@@ -120,3 +120,4 @@ drivers/hisi/tzdriver/cfc_graph.pyc
 drivers/hisi/tzdriver/cfc_graphgen.pyc
 drivers/hisi/tzdriver/cfc_rule_parser.pyc
 drivers/huawei_platform/oases/inlinehook_offset.h
+net/wireguard/
