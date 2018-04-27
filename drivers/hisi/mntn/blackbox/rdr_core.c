@@ -25,6 +25,7 @@
 #include <linux/hisi/rdr_pub.h>
 #include <linux/hisi/util.h>
 #include <linux/hisi/hisi_bootup_keypoint.h>
+#include <libhwsecurec/securec.h>
 
 #include "rdr_inner.h"
 #include "rdr_field.h"
@@ -154,9 +155,7 @@ Return:         true:need save; false:not need save
 bool need_save_mntndump_log(u32 reboot_type_s)
 {
 	if (reboot_type_s >= REBOOT_REASON_LABEL3 &&
-		reboot_type_s < REBOOT_REASON_LABEL4 &&
-		MMC_S_EXCEPTION != reboot_type_s &&
-		LPM3_S_EXCEPTION != reboot_type_s)
+		reboot_type_s < REBOOT_REASON_LABEL4)
 		return true;
 
 	return false;
@@ -237,6 +236,7 @@ void rdr_syserr_process(struct rdr_syserr_param_s *p)
 {
 	int reboot_times = 0;
 	int max_reboot_times = rdr_get_reboot_times();
+	int ret = 0;
 	u32 mod_id = p->modid;
 
 	struct rdr_exception_info_s *p_exce_info = NULL;
@@ -282,8 +282,11 @@ void rdr_syserr_process(struct rdr_syserr_param_s *p)
 		}
 	} else {		/*if no dump need(like modem-reboot), don't create exc-dir, but date is a must. */
 		memset(date, 0, DATATIME_MAXLEN);
-		snprintf(date, DATATIME_MAXLEN, "%s-%08lld",
+		ret = snprintf_s(date, DATATIME_MAXLEN, DATATIME_MAXLEN - 1, "%s-%08lld",
 			 rdr_get_timestamp(), rdr_get_tick());
+		if(unlikely(ret < 0)){
+			BB_PRINT_ERR("[%s], snprintf_s ret %d!\n", __func__, ret);
+		}
 	}
 	rdr_fill_edata(p_exce_info, date);
 
@@ -291,6 +294,10 @@ void rdr_syserr_process(struct rdr_syserr_param_s *p)
 		rdr_save_history_log(p_exce_info, date, true, get_boot_keypoint());
 	}
 	rdr_module_dump(p_exce_info, path, mod_id);
+
+	/* notify to save the clear text */
+	up(&rdr_cleartext_sem);
+
 out:
 	rdr_set_saving_state(0);
 	rdr_callback(p_exce_info, mod_id, path);
@@ -459,6 +466,8 @@ bool rdr_init_done()
 	}
 
 	sema_init(&rdr_sem, 0);
+	sema_init(&rdr_cleartext_sem, 0);
+
 	init_done = true;
 
 	BB_PRINT_END();
@@ -469,6 +478,7 @@ static s32 __init rdr_init(void)
 {
 	struct task_struct *rdr_main = NULL;
 	struct task_struct *rdr_bootcheck = NULL;
+	struct task_struct *rdr_cleartext = NULL;
 	struct sched_param   param;
 
 	BB_PRINT_START();
@@ -504,6 +514,11 @@ static s32 __init rdr_init(void)
 		kthread_stop(rdr_main);
 		wake_lock_destroy(&blackbox_wl);
 		return -1;
+	}
+
+	rdr_cleartext = kthread_run(rdr_cleartext_body, NULL, "bbox_cleartext");
+	if (!rdr_cleartext) {
+		BB_PRINT_ERR("create thread rdr_cleartext faild.\n");
 	}
 
 	BB_PRINT_END();

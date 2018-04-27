@@ -208,5 +208,4 @@ void asp_cfg_hdmi_module_disable(void);
 void asp_cfg_dp_module_enable(void);
 void asp_cfg_dp_module_disable(void);
 unsigned int asp_cfg_get_irq_value(void);
-bool asp_cfg_is_vr(void);
 #endif

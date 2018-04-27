@@ -256,6 +256,8 @@ do {                               \
 #define  reset_print_debug(fmt, ...)
 #endif
 
+#define reset_stamp(macro_addr)   readl((volatile const void *)macro_addr)
+
 /* 打点时间戳 */
 static inline void cp_reset_timestamp_dump(enum RESET_DUMP_MOD_ID reset_dumpid)
 {

@@ -76,7 +76,7 @@ NV_DUMP_STRU* dump_get_feature_cfg(void);
 enum EDITION_KIND dump_get_edition_type(void);
 void dump_config_init(void);
 s32 dump_check_reset_timestamp(u32 modid);
-
+dump_access_mdmddr_type_t dump_get_access_mdmddr_type(void);
 
 #endif
 

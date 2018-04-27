@@ -123,9 +123,9 @@ static int dwc3_otg_start_host(struct dwc3_otg *dwc_otg)
 
 #ifdef DWC3_OTG_FORCE_RESET_GCTL
 	dwc3_otg_force_reset_core(dwc_otg);
+#endif /* DWC3_OTG_FORCE_RESET_GCTL */
 
 	hisi_dwc3_cpmode_enable();
-#endif /* DWC3_OTG_FORCE_RESET_GCTL */
 	dwc3_lscdtimer_set();
 
 #else
@@ -172,6 +172,8 @@ static int dwc3_otg_start_host(struct dwc3_otg *dwc_otg)
 	dwc3_otg_split_disable(dwc_otg);
 #endif /* DWC3_OTG_FORCE_RESET_GCTL */
 
+	hisi_dwc3_platform_host_quirks();
+
 	DBG("-\n");
 
 	return ret;
@@ -200,6 +202,8 @@ static int dwc3_otg_start_peripheral(struct dwc3_otg *dwc_otg)
 	DBG("+\n");
 
 	spin_lock_irqsave(&dwc->lock, flags);
+
+	hisi_dwc3_platform_device_quirks();
 
 #ifdef DWC3_OTG_FORCE_MODE
 	reg = dwc3_readl(dwc->regs, DWC3_GCTL);

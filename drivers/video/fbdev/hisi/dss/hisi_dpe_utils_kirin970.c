@@ -50,20 +50,20 @@ static int get_lcd_frame_rate(struct hisi_panel_info *pinfo)
 		pinfo->ldi.v_back_porch + pinfo->ldi.v_front_porch + pinfo->ldi.v_pulse_width);
 }
 
-struct dss_clk_rate * get_dss_clk_rate(struct hisi_fb_data_type *hisifd)
+struct dss_vote_cmd * get_dss_vote_cmd(struct hisi_fb_data_type *hisifd)
 {
 	struct hisi_panel_info *pinfo = NULL;
-	struct dss_clk_rate *pdss_clk_rate = NULL;
+	struct dss_vote_cmd *pdss_vote_cmd = NULL;
 	int frame_rate = 0;
 	uint64_t default_dss_pri_clk_rate;
 
 	if (hisifd == NULL) {
 		HISI_FB_ERR("hisifd is null.\n");
-		return pdss_clk_rate;
+		return pdss_vote_cmd;
 	}
 
 	pinfo = &(hisifd->panel_info);
-	pdss_clk_rate = &(hisifd->dss_clk_rate);
+	pdss_vote_cmd = &(hisifd->dss_vote_cmd);
 
 	frame_rate = get_lcd_frame_rate(pinfo);
 
@@ -75,60 +75,60 @@ struct dss_clk_rate * get_dss_clk_rate(struct hisi_fb_data_type *hisifd)
 
 	/* FIXME: TBD  */
 	if (g_fpga_flag == 1) {
-		if (pdss_clk_rate->dss_pclk_dss_rate == 0) {
-			pdss_clk_rate->dss_pri_clk_rate = 40 * 1000000UL;
-			pdss_clk_rate->dss_pclk_dss_rate = 20 * 1000000UL;
-			pdss_clk_rate->dss_pclk_pctrl_rate = 20 * 1000000UL;
+		if (pdss_vote_cmd->dss_pclk_dss_rate == 0) {
+			pdss_vote_cmd->dss_pri_clk_rate = 40 * 1000000UL;
+			pdss_vote_cmd->dss_pclk_dss_rate = 20 * 1000000UL;
+			pdss_vote_cmd->dss_pclk_pctrl_rate = 20 * 1000000UL;
 		}
 	} else {
-		if (pdss_clk_rate->dss_pclk_dss_rate == 0) {
+		if (pdss_vote_cmd->dss_pclk_dss_rate == 0) {
 			if ((pinfo->xres * pinfo->yres) >= (RES_4K_PHONE)) {
-				pdss_clk_rate->dss_pri_clk_rate = DEFAULT_DSS_CORE_CLK_RATE_L3;
-				pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L3;
-				pdss_clk_rate->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
-				pdss_clk_rate->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
+				pdss_vote_cmd->dss_pri_clk_rate = DEFAULT_DSS_CORE_CLK_RATE_L3;
+				pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L3;
+				pdss_vote_cmd->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
+				pdss_vote_cmd->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
 				hisifd->core_clk_upt_support = 0;
 			} else if ((pinfo->xres * pinfo->yres) >= (RES_1440P)) {
 				if (frame_rate >= 110) {
-					pdss_clk_rate->dss_pri_clk_rate = DEFAULT_DSS_CORE_CLK_RATE_L3;
-					pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L3;
-					pdss_clk_rate->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
-					pdss_clk_rate->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
+					pdss_vote_cmd->dss_pri_clk_rate = DEFAULT_DSS_CORE_CLK_RATE_L3;
+					pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L3;
+					pdss_vote_cmd->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
+					pdss_vote_cmd->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
 					hisifd->core_clk_upt_support = 0;
 				} else {
-					pdss_clk_rate->dss_pri_clk_rate = default_dss_pri_clk_rate;
-					pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
-					pdss_clk_rate->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
-					pdss_clk_rate->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
+					pdss_vote_cmd->dss_pri_clk_rate = default_dss_pri_clk_rate;
+					pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
+					pdss_vote_cmd->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
+					pdss_vote_cmd->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
 					hisifd->core_clk_upt_support = 1;
 				}
 			} else if ((pinfo->xres * pinfo->yres) >= (RES_1080P)) {
-				pdss_clk_rate->dss_pri_clk_rate = default_dss_pri_clk_rate;
-				pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
-				pdss_clk_rate->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
-				pdss_clk_rate->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
+				pdss_vote_cmd->dss_pri_clk_rate = default_dss_pri_clk_rate;
+				pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
+				pdss_vote_cmd->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
+				pdss_vote_cmd->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
 				hisifd->core_clk_upt_support = 1;
 			} else {
-				pdss_clk_rate->dss_pri_clk_rate = default_dss_pri_clk_rate;
-				pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
-				pdss_clk_rate->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
-				pdss_clk_rate->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
+				pdss_vote_cmd->dss_pri_clk_rate = default_dss_pri_clk_rate;
+				pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
+				pdss_vote_cmd->dss_pclk_dss_rate = DEFAULT_PCLK_DSS_RATE;
+				pdss_vote_cmd->dss_pclk_pctrl_rate = DEFAULT_PCLK_PCTRL_RATE;
 				hisifd->core_clk_upt_support = 1;
 			}
 		}
 
 		if (hisifd->index == EXTERNAL_PANEL_IDX) {
 			if ((pinfo->xres * pinfo->yres) >= (RES_4K_PHONE)) {
-				pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L3;
+				pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L3;
 			} else if ((pinfo->xres * pinfo->yres) >= (RES_1440P)) {
-				pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L2;
+				pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L2;
 			} else {
-				pdss_clk_rate->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
+				pdss_vote_cmd->dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
 			}
 		}
 	}
 
-	return pdss_clk_rate;
+	return pdss_vote_cmd;
 }
 
 static int dss_core_clk_enable(struct hisi_fb_data_type *hisifd)
@@ -173,24 +173,38 @@ static int dss_core_clk_disable(struct hisi_fb_data_type *hisifd)
 	return 0;
 }
 
-static int set_mdc_core_clk(struct hisi_fb_data_type *hisifd, dss_clk_rate_t dss_clk_rate)
+static int get_mdc_clk_rate(dss_vote_cmd_t *vote_cmd, uint64_t *clk_rate)
+{
+	switch (vote_cmd->dss_voltage_level) {
+		case PERI_VOLTAGE_LEVEL0: // 0.65v
+			*clk_rate = DEFAULT_MDC_CORE_CLK_RATE_L1;
+			break;
+		case PERI_VOLTAGE_LEVEL1: // 0.75v
+			*clk_rate = DEFAULT_MDC_CORE_CLK_RATE_L2;
+			break;
+		case PERI_VOLTAGE_LEVEL2: // 0.8v
+			*clk_rate = DEFAULT_MDC_CORE_CLK_RATE_L3;
+			break;
+
+		default:
+			HISI_FB_ERR("no support set dss_voltage_level(%d)!\n",
+				vote_cmd->dss_voltage_level);
+			return -1;
+	}
+	return 0;
+}
+
+static int set_mdc_core_clk(struct hisi_fb_data_type *hisifd, dss_vote_cmd_t vote_cmd)
 {
 	int ret = 0;
 	uint64_t clk_rate = 0;
 
-	if (dss_clk_rate.dss_voltage_value == PERI_VOLTAGE_065V) {
-		clk_rate = DEFAULT_MDC_CORE_CLK_RATE_L1;
-	} else if (dss_clk_rate.dss_voltage_value == PERI_VOLTAGE_075V) {
-		clk_rate = DEFAULT_MDC_CORE_CLK_RATE_L2;
-	} else if (dss_clk_rate.dss_voltage_value == PERI_VOLTAGE_080V) {
-		clk_rate = DEFAULT_MDC_CORE_CLK_RATE_L3;
-	} else {
-		HISI_FB_ERR("no support set dss_voltage_value(%d)!\n", dss_clk_rate.dss_voltage_value);
-		return -1;
+	if (vote_cmd.dss_voltage_level == hisifd->dss_vote_cmd.dss_voltage_level) {
+		return 0;
 	}
 
-	if (dss_clk_rate.dss_voltage_value == hisifd->dss_clk_rate.dss_voltage_value) {
-		return ret;
+	if (get_mdc_clk_rate(&vote_cmd, &clk_rate)) {
+		return -1;
 	}
 
 	ret = clk_set_rate(hisifd->dss_clk_media_common_clk, clk_rate);
@@ -198,20 +212,21 @@ static int set_mdc_core_clk(struct hisi_fb_data_type *hisifd, dss_clk_rate_t dss
 		HISI_FB_ERR("set dss_clk_media_common_clk(%llu) failed, error=%d!\n", clk_rate, ret);
 		return -1;
 	}
-	hisifd->dss_clk_rate.dss_voltage_value = dss_clk_rate.dss_voltage_value;
+	hisifd->dss_vote_cmd.dss_voltage_level = vote_cmd.dss_voltage_level;
 
-	HISI_FB_DEBUG("set dss_clk_media_common_clk = %llu.\n", clk_rate);
+	HISI_FB_INFO("set dss_clk_media_common_clk = %llu.\n", clk_rate);
+
 	return ret;
 }
 
-static int set_primary_core_clk(struct hisi_fb_data_type *hisifd, dss_clk_rate_t dss_clk_rate)
+static int set_primary_core_clk(struct hisi_fb_data_type *hisifd, dss_vote_cmd_t dss_vote_cmd)
 {
 	int ret = 0;
 	struct hisi_fb_data_type *targetfd = NULL;
 	bool set_rate_succ = true;
 
 	targetfd = hisifd_list[AUXILIARY_PANEL_IDX];
-	if (targetfd && (dss_clk_rate.dss_pri_clk_rate >= targetfd->dss_clk_rate.dss_pri_clk_rate)) {
+	if (targetfd && (dss_vote_cmd.dss_pri_clk_rate >= targetfd->dss_vote_cmd.dss_pri_clk_rate)) {
 		if (hisifd->panel_info.vsync_ctrl_type & VSYNC_CTRL_CLK_OFF) {
 			ret = dss_core_clk_enable(hisifd);
 			if (ret < 0) {
@@ -219,13 +234,13 @@ static int set_primary_core_clk(struct hisi_fb_data_type *hisifd, dss_clk_rate_t
 				return -1;
 			}
 		}
-		ret = clk_set_rate(hisifd->dss_pri_clk, dss_clk_rate.dss_pri_clk_rate);
+		ret = clk_set_rate(hisifd->dss_pri_clk, dss_vote_cmd.dss_pri_clk_rate);
 		HISI_FB_DEBUG("fb%d set dss_pri_clk_rate = %llu.\n",
 			hisifd->index, (uint64_t)clk_get_rate(hisifd->dss_pri_clk));
 		if (ret < 0) {
 			set_rate_succ = false;
 			HISI_FB_ERR("set dss_pri_clk_rate(%llu) failed, error=%d!\n",
-				dss_clk_rate.dss_pri_clk_rate, ret);
+				dss_vote_cmd.dss_pri_clk_rate, ret);
 		}
 
 		if (hisifd->panel_info.vsync_ctrl_type & VSYNC_CTRL_CLK_OFF) {
@@ -237,20 +252,19 @@ static int set_primary_core_clk(struct hisi_fb_data_type *hisifd, dss_clk_rate_t
 		}
 
 		if (set_rate_succ == true) {
-			hisifd->dss_clk_rate.dss_pri_clk_rate = dss_clk_rate.dss_pri_clk_rate;
+			hisifd->dss_vote_cmd.dss_pri_clk_rate = dss_vote_cmd.dss_pri_clk_rate;
 		} else {
 			return -1;
 		}
 	}
 
-	HISI_FB_DEBUG("set dss_pri_clk_rate = %llu.\n", dss_clk_rate.dss_pri_clk_rate);
+	HISI_FB_DEBUG("set dss_pri_clk_rate = %llu.\n", dss_vote_cmd.dss_pri_clk_rate);
 	return ret;
 }
 
-int set_dss_clk_rate(struct hisi_fb_data_type *hisifd, dss_clk_rate_t dss_clk_rate)
+int set_dss_vote_cmd(struct hisi_fb_data_type *hisifd, dss_vote_cmd_t vote_cmd)
 {
 	int ret = 0;
-	uint64_t clk_rate = 0;
 	struct hisi_fb_data_type *targetfd = NULL;
 
 	if (NULL == hisifd) {
@@ -259,38 +273,38 @@ int set_dss_clk_rate(struct hisi_fb_data_type *hisifd, dss_clk_rate_t dss_clk_ra
 	}
 
 	if (hisifd->index == MEDIACOMMON_PANEL_IDX) {
-		ret = set_mdc_core_clk(hisifd, dss_clk_rate);
+		ret = set_mdc_core_clk(hisifd, vote_cmd);
 		return ret;
 	}
 
-	if ((dss_clk_rate.dss_pri_clk_rate != DEFAULT_DSS_CORE_CLK_RATE_L1)
-		&& (dss_clk_rate.dss_pri_clk_rate != DEFAULT_DSS_CORE_CLK_RATE_L2)
-		&& (dss_clk_rate.dss_pri_clk_rate != DEFAULT_DSS_CORE_CLK_RATE_L3)) {
-		HISI_FB_ERR("no support set dss_pri_clk_rate(%llu)!\n", dss_clk_rate.dss_pri_clk_rate);
+	if ((vote_cmd.dss_pri_clk_rate != DEFAULT_DSS_CORE_CLK_RATE_L1)
+		&& (vote_cmd.dss_pri_clk_rate != DEFAULT_DSS_CORE_CLK_RATE_L2)
+		&& (vote_cmd.dss_pri_clk_rate != DEFAULT_DSS_CORE_CLK_RATE_L3)) {
+		HISI_FB_ERR("no support set dss_pri_clk_rate(%llu)!\n", vote_cmd.dss_pri_clk_rate);
 		return -1;
 	}
 
-	if (dss_clk_rate.dss_pri_clk_rate == hisifd->dss_clk_rate.dss_pri_clk_rate) {
+	if (vote_cmd.dss_pri_clk_rate == hisifd->dss_vote_cmd.dss_pri_clk_rate) {
 		return ret;
 	}
 
 	if (hisifd->index == PRIMARY_PANEL_IDX) {
-		ret = set_primary_core_clk(hisifd, dss_clk_rate);
+		ret = set_primary_core_clk(hisifd, vote_cmd);
 		return ret;
 	}
 
 	if (hisifd->index == AUXILIARY_PANEL_IDX) {
 		targetfd = hisifd_list[PRIMARY_PANEL_IDX];
-		if (targetfd && (dss_clk_rate.dss_pri_clk_rate >= targetfd->dss_clk_rate.dss_pri_clk_rate)) {
+		if (targetfd && (vote_cmd.dss_pri_clk_rate >= targetfd->dss_vote_cmd.dss_pri_clk_rate)) {
 			hisifd->need_tuning_clk = true;
 			HISI_FB_DEBUG("fb%d save dss_pri_clk_rate = %llu.\n",
-				hisifd->index, dss_clk_rate.dss_pri_clk_rate);
+				hisifd->index, vote_cmd.dss_pri_clk_rate);
 		}
-		
-		hisifd->dss_clk_rate.dss_pri_clk_rate = dss_clk_rate.dss_pri_clk_rate;
+
+		hisifd->dss_vote_cmd.dss_pri_clk_rate = vote_cmd.dss_pri_clk_rate;
 	}
 
-	HISI_FB_DEBUG("set dss_pri_clk_rate = %llu.\n", dss_clk_rate.dss_pri_clk_rate);
+	HISI_FB_DEBUG("set dss_pri_clk_rate = %llu.\n", vote_cmd.dss_pri_clk_rate);
 	return ret;
 }
 
@@ -299,7 +313,7 @@ int dpe_set_clk_rate(struct platform_device *pdev)
 {
 	struct hisi_fb_data_type *hisifd;
 	struct hisi_panel_info *pinfo;
-	struct dss_clk_rate *pdss_clk_rate;
+	struct dss_vote_cmd *pdss_vote_cmd;
 	uint64_t dss_pri_clk_rate;
 	uint64_t dss_mmbuf_rate;
 	int ret = 0;
@@ -316,18 +330,18 @@ int dpe_set_clk_rate(struct platform_device *pdev)
 	}
 
 	pinfo = &(hisifd->panel_info);
-	pdss_clk_rate = get_dss_clk_rate(hisifd);
-	if (NULL == pdss_clk_rate) {
+	pdss_vote_cmd = get_dss_vote_cmd(hisifd);
+	if (NULL == pdss_vote_cmd) {
 		HISI_FB_ERR("NULL Pointer!\n");
 		return -EINVAL;
 	}
 
-	dss_pri_clk_rate = pdss_clk_rate->dss_pri_clk_rate;
+	dss_pri_clk_rate = pdss_vote_cmd->dss_pri_clk_rate;
 
 	if (hisifd->index != PRIMARY_PANEL_IDX) {
 		if (hisifd_list[PRIMARY_PANEL_IDX]) {
-			if (hisifd_list[PRIMARY_PANEL_IDX]->dss_clk_rate.dss_pri_clk_rate > dss_pri_clk_rate) {
-				dss_pri_clk_rate = hisifd_list[PRIMARY_PANEL_IDX]->dss_clk_rate.dss_pri_clk_rate;
+			if (hisifd_list[PRIMARY_PANEL_IDX]->dss_vote_cmd.dss_pri_clk_rate > dss_pri_clk_rate) {
+				dss_pri_clk_rate = hisifd_list[PRIMARY_PANEL_IDX]->dss_vote_cmd.dss_pri_clk_rate;
 			}
 		}
 	}
@@ -372,11 +386,11 @@ int dpe_set_clk_rate(struct platform_device *pdev)
 		;
 	}
 
-	dss_mmbuf_rate = pdss_clk_rate->dss_mmbuf_rate;
+	dss_mmbuf_rate = pdss_vote_cmd->dss_mmbuf_rate;
 	if (g_dss_version_tag == FB_ACCEL_KIRIN970) {
 		if (hisifd_list[EXTERNAL_PANEL_IDX]) {
-			if (hisifd_list[EXTERNAL_PANEL_IDX]->dss_clk_rate.dss_mmbuf_rate > dss_mmbuf_rate) {
-				dss_mmbuf_rate = hisifd_list[EXTERNAL_PANEL_IDX]->dss_clk_rate.dss_mmbuf_rate;
+			if (hisifd_list[EXTERNAL_PANEL_IDX]->dss_vote_cmd.dss_mmbuf_rate > dss_mmbuf_rate) {
+				dss_mmbuf_rate = hisifd_list[EXTERNAL_PANEL_IDX]->dss_vote_cmd.dss_mmbuf_rate;
 			}
 		}
 		ret = clk_set_rate(hisifd->dss_mmbuf_clk, dss_mmbuf_rate);
@@ -399,7 +413,82 @@ int dpe_set_clk_rate(struct platform_device *pdev)
 	return ret;
 }
 
-int dpe_set_clk_rate_on_pll0(struct hisi_fb_data_type *hisifd)
+#define PERI_VOLTAGE_LEVEL0_065V		(0) // 0.65v
+#define PERI_VOLTAGE_LEVEL1_075V		(2) // 0.75v
+#define PERI_VOLTAGE_LEVEL2_080V		(3) // 0.80v
+int dpe_get_votage_value(struct hisi_fb_data_type *hisifd, dss_vote_cmd_t *vote_cmd)
+{
+	if (!vote_cmd) {
+		HISI_FB_ERR("vote_cmd is null\n");
+		return -1;
+	}
+
+	switch (vote_cmd->dss_voltage_level) {
+		case PERI_VOLTAGE_LEVEL0:
+			return PERI_VOLTAGE_LEVEL0_065V; // 0.65v
+		case PERI_VOLTAGE_LEVEL1:
+			return PERI_VOLTAGE_LEVEL1_075V; // 0.75v
+		case PERI_VOLTAGE_LEVEL2:
+			return PERI_VOLTAGE_LEVEL2_080V; // 0.80v
+		default:
+			HISI_FB_ERR("not support dss_voltage_level is %d\n", vote_cmd->dss_voltage_level);
+			return -1;
+	}
+}
+
+int dpe_get_votage_level(struct hisi_fb_data_type *hisifd, int votage_value)
+{
+	switch (votage_value) {
+		case PERI_VOLTAGE_LEVEL0_065V: // 0.65v
+			return PERI_VOLTAGE_LEVEL0;
+		case PERI_VOLTAGE_LEVEL1_075V: // 0.75v
+			return PERI_VOLTAGE_LEVEL1;
+		case PERI_VOLTAGE_LEVEL2_080V: // 0.80v
+			return PERI_VOLTAGE_LEVEL2;
+		default:
+			HISI_FB_ERR("not support votage_value is %d\n", votage_value);
+			return PERI_VOLTAGE_LEVEL0;
+	}
+}
+
+int dpe_set_pixel_clk_rate_on_pll0(struct hisi_fb_data_type *hisifd)
+{
+	int ret = 0;
+	uint64_t clk_rate;
+
+	if (NULL == hisifd) {
+		HISI_FB_ERR("hisifd is NULL Pointer!\n");
+		return -EINVAL;
+	}
+
+	if (g_fpga_flag == 1) {
+		return 0;
+	}
+
+	if (hisifd->index == PRIMARY_PANEL_IDX) {
+		clk_rate = DEFAULT_DSS_PXL0_CLK_RATE_POWER_OFF;
+		ret = clk_set_rate(hisifd->dss_pxl0_clk, clk_rate);
+		if (ret < 0) {
+			HISI_FB_ERR("fb%d dss_pxl0_clk clk_set_rate(%llu) failed, error=%d!\n", hisifd->index, clk_rate, ret);
+			return -EINVAL;
+		}
+		HISI_FB_INFO("dss_pxl0_clk:[%llu]->[%llu].\n", clk_rate, (uint64_t)clk_get_rate(hisifd->dss_pxl0_clk));
+	} else if ((hisifd->index == EXTERNAL_PANEL_IDX) && !hisifd->panel_info.fake_external) {
+		clk_rate = DEFAULT_DSS_PXL1_CLK_RATE_POWER_OFF;
+		ret = clk_set_rate(hisifd->dss_pxl1_clk, clk_rate);
+		if (ret < 0) {
+			HISI_FB_ERR("fb%d dss_pxl1_clk clk_set_rate(%llu) failed, error=%d!\n", hisifd->index, clk_rate, ret);
+			return -EINVAL;
+		}
+		HISI_FB_INFO("dss_pxl1_clk:[%llu]->[%llu].\n", clk_rate, (uint64_t)clk_get_rate(hisifd->dss_pxl1_clk));
+	} else {
+		;
+	}
+
+	return ret;
+}
+
+int dpe_set_common_clk_rate_on_pll0(struct hisi_fb_data_type *hisifd)
 {
 	int ret;
 	uint64_t clk_rate;
@@ -430,41 +519,21 @@ int dpe_set_clk_rate_on_pll0(struct hisi_fb_data_type *hisifd)
 	}
 	HISI_FB_INFO("dss_pri_clk:[%llu]->[%llu].\n", clk_rate, (uint64_t)clk_get_rate(hisifd->dss_pri_clk));
 
-	if (hisifd->index == PRIMARY_PANEL_IDX) {
-		clk_rate = DEFAULT_DSS_PXL0_CLK_RATE_POWER_OFF;
-		ret = clk_set_rate(hisifd->dss_pxl0_clk, clk_rate);
-		if (ret < 0) {
-			HISI_FB_ERR("fb%d dss_pxl0_clk clk_set_rate(%llu) failed, error=%d!\n", hisifd->index, clk_rate, ret);
-			return -EINVAL;
-		}
-		HISI_FB_INFO("dss_pxl0_clk:[%llu]->[%llu].\n", clk_rate, (uint64_t)clk_get_rate(hisifd->dss_pxl0_clk));
-
-	} else if ((hisifd->index == EXTERNAL_PANEL_IDX) && !hisifd->panel_info.fake_external) {
-		clk_rate = DEFAULT_DSS_PXL1_CLK_RATE_POWER_OFF;
-		ret = clk_set_rate(hisifd->dss_pxl1_clk, clk_rate);
-		if (ret < 0) {
-			HISI_FB_ERR("fb%d dss_pxl1_clk clk_set_rate(%llu) failed, error=%d!\n", hisifd->index, clk_rate, ret);
-		}
-		HISI_FB_INFO("dss_pxl1_clk:[%llu]->[%llu].\n", clk_rate, (uint64_t)clk_get_rate(hisifd->dss_pxl1_clk));
-	} else {
-		;
-	}
-
 	pvp = peri_volt_poll_get(DEV_DSS_VOLTAGE_ID, NULL);
 	if (!pvp) {
 		HISI_FB_ERR("get pvp failed!\n");
 		return -EINVAL;
 	}
 
-	ret = peri_set_volt(pvp, PERI_VOLTAGE_065V);
+	ret = peri_set_volt(pvp, 0); // 0.65v
 	if (ret) {
-		HISI_FB_ERR("set dss_voltage_value=0 failed!\n");
+		HISI_FB_ERR("set voltage_value=0 failed!\n");
 		return -EINVAL;
 	}
-	hisifd_list[PRIMARY_PANEL_IDX]->dss_clk_rate.dss_voltage_value = PERI_VOLTAGE_065V;
-	hisifd_list[AUXILIARY_PANEL_IDX]->dss_clk_rate.dss_voltage_value = PERI_VOLTAGE_065V;
+	hisifd_list[PRIMARY_PANEL_IDX]->dss_vote_cmd.dss_voltage_level = PERI_VOLTAGE_LEVEL0;
+	hisifd_list[AUXILIARY_PANEL_IDX]->dss_vote_cmd.dss_voltage_level = PERI_VOLTAGE_LEVEL0;
 
-	HISI_FB_INFO("set dss_voltage_value=0!\n");
+	HISI_FB_INFO("set dss_voltage_level=0!\n");
 
 	return ret;
 }
@@ -612,6 +681,10 @@ void dss_inner_clk_common_enable(struct hisi_fb_data_type *hisifd, bool fastboot
 		return;
 	}
 
+	if (hisifd->index == MEDIACOMMON_PANEL_IDX) {
+		return;
+	}
+
 	dss_base = hisifd->dss_base;
 
 	down(&hisi_fb_dss_inner_clk_sem);
@@ -637,6 +710,10 @@ void dss_inner_clk_common_disable(struct hisi_fb_data_type *hisifd)
 
 	if (hisifd == NULL) {
 		HISI_FB_ERR("hisifd is NULL point\n.");
+		return;
+	}
+
+	if (hisifd->index == MEDIACOMMON_PANEL_IDX) {
 		return;
 	}
 
@@ -720,11 +797,11 @@ void dss_inner_clk_sdp_disable(struct hisi_fb_data_type *hisifd)
 		return ;
 	}
 
-	hisifd->dss_clk_rate.dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
+	hisifd->dss_vote_cmd.dss_mmbuf_rate = DEFAULT_DSS_MMBUF_CLK_RATE_L1;
 
 	if (g_dss_version_tag == FB_ACCEL_KIRIN970) {
 		if (hisifd_list[PRIMARY_PANEL_IDX]) {
-			dss_mmbuf_rate = hisifd_list[PRIMARY_PANEL_IDX]->dss_clk_rate.dss_mmbuf_rate;
+			dss_mmbuf_rate = hisifd_list[PRIMARY_PANEL_IDX]->dss_vote_cmd.dss_mmbuf_rate;
 			ret = clk_set_rate(hisifd->dss_mmbuf_clk, dss_mmbuf_rate);
 			if (ret < 0) {
 				HISI_FB_ERR("fb%d dss_mmbuf clk_set_rate(%llu) failed, error=%d!\n",
@@ -1519,7 +1596,7 @@ void init_dbuf(struct hisi_fb_data_type *hisifd)
 				thd_flux_req_befdfs_in = 0x1140;
 				thd_flux_req_aftdfs_out = 0xfcc;
 				thd_flux_req_aftdfs_in = 0x7e6;
-			} else {
+			} else { // for 1080p
 				sram_valid_num = 1;
 				thd_rqos_out = 0x217f;
 				thd_rqos_in = 0x1c78;
@@ -1627,6 +1704,26 @@ static void init_ldi_pxl_div(struct hisi_fb_data_type *hisifd)
 	set_reg(ldi_base + LDI_PXL0_DIVXCFG, pxl0_divxcfg, 3, 0);
 }
 
+static void itf_ctrl_config(struct hisi_fb_data_type *hisifd, char __iomem *ldi_base)
+{
+	if ((NULL == hisifd) || (NULL == ldi_base)) {
+		return;
+	}
+
+	if (is_mipi_cmd_panel(hisifd)) {
+		set_reg(ldi_base + LDI_FRM_MSK,
+			(hisifd->frame_update_flag == 1) ? 0x0 : 0x1, 1, 0);
+	} else {
+		set_reg(ldi_base + LDI_FRM_MSK, 0x0, 1, 0);
+	}
+
+	if (hisifd->index == EXTERNAL_PANEL_IDX && (is_mipi_panel(hisifd))) {
+		set_reg(ldi_base + LDI_DP_DSI_SEL, 0x1, 1, 0);
+	}
+
+	return;
+}
+
 void init_ldi(struct hisi_fb_data_type *hisifd, bool fastboot_enable)
 {
 	char __iomem *ldi_base = NULL;
@@ -1722,7 +1819,7 @@ void init_ldi(struct hisi_fb_data_type *hisifd, bool fastboot_enable)
 
 	// for 1Hz LCD and mipi command LCD
 	if (is_mipi_cmd_panel(hisifd)) {
-		set_reg(ldi_base + LDI_DSI_CMD_MOD_CTRL, 0x1, 1, 0);
+		set_reg(ldi_base + LDI_DSI_CMD_MOD_CTRL, 0x1, 2, 0);
 
 		//DSI_TE_CTRL
 		// te_source = 0, select te_pin
@@ -1760,26 +1857,20 @@ void init_ldi(struct hisi_fb_data_type *hisifd, bool fastboot_enable)
 		//set_reg(ldi_base + LDI_DSI_TE_VS_WD, 0x3FC0FF, 32, 0);
 		//set_reg(ldi_base + LDI_DSI_TE_VS_WD, 0x3FC01F, 32, 0);
 	} else {
-		set_reg(ldi_base + LDI_DSI_CMD_MOD_CTRL, 0x1, 1, 1);
+		// dsi_te_hard_en
+		set_reg(ldi_base + LDI_DSI_TE_CTRL, 0x0, 1, 0);
+		set_reg(ldi_base + LDI_DSI_CMD_MOD_CTRL, 0x2, 2, 0);
 	}
 	//ldi_data_gate(hisifd, true);
 
 	// normal
 	set_reg(ldi_base + LDI_WORK_MODE, 0x1, 1, 0);
 
+	itf_ctrl_config(hisifd, ldi_base);
 
-	if (is_mipi_cmd_panel(hisifd)) {
-		set_reg(ldi_base + LDI_FRM_MSK,
-			(hisifd->frame_update_flag == 1) ? 0x0 : 0x1, 1, 0);
-	}
-
-	if (hisifd->index == EXTERNAL_PANEL_IDX && (is_mipi_panel(hisifd))) {
-		set_reg(ldi_base + LDI_DP_DSI_SEL, 0x1, 1, 0);
-	}
-
-	// ldi disable
-	if (!fastboot_enable)
+	if (!fastboot_enable) {
 		set_reg(ldi_base + LDI_CTRL, 0x0, 1, 0);
+	}
 
 	HISI_FB_DEBUG("-.!\n");
 }
@@ -1870,8 +1961,9 @@ void ldi_frame_update(struct hisi_fb_data_type *hisifd, bool update)
 
 		if (is_mipi_cmd_panel(hisifd)) {
 			set_reg(ldi_base + LDI_FRM_MSK, (update ? 0x0 : 0x1), 1, 0);
-			if (update)
+			if (update) {
 				set_reg(ldi_base + LDI_CTRL, 0x1, 1, 0);
+			}
 		}
 	} else {
 		HISI_FB_ERR("fb%d, not support!", hisifd->index);
@@ -2308,70 +2400,70 @@ static void acm_set_lut_LTx_table(char __iomem *acm_lut_base, struct hisi_panel_
 	if (pinfo->acm_lut_satr_face_table && pinfo->acm_lut_satr_face_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_SATR_FACE_COEF, pinfo->acm_lut_satr_face_table, pinfo->acm_lut_satr_face_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_satr_face_table is NULL or acm_lut_satr_face_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_satr_face_table is NULL or acm_lut_satr_face_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lta_table && pinfo->acm_lut_lta_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTA_COEF, pinfo->acm_lut_lta_table, pinfo->acm_lut_lta_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lta_table is NULL or acm_lut_lta_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lta_table is NULL or acm_lut_lta_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr0_table && pinfo->acm_lut_ltr0_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR0_COEF, pinfo->acm_lut_ltr0_table, pinfo->acm_lut_ltr0_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr0_table is NULL or acm_lut_ltr0_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr0_table is NULL or acm_lut_ltr0_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr1_table && pinfo->acm_lut_ltr1_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR1_COEF, pinfo->acm_lut_ltr1_table, pinfo->acm_lut_ltr1_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr1_table is NULL or acm_lut_ltr1_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr1_table is NULL or acm_lut_ltr1_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr2_table && pinfo->acm_lut_ltr2_table_len> 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR2_COEF, pinfo->acm_lut_ltr2_table, pinfo->acm_lut_ltr2_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr2_table is NULL or acm_lut_ltr2_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr2_table is NULL or acm_lut_ltr2_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr3_table && pinfo->acm_lut_ltr3_table_len> 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR3_COEF, pinfo->acm_lut_ltr3_table, pinfo->acm_lut_ltr3_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr3_table is NULL or acm_lut_ltr3_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr3_table is NULL or acm_lut_ltr3_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr4_table && pinfo->acm_lut_ltr4_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR4_COEF, pinfo->acm_lut_ltr4_table, pinfo->acm_lut_ltr4_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr4_table is NULL or acm_lut_ltr4_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr4_table is NULL or acm_lut_ltr4_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr5_table && pinfo->acm_lut_ltr5_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR5_COEF, pinfo->acm_lut_ltr5_table, pinfo->acm_lut_ltr5_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr5_table is NULL or acm_lut_ltr5_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr5_table is NULL or acm_lut_ltr5_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr6_table && pinfo->acm_lut_ltr6_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR6_COEF, pinfo->acm_lut_ltr6_table, pinfo->acm_lut_ltr6_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr6_table is NULL or acm_lut_ltr6_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr6_table is NULL or acm_lut_ltr6_table_len less than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ltr7_table && pinfo->acm_lut_ltr7_table_len > 0) {
 		acm_set_lut(acm_lut_base + ACM_U_ACM_LTR7_COEF, pinfo->acm_lut_ltr7_table, pinfo->acm_lut_ltr7_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ltr4_table is NULL or acm_lut_ltr4_table_len less than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ltr4_table is NULL or acm_lut_ltr4_table_len less than 0!\n", index);
 		return;
 	}
 
@@ -2382,56 +2474,56 @@ static void acm_set_lut_LHx_table(char __iomem *acm_lut_base, struct hisi_panel_
 	if (pinfo->acm_lut_lh0_table && pinfo->acm_lut_lh0_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH0_COFF, pinfo->acm_lut_lh0_table, pinfo->acm_lut_lh0_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh0_table is NULL or acm_lut_lh0_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh0_table is NULL or acm_lut_lh0_table_lenless than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lh1_table && pinfo->acm_lut_lh1_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH1_COFF, pinfo->acm_lut_lh1_table, pinfo->acm_lut_lh1_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh1_table is NULL or acm_lut_lh1_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh1_table is NULL or acm_lut_lh1_table_lenless than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lh2_table && pinfo->acm_lut_lh2_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH2_COFF, pinfo->acm_lut_lh2_table, pinfo->acm_lut_lh2_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh2_table is NULL or acm_lut_lh2_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh2_table is NULL or acm_lut_lh2_table_lenless than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lh3_table && pinfo->acm_lut_lh3_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH3_COFF, pinfo->acm_lut_lh3_table, pinfo->acm_lut_lh3_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh3_table is NULL or acm_lut_lh3_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh3_table is NULL or acm_lut_lh3_table_lenless than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lh4_table && pinfo->acm_lut_lh4_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH4_COFF, pinfo->acm_lut_lh4_table, pinfo->acm_lut_lh4_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh4_table is NULL or acm_lut_lh4_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh4_table is NULL or acm_lut_lh4_table_lenless than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lh5_table && pinfo->acm_lut_lh5_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH5_COFF, pinfo->acm_lut_lh5_table, pinfo->acm_lut_lh5_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh5_table is NULL or acm_lut_lh5_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh5_table is NULL or acm_lut_lh5_table_lenless than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lh6_table && pinfo->acm_lut_lh6_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH6_COFF, pinfo->acm_lut_lh6_table, pinfo->acm_lut_lh6_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh6_table is NULL or acm_lut_lh6_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh6_table is NULL or acm_lut_lh6_table_lenless than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_lh7_table && pinfo->acm_lut_lh7_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_LH7_COFF, pinfo->acm_lut_lh7_table, pinfo->acm_lut_lh7_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_lh7_table is NULL or acm_lut_lh7_table_lenless than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_lh7_table is NULL or acm_lut_lh7_table_lenless than 0!\n", index);
 		return;
 	}
 
@@ -2442,56 +2534,56 @@ static void acm_set_lut_CHx_table(char __iomem *acm_lut_base, struct hisi_panel_
 	if (pinfo->acm_lut_ch0_table && pinfo->acm_lut_ch0_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH0_COFF, pinfo->acm_lut_ch0_table, pinfo->acm_lut_ch0_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch0_table is NULL or acm_lut_ch0_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch0_table is NULL or acm_lut_ch0_table_len than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ch1_table && pinfo->acm_lut_ch1_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH1_COFF, pinfo->acm_lut_ch1_table, pinfo->acm_lut_ch1_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch1_table is NULL or acm_lut_ch1_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch1_table is NULL or acm_lut_ch1_table_len than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ch2_table && pinfo->acm_lut_ch2_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH2_COFF, pinfo->acm_lut_ch2_table, pinfo->acm_lut_ch2_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch2_table is NULL or acm_lut_ch2_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch2_table is NULL or acm_lut_ch2_table_len than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ch3_table && pinfo->acm_lut_ch3_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH3_COFF, pinfo->acm_lut_ch3_table, pinfo->acm_lut_ch3_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch3_table is NULL or acm_lut_ch3_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch3_table is NULL or acm_lut_ch3_table_len than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ch4_table && pinfo->acm_lut_ch4_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH4_COFF, pinfo->acm_lut_ch4_table, pinfo->acm_lut_ch4_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch4_table is NULL or acm_lut_ch4_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch4_table is NULL or acm_lut_ch4_table_len than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ch5_table && pinfo->acm_lut_ch5_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH5_COFF, pinfo->acm_lut_ch5_table, pinfo->acm_lut_ch5_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch5_table is NULL or acm_lut_ch5_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch5_table is NULL or acm_lut_ch5_table_len than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ch6_table && pinfo->acm_lut_ch6_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH6_COFF, pinfo->acm_lut_ch6_table, pinfo->acm_lut_ch6_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch6_table is NULL or acm_lut_ch6_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch6_table is NULL or acm_lut_ch6_table_len than 0!\n", index);
 		return;
 	}
 
 	if (pinfo->acm_lut_ch7_table && pinfo->acm_lut_ch7_table_len > 0) {
 		acm_set_lut_lh(acm_lut_base + ACM_U_ACM_CH7_COFF, pinfo->acm_lut_ch7_table, pinfo->acm_lut_ch7_table_len);
 	} else {
-		HISI_FB_ERR("fb%d, acm_lut_ch7_table is NULL or acm_lut_ch7_table_len than 0!\n", index);
+		HISI_FB_INFO("fb%d, acm_lut_ch7_table is NULL or acm_lut_ch7_table_len than 0!\n", index);
 		return;
 	}
 	return;

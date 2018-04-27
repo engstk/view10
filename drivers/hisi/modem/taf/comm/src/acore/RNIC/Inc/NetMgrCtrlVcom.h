@@ -96,12 +96,12 @@ extern "C" {
 #define NM_CTRL_DEVICE_NAME             "nmctrlvcom"
 
 #define NM_CTRL_PRINT_INFO(fmt, ...) \
-    printk(KERN_ERR fmt, ##__VA_ARGS__)
+    printk(KERN_INFO fmt, ##__VA_ARGS__)
 /* printk(KERN_INFO fmt, ##__VA_ARGS__) */
 
 
 #define NM_CTRL_PRINT_WARN(fmt, ...) \
-    printk(KERN_ERR fmt, ##__VA_ARGS__)
+    printk(KERN_WARNING fmt, ##__VA_ARGS__)
 /* printk(KERN_WARNING fmt, ##__VA_ARGS__) */
 
 #define NM_CTRL_PRINT_ERR(fmt, ...) \
@@ -157,6 +157,7 @@ typedef struct
     wait_queue_head_t                   stReadInq;
     spinlock_t                          stListLock;             /* 新增一个成员，定义一个spin锁,访问链表时需要加锁 */
     LIST_HEAD_STRU                      stListHead;
+    LIST_HEAD_STRU                      stLowPriListHead;
     unsigned int                        ulMajorNum;
     unsigned int                        ulDataFlg;
 }NM_CTRL_CTX_STRU;

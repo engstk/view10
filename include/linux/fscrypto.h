@@ -18,6 +18,7 @@
 #include <crypto/aead.h>
 #include <uapi/linux/fs.h>
 
+#define FS_KEY_DERIVATION_PUBKEY_SIZE		64
 #define FS_KEY_DERIVATION_NONCE_SIZE		64
 #define FS_KEY_DERIVATION_IV_SIZE		16
 #define FS_KEY_DERIVATION_TAG_SIZE		16
@@ -196,6 +197,8 @@ struct fscrypt_operations {
 	bool (*is_encrypted_fixed)(struct inode *);
 	bool (*empty_dir)(struct inode *);
 	unsigned (*max_namelen)(struct inode *);
+	int (*get_keyinfo)(struct inode *, void *, int *);
+	int (*is_permitted_context)(struct inode *, struct inode *);
 };
 
 static inline bool fscrypt_dummy_context_enabled(struct inode *inode)

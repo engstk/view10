@@ -21,6 +21,7 @@
 /*get key from HISEE*/
 #define KEY_NOT_READY 0
 #define KEY_READY 1
+#define KEY_REQ_FAILED 2
 
 #define RPMB_DRIVER_IS_NOT_READY 0
 #define RPMB_DRIVER_IS_READY 1
@@ -56,6 +57,7 @@
 #define RPMB_SVC_REQUEST_ADDR 0xc600FF04
 #define RPMB_SVC_SET_KEY 0xc600FF05
 #define RPMB_SVC_REQUEST_DONE 0xc600FF06
+#define RPMB_SVC_GET_DEV_VER 0xc600FFFC
 
 #define RPMB_SVC_SECURE_OS_INFO 0x8600FF10
 
@@ -69,6 +71,7 @@
 #define RPMB_SVC_PARTITION 0xc600FFF8
 #define RPMB_SVC_MULTI_KEY 0xc600FFF9
 #define RPMB_SVC_CONFIG_VIEW 0xc600FFFA
+#define RPMB_SVC_MULTI_KEY_STATUS 0xc600FFFB
 /* Request codes */
 #define RPMB_REQ_KEY 1
 #define RPMB_REQ_WCOUNTER 2
@@ -95,17 +98,18 @@
 #define RPMB_ERR_MSK 0x7
 
 /* rpmb non-standard err code */
-#define RPMB_EXCEED_PART 0xFF01
-#define RPMB_UNKNOWN_PART 0xFF02
-#define RPMB_EXCEED_BUF 0xFF03
-#define RPMB_ERR_MMC_ERR 0xFF04
-#define RPMB_ERR_BLKDEV 0xFF05
-#define RPMB_ERR_MEMALOC 0xFF06
-#define RPMB_ERR_INIT 0xFF07
-#define RPMB_ERR_IOCTL 0xFF08
-#define RPMB_ERR_SET_KEY 0xFF09
-#define RPMB_ERR_GET_COUNT 0xFF0A
-#define RPMB_ERR_TIMEOUT 0xFF0B
+#define  RPMB_EXCEED_PART     0xFF01
+#define  RPMB_UNKNOWN_PART    0xFF02
+#define  RPMB_EXCEED_BUF      0xFF03
+#define  RPMB_ERR_MMC_ERR     0xFF04
+#define  RPMB_ERR_BLKDEV      0xFF05
+#define  RPMB_ERR_MEMALOC     0xFF06
+#define  RPMB_ERR_INIT        0xFF07
+#define  RPMB_ERR_IOCTL       0xFF08
+#define  RPMB_ERR_SET_KEY     0xFF09
+#define  RPMB_ERR_GET_COUNT   0xFF0A
+#define  RPMB_ERR_TIMEOUT     0xFF0B
+#define  RPMB_ERR_DEV_VER     0xFF0C
 /* Sizes of RPMB data frame */
 #define RPMB_SZ_STUFF 196
 #define RPMB_SZ_MAC 32
@@ -161,6 +165,7 @@ struct request_info {
 	unsigned char *des_buf;
 	unsigned int counter;
 	enum rpmb_state state;
+	uint8_t rpmb_region_num;
 	struct _current_rqst {
 		unsigned int offset; /* offset upon to request_info.base */
 		unsigned int blks;   /* current request size */
@@ -175,14 +180,17 @@ struct request_info {
 #define MAX_HAMC_BUF_SZ (10 * 1024)
 #define RPMB_TIMEOUT_TIME_IN_KERNEL 800000000/*may be in kernel we think 800ms is abnormal*/
 #define RPMB_MARK_EXIST_STATUS 0x5A5A
+
 struct rpmb_request {
 	struct rpmb_frame frame[MAX_RPMB_FRAME];
-	struct rpmb_frame status_frame;
 	unsigned char hmac_buf[MAX_HAMC_BUF_SZ];
+	struct rpmb_frame status_frame;
+	struct rpmb_frame key_frame;
 	struct request_info info;
 	uint16_t key_frame_status;
 	uint16_t rpmb_request_status;
 	uint16_t rpmb_exception_status;
+	enum rpmb_version dev_ver;
 	struct _rpmb_debug {
 		uint64_t partition_size;
 		uint64_t result;
@@ -198,6 +206,7 @@ struct rpmb_request {
 		uint16_t read_check;
 		uint8_t capability_times;
 		uint8_t multi_region_num;
+		uint8_t partition_id;
 	} rpmb_debug;
 };
 

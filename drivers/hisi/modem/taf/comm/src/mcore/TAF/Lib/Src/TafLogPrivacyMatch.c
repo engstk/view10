@@ -70,25 +70,7 @@
 /*****************************************************************************
   3 函数实现
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : TAF_AppMnCallBackCsCallIsNeedLogPrivacy
- 功能描述  : 判断MN_CALLBACK_CS_CALL哪些event需要脱敏处理
- 输入参数  : MN_CALL_EVENT_ENUM_U32              enEvtId
- 输出参数  : 无
- 返 回 值  : 当前的event是否需要脱敏
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : y00307564
-    修改内容   : 新生成函数
-
-  2.日    期   : 2017年03月30日
-    作    者   : w00351686
-    修改内容   : 新增enEvtId判断
-
-*****************************************************************************/
 VOS_UINT32 TAF_AppMnCallBackCsCallIsNeedLogPrivacy(
     MN_CALL_EVENT_ENUM_U32              enEvtId
 )
@@ -137,21 +119,7 @@ VOS_UINT32 TAF_AppMnCallBackCsCallIsNeedLogPrivacy(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_MnCallBackSsLcsEvtIsNeedLogPrivacy
- 功能描述  : 判断MN_CALLBACK_SS LCS事件中的哪些enEvtId需要脱敏处理
- 输入参数  : TAF_SSA_EVT_ID_ENUM_UINT32              enEvtId
- 输出参数  : 无
- 返 回 值  : 当前的ucSsEvent是否需要脱敏
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_MnCallBackSsLcsEvtIsNeedLogPrivacy(
     TAF_SSA_EVT_ID_ENUM_UINT32          enEvtId
 )
@@ -175,21 +143,7 @@ VOS_UINT32 TAF_MnCallBackSsLcsEvtIsNeedLogPrivacy(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PrivacyMatchAppMnCallBackCsCall
- 功能描述  : MN_CALLBACK_CS_CALL脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : y00307564
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_PrivacyMatchAppMnCallBackCsCall(
     MsgBlock                           *pstMsg
 )
@@ -214,7 +168,7 @@ VOS_VOID* TAF_PrivacyMatchAppMnCallBackCsCall(
     ulLength = pstAtIndEvt->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请消息 */
-    pstPrivacyAtIndEvt = (MN_AT_IND_EVT_STRU *)VOS_MemAlloc(WUEPS_PID_TAF,
+    pstPrivacyAtIndEvt = (MN_AT_IND_EVT_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                             DYNAMIC_MEM_PT,
                                                             ulLength);
 
@@ -239,21 +193,7 @@ VOS_VOID* TAF_PrivacyMatchAppMnCallBackCsCall(
     return (VOS_VOID *)pstPrivacyAtIndEvt;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppEconfDialReq
- 功能描述  : TAF_CALL_APP_ECONF_DIAL_REQ的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppEconfDialReq(
     MsgBlock                           *pstMsg
 )
@@ -289,21 +229,7 @@ VOS_VOID* AT_PrivacyMatchCallAppEconfDialReq(
     return (VOS_VOID *)pstEconfDialReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchRegisterSsMsg
- 功能描述  : TAF_MSG_REGISTERSS_MSG的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchRegisterSsMsg(
     MsgBlock                           *pstMsg
 )
@@ -347,21 +273,7 @@ VOS_VOID* AT_PrivacyMatchRegisterSsMsg(
     return (VOS_VOID *)pstRegisterSs;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchProcessUssMsg
- 功能描述  : TAF_MSG_PROCESS_USS_MSG的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchProcessUssMsg(
     MsgBlock                           *pstMsg
 )
@@ -400,21 +312,7 @@ VOS_VOID* AT_PrivacyMatchProcessUssMsg(
     return (VOS_VOID *)pstProcessUss;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppOrigReq
- 功能描述  : MN_CALL_APP_ORIG_REQ的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppOrigReq(
     MsgBlock                           *pstMsg
 )
@@ -455,21 +353,7 @@ VOS_VOID* AT_PrivacyMatchCallAppOrigReq(
     return (VOS_VOID *)pstCallOrigReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppSupsCmdReq
- 功能描述  : MN_CALL_APP_SUPS_CMD_REQ的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppSupsCmdReq(
     MsgBlock                           *pstMsg
 )
@@ -510,21 +394,7 @@ VOS_VOID* AT_PrivacyMatchCallAppSupsCmdReq(
     return (VOS_VOID *)pstSupsCmdReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppStartDtmfReq
- 功能描述  : MN_CALL_APP_START_DTMF_REQ的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppStartDtmfReq(
     MsgBlock                           *pstMsg
 )
@@ -560,21 +430,7 @@ VOS_VOID* AT_PrivacyMatchCallAppStartDtmfReq(
     return (VOS_VOID *)pstStartDtmfReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppStopDtmfReq
- 功能描述  : MN_CALL_APP_STOP_DTMF_REQ的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppStopDtmfReq(
     MsgBlock                           *pstMsg
 )
@@ -610,21 +466,7 @@ VOS_VOID* AT_PrivacyMatchCallAppStopDtmfReq(
     return (VOS_VOID *)pstStopDtmfReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppCustomEccNumReq
- 功能描述  : MN_CALL_APP_CUSTOM_ECC_NUM_REQ的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppCustomEccNumReq(
     MsgBlock                           *pstMsg
 )
@@ -660,21 +502,7 @@ VOS_VOID* AT_PrivacyMatchCallAppCustomEccNumReq(
     return (VOS_VOID *)pstCustomEccNumReq;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PrivacyMatchMnCallBackSsLcsEvt
- 功能描述  : MN_CALLBACK_SS中和LCS事件上报相关的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_PrivacyMatchMnCallBackSsLcsEvt(
     MsgBlock                           *pstMsg
 )
@@ -696,7 +524,7 @@ VOS_VOID* TAF_PrivacyMatchMnCallBackSsLcsEvt(
     }
 
     /* 申请内存，后续统一由底层释放 */
-    pstPrivacySsaEvt = (TAF_SSA_EVT_STRU *)VOS_MemAlloc(WUEPS_PID_TAF,
+    pstPrivacySsaEvt = (TAF_SSA_EVT_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                         DYNAMIC_MEM_PT,
                                                         ulLength);
 
@@ -726,21 +554,7 @@ VOS_VOID* TAF_PrivacyMatchMnCallBackSsLcsEvt(
     return (VOS_VOID *)pstPrivacySsaEvt;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PrivacyMatchMnCallBackSsLcsEvt
- 功能描述  : MN_CALLBACK_SS中和呼叫无关事件上报相关的脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_PrivacyMatchMnCallBackSsAtIndEvt(
     MsgBlock                           *pstMsg
 )
@@ -754,7 +568,7 @@ VOS_VOID* TAF_PrivacyMatchMnCallBackSsAtIndEvt(
     ulLength    = pstAtIndEvt->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请内存，后续统一由底层释放 */
-    pstPrivacyAtIndEvt = (MN_AT_IND_EVT_STRU *)VOS_MemAlloc(WUEPS_PID_TAF,
+    pstPrivacyAtIndEvt = (MN_AT_IND_EVT_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                             DYNAMIC_MEM_PT,
                                                             ulLength);
 
@@ -800,21 +614,7 @@ VOS_VOID* TAF_PrivacyMatchMnCallBackSsAtIndEvt(
     return (VOS_VOID *)pstPrivacyAtIndEvt;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PrivacyMatchAppMnCallBackSs
- 功能描述  : MN_CALLBACK_SS脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_PrivacyMatchAppMnCallBackSs(
     MsgBlock                           *pstMsg
 )
@@ -843,21 +643,7 @@ VOS_VOID* TAF_PrivacyMatchAppMnCallBackSs(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_CALL_PrivacyMatchAppCnapQryCnf
- 功能描述  : ID_TAF_CALL_APP_CNAP_QRY_CNF脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_CALL_PrivacyMatchAppCnapQryCnf(
     MsgBlock                           *pstMsg
 )
@@ -869,7 +655,7 @@ VOS_VOID* TAF_CALL_PrivacyMatchAppCnapQryCnf(
     ulLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请内存，后续统一由底层释放 */
-    pstCnapQryCnf = (TAF_CALL_APP_CNAP_QRY_CNF_STRU *)VOS_MemAlloc(WUEPS_PID_TAF,
+    pstCnapQryCnf = (TAF_CALL_APP_CNAP_QRY_CNF_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                    DYNAMIC_MEM_PT,
                                                                    ulLength);
 
@@ -893,21 +679,7 @@ VOS_VOID* TAF_CALL_PrivacyMatchAppCnapQryCnf(
     return (VOS_VOID *)pstCnapQryCnf;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_CALL_PrivacyMatchAppCnapInfoInd
- 功能描述  : ID_TAF_CALL_APP_CNAP_INFO_IND脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月29日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_CALL_PrivacyMatchAppCnapInfoInd(
     MsgBlock                           *pstMsg
 )
@@ -919,7 +691,7 @@ VOS_VOID* TAF_CALL_PrivacyMatchAppCnapInfoInd(
     ulLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请内存，后续统一由底层释放 */
-    pstCnapInfoInd = (TAF_CALL_APP_CNAP_INFO_IND_STRU *)VOS_MemAlloc(WUEPS_PID_TAF,
+    pstCnapInfoInd = (TAF_CALL_APP_CNAP_INFO_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                      DYNAMIC_MEM_PT,
                                                                      ulLength);
 
@@ -943,21 +715,7 @@ VOS_VOID* TAF_CALL_PrivacyMatchAppCnapInfoInd(
     return (VOS_VOID *)pstCnapInfoInd;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PrivacyMatchAtCallBackQryProc
- 功能描述  : MN_CALLBACK_QRY脱敏处理函数
- 输入参数  : MsgBlock                           *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID*
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_PrivacyMatchAtCallBackQryProc(
     MsgBlock                           *pstMsg
 )
@@ -984,7 +742,7 @@ VOS_VOID* TAF_PrivacyMatchAtCallBackQryProc(
     ulLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请消息 */
-    pucSendAtMsg = (VOS_UINT8 *)VOS_MemAlloc(WUEPS_PID_TAF,
+    pucSendAtMsg = (VOS_UINT8 *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                              DYNAMIC_MEM_PT,
                                              ulLength);
 
@@ -1017,21 +775,7 @@ VOS_VOID* TAF_PrivacyMatchAtCallBackQryProc(
     return (VOS_VOID *)pucSendAtMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XSMS_PrivacyMatchAppMsgTypeRcvInd
- 功能描述  : 消息TAF_XSMS_APP_MSG_TYPE_RCV_IND脱敏函数
- 输入参数  : MsgBlock * : 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *        : 脱敏后的消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月14日
-    作    者   : z00408428
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID*  TAF_XSMS_PrivacyMatchAppMsgTypeRcvInd(
     MsgBlock                           *pstMsg
 )
@@ -1044,7 +788,7 @@ VOS_VOID*  TAF_XSMS_PrivacyMatchAppMsgTypeRcvInd(
     ulLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请内存 */
-    pstMatchTafXsmsAppAtCnf  = (TAF_XSMS_APP_AT_CNF_STRU *)VOS_MemAlloc(UEPS_PID_XSMS,
+    pstMatchTafXsmsAppAtCnf  = (TAF_XSMS_APP_AT_CNF_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                         DYNAMIC_MEM_PT,
                                                                         ulLength);
     /* 如果没有申请到内存，则返回空指针 */
@@ -1067,21 +811,7 @@ VOS_VOID*  TAF_XSMS_PrivacyMatchAppMsgTypeRcvInd(
     return (VOS_VOID *)pstMatchTafXsmsAppAtCnf;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XSMS_PrivacyMatchAppMsgTypeWriteCnf
- 功能描述  : 消息TAF_XSMS_APP_MSG_TYPE_WRITE_CNF脱敏函数
- 输入参数  : MsgBlock * : 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *        : 脱敏后的消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月8日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID*  TAF_XSMS_PrivacyMatchAppMsgTypeWriteCnf(
     MsgBlock                           *pstMsg
 )
@@ -1094,9 +824,10 @@ VOS_VOID*  TAF_XSMS_PrivacyMatchAppMsgTypeWriteCnf(
     ulLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请内存 */
-    pstMatchTafXsmsAppAtCnf  = (TAF_XSMS_APP_AT_CNF_STRU *)VOS_MemAlloc(UEPS_PID_XSMS,
+    pstMatchTafXsmsAppAtCnf  = (TAF_XSMS_APP_AT_CNF_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                         DYNAMIC_MEM_PT,
                                                                         ulLength);
+
     /* 如果没有申请到内存，则返回空指针 */
     if (VOS_NULL_PTR == pstMatchTafXsmsAppAtCnf)
     {
@@ -1117,21 +848,7 @@ VOS_VOID*  TAF_XSMS_PrivacyMatchAppMsgTypeWriteCnf(
     return (VOS_VOID *)pstMatchTafXsmsAppAtCnf;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppSendCustomDialReq
- 功能描述  : TAF_CALL_APP_SEND_CUSTOM_DIAL_REQ脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : y00307564
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppSendCustomDialReq(
     MsgBlock                           *pstMsg
 )
@@ -1163,21 +880,7 @@ VOS_VOID* AT_PrivacyMatchCallAppSendCustomDialReq(
     return (VOS_VOID *)pstCustomDialReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchAppMsgTypeSendReq
- 功能描述  : 消息TAF_XSMS_APP_MSG_TYPE_SEND_REQ脱敏函数
- 输入参数  : MsgBlock * : 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *        : 脱敏后的消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月14日
-    作    者   : z00408428
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID*  AT_PrivacyMatchAppMsgTypeSendReq(
     MsgBlock                           *pstMsg
 )
@@ -1225,21 +928,8 @@ VOS_VOID*  AT_PrivacyMatchAppMsgTypeSendReq(
     return (VOS_VOID *)pstMatchTafXsmsSendMsgReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCposSetReq
- 功能描述  : 消息ID_AT_MTA_CPOS_SET_REQ脱敏函数
- 输入参数  : MsgBlock * : 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *        : 脱敏后的消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月10日
-    作    者   : h00360002
-    修改内容   : 新生成函数
 
-*****************************************************************************/
 VOS_VOID*  AT_PrivacyMatchCposSetReq(
     MsgBlock                           *pstMsg
 )
@@ -1278,21 +968,7 @@ VOS_VOID*  AT_PrivacyMatchCposSetReq(
 
     return (VOS_VOID *)pstMatchAppMsgCposSetReq;
 }
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchMeidSetReq
- 功能描述  : 消息ID_AT_MTA_MEID_SET_REQ脱敏函数
- 输入参数  : MsgBlock * : 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *        : 脱敏后的消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : z00382546
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID*  AT_PrivacyMatchMeidSetReq(
     MsgBlock                           *pstMsg
 )
@@ -1332,21 +1008,7 @@ VOS_VOID*  AT_PrivacyMatchMeidSetReq(
     return (VOS_VOID *)pstMatchAppMsgSetReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchAppMsgTypeWriteReq
- 功能描述  : 消息TAF_XSMS_APP_MSG_TYPE_WRITE_REQ脱敏函数
- 输入参数  : MsgBlock * : 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *        : 脱敏后的消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月14日
-    作    者   : z00408428
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID*  AT_PrivacyMatchAppMsgTypeWriteReq(
     MsgBlock                           *pstMsg
 )
@@ -1394,21 +1056,7 @@ VOS_VOID*  AT_PrivacyMatchAppMsgTypeWriteReq(
     return (VOS_VOID *)pstMatchTafXsmsWriteMsgReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchAppMsgTypeDeleteReq
- 功能描述  : 消息TAF_XSMS_APP_MSG_TYPE_DELETE_REQ脱敏函数
- 输入参数  : MsgBlock * : 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *        : 脱敏后的消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月14日
-    作    者   : z00408428
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID*  AT_PrivacyMatchAppMsgTypeDeleteReq(
     MsgBlock                           *pstMsg
 )
@@ -1441,21 +1089,8 @@ VOS_VOID*  AT_PrivacyMatchAppMsgTypeDeleteReq(
     return (VOS_VOID *)pstMatchTafXsmsDeleteMsgReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppSendFlashReq
- 功能描述  : TAF_CALL_APP_SEND_FLASH_REQ脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : y00307564
-    修改内容   : 新生成函数
 
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppSendFlashReq(
     MsgBlock                           *pstMsg
 )
@@ -1489,21 +1124,7 @@ VOS_VOID* AT_PrivacyMatchCallAppSendFlashReq(
     return (VOS_VOID *)pstFlashReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppSendBurstReq
- 功能描述  : TAF_CALL_APP_SEND_BURST_DTMF_REQ脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : y00307564
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppSendBurstReq(
     MsgBlock                           *pstMsg
 )
@@ -1539,21 +1160,7 @@ VOS_VOID* AT_PrivacyMatchCallAppSendBurstReq(
     return (VOS_VOID *)pstBurstDtmfReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCallAppSendContReq
- 功能描述  : TAF_CALL_APP_SEND_CONT_DTMF_REQ脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : y00307564
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCallAppSendContReq(
     MsgBlock                           *pstMsg
 )
@@ -1582,21 +1189,7 @@ VOS_VOID* AT_PrivacyMatchCallAppSendContReq(
     return (VOS_VOID *)pstConttDtmfReq;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCagpsPosInfoRsp
- 功能描述  : ID_AT_XPDS_GPS_POS_INFO_RSP消息脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月18日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCagpsPosInfoRsp(
     MsgBlock                           *pstMsg
 )
@@ -1628,21 +1221,7 @@ VOS_VOID* AT_PrivacyMatchCagpsPosInfoRsp(
     return (VOS_VOID *)pstPrivacyMatchMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCagpsPrmInfoRsp
- 功能描述  : ID_AT_XPDS_GPS_PRM_INFO_RSP消息脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月18日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCagpsPrmInfoRsp(
     MsgBlock                           *pstMsg
 )
@@ -1681,21 +1260,7 @@ VOS_VOID* AT_PrivacyMatchCagpsPrmInfoRsp(
     return (VOS_VOID *)pstPrivacyMatchMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchCagpsApForwardDataInd
- 功能描述  : ID_AT_XPDS_AP_FORWARD_DATA_IND消息脱敏处理函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月18日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchCagpsApForwardDataInd(
     MsgBlock                           *pstMsg
 )
@@ -1729,21 +1294,7 @@ VOS_VOID* AT_PrivacyMatchCagpsApForwardDataInd(
     return (VOS_VOID *)pstPrivacyMatchMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtGpsRefLocInfoCnf
- 功能描述  : 替换ID_XPDS_AT_GPS_REFLOC_INFO_CNF消息中位置信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsRefLocInfoCnf(
     MsgBlock                           *pstMsg
 )
@@ -1753,7 +1304,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsRefLocInfoCnf(
 
     ulMsgLength                 = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchRefLocInfo   = (XPDS_AT_GPS_REFLOC_INFO_CNF_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchRefLocInfo   = (XPDS_AT_GPS_REFLOC_INFO_CNF_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                                    DYNAMIC_MEM_PT,
                                                                                    ulMsgLength);
 
@@ -1776,21 +1327,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsRefLocInfoCnf(
     return (VOS_VOID *)pstPrivacyMatchRefLocInfo;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtGpsIonInfoInd
- 功能描述  : 替换ID_XPDS_AT_GPS_ION_INFO_IND消息中用户敏感信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsIonInfoInd(
     MsgBlock                           *pstMsg
 )
@@ -1800,7 +1337,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsIonInfoInd(
 
     ulMsgLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchIonInfo = (XPDS_AT_GPS_ION_INFO_IND_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchIonInfo = (XPDS_AT_GPS_ION_INFO_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                            DYNAMIC_MEM_PT,
                                                                            ulMsgLength);
 
@@ -1828,21 +1365,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsIonInfoInd(
     return (VOS_VOID *)pstPrivacyMatchIonInfo;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtGpsEphInfoInd
- 功能描述  : 替换ID_XPDS_AT_GPS_EPH_INFO_IND消息中用户敏感信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsEphInfoInd(
     MsgBlock                           *pstMsg
 )
@@ -1854,7 +1377,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsEphInfoInd(
 
     ulMsgLength             = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchEphInfo  = (XPDS_AT_GPS_EPH_INFO_IND_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchEphInfo  = (XPDS_AT_GPS_EPH_INFO_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                             DYNAMIC_MEM_PT,
                                                                             ulMsgLength);
 
@@ -1882,21 +1405,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsEphInfoInd(
     return (VOS_VOID *)pstPrivacyMatchEphInfo;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtGpsAlmInfoInd
- 功能描述  : 替换ID_XPDS_AT_GPS_ALM_INFO_IND消息中用户敏感信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsAlmInfoInd(
     MsgBlock                           *pstMsg
 )
@@ -1908,7 +1417,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsAlmInfoInd(
 
     ulMsgLength             = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchAlmInfo  = (XPDS_AT_GPS_ALM_INFO_IND_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchAlmInfo  = (XPDS_AT_GPS_ALM_INFO_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                             DYNAMIC_MEM_PT,
                                                                             ulMsgLength);
 
@@ -1937,21 +1446,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsAlmInfoInd(
     return (VOS_VOID *)pstPrivacyMatchAlmInfo;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtGpsPdePosiInfoInd
- 功能描述  : 替换ID_XPDS_AT_GPS_PDE_POSI_INFO_IND消息中用户敏感信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsPdePosiInfoInd(
     MsgBlock                           *pstMsg
 )
@@ -1961,7 +1456,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsPdePosiInfoInd(
 
     ulMsgLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchPosiInfo = (XPDS_AT_GPS_PDE_POSI_INFO_IND_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchPosiInfo = (XPDS_AT_GPS_PDE_POSI_INFO_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                                  DYNAMIC_MEM_PT,
                                                                                  ulMsgLength);
 
@@ -1995,21 +1490,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsPdePosiInfoInd(
     return (VOS_VOID *)pstPrivacyMatchPosiInfo;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtGpsAcqAssistDataInd
- 功能描述  : 替换ID_XPDS_AT_GPS_ACQ_ASSIST_DATA_IND消息中用户敏感信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsAcqAssistDataInd(
     MsgBlock                           *pstMsg
 )
@@ -2021,7 +1502,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsAcqAssistDataInd(
 
     ulMsgLength                 = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchAssistData   = (XPDS_AT_GPS_ACQ_ASSIST_DATA_IND_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchAssistData   = (XPDS_AT_GPS_ACQ_ASSIST_DATA_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                                        DYNAMIC_MEM_PT,
                                                                                        ulMsgLength);
 
@@ -2049,21 +1530,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtGpsAcqAssistDataInd(
     return (VOS_VOID *)pstPrivacyMatchAssistData;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtApReverseDataInd
- 功能描述  : 替换ID_XPDS_AT_AP_REVERSE_DATA_IND消息中用户敏感信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtApReverseDataInd(
     MsgBlock                           *pstMsg
 )
@@ -2076,7 +1543,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtApReverseDataInd(
 
     ulMsgLength                 = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchReverseData = (XPDS_AT_AP_REVERSE_DATA_IND_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchReverseData = (XPDS_AT_AP_REVERSE_DATA_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                                   DYNAMIC_MEM_PT,
                                                                                   ulMsgLength);
 
@@ -2102,21 +1569,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtApReverseDataInd(
     return (VOS_VOID *)pstPrivacyMatchReverseData;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_PrivacyMatchAtUtsGpsPosInfoInd
- 功能描述  : 替换ID_XPDS_AT_UTS_GPS_POS_INFO_IND消息中用户敏感信息
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_PrivacyMatchAtUtsGpsPosInfoInd(
     MsgBlock                           *pstMsg
 )
@@ -2126,7 +1579,7 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtUtsGpsPosInfoInd(
 
     ulMsgLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-    pstPrivacyMatchUtsPosInfo = (XPDS_AT_UTS_GPS_POS_INFO_IND_STRU *)VOS_MemAlloc(UEPS_PID_XPDS,
+    pstPrivacyMatchUtsPosInfo = (XPDS_AT_UTS_GPS_POS_INFO_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                                   DYNAMIC_MEM_PT,
                                                                                   ulMsgLength);
 
@@ -2149,21 +1602,39 @@ VOS_VOID* TAF_XPDS_PrivacyMatchAtUtsGpsPosInfoInd(
 }
 
 
-/*****************************************************************************
- 函 数 名  : TAF_MTA_PrivacyMatchCposrInd
- 功能描述  : ID_MTA_AT_CPOSR_IND脱敏处理函数
- 输入参数  : MsgBlock                           *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
+VOS_VOID* TAF_PrivacyMatchCallAppEncryptVoiceReq(
+    MsgBlock                           *pstMsg
+)
+{
+    TAF_CALL_APP_ENCRYPT_VOICE_REQ_STRU                    *pstEncryptVoiceReq = VOS_NULL_PTR;
+    VOS_UINT32                                              ulLength;
 
- 修改历史      :
-  1.日    期   : 2017年4月5日
-    作    者   : h00360002
-    修改内容   : 新生成函数
+    ulLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
-*****************************************************************************/
+    pstEncryptVoiceReq  = (TAF_CALL_APP_ENCRYPT_VOICE_REQ_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
+                                                                              DYNAMIC_MEM_PT,
+                                                                              ulLength);
+
+    if (VOS_NULL_PTR == pstEncryptVoiceReq)
+    {
+        return VOS_NULL_PTR;
+    }
+
+    TAF_MEM_CPY_S(pstEncryptVoiceReq,
+                  sizeof(TAF_CALL_APP_ENCRYPT_VOICE_REQ_STRU),
+                  pstMsg,
+                  ulLength);
+
+    TAF_MEM_SET_S(&(pstEncryptVoiceReq->stDialNumber),
+                  sizeof(TAF_ECC_CALL_BCD_NUM_STRU),
+                  0,
+                  sizeof(TAF_ECC_CALL_BCD_NUM_STRU));
+
+    return (VOS_VOID *)pstEncryptVoiceReq;
+}
+
+
+
 VOS_VOID* TAF_MTA_PrivacyMatchCposrInd(
     MsgBlock                           *pstMsg
 )
@@ -2177,7 +1648,7 @@ VOS_VOID* TAF_MTA_PrivacyMatchCposrInd(
 
 
     /* 申请内存，后续统一由底层释放 */
-    pstSndMsg = (AT_MTA_MSG_STRU *)VOS_MemAlloc(UEPS_PID_MTA,
+    pstSndMsg = (AT_MTA_MSG_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                 DYNAMIC_MEM_PT,
                                                 ulLength);
 
@@ -2203,21 +1674,7 @@ VOS_VOID* TAF_MTA_PrivacyMatchCposrInd(
     return (VOS_VOID *)pstSndMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_MTA_PrivacyMatchAtMeidQryCnf
- 功能描述  : ID_MTA_AT_MEID_QRY_CNF脱敏处理函数
- 输入参数  : MsgBlock                           *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_MTA_PrivacyMatchAtMeidQryCnf(
     MsgBlock                           *pstMsg
 )
@@ -2231,7 +1688,7 @@ VOS_VOID* TAF_MTA_PrivacyMatchAtMeidQryCnf(
 
 
     /* 申请内存，后续统一由底层释放 */
-    pstSndMsg = (AT_MTA_MSG_STRU *)VOS_MemAlloc(UEPS_PID_MTA,
+    pstSndMsg = (AT_MTA_MSG_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                 DYNAMIC_MEM_PT,
                                                 ulLength);
 
@@ -2267,21 +1724,7 @@ VOS_VOID* TAF_MTA_PrivacyMatchAtMeidQryCnf(
     return (VOS_VOID *)pstSndMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_MTA_PrivacyMatchAtCgsnQryCnf
- 功能描述  : ID_MTA_AT_CGSN_QRY_CNF脱敏处理函数
- 输入参数  : MsgBlock                           *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_MTA_PrivacyMatchAtCgsnQryCnf(
     MsgBlock                           *pstMsg
 )
@@ -2295,7 +1738,7 @@ VOS_VOID* TAF_MTA_PrivacyMatchAtCgsnQryCnf(
 
 
     /* 申请内存，后续统一由底层释放 */
-    pstSndMsg = (AT_MTA_MSG_STRU *)VOS_MemAlloc(UEPS_PID_MTA,
+    pstSndMsg = (AT_MTA_MSG_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                 DYNAMIC_MEM_PT,
                                                 ulLength);
 
@@ -2323,21 +1766,7 @@ VOS_VOID* TAF_MTA_PrivacyMatchAtCgsnQryCnf(
 
 
 
-/*****************************************************************************
- 函 数 名  : TAF_MMA_PrivacyMatchAtUsimStatusInd
- 功能描述  : ID_TAF_MMA_USIM_STATUS_IND脱敏处理函数
- 输入参数  : MsgBlock                           *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_MMA_PrivacyMatchAtUsimStatusInd(
     MsgBlock                           *pstMsg
 )
@@ -2350,7 +1779,7 @@ VOS_VOID* TAF_MMA_PrivacyMatchAtUsimStatusInd(
 
 
     /* 申请内存，后续统一由底层释放 */
-    pstSndMsg = (AT_MMA_USIM_STATUS_IND_STRU *)VOS_MemAlloc(WUEPS_PID_MMA,
+    pstSndMsg = (AT_MMA_USIM_STATUS_IND_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                             DYNAMIC_MEM_PT,
                                                             ulLength);
 
@@ -2371,21 +1800,7 @@ VOS_VOID* TAF_MMA_PrivacyMatchAtUsimStatusInd(
     return (VOS_VOID *)pstSndMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_MMA_PrivacyMatchAtHomePlmnQryCnf
- 功能描述  : ID_TAF_MMA_HOME_PLMN_QRY_CNF脱敏处理函数
- 输入参数  : MsgBlock                           *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_MMA_PrivacyMatchAtHomePlmnQryCnf(
     MsgBlock                           *pstMsg
 )
@@ -2398,7 +1813,7 @@ VOS_VOID* TAF_MMA_PrivacyMatchAtHomePlmnQryCnf(
 
 
     /* 申请内存，后续统一由底层释放 */
-    pstSndMsg = (TAF_MMA_HOME_PLMN_QRY_CNF_STRU *)VOS_MemAlloc(WUEPS_PID_MMA,
+    pstSndMsg = (TAF_MMA_HOME_PLMN_QRY_CNF_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                                DYNAMIC_MEM_PT,
                                                                ulLength);
 
@@ -2419,21 +1834,7 @@ VOS_VOID* TAF_MMA_PrivacyMatchAtHomePlmnQryCnf(
     return (VOS_VOID *)pstSndMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_DRVAGENT_PrivacyMatchAtMsidQryCnf
- 功能描述  : DRV_AGENT_MSID_QRY_CNF脱敏处理函数
- 输入参数  : MsgBlock                           *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_DRVAGENT_PrivacyMatchAtMsidQryCnf(
     MsgBlock                           *pstMsg
 )
@@ -2446,7 +1847,7 @@ VOS_VOID* TAF_DRVAGENT_PrivacyMatchAtMsidQryCnf(
     ulLength = pstMsg->ulLength + VOS_MSG_HEAD_LENGTH;
 
     /* 申请内存，后续统一由底层释放 */
-    pstSndMsg = (DRV_AGENT_MSG_STRU *)VOS_MemAlloc(WUEPS_PID_DRV_AGENT,
+    pstSndMsg = (DRV_AGENT_MSG_STRU *)VOS_MemAlloc(pstMsg->ulSenderPid,
                                                    DYNAMIC_MEM_PT,
                                                    ulLength);
 

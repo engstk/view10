@@ -51,102 +51,38 @@
   1 头文件包含
 *****************************************************************************/
 
-#include <vos.h>
-#include <mdrv_diag_system.h>
 #include "product_config.h"
-#include "vos.h"
+#include <mdrv_diag_system.h>
 #include "NVIM_Interface.h"
-#include "omerrorlog.h"
 #include "AtAppVcomInterface.h"
 #include "nv_stru_sys.h"
 #include "acore_nv_stru_msp.h"
 #include "msp_diag_comm.h"
 #include  <linux/wakelock.h>
-//#include "diag_acore_common.h"
-//#include "diag_common.h"
-//#include "errlog_cfg.h"
+#include "msp_diag.h"
+#include "chr_om.h"
+#include "chr_cfg.h"
+
+
 
 
 
 #define    THIS_FILE_ID        PS_FILE_ID_OM_ERRORLOG_C
 
 
-/*****************************************************************************
-  2 全局变量定义
-*****************************************************************************/
-
-//#if(FEATURE_ON == FEATURE_PTM)
-#define    ERRLOG_IDLE         0
-#define    ERRLOG_BUSY         1
-
-#define    CHR_FAULTID_GUTL_MIN     (0x0)
-#define    CHR_FAULTID_GUTL_MAX     (0xA0)
-#define    CHR_FAULTID_CDMA_MIN     (0xA1)
-#define    CHR_FAULTID_CDMA_MAX     (0xCC)
-
-#define    CHR_FAULTID_NUM_MAX      (22)
-
 VOS_UINT32                              g_ulChrOmAcpuDbgFlag = VOS_FALSE;
 
-
-/* 用于记录Error Log收到和发送给Ap侧消息 */
-typedef struct
-{
-    VOS_UINT32                          ulFTMRcvNum;
-    VOS_UINT32                          ulFTMRcvLen;
-    VOS_UINT32                          ulErrLogRcvNum;
-    VOS_UINT32                          ulErrLogRcvLen;
-
-    VOS_UINT32                          ulFTMSendNum;
-    VOS_UINT32                          ulFTMSendLen;
-    VOS_UINT32                          ulErrLogSendNum;
-    VOS_UINT32                          ulErrLogSendLen;
-}OM_ERR_LOG_DEBUG_INFO;
-
-/* OM收到AP需要在全局变量中记录内容 */
-typedef struct
-{
-    VOS_UINT16                          usFaultId;          /* 本次请求的faultid */
-    VOS_UINT16                          usModemId;          /* 本次请求的modemid */
-    VOS_UINT32                          ulFaultNv;          /* 本次请求faultid对应的nvid */
-    VOS_UINT32                          ulAlarmIdNum;       /* 本次请求的alarm配置总数 */
-    VOS_UINT32                          ulErrLogReportSend; /* 记录需要上报alarm个数，差别在于可能某些pid在当前版本不存在 */
-    VOS_UINT32                          ulErrLogState;      /* 请求处理状态 */
-    VOS_UINT32                          ulMsgSN;
-    VOS_UINT32                          ulErrSendFlag[4];   /* 请求发送状态 */
-    VOS_UINT32                          ulErrRptFlag[4];    /* 请求回复状态 */
-    NV_ID_CHR_FAULTID_CONFIG_STRU       stFaultCfg;         /* 请求的NV配置 */
-    VOS_UINT32                         *pulFTMModule;
-    VOS_UINT32                          ulFTMReportSend;   /* 记录FTM需要上报组件 */
-}OM_APP_MSG_RECORD_STRU;
-
 OM_APP_MSG_RECORD_STRU                  g_stOmAppMsgRecord; /* OM收到AP需要在全局变量中记录内容 */
-
-/* OM获取到的NV需要在全局变量中记录内容 */
-typedef struct
-{
-    FAULTID_MAP                        *pstFaultIdMap;
-    CHR_ALARM                          *pstAlarmIdMap;
-    VOS_UINT32                          ulFaultIdNum;
-    VOS_UINT16                          usModemId;
-    VOS_UINT16                          usFaultId;
-    VOS_UINT8                           aucRsv[4];
-    
-}OM_APP_NV_RECORD_STRU;
-OM_APP_NV_RECORD_STRU                    g_stOmAppNvRecord;
       
 struct semaphore                        g_stOmRxErrorLogBuffSem;
-struct wake_lock                        chr_wakelock;
 
 OM_VCOM_DEBUG_INFO                      g_stErrLogVcomDebugInfo   = {0};
 
 OM_ERR_LOG_DEBUG_INFO                   g_stRcvUESendAP           = {0};
 
-HTIMER                                  g_AcpuErrLogFullTmr       = VOS_NULL_PTR ;
+HTIMER                                  g_AcpuErrLogFullTmr       = VOS_NULL_PTR ;/*查询上报起定时器*/
 
-VOS_SPINLOCK                            g_stVosErrLogSendSpinLock;  /* 自旋锁，用来作Err Log上报状态机的临界资源保护 */
-
-HTIMER                                  g_AcpuCltInfoFullTmr      = VOS_NULL_PTR ;
+HTIMER                                  g_AcpuCltInfoFullTmr      = VOS_NULL_PTR ;/*信息收集起定时器*/
 
 /* 新增下发上报请求时的时间戳，用于故障上报结束时的消息 */
 VOS_UINT64                              g_ulTriggerTime64Bit = 0;
@@ -157,108 +93,13 @@ NV_ID_CHR_C_CONFIG_CTRL_INFO_STRU       g_stChrFaultMapCdma = {0};
 /* 1表示超时后下次下发采集请求前，MTA上报的消息将不被OM处理 */
 VOS_UINT32                              g_AcpuCtlInfoCnfNotNeedProcess = 0;
 VOS_UINT8                               g_ucErrRptFlag[256] = {0};
-#define                                 OM_MSG_RECEIVE_FLAG               (1) 
-#define                                 OM_MSG_NO_RECEIVE_FLAG            (0) 
-/* 工程模式主动上报涉及PID */
-VOS_UINT32    g_aulModem0FTMDetail[OM_MAX_MODULE_ID]={
-                         I0_WUEPS_PID_MMC,I0_WUEPS_PID_MM,I0_WUEPS_PID_GMM,MSP_PID_DIAG_AGENT,
-                         0,               0,               0,              0,
-                         0,               0,               0,              0,
-                         WUEPS_PID_WRR,   0,               0,              DSP_PID_WPHY,
-                         I0_DSP_PID_APM,  I0_DSP_PID_GPHY, 0,              0,
-                         PS_PID_ERRC,     TPS_PID_RRC,     0,              0,
-                         PS_PID_MM,       PS_PID_ESM,      0,              0,
-                         0,               0,               0,              0};
 
-VOS_UINT32    g_aulModem1FTMDetail[OM_MAX_MODULE_ID]={
-                         I1_WUEPS_PID_MMC,I1_WUEPS_PID_MM,I1_WUEPS_PID_GMM,MSP_PID_DIAG_AGENT,
-                         0,               0,              0,               0,
-                         0,               0,              0,               0,
-                         WUEPS_PID_WRR,   0,              0,               DSP_PID_WPHY,
-                         I1_DSP_PID_APM,  I1_DSP_PID_GPHY,0,               0,
-                         PS_PID_ERRC,     TPS_PID_RRC,    0,               0,
-                         PS_PID_MM,       PS_PID_ESM,     0,               0,
-                         0,               0,              0,               0};
 
-VOS_UINT32    g_aulModem2FTMDetail[OM_MAX_MODULE_ID]={
-                         I2_WUEPS_PID_MMC,I2_WUEPS_PID_MM,I2_WUEPS_PID_GMM,MSP_PID_DIAG_AGENT,
-                         0,               0,              0,               0,
-                         0,               0,              0,               0,
-                         WUEPS_PID_WRR,   0,              0,               DSP_PID_WPHY,
-                         I2_DSP_PID_APM,  I2_DSP_PID_GPHY,0,               0,
-                         PS_PID_ERRC,     TPS_PID_RRC,    0,               0,
-                         PS_PID_MM,       PS_PID_ESM,     0,               0,
-                         0,               0,              0,               0};
+#define CHR_LogReport(fmt, ...)  \
+    DIAG_LogReport(DIAG_GEN_LOG_MODULE(0, 0, 1), MSP_PID_CHR, "chr_om", __LINE__, "%s:"fmt, __FUNCTION__, ##__VA_ARGS__)
 
-/* 工程模式命令上报组件对应PID */
-/* 数组中两个moduleID只是为了验证此功能增加，并没有实际用到 */
-APP_OM_FTM_MSG_PID_STRU    g_astModem0FTMMsgModule[]={
-                            {OM_ERR_LOG_MOUDLE_ID_IMS,  0},
-                            {OM_ERR_LOG_MOUDLE_ID_IMSA, 0},
-                           };
 
-/* 数组中两个moduleID只是为了验证此功能增加，并没有实际用到 */
-APP_OM_FTM_MSG_PID_STRU    g_astModem1FTMMsgModule[]={
-                            {OM_ERR_LOG_MOUDLE_ID_IMS,  0},
-                            {OM_ERR_LOG_MOUDLE_ID_IMSA, 0},
-                           };
 
-/* 数组中两个moduleID只是为了验证此功能增加，并没有实际用到 */
-APP_OM_FTM_MSG_PID_STRU    g_astModem2FTMMsgModule[]={
-                            {OM_ERR_LOG_MOUDLE_ID_IMS,  0},
-                            {OM_ERR_LOG_MOUDLE_ID_IMSA, 0},
-                           };
-
-#define BIT_N(num)          (0x01 << (num))
-
-#define OM_ACPU_RECV_USB        BIT_N(0)
-#define OM_ACPU_DISPATCH_MSG    BIT_N(1)
-#define OM_ACPU_SEND_SOCP       BIT_N(2)
-#define OM_ACPU_SEND_USB        BIT_N(3)
-#define OM_ACPU_USB_CB          BIT_N(4)
-#define OM_ACPU_SEND_USB_IND    BIT_N(5)
-#define OM_ACPU_ERRLOG_SEND     BIT_N(6)
-#define OM_ACPU_ERRLOG_RCV      BIT_N(7)
-#define OM_ACPU_ERRLOG_PRINT    BIT_N(8)
-#define OM_ACPU_RECV_SOCKET     BIT_N(9)
-#define OM_ACPU_SEND_SOCKET     BIT_N(10)
-#define OM_ACPU_DATA            BIT_N(11)
-#define OM_ACPU_READ_DONE       BIT_N(12)
-
-#define OM_ACPU_CHR_DEBUG_TRACE(pucData, ulDataLen, ulSwitch) \
-        if(VOS_FALSE != (g_ulChrOmAcpuDbgFlag&ulSwitch)) \
-        { \
-            VOS_UINT32 ulChrOmDbgIndex; \
-            (VOS_VOID)vos_printf("\n%s, Data Len: = %d\n", __FUNCTION__, ulDataLen); \
-            for (ulChrOmDbgIndex = 0 ; ulChrOmDbgIndex < ulDataLen; ulChrOmDbgIndex++) \
-            { \
-                (VOS_VOID)vos_printf("%02x ", *((VOS_UINT8*)pucData + ulChrOmDbgIndex)); \
-            } \
-            (VOS_VOID)vos_printf("\r\n"); \
-        }
-
-#define chr_print(fmt, ...)    (printk(KERN_ERR "[CHR]<%s:%d> "fmt, __FUNCTION__, __LINE__ ,##__VA_ARGS__))
-
-/*****************************************************************************
-  3 外部引用声明
-*****************************************************************************/
-
-/*****************************************************************************
-  4 函数实现
-*****************************************************************************/
-/*****************************************************************************
- 函 数 名  : OM_ChrOpenLog
- 功能描述  : 打印当前OM通道的状态
- 输入参数  :
- 输出参数  :
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月26日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID  OM_ChrOpenLog(VOS_UINT32 ulFlag)
 {
     g_ulChrOmAcpuDbgFlag = ulFlag;
@@ -266,20 +107,7 @@ VOS_VOID  OM_ChrOpenLog(VOS_UINT32 ulFlag)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuRcvMsgFinish
- 功能描述  : 各组件给Om上报消息完毕
- 输入参数  : 无
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月29日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_AcpuRcvMsgFinish(VOS_VOID)
 {
     OM_APP_REPORT_STATUS_STRU               stOmAppReportStatus={{0,},0,0,0,0,0,0};
@@ -306,20 +134,8 @@ VOS_VOID OM_AcpuRcvMsgFinish(VOS_VOID)
     return ;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuSendAppResult
- 功能描述  : OM给AP回复处理结果
- 输入参数  : ulRest: 给APP发送的
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月29日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
+
 VOS_VOID OM_AcpuSendAppResult(VOS_UINT32 ulRest, VOS_UINT16  usModemId)
 {
     OM_APP_RESULT_CNF_STRU               stOmAppResultCnf={{0,},0,0,0,0};
@@ -338,156 +154,6 @@ VOS_VOID OM_AcpuSendAppResult(VOS_UINT32 ulRest, VOS_UINT16  usModemId)
     return ;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuSwitchOnOffErrLog
- 功能描述  : AP下发 Error Log开关命令，写入NV项同时给各组件发送开关状态
- 输入参数  : pstAppOmCtrlStatus : 收到数据
-
- 输出参数  : 无
- 返 回 值  : OK/ERR
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月29日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_INT OM_AcpuSwitchOnOffErrLog(APP_OM_CTRL_STATUS_STRU  *pstAppOmCtrlStatus)
-{
-    
-    return VOS_OK;
-}
-
-/*****************************************************************************
- 函 数 名  : OM_AcpuReportFTMMsg
- 功能描述  : 根据NV项配置向各组件下发工程模式 上报请求
- 输入参数  : pstAppOmCtrlStatus: 收到数据
-
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
- 修改历史  :
-  1.日    期  : 2017年4月29日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_INT OM_AcpuSwitchOnOffFTM(APP_OM_CTRL_STATUS_STRU *pstAppOmCtrlStatus)
-{
-    NV_ID_FTM_DETAIL_STRU               stNvFTMDetail={0};
-    OM_FTM_CTRL_IND_STRU               *pstOmFtmCtrlInd;
-    VOS_UINT32                          ulRest;
-    VOS_UINT32                          i;
-
-    /* modem ID 检查*/
-    if (MODEM_ID_0 == pstAppOmCtrlStatus->usModemID)
-    {
-        g_stOmAppMsgRecord.pulFTMModule = g_aulModem0FTMDetail;
-    }
-    else if (MODEM_ID_1 == pstAppOmCtrlStatus->usModemID)
-    {
-        g_stOmAppMsgRecord.pulFTMModule = g_aulModem1FTMDetail;
-    }
-    else if (2 == pstAppOmCtrlStatus->usModemID)
-    {
-        g_stOmAppMsgRecord.pulFTMModule = g_aulModem2FTMDetail;
-    }
-    else
-    {
-        
-        (VOS_VOID)vos_printf("OM_AcpuSwitchOnOffFTM: modem id error!\r\n ");
-        
-        g_stErrLogVcomDebugInfo.ulVCOMRcvErrNum++;
-        g_stErrLogVcomDebugInfo.ulVCOMRcvErrLen += (pstAppOmCtrlStatus->stOmHeader.ulMsgLen + sizeof(OM_ALARM_MSG_HEAD_STRU));
-        OM_AcpuSendAppResult(OM_APP_SEND_MODEM_ID_ERR, pstAppOmCtrlStatus->usModemID);
-        return OM_APP_SEND_MODEM_ID_ERR;
-    }
-
-    ulRest = NV_ReadEx(pstAppOmCtrlStatus->usModemID, en_NV_Item_FTMDetail,
-                       (VOS_VOID*)&stNvFTMDetail, (VOS_UINT32)sizeof(NV_ID_FTM_DETAIL_STRU));
-    if (VOS_OK != ulRest)
-    {
-       
-        (VOS_VOID)vos_printf("OM_AcpuSwitchOnOffFTM: nv read faile!\r\n ");
-        
-        OM_AcpuSendAppResult(OM_APP_OMACPU_READ_NV_ERR, pstAppOmCtrlStatus->usModemID);
-        return OM_APP_OMACPU_READ_NV_ERR;
-    }
-
-    g_stOmAppMsgRecord.ulFTMReportSend = stNvFTMDetail.ulFTMDetail;
-
-    /* 因各组件任务优先级较高，先给AP回复消息。后便存在失败的场景，但可维可测，不以过度考虑 */
-    OM_AcpuSendAppResult(OM_APP_MSG_OK, pstAppOmCtrlStatus->usModemID);
-
-    /* 根据工程模式相关性，向对应PID发送消息 */
-    for (i=0; i<OM_MAX_MODULE_ID; i++)
-    {
-        if ((0 !=(BIT_N(i) & g_stOmAppMsgRecord.ulFTMReportSend)) && (OM_PID_NULL != g_stOmAppMsgRecord.pulFTMModule[i]))
-        {
-            /* 给对应的PID发送消息 */
-            pstOmFtmCtrlInd = (OM_FTM_CTRL_IND_STRU*)VOS_AllocMsg(MSP_PID_CHR,
-                                  (sizeof(OM_FTM_CTRL_IND_STRU) - VOS_MSG_HEAD_LENGTH));
-            if (VOS_NULL_PTR == pstOmFtmCtrlInd)
-            {
-                OM_AcpuSendAppResult(OM_APP_OMACPU_ALLOC_MSG_ERR, pstAppOmCtrlStatus->usModemID);
-                return OM_APP_OMACPU_ALLOC_MSG_ERR;
-            }
-
-            pstOmFtmCtrlInd->ulReceiverPid = g_stOmAppMsgRecord.pulFTMModule[i];
-            pstOmFtmCtrlInd->ulMsgName     = ID_OM_FTM_CTRL_IND;
-            pstOmFtmCtrlInd->usModemID     = pstAppOmCtrlStatus->usModemID;
-            pstOmFtmCtrlInd->ucActionFlag  = pstAppOmCtrlStatus->ucAlmStatus;
-
-            (VOS_VOID)VOS_SendMsg(MSP_PID_CHR, pstOmFtmCtrlInd);
-        }
-    }
-
-    return VOS_OK;
-}
-
-/*****************************************************************************
- 函 数 名  : OM_AcpuSwitchOnOff
- 功能描述  : 判断是Error log开关还是工程模式开关
- 输入参数  : pucData    : 收到数据
-             ulLen : 数据长度
-
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月29日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_INT OM_AcpuSwitchOnOff(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
-{
-    APP_OM_CTRL_STATUS_STRU              *pstAppOmCtrlStatus;
-
-    pstAppOmCtrlStatus = (APP_OM_CTRL_STATUS_STRU*)pucData;
-
-    if (OM_APP_SWITCH_MSG_ID_ERR_LOG == pstAppOmCtrlStatus->ulMsgModuleID)
-    {
-        /* Error log 开关 */
-        return OM_AcpuSwitchOnOffErrLog(pstAppOmCtrlStatus);
-    }
-    else if (OM_APP_SWITCH_MSG_ID_FTM == pstAppOmCtrlStatus->ulMsgModuleID)
-    {
-        /* 工程模式开关 */
-        return OM_AcpuSwitchOnOffFTM(pstAppOmCtrlStatus);
-    }
-    else
-    {
-        /* 异常信息上报 */
-        (VOS_VOID)vos_printf("OM_AcpuSwitchOnOff: Msg Module id error!\r\n ");
-        
-        g_stErrLogVcomDebugInfo.ulVCOMRcvErrNum++;
-        g_stErrLogVcomDebugInfo.ulVCOMRcvErrLen += ulLen;
-        OM_AcpuSendAppResult(OM_APP_MSG_MODULE_ID_ERR, pstAppOmCtrlStatus->usModemID);
-    }
-
-    return OM_APP_MSG_MODULE_ID_ERR;
-}
 
 VOS_VOID OM_AcpuSetRptFlag(VOS_UINT id)
 {
@@ -501,19 +167,7 @@ VOS_VOID OM_AcpuSetRptFlag(VOS_UINT id)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuSendSkipPid
- 功能描述  : 收到的模块标志位置0
- 输入参数  : index 计数
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月29日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
+
 VOS_VOID OM_AcpuSendSkipPid(VOS_UINT32 index)
 {
     if(g_stOmAppMsgRecord.ulErrLogReportSend > 0)
@@ -523,23 +177,7 @@ VOS_VOID OM_AcpuSendSkipPid(VOS_UINT32 index)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuRcvAppMsgCheck
- 功能描述  : 获取PID表
- 输入参数  : pstAppOmReqErrLog    : 收到数据
 
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月27日
-     作    者  : d00212987
-     修改内容  : Creat Function
-   1.日    期  : 2016年2月22日
-     作    者  : x00346372
-     修改内容  : modified
-*****************************************************************************/
 VOS_INT OM_AcpuRcvAppMsgCheck(APP_OM_REQ_ERR_LOG_STRU *pstAppOmReqErrLog)
 {
  
@@ -556,42 +194,14 @@ VOS_INT OM_AcpuRcvAppMsgCheck(APP_OM_REQ_ERR_LOG_STRU *pstAppOmReqErrLog)
     
     return VOS_OK;
 }
-/*****************************************************************************
- 函 数 名  : OM_AcpuClearSendFlagAll
- 功能描述  : 清除PID标志位
- 输入参数  :  无 
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年5月16日
-     作    者  : x00346372
-     修改内容  : Creat Function
-   
-*****************************************************************************/
 VOS_VOID OM_AcpuClearSendFlagAll(VOS_VOID)
 {
     VOS_MemSet_s(g_stOmAppMsgRecord.ulErrSendFlag, 4*sizeof(VOS_UINT32), 0, 4*sizeof(VOS_UINT32));
     VOS_MemSet_s(g_stOmAppMsgRecord.ulErrRptFlag, 4*sizeof(VOS_UINT32), 0, 4*sizeof(VOS_UINT32));
     return;
 }
-/*****************************************************************************
- 函 数 名  : OM_AcpuSetSendFlag
- 功能描述  : 发送pid标志处理函数
- 输入参数  :  无 
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年5月16日
-     作    者  : x00346372
-     修改内容  : Creat Function
-   
-*****************************************************************************/
 VOS_VOID OM_AcpuSetSendFlag(VOS_UINT id)
 {
     VOS_UINT i,j;
@@ -623,7 +233,7 @@ VOS_BOOL OM_AcpuChkRptFlag(VOS_UINT id)
 }
 
 
-VOS_INT OM_AcpuGetFaultMap(VOS_UINT32 ulFaultId, VOS_UINT* ulFaultIdNum, FAULTID_MAP **FaultMap)
+VOS_INT OM_AcpuGetFaultMap(VOS_UINT32 ulModemId,VOS_UINT32 ulFaultId, VOS_UINT* ulFaultIdNum, FAULTID_MAP **FaultMap)
 {
     VOS_UINT ulRest;
     
@@ -631,7 +241,7 @@ VOS_INT OM_AcpuGetFaultMap(VOS_UINT32 ulFaultId, VOS_UINT* ulFaultIdNum, FAULTID
     {
         if(0 == g_stChrFaultMapGutl.ulFaultIdNum)
         {
-            ulRest = NV_ReadEx(0, NV_ID_ErrLogGutlCtrlInfo,
+            ulRest = mdrv_nv_readex(ulModemId, NV_ID_ErrLogGutlCtrlInfo,
                            (VOS_VOID*)&g_stChrFaultMapGutl,
                            sizeof(NV_ID_CHR_CONFIG_CTRL_INFO_STRU));
         }
@@ -645,7 +255,7 @@ VOS_INT OM_AcpuGetFaultMap(VOS_UINT32 ulFaultId, VOS_UINT* ulFaultIdNum, FAULTID
     {
         if(0 == g_stChrFaultMapCdma.ulFaultIdNum)
         {
-            ulRest = NV_ReadEx(0, NV_ID_ErrLogCdmaCtrlInfo,
+            ulRest = mdrv_nv_readex(ulModemId, NV_ID_ErrLogCdmaCtrlInfo,
                            (VOS_VOID*)&g_stChrFaultMapCdma,
                            sizeof(NV_ID_CHR_C_CONFIG_CTRL_INFO_STRU));
         }
@@ -671,7 +281,7 @@ VOS_INT OM_AcpuGetFaultCfg(VOS_UINT32 ulFaultId, VOS_UINT32 ulModemId, VOS_UINT3
     VOS_UINT nvid = (VOS_UINT32)(-1);
   //  OM_APP_MSG_RECORD_STRU *pstAppOmReqErrLog = &g_stOmAppMsgRecord; 
 
-    ulRest = OM_AcpuGetFaultMap(ulFaultId, &ulFaultIdNum, &FaultMap);
+    ulRest = OM_AcpuGetFaultMap(ulModemId,ulFaultId, &ulFaultIdNum, &FaultMap);
     if(VOS_OK != ulRest)
     {
         chr_print("get faultmap error: %d!\n",ulFaultId);
@@ -698,7 +308,7 @@ VOS_INT OM_AcpuGetFaultCfg(VOS_UINT32 ulFaultId, VOS_UINT32 ulModemId, VOS_UINT3
     }
     *ulNvId = nvid;
 
-    ulRest = NV_ReadEx(ulModemId, nvid, (VOS_VOID*)pFaultCfg,
+    ulRest = mdrv_nv_readex(ulModemId, nvid, (VOS_VOID*)pFaultCfg,
                         sizeof(NV_ID_CHR_FAULTID_CONFIG_STRU));
     if (VOS_OK != ulRest)
     {
@@ -754,8 +364,8 @@ VOS_INT OM_AcpuSendReq(VOS_UINT32 *pulSendCount)
         pstOmErrLogReportReq->ulReceiverPid = RecvPid;
         pstOmErrLogReportReq->ulMsgName     = ID_OM_ERR_LOG_REPORT_REQ;
         pstOmErrLogReportReq->usModemID     = g_stOmAppMsgRecord.usModemId;
-        pstOmErrLogReportReq->ucFaultID     = (VOS_UINT8)g_stOmAppMsgRecord.usFaultId;
-        pstOmErrLogReportReq->ucAlarmID     = (VOS_UINT8)AlarmId;
+        pstOmErrLogReportReq->usFaultID     = g_stOmAppMsgRecord.usFaultId;
+        pstOmErrLogReportReq->usAlarmID     = AlarmId;
         pstOmErrLogReportReq->ulMsgSN       = g_stOmAppMsgRecord.ulMsgSN;
         
         if(VOS_OK != VOS_SendMsg(MSP_PID_CHR, pstOmErrLogReportReq))
@@ -790,21 +400,7 @@ VOS_INT OM_AcpuStartTimer(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuReportErrLogMsg
- 功能描述  : 向PAM获取PID表，向各组件下发Errorlog 上报请求
- 输入参数  : pucData    : 收到数据
-             ulLen : 数据长度
 
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月29日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_INT OM_AcpuReportErrLogMsg(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
 {
     APP_OM_REQ_ERR_LOG_STRU            *pstAppOmReqErrLog;
@@ -813,8 +409,20 @@ VOS_INT OM_AcpuReportErrLogMsg(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
     VOS_UINT32                          *pulNvId = &g_stOmAppMsgRecord.ulFaultNv;
     NV_ID_CHR_FAULTID_CONFIG_STRU       *pFaultCfg = &g_stOmAppMsgRecord.stFaultCfg;
     
+    if(!pucData)
+    {
+        return VOS_ERR;
+    }
     /* 收到AP消息检查 */
     pstAppOmReqErrLog = (APP_OM_REQ_ERR_LOG_STRU*)pucData;
+    
+    /*输入消息长度的检查*/
+    if(ulLen != (pstAppOmReqErrLog->stOmHeader.ulMsgLen + sizeof(OM_ALARM_MSG_HEAD_STRU)))
+    {
+          chr_print("input length error !\n");
+          return VOS_ERR;
+    }
+    /*是否完成上一次上报，OM是否处于BUSY状态*/
     ulRest = OM_AcpuRcvAppMsgCheck(pstAppOmReqErrLog);
     if (VOS_OK != ulRest)
     {
@@ -870,7 +478,7 @@ VOS_INT OM_AcpuReportErrLogMsg(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
         OM_AcpuRcvMsgFinish();
         return VOS_OK;
     }
-
+    /* 起timer定时器 */
     ulRest = OM_AcpuStartTimer();
     if(VOS_OK != ulRest)
     {
@@ -881,22 +489,7 @@ VOS_INT OM_AcpuReportErrLogMsg(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  :  OM_AcpuErrLogHook
- 功能描述  :  可维可测，收到的消息内容发往log工具一份
- 输入参数  :  pucData    : 收到数据
-              ulLen      : 数据长度
-              ulDateType : 消息类型,收到的VCOM消息，还是发送给VCOM消息
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年9月19日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_AcpuErrLogHook(VOS_UINT8 *pucData, VOS_UINT32 ulLen, VOS_UINT32 ulDateType)
 {
     DIAG_TRANS_IND_STRU stTrans = {0};
@@ -912,22 +505,7 @@ VOS_VOID OM_AcpuErrLogHook(VOS_UINT8 *pucData, VOS_UINT32 ulLen, VOS_UINT32 ulDa
     return;
 }
 
-/*****************************************************************************
- 函 数 名  :  OM_AcpuSendVComData
- 功能描述  :  调NAS接口，把数据发走
- 输入参数  :  ucDevIndex: 物理端口
-              pucData    : 收到数据
-              ulLen : 数据长度
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月27日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_AcpuSendVComData(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
 {
     /* 调用注册函数，给Vcom发数据 */
@@ -954,173 +532,8 @@ VOS_VOID OM_AcpuSendVComData(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
     return ;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuSendFTMMsgOther
- 功能描述  : 收到AP工程模式命令
- 输入参数  : pstAppOmReqFtm : 发送数据
-             ulLen          : 发送数据长度
-             ulPID          : 接收PID
 
- 输出参数  : 无
- 返 回 值  : VOS_VOID
-
- 修改历史  :
-   1.日    期  : 2014年2月14日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_VOID OM_AcpuSendFTMMsgOther(APP_OM_FTM_REQ_STRU *pstAppOmFtmReq, VOS_UINT32 ulLen, VOS_UINT32 ulPID)
-{
-    OM_FTM_REQUIRE_STRU                *pstOmFtmReq;
-
-    if (VOS_NULL == ulPID)
-    {
-        return;
-    }
-
-    /* 工程模式命令上报通知对应的组件 */
-    pstOmFtmReq  = (OM_FTM_REQUIRE_STRU*)VOS_AllocMsg(MSP_PID_CHR,
-                                         (ulLen + sizeof(VOS_UINT32) + sizeof(VOS_UINT16)));
-
-    if (VOS_NULL_PTR == pstOmFtmReq)
-    {
-        OM_AcpuSendAppResult(OM_APP_OMACPU_ALLOC_MSG_ERR, pstAppOmFtmReq->usModemID);
-        
-        (VOS_VOID)vos_printf("OM_AcpuSendFTMMsgOther:malloc msg fail\r\n");
-        
-        return ;
-    }
-    pstOmFtmReq->ulReceiverPid = ulPID;
-    pstOmFtmReq->ulMsgName     = ID_OM_FTM_REQUIRE_IND;
-    pstOmFtmReq->usModemID     = pstAppOmFtmReq->usModemID;
-    
-    (VOS_VOID)VOS_MemCpy_s((VOS_VOID*)pstOmFtmReq->aucContent, ulLen, (VOS_VOID*)pstAppOmFtmReq, ulLen);
-    
-
-    /* 提前回复消息 */
-    OM_AcpuSendAppResult(OM_APP_MSG_OK, pstAppOmFtmReq->usModemID);
-
-    (VOS_VOID)VOS_SendMsg(MSP_PID_CHR, pstOmFtmReq);
-
-    return ;
-}
-
-/*****************************************************************************
- 函 数 名  : OM_AcpuFTMMsgReq
- 功能描述  : 收到AP工程模式命令
- 输入参数  : pucData    : 收到数据
-             ulLen      : 收到数据长度
-
- 输出参数  : 无
- 返 回 值  : VOS_INT
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2014年2月14日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_INT OM_AcpuFTMMsgReq(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
-{
-    APP_OM_FTM_REQ_STRU                *pstAppOmReqFtm;
-    VOS_UINT32                          ulIndex;
-
-    pstAppOmReqFtm = (APP_OM_FTM_REQ_STRU*)pucData;
-
-    /* modem ID 检查*/
-    if (MODEM_ID_0 == pstAppOmReqFtm->usModemID)
-    {
-        for (ulIndex=0; ulIndex<(sizeof(g_astModem0FTMMsgModule) / sizeof(g_astModem0FTMMsgModule[0])); ulIndex++)
-        {
-            if (pstAppOmReqFtm->ulMsgModuleID == g_astModem0FTMMsgModule[ulIndex].ulMsgModuleID)
-            {
-                OM_AcpuSendFTMMsgOther(pstAppOmReqFtm, ulLen, g_astModem0FTMMsgModule[ulIndex].ulPID);
-                break;
-            }
-        }
-
-        if ( (sizeof(g_astModem0FTMMsgModule) / sizeof(g_astModem0FTMMsgModule[0])) <= ulIndex )
-        {
-           
-            (VOS_VOID)vos_printf("OM_AcpuFTMMsgReq:MsgModule ID is error %d\r\n", pstAppOmReqFtm->ulMsgModuleID);
-            
-            return OM_APP_MSG_MODULE_ID_ERR;
-        }
-    }
-
-    else if (MODEM_ID_1 == pstAppOmReqFtm->usModemID)
-    {
-        for (ulIndex=0; ulIndex<(sizeof(g_astModem1FTMMsgModule) / sizeof(g_astModem1FTMMsgModule[0])); ulIndex++)
-        {
-            if (pstAppOmReqFtm->ulMsgModuleID == g_astModem1FTMMsgModule[ulIndex].ulMsgModuleID)
-            {
-                OM_AcpuSendFTMMsgOther(pstAppOmReqFtm, ulLen, g_astModem1FTMMsgModule[ulIndex].ulPID);
-                break;
-            }
-        }
-
-        if ( (sizeof(g_astModem1FTMMsgModule) / sizeof(g_astModem1FTMMsgModule[0])) <= ulIndex )
-        {
-            
-            (VOS_VOID)vos_printf("OM_AcpuFTMMsgReq:MsgModule ID is error %d\r\n", pstAppOmReqFtm->ulMsgModuleID);
-          
-            return OM_APP_MSG_MODULE_ID_ERR;
-        }
-    }
-
-    else if (2 == pstAppOmReqFtm->usModemID)
-    {
-        for (ulIndex=0; ulIndex<(sizeof(g_astModem2FTMMsgModule) / sizeof(g_astModem2FTMMsgModule[0])); ulIndex++)
-        {
-            if (pstAppOmReqFtm->ulMsgModuleID == g_astModem2FTMMsgModule[ulIndex].ulMsgModuleID)
-            {
-                OM_AcpuSendFTMMsgOther(pstAppOmReqFtm, ulLen, g_astModem2FTMMsgModule[ulIndex].ulPID);
-                break;
-            }
-        }
-
-        if ( (sizeof(g_astModem2FTMMsgModule) / sizeof(g_astModem2FTMMsgModule[0])) <= ulIndex )
-        {
-            
-            (VOS_VOID)vos_printf("OM_AcpuFTMMsgReq:MsgModule ID is error %d\r\n", pstAppOmReqFtm->ulMsgModuleID);
-            
-            return OM_APP_MSG_MODULE_ID_ERR;
-        }
-    }
-    else
-    {
-        
-        (VOS_VOID)vos_printf("OM_AcpuFTMMsgReq: modem id error!\r\n ");
-        
-        g_stErrLogVcomDebugInfo.ulVCOMRcvErrNum++;
-        g_stErrLogVcomDebugInfo.ulVCOMRcvErrLen += ulLen;
-        OM_AcpuSendAppResult(OM_APP_SEND_MODEM_ID_ERR, pstAppOmReqFtm->usModemID);
-        return OM_APP_SEND_MODEM_ID_ERR;
-    }
-
-    return OM_APP_MSG_OK;
-}
-
-/*****************************************************************************
- 函 数 名  :  OM_AcpuRcvErrLogMsgCheck
- 功能描述  :  收到各组件消息，检查是否需要上报
- 输入参数  :  pstOmRcvDataInfo    : 收到数据
-
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
- 
- 修改历史  :
-   1.日    期  : 2014年2月18日
-     作    者  : d00212987
-     修改内容  : Creat Function
-   2.日    期  : 2016年2月22日
-     作    者  : x00346372
-     修改内容  : modified Function
-     
-*****************************************************************************/
-VOS_UINT32 OM_AcpuRcvErrLogMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo, VOS_UINT32 *pulSendPidCount)
+VOS_UINT32 OM_AcpuRcvErrLogMsgCheck(OM_RCV_REPORT_STRU *pstOmRcvDataInfo, VOS_UINT32 *pulSendPidCount)
 {
     NV_ID_CHR_FAULTID_CONFIG_STRU       *pFaultCfg = &g_stOmAppMsgRecord.stFaultCfg;
     VOS_UINT32   i;
@@ -1131,15 +544,14 @@ VOS_UINT32 OM_AcpuRcvErrLogMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo, VOS
         return VOS_ERR;
     }
     
-    g_stRcvUESendAP.ulErrLogRcvNum++;
-    g_stRcvUESendAP.ulErrLogRcvLen += pstOmRcvDataInfo->stOmHeader.ulMsgLen;
+ 
     
     /* 记录对应组件已上报消息 */
     for (i=0; i<g_stOmAppMsgRecord.ulAlarmIdNum; i++)
     {
-        if (   (pFaultCfg->aucAlarmMap[i].ulPid     == pstOmRcvDataInfo->ulSenderPid)
-            && (pFaultCfg->aucAlarmMap[i].ulAlarmId == (VOS_UINT32)pstOmRcvDataInfo->stOmHeader.ucAlarmId)
-            && (g_stOmAppMsgRecord.ulMsgSN         == pstOmRcvDataInfo->stOmHeader.ulMsgSN)
+        if ((pFaultCfg->aucAlarmMap[i].ulPid     == pstOmRcvDataInfo->stChrRcvOmHeader.ulSenderPid)
+            && (pFaultCfg->aucAlarmMap[i].ulAlarmId == pstOmRcvDataInfo->stChrRcvOmHeader.usAlarmId)
+            && (g_stOmAppMsgRecord.ulMsgSN          == pstOmRcvDataInfo->ulMsgSN)
             && (OM_AcpuChkRptFlag(i)))
         {   
             (*pulSendPidCount)++;
@@ -1147,7 +559,7 @@ VOS_UINT32 OM_AcpuRcvErrLogMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo, VOS
             g_stOmAppMsgRecord.ulErrLogReportSend--;
 
             g_stRcvUESendAP.ulErrLogSendNum++;
-            g_stRcvUESendAP.ulErrLogSendLen += pstOmRcvDataInfo->stOmHeader.ulMsgLen;
+            g_stRcvUESendAP.ulErrLogSendLen += pstOmRcvDataInfo->ulRptLen;
             
             break;
         }
@@ -1156,191 +568,17 @@ VOS_UINT32 OM_AcpuRcvErrLogMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo, VOS
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  :  OM_AcpuRcvFTMReportMsgCheck
- 功能描述  :  收到各组件消息，检查是否需要上报
- 输入参数  :  pstOmRcvDataInfo    : 收到数据
-
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2014年2月18日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_UINT32 OM_AcpuRcvFTMReportMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo, VOS_UINT32 *pulSendPidCount)
-{
-    VOS_UINT32                          i;
-
-    /* 工程模式主动上报 */
-    if (VOS_NULL_PTR == g_stOmAppMsgRecord.pulFTMModule)
-    {
-        (VOS_VOID)vos_printf("OM_AcpuRcvFTMReportMsgCheck: not expect report Ftm msg!\r\n ");
-        
-        return VOS_ERR;
-    }
-
-    /* 工程模式上报 */
-    g_stRcvUESendAP.ulFTMRcvNum++;
-    g_stRcvUESendAP.ulFTMRcvLen += pstOmRcvDataInfo->stOmHeader.ulMsgLen;
-    for(i=0; i<OM_MAX_MODULE_ID; i++)
-    {
-        if ((g_stOmAppMsgRecord.pulFTMModule[i] == pstOmRcvDataInfo->ulSenderPid)
-             && (0 !=(BIT_N(i) & g_stOmAppMsgRecord.ulFTMReportSend))
-             && (OM_PID_NULL != g_stOmAppMsgRecord.pulFTMModule[i]))
-        {
-            (*pulSendPidCount)++;
-            g_stRcvUESendAP.ulFTMSendNum++;
-            g_stRcvUESendAP.ulFTMSendLen += pstOmRcvDataInfo->stOmHeader.ulMsgLen;
-
-            break;
-        }
-    }
 
 
-    return VOS_OK;
-}
-
-/*****************************************************************************
- 函 数 名  :  OM_AcpuRcvFTMCnfMsgCheck
- 功能描述  :  收到各组件消息，检查是否需要上报
- 输入参数  :  pstOmRcvDataInfo    : 收到数据
-
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2014年2月18日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_UINT32 OM_AcpuRcvFTMCnfMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo, VOS_UINT32 *pulSendPidCount)
-{
-    OM_APP_FTM_CNF_STRU                *pstOmAppFtmCnf;
-    VOS_UINT32                          ulIndex;
-
-    /* 工程模式响应上报最小消息长度 */
-    if ((4*sizeof(VOS_UINT32)) > pstOmRcvDataInfo->stOmHeader.ulMsgLen)
-    {
-       
-        (VOS_VOID)vos_printf("OM_AcpuRcvFTMCnfMsgCheck:MsgModule ID is error %d\r\n", pstOmRcvDataInfo->stOmHeader.ulMsgLen);
-        
-        return OM_APP_MSG_LENGTH_ERR;
-    }
-
-    pstOmAppFtmCnf= (OM_APP_FTM_CNF_STRU*)(&pstOmRcvDataInfo->stOmHeader.usMsgType);
-
-    if (MODEM_ID_0 == pstOmAppFtmCnf->usModemID)
-    {
-        for (ulIndex=0; ulIndex<(sizeof(g_astModem0FTMMsgModule) / sizeof(g_astModem0FTMMsgModule[0])); ulIndex++)
-        {
-            if ((g_astModem0FTMMsgModule[ulIndex].ulMsgModuleID == pstOmAppFtmCnf->ulMsgModuleID)
-                && (g_astModem0FTMMsgModule[ulIndex].ulPID == pstOmRcvDataInfo->ulSenderPid))
-            {
-               (*pulSendPidCount)++;
-                break;
-            }
-        }
-
-        if ((sizeof(g_astModem0FTMMsgModule) / sizeof(g_astModem0FTMMsgModule[0])) <= ulIndex)
-        {
-            
-            (VOS_VOID)vos_printf("OM_AcpuFTMMsgReq:MsgModule ID is error %d\r\n", pstOmAppFtmCnf->ulMsgModuleID);
-           
-            return OM_APP_MSG_MODULE_ID_ERR;
-        }
-    }
-    else if (MODEM_ID_1 == pstOmAppFtmCnf->usModemID)
-    {
-        for (ulIndex=0; ulIndex<(sizeof(g_astModem1FTMMsgModule) / sizeof(g_astModem1FTMMsgModule[0])); ulIndex++)
-        {
-            if ((g_astModem1FTMMsgModule[ulIndex].ulMsgModuleID == pstOmAppFtmCnf->ulMsgModuleID)
-                && (g_astModem1FTMMsgModule[ulIndex].ulPID == pstOmRcvDataInfo->ulSenderPid))
-            {
-               (*pulSendPidCount)++;
-                break;
-            }
-        }
-
-        if ((sizeof(g_astModem1FTMMsgModule) / sizeof(g_astModem1FTMMsgModule[0])) <= ulIndex)
-        {
-            
-            (VOS_VOID)vos_printf("OM_AcpuFTMMsgReq:MsgModule ID is error %d\r\n", pstOmAppFtmCnf->ulMsgModuleID);
-            
-            return OM_APP_MSG_MODULE_ID_ERR;
-        }
-    }
-
-    else if (2 == pstOmAppFtmCnf->usModemID)
-    {
-        for (ulIndex=0; ulIndex<(sizeof(g_astModem2FTMMsgModule) / sizeof(g_astModem2FTMMsgModule[0])); ulIndex++)
-        {
-            if ((g_astModem2FTMMsgModule[ulIndex].ulMsgModuleID == pstOmAppFtmCnf->ulMsgModuleID)
-                && (g_astModem2FTMMsgModule[ulIndex].ulPID == pstOmRcvDataInfo->ulSenderPid))
-            {
-               (*pulSendPidCount)++;
-                break;
-            }
-        }
-
-        if ((sizeof(g_astModem2FTMMsgModule) / sizeof(g_astModem2FTMMsgModule[0])) <= ulIndex)
-        {
-            
-            (VOS_VOID)vos_printf("OM_AcpuFTMMsgReq:MsgModule ID is error %d\r\n", pstOmAppFtmCnf->ulMsgModuleID);
-            
-            return OM_APP_MSG_MODULE_ID_ERR;
-        }
-    }
-    else
-    {
-        return VOS_ERR;
-    }
-
-    return VOS_OK;
-
-}
-/*****************************************************************************
- 函 数 名  :  OM_AcpuRcvMsgCheck
- 功能描述  :  收到各组件消息，检查是否需要上报
- 输入参数  :  pstOmRcvDataInfo    : 收到数据
-
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月27日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_UINT32 OM_AcpuRcvMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo)
+VOS_UINT32 OM_AcpuRcvMsgCheck(OM_RCV_REPORT_STRU *pstOmRcvDataInfo)
 {
     VOS_UINT32                          ulSendPidCount = 0;
 
-    switch(pstOmRcvDataInfo->stOmHeader.usMsgType)
+    switch(pstOmRcvDataInfo->unComChrType.ulMsgType)
     {
         case OM_ERR_LOG_MSG_ERR_REPORT:
             /* Error Log 上报 */
             if(VOS_OK != OM_AcpuRcvErrLogMsgCheck(pstOmRcvDataInfo, &ulSendPidCount))
-            {
-                return VOS_ERR;
-            }
-            break;
-
-        case OM_ERR_LOG_MSG_FTM_REPORT:
-            /* 工程模式主动上报 */
-            if(VOS_OK != OM_AcpuRcvFTMReportMsgCheck(pstOmRcvDataInfo, &ulSendPidCount))
-            {
-                return VOS_ERR;
-            }
-            break;
-
-        case OM_ERR_LOG_MSG_FTM_CNF:
-            /* 工程模式请求上报 */
-            if(VOS_OK != OM_AcpuRcvFTMCnfMsgCheck(pstOmRcvDataInfo, &ulSendPidCount))
             {
                 return VOS_ERR;
             }
@@ -1355,9 +593,9 @@ VOS_UINT32 OM_AcpuRcvMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo)
             /* 平台检测告警主动上报 */
             ulSendPidCount++;
             break;
+            
         default:
-            /* 异常 */
-           
+            /* 异常 */         
             (VOS_VOID)vos_printf("OM_AcpuRcvMsgCheck: Msg type error!\r\n ");
            
             return VOS_ERR;
@@ -1375,68 +613,12 @@ VOS_UINT32 OM_AcpuRcvMsgCheck(OM_RCV_DATA_INFO_STRU *pstOmRcvDataInfo)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuRcvAPCtrl
- 功能描述  : 测试桩函数 : 模拟AP发送开关消息
- 输入参数  :  ultype    : 消息类型
-              ulValuse  : 消息名称
-              usModemID : MODEM id
-              ucAlmStatus :开关名称
-              ucAlmLevel  :告警级别
 
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月27日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_VOID OM_AcpuRcvAPCtrl(VOS_UINT32 ultype,          VOS_UINT32 ulValuse,
-                          VOS_UINT16 usModemID,       VOS_UINT8  ucAlmStatus,
-                          VOS_UINT8  ucAlmLevel)
-{
-    APP_OM_CTRL_STATUS_STRU              stAppOmCtrlStatus;
-
-    
-    (VOS_VOID)VOS_MemSet_s(&stAppOmCtrlStatus, sizeof(stAppOmCtrlStatus), 0, (VOS_UINT32)sizeof(APP_OM_CTRL_STATUS_STRU));
-    
-
-    stAppOmCtrlStatus.stOmHeader.ulMsgType = ultype;
-    stAppOmCtrlStatus.stOmHeader.ulMsgSN   = VOS_OK;
-    stAppOmCtrlStatus.stOmHeader.ulMsgLen  = 2*sizeof(VOS_UINT32);
-    stAppOmCtrlStatus.ulMsgModuleID        = ulValuse;
-    stAppOmCtrlStatus.usModemID            = usModemID;
-    stAppOmCtrlStatus.ucAlmStatus          = ucAlmStatus;
-    stAppOmCtrlStatus.ucAlmLevel           = ucAlmLevel;
-
-    
-    (VOS_VOID)OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, (VOS_UINT8*)&stAppOmCtrlStatus, sizeof(APP_OM_CTRL_STATUS_STRU));
-    
-}
-
-
-/*****************************************************************************
- 函 数 名  : OM_AcpuReportErrLog
- 功能描述  : 测试桩函数:模拟AP请求上报Error log
- 输入参数  : usModemID : MODEM id
-             usFaultId :告警相关性
-
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月27日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_VOID OM_AcpuReportErrLog(VOS_UINT16 usModemID, VOS_UINT16 usFaultId)
+VOS_INT OM_AcpuReportErrLog(VOS_UINT16 usModemID, VOS_UINT16 usFaultId)
 {
     APP_OM_REQ_ERR_LOG_STRU              stAppOmCtrlStatus;
 
-    
+    VOS_INT ret;
     (VOS_VOID)VOS_MemSet_s(&stAppOmCtrlStatus, sizeof(stAppOmCtrlStatus), 0, (VOS_UINT32)(sizeof(APP_OM_REQ_ERR_LOG_STRU)));
     
 
@@ -1448,8 +630,174 @@ VOS_VOID OM_AcpuReportErrLog(VOS_UINT16 usModemID, VOS_UINT16 usFaultId)
     stAppOmCtrlStatus.usFaultId            = usFaultId;
 
     
-    (VOS_VOID)OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, (VOS_UINT8*)&stAppOmCtrlStatus, sizeof(APP_OM_REQ_ERR_LOG_STRU));
+    ret = OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, (VOS_UINT8*)&stAppOmCtrlStatus, sizeof(APP_OM_REQ_ERR_LOG_STRU));
+    if(VOS_ERR == ret)
+    {
+        vos_printf("OM_AcpuReportErrLog error!\n");  
+        
+    }
+    return ret;
+}
+/*****************************************************************************
+ 函 数 名  : OM_AcpuCfgBlackListTest
+ 功能描述  : 测试桩函数:模拟AP下发黑名单配置
+ 输入参数  : usModemID : MODEM id
+             usFaultId :告警相关性
+
+ 输出参数  : 无
+ 返 回 值  :
+ 调用函数  :
+ 被调函数  :
+ 
+*****************************************************************************/
+VOS_INT OM_AcpuCfgBlackListTest(VOS_UINT32  ulMsgModuleID, VOS_UINT16  usAlarmId, VOS_UINT16  usAlmType)
+{   
+    VOS_INT ret;
+    VOS_UINT  allocSize;
     
+    OM_APP_BLACK_LIST_STRU              *pstAppOmCfgBlackList;
+    CHR_LIST_INFO_S                     *pstBlackListInfo;
+    VOS_UINT8                           *pucAppOmCfgBlackList ;                   
+    allocSize = sizeof( OM_APP_BLACK_LIST_STRU) + sizeof(CHR_LIST_INFO_S);
+    
+    pucAppOmCfgBlackList = (VOS_UINT8 *)VOS_MemAlloc(MSP_PID_CHR, DYNAMIC_MEM_PT, allocSize);        
+    if (!pucAppOmCfgBlackList)
+    {
+        vos_printf("OM_AcpuReportCltInfo: failed to malloc\n");
+        return VOS_ERR;
+    }
+    (VOS_VOID)VOS_MemSet_s(pucAppOmCfgBlackList, allocSize, 0, allocSize);
+
+    pstAppOmCfgBlackList = (OM_APP_BLACK_LIST_STRU *)pucAppOmCfgBlackList;
+    
+    pstAppOmCfgBlackList->stOmHeader.ulMsgType = OM_ERR_LOG_MSG_BLACK_LIST;
+    pstAppOmCfgBlackList->stOmHeader.ulMsgSN   = 0;
+    pstAppOmCfgBlackList->stOmHeader.ulMsgLen  = sizeof(CHR_LIST_INFO_S) ;
+
+    
+    pstBlackListInfo = (CHR_LIST_INFO_S *)(pstAppOmCfgBlackList->stBlackList);
+    
+    pstBlackListInfo->ulMsgModuleID = ulMsgModuleID;
+    pstBlackListInfo->usAlarmId     = usAlarmId;
+    pstBlackListInfo->usAlmType     = usAlmType;
+    
+    ret = OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, pucAppOmCfgBlackList, allocSize);
+    if(VOS_ERR == ret)
+    {
+        vos_printf("OM_AcpuReportErrLog error!\n");  
+       (VOS_VOID)VOS_MemFree(MSP_PID_CHR, pucAppOmCfgBlackList);
+        return VOS_ERR;
+    }
+    (VOS_VOID)VOS_MemFree(MSP_PID_CHR, pucAppOmCfgBlackList);
+    
+    return ret;
+}
+/*****************************************************************************
+ 函 数 名  : OM_AcpuCfgPriorityTest
+ 功能描述  : 测试桩函数:模拟AP下发高优先级
+ 输入参数  : 
+ 输出参数  : 无
+ 返 回 值  :
+ 调用函数  :
+ 被调函数  :
+ 
+*****************************************************************************/
+VOS_INT OM_AcpuCfgPriorityTest(VOS_UINT32  ulMsgModuleID, VOS_UINT16  usAlarmId ,VOS_UINT8 ucSn,VOS_UINT16 usAlmType)
+{   
+    VOS_INT ret;
+    VOS_UINT  allocSize;
+    
+    OM_APP_PRIORITY_CFG_STRU              *pstAppOmCfgPriority ;
+    CHR_PRIORITY_INFO_S                   *pstPriorityInfo;
+    VOS_UINT8                             *pucAppOmCfgPriority; 
+    
+    allocSize = sizeof( OM_APP_PRIORITY_CFG_STRU) + sizeof(CHR_PRIORITY_INFO_S);
+    pucAppOmCfgPriority = (VOS_UINT8 *)VOS_MemAlloc(MSP_PID_CHR, DYNAMIC_MEM_PT, allocSize);        
+    if (!pucAppOmCfgPriority)
+    {
+        vos_printf("OM_AcpuReportCfgPriority: failed to malloc\n");
+        return VOS_ERR;
+    }
+    (VOS_VOID)VOS_MemSet_s(pucAppOmCfgPriority, allocSize, 0, allocSize);
+    
+    pstAppOmCfgPriority =(OM_APP_PRIORITY_CFG_STRU *)pucAppOmCfgPriority;
+    
+    pstAppOmCfgPriority->stOmHeader.ulMsgType = OM_ERR_LOG_MSG_PRIORITY_CFG;
+    pstAppOmCfgPriority->stOmHeader.ulMsgSN   = 0;
+    pstAppOmCfgPriority->stOmHeader.ulMsgLen  = allocSize - sizeof(OM_ALARM_MSG_HEAD_STRU);
+    pstAppOmCfgPriority->ucCount = 1;
+    pstAppOmCfgPriority->ucPacketSN = ucSn;
+
+    pstPriorityInfo = (CHR_PRIORITY_INFO_S *)(pstAppOmCfgPriority->alarmMap);
+    
+    pstPriorityInfo->ulModuleId    = ulMsgModuleID;
+    pstPriorityInfo->usAlarmId     = usAlarmId;
+    pstPriorityInfo->usAlmType     = usAlmType;
+    
+    ret = OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, (VOS_UINT8*)pucAppOmCfgPriority, allocSize);
+    if(VOS_ERR == ret)
+    {
+        vos_printf("OM_AcpuReportCfgPriority error!\n");  
+       (VOS_VOID)VOS_MemFree(MSP_PID_CHR, pucAppOmCfgPriority);
+        return VOS_ERR;
+    }
+    (VOS_VOID)VOS_MemFree(MSP_PID_CHR, pucAppOmCfgPriority);
+    
+    return ret;
+}
+/*****************************************************************************
+ 函 数 名  : OM_AcpuCfgPeriodTest
+ 功能描述  : 测试桩函数:模拟AP下发上报周期配置
+ 输入参数  : 
+ 输出参数  : 无
+ 返 回 值  :
+ 调用函数  :
+ 被调函数  :
+ 
+*****************************************************************************/
+VOS_INT OM_AcpuCfgPeriodTest(VOS_UINT32  ulMsgModuleID, VOS_UINT32  ulCount ,VOS_UINT8 ucSn)
+{   
+    VOS_INT ret;
+    VOS_UINT  allocSize;
+    
+    OM_APP_PERIOD_CFG_STRU              *pstAppOmCfgPeriod ;
+    CHR_PERIOD_CFG_STRU                 *pstPeriodInfo;
+    VOS_UINT8                           *pucAppOmCfgPeriod; 
+    
+    allocSize = sizeof( OM_APP_PERIOD_CFG_STRU) + sizeof(CHR_PERIOD_CFG_STRU);
+    pucAppOmCfgPeriod = (VOS_UINT8 *)VOS_MemAlloc(MSP_PID_CHR, DYNAMIC_MEM_PT, allocSize);        
+    if (!pucAppOmCfgPeriod)
+    {
+        vos_printf("OM_AcpuReportCfgPeriod: failed to malloc\n");
+        return VOS_ERR;
+    }
+    (VOS_VOID)VOS_MemSet_s(pucAppOmCfgPeriod, allocSize, 0, allocSize);
+    
+    pstAppOmCfgPeriod =(OM_APP_PERIOD_CFG_STRU *)pucAppOmCfgPeriod;
+        
+    pstAppOmCfgPeriod->stOmHeader.ulMsgType = OM_ERR_LOG_MSG_PERIOD_CFG;
+    pstAppOmCfgPeriod->stOmHeader.ulMsgSN   = 0;
+    pstAppOmCfgPeriod->stOmHeader.ulMsgLen  = allocSize - sizeof(OM_ALARM_MSG_HEAD_STRU);
+    pstAppOmCfgPeriod->ucCount = 1;
+    pstAppOmCfgPeriod->ucMsgSN = ucSn;
+    pstAppOmCfgPeriod->ucperiod =1 ;
+    
+    pstPeriodInfo = (CHR_PERIOD_CFG_STRU *)(pstAppOmCfgPeriod->alarmMap);
+    
+    pstPeriodInfo->ulModuleId    = ulMsgModuleID;
+    pstPeriodInfo->ulCount       = ulCount;
+    
+    
+    ret = OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, (VOS_UINT8*)pucAppOmCfgPeriod, allocSize);
+    if(VOS_ERR == ret)
+    {
+        vos_printf("OM_AcpuReportCfgPeriod error!\n");  
+       (VOS_VOID)VOS_MemFree(MSP_PID_CHR, pucAppOmCfgPeriod);
+        return VOS_ERR;
+    }
+    (VOS_VOID)VOS_MemFree(MSP_PID_CHR, pucAppOmCfgPeriod);
+    
+    return ret;
 }
 
 /* 设置采集信息回复消息不需要处理标志 */
@@ -1503,7 +851,9 @@ VOS_INT OM_AcpuCltInfoReqMsgProc(VOS_UINT8 *pucData, VOS_UINT32 ulLen)
     {
         return VOS_ERR;
     }
+    
     allocSize = sizeof(OM_INFO_CLT_REPORT_REQ_STRU) - VOS_MSG_HEAD_LENGTH - sizeof(pOMCltInfo->aucMsgContent) + pOMCltInfo->ulMsgLength;
+    
     pVOSCltInfo = (OM_INFO_CLT_REPORT_REQ_STRU *)VOS_AllocMsg(MSP_PID_CHR, allocSize);
 
     if (!pVOSCltInfo) {
@@ -1560,11 +910,12 @@ VOS_VOID OM_AcpuRcvCltInfoFinish(VOS_VOID)
 }
  
 /* 采集信息下发请求消息打桩函数，用于测试 */
-VOS_VOID OM_AcpuReportCltInfo(VOS_UINT16 modemID, VOS_UINT16 infoId, VOS_UINT32 mcc, VOS_UINT32 mnc)
+VOS_INT OM_AcpuReportCltInfo(VOS_UINT16 modemID, VOS_UINT16 infoId, VOS_UINT32 mcc, VOS_UINT32 mnc)
 {
     APP_OM_INFO_CLT_REQ_STRU *cltInfoReq = NULL;
     OM_INFO_CLT_PLMN_ID_STRU *cltInfoPLMN = NULL;
-    
+
+    VOS_INT ret;
     void *cltInfoalloc = NULL;
     VOS_UINT32 allocSize = sizeof(APP_OM_INFO_CLT_REQ_STRU) + 4; /* mcc/mnc 共8字节 */
 
@@ -1572,7 +923,7 @@ VOS_VOID OM_AcpuReportCltInfo(VOS_UINT16 modemID, VOS_UINT16 infoId, VOS_UINT32 
 
     if (!cltInfoalloc){
         vos_printf("OM_AcpuReportCltInfo: failed to malloc\n");
-        return;
+        return VOS_ERR;
     }
    
     (VOS_VOID)VOS_MemSet_s(cltInfoalloc, allocSize, 0, allocSize);
@@ -1589,30 +940,20 @@ VOS_VOID OM_AcpuReportCltInfo(VOS_UINT16 modemID, VOS_UINT16 infoId, VOS_UINT32 
     cltInfoPLMN = (OM_INFO_CLT_PLMN_ID_STRU *)(cltInfoReq->aucMsgContent);
     cltInfoPLMN->ulMcc = mcc;
     cltInfoPLMN->ulMnc = mnc;
-    
-    
-    (VOS_VOID)OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, (VOS_UINT8*)cltInfoalloc,allocSize);
+    ret = OM_AcpuReadVComData(APP_VCOM_DEV_INDEX_ERRLOG, (VOS_UINT8*)cltInfoalloc,allocSize);
+    if( VOS_ERR == ret)
+    {
+       (VOS_VOID)VOS_MemFree(MSP_PID_CHR, cltInfoalloc);
+       vos_printf("OM_AcpuReportCltInfo error!\n");
+       return VOS_ERR ;
+    }
     (VOS_VOID)VOS_MemFree(MSP_PID_CHR, cltInfoalloc);
- 
-    return;
+    return ret;
 }
  
 //#endif
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuErrLogTimeoutShowPid
- 功能描述  : 打印超时之后上报的PID
- 输入参数  : 无
 
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年5月2日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_AcpuErrLogTimeoutShowPid(VOS_VOID)
 {
     VOS_UINT32 i;
@@ -1631,20 +972,7 @@ VOS_VOID OM_AcpuErrLogTimeoutShowPid(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuErrLogTimeoutProc
- 功能描述  : 超时之后的处理函数
- 输入参数  : 无
 
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年5月2日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_AcpuErrLogTimeoutProc(VOS_VOID)
 {
     OM_AcpuErrLogTimeoutShowPid();
@@ -1654,27 +982,17 @@ VOS_VOID OM_AcpuErrLogTimeoutProc(VOS_VOID)
     return ;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuReadVComData
- 功能描述  : NAS把收到数据调用OM 接口读走
- 输入参数  :  ucDevIndex: 物理端口
-              pucData    : 收到数据
-              ulLen : 数据长度
 
- 输出参数  : 无
- 返 回 值  : VOS_ERR/VOS_OK
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月27日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_INT OM_AcpuReadVComData(VOS_UINT8 ucDevIndex, VOS_UINT8 *pucData, VOS_UINT32 ulLen)
 {
     OM_ALARM_MSG_HEAD_STRU             *pstOmAlarmMsgHead;
-
-    chr_print("enter: %d!\n",ucDevIndex);
+    
+    if(NULL == pucData)
+    {
+        (VOS_VOID)vos_printf("\r\n OM_AcpuReadVComData data is null\n");
+        OM_AcpuSendAppResult(OM_APP_PARAM_INAVALID, MODEM_ID_BUTT);
+        return VOS_ERR;
+    }
 
     if (APP_VCOM_DEV_INDEX_ERRLOG != ucDevIndex)
     {
@@ -1688,51 +1006,69 @@ VOS_INT OM_AcpuReadVComData(VOS_UINT8 ucDevIndex, VOS_UINT8 *pucData, VOS_UINT32
     
     down(&g_stOmRxErrorLogBuffSem);
 
-    g_stErrLogVcomDebugInfo.ulVCOMRcvNum++;
-    g_stErrLogVcomDebugInfo.ulVCOMRcvLen += ulLen;
-
-    if ((VOS_NULL_PTR == pucData) || (sizeof(APP_OM_CTRL_STATUS_STRU)> ulLen))
+    if (ulLen < sizeof(OM_ALARM_MSG_HEAD_STRU))
     {
        
-        (VOS_VOID)vos_printf("\r\n OM_AcpuReadVComData:Send data is NULL or len is error:%d\n", ulLen);        
+        (VOS_VOID)chr_print(" len is error short:%d\n", ulLen);        
         OM_AcpuSendAppResult(OM_APP_MSG_LENGTH_ERR, MODEM_ID_BUTT);
 
         up(&g_stOmRxErrorLogBuffSem);
 
         return VOS_ERR;
     }
+
+     /* 根据消息头判断命令类型 */
+    pstOmAlarmMsgHead = (OM_ALARM_MSG_HEAD_STRU *)pucData;  
+    if (ulLen!= pstOmAlarmMsgHead->ulMsgLen +sizeof(OM_ALARM_MSG_HEAD_STRU))
+    {
+       
+        (VOS_VOID)chr_print(" len is error:%d\n", ulLen);        
+        OM_AcpuSendAppResult(OM_APP_MSG_LENGTH_ERR, MODEM_ID_BUTT);
+
+        up(&g_stOmRxErrorLogBuffSem);
+
+        return VOS_ERR;
+    }
+
+    chr_print("receive msg:Msgtype:0x%x,MsgLen:0x%x,len:0x%x!\n",
+        pstOmAlarmMsgHead->ulMsgType,pstOmAlarmMsgHead->ulMsgLen,ulLen);
+   
     /*串口打印码流*/
+
     OM_ACPU_CHR_DEBUG_TRACE((VOS_UINT8*)pucData, ulLen, OM_ACPU_ERRLOG_RCV);
 
     /* 增加Trans勾包 */
     OM_AcpuErrLogHook(pucData, ulLen, OM_ERRLOG_RCV_MSG);
 
-    /* 根据消息头判断命令类型 */
-    pstOmAlarmMsgHead = (OM_ALARM_MSG_HEAD_STRU *)pucData;
-
+    g_stErrLogVcomDebugInfo.ulVCOMRcvNum++;
+    g_stErrLogVcomDebugInfo.ulVCOMRcvLen += ulLen;
     g_stErrLogVcomDebugInfo.ulVCOMRcvSn = pstOmAlarmMsgHead->ulMsgSN;
+    
 
-    if (OM_ERR_LOG_MSG_ON_OFF == pstOmAlarmMsgHead->ulMsgType)
-    {
-
-        up(&g_stOmRxErrorLogBuffSem);
-        return OM_AcpuSwitchOnOff(pucData, ulLen);
-    }
-    else if(OM_ERR_LOG_MSG_SET_ERR_REPORT == pstOmAlarmMsgHead->ulMsgType)
+    if(OM_ERR_LOG_MSG_SET_ERR_REPORT == pstOmAlarmMsgHead->ulMsgType)
     {
         up(&g_stOmRxErrorLogBuffSem);
         return OM_AcpuReportErrLogMsg(pucData, ulLen);
-    }
-    else if(OM_ERR_LOG_MSG_FTM_REQ == pstOmAlarmMsgHead->ulMsgType)
-    {
-        up(&g_stOmRxErrorLogBuffSem);
-
-        return OM_AcpuFTMMsgReq(pucData, ulLen);
     }
     else if(OM_ERR_LOG_MSG_INFO_CLT_REQ == pstOmAlarmMsgHead->ulMsgType)
     {
         up(&g_stOmRxErrorLogBuffSem);
         return OM_AcpuCltInfoReqMsgProc(pucData, ulLen);
+    }
+    else if(OM_ERR_LOG_MSG_BLACK_LIST == pstOmAlarmMsgHead->ulMsgType)
+    {
+        up(&g_stOmRxErrorLogBuffSem);
+        return OM_AcpuBlackListProc(pucData, ulLen);
+    }
+    else if(OM_ERR_LOG_MSG_PRIORITY_CFG == pstOmAlarmMsgHead->ulMsgType)
+    {
+        up(&g_stOmRxErrorLogBuffSem);
+        return OM_AcpuPriorityCfgProc(pucData, ulLen);
+    }
+    else if(OM_ERR_LOG_MSG_PERIOD_CFG == pstOmAlarmMsgHead->ulMsgType)
+    {
+        up(&g_stOmRxErrorLogBuffSem);
+        return OM_AcpuPeriodCfgProc(pucData, ulLen);
     }
     else
     {
@@ -1742,91 +1078,100 @@ VOS_INT OM_AcpuReadVComData(VOS_UINT8 ucDevIndex, VOS_UINT8 *pucData, VOS_UINT32
         (VOS_VOID)vos_printf("\r\n OM_AcpuReadVComData:Recv msg type is err\n");
          
         OM_AcpuSendAppResult(OM_APP_MSG_TYPE_ERR, MODEM_ID_BUTT);
+        up(&g_stOmRxErrorLogBuffSem);
+        return VOS_ERR;
     }
-    up(&g_stOmRxErrorLogBuffSem);
+}
 
-    return VOS_ERR;
+VOS_VOID OM_AcpuErrLogMsgContentShow(VOS_UINT8* pData)
+{
+    OM_FAULT_ERR_LOG_IND_STRU       *pstOmMsg = (OM_FAULT_ERR_LOG_IND_STRU*)pData;
+    OM_ERR_LOG_HEADER_STRU *pAlarm = (OM_ERR_LOG_HEADER_STRU*)pstOmMsg->aucContent;
+    VOS_INT32 total_len            = (VOS_INT32)pstOmMsg->ulRptLen;
+
+    if((ID_OM_FAULT_ERR_LOG_IND != pstOmMsg->stChrOmHeader.ulMsgName)&&
+        (ID_OM_ALARM_ERR_LOG_IND != pstOmMsg->stChrOmHeader.ulMsgName))
+    {
+        return;
+    }
+
+    while(total_len>0)
+    {
+        CHR_LogReport("Alarm Content, modulid 0x%x, mdmid 0x%x, Alarmid 0x%x, AlarmType 0x%x, AlarmLevel 0x%x,slice 0x%x 0x%x, length 0x%x\n",
+            pAlarm->usModemId, pAlarm->usModemId, pAlarm->usAlmId, pAlarm->usAlmType,
+            pAlarm->usAlmLevel, pAlarm->usAlmHighSlice, pAlarm->usAlmLowSlice, pAlarm->ulAlmLength);
+        total_len -= (pAlarm->ulAlmLength + sizeof(OM_ERR_LOG_HEADER_STRU));
+        pAlarm = (OM_ERR_LOG_HEADER_STRU*)((VOS_UINT8*)pAlarm + pAlarm->ulAlmLength + sizeof(OM_ERR_LOG_HEADER_STRU));
+    }
+
+    return;
 }
 
 /*****************************************************************************
  函 数 名  : OM_AcpuErrLogMsgProc
  功能描述  : OM收到各业务模块上报消息处理
- 输入参数  : pMsg    : 收到数据
+ 输入参数  : pMsg: 收到数据
 
  输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月27日
-     作    者  : x00346372
-     修改内容  : Creat Function
+ 
 *****************************************************************************/
 VOS_VOID OM_AcpuErrLogMsgProc(MsgBlock* pMsg)
 {
 
-    OM_RCV_DATA_INFO_STRU              *pstOmRcvDataInfo;
+    OM_RCV_REPORT_STRU              *pstOmRcvDataInfo;
 
-    pstOmRcvDataInfo = (OM_RCV_DATA_INFO_STRU*)pMsg;
+    pstOmRcvDataInfo = (OM_RCV_REPORT_STRU*)pMsg;
     
-    /* 判断消息ID是否为规定消息ID */
-    if ((ID_OM_FTM_REPROT_IND != pstOmRcvDataInfo->ulMsgName)
-         && (ID_OM_ERR_LOG_REPORT_CNF != pstOmRcvDataInfo->ulMsgName)
-         && (ID_OM_FTM_REQUIRE_CNF != pstOmRcvDataInfo->ulMsgName)
-         && (ID_OM_FAULT_ERR_LOG_IND != pstOmRcvDataInfo->ulMsgName)
-         && (ID_OM_ALARM_ERR_LOG_IND != pstOmRcvDataInfo->ulMsgName))
+    /*判断是否是主动上报或者被动上报*/
+    if ((ID_OM_ERR_LOG_REPORT_CNF != pstOmRcvDataInfo->stChrRcvOmHeader.ulMsgName)       
+         && (ID_OM_FAULT_ERR_LOG_IND != pstOmRcvDataInfo->stChrRcvOmHeader.ulMsgName)
+         && (ID_OM_ALARM_ERR_LOG_IND != pstOmRcvDataInfo->stChrRcvOmHeader.ulMsgName))
     {
-        chr_print("not error Log msg.\n");
+        CHR_LogReport("not chr Log msg.\n");
         return ;
     }
 
     /*  收到消息检查是否需要上报 */
-    if (VOS_OK != OM_AcpuRcvMsgCheck(pstOmRcvDataInfo))
+    if (VOS_OK !=OM_AcpuRcvMsgCheck(pstOmRcvDataInfo))
     {
-        chr_print("rcv msg error!\r\n ");
+        CHR_LogReport("rcv msg error!\r\n ");
         return ;
     }
+    /*兼容ap的x模解析*/ 
 
-    pstOmRcvDataInfo->stOmHeader.ulMsgSN = g_stErrLogVcomDebugInfo.ulVCOMSendSn++;
-
-    OM_AcpuSendVComData((VOS_UINT8 *)&pstOmRcvDataInfo->stOmHeader.usMsgType,
-                        pstOmRcvDataInfo->stOmHeader.ulMsgLen + sizeof(OM_ERR_MSG_HEAD_STRU));
+    pstOmRcvDataInfo->unComChrType.stComChrType.usMsgType = pstOmRcvDataInfo->unComChrType.ulMsgType&0xffff;
+    pstOmRcvDataInfo->unComChrType.stComChrType.usFaultId = pstOmRcvDataInfo->stChrRcvOmHeader.usFaultId;
+  
+    OM_AcpuSendVComData((VOS_UINT8 *)&pstOmRcvDataInfo->unComChrType.ulMsgType,
+                 
+       pstOmRcvDataInfo->ulRptLen + sizeof(OM_ALARM_MSG_HEAD_STRU));
    
-    chr_print("rcv msg Send Success,Msgname 0x%x, Type 0x%x, Alarmid  0x%x,Pid 0x%x, Cnt 0x%x\n",
-        pstOmRcvDataInfo->ulMsgName,
-        pstOmRcvDataInfo->stOmHeader.usMsgType,
-         pstOmRcvDataInfo->stOmHeader.ucAlarmId,
-        pstOmRcvDataInfo->ulSenderPid,
-        g_stOmAppMsgRecord.ulErrLogReportSend);
-     
-    if ((OM_ERR_LOG_MSG_ERR_REPORT == pstOmRcvDataInfo->stOmHeader.usMsgType)
+    CHR_LogReport("rcv msg Send Success,Msgname 0x%x, Type 0x%x, AlarmTyep 0x%x, Alarmid 0x%x,Pid 0x%x, Cnt 0x%x,modulid 0x%x\n",
+        pstOmRcvDataInfo->stChrRcvOmHeader.ulMsgName,
+        pstOmRcvDataInfo->unComChrType.stComChrType.usMsgType,
+        pstOmRcvDataInfo->stChrRcvOmHeader.usAlmType,
+        pstOmRcvDataInfo->stChrRcvOmHeader.usAlarmId,
+        pstOmRcvDataInfo->stChrRcvOmHeader.ulSenderPid,
+        g_stOmAppMsgRecord.ulErrLogReportSend,
+        pstOmRcvDataInfo->stChrRcvOmHeader.ulModuleId);
+
+    //OM_AcpuErrLogMsgContentShow((VOS_UINT8*)pstOmRcvDataInfo);
+    
+     if ((OM_ERR_LOG_MSG_ERR_REPORT == pstOmRcvDataInfo->unComChrType.stComChrType.usMsgType)
         && ( OM_AP_SEND_MSG_FINISH==g_stOmAppMsgRecord.ulErrLogReportSend))
     {
-        /* 停定时器 */
+        /* 停定时器*/
          
-        (void)VOS_StopRelTimer(&g_AcpuErrLogFullTmr);
+       (void)VOS_StopRelTimer(&g_AcpuErrLogFullTmr);
         
         OM_AcpuRcvMsgFinish();
-        chr_print("Report all msg, Stop timer\n");
+        CHR_LogReport("Report all msg, Stop timer\n");
     }
 
-    return ;
+    return;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuCltInfoCnfMsgProc
- 功能描述  : OM采集信息回复消息处理函数
- 输入参数  : pMsg    : 收到数据
 
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月27日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 /* 采集信息回复消息处理函数 */
 VOS_VOID OM_AcpuCltInfoCnfMsgProc(MsgBlock* pMsg)
 {
@@ -1857,33 +1202,17 @@ VOS_VOID OM_AcpuCltInfoCnfMsgProc(MsgBlock* pMsg)
 
     return;
 }
-/*****************************************************************************
- 函 数 名  : OM_AcpuChrMsgProc
- 功能描述  : OM收到各业务模块上报消息处理
- 输入参数  : pMsg    : 收到数据
 
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月27日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_AcpuChrMsgProc(MsgBlock* pMsgBlock)
 {
     
     REL_TIMER_MSG *pTimer =NULL;
-
+    CHR_APP_RESET_MSG_STRU *pReset= NULL;
     /*入参判断*/
     if (NULL == pMsgBlock)
     {
         return;
     }
-
-    /*任务开始处理，不允许睡眠*/
-//    wake_lock(&chr_wakelock);
 
     /*根据发送PID，执行不同处理*/
     switch(pMsgBlock->ulSenderPid)
@@ -1902,7 +1231,14 @@ VOS_VOID OM_AcpuChrMsgProc(MsgBlock* pMsgBlock)
                 OM_AcpuCltInfoCnfNotNeedProcessSetFlag();
                 OM_AcpuRcvCltInfoFinish();
             }
-            break;          
+            break; 
+        case MSP_PID_CHR:
+            pReset =( CHR_APP_RESET_MSG_STRU *)pMsgBlock;
+            if(CHR_ID_RESET_CCORE == pReset->stMsgHeader.ulMsgName)
+            {    
+                OM_AcpuResetProc();
+            }
+            break;
         default:
         {
             OM_AcpuErrLogMsgProc(pMsgBlock);
@@ -1912,114 +1248,76 @@ VOS_VOID OM_AcpuChrMsgProc(MsgBlock* pMsgBlock)
 
     }
 
-   /*任务开始结束，允许睡眠*/
-//  wake_unlock(&chr_wakelock);
-
    return ;
 }
-/*****************************************************************************
- 函 数 名  : OM_AcpuChrInit
- 功能描述  : 用于ErrLog Vcom 口通道的初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史  :
-   1.日    期  : 2017年05月02日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
-VOS_UINT32 OM_AcpuChrInit(VOS_VOID)
+
+VOS_UINT32 OM_AcpuChrInit(enum VOS_INIT_PHASE_DEFINE ip)
 {
     
-    VOS_UINT32 ulRest = 0;    
-  
-    VOS_SpinLockInit(&g_stVosErrLogSendSpinLock);
-//    wake_lock_init(&chr_wakelock,WAKE_LOCK_SUSPEND,"chr_wakelock");
-    
-    /* 商用ERR LOG上报全局变量初始化 */
-    g_stOmAppMsgRecord.ulErrLogReportSend = 0;/* 记录Err Log需要上报组件 */
-    g_stOmAppMsgRecord.ulFTMReportSend    = 0;/* 记录FTM需要上报组件 */
-//    g_stOmAppMsgRecord.pstErrorLogModule  = VOS_NULL_PTR;
-    g_stOmAppMsgRecord.pulFTMModule       = VOS_NULL_PTR;
-    g_stOmAppMsgRecord.usModemId          = MODEM_ID_BUTT;
-    g_stOmAppMsgRecord.ulErrLogState      = ERRLOG_IDLE;
-    g_stOmAppMsgRecord.ulMsgSN            = 0;
+    VOS_UINT32 ulRest = 0; 
 
-    sema_init(&g_stOmRxErrorLogBuffSem, 1);
-
-    /* 注册收Vcom Error log函数给NAS */    
-    ulRest = APP_VCOM_RegDataCallback(APP_VCOM_DEV_INDEX_ERRLOG, OM_AcpuReadVComData);
-    if(VOS_OK != ulRest)
+    if(ip == VOS_IP_LOAD_CONFIG)
     {
-        chr_print("RegDataCallback is err\n");
-    }
+        /* 商用ERR LOG上报全局变量初始化 */
+        g_stOmAppMsgRecord.ulErrLogReportSend = 0;/* 记录Err Log需要上报组件 */
 
-   
-    return ulRest;
+        g_stOmAppMsgRecord.usModemId          = MODEM_ID_BUTT;
+        g_stOmAppMsgRecord.ulErrLogState      = ERRLOG_IDLE;
+        g_stOmAppMsgRecord.ulMsgSN            = 0;
+     
+        sema_init(&g_stOmRxErrorLogBuffSem, 1);
+ 
+        
+        /* 注册收Vcom Error log函数给NAS */    
+        ulRest = APP_VCOM_RegDataCallback(APP_VCOM_DEV_INDEX_ERRLOG, OM_AcpuReadVComData);
+        if(VOS_OK != ulRest)
+        {
+            chr_print("RegDataCallback is err\n");
+        }
+          
+        ulRest = CHR_Cfg_Init();
+        
+        if(VOS_OK != ulRest)
+        {
+            chr_print("chr init err\n");
+        }
+    } 
     
+    return ulRest;
+     
 }
 
 
-/*****************************************************************************
- 函 数 名  : OM_AcpuErrLogInfoShow
- 功能描述  : 用于打印 Error log 调测信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史  :
-   1.日    期  : 2013年08月27日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_AcpuErrLogInfoShow(VOS_VOID)
 {
     
     (VOS_VOID)vos_printf("\r\nVCom Send sn is           %d", g_stErrLogVcomDebugInfo.ulVCOMSendSn);
     (VOS_VOID)vos_printf("\r\nVCom Send num is           %d", g_stErrLogVcomDebugInfo.ulVCOMSendNum);
     (VOS_VOID)vos_printf("\r\nVCom Send Len is           %d", g_stErrLogVcomDebugInfo.ulVCOMSendLen);
-
     (VOS_VOID)vos_printf("\r\nVCom Send Error num is         %d", g_stErrLogVcomDebugInfo.ulVCOMSendErrNum);
     (VOS_VOID)vos_printf("\r\nVCom Send Error Len is         %d\r\n", g_stErrLogVcomDebugInfo.ulVCOMSendErrLen);
-
     (VOS_VOID)vos_printf("\r\nVCom receive sn is           %d", g_stErrLogVcomDebugInfo.ulVCOMRcvSn);
     (VOS_VOID)vos_printf("\r\nVCom receive num is           %d", g_stErrLogVcomDebugInfo.ulVCOMRcvNum);
     (VOS_VOID)vos_printf("\r\nVCom receive Len is           %d", g_stErrLogVcomDebugInfo.ulVCOMRcvLen);
-
     (VOS_VOID)vos_printf("\r\nVCom receive Error num is         %d", g_stErrLogVcomDebugInfo.ulVCOMRcvErrNum);
     (VOS_VOID)vos_printf("\r\nVCom receive Error Len is         %d\r\n", g_stErrLogVcomDebugInfo.ulVCOMRcvErrLen);
-
-
-    (VOS_VOID)vos_printf("\r\nOM Rcv Err log msg num is         %d", g_stRcvUESendAP.ulErrLogRcvNum);
-    (VOS_VOID)vos_printf("\r\nOM Rcv Err log msg len is         %d", g_stRcvUESendAP.ulErrLogRcvLen);
-
-    (VOS_VOID)vos_printf("\r\nOM Rcv FTM msg num is         %d", g_stRcvUESendAP.ulFTMRcvNum);
-    (VOS_VOID)vos_printf("\r\nOM Rcv FTM msg len is         %d", g_stRcvUESendAP.ulFTMRcvLen);
-
     (VOS_VOID)vos_printf("\r\nOM Send Err log msg num is         %d", g_stRcvUESendAP.ulErrLogSendNum);
     (VOS_VOID)vos_printf("\r\nOM Send Err log msg len is         %d", g_stRcvUESendAP.ulErrLogSendLen);
 
-    (VOS_VOID)vos_printf("\r\nOM Send FTM msg num is         %d", g_stRcvUESendAP.ulFTMSendNum);
-    (VOS_VOID)vos_printf("\r\nOM Send FTM msg len is         %d\r\n", g_stRcvUESendAP.ulFTMSendLen);
     
 
     return;
 }
-/*****************************************************************************
- 函 数 名  : MSP_AppChrFidInit
- 功能描述  : CHR fid初始化函数
- 输入参数  : 
+EXPORT_SYMBOL(OM_AcpuReportErrLog);
+EXPORT_SYMBOL(OM_AcpuReportCltInfo);
+EXPORT_SYMBOL(OM_AcpuErrLogInfoShow);
+EXPORT_SYMBOL(OM_ChrOpenLog);
+EXPORT_SYMBOL(OM_AcpuCfgBlackListTest);
+EXPORT_SYMBOL(OM_AcpuCfgPriorityTest);
+EXPORT_SYMBOL(OM_AcpuCfgPeriodTest);
 
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2017年4月27日
-     作    者  : x00346372
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_UINT32 MSP_AppChrFidInit(enum VOS_INIT_PHASE_DEFINE ip)
 {
     

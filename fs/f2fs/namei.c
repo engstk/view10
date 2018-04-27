@@ -22,6 +22,11 @@
 #include "acl.h"
 #include <trace/events/f2fs.h>
 
+#ifdef CONFIG_ACM
+#include <linux/acm_f2fs.h>
+#include <log/log_usertype/log-usertype.h>
+#endif
+
 static struct inode *f2fs_new_inode(struct inode *dir, umode_t mode)
 {
 	struct f2fs_sb_info *sbi = F2FS_I_SB(dir);
@@ -103,8 +108,20 @@ static int is_multimedia_file(const unsigned char *s, const char *sub)
 	for (i = 1; i < slen - sublen; i++) {
 		if (s[i] != '.')
 			continue;
-		if (!strncasecmp((const char *)s + i + 1, sub, sublen))
+		if (!strncasecmp((const char *)s + i + 1, sub, sublen)) {
+#ifdef CONFIG_ACM
+			/*
+			 * ".*.hwbk" is the renaming rule in the framework,
+			 * we should not treate the renaming file as a multimedia_file.
+			 */
+			if (!strncasecmp((const char *)s + slen - 4, "hwbk", 4))
+				return 0;
+			else
+				return 1;
+#else
 			return 1;
+#endif
+		}
 	}
 
 	return 0;
@@ -128,11 +145,13 @@ static inline void set_cold_files(struct f2fs_sb_info *sbi, struct inode *inode,
 	}
 }
 
-#define F2FS_MONITOR_UNRM
-#ifdef F2FS_MONITOR_UNRM
+#ifdef CONFIG_ACM
 static bool is_unrm_file(struct inode *inode, struct dentry *dentry)
 {
-	char *ext[] = { "jpg", "png", NULL };
+	static const char * const ext[] = { "jpg", "jpe", "jpeg", "gif", "png",
+					    "bmp", "wbmp", "webp", "dng", "cr2",
+					    "nef", "nrw", "arw", "rw2", "orf",
+					    "raf", "pef", "srw", NULL };
 	int i;
 
 	if (S_ISDIR(inode->i_mode))
@@ -142,6 +161,27 @@ static bool is_unrm_file(struct inode *inode, struct dentry *dentry)
 		if (is_multimedia_file(dentry->d_name.name, ext[i]))
 			return true;
 	}
+
+	return false;
+}
+
+static bool should_monitor_file(struct dentry *dentry)
+{
+	struct inode *i = d_inode(dentry);
+	struct dentry *d;
+
+	if (F2FS_I(i)->i_flags & FS_UNRM_FL)
+		return true;
+
+	if (!is_unrm_file(i, dentry))
+		return false;
+
+	/* check if parent directory is set with FS_UNRM_FL */
+	d = dget_parent(dentry);
+	i = d_inode(d);
+	dput(d);
+	if (F2FS_I(i)->i_flags & FS_UNRM_FL)
+		return true;
 
 	return false;
 }
@@ -383,42 +423,48 @@ static int f2fs_unlink(struct inode *dir, struct dentry *dentry)
 
 	trace_f2fs_unlink_enter(dir, dentry);
 
-#ifdef F2FS_MONITOR_UNRM
-	if (F2FS_I(inode)->i_flags & FS_UNRM_FL ||
-	    F2FS_I(dir)->i_flags & FS_UNRM_FL) {
-		struct task_struct *tsk, *p_tsk, *pp_tsk;
-		struct dentry *dent;
-		int is_dir = S_ISDIR(inode->i_mode);
-		char *event;
-		char *envp[2];
+#ifdef CONFIG_ACM
+	int logusertype = get_logusertype_flag();
+	/* oversea users do not need monitor*/
+	if (logusertype != OVERSEA_USER && logusertype != OVERSEA_COMMERCIAL_USER) {
+		struct task_struct *tsk,*p_tsk;
+		char *pkg;
+		uid_t uid;
 
-		if (!is_unrm_file(inode, dentry))
-			goto skip_report;
+		if (should_monitor_file(dentry)) {
+			pkg = (char *)kzalloc(100, GFP_NOFS);
+			if(!pkg) {
+				err = -ENOMEM;
+				goto fail;
+			}
 
-		tsk = current->group_leader;
-		p_tsk = tsk->parent->group_leader;
-		pp_tsk = p_tsk->parent->group_leader;
-		if (is_dir)
-			dent = dentry;
-		else
-			dent = dentry->d_parent;
-		event = kmalloc(300UL, GFP_NOFS);
-		if (event) {
-			scnprintf(event, 299UL, "UNLINK=%s@%s@%s@%s@%d",
-				  tsk->comm, p_tsk->comm, pp_tsk->comm,
-				  dent->d_name.name, is_dir);
-			envp[0] = event;
-			envp[1] = NULL;
-			kobject_uevent_env(&sbi->s_kobj, KOBJ_CHANGE, envp);
-			kfree(event);
+			tsk = current->group_leader;
+			/* When the task's uid is not more than 10000,get pakege name and uid directly.
+				Otherwise,find it's parent until the uid of it's parent is less than 10000 */
+			if (__kuid_val(task_uid(tsk)) > 10000) {
+				p_tsk = tsk;
+				while ( __kuid_val(task_uid(p_tsk)) > 10000) {
+					if ((p_tsk->parent) != NULL) {
+						tsk = p_tsk;
+						p_tsk = p_tsk->parent->group_leader;
+					} else {
+						break;
+					}
+				}
+			}
+			get_cmdline(tsk, pkg, 100);
+			uid = __kuid_val(task_uid(tsk));
+
+			pr_err("F2FS-fs: %s: dentry %pd PID %d cmdline %s uid %d\n",
+				__func__, dentry, task_pid_nr(tsk), pkg, uid);
+			if (acm_search(pkg, dentry, uid) != 0) {
+				err = -EOWNERDEAD;
+				kfree(pkg);
+				goto fail;
+			}
+			kfree(pkg);
 		}
-
-		pr_warning("F2FS-fs (%s): %s: unlinked by %d[%s](parent %d[%s] grand %d[%s])\n",
-			   sbi->sb->s_id, dent->d_name.name,
-			   tsk->pid, tsk->comm, p_tsk->pid, p_tsk->comm,
-			   pp_tsk->pid, pp_tsk->comm);
 	}
-skip_report:
 #endif
 
 	de = f2fs_find_entry(dir, &dentry->d_name, &page);
@@ -589,7 +635,7 @@ static int f2fs_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
 	inode->i_mapping->a_ops = &f2fs_dblock_aops;
 	mapping_set_gfp_mask(inode->i_mapping, GFP_F2FS_HIGH_ZERO);
 
-#ifdef F2FS_MONITOR_UNRM
+#ifdef CONFIG_ACM
 	inherit_parent_flag(dir, inode);
 #endif
 

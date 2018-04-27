@@ -1,11 +1,15 @@
 TOP      := drivers/../..
 VFMW_DIR := drivers/vcodec/hi_vcodec/vdec_hivna
 
-ifeq ($(TARGET_BOARD_PLATFORM), hi3660)
-include $(VFMW_DIR)/vfmw_v4.0/firmware/product/HiVCodecV100/NOR_CFG/vfmw_make.cfg
+ifeq ($(TARGET_BOARD_PLATFORM), kirin970)
+include $(VFMW_DIR)/vfmw_v4.0/firmware/product/HiVCodecV200/NOR_CFG/vfmw_make.cfg
 endif
 
-ifeq ($(TARGET_BOARD_PLATFORM), kirin970)
+ifeq ($(CONFIG_VCODEC_PLATFORM_HIVCODECV300), y)
+include $(VFMW_DIR)/vfmw_v4.0/firmware/product/HiVCodecV200/NOR_CFG/vfmw_make.cfg
+endif
+
+ifeq ($(CONFIG_VCODEC_PLATFORM_HIVCODECV210), y)
 include $(VFMW_DIR)/vfmw_v4.0/firmware/product/HiVCodecV200/NOR_CFG/vfmw_make.cfg
 endif
 

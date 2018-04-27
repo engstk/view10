@@ -73,7 +73,8 @@ static DECLARE_WAIT_QUEUE_HEAD(s_wait_closing_pipeline);
 static LIST_HEAD(s_pipelines_closing);
 
 static void hwcam_cfgpipeline_force_close(struct work_struct *work);
-
+static int  hwcam_cfgpipeline_mount_req_on_cancel(hwcam_cfgreq_intf_t* pintf,
+                int reason);
 enum
 {
     HWCAM_WAIT4STOPPING_TIME                    =   30000,   // 30s
@@ -1119,6 +1120,11 @@ hwcam_cfgpipeline_mount_req_put(
         hwcam_cfgreq_intf_t* pintf)
 {
     hwcam_cfgpipeline_mount_req_t* mpr = I2MPR(pintf);
+
+    if(1 == atomic_read(&mpr->ref.refcount)){
+        hwcam_cfgpipeline_mount_req_on_cancel(&mpr->intf, -ENOENT);
+    }
+
     return kref_put(&mpr->ref, hwcam_cfgpipeline_mount_req_release);
 }
 
@@ -1289,8 +1295,6 @@ hwcam_cfgpipeline_mount_req_release(
         struct kref* r)
 {
     hwcam_cfgpipeline_mount_req_t* mpr = REF2MPR(r);
-
-    hwcam_cfgpipeline_mount_req_on_cancel(&mpr->intf, -ENOENT);
 
     if (mpr->pipeline) {
         hwcam_cfgpipeline_intf_put(mpr->pipeline);

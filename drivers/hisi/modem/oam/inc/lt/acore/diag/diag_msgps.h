@@ -85,7 +85,11 @@ extern "C" {
 /*****************************************************************************
    5 STRUCT
 *****************************************************************************/
-
+typedef struct
+{
+    VOS_UINT32  ulChannelNum;
+    VOS_UINT32  ulChannelId;
+}DIAG_MSGPS_CTRL;
 
 /*****************************************************************************
   6 UNION
@@ -104,9 +108,12 @@ extern "C" {
 /*****************************************************************************
   9 OTHERS
 *****************************************************************************/
-extern VOS_VOID diag_PsMsgInit(VOS_VOID);
-
-extern VOS_VOID DIAG_ShowTransList(VOS_VOID);
+VOS_VOID diag_PsMsgInit(VOS_VOID);
+VOS_VOID DIAG_ShowTransList(VOS_VOID);
+VOS_UINT32 diag_PsConnect(VOS_UINT8 * pData);
+VOS_UINT32 diag_PsConnMgr(VOS_UINT8 * pData);
+VOS_UINT32 diag_PsDisconnect(VOS_UINT8 * pData);
+VOS_VOID diag_ConnReset(VOS_VOID);
 
 #ifdef __cplusplus
     #if __cplusplus

@@ -1,4 +1,9 @@
+choose_variant_modem ?= $(TARGET_BUILD_VARIANT)
+ifneq ($(choose_variant_modem),)
+export choose_variant_modem
+endif
 -include $(srctree)/drivers/hisi/modem/config/product/$(OBB_PRODUCT_NAME)/config/balong_product_config.mk
+subdir-ccflags-y += -I$(srctree)/drivers/hisi/tzdriver/libhwsecurec/
 subdir-ccflags-y += -I$(srctree)/drivers/hisi/modem/platform/ccore/$(CFG_PLATFORM)/
 subdir-ccflags-y += -I$(srctree)/drivers/hisi/modem/platform/dsp/$(CFG_PLATFORM)/
 subdir-ccflags-y += -I$(srctree)/drivers/hisi/modem/platform/acore/$(CFG_PLATFORM)/
@@ -36,6 +41,7 @@ ifeq ($(strip $(OBB_LLT_MDRV)),y)
 subdir-ccflags-y += -DDRV_BUILD_LLT
 endif
 
+
 ifeq ($(LLT_BUILD_GCOV), y)
 subdir-ccflags-y += -DDRV_BUILD_GCOV
 endif
@@ -71,4 +77,10 @@ endif
 #add modem user
 ifeq ($(TARGET_BUILD_VARIANT),user)
 KBUILD_CFLAGS += -DCHOOSE_MODEM_USER
+endif
+
+ifeq ($(cdma),false)
+KBUILD_CFLAGS += -DFEATURE_UE_MODE_CDMA=FEATURE_OFF
+KBUILD_CFLAGS += -DFEATURE_CSDR=FEATURE_OFF
+KBUILD_CFLAGS += -DFEATURE_BALONG_CL=FEATURE_OFF
 endif

@@ -237,7 +237,6 @@ typedef enum _map_pool_usage_e{
     MAP_POOL_USAGE_FW = 0,
     MAP_POOL_USAGE_ISP_FW,
     MAP_POOL_USAGE_ISP,
-    MAP_POOL_USAGE_SEC_ISP_FW,
     MAP_POOL_USAGE_MAX,
 } map_pool_usage_e;
 
@@ -401,6 +400,7 @@ typedef struct _stream_config_t
     unsigned int height;
     unsigned int stride;
     unsigned int format;
+    unsigned int secure;
 } stream_config_t;
 
 typedef struct _msg_req_usecase_config_t
@@ -1116,6 +1116,7 @@ typedef struct _msg_ack_test_case_interface_t
 typedef struct _msg_req_flush_t
 {
     unsigned int cam_id;
+    unsigned int is_hotplug;
 } msg_req_flush_t;
 
 typedef struct _msg_ack_flush_t

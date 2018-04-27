@@ -22,7 +22,7 @@
 #include <governor.h>
 
 #ifdef CONFIG_HUAWEI_DUBAI
-#include <huawei_platform/power/dubai/dubai.h>
+#include <chipset_common/dubai/dubai.h>
 #endif
 
 #define DEFAULT_GO_HISPEED_LOAD		90
@@ -538,7 +538,7 @@ static int gpu_scene_aware_init(struct devfreq *devfreq)
 		goto err_sa_data;
 	}
 
-	data->cur_policy->target_load = kmalloc(sizeof(unsigned int), GFP_KERNEL);
+	data->cur_policy->target_load = kzalloc(sizeof(unsigned int), GFP_KERNEL);
 	if (!(data->cur_policy->target_load)) {
 		pr_err("%s: alloc target load err\n", __func__);
 		goto err_cur_policy;

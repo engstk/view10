@@ -33,6 +33,9 @@
 #endif
 #include <linux/switch.h>
 #include <linux/hisi/hw_cmdline_parse.h>
+#ifdef CONFIG_HUAWEI_DSM
+#include <dsm/dsm_pub.h>
+#endif
 
 
 #define GPIO_LEVEL_LOW 0
@@ -147,6 +150,9 @@ struct drv2605_pdata {
 	int max_timeout_ms;
 	int reduce_timeout_ms;
 	int support_amplitude_control;
+	int check_power_state1;
+	int check_power_state2;
+	int check_power_time;
 	char lra_rated_voltage;
 	char lra_overdriver_voltage;
 	char lra_rtp_strength;
@@ -159,6 +165,8 @@ static char g_effect_bank = EFFECT_LIBRARY;
 static int device_id = -1;
 static char read_val;
 static int vibrator_is_playing = NO;
+static int fpc_check_time = 0;
+
 #if defined(CONFIG_HISI_VIBRATOR)
 extern volatile int vibrator_shake;
 #else
@@ -233,7 +241,7 @@ static const unsigned char LRA_init_sequence[] = {
     /*RATED_VOLTAGE_REG,              LRA_RATED_VOLTAGE,*/
     /*OVERDRIVE_CLAMP_VOLTAGE_REG,    LRA_OVERDRIVE_CLAMP_VOLTAGE,*/
 	Control1_REG, 0x90,
-	Control2_REG, 0xF2,
+	Control2_REG, 0xC2,
 	Control3_REG, 0xA0,
 	AUTOCAL_MEM_INTERFACE_REG, 0x30,
 };
@@ -276,6 +284,135 @@ struct {
     { 33, {0x2C,0,0,0,0,0,0,0}},
 };
 
+#ifdef CONFIG_HUAWEI_DSM
+static struct dsm_dev dsm_vibrator = {
+	.name = "dsm_vibrator",
+	.device_name = "DRV2605",
+	.ic_name = NULL,
+	.module_name = NULL,
+	.fops = NULL,
+	.buff_size = 1024,
+};
+static struct dsm_client* vib_dclient = NULL;
+#endif
+
+#ifdef CONFIG_HUAWEI_DSM
+#ifdef CONFIG_HUAWEI_DATA_ACQUISITION
+#define VIB_CAL_NUM 4
+#define VIB_CALI_STATUS
+#define VIB_CALI_18
+#define VIB_CALI_19
+#define VIB_CALI_1A
+#define STA_MMI1 "MMI1"
+#define VIB_TEST_NAME "VIBRATOR"
+#define VIB_TEST_PASS "pass"
+#define VIB_TEST_FAIL "fail"
+#define VIB_CAL_STATUS_MSG 703021001
+#define VIB_CAL_CALI18_MSG 703021002
+#define VIB_CAL_CALI19_MSG 703021003
+#define VIB_CAL_CALI1A_MSG 703021004
+#define NA "NA"
+#define PRA_ERR -1
+#define DEFAULT_VERSION 1
+#define VIB_CAL_MAX_THR 0xFF
+#define VIB_CAL_MIN_THR 0x00
+#define VIB_CAL_FAILD -1
+
+static char *vibra_cali_name[VIB_CAL_NUM] =
+	{"VIBRATOR_CAL_STATUS", "VIBRATOR_CAL_COMPENSATE", "VIBRATOR_CAL_BACK_EMF", "VIBRATOR_CAL_FEEDBACK_CTL"};
+static int cali_result_val[VIB_CAL_NUM]={0};
+
+static int init_event_of_msg(struct event *events, int result)
+{
+	if(events == NULL )
+		return PRA_ERR;
+	memset(events,0,sizeof(struct event));
+	events->cycle = 0;
+	memcpy(events->station, STA_MMI1, sizeof(STA_MMI1));
+	memcpy(events->device_name, VIB_TEST_NAME, sizeof(VIB_TEST_NAME));
+	memcpy(events->bsn, NA, sizeof(NA));
+	snprintf(events->max_threshold,MAX_VAL_LEN,"%d",VIB_CAL_MAX_THR);
+	snprintf(events->min_threshold,MAX_VAL_LEN,"%d",VIB_CAL_MIN_THR);
+	if(0 == result){//calib fail
+		memcpy(events->result, VIB_TEST_FAIL, sizeof(VIB_TEST_FAIL));
+		events->error_code = VIB_CAL_FAILD;
+	}else{
+		memcpy(events->result, VIB_TEST_PASS, sizeof(VIB_TEST_PASS));
+		events->error_code = 0;//0 calib succ
+	}
+	memcpy(events->result, VIB_TEST_PASS, sizeof(VIB_TEST_PASS));
+	memcpy(events->firmware, NA, sizeof(NA));
+	memcpy(events->description, NA, sizeof(NA));
+	return 0;
+}
+
+static int init_msg_for_enq(struct message *msg)
+{
+	if(msg == NULL)
+		return PRA_ERR;
+	memset(msg,0,sizeof(struct message));
+	msg->data_source = DATA_FROM_KERNEL;
+	msg->num_events = 0;
+	msg->version = DEFAULT_VERSION;
+	return 0;
+}
+
+static int vibra_cal_enq_notify_work(int result)
+{
+	int ret = PRA_ERR;
+	struct message *msg = NULL;
+	int pEvents = 0;
+	int first_item = VIB_CAL_STATUS_MSG;
+
+	msg = (struct message*)kzalloc(sizeof(struct message),GFP_KERNEL);
+	ret = init_msg_for_enq(msg);
+	if(ret){
+		dev_err(&client_temp->dev, "alloc mesage failed\n");
+		return ret;
+	}
+
+	for(pEvents=0; pEvents<MAX_MSG_EVENT_NUM && pEvents<VIB_CAL_NUM; pEvents++){
+		ret =  init_event_of_msg(&(msg->events[pEvents]), result);
+		if(ret){
+			dev_err(&client_temp->dev, "init_event_of_msg failed\n");
+			kfree(msg);
+			return ret;
+		}
+		snprintf(msg->events[pEvents].value,MAX_VAL_LEN,"%d",cali_result_val[pEvents]);
+		memcpy(msg->events[pEvents].test_name,vibra_cali_name[pEvents],(strlen(vibra_cali_name[pEvents])+1));
+		msg->events[pEvents].item_id = first_item+pEvents;
+	}
+
+	msg->num_events = pEvents;
+	ret = dsm_client_copy_ext(vib_dclient,msg,sizeof(struct message));
+	if(ret <= 0){
+		ret = PRA_ERR;
+		dev_err(&client_temp->dev, "vibrator dsm_client_copy_ext for vibrator failed\n");
+		kfree(msg);
+		return ret;
+	}else{
+		ret = 0;
+		if(msg){
+			kfree(msg);
+		}
+	}
+
+	dev_err(&client_temp->dev, "vibrator vibra_cal_enq_notify_work succ!!\n");
+	return ret;
+}
+
+static void enq_notify_work_vibrator(int result)
+{
+	int ret = 0;
+	if(!dsm_client_ocuppy(vib_dclient)){
+		ret = vibra_cal_enq_notify_work(result);
+		if(!ret){
+			dsm_client_notify(vib_dclient,DA_VIBRATOR_ERROR_NO);
+		}
+	}
+}
+#endif
+#endif
 static void drv2605_write_reg_val(struct i2c_client *client,
 				  const unsigned char *data, unsigned int size)
 {
@@ -431,6 +568,7 @@ static int write_vibrator_calib_value_to_nv(char *temp)
 			"nve_direct_access write error(%d)\n", ret);
 		return -1;
 	}
+
 	dev_info(&client_temp->dev,
 		 "nve_direct_access write nv_data (0x%x  0x%x  0x%x )\n",
 		 user_info.nv_data[0], user_info.nv_data[1],
@@ -518,6 +656,36 @@ static int vibrator_get_time(struct timed_output_dev *dev)
 	return 0;
 }
 
+#ifdef CONFIG_HUAWEI_DSM
+static void check_power_state(void)
+{
+	int gpio_val1 = -1;
+	int gpio_val2 = -1;
+	if(pdata->check_power_state1 < 0 && pdata->check_power_state2 < 0){
+		return;
+	}
+	if(pdata->check_power_state1 >= 0){
+		gpio_val1 = gpio_get_value(pdata->check_power_state1);
+	}
+	if(pdata->check_power_state2 >= 0){
+		gpio_val2 = gpio_get_value(pdata->check_power_state2);
+	}
+	if((gpio_val1 == HIGH_VOL_ERR) || (gpio_val2 == HIGH_VOL_ERR)){
+		dev_err(&(data->client->dev), "get check_power_state1 = %d, stat2 = %d\n", gpio_val1, gpio_val2);
+		if(fpc_check_time > pdata->check_power_time){
+			return;
+		}
+		if(fpc_check_time == pdata->check_power_time){
+			if (!dsm_client_ocuppy(vib_dclient)) {
+				dsm_client_record(vib_dclient, "gpio_%d = %d, gpio_%d = %d\n", pdata->check_power_state1, \
+				gpio_val1, pdata->check_power_state2, gpio_val2);
+				dsm_client_notify(vib_dclient, DSM_VIBRATOR_FPC_CHECK_NO);
+			}
+		}
+		fpc_check_time++;
+	}
+}
+#endif
 static void vibrator_off(struct drv2605_data *data)
 {
 	if (vibrator_is_playing) {
@@ -526,6 +694,9 @@ static void vibrator_off(struct drv2605_data *data)
 		vibrator_is_playing = NO;
 		drv2605_change_mode(data->client, MODE_STANDBY);
 		vibrator_shake = 0;
+		#ifdef CONFIG_HUAWEI_DSM
+		check_power_state();
+		#endif
 	}
 
 	dev_info(&(data->client->dev), "drv2605 off!");
@@ -641,7 +812,7 @@ static int drv2605_parse_dt(struct device *dev, struct drv2605_pdata *pdata)
 {
 	int rc, temp;
 	enum of_gpio_flags flags;
-
+	unsigned int gpo;
 	rc = of_property_read_string(dev->of_node, "ti,label", &pdata->name);
 	/* set vibrator as default name */
 	if (rc < 0) {
@@ -697,7 +868,41 @@ static int drv2605_parse_dt(struct device *dev, struct drv2605_pdata *pdata)
 	}else {
 		pdata->support_amplitude_control = (char)temp;
 	}
+	pdata->check_power_state1 = of_get_named_gpio(dev->of_node, "check_power_state1", 0);
+	pdata->check_power_state2 = of_get_named_gpio(dev->of_node, "check_power_state2", 0);
+	dev_info(dev, "read dts check power state1:%d, state2:%d\n", pdata->check_power_state1, pdata->check_power_state2);
+	if (!gpio_is_valid(pdata->check_power_state1)) {
+		dev_info(dev,"check_power_state1 is invalid\n");
+		pdata->check_power_state1 = -1;
+	}else{
+		gpo = (unsigned int)(pdata->check_power_state1);
+		rc = gpio_request(gpo, "vib_check1");
+		if (rc  < 0) {
+			dev_info(dev,"request vib_check1 err, %d\n", rc);
+		}else{
+			dev_info(dev,"power_state1 support dmd check\n");
+		}
+	}
+	if (!gpio_is_valid(pdata->check_power_state2)) {
+		dev_info(dev,"check_power_state2 is invalid\n");
+		pdata->check_power_state2 = -1;
+	}else{
+		gpo = (unsigned int)(pdata->check_power_state2);
+		rc = gpio_request(gpo, "vib_check2");
+		if (rc  < 0) {
+			dev_info(dev,"request vib_check2 err, %d\n", rc);
+		}else{
+			dev_info(dev,"power_state2 support dmd check\n");
+		}
+	}
 
+	rc = of_property_read_u32(dev->of_node, "check_power_time", &temp);
+	if(rc < 0) {
+		pdata->check_power_time = -1;//invalid time
+	}else {
+		pdata->check_power_time = temp;
+	}
+	dev_info(dev, "max check_power_time:%d.\n", pdata->check_power_time);
 	dev_info(dev, "max timedout_ms:%d.\n", pdata->max_timeout_ms);
 	pdata->gpio_enable = of_get_named_gpio(dev->of_node, "gpio-enable", 0);
 
@@ -823,14 +1028,11 @@ static ssize_t vibrator_calib_store(struct device *dev,
 	/* Read calibration result */
 	status = drv2605_read_reg(client_temp, STATUS_REG);
 	dev_info(&client_temp->dev, "calibration status =0x%x\n", status);
-	status = 0x08 & status;
-	if(status != 0){
-		vib_calib_result = 0;
-		dev_info(&client_temp->dev, "vibrator calibration fail!\n");
-		return count;
-	} else {
-		vib_calib_result = 1;
-	}
+#ifdef CONFIG_HUAWEI_DSM
+#ifdef CONFIG_HUAWEI_DATA_ACQUISITION
+	cali_result_val[0] = status;
+#endif
+#endif
 
 	/* Read calibration value */
 	calib_value[0] = drv2605_read_reg(client_temp, AUTO_CALI_RESULT_REG);
@@ -840,6 +1042,27 @@ static ssize_t vibrator_calib_store(struct device *dev,
 	calib_value[2] = 0x03 & calib_value[2];
 	dev_info(&client_temp->dev, "calibration value =0x%x, 0x%x, 0x%x\n",
 		 calib_value[0], calib_value[1], calib_value[2]);
+
+	status = 0x08 & status;
+	if(status != 0){
+		vib_calib_result = 0;
+		dev_info(&client_temp->dev, "vibrator calibration fail!\n");
+		//return count;
+	} else {
+		vib_calib_result = 1;
+	}
+
+#ifdef CONFIG_HUAWEI_DSM
+#ifdef CONFIG_HUAWEI_DATA_ACQUISITION
+	cali_result_val[1] = calib_value[0];
+	cali_result_val[2] = calib_value[1];
+	cali_result_val[3] = calib_value[2];//copy cal value to big data array
+	enq_notify_work_vibrator(vib_calib_result);
+#endif
+#endif
+	if(vib_calib_result == 0){//0 calib fail
+		return count;
+	}
 	/*write calibration value to nv */
 	ret = write_vibrator_calib_value_to_nv(calib_value);
 	if (ret) {
@@ -1384,6 +1607,14 @@ static int drv2605_probe(struct i2c_client *client,
 
 #ifdef CONFIG_HUAWEI_HW_DEV_DCT
 	set_hw_dev_flag(DEV_I2C_VIBRATOR_LRA);
+#endif
+#ifdef CONFIG_HUAWEI_DSM
+#ifdef CONFIG_HUAWEI_DATA_ACQUISITION
+	if (!vib_dclient) {
+		vib_dclient = dsm_register_client(&dsm_vibrator);
+		dev_info(&client->dev, "drv2605 dsm register success.\n");
+	}
+#endif
 #endif
 
 	dev_info(&client->dev, "drv2605 probe succeeded.\n");

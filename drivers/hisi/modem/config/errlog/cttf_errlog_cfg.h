@@ -84,7 +84,7 @@ enum CTTF_ERR_LOG_ALM_ID_ENUM
 
     CTTF_ERR_LOG_ALM_ID_BUTT
 };
-typedef  VOS_UINT8 CTTF_ERR_LOG_ALM_ID_ENUM_UINT8;
+typedef  VOS_UINT16 CTTF_ERR_LOG_ALM_ID_ENUM_UINT16;
 
 /*******************************************************************************
  * Name        : PPP_ERR_LOG_ALM_ID_ENUM_UINT8
@@ -96,7 +96,8 @@ enum PPP_ERR_LOG_ALM_ID_ENUM
 
     PPP_ERR_LOG_ALM_ID_BUTT
 };
-typedef VOS_UINT8 PPP_ERR_LOG_ALM_ID_ENUM_UINT8;
+typedef VOS_UINT16 PPP_ERR_LOG_ALM_ID_ENUM_UINT16;
+
 
 /*******************************************************************************
  Name    : RRM_ERR_LOG_ALM_ID_ENUM_UINT8
@@ -108,10 +109,11 @@ enum RRM_ERR_LOG_ALM_ID_ENUM
     RRM_ERR_LOG_ALM_ID_CDMA_RPT_RESOURCE_INFO  = 0x02,
     RRM_ERR_LOG_ALM_ID_HIGH_PRI_TASK_INFO      = 0x03,
     RRM_ERR_LOG_ALM_ID_CDMA_HIGH_PRI_TASK_INFO = 0x04,
+    RRM_ERR_LOG_ALM_ID_DSDS_INFO               = 0x05,
 
     RRM_ERR_LOG_ALM_ID_BUTT
 };
-typedef VOS_UINT8 RRM_ERR_LOG_ALM_ID_ENUM_UINT8;
+typedef VOS_UINT16 RRM_ERR_LOG_ALM_ID_ENUM_UINT16;
 
 /*****************************************************************************
   4 全局变量声明

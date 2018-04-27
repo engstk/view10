@@ -241,5 +241,5 @@ extern bool dc_ufp_notify_uvdm(pd_port_t *pd_port,
 			svdm_svid_data_t *svid_data);
 
 #endif /* CONFIG_USB_PD_ALT_MODE_RTDC */
-
+extern void pd_dpm_set_optional_max_power_status(bool status);
 #endif /* PD_DPM_CORE_H */

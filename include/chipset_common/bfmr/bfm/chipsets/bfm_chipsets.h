@@ -53,9 +53,13 @@ typedef struct bfi_every_number_Info
     unsigned int rcvMethod;
     unsigned int rcvResult;
     unsigned int dmdErrNo;
+    char excepInfo[BFMR_SIZE_128];
     unsigned int bootup_time;
+    unsigned int is_log_saved;
+    unsigned int suggested_recovery_method;
+    unsigned int is_bootup_successfully;
+    unsigned int reboot_type;
 } bfm_bfi_member_info_t;
-
 
 /* this stuct is defined for qcom currently */
 typedef struct bfm_record_Info
@@ -71,6 +75,18 @@ typedef struct bfm_record_Info
     char log_dir[BFMR_SIZE_128];
     char log_name[LOG_TYPE_MAX_COUNT][BFMR_SIZE_128];
 } bfm_record_info_t;
+
+typedef struct
+{
+    char log_dir[BFMR_MAX_PATH];
+} bfm_single_bootfail_log_info_t;
+
+typedef struct
+{
+    bfm_single_bootfail_log_info_t bootfail_logs[BFM_LOG_MAX_COUNT];
+    bfr_real_recovery_info_t real_recovery_info;
+    int log_dir_count;
+} bfm_bootfail_log_info_t;
 
 typedef struct bfm_process_bootfail_param
 {
@@ -103,8 +119,8 @@ typedef struct bfm_process_bootfail_param
     /* log dir such as: /log/boot_fail/bootfail_20161010101010_0x03000005 */
     char bootfail_log_dir[BFMR_MAX_PATH];
 
-    /* user log path such as: /cache/critical_process_crash.txt */
-    char user_log_path[BFMR_MAX_PATH];
+    /* additional info such as: /cache/critical_process_crash.txt */
+    bfmr_bootfail_addl_info_t addl_info;
 
     /* varified log path such as: /log/boot_fail/bootfail_20161010101010_0x03000005/xloader_log */
     char bootfail_log_path[BFMR_MAX_PATH];
@@ -124,8 +140,11 @@ typedef struct bfm_process_bootfail_param
 
     char *user_space_log_buf;
     long user_space_log_len;
-    long user_space_read_len;
+    long user_space_log_read_len;
+    char excepInfo[BFMR_SIZE_128];
+    bfm_bootfail_log_info_t bootfail_log_info;
     unsigned int bootup_time;
+    bool is_bootup_successfully;
 } bfm_process_bootfail_param_t;
 
 typedef int (*bfmr_capture_and_save_bootfail_log)(bfm_process_bootfail_param_t *param);
@@ -144,17 +163,25 @@ typedef struct
 /*----export macroes-----------------------------------------------------------------*/
 
 #define BFM_CRITICAL_PROCESS_CRASH_LOG_NAME "critical_process_crash.txt"
+#define BFM_TOMBSTONE_LOG_NAME "tombstone_00"
+#define BFM_SYSTEM_SERVER_CRASH_LOG_NAME "system_server_crash@0.txt"
+#define BFM_SYSTEM_SERVER_WATCHDOG_LOG_NAME "system_server_watchdog@0.txt.gz"
 #define BFM_LOGCAT_FILE_PATH "/data/log/android_logs/applogcat-log"
 #define BFM_OLD_LOGCAT_FILE_PATH "/data/log/android_logs/applogcat-log.1"
 #define BFM_LOGCAT_FILE_NAME "applogcat-log"
-#define BFM_LOGCAT_GZ_FILE_NAME "applogcat-log.gz"
+#define BFM_LOGCAT_FILE_NAME_KEYWORD "applogcat-log"
 #define BFM_FRAMEWORK_BOOTFAIL_LOG_PATH "/data/anr/framework_boot_fail.log"
 #define BFM_FRAMEWORK_BOOTFAIL_LOG_FILE_NAME "framework_boot_fail.log"
 #define BFM_BETA_KMSG_LOG_PATH "/data/log/android_logs/kmsgcat-log"
 #define BFM_BETA_OLD_KMSG_LOG_PATH "/data/log/android_logs/kmsgcat-log.1"
-#define BFM_BOOTLOADER_1_LOG_FILENAME "xloader_log"
-#define BFM_BOOTLOADER_2_LOG_FILENAME "fastboot_log"
+#define BFM_BL1_LOG_FILENAME "xloader_log"
+#define BFM_BL2_LOG_FILENAME "fastboot_log"
 #define BFM_KERNEL_LOG_FILENAME "last_kmsg"
+#define BFM_ALT_BL1_LOG_FILENAME "sbl1.log"
+#define BFM_ALT_BL2_LOG_FILENAME "lk.log"
+#define BFM_ALT_KERNEL_LOG_FILENAME "kmsg.log"
+#define BFM_PMSG_LOG_FILENAME "pmsg-ramoops-0"
+#define BFM_KERNEL_LOG_GZ_FILENAME_KEYWORD "last_kmsg.android"
 #define BFM_BOOT_FAIL_LOGCAT_FILE_MAX_SIZE ((unsigned int)512 * 1024)
 #define BFM_UPLOADING_DIR_NAME "uploading"
 #define BFM_BOOTFAIL_LOG_DIR_NAME_FORMAT "bootfail_%s_0x%08x"

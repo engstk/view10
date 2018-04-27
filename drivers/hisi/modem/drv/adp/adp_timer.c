@@ -258,6 +258,7 @@ static void get_timer_int_stat(void)
 static struct syscore_ops debug_timer_dpm_ops = {
 	.resume = get_timer_int_stat,
 	};
+
 static void timer_handler_connect(DRV_TIMER_ID timer_id,const char* timer_name,unsigned long flags)
 {
 	s32 ret = 0;
@@ -331,6 +332,8 @@ void adp_timer_show(void){
 }
 EXPORT_SYMBOL(mdrv_timer_start);
 EXPORT_SYMBOL(mdrv_timer_stop);
-
+EXPORT_SYMBOL(mdrv_timer_get_accuracy_timestamp);
+EXPORT_SYMBOL(mdrv_timer_get_normal_timestamp);
+EXPORT_SYMBOL(mdrv_timer_get_hrt_timestamp);
 /*lint -restore +e19*/
 

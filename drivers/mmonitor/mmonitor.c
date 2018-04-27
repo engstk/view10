@@ -13,7 +13,7 @@
 #include <linux/time.h>
 #include <linux/kernel.h>
 #include <linux/uaccess.h>
-#include <huawei_platform/log/log_usertype/log-usertype.h>
+#include <log/log_usertype/log-usertype.h>
 
 #ifdef CONFIG_HW_MEMORY_MONITOR
 #include <chipset_common/mmonitor/mmonitor.h>

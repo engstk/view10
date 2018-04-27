@@ -3,6 +3,8 @@
 
 #define ALS_DBG_PARA_SIZE (8)
 #define BUF_SIZE (128)
+#define ALS_MCU_HAL_CONVER (10)
+#define ACC_CONVERT_COFF 1000
 
 struct sensor_cookie {
 	int tag;

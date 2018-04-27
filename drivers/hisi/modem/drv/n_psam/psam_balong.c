@@ -56,6 +56,7 @@
 #include <linux/io.h>
 #include <linux/dma-mapping.h>
 #include <bsp_vic.h>
+#include <securec.h>
 #include "psam_balong.h"
 #include "n_bsp_psam.h"
 #include "bsp_trace.h"
@@ -261,6 +262,7 @@ int psam_config_dlad(unsigned int type, unsigned int num, IPF_AD_DESC_S *desc)
 	}
 
 	g_psam_device->hal->config_ad((IPF_AD_TYPE_E)type, num, desc);
+    g_psam_device->ads_up = 1;
 	return 0;
 }
 
@@ -349,13 +351,16 @@ int psam_is_idle(void)
 	HI_PSAM_SRST_T srst;
 	HI_PSAM_ADQ0_STAT_T adq0_stat;
 	HI_PSAM_ADQ1_STAT_T adq1_stat;
-	int ret = 1;
 	
 	srst.u32 = psam_readl(HI_PSAM_SRST_OFFSET);
 	if(!srst.bits.psam_idle){
 		g_psam_device->debug.not_idle++;
 		return 0;
 	}
+
+    if(!g_psam_device->ads_up){
+        return 1;
+    }
 
 	adq0_stat.u32 = psam_readl(HI_PSAM_ADQ0_STAT_OFFSET);
 	if(adq0_stat.bits.adq0_epty){
@@ -369,7 +374,7 @@ int psam_is_idle(void)
 		return 0;
 	}
 
-	return ret;
+	return 1;
 }
 
 void psam_save_reg(unsigned int *base)
@@ -442,7 +447,7 @@ static int psam_probe(struct platform_device *pdev)
     int i;
     int ret;
 
-    memset(&g_psam_ctx, sizeof(struct psam_device), 0);
+    memset_s(&g_psam_ctx, sizeof(g_psam_ctx), 0, sizeof(struct psam_device));
     g_psam_device = &g_psam_ctx;
 
     regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);

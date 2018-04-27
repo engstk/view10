@@ -61,17 +61,7 @@
 
 #define    THIS_FILE_ID        MSP_FILE_ID_DIAG_MSGDSP_C
 
-/*****************************************************************************
- Function Name   : diag_GuDspTransProc
- Description     : GU DSP的命令直接透传消息给GUDSP，并由MSP代替回复
- Input           : pData    诊断命令请求的内容
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.c00326366      2015-06-14  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_GuDspTransProc(DIAG_FRAME_INFO_STRU *pData)
 {
     VOS_UINT32 ulRet                    = ERR_MSP_SUCCESS;
@@ -80,10 +70,21 @@ VOS_UINT32 diag_GuDspTransProc(DIAG_FRAME_INFO_STRU *pData)
     DIAG_OSA_MSG_STRU *pstMsg           = NULL;
     DIAG_OSA_MSG_STRU *pstVosMsg        = NULL;
 
+    if(pData->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(DIAG_OSA_MSG_STRU))
+    {
+        diag_error("rev tool data len:0x%x error\n", pData->ulMsgLen);
+        return ERR_MSP_INALID_LEN_ERROR;
+    }
+
     pstMsg = (DIAG_OSA_MSG_STRU *)(pData->aucData + sizeof(MSP_DIAG_DATA_REQ_STRU));
 
-    pstVosMsg = (DIAG_OSA_MSG_STRU *)VOS_AllocMsg(MSP_PID_DIAG_APP_AGENT, pstMsg->ulLength);
+    if(VOS_CheckPidValidity(pstMsg->ulReceiverPid) != VOS_PID_AVAILABLE)
+    {
+        diag_error("pid:0x%x is invalid, please check\n", pstMsg->ulReceiverPid);
+        return ERR_MSP_DIAG_ERRPID_CMD;
+    }
 
+    pstVosMsg = (DIAG_OSA_MSG_STRU *)VOS_AllocMsg(MSP_PID_DIAG_APP_AGENT, pstMsg->ulLength);
     if (pstVosMsg != NULL)
     {
         pstVosMsg->ulReceiverPid  = pstMsg->ulReceiverPid;

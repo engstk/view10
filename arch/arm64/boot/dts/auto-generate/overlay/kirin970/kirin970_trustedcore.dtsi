@@ -11,8 +11,6 @@
 	trusted_core {
 		compatible = "trusted_core";
 		interrupts = <0 344 4>;
-		sec-s-power-proc-en;
-		memory-region = <&tui_cma>;
 		reg = <0x0 0x0 0x0 0x0>;
 	};
 };

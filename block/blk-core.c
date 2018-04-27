@@ -235,7 +235,7 @@ EXPORT_SYMBOL(blk_start_queue_async);
  **/
 void blk_start_queue(struct request_queue *q)
 {
-	WARN_ON(!irqs_disabled());
+	WARN_ON(!in_interrupt() && !irqs_disabled());
 
 	queue_flag_clear(QUEUE_FLAG_STOPPED, q);
 	__blk_run_queue(q);
@@ -537,8 +537,8 @@ void blk_set_queue_dying(struct request_queue *q)
 
 		blk_queue_for_each_rl(rl, q) {
 			if (rl->rq_pool) {
-				wake_up(&rl->wait[BLK_RW_SYNC]);
-				wake_up(&rl->wait[BLK_RW_ASYNC]);
+				wake_up_all(&rl->wait[BLK_RW_SYNC]);
+				wake_up_all(&rl->wait[BLK_RW_ASYNC]);
 			}
 		}
 	}
@@ -2350,6 +2350,32 @@ out:
 	return ret;
 }
 EXPORT_SYMBOL(generic_make_request);
+
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_HOTCOLD
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_TEST
+void blk_hotcold_test(struct bio *bio)
+{
+	static unsigned long int flag = 0;
+
+	flag += 1;
+	flag %= 9;
+
+	pr_devel("<%s, %d> bio->bi_rw=%llx, REQ_HOTCOLD_ID=%llx\n",
+			 __func__, __LINE__,
+			 (long long unsigned int) bio->bi_rw, (long long unsigned int) REQ_HOTCOLD_ID(flag));
+
+	bio->bi_rw |= REQ_HOTCOLD_ID(flag);
+
+	/*
+	pr_devel("<%s, %d> bio->bi_rw=%llx\n",
+			__func__, __LINE__,
+			(long long unsigned int) bio->bi_rw);
+	*/
+
+}
+#endif
+#endif
+
 unsigned char trace_one_bio = 0;
 /**
  * submit_bio - submit a bio to the block device layer for I/O
@@ -2378,6 +2404,11 @@ blk_qc_t submit_bio(int rw, struct bio *bio)
 			count = bio_sectors(bio);
 
 		if (rw & WRITE) {
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_HOTCOLD
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_TEST
+			blk_hotcold_test(bio);
+#endif
+#endif
 			count_vm_events(PGPGOUT, count);
 		} else {
 			task_io_account_read(bio->bi_iter.bi_size);
@@ -2884,6 +2915,9 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
 			atomic_read(&lld->blk_idle.io_count),atomic_read(&q->request_queue_disk->part0.in_flight[0]),atomic_read(&q->request_queue_disk->part0.in_flight[1]));
 		trace_blk_mq_debug(__func__,log);
 	}
+#endif
+#ifdef CONFIG_HISI_IO_LATENCY_TRACE
+	req_latency_check(req, REQ_PROC_STAGE_UPDATE);
 #endif
 
 	trace_block_rq_complete(req->q, req, nr_bytes);

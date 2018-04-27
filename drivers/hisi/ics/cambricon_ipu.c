@@ -36,7 +36,6 @@
 #include <linux/miscdevice.h>
 #include <linux/fs.h>
 #include <linux/input.h>
-#include <linux/wakelock.h>
 #include <linux/clk.h>
 #include <linux/hwspinlock.h>
 #include <asm/uaccess.h>
@@ -55,6 +54,7 @@
 #include "ipu_smmu_drv.h"
 #include "ipu_clock.h"
 #include "cambricon_ipu.h"
+#include "ipu_mntn.h"
 
 #define COMP_CAMBRICON_IPU_DRV_NAME "hisilicon,cambricon-ipu"
 
@@ -107,6 +107,7 @@
 #define ICS_IRQ_CLEAR_IRQ_NS (0x00000001)
 #define ICS_SMMU_WR_ERR_BUFF_LEN (128)
 #define ICS_NOC_BUS_CONFIG_QOS_TYPE (0x1)
+#define ICS_NOC_BUS_QOS_EXTCONTROL_ENABLE (0x1)
 #define ICS_NOC_BUS_CONFIG_FACTOR (0x0)
 #define ICS_NOC_BUS_CONFIG_SATURATION_RESET (0x0)
 #define ICS_NOC_BUS_CONFIG_SATURATION_NORMAL (0x10)
@@ -124,15 +125,16 @@
 #define NORMAL_START_BIT (0)
 #define NORMAL_START_MASK (0x1 << NORMAL_START_BIT)
 
-#define WATCHDOG_TIMEOUT_THD_MS (600) //fixme: it can be set by model
+#define WATCHDOG_TIMEOUT_THD_MS (600)
 
-#define READ_LATENCY_NANOSECOND	 (750)
-#define WRITE_LATENCY_NANOSECOND (350)
 #define SMMU_OUTSTANDING		(4)
-#define BURST_LENGTH			(128000)
+#define IPU_BASELINE_RATE_MHZ	(960)
+#define IPU_BASELINE_LMT_OSD	(32)
+#define IPU_BASELINE_LMT_BANDWIDTH_MHZ (7500)
+#define IPU_RATE_HZ_TO_MHZ		(1000000)
 #define IPU_STATUS_REG_FINISH	(0xA0)
 #define	IPU_INTERRUPT_INST_REG	(0xAC)
-#define ICS_IRQ_CLEAR_IRQ_FAULT_NS (0x2)
+#define ICS_IRQ_CLEAR_IRQ_LEVEL1_NS (0x2)
 #define ICS_SOFT_RST_REQ_REG	(0x74)
 #define ICS_SOFT_RST_ACK_REG	(0x78)
 #define ICS_SOFT_RST_ACK		(0x1)
@@ -276,6 +278,7 @@ static int ipu_power_up(void);
 static int ipu_power_down(void);
 long ipu_set_profile(struct cambricon_ipu_private *, unsigned long, struct ioctl_out_params *);
 static bool cambricon_ipu_workqueue(void);
+static void performance_monitor_open(void);
 
 static long ipu_write_qword(struct cambricon_ipu_private *dev, unsigned long arg, struct ioctl_out_params *out_params)
 {
@@ -466,9 +469,15 @@ static int start_ipu(void)
 				/* start ipu */
 				iowrite32(IPU_TO_STOP, (void *)((unsigned long)adapter->config_reg_virt_addr + IPU_START_REG));
 				iowrite32(IPU_STATUS_UNFINISH, (void *)((unsigned long)adapter->config_reg_virt_addr + IPU_STATUS_REG));
+
+				if (adapter->feature_tree.performance_monitor) {
+					performance_monitor_open();
+				}
+
 				iowrite32(IPU_TO_START, (void *)((unsigned long)adapter->config_reg_virt_addr + IPU_START_REG));
 
 				printk(KERN_DEBUG"[%s]: START COMPUTE, offchipInstAddr=0x%pK\n", __func__, (void *)head.offchipInstAddr);
+
 				ipu_watchdog_start(&adapter->reset_wtd, WATCHDOG_TIMEOUT_THD_MS);
 			} else {
 				printk(KERN_ERR"[%s]: IPU_ERROR:set_offchip_inst_addr fail, ret=%d\n", __func__, ret);
@@ -562,6 +571,7 @@ bool ipu_get_bandwidth_lmt_offset (struct device *dev)
 	property_rd |= of_property_read_u32(node, "qos-type", &ics_noc_bus->qos_type);
 	property_rd |= of_property_read_u32(node, "factor", &ics_noc_bus->factor);
 	property_rd |= of_property_read_u32(node, "saturation", &ics_noc_bus->saturation);
+	property_rd |= of_property_read_u32(node, "qos_extcontrol", &ics_noc_bus->qos_extcontrol);
 	if (property_rd) {
 		printk(KERN_ERR"[%s]: IPU_ERROR:read property of ics_noc_bus offset error\n", __func__);
 		return false;
@@ -646,15 +656,6 @@ bool ipu_get_reset_offset (struct device *dev)
 
 bool ipu_get_feature_tree (struct device *dev)
 {
-	/* get platform information */
-	const char *str;
-	int ret = of_property_read_string(dev->of_node, "ics-platform", &str);
-
-	if (ret) {
-		printk(KERN_ERR"[%s]: IPU_ERROR:fatal err, of_property_read_string fail\n", __func__);
-		return false;
-	}
-
 	memset(&adapter->feature_tree, 0, sizeof(adapter->feature_tree));// coverity[secure_coding]
 
 	adapter->feature_tree.finish_irq_expand_ns = true;
@@ -668,9 +669,7 @@ bool ipu_get_feature_tree (struct device *dev)
 	adapter->feature_tree.smmu_port_select = false;
 	adapter->feature_tree.soft_watchdog_enable = true;
 	adapter->feature_tree.ipu_reset_when_in_error = IPU_RESET_BY_CONFIG_NOC_BUS;
-	adapter->feature_tree.ipu_bandwidth_lmt = IPU_BANDWIDTH_LMT_UNSUPPORT;//fixme: IPU_BANDWIDTH_LMT_BY_QOS;
-
-	printk(KERN_DEBUG"[%s]: the platform is %s\n", __func__, str);
+	adapter->feature_tree.ipu_bandwidth_lmt = IPU_BANDWIDTH_LMT_BY_QOS;
 
 	return true;
 }
@@ -682,12 +681,14 @@ int regulator_ip_vipu_enable(void)
 	ret = regulator_is_enabled(adapter->vipu_ip);
 	if (ret) {
 		printk(KERN_ERR"[%s]:IPU_ERROR:regulator_is_enabled: %d\n", __func__, ret);
+		rdr_system_error((unsigned int)MODID_NPU_EXC_SET_POWER_UP_STATUS_FAULT, 0, 0);
 		return -EBUSY;
 	}
 
 	ret = regulator_enable(adapter->vipu_ip);
 	if (0 != ret) {
 		printk(KERN_ERR"[%s]:IPU_ERROR:Failed to enable: %d\n", __func__, ret);
+		rdr_system_error((unsigned int)MODID_NPU_EXC_SET_POWER_UP_FAIL, 0, 0);
 		return ret;
 	}
 	return 0;
@@ -700,6 +701,7 @@ int regulator_ip_vipu_disable(void)
 	ret = regulator_disable(adapter->vipu_ip);
 	if (ret != 0) {
 		printk(KERN_ERR"[%s]:IPU_ERROR:Failed to disable: %d\n", __func__, ret);
+		rdr_system_error((unsigned int)MODID_NPU_EXC_SET_POWER_DOWN_FAIL, 0, 0);
 		return ret;
 	}
 	return 0;
@@ -753,37 +755,36 @@ static unsigned int ipu_bandwidth_get_lmt(unsigned int ipu_rate, unsigned int ba
 	unsigned int noc_bandwidth_lmt;
 	unsigned int vcodec_rate;
 	unsigned int bandwidth;
+	unsigned int ipu_rate_MHz;
 	unsigned int read_outstanding;
 	unsigned int write_outstanding;
 	unsigned int ret;
 
-	switch(ipu_rate) {
-		case IPU_CLOCK_HIGH:
-			vcodec_rate = VCODECBUS_CLOCK_EXCEED;
-			break;
-		case IPU_CLOCK_NORMAL:
-			vcodec_rate = VCODECBUS_CLOCK_NORMAL;
-			break;
-		case IPU_CLOCK_LOW:
-			vcodec_rate = VCODECBUS_CLOCK_LOW;
-			break;
-		default:
-			printk(KERN_ERR"[%s]: IPU_ERROR:error ipu_rate=%u, ignore\n", __func__, ipu_rate);
-			return 0;
+	if (ipu_rate == adapter->clk.ipu_high) {
+		vcodec_rate = adapter->clk.vcodecbus_high;
+	} else if (ipu_rate == adapter->clk.ipu_middle) {
+		vcodec_rate = adapter->clk.vcodecbus_middle;
+	} else if (ipu_rate == adapter->clk.ipu_low) {
+		vcodec_rate = adapter->clk.vcodecbus_low;
+	} else {
+		printk(KERN_ERR"[%s]: IPU_ERROR:error ipu_rate=%u, ignore\n", __func__, ipu_rate);
+		return 0;
 	}
 
-	/* for ipu_rate=960M, bandwidth is 7500Mbps, equal proportion for other ipu_rate (7500 * (MAX/1000000)=7200000<MAX of unsigned int) */
-	bandwidth = (7500 * (ipu_rate / 1000000)) / (IPU_CLOCK_HIGH / 1000000);
+	ipu_rate_MHz = ipu_rate / IPU_RATE_HZ_TO_MHZ;
 
 	if (IPU_BANDWIDTH_LMT_BY_RW_OSD == bandwidth_lmt_trategy) {
-		read_outstanding = ((((unsigned long)bandwidth * READ_LATENCY_NANOSECOND) / BURST_LENGTH) + SMMU_OUTSTANDING + 1) & 0xff; /* "+1" means to round up */
-		write_outstanding = (((unsigned long)bandwidth * WRITE_LATENCY_NANOSECOND) / BURST_LENGTH + 1) & 0xff; /* "+1" means to round up */
-
+		/* for ipu_rate=960M, assume read/write osd is 32 */
+		read_outstanding = ((IPU_BASELINE_LMT_OSD * ipu_rate_MHz) / IPU_BASELINE_RATE_MHZ + SMMU_OUTSTANDING) & 0xff;
+		write_outstanding = ((IPU_BASELINE_LMT_OSD * ipu_rate_MHz) / IPU_BASELINE_RATE_MHZ) & 0xff;
 		ret = (read_outstanding << 8) + write_outstanding;
-		printk(KERN_DEBUG"[%s]:ipu_bandwidth=%d, read/write OSD=%d/%d\n", __func__, bandwidth, read_outstanding, write_outstanding);
+		printk(KERN_DEBUG"[%s]:read/write OSD=%u/%u\n", __func__, read_outstanding, write_outstanding);
 	} else {
+		/* for ipu_rate=960M, bandwidth is 7500Mbps, equal proportion for other ipu_rate (7500 * (MAX/1000000)=7200000<MAX of unsigned int) */
+		bandwidth = (IPU_BASELINE_LMT_BANDWIDTH_MHZ * ipu_rate_MHz) / IPU_BASELINE_RATE_MHZ;
+
 		/* IPU_BANDWIDTH_LMT_BY_QOS, default */
-		noc_bandwidth_lmt = (unsigned long)bandwidth * 256 / (vcodec_rate / 1000000) + 1; /* "+1" means to round up */
+		noc_bandwidth_lmt = (unsigned long)bandwidth * 256 / (vcodec_rate / IPU_RATE_HZ_TO_MHZ) + 1; /* "+1" means to round up */
 		ret = noc_bandwidth_lmt;
 
 		printk(KERN_DEBUG"[%s]:ipu_bandwidth=%d, qos_bandwidth=%d\n", __func__, bandwidth, noc_bandwidth_lmt);
@@ -800,7 +801,7 @@ static void ipu_bandwidth_set_lmt(unsigned int reg_bandwidth, unsigned int satur
 			return;
 		}
 
-		iowrite32(reg_bandwidth, (void *)((unsigned long)adapter->ics_irq_io_addr + ICS_OSD_CNT_REG));
+		iowrite32(reg_bandwidth, (void *)((unsigned long)adapter->ics_irq_io_addr + ICS_MAX_OSD_REG));
 	} else {
 		if (0 == adapter->noc_bus_io_addr) {
 			printk(KERN_ERR"[%s]:IPU_ERROR:adapter->noc_bus_io_addr is NULL\n", __func__);
@@ -810,6 +811,7 @@ static void ipu_bandwidth_set_lmt(unsigned int reg_bandwidth, unsigned int satur
 		iowrite32(ICS_NOC_BUS_CONFIG_QOS_TYPE, (void *)((unsigned long)adapter->noc_bus_io_addr + adapter->ics_noc_bus_reg_offset.qos_type));
 		iowrite32(reg_bandwidth, (void *)((unsigned long)adapter->noc_bus_io_addr + adapter->ics_noc_bus_reg_offset.factor));
 		iowrite32(saturation, (void *)((unsigned long)adapter->noc_bus_io_addr + adapter->ics_noc_bus_reg_offset.saturation));
+		iowrite32(ICS_NOC_BUS_QOS_EXTCONTROL_ENABLE, (void *)((unsigned long)adapter->noc_bus_io_addr + adapter->ics_noc_bus_reg_offset.qos_extcontrol));
 	}
 }
 
@@ -886,7 +888,7 @@ int ipu_reset_init(struct device *dev)
 	return 0;
 }
 
-void performance_monitor_open(void)
+static void performance_monitor_open(void)
 {
 	if (!adapter->feature_tree.performance_monitor) {
 		printk(KERN_ERR"[%s]: IPU_ERROR:unsupport op in this platform!\n", __func__);
@@ -901,7 +903,7 @@ void performance_monitor_open(void)
 	iowrite32(FRAME_START_CNT_CLEAR | FRAME_FINISH_CNT_CLEAR, (void *)((unsigned long)adapter->ics_irq_io_addr + FRAME_CNT_CLEAR_REG));
 }
 
-void performance_monitor_get_stat(void)
+static void performance_monitor_get_stat(void)
 {
 	unsigned int frame_cycle_cnt;
 	unsigned int fu_idle_cnt;
@@ -909,6 +911,7 @@ void performance_monitor_get_stat(void)
 	unsigned int all_idle_cnt;
 	unsigned int all_busy_cnt;
 	unsigned int ics_frame_cnt;
+	unsigned int vcodecbus_clk;
 
 	if (!adapter->feature_tree.performance_monitor) {
 		printk(KERN_ERR"[%s]: IPU_ERROR:unsupport op in this platform!\n", __func__);
@@ -925,12 +928,21 @@ void performance_monitor_get_stat(void)
 
 	// todo: here you can config PERF_CNT_CLEAR.perf_cnt_clear = 0x1 if want to clear current value
 
-	printk(KERN_ERR"[%s]: frame_cycle: %d | fu/io/all idle: %d/%d/%d | all_busy: %d | ics_frame_cnt: %d",
-		__func__, frame_cycle_cnt, fu_idle_cnt, io_idle_cnt, all_idle_cnt, all_busy_cnt, ics_frame_cnt);
+	vcodecbus_clk = clk_get_rate(adapter->clk.vcodecbus_clk_ptr);
+	vcodecbus_clk = vcodecbus_clk / 1000000; /* convert vcodecbus clk working rate from bps to Mbps */
+
+	if (0 != vcodecbus_clk) {
+		printk(KERN_DEBUG"[%s]: frame_cycle: %d | fu/io/all idle: %d/%d/%d | all_busy: %d | ics_frame_cnt: %d; hw time: %d @ %dM",
+			__func__, frame_cycle_cnt, fu_idle_cnt, io_idle_cnt, all_idle_cnt, all_busy_cnt, ics_frame_cnt & 0xffff,
+			frame_cycle_cnt / vcodecbus_clk, vcodecbus_clk);
+	} else {
+		printk(KERN_DEBUG"[%s]: frame_cycle: %d | fu/io/all idle: %d/%d/%d | all_busy: %d | ics_frame_cnt: %d",
+			__func__, frame_cycle_cnt, fu_idle_cnt, io_idle_cnt, all_idle_cnt, all_busy_cnt, ics_frame_cnt & 0xffff);
+	}
 
 }
 
-void performance_monitor_close(void)
+static void performance_monitor_close(void)
 {
 	if (!adapter->feature_tree.performance_monitor) {
 		printk(KERN_ERR"[%s]: IPU_ERROR:unsupport op in this platform!\n", __func__);
@@ -1078,7 +1090,7 @@ void ipu_reset_proc(unsigned int addr)
 	mutex_unlock(&adapter->bandwidth_lmt_mutex);
 
 	ipu_smmu_init(adapter->smmu_ttbr0,
-		(unsigned long)adapter->smmu_rw_err_phy_addr, adapter->feature_tree.smmu_port_select);
+		(unsigned long)adapter->smmu_rw_err_phy_addr, adapter->feature_tree.smmu_port_select, adapter->feature_tree.smmu_mstr_hardware_start);
 
 	ipu_interrupt_init();
 
@@ -1150,11 +1162,14 @@ static bool cambricon_ipu_workqueue(void) {
 	return true;
 }
 
-static void ipu_fault_irq_handler(void)
+static void ipu_level1_irq_handler(void)
 {
 	unsigned int lv1_int_status;
+	unsigned int fault_status;
+	int loop_cnt = 0;
+	unsigned int detect_fault = 0;
 
-	if (!adapter->feature_tree.fault_irq) {
+	if (!adapter->feature_tree.level1_irq) {
 		printk(KERN_ERR"[%s]: IPU_ERROR:unsupport op in this platform!\n", __func__);
 		return;
 	}
@@ -1162,26 +1177,39 @@ static void ipu_fault_irq_handler(void)
 	lv1_int_status = ioread32((void *)((unsigned long)adapter->config_reg_virt_addr + IPU_STATUS_REG_FINISH));
 
 	while(lv1_int_status){
-		printk(KERN_ERR"[%s]: IPU_ERROR:lv1_int_status=0x%x\n", __func__, lv1_int_status);
+		if (loop_cnt > 3) {
+			printk(KERN_ERR"[%s]: lv1_int loop timeout\n", __func__);
+			break;
+		}
+		printk(KERN_DEBUG"[%s]: lv1_int_status=0x%x\n", __func__, lv1_int_status);
 
 		if (lv1_int_status & INTERRUPTINST_INTERRUPT_MASK) {
+			detect_fault = detect_fault | INTERRUPTINST_INTERRUPT_MASK;
+			fault_status = ioread32((void *)((unsigned long)adapter->config_reg_virt_addr + IPU_INTERRUPT_INST_REG));
 			iowrite32(0, (void *)((unsigned long)(adapter->config_reg_virt_addr) + IPU_INTERRUPT_INST_REG));
+			printk(KERN_ERR"[%s]: IPU_ERROR:INTERRUPTINST_INTERRUPT error, fault_status=0x%x\n", __func__, fault_status);
 		}
 		if (lv1_int_status & CT_INTERRUPT_MASK) {
-		/* do_interruptinst_interrupt_service(); */
+			/* do_interruptinst_interrupt_service(); */
+			detect_fault = detect_fault | CT_INTERRUPT_MASK;
+			fault_status = ioread32((void *)((unsigned long)adapter->config_reg_virt_addr + IPU_ID_REG));
 			iowrite32(0, (void *)((unsigned long)(adapter->config_reg_virt_addr) + IPU_ID_REG));
-			printk(KERN_ERR"[%s]: IPU_ERROR:CT_INTERRUPT_MASK\n", __func__);
+			printk(KERN_ERR"[%s]: IPU_ERROR:CT_INTERRUPT error, fault_status=0x%x\n", __func__, fault_status);
 		}
 		if (lv1_int_status & IPU_CONTROL_INTERRUPT_MASK) {
-		/* do_ipu_control_interrupt_service(); */
+			/* do_ipu_control_interrupt_service(); */
+			detect_fault = detect_fault | IPU_CONTROL_INTERRUPT_MASK;
+			fault_status = ioread32((void *)((unsigned long)adapter->config_reg_virt_addr + IPU_CONTROL_ID_REG));
 			iowrite32(0, (void *)((unsigned long)(adapter->config_reg_virt_addr) + IPU_CONTROL_ID_REG));
-			printk(KERN_ERR"[%s]: IPU_ERROR:IPU_CONTROL_INTERRUPT_MASK\n", __func__);
+			printk(KERN_ERR"[%s]: IPU_ERROR:IPU_CONTROL_INTERRUPT error, fault_status=0x%x\n", __func__, fault_status);
 		}
 		/* WATCH_DOG */
 		if (lv1_int_status & WATCH_DOG_MASK) {
 			/* do_watch_dog_interrupt_service();*/
+			detect_fault = detect_fault | WATCH_DOG_MASK;
+			fault_status = ioread32((void *)((unsigned long)adapter->config_reg_virt_addr + IPU_WATCH_DOG_REG));
 			iowrite32(0, (void *)((unsigned long)(adapter->config_reg_virt_addr) + IPU_WATCH_DOG_REG));
-			printk(KERN_ERR"[%s]: IPU_ERROR:WATCH_DOG_MASK\n", __func__);
+			printk(KERN_ERR"[%s]: IPU_ERROR:WATCH_DOG error, fault_status=0x%x\n", __func__, fault_status);
 		}
 		if (lv1_int_status & IS_NORMAL_FINISH_MASK) {
 			iowrite32(IPU_STATUS_UNFINISH, (void *)((unsigned long)adapter->config_reg_virt_addr + IPU_STATUS_REG));
@@ -1189,6 +1217,14 @@ static void ipu_fault_irq_handler(void)
 		iowrite32(lv1_int_status, (void *)((unsigned long)adapter->config_reg_virt_addr + IPU_STATUS_REG_FINISH));
 		iowrite32(0, (void *)((unsigned long)adapter->config_reg_virt_addr + (IPU_STATUS_REG_FINISH + 0x4))); /* to clear finish reg high 32bit */
 		lv1_int_status = ioread32((void *)((unsigned long)adapter->config_reg_virt_addr + IPU_STATUS_REG_FINISH));
+
+		loop_cnt++;
+	}
+
+	if (detect_fault) {
+		if (adapter->feature_tree.ipu_reset_when_in_error && adapter->reset_va) {
+			ipu_reset_proc((unsigned int)adapter->reset_va);
+		}
 	}
 }
 
@@ -1197,16 +1233,28 @@ static void ipu_finish_irq_handler(void)
 	unsigned long reg_virt_addr = (unsigned long)adapter->config_reg_virt_addr;
 
 	/* clear ipu finished status */
-	iowrite32(IPU_STATUS_UNFINISH, (void *)(reg_virt_addr + IPU_STATUS_REG));
+	iowrite32(0, (void *)(reg_virt_addr + IPU_STATUS_REG));
 	if (adapter->feature_tree.finish_irq_expand_ns) {
 		/* clear ipu finished status non-security irq, which is copied from ipu finished irq in non-security mode if unmask*/
 		// fixme: add security and protected mode here in furture
-		if (adapter->feature_tree.fault_irq) {
-			iowrite32(ICS_IRQ_CLEAR_IRQ_FAULT_NS | ICS_IRQ_CLEAR_IRQ_NS,
+		if (adapter->feature_tree.level1_irq) {
+			iowrite32(ICS_IRQ_CLEAR_IRQ_LEVEL1_NS | ICS_IRQ_CLEAR_IRQ_NS,
 				(void *)((unsigned long)adapter->ics_irq_io_addr + adapter->irq_reg_offset.ics_irq_clr_ns));
 		} else {
 			iowrite32(ICS_IRQ_CLEAR_IRQ_NS, (void *)((unsigned long)adapter->ics_irq_io_addr + adapter->irq_reg_offset.ics_irq_clr_ns));
 		}
+	}
+}
+
+static void ipu_core_irq_handler(void)
+{
+	ipu_finish_irq_handler();
+
+	if (adapter->feature_tree.level1_irq) {
+		ipu_level1_irq_handler();
+	} else {
+		/* clear ipu finished status */
+		iowrite32(IPU_STATUS_UNFINISH, (void *)((unsigned long)adapter->config_reg_virt_addr + IPU_STATUS_REG));
 	}
 }
 
@@ -1240,6 +1288,10 @@ static irqreturn_t ipu_interrupt_handler(int irq, void *dev)
 	}
 
 	ipu_watchdog_stop(&adapter->reset_wtd);
+	if (adapter->feature_tree.performance_monitor) {
+		performance_monitor_get_stat();
+		performance_monitor_close();
+	}
 
 	mutex_lock(&adapter->stat_mutex);
 	ipu_smmu_err_isr = ipu_smmu_interrupt_handler(&adapter->stat.smmu_irq_count);
@@ -1247,15 +1299,11 @@ static irqreturn_t ipu_interrupt_handler(int irq, void *dev)
 
 	if (ipu_smmu_err_isr) {
 		if (adapter->feature_tree.ipu_reset_when_in_error && adapter->reset_va) {
-			ipu_reset_proc((unsigned int)adapter->reset_va);
+			rdr_system_error((unsigned int)MODID_NPU_EXC_INTERRUPT_ABNORMAL, 0, 0);
+			ipu_reset_proc((unsigned int)adapter->reset_va); //lint !e570
 		}
 	} else {
-		ipu_finish_irq_handler();
-
-		if (adapter->feature_tree.fault_irq) {
-			ipu_fault_irq_handler();
-		}
-
+		ipu_core_irq_handler();
 		if (!cambricon_ipu_workqueue()) {
 			printk(KERN_ERR"[%s]: IPU_ERROR:cambricon_ipu_workqueue return false\n", __func__);
 			mutex_unlock(&adapter->power_mutex);
@@ -1283,14 +1331,6 @@ static irqreturn_t ipu_interrupt_handler(int irq, void *dev)
 	it will register as a callback func for ipu resume watchdog */
 static int ipu_reset(void *arg)
 {
-	unsigned int peri_stat;
-	unsigned int ppll_select;
-	unsigned int power_stat;
-	unsigned int power_ack;
-	unsigned int reset_stat;
-	unsigned int perclken0;
-	unsigned int perstat0;
-
 	static unsigned long last_computed_task = 0;
 
 	char register_info_flag[] = "NULL";
@@ -1305,16 +1345,6 @@ static int ipu_reset(void *arg)
 
 		mutex_lock(&adapter->power_mutex);
 
-		/* WTD time out, report to DSM */
-		if (last_computed_task != adapter->computed_task_cnt){
-			ipu_smmu_dump_strm();
-			perr = register_info;
-		}
-
-		DSM_AI_KERN_ERROR_REPORT(DSM_AI_KERN_WTD_TIMEOUT_ERR_NO,
-			"IPU soft watchdog timeout, ipu_status=%d, ttbr0=%x, inst_set=%d, offchip{set=%x, base=%x}, last_computed_task=%d, register_info=%s.\n",
-			adapter->ipu_power_up, adapter->smmu_ttbr0, adapter->boot_inst_set.boot_inst_recorded_is_config, adapter->boot_inst_set.access_ddr_addr_is_config,
-			adapter->boot_inst_set.ipu_access_ddr_addr, adapter->computed_task_cnt, perr);
 		if (false == adapter->ipu_power_up) {
 			printk(KERN_ERR"[%s]: IPU_ERROR: ipu is power off, can not resume\n", __func__);
 			mutex_unlock(&adapter->power_mutex);
@@ -1327,21 +1357,37 @@ static int ipu_reset(void *arg)
 				__func__, adapter->ipu_power_up, adapter->smmu_ttbr0, adapter->boot_inst_set.boot_inst_recorded_is_config,
 				adapter->boot_inst_set.access_ddr_addr_is_config, adapter->boot_inst_set.ipu_access_ddr_addr, adapter->computed_task_cnt);
 
-			/* get clock and power status in register */
-			peri_stat = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.peristat7);
-			ppll_select = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.clkdiv8);
-			power_stat = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.perpwrstat);
-			power_ack = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.perpwrack);
-			reset_stat = ioread32((void *)adapter->media2_io_addr + adapter->media2_reg_offset.perrststat0);
-			perclken0 = ioread32((void *)adapter->media2_io_addr + adapter->media2_reg_offset.perclken0);
-			perstat0 = ioread32((void *)adapter->media2_io_addr + adapter->media2_reg_offset.perstat0);
+		/* get clock and power status in register */
+		ipu_reg_info.peri_reg.peri_stat   = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.peristat7);
+		ipu_reg_info.peri_reg.ppll_select = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.clkdiv8);
+		ipu_reg_info.peri_reg.power_stat  = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.perpwrstat);
+		ipu_reg_info.peri_reg.power_ack   = ioread32((void *)adapter->peri_io_addr + adapter->peri_reg_offset.perpwrack);
+		ipu_reg_info.peri_reg.reset_stat  = ioread32((void *)adapter->media2_io_addr + adapter->media2_reg_offset.perrststat0);
+		ipu_reg_info.peri_reg.perclken0   = ioread32((void *)adapter->media2_io_addr + adapter->media2_reg_offset.perclken0);
+		ipu_reg_info.peri_reg.perstat0    = ioread32((void *)adapter->media2_io_addr + adapter->media2_reg_offset.perstat0);
 
-			printk(KERN_ERR"[%s]: peri_stat=%x, ppll_select=%x, power_stat=%x, power_ack=%x, reset_stat=%x, perclken=%x, perstat=%x\n",
-				__func__, peri_stat, ppll_select, power_stat, power_ack, reset_stat, perclken0, perstat0);
+		printk(KERN_ERR"[%s]: peri_stat=%x, ppll_select=%x, power_stat=%x, power_ack=%x, reset_stat=%x, perclken=%x, perstat=%x\n",
+			__func__,
+			ipu_reg_info.peri_reg.peri_stat,
+			ipu_reg_info.peri_reg.ppll_select,
+			ipu_reg_info.peri_reg.power_stat,
+			ipu_reg_info.peri_reg.power_ack,
+			ipu_reg_info.peri_reg.reset_stat,
+			ipu_reg_info.peri_reg.perclken0,
+			ipu_reg_info.peri_reg.perstat0);
 
-			/* get memory info in register */
-			ipu_smmu_dump_strm();
-		}
+		/* get memory info in register */
+		ipu_smmu_dump_strm();
+
+		/* WTD time out, report to DSM */
+		perr = register_info;
+		DSM_AI_KERN_ERROR_REPORT(DSM_AI_KERN_WTD_TIMEOUT_ERR_NO,
+			"IPU soft watchdog timeout, ipu_status=%d, ttbr0=%x, inst_set=%d, offchip{set=%x, base=%x}, last_computed_task=%d, register_info=%s.\n",
+			adapter->ipu_power_up, adapter->smmu_ttbr0, adapter->boot_inst_set.boot_inst_recorded_is_config, adapter->boot_inst_set.access_ddr_addr_is_config,
+			adapter->boot_inst_set.ipu_access_ddr_addr, adapter->computed_task_cnt, perr);
+
+		rdr_system_error((unsigned int)MODID_NPU_EXC_DEAD, 0, 0);
+	}
 
 		/* reset ipu */
 		ipu_reset_proc((unsigned int)adapter->reset_va);
@@ -1414,7 +1460,12 @@ int ipu_power_up(void)
 	/* start ipu clock */
 	ret = ipu_clock_start(&adapter->clk);
 	if (ret) {
-		printk(KERN_ERR"[%s]: IPU_ERROR:IPU clock start failed\n", __func__);
+		printk(KERN_ERR"[%s]: IPU_ERROR:IPU clock start failed, power down ipu\n", __func__);
+		if (regulator_ip_vipu_disable()) {
+			printk(KERN_ERR"[%s]: IPU_ERROR:ipu power down fail\n", __func__);
+		}
+
+		/* if more return add in this func, add ipu power-down function before "return" */
 		return ret;
 	}
 
@@ -1430,15 +1481,11 @@ int ipu_power_up(void)
 	do_gettimeofday(&tv3);
 
 	ipu_smmu_init(adapter->smmu_ttbr0,
-		(unsigned long)adapter->smmu_rw_err_phy_addr, adapter->feature_tree.smmu_port_select);
+		(unsigned long)adapter->smmu_rw_err_phy_addr, adapter->feature_tree.smmu_port_select, adapter->feature_tree.smmu_mstr_hardware_start);
 
 	mutex_lock(&adapter->stat_mutex);
 	if (adapter->smmu_stat_en) {
 		ipu_smmu_reset_statistic();
-
-		if (adapter->feature_tree.performance_monitor) {
-			performance_monitor_open();
-		}
 	}
 	mutex_unlock(&adapter->stat_mutex);
 
@@ -1482,7 +1529,6 @@ static int ipu_open(struct inode *inode, struct file *filp)
 		mutex_unlock(&adapter->open_mutex);
 		return -EBUSY;
 	} else {
-		wake_lock(&adapter->wakelock);
 		adapter->ipu_device_opened = true;
 	}
 
@@ -1523,11 +1569,6 @@ int ipu_power_down(void)
 	mutex_lock(&adapter->stat_mutex);
 	if (adapter->smmu_stat_en) {
 		ipu_smmu_record_statistic(&adapter->stat);
-
-		if (adapter->feature_tree.performance_monitor) {
-			performance_monitor_get_stat();
-			performance_monitor_close();
-		}
 	}
 	mutex_unlock(&adapter->stat_mutex);
 
@@ -1549,7 +1590,7 @@ int ipu_power_down(void)
 	do_gettimeofday(&tv4);
 	ret = regulator_ip_vipu_disable();
 	if (ret) {
-		printk(KERN_ERR"[%s]: IPU_ERROR:No IPU device!\n", __func__);
+		printk(KERN_ERR"[%s]: IPU_ERROR:ipu power down fail\n", __func__);
 		return -EBUSY;
 	}
 
@@ -1623,14 +1664,7 @@ static int ipu_release(struct inode *inode, struct file *filp)
 	adapter->boot_inst_set.boot_inst_recorded_is_config = false;
 	mutex_unlock(&adapter->boot_inst_set.boot_mutex);
 
-	mutex_lock(&adapter->clk.clk_mutex);
-	ipu_vote_peri_withdraw(&adapter->clk);
-	adapter->clk.voted_peri_volt = 0;
-	mutex_unlock(&adapter->clk.clk_mutex);
-
-	wake_unlock(&adapter->wakelock);
 	adapter->ipu_device_opened = false;
-
 	mutex_unlock(&adapter->open_mutex);/*lint !e455*/
 
 	printk(KERN_DEBUG"[%s]: ipu release succeed\n", __func__);
@@ -1691,8 +1725,13 @@ static long ipu_write_dword(struct cambricon_ipu_private *dev, unsigned long arg
 	mutex_lock(&adapter->power_mutex);
 	if (adapter->ipu_power_up) {
 		if ((IPU_START_REG == in[offset]) || (IPU_STATUS_REG == in[offset]) || (IPU_BASE_ADDR_REG == in[offset])) {
+			if (IPU_START_REG == in[offset] && IPU_TO_START == in[data]) {
+				if (adapter->feature_tree.performance_monitor) {
+					performance_monitor_open();
+				}
+				ipu_watchdog_start(&adapter->reset_wtd, WATCHDOG_TIMEOUT_THD_MS);
+			}
 			iowrite32(in[data], (void *)((unsigned long)dev->config_reg_virt_addr + in[offset]));
-
 		} else {
 			printk(KERN_ERR"[%s]: IPU_ERROR:error offset when ipu on, offset=0x%pK, data=0x%lx\n", __func__, (void *)in[offset], in[data]);
 			mutex_unlock(&adapter->power_mutex);
@@ -1709,10 +1748,6 @@ static long ipu_write_dword(struct cambricon_ipu_private *dev, unsigned long arg
 			mutex_unlock(&adapter->power_mutex);
 			return -EFAULT;
 		}
-	}
-
-	if (IPU_START_REG == in[offset] && IPU_TO_START == in[data]) {
-		ipu_watchdog_start(&adapter->reset_wtd, WATCHDOG_TIMEOUT_THD_MS);
 	}
 
 	mutex_unlock(&adapter->power_mutex);
@@ -1883,16 +1918,16 @@ long ipu_set_profile(struct cambricon_ipu_private *dev, unsigned long arg, struc
 	/* get rate by profile */
 	switch (profile) {
 	case DEV_UNSET_PROFILE:
-		clock = IPU_CLOCK_LOW; /* if profile not need IPU, set IPU clock as low */
+		clock = adapter->clk.ipu_low; /* if profile not need IPU, set IPU clock as low */
 		break;
 	case DEV_LOW_PROFILE:
-		clock = IPU_CLOCK_LOW;
+		clock = adapter->clk.ipu_low;
 		break;
 	case DEV_NORMAL_PROFILE:
-		clock = IPU_CLOCK_NORMAL;
+		clock = adapter->clk.ipu_middle;
 		break;
 	case DEV_HIGH_PROFILE:
-		clock = IPU_CLOCK_HIGH;
+		clock = adapter->clk.ipu_high;
 		break;
 	default:
 		printk(KERN_ERR"[%s]: IPU_ERROR:profile=%lu error\n", __FUNCTION__, profile);
@@ -2025,7 +2060,6 @@ static long ipu_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	}
 
 	mutex_lock(&adapter->open_mutex);
-
 	if (!adapter->ipu_device_opened) {
 		printk(KERN_ERR"[%s]: IPU_ERROR:receiving IOCTL attack when ipu is not open, ignore\n", __func__);
 		mutex_unlock(&adapter->open_mutex);
@@ -2383,6 +2417,11 @@ static int cambricon_ipu_probe(struct platform_device *pdev)
 		goto release_res_cfg;
 	}
 
+	if (!ipu_get_feature_tree(&pdev->dev)) {
+		printk(KERN_ERR"[%s]: fatal err, unknown feature tree\n", __func__);
+		goto unmap_reg;
+	}
+
 	/* request ipu irq */
 	if (request_threaded_irq(adapter->irq, NULL, ipu_interrupt_handler,
 		(unsigned long)(IRQF_ONESHOT | IRQF_TRIGGER_HIGH), IPU_NAME, &(adapter->cdev))) {
@@ -2415,11 +2454,6 @@ static int cambricon_ipu_probe(struct platform_device *pdev)
 		err = (int)PTR_ERR(temp);
 		printk(KERN_ERR"[%s]: Failed to mount IPU to /dev/ipu!\n", __func__);
 		goto destroy_class;
-	}
-
-	if (!ipu_get_feature_tree(&pdev->dev)) {
-		printk(KERN_ERR"[%s]: fatal err, unknown feature tree\n", __func__);
-		goto destroy_device;
 	}
 
 	if (!ipu_get_irq_offset(&pdev->dev)) {
@@ -2459,7 +2493,7 @@ static int cambricon_ipu_probe(struct platform_device *pdev)
 	}
 
 	/* init ipu clock */
-	if (ipu_clock_init(&pdev->dev, &adapter->clk)) {
+	if (ipu_clock_init(&pdev->dev, &adapter->clk, adapter->feature_tree.lpm3_set_vcodecbus)) {
 		printk(KERN_ERR"[%s]: Failed to init ipu clock\n", __func__);
 		goto unmap_bandwidth_lmt;
 	}
@@ -2474,15 +2508,16 @@ static int cambricon_ipu_probe(struct platform_device *pdev)
 	adapter->smmu_ttbr0 = ipu_get_smmu_base_phy(&pdev->dev);
 
 
-	wake_lock_init(&adapter->wakelock, WAKE_LOCK_SUSPEND, "ipu_process");
+	err = ipu_mntn_rdr_init();
+	if (err) {
+		printk(KERN_ERR"[%s]: Call ipu_mntn_rdr_init is failed!ret=%d\n", __func__, err);
+		goto exit_error;
+	}
 
 	ipu_watchdog_init(&adapter->reset_wtd, adapter->feature_tree.soft_watchdog_enable, ipu_reset_irq);
 
 	sema_init(&(adapter->reset_wtd.sem), 0);
 	adapter->reset_wtd.task = kthread_run(ipu_reset, NULL, "ipu_reset_task");
-	if (!adapter->reset_wtd.task) {
-		printk(KERN_ERR"[%s]: IPU_ERROR:create ipu_reset_task fail\n", __func__);
-	}
 
 	printk(KERN_DEBUG"[%s]: Succeeded to initialize ipu device.\n", __func__);
 
@@ -2561,8 +2596,6 @@ static int __exit cambricon_ipu_remove(struct platform_device *pdev)
 			iounmap(adapter->ics_irq_io_addr);
 			adapter->ics_irq_io_addr = NULL;
 		}
-
-		wake_lock_destroy(&adapter->wakelock);
 
 		cdev_del(&(adapter->cdev));
 
@@ -2647,6 +2680,7 @@ static void __exit cambricon_ipu_exit(void)
 {
 	platform_device_unregister(&cambricon_ipu_device);
 	platform_driver_unregister(&cambricon_ipu_driver);
+	destroy_workqueue(ipu_mntn_rdr_wq);
 }
 
 /*lint -e753 -e528*/

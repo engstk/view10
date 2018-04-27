@@ -1,70 +1,48 @@
-/******************************************************************************
-
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : hisi_load_image.h
-  版 本 号   : 初稿
-  作    者   : hisi_load_image.h
-  生成日期   : 2016年2月2日
-  最近修改   :
-  功能描述   : load_image.c 的头文件
-  函数列表   :
-  修改历史   :
-  1.日    期   :
-    作    者   :
-    修改内容   :
-  2.注    意   :
-
-******************************************************************************/
-
-/*****************************************************************************
-  1 其他头文件包含
-*****************************************************************************/
-
+/*
+ * hisi_load_image.h
+ *
+ * Copyright (c) 2001-2021, Huawei Tech. Co., Ltd. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
 #ifndef __HISI_LOAD_IMAGE_H__
 #define __HISI_LOAD_IMAGE_H__
 
-
 /*****************************************************************************
-  1 STRUCT定义
+ Struct Definition
 *****************************************************************************/
-
-/***************load_image struct for new platform from chicago**************/
 struct load_image_info {
 	unsigned int ecoretype;
-	unsigned long image_addr;
 	unsigned int image_size;
+	unsigned long image_addr;
 	char *partion_name;
 };
 
 /*****************************************************************************
-  3 函数声明
+ Function:     bsp_load_and_verify_image
+ Description:  This function is used for image in nonsecure world load to
+               secure world, include image reset/load/sec-verify/disreset.
+ Parameters:   struct load_image_info *img_info
+ Return:       SEC_OK:    success
+               SEC_ERROR: failure
+ Instuctions:  1. Fill the load_image_info struct, note the following points:
+               ecoretype is soc type should match the definition in secos.
+               image_addr should align with cacheline.
+               image_size represent load image size.
+               partion_name should be consistent with ptable.
+               2. Call bsp_load_and_verify_image and check return value after
+               filled the load_image_info struct.
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : bsp_load_and_verify_image
- 功能描述  : 加载校验镜像
- 输入参数  : struct load_image_info *img_info
- 输出参数  : SEC_OK 0
-			SEC_ERROR -1
- 返 回 值  : int
- 调用函数  :
- 被调函数  :
- 说    明  : 该函数用于非安全世界的安全镜像的复位、加载、安全校验及解复位。
- 用法说明  : 1、填充镜像加载结构体struct load_image_info，
-			其中ecoretype表示镜像类型ID该镜像类型ID需要与安全OS对齐；
-			image_addr表示镜像加载地址，注意需要cacheline对齐；
-			image_size表示镜像大小；
-			partion_name表示镜像分区名，注意需要与分区表保持一致；
-			2、结构体填充完成后调用函数bsp_load_and_verify_image，判断返回值；
- 用法说明  :
- 修改历史      :
-  1.日    期   :
-    作    者   :
-    修改内容   :
-
-*****************************************************************************/
-/*new func for new platform from chicago*/
 int bsp_load_and_verify_image(struct load_image_info *img_info);
+
+int bsp_load_sec_img(struct load_image_info *img_info);
 
 #endif /* end of hisi_load_image.h */

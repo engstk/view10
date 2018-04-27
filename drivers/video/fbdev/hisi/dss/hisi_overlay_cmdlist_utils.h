@@ -29,6 +29,14 @@
 #include "hisi_overlay_utils_kirin970.h"
 #endif
 
+#ifdef CONFIG_HISI_FB_V501
+#include "hisi_overlay_utils_dssv501.h"
+#endif
+
+#ifdef CONFIG_HISI_FB_V320
+#include "hisi_overlay_utils_dssv320.h"
+#endif
+
 #define CONFIG_HISI_DSS_CMDLIST_LAST_USED
 
 #define HISI_DSS_CMDLIST_DATA_MAX	  (3)

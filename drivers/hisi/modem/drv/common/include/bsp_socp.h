@@ -102,7 +102,6 @@ typedef struct socp_compress_ops
 }socp_compress_ops_stru;
 
 #if (FEATURE_SOCP_DECODE_INT_TIMEOUT == FEATURE_ON)
-/*2014年2月22日14:23:11 l00258701 v711增加定义begin*/
 typedef enum timeout_module
 {
     DECODE_TIMEOUT_INT_TIMEOUT = 0,
@@ -111,7 +110,6 @@ typedef enum timeout_module
 
 } DECODE_TIMEOUT_MODULE;
 
-/*2014年2月22日14:23:11 l00258701 v711增加定义end*/
 #endif
 
 typedef struct
@@ -137,7 +135,7 @@ struct socp_enc_dst_log_cfg
 	unsigned int    currentMode;
     
 };
-
+#ifdef ENABLE_BUILD_SOCP
 /*****************************************************************************
 * 函 数 名  : socp_init
 *
@@ -150,6 +148,32 @@ struct socp_enc_dst_log_cfg
 * 返 回 值  : 初始化成功的标识码
 *****************************************************************************/
 s32 socp_init(void);
+
+/*****************************************************************************
+* 函 数 名  : bsp_socp_encdst_dsm_init
+*
+* 功能描述  : socp编码目的端中断状态初始化
+* 输入参数  : EncDestChanID: 编码目的端通道号
+*             bEnable: 初始化的中断状态
+*
+* 输出参数  : 无
+*
+* 返 回 值  : 无
+*****************************************************************************/
+void bsp_socp_encdst_dsm_init(u32 EncDestChanID, u32 bEnable);
+
+/*****************************************************************************
+* 函 数 名  : bsp_socp_data_send_manager
+*
+* 功能描述  : socp编码目的端上报数据
+* 输入参数  : EncDestChanID: 编码目的端通道号
+*             bEnable: 中断使能
+*
+* 输出参数  : 无
+*
+* 返 回 值  : 无
+*****************************************************************************/
+void bsp_socp_data_send_manager(u32 EncDestChanID, u32 bEnable);
 
 /*****************************************************************************
  函 数 名  : bsp_socp_coder_set_src_chan
@@ -535,9 +559,9 @@ s32  bsp_socp_get_log_ind_mode(u32 *LofgIndMode);
 s32 bsp_report_ind_mode_ajust(SOCP_IND_MODE_ENUM eMode);
 
 /*****************************************************************************
-* 函 数 名  :  bsp_socp_stop_dsp_chan
+* 函 数 名  :  bsp_socp_encsrc_chan_open
 *
-* 功能描述  : dsp下电之前停止SOCP通道
+* 功能描述  : 打开SOCP编码源通道开关
 *
 * 输入参数  : 无
 *
@@ -545,8 +569,21 @@ s32 bsp_report_ind_mode_ajust(SOCP_IND_MODE_ENUM eMode);
 *
 * 返 回 值  : void
 *****************************************************************************/
-void bsp_socp_stop_dsp_chan(u32 u32SrcChanId);
+void bsp_socp_encsrc_chan_open(u32 u32SrcChanId);
 
+/*****************************************************************************
+* 函 数 名  : bsp_socp_encsrc_chan_close
+*
+* 功能描述  : 关闭socp编码源通道开关，并且等待socp空闲后退出
+              该接口用于防止socp访问下电区域
+*
+* 输入参数  : 无
+*
+* 输出参数  : 无
+*
+* 返 回 值  : void
+*****************************************************************************/
+void bsp_socp_encsrc_chan_close(u32 u32SrcChanId);
 
 /*****************************************************************************
  函 数 名  : bsp_socp_update_bbp_ptr
@@ -559,7 +596,42 @@ void bsp_socp_stop_dsp_chan(u32 u32SrcChanId);
 void bsp_socp_update_bbp_ptr(u32 u32SrcChanId);
 
 
-u32 bsp_get_socp_ind_dst_int_slice(void);   
+u32 bsp_get_socp_ind_dst_int_slice(void);  
+
+#else
+
+static inline void bsp_socp_encsrc_chan_open(u32 u32SrcChanId)
+{
+    return;
+}	
+	
+static inline void bsp_socp_encsrc_chan_close(u32 u32SrcChanId)
+{
+    return;
+}
+
+static inline s32 bsp_socp_get_write_buff( u32 u32SrcChanID, SOCP_BUFFER_RW_STRU *pBuff)
+{
+    return 0;
+}
+
+static inline s32 bsp_socp_write_done(u32 u32SrcChanID, u32 u32WrtSize)
+{
+    return 0;
+}
+
+static inline s32 bsp_socp_coder_set_src_chan(SOCP_CODER_SRC_ENUM_U32 enSrcChanID, SOCP_CODER_SRC_CHAN_S *pSrcAttr)
+{
+    return 0;
+}
+
+static inline s32 bsp_socp_start(u32 u32SrcChanID)
+{
+    return 0;
+}
+
+#endif
+
 
 
 #ifdef CONFIG_DEFLATE

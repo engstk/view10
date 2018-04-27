@@ -233,6 +233,9 @@ int focal_prase_ic_config_dts(
 	focal_of_property_read_u32_default(np, FTS_POWER_SELF_CTRL,
 		&g_focal_pdata->self_ctrl_power, 0);
 
+	focal_of_property_read_u32_default(np, FTS_RESET_SELF_CTRL,
+		&g_focal_pdata->self_ctrl_reset, 0);
+
 	if (FTS_SELF_CTRL_POWER == g_focal_pdata->self_ctrl_power) {
 		focal_of_property_read_u32_default(np, FTS_VCI_REGULATOR_TYPE,
 			&dev_data->vci_regulator_type, 0);
@@ -263,6 +266,7 @@ int focal_prase_ic_config_dts(
 		"vci_value", dev_data->regulator_ctr.vci_value,
 		"vddio_value", dev_data->regulator_ctr.vddio_value,
 		"power_self_ctrl", g_focal_pdata->self_ctrl_power,
+		"reset_self_ctrl", g_focal_pdata->self_ctrl_reset,
 		"power_down_ctrl", g_focal_pdata->power_down_ctrl);
 
 	return 0;
@@ -297,7 +301,8 @@ int focal_parse_dts(
 	struct focal_platform_data *focal_pdata)
 {
 	int ret = 0;
-
+	int read_val = 0;
+	unsigned int value = 0;
 	const char *str_value = NULL;
 	struct ts_glove_info *glove_info = NULL;
 	struct ts_holster_info *holster_info = NULL;
@@ -381,6 +386,17 @@ int focal_parse_dts(
 		TS_LOG_INFO("%s:get use_lcdkit_power_notify from dts failed ,use default \n", __func__);
 	}
 
+	ret = of_property_read_u32(np, "rawdata_newformatflag", &read_val);
+	if (!ret) {
+		dev_data->rawdata_newformatflag = read_val;
+		TS_LOG_INFO("use dts rawdata_newformatflag = %d\n",
+			    dev_data->rawdata_newformatflag);
+	}else{
+		dev_data->rawdata_newformatflag = 0;
+		TS_LOG_INFO("use default rawdata_newformatflag = %d\n",
+			    dev_data->rawdata_newformatflag);
+	}
+
 	ret = of_property_read_u32(np, FTS_ENABLE_EDGE_TOUCH, &focal_pdata->enable_edge_touch);
 	if (ret) {
 		focal_pdata->enable_edge_touch = 0;
@@ -421,6 +437,25 @@ int focal_parse_dts(
 	if (ret) {
 		TS_LOG_INFO("%s get touch_switch_flag from dts failed, use default(0).\n", __func__);
 		focal_pdata->focal_device_data->touch_switch_flag = 0;
+	} else {
+		if (TS_SWITCH_TYPE_GAME == (focal_pdata->focal_device_data->touch_switch_flag & TS_SWITCH_TYPE_GAME)) {
+			ret = of_property_read_u32(np, FTS_TOUCH_SWITCH_GAME_REG, &value);
+			if (ret) {
+				TS_LOG_INFO("%s get touch_switch_game_reg from dts failed, use default(0).\n", __func__);
+				focal_pdata->touch_switch_game_reg = 0;
+			} else {
+				focal_pdata->touch_switch_game_reg = (u8)(value & 0xFF);
+				TS_LOG_INFO("%s get touch_switch_game_reg from dts succ, use value(0x%x).\n", __func__, focal_pdata->touch_switch_game_reg);
+			}
+		}
+	}
+
+	ret = of_property_read_u32(np, "aft_wxy_enable", &focal_pdata->aft_wxy_enable);
+	if (ret) {
+		TS_LOG_INFO("%s get aft_wxy_enable from dts failed, use default(0).\n", __func__);
+		focal_pdata->aft_wxy_enable = 0;
+	} else {
+		TS_LOG_INFO("%s get aft_wxy_enable  = %d.\n", __func__, focal_pdata->aft_wxy_enable);
 	}
 
 	/*
@@ -483,10 +518,16 @@ static void focal_prase_test_item(struct device_node *np,
 	focal_of_property_read_u32_default(np, FTS_LCD_NOISE_DATA_TEST,
 		&params->lcd_noise_data, 0);
 
+	focal_of_property_read_u32_default(np, FTS_OPENTEST_CHARGE_TIME,
+		&params->opentest_charge_time, 0);
+
+	focal_of_property_read_u32_default(np, FTS_OPENTEST_RESET_TIME,
+		&params->opentest_reset_time, 0);
+
 	TS_LOG_INFO("%s:%s=%d, %s=%d, %s=%d\n", __func__,
 		"row_column_delta_test", params->row_column_delta,
-		"row_column_delta_test_point_by_point", params->row_column_delta_test_point_by_point,
-		"lcd_noise_data_test", params->lcd_noise_data);
+		"opentest_charge_time", params->opentest_charge_time,
+		"opentest_reset_time", params->opentest_reset_time);
 }
 
 static void focal_prase_test_threshold(

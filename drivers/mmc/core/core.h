@@ -33,10 +33,10 @@ struct mmc_bus_ops {
 	int (*alive)(struct mmc_host *);
 	int (*shutdown)(struct mmc_host *);
 	int (*reset)(struct mmc_host *);
-#ifdef CONFIG_MMC_PASSWORDS	
+#ifdef CONFIG_MMC_PASSWORDS
 	int (*sysfs_add)(struct mmc_host *, struct mmc_card *card);
 	void (*sysfs_remove)(struct mmc_host *, struct mmc_card *card);
-#endif	
+#endif
 };
 
 void mmc_attach_bus(struct mmc_host *host, const struct mmc_bus_ops *ops);
@@ -69,7 +69,7 @@ static inline void mmc_delay(unsigned int ms)
 {
 	if (ms < 1000 / HZ) {
 		cond_resched();
-		mdelay(ms);
+		mdelay(ms);/*lint !e647*/
 	} else {
 		msleep(ms);
 	}

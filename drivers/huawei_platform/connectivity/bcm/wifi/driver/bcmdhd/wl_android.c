@@ -2283,7 +2283,9 @@ wl_android_set_disassoc_roaming_bssid(struct net_device *dev, char *command, int
 }
 
 #endif
-
+#ifdef HW_SHARE_WIFI_FILTER_MANAGE
+bool g_force_stop_filter = false;
+#endif
 int wl_android_priv_cmd(struct net_device *net, struct ifreq *ifr, int cmd)
 {
 #define PRIVATE_COMMAND_MAX_LEN	8192
@@ -2294,9 +2296,7 @@ int wl_android_priv_cmd(struct net_device *net, struct ifreq *ifr, int cmd)
 	char *command = NULL;
 	int bytes_written = 0;
 	android_wifi_priv_cmd priv_cmd;
-#ifdef BRCM_RSDB
-	dhd_pub_t * dhd_pub = NULL;
-#endif
+	dhd_pub_t * dhd_pub = hw_get_dhd_pub(net);
 
 	net_os_wake_lock(net);
 #ifdef BCM_PATCH_CVE_2016_2475
@@ -2389,9 +2389,19 @@ int wl_android_priv_cmd(struct net_device *net, struct ifreq *ifr, int cmd)
 	}
 #ifdef PKT_FILTER_SUPPORT
 	else if (strnicmp(command, CMD_RXFILTER_START, strlen(CMD_RXFILTER_START)) == 0) {
+#ifdef HW_SHARE_WIFI_FILTER_MANAGE
+		g_force_stop_filter = false;
+		if (dhd_pub && dhd_pub->in_suspend)
+			dhd_dev_apf_enable_filter(net);
+#endif /* HW_SHARE_WIFI_FILTER_MANAGE */
 		bytes_written = net_os_enable_packet_filter(net, 1);
 	}
 	else if (strnicmp(command, CMD_RXFILTER_STOP, strlen(CMD_RXFILTER_STOP)) == 0) {
+#ifdef HW_SHARE_WIFI_FILTER_MANAGE
+		g_force_stop_filter = true;
+		if (dhd_pub && !dhd_pub->in_suspend)
+			dhd_dev_apf_enable_filter(net);
+#endif
 		bytes_written = net_os_enable_packet_filter(net, 0);
 	}
 	else if (strnicmp(command, CMD_RXFILTER_ADD, strlen(CMD_RXFILTER_ADD)) == 0) {

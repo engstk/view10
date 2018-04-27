@@ -5,6 +5,7 @@
 #include <linux/list.h>
 #include <linux/dma-buf.h>
 #include "ipu_smmu_drv.h"
+#include "ipu_mntn.h"
 
 #define SMMU_MSTR_DEBUG_CONFIG_WR (16)
 #define SMMU_MSTR_DEBUG_CONFIG_CS (17)
@@ -401,7 +402,7 @@ unsigned long ipu_get_smmu_base_phy(struct device *dev)
 	return ((unsigned long)domain_data->phy_pgd_base);
 }
 
-static void ipu_smmu_mstr_init(bool port_sel)
+static void ipu_smmu_mstr_init(bool port_sel, bool hardware_start)
 {
 	unsigned long io_mstr_base = (unsigned long)smmu_manager.master_io_addr;
 	unsigned int stream_status;
@@ -435,31 +436,33 @@ static void ipu_smmu_mstr_init(bool port_sel)
 	iowrite32(SMMU_MSTR_INTCLR_ALL, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_intclr));
 	iowrite32(SMMU_MSTR_INTCLR_ALL_UNMASK, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_intmask));
 
-	/********************************************************
-	config stream by SMMU_MSTR_SMRX_0
-	for a sid, includes:
-	VA max and VA min for this stream-id r/w region;
-	len and upwin (in 32k, if VA continue increase, will not decrease in 32k, upwin is 0)
-	len should be iid/2, iid(index id) is 8, for iid, for example, if pingpong buffer, iid is 2
+	if (!hardware_start) {
+		/********************************************************
+		config stream by SMMU_MSTR_SMRX_0
+		for a sid, includes:
+		VA max and VA min for this stream-id r/w region;
+		len and upwin (in 32k, if VA continue increase, will not decrease in 32k, upwin is 0)
+		len should be iid/2, iid(index id) is 8, for iid, for example, if pingpong buffer, iid is 2
 
-	00.b:weight
-	01.b:input read
-	10.b:output read
-	11.b:output write
+		00.b:weight
+		01.b:input read
+		10.b:output read
+		11.b:output write
 
-	.len = iid/2=4
-	.upwin = 0(do not search in upwin)
-	.bypass = 0(no bypass)
+		.len = iid/2=4
+		.upwin = 0(do not search in upwin)
+		.bypass = 0(no bypass)
 
-	for malloc and free, VA is not in a designated area, so can not set VA max and VA min
-	*********************************************************/
-	iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[0]));
-	iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[1]));
-	iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[2]));
-	iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[3]));
+		for malloc and free, VA is not in a designated area, so can not set VA max and VA min
+		*********************************************************/
+		iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[0]));
+		iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[1]));
+		iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[2]));
+		iowrite32(SMMU_MSTR_SMRX_0_LEN, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_0[3]));
 
-	/* stream startup by config SMMU_MSTR_SMRX_START */
-	iowrite32(SMMU_MSTR_SMRX_START_ALL_STREAM, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_start));
+		/* stream startup by config SMMU_MSTR_SMRX_START */
+		iowrite32(SMMU_MSTR_SMRX_START_ALL_STREAM, (void *)(io_mstr_base + smmu_master_reg_offset.smmu_mstr_smrx_start));
+	}
 
 	return;
 }
@@ -503,9 +506,9 @@ static void ipu_smmu_comm_init(unsigned long ttbr0, unsigned long smmu_rw_err_ph
 	return;
 }
 
-void ipu_smmu_init(unsigned long ttbr0, unsigned long smmu_rw_err_phy_addr, bool port_sel)
+void ipu_smmu_init(unsigned long ttbr0, unsigned long smmu_rw_err_phy_addr, bool port_sel, bool hardware_start)
 {
-	ipu_smmu_mstr_init(port_sel);
+	ipu_smmu_mstr_init(port_sel, hardware_start);
 	ipu_smmu_comm_init(ttbr0, smmu_rw_err_phy_addr);
 }
 
@@ -1015,17 +1018,20 @@ void ipu_smmu_dump_strm(void)
 	}
 
 	iowrite32(IPU_SMMU_RD_CMD_BUF_BITMAP, (void *)(mstr_io_addr + (unsigned long)offset->smmu_mstr_dbg_port_in_0));
-	port_out[0] = ioread32((void *)(mstr_io_addr + (unsigned long)offset->smmu_mstr_dbg_port_out));
-
 	iowrite32(IPU_SMMU_WR_CMD_BUF_BITMAP, (void *)(mstr_io_addr + (unsigned long)offset->smmu_mstr_dbg_port_in_0));
-	port_out[1] = ioread32((void *)(mstr_io_addr + (unsigned long)offset->smmu_mstr_dbg_port_out));
-
+	ipu_reg_info.mstr_reg.rd_bitmap = ioread32((void *)(mstr_io_addr + (unsigned long)offset->smmu_mstr_dbg_port_out));
+	ipu_reg_info.mstr_reg.wr_bitmap = ioread32((void *)(mstr_io_addr + (unsigned long)offset->smmu_mstr_dbg_port_out));
+	ipu_reg_info.mstr_reg.rd_cmd_total_cnt0 = ioread32((void *)(mstr_io_addr + (unsigned long)offset->read_cmd_total_cnt[0]));
+	ipu_reg_info.mstr_reg.rd_cmd_total_cnt1 = ioread32((void *)(mstr_io_addr + (unsigned long)offset->read_cmd_total_cnt[1]));
+	ipu_reg_info.mstr_reg.rd_cmd_total_cnt2 = ioread32((void *)(mstr_io_addr + (unsigned long)offset->read_cmd_total_cnt[2]));
+	ipu_reg_info.mstr_reg.wr_cmd_total_cnt	= ioread32((void *)(mstr_io_addr + (unsigned long)offset->write_cmd_total_cnt));
 	printk(KERN_ERR"RD_BITMAP=%x, WR_BITMAP=%x, rd_cmd_total_cnt[0-3]={%x, %x, %x}, wr_cmd_total_cnt=%x\n",
-		port_out[0], port_out[1],
-		ioread32((void *)(mstr_io_addr + (unsigned long)offset->read_cmd_total_cnt[0])),
-		ioread32((void *)(mstr_io_addr + (unsigned long)offset->read_cmd_total_cnt[1])),
-		ioread32((void *)(mstr_io_addr + (unsigned long)offset->read_cmd_total_cnt[2])),
-		ioread32((void *)(mstr_io_addr + (unsigned long)offset->write_cmd_total_cnt)));
+		ipu_reg_info.mstr_reg.rd_bitmap,
+		ipu_reg_info.mstr_reg.wr_bitmap,
+		ipu_reg_info.mstr_reg.rd_cmd_total_cnt0,
+		ipu_reg_info.mstr_reg.rd_cmd_total_cnt1,
+		ipu_reg_info.mstr_reg.rd_cmd_total_cnt2,
+		ipu_reg_info.mstr_reg.wr_cmd_total_cnt);
 
 }
 

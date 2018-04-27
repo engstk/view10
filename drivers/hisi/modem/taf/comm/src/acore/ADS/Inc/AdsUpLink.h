@@ -91,13 +91,14 @@ extern "C" {
            bit8:5  fc_head 过滤器组号 mfc_en控制域为1时，有效
            bit15:9 rsv
 */
-#ifdef CONFIG_NEW_PLATFORM
-#define ADS_UL_BUILD_BD_ATTRIBUTE(Flag, Mode, FcHead) ((Flag & 0x000F) | (Mode << 1 & 0x0006) | (FcHead << 5 &0x01E0))
-#else
-#define ADS_UL_BUILD_BD_ATTRIBUTE(Flag, Mode, FcHead) ((Flag & 0x000F) | (Mode << 1 & 0x0006) | (FcHead << 4 &0x0070))
+#ifndef CONFIG_NEW_PLATFORM
+#define ADS_UL_BUILD_BD_ATTRIBUTE(Flag, Mode, FcHead) \
+            ((VOS_UINT16)(((Flag) & 0x000F) | (((Mode) << 1) & 0x0006) | (((FcHead) << 4) &0x0070)))
+
+#define ADS_UL_SET_BD_ATTR_INT_FLAG(usAttr) \
+            ((usAttr) = (usAttr) | 0x1)
 #endif
 
-#define ADS_UL_SET_BD_ATTR_INT_FLAG(usAttr)            ((usAttr) = (usAttr) | 0x1)
 
 #define ADS_UL_IPF_1XHRPD                   (IPF_1XHRPD_ULFC)
 

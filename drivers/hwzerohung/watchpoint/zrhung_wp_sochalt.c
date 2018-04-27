@@ -15,7 +15,7 @@
 
 static int is_soc_halt;
 
-#define SOCHALT_INFO         "press10s"
+#define SOCHALT_INFO         "BR_PRESS_10S"
 #define SR_POSITION_KEYWORD  "sr position:"
 #define FASTBOOT_LOG_PATH    "/proc/balong/log/fastboot_log"
 #define BUFFER_SIZE_FASTBOOT (4 * 1024) //4KB buffer for reading fastboot log

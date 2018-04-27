@@ -84,24 +84,30 @@ const MODEM_VER_INFO_S * mdrv_ver_get_info(void)
 ****************************************************************************/
 void mdrv_ver_init(void)
 {
-	memset(&ver_info, 0x0, sizeof(MODEM_VER_INFO_S));
+    memset(&ver_info, 0x0, sizeof(MODEM_VER_INFO_S));
 
-	ver_info.stproductinfo.eboardatype   = (BOARD_ACTUAL_TYPE_E)bsp_get_version_info()->board_type;
-	ver_info.stproductinfo.echiptype     = V7R2_CHIP;
-	ver_info.stproductinfo.productname   = (unsigned char*)bsp_version_get_product_out_name();
-	ver_info.stproductinfo.productnamelen= VER_MAX_LENGTH;
-	ver_info.stproductinfo.chip_id       = (unsigned short)bsp_get_version_info()->chip_type;
+    if(NULL == bsp_get_version_info())
+    {
+        bsp_trace(BSP_LOG_LEVEL_ERROR,BSP_MODU_HWADP, "null version!\n");
+        return;
+    }
 
-	ver_info.sthwverinfo.hwfullver       = (unsigned char*)bsp_version_get_hardware();
-	ver_info.sthwverinfo.hwfullverlen    = VER_MAX_LENGTH;
-	ver_info.sthwverinfo.hwidsub         = huawei_product_info.hwIdSub;
-	ver_info.sthwverinfo.hwindex         = bsp_get_version_info()->board_id;
-	ver_info.sthwverinfo.hwinname        = (unsigned char*)bsp_version_get_product_inner_name();
-	ver_info.sthwverinfo.hwinnamelen     = VER_MAX_LENGTH;
-	ver_info.sthwverinfo.hwname          = (unsigned char*)bsp_version_get_product_out_name();
-	ver_info.sthwverinfo.hwnamelen       = VER_MAX_LENGTH;
+    ver_info.stproductinfo.eboardatype   = (BOARD_ACTUAL_TYPE_E)bsp_get_version_info()->board_type;
+    ver_info.stproductinfo.echiptype     = V7R2_CHIP;
+    ver_info.stproductinfo.productname   = (unsigned char*)bsp_version_get_product_out_name();
+    ver_info.stproductinfo.productnamelen= VER_MAX_LENGTH;
+    ver_info.stproductinfo.chip_id       = (unsigned short)bsp_get_version_info()->chip_type;
 
-	return ;
+    ver_info.sthwverinfo.hwfullver       = (unsigned char*)bsp_version_get_hardware();
+    ver_info.sthwverinfo.hwfullverlen    = VER_MAX_LENGTH;
+    ver_info.sthwverinfo.hwidsub         = huawei_product_info.hwIdSub;
+    ver_info.sthwverinfo.hwindex         = bsp_get_version_info()->board_id;
+    ver_info.sthwverinfo.hwinname        = (unsigned char*)bsp_version_get_product_inner_name();
+    ver_info.sthwverinfo.hwinnamelen     = VER_MAX_LENGTH;
+    ver_info.sthwverinfo.hwname          = (unsigned char*)bsp_version_get_product_out_name();
+    ver_info.sthwverinfo.hwnamelen       = VER_MAX_LENGTH;
+
+    return ;
 }
 
 /*lint -save -e64 -e437 -e233 -e713*/

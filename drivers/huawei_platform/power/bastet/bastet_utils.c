@@ -475,8 +475,8 @@ int bastet_get_comm_prop(struct sock *sk,
 {
 	struct inet_sock *inet = inet_sk(sk);
 
-	if (inet == NULL) {
-		BASTET_LOGE("inet is null");
+	if (inet == NULL || NULL == prop) {
+		BASTET_LOGE("invalid patameter");
 		return -1;
 	}
 	prop->local_ip = inet->inet_saddr;
@@ -490,6 +490,11 @@ int bastet_get_comm_prop(struct sock *sk,
 void bastet_get_sock_prop(struct sock *sk, struct bst_sock_sync_prop *prop)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
+
+	if (IS_ERR_OR_NULL(tp) || IS_ERR_OR_NULL(prop)) {
+		BASTET_LOGE("invalid patameter");
+		return;
+	}
 
 	prop->seq = tp->write_seq;
 	prop->rcv_nxt = tp->rcv_nxt;
@@ -516,7 +521,7 @@ struct sock *get_sock_by_comm_prop(struct bst_sock_comm_prop *guide)
 	struct net_device *dev;
 
 	dev = dev_get_by_name(&init_net, cur_netdev_name);
-	if (NULL == dev)
+	if (NULL == dev || NULL == guide)
 		return NULL;
 
 	net = dev_net(dev);

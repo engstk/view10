@@ -64,7 +64,8 @@ extern "C"
 
 typedef enum tagMDRV_ICC_TYPE
 {
-	MDRV_ICC_VT_VOIP,                   /* for LTE video phone use, ACORE<-->CCORE */
+    MDRV_ICC_VT_VOIP,                   /* for LTE video phone use, ACORE<-->CCORE */
+    MDRV_ICC_RCS_SERV,
     MDRV_ICC_GUOM0,                     /* for GU OM use, ACORE<-->CCORE */
     MDRV_ICC_GUOM1,                     /* for GU OM use, ACORE<-->CCORE */
     MDRV_ICC_GUOM2,                     /* for GU OM use, ACORE<-->CCORE */

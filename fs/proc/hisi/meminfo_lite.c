@@ -41,7 +41,7 @@ static int meminfo_lite_proc_show(struct seq_file *m, void *v)
 	si_meminfo(&i);
 
 	for (lru = LRU_BASE; lru < NR_LRU_LISTS; lru++)
-		pages[lru] = global_page_state(NR_LRU_BASE + lru);
+		pages[lru] = global_page_state(NR_LRU_BASE + lru);/*lint !e64 */
 
 	for_each_zone(zone)
 		wmark_low += zone->watermark[WMARK_LOW];
@@ -69,7 +69,7 @@ static int meminfo_lite_proc_show(struct seq_file *m, void *v)
 	 * and cannot be freed. Cap this estimate at the low watermark.
 	 */
 	available += global_page_state(NR_SLAB_RECLAIMABLE) -
-		min(global_page_state(NR_SLAB_RECLAIMABLE) / 2, wmark_low);
+		min(global_page_state(NR_SLAB_RECLAIMABLE) / 2, wmark_low);/*lint !e666 */
 
 	/*
 	 * Add the ioncache pool pages

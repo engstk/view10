@@ -43,7 +43,7 @@
 #define DTS_COMP_GPS_POWER_NAME "huawei,gps_power"
 #define BUFFER_SIZE 16
 #define PORT_NAME "/dev/ttyAMA3"
-
+#define SIZE_MAX      (18446744073709551615UL)
 #define USE_TIMER 1
 //#define BCM_TTY_DEBUG_INFO 0
 //#define BCM_TTY_DEBUG 0
@@ -114,6 +114,11 @@ struct bcm_tty_priv *priv;
  */
 static bool bcm477x_hello(struct bcm_tty_priv *priv, unsigned total_bytes_in_queue, unsigned total_write_request)
 {
+	if(priv == NULL)
+	{
+		GPSERR(" priv is NOT init ");
+		return false;
+	}
 #ifdef BCM_TTY_DEBUG
 	GPSINFO("[SSPBBD]gpstty driver bcm477x_hello is coming %d total_bytes_in_queue=%d total_write_request=%d", priv->mcu_req, total_bytes_in_queue, total_write_request);
 #endif
@@ -156,6 +161,11 @@ static bool bcm477x_hello(struct bcm_tty_priv *priv, unsigned total_bytes_in_que
  */
 static void bcm477x_bye(struct bcm_tty_priv *priv)
 {
+	if(priv == NULL)
+	{
+		GPSERR(" priv is NOT init ");
+		return false;
+	}
 #ifdef BCM_TTY_DEBUG
 	GPSINFO("[SSPBBD]gpstty driver bcm477x_bye is coming");
 #endif
@@ -279,7 +289,11 @@ static void alarm_idle_arm(void)
 static void config_timer(struct bcm_tty_priv *priv)
 {
 #ifdef USE_TIMER
-
+	if(priv == NULL)
+	{
+		GPSERR(" priv is NOT init ");
+		return;
+	}
 #ifdef BCM_TTY_DEBUG
 	GPSINFO( "[SSPBBD]gpstty driver config_timer");
 #endif
@@ -350,7 +364,11 @@ static int bcm_tty_config(struct file *f)
 	struct termios termios;
 	mm_segment_t fs;
 	long ret;
-
+	if(f == NULL)
+	{
+		GPSERR(" f is NOT init ");
+		return -1;
+	}
 	/* Change address limit */
 	fs = get_fs();
 	set_fs(KERNEL_DS);
@@ -391,7 +409,11 @@ static int bcm_tty_config_close(struct file *f)
 	struct termios termios;
 	mm_segment_t fs;
 	long ret;
-
+	if(f == NULL)
+	{
+		GPSERR(" f is NOT init ");
+		return -1;
+	}
 	/* Change address limit */
 	fs = get_fs();
 	set_fs(KERNEL_DS);
@@ -457,6 +479,11 @@ static int get_GPS_TTY_Port(void)
 static int bcm_tty_open(struct inode *inode, struct file *filp)
 {
 	/* Initially, file->private_data points device itself and we can get our priv structs from it. */
+	if(inode == NULL || filp == NULL)
+	{
+		GPSERR(" pointer is NOT init ");
+		return -1;
+	}
 #ifdef USE_TIMER
 	enum  ttyalarmtimer_type type = TXALARM_KERNEL_TIMER;
 #endif
@@ -506,6 +533,12 @@ static int bcm_tty_open(struct inode *inode, struct file *filp)
 
 static int bcm_tty_release(struct inode *inode, struct file *filp)
 {
+	if(inode == NULL || filp == NULL)
+	{
+		GPSERR(" pointer is NOT init ");
+		return -1;
+	}
+       
 	struct bcm_tty_priv *priv = (struct bcm_tty_priv*) filp->private_data;
 	struct file *tty = priv->tty;
 	int ret = 0;
@@ -523,6 +556,11 @@ static int bcm_tty_release(struct inode *inode, struct file *filp)
 
 static ssize_t bcm_tty_read(struct file *filp, char __user *buf, size_t size, loff_t *ppos)
 {
+	if(buf == NULL || filp == NULL || ppos ==NULL)
+	{
+		GPSERR(" pointer is NOT init ");
+		return 0;
+	}
 	struct bcm_tty_priv *priv = (struct bcm_tty_priv*) filp->private_data;
 	struct file *tty = priv->tty;
 	ssize_t len;
@@ -534,6 +572,11 @@ static ssize_t bcm_tty_read(struct file *filp, char __user *buf, size_t size, lo
 
 static ssize_t bcm_tty_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
+	if(buf == NULL || filp == NULL || ppos ==NULL)
+	{
+		GPSERR(" pointer is NOT init ");
+		return 0;
+	}
 	unsigned long j = jiffies;
 	struct bcm_tty_priv *priv = (struct bcm_tty_priv*) filp->private_data;
 	struct file *tty = priv->tty;
@@ -548,6 +591,9 @@ static ssize_t bcm_tty_write(struct file *filp, const char __user *buf, size_t s
 	priv = (struct bcm_tty_priv *)base->priv_data;
 
 	spin_lock_irqsave(&base->lock, flags);
+	if(size > SIZE_MAX){
+		size = SIZE_MAX;
+	}
 	base->total_bytes_to_write+=size;
 	base->total_write_request++;
 
@@ -569,6 +615,11 @@ static ssize_t bcm_tty_write(struct file *filp, const char __user *buf, size_t s
 
 static unsigned int bcm_tty_poll(struct file *filp, poll_table *wait)
 {
+	if(filp == NULL || wait == NULL)
+	{
+		GPSERR(" pointer is NOT init ");
+		return 0;
+	}
 	struct bcm_tty_priv *priv = (struct bcm_tty_priv*) filp->private_data;
 	struct file *tty = priv->tty;
 

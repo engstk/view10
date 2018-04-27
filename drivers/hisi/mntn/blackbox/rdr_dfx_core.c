@@ -60,7 +60,7 @@ int dfx_open(void)
 int dfx_read(u32 module, void *buffer, u32 size)
 {
 	int ret, fd_dfx, cnt=0;
-	mm_segment_t old_fs = get_fs();
+	mm_segment_t old_fs = get_fs(); //lint !e501
 
 	if (dfx_size_tbl[module] < size || !dfx_size_tbl[module])
 		return cnt;

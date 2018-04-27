@@ -30,7 +30,7 @@ void balong_bbp_get_om_info(int print_enable)
         return;
     }
 
-    sctrl_addr = bsp_sysctrl_addr_byindex(sysctrl_ap_peri);
+    sctrl_addr = bsp_sysctrl_addr_byindex(sysctrl_ao);
 
     for (i = 0; i < cmd_num; i++) {
         writel(bbpom_cmd[i], sctrl_addr+BBP_PCTRL_OM_CTRL_OFFSET);

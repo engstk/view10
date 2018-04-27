@@ -630,7 +630,7 @@ int sec_ts_read_pid(struct sec_ts_data *ts)
 		for (retry = 0; retry < SEC_TS_I2C_RETRY_CNT; retry++) {
 			set_pid_data(ts, ts->project_id);
 			get_pid_data(ts, data);
-			data[SEC_TS_PROJECTID_MAX] = "\0";
+			data[SEC_TS_PROJECTID_MAX-1] = "\0";
 			if (memcmp(ts->project_id, data, SEC_TS_PROJECTID_MAX) == 0) {
 				TS_LOG_ERR("%s: pid write and read: data[0] = %s \n", __func__, data);
 				break;

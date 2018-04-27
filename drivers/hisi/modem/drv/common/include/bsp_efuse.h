@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * Copyright (C) Huawei Technologies Co., Ltd. 2012-2015. All rights reserved.
  * foss@huawei.com
  *
@@ -108,55 +108,69 @@ typedef struct
 
 #ifdef CONFIG_EFUSE
 /*****************************************************************************
-* º¯ Êı Ãû  : bsp_efuse_read
+* å‡½ æ•° å  : bsp_efuse_read
 *
-* ¹¦ÄÜÃèÊö  : °´×é¶ÁÈ¡EFUSEÖĞµÄÊı¾İ
+* åŠŸèƒ½æè¿°  : æŒ‰ç»„è¯»å–EFUSEä¸­çš„æ•°æ®
 *
-* ÊäÈë²ÎÊı  : group  ÆğÊ¼group
-*                   num  Êı×é³¤¶È(wordÊı,²»³¬¹ı16)
-* Êä³ö²ÎÊı  : pBuf £ºEFUSEÖĞµÄÊı¾İ
+* è¾“å…¥å‚æ•°  : group  èµ·å§‹group
+*                   count  æ•°ç»„é•¿åº¦
+* è¾“å‡ºå‚æ•°  : pBuf ï¼šEFUSEä¸­çš„æ•°æ®
 *
-* ·µ »Ø Öµ  :
+* è¿” å› å€¼  :
 *
-* ÆäËüËµÃ÷  :
-*
-*****************************************************************************/
-int bsp_efuse_read(u32* pBuf, const u32 group, const u32 num);
-
-/*****************************************************************************
-* º¯ Êı Ãû  : bsp_efuse_write
-*
-* ¹¦ÄÜÃèÊö  : ÉÕĞ´Efsue
-*
-* ÊäÈë²ÎÊı  : pBuf:´ıÉÕĞ´µÄEFUSEÖµ
-*                 group,EfuseµØÖ·Æ«ÒÆ
-*                 len,ÉÕĞ´³¤¶È
-* Êä³ö²ÎÊı  :
-*
-* ·µ »Ø Öµ  :
-*
-* ÆäËüËµÃ÷  :
+* å…¶å®ƒè¯´æ˜  :
 *
 *****************************************************************************/
-int bsp_efuse_write( u32 *pBuf, const u32 group, const u32 len);
+int bsp_efuse_read(u32* pbuffer, u32 group, u32 count);
 
 /*****************************************************************************
-* º¯ Êı Ãû  : bsp_efuse_show
+* å‡½ æ•° å  : bsp_efuse_write
 *
-* ¹¦ÄÜÃèÊö  : ÏÔÊ¾efsue¸÷×éĞÅÏ¢
+* åŠŸèƒ½æè¿°  : çƒ§å†™Efsue
 *
-* ÊäÈë²ÎÊı  :
+* è¾“å…¥å‚æ•°  : pBuf:å¾…çƒ§å†™çš„EFUSEå€¼
+*                 group,Efuseåœ°å€åç§»
+*                 count,çƒ§å†™é•¿åº¦
+* è¾“å‡ºå‚æ•°  :
 *
-* Êä³ö²ÎÊı  :
+* è¿” å› å€¼  :
 *
-* ·µ »Ø Öµ  :
+* å…¶å®ƒè¯´æ˜  :
 *
-* ÆäËüËµÃ÷  :
+*****************************************************************************/
+int bsp_efuse_write(u32 *pbuffer, u32 group, u32 count);
+
+/*****************************************************************************
+* å‡½ æ•° å  : bsp_efuse_show
+*
+* åŠŸèƒ½æè¿°  : æ˜¾ç¤ºefsueå„ç»„ä¿¡æ¯
+*
+* è¾“å…¥å‚æ•°  :
+*
+* è¾“å‡ºå‚æ•°  :
+*
+* è¿” å› å€¼  :
+*
+* å…¶å®ƒè¯´æ˜  :
 *
 *****************************************************************************/
 int efuse_init(void);
 
+/* Attention:
+ * This Vector will write efuse, so please test it on SOCKET board!!!
+ */
+int bsp_efuse_ate_vector(void);
+
+
 void bsp_efuse_show(void);
+
+#if defined(__FASTBOOT__)
+int bsp_efuse_ops_prepare(void);
+void bsp_efuse_ops_complete(void);
+
+int bsp_efuse_write_prepare(void);
+void bsp_efuse_write_complete(void);
+#endif
 
 #if defined(__KERNEL__)
 
@@ -193,11 +207,11 @@ static inline int efuse_init(void)
 {
     return 0;
 }
-static inline int bsp_efuse_read(u32* pBuf, const u32 group, const u32 num)
+static inline int bsp_efuse_read(u32* pbuffer, u32 group, u32 count)
 {
     return 0;
 }
-static inline int bsp_efuse_write( u32 *pBuf, const u32 group, const u32 len)
+static inline int bsp_efuse_write(u32* pbuffer, u32 group, u32 count)
 {
     return 0;
 }
@@ -219,6 +233,11 @@ static inline int bsp_efuse_write_prepare(void)
 static inline void bsp_efuse_write_complete(void)
 {
 }
+static inline int bsp_efuse_ate_vector(void)
+{
+    return 0;
+}
+
 #endif
 
 #endif

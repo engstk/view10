@@ -79,6 +79,7 @@
 #include "bsp_rfile.h"
 
 #include "mdrv_rfile_common.h"
+#include <securec.h>
 
 
 
@@ -94,39 +95,9 @@ typedef  struct semaphore       rfile_sem_id;
 #define RFILE_TIMEOUT_MAX           (2000)           /* ×î³¤µÈ´ý2s */
 
 typedef struct
-{
-    void *      context;        /* 0x00: WRS defined context */
-    void *      magic;          /* 0x04: magic. Used in HANDLE_VERIFY() */
-    u16         attributes;     /* 0x08: attribute bit set */
-    s8          type;           /* 0x0a: enum windObjClassType */
-    u8          contextType;    /* 0x0b: enum handleContextType */
-} RFILE_HANDLE;
-
-typedef struct           /* stdio buffers */
-{
-    u8 *            _base;      /* base address of {std,unget,line} buffer */
-    int             _size;      /* size of the buffer */
-} RFILE_SBUF;
-
-typedef struct
-{
-    RFILE_HANDLE    handle;     /* file pointer handle managemet */
-    u8 *            _p;         /* current position in (some) buffer */
-    int             _r;         /* read space left for getc() */
-    int             _w;         /* write space left for putc() */
-    short           _flags;     /* flags, below;this FILE is free if 0*/
-    short           _file;      /* fileno, if Unix descriptor, else -1*/
-    RFILE_SBUF      _bf;        /* buffer (at least 1 byte,if !NULL) */
-    int             _lbfsize;   /* 0 or -_bf._size, for inline putc */
-    RFILE_SBUF      _ub;        /* ungetc buffer */
-    u8 *            _up;        /* old _p if _p is doing ungetc data */
-    int             _ur;        /* old _r if _r counting ungetc data */
-    u8              _ubuf[3];   /* guarantee an ungetc() buffer */
-    u8              _nbuf[1];   /* guarantee a getc() buffer */
-    RFILE_SBUF      _lb;        /* buffer for fgetline() */
-    int             _blksize;   /* stat.st_blksize (may be!=_bf._size)*/
-    int             _offset;    /* current lseek offset */
-    int             taskId;     /* task that owns this file pointer */
+{   
+    short           _flags;   
+    short           _file;    
 } RFILE_FILE;
 
 //extern struct bsp_rfile_main_stru g_stRfileMain;
@@ -234,27 +205,9 @@ RFILE_FILE *rfile_stdioFpCreate (void)
 
     if ((fp = (RFILE_FILE *)Rfile_Malloc(sizeof(RFILE_FILE))) != NULL)
     {
-        memset((void*)fp,0,sizeof(RFILE_FILE));
-        fp->_p      = NULL;         /* no current pointer */
-        fp->_r      = 0;
-        fp->_w      = 0;            /* nothing to read or write */
+        memset_s((void*)fp,sizeof(*fp),0,sizeof(RFILE_FILE));
         fp->_flags  = 1;            /* caller sets real flags */
-        fp->_file   = -1;           /* no file */
-        fp->_bf._base   = NULL;         /* no buffer */
-        fp->_bf._size   = 0;
-        fp->_lbfsize    = 0;            /* not line buffered */
-        fp->_ub._base   = NULL;         /* no ungetc buffer */
-        fp->_ub._size   = 0;
-        fp->_lb._base   = NULL;         /* no line buffer */
-        fp->_lb._size   = 0;
-        fp->_blksize    = 0;
-        fp->_offset     = 0;
-        fp->taskId      = 0;
-
-        fp->handle.magic        = (void*) (&fp->handle);
-        fp->handle.type         = 102;      /* stdioLib FILE    */
-        fp->handle.context      = NULL;
-        fp->handle.contextType  = 0;        /* handleContextTypeNone */
+        fp->_file   = -1;           /* no file */  
     }
 
     return (fp);
@@ -266,9 +219,6 @@ int rfile_stdioFpDestroy(RFILE_FILE *fp)
     if(NULL == fp)
         return -1;
     /* fclose() deallocates any buffers associated with the file pointer */
-
-    fp->handle.magic        = 0;
-    fp->handle.type         = -1;      /* bad handle */
 
     /* deallocate file pointer */
 
@@ -471,12 +421,12 @@ DRV_DIR_S *rfile_stdioDirCreate (void)
     dir = (DRV_DIR_S *)Rfile_Malloc(sizeof(DRV_DIR_S));
     if (dir != NULL)
     {
-        memset((void*)dir,0,sizeof(DRV_DIR_S));
+        memset_s((void*)dir,sizeof(*dir),0,sizeof(DRV_DIR_S));
         dir->dd_fd      = -1;
         dir->dd_cookie  = 0;
         dir->dd_eof     = 0;
 
-        memset(&dir->dd_dirent, 0, sizeof(DRV_DIRENT_S));
+        memset_s(&dir->dd_dirent,sizeof(DRV_DIRENT_S),0, sizeof(DRV_DIRENT_S));
     }
 
     return (dir);
@@ -489,7 +439,7 @@ int rfile_stdioDirDestroy(DRV_DIR_S *dir)
         return -1;
 
     dir->dd_fd = -1;
-    memset(&dir->dd_dirent, 0, sizeof(DRV_DIRENT_S));
+    memset_s(&dir->dd_dirent,sizeof(DRV_DIRENT_S), 0, sizeof(DRV_DIRENT_S));
 
     Rfile_Free ((char *) dir);
 
@@ -527,7 +477,7 @@ DRV_DIR_S* mdrv_file_opendir(const char *dirName)
 
     dir->dd_fd = ret;
     min_length = min_t(size_t,strlen(dirName),DRV_NAME_MAX);
-    memcpy(dir->dd_dirent.d_name, dirName, min_length);
+    memcpy_s(dir->dd_dirent.d_name,DRV_NAME_MAX, dirName, min_length);
 
     return dir;
 }
@@ -685,7 +635,7 @@ DRV_DIRENT_S* mdrv_file_readdir(DRV_DIR_S *dirp)
         {
             return 0;
         }
-        memset((void*)pdirent,0,1024);/*lint !e669 */
+        memset_s((void*)pdirent,1024,0,1024);/*lint !e669 */
 
         /* coverity[alloc_fn] */
         pstDirent = Rfile_Malloc(sizeof(struct rfile_dirent_info));
@@ -694,10 +644,10 @@ DRV_DIRENT_S* mdrv_file_readdir(DRV_DIR_S *dirp)
             Rfile_Free(pdirent);
             return 0;
         }
-        memset((void*)pstDirent,0,sizeof(struct rfile_dirent_info));
+        memset_s((void*)pstDirent,sizeof(*pstDirent),0,sizeof(struct rfile_dirent_info));
 
         /* coverity[noescape] */
-        memcpy((void*)pdirent, data, (unsigned int)ret);
+        memcpy_s((void*)pdirent,1024, data, (unsigned int)ret);
 
         pstDirent->phandle = dirp;
 
@@ -726,16 +676,16 @@ DRV_DIRENT_S* mdrv_file_readdir(DRV_DIR_S *dirp)
     pdirentcur = (RFILE_DIRENT_STRU *)((u8*)(pstDirent->pdirent) + pstDirent->ptr);
     g_stdirent.d_ino = pdirentcur->d_ino;
 
-    memset((void*)g_stdirent.d_name, 0, (DRV_NAME_MAX+1));
+    memset_s((void*)g_stdirent.d_name,(DRV_NAME_MAX+1),0, (DRV_NAME_MAX+1));
 
     if(strlen((char*)pdirentcur->d_name) > DRV_NAME_MAX)
     {
-        memcpy(g_stdirent.d_name, pdirentcur->d_name, DRV_NAME_MAX);
+        memcpy_s(g_stdirent.d_name,DRV_NAME_MAX+1,pdirentcur->d_name, DRV_NAME_MAX);
     }
     else
     {
         /* coverity[secure_coding] */
-        strncpy(g_stdirent.d_name, (char*)pdirentcur->d_name, (unsigned long)DRV_NAME_MAX); /* [false alarm]:fortify */
+        strncpy_s(g_stdirent.d_name,DRV_NAME_MAX+1,(char*)pdirentcur->d_name, (unsigned long)DRV_NAME_MAX); /* [false alarm]:fortify */
     }
 
     pstDirent->ptr += pdirentcur->d_reclen;
@@ -826,6 +776,11 @@ EXPORT_SYMBOL(mdrv_file_mkdir);
 EXPORT_SYMBOL(mdrv_file_tell);
 EXPORT_SYMBOL(mdrv_file_readdir);
 EXPORT_SYMBOL(mdrv_file_remove);
+
+EXPORT_SYMBOL(mdrv_file_write_sync);
+EXPORT_SYMBOL(mdrv_file_rename);
+EXPORT_SYMBOL(mdrv_file_access);
+EXPORT_SYMBOL(mdrv_file_get_errno);
 
 
 

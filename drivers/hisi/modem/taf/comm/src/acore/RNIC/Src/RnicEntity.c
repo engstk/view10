@@ -86,32 +86,7 @@ VOS_UINT32                              g_ulRnicNapiPollQueLen[RNIC_NET_ID_MAX_N
    5 函数实现
 ******************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : RNIC_ProcUlDataInPdpActive
- 功能描述  : 在PDP激活的状态，RNIC发送数据时的处理过程
- 输入参数  : pstSkb     :SKBUF数据首地址
-             pstNetCntxt:网卡上下文
-             ucRabid    :链路承载号
-             enIpType   :IPv4或IPv6
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月13日
-    作    者   : 范晶
-    修改内容   : 新生成函数
-  2.日    期   : 2012年11月23日
-    作    者   : f00179208
-    修改内容   : DSDA Phase I: RNIC多实例
-  3.日    期   : 2013年6月3日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目修改
-  4.日    期   : 2015年5月28日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_VOID RNIC_SendULDataInPdpActive(
     IMM_ZC_STRU                        *pstImmZc,
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt,
@@ -173,25 +148,7 @@ VOS_VOID RNIC_SendULDataInPdpActive(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ProcVoWifiULData
- 功能描述  :  处理vowifi的上行数据
-              请注意! 这个是整个VOWIFI数据流的上行，但是对于网卡来说，
-              IP协议栈的出口数据是上行，刚好反过来
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月9日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-
-  2.日    期   : 2016年12月27日
-    作    者   : A00165503
-    修改内容   : DTS2016121600573: 新增VOWIFI专用网卡
-*****************************************************************************/
 VOS_VOID RNIC_ProcVoWifiULData(
     struct sk_buff                     *pstSkb,
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt
@@ -203,9 +160,7 @@ VOS_VOID RNIC_ProcVoWifiULData(
     /* 当IMS域为WIFI时，RMNET_IMS网卡出口的数据通过RNIC和CDS之间的核间消息传递 */
     if (VOS_OK == RNIC_SendCdsImsDataReq(pstSkb, pstNetCntxt))
     {
-        /* Modified by m00217266 for 双VoWiFi项目, 2017-2-27, begin */
         RNIC_DBG_SEND_UL_PKT_NUM(1, pstNetCntxt->enRmNetId);
-        /* Modified by m00217266 for 双VoWiFi项目, 2017-2-27, end */
 
         /* 统计网卡发送信息 */
         pstPriv   = pstNetCntxt->pstPriv;
@@ -223,31 +178,7 @@ VOS_VOID RNIC_ProcVoWifiULData(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ProcUlIpv4Data
- 功能描述  : RNIC处理IPV4的上行数据
- 输入参数  : pstSkb     :SKBUF数据包首地址
-             pstNetCntxt:网卡上下文
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
- 1.日    期   : 2011年12月15日
-   作    者   : 范晶
-   修改内容   : 新生成函数
- 2.日    期   : 2012年8月30日
-   作    者   : l60609
-   修改内容   : AP适配项目：在RNIC_TransSkbToImmZC中已统计转换失败的次数
- 3.日    期   : 2012年11月23日
-   作    者   : f00179208
-   修改内容   : DSDA Phase I: RNIC多实例
-
-  4.日    期   : 2016年12月27日
-    作    者   : A00165503
-    修改内容   : DTS2016121600573: 新增VOWIFI专用网卡
-*****************************************************************************/
 VOS_VOID RNIC_SendULIpv4Data(
     struct sk_buff                     *pstSkb,
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt
@@ -294,31 +225,7 @@ VOS_VOID RNIC_SendULIpv4Data(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ProcUlIpv6Data
- 功能描述  : RNIC处理IPV6的上行数据
- 输入参数  : pstSkb     : SKBUF数据包首地址
-             pstNetCntxt: 网卡上下文指针
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
- 1.日    期   : 2011年12月15日
-   作    者   : 范晶
-   修改内容   : 新生成函数
- 2.日    期   : 2012年8月30日
-   作    者   : l60609
-   修改内容   : AP适配项目：在RNIC_TransSkbToImmZC中已统计转换失败的次数
- 3.日    期   : 2012年11月23日
-   作    者   : f00179208
-   修改内容   : DSDA Phase I: RNIC多实例
-
-  4.日    期   : 2016年12月27日
-    作    者   : A00165503
-    修改内容   : DTS2016121600573: 新增VOWIFI专用网卡
-*****************************************************************************/
 VOS_VOID RNIC_SendULIpv6Data(
     struct sk_buff                     *pstSkb,
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt
@@ -365,28 +272,7 @@ VOS_VOID RNIC_SendULIpv6Data(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ProcDemDial
- 功能描述  : RNIC处理按需拨号
- 输入参数  : struct sk_buff  *pstSkb,
-             pBuf -- 存储数据的缓存的ID
 
- 输出参数  : 无
- 返 回 值  : OK
-             ERROR
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2010年1月19日
-    作    者   : 范晶
-    修改内容   : 新生成函数
-
-  2.日    期   : 2012年6月6日
-    作    者   : A00165503
-    修改内容   : DTS2012060502819: 灌包方式触发按需拨号, 导致频繁上报事件
-
-*****************************************************************************/
 VOS_UINT32 RNIC_ProcDemDial(
     struct sk_buff                     *pstSkb
 )
@@ -438,22 +324,7 @@ VOS_UINT32 RNIC_ProcDemDial(
 }
 
 /* Modified by l60609 for L-C互操作项目, 2014-1-14, begin */
-/*****************************************************************************
- 函 数 名  : RNIC_ProcessTxData
- 功能描述  : 接收到TCP/IP协议栈3GPP的上行数据
- 输入参数  : struct sk_buff                     *pstSkb
-             RNIC_RMNET_ID_ENUM_UINT8            enRmNetId
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年1月7日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_ProcessTxData(
     struct sk_buff                     *pstSkb,
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt
@@ -531,26 +402,7 @@ VOS_VOID RNIC_ProcessTxData(
 /* Modified by l60609 for L-C互操作项目, 2014-1-14, end */
 
 /* Modified by l60609 for L-C互操作项目, 2014-01-06, Begin */
-/*****************************************************************************
- 函 数 名  : RNIC_RcvAdsDlData
- 功能描述  : RNIC收到ADS下行数据
- 输入参数  : ucRabid  :链路承载号
-             pstData  :SKBUF数据包首地址
-             enPdpType:PDP 类型
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年2月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-  2.日    期   : 2015年5月28日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_UINT32  RNIC_RcvAdsDlData(
     VOS_UINT8                           ucExRabid,
     IMM_ZC_STRU                        *pstImmZc,
@@ -568,40 +420,7 @@ VOS_UINT32  RNIC_RcvAdsDlData(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_SendDlData
- 功能描述  : RNIC_SendDlData接收数据时的处理过程
- 输入参数  : enRmNetId  :网卡id
-             pstData    :SKBUF数据包首地址
-             enPdpType  :PDP 类型
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : VOS_UINT32:RNIC_OK, RNIC_ERROR
- 被调函数  :
 
- 修改历史     :
-  1.日    期   : 2011年12月06日
-    作    者   : 范晶
-    修改内容   : 新生成函数
-  2.日    期   : 2011年06月08日
-    作    者   : zhangyizhan 60575
-    修改内容   : DTS2012060708396配合北京修改
-  3.日    期   : 2011年06月09日
-    作    者   : zhangyizhan 60575
-    修改内容   : DTS2012060902909性能问题修改，,V3R2/V7R1统一调用netif_rx
-  4.日    期   : 2012年6月20日
-    作    者   : A00165503
-    修改内容   : DTS2012061904440: 增加用户面时延统计
-  5.日    期   : 2012年6月20日
-    作    者   : f00179208
-    修改内容   : DTS2012070306267: 调用内核接口失败后，不需要释放内存
-  6.日    期   : 2012年11月23日
-    作    者   : f00179208
-    修改内容   : DSDA Phase I: RNIC多实例
-  7.日    期   : 2014年6月13日
-    作    者   : A00165503
-    修改内容   : DTS2014052607108: 规避下行灌包插拔核复位问题
-*****************************************************************************/
 VOS_UINT32 RNIC_SendDlData(
     RNIC_RMNET_ID_ENUM_UINT8            enRmNetId,
     IMM_ZC_STRU                        *pstImmZc,
@@ -624,48 +443,14 @@ VOS_UINT32 RNIC_SendDlData(
 }
 /* Modified by l60609 for L-C互操作项目, 2014-01-06, End */
 
-/*****************************************************************************
- 函 数 名  : RNIC_StartFlowCtrl
- 功能描述  : 启动上行流控
- 输入参数  : ucRmNetId : 网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_OK     - 启动流控成功
-             VOS_ERR    - 启动流控失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
- 1.日    期   : 2012年5月31日
-   作    者   : A00165503
-   修改内容   : 新生成函数
- 2.日    期   : 2012年11月23日
-   作    者   : f00179208
-   修改内容   : DSDA Phase I: RNIC多实例
-*****************************************************************************/
 unsigned int RNIC_StartFlowCtrl(unsigned char ucRmNetId)
 {
     RNIC_SET_FLOW_CTRL_STATUS(RNIC_FLOW_CTRL_STATUS_START, ucRmNetId);
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_StopFlowCtrl
- 功能描述  : 停止上行流控
- 输入参数  : ucRmNetId : 网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_OK     - 停止流控成功
-             VOS_ERR    - 停止流控失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
- 1.日    期   : 2012年5月31日
-   作    者   : A00165503
-   修改内容   : 新生成函数
- 2.日    期   : 2012年11月23日
-   作    者   : f00179208
-   修改内容   : DSDA Phase I: RNIC多实例
-*****************************************************************************/
 unsigned int RNIC_StopFlowCtrl(unsigned char ucRmNetId)
 {
     RNIC_SET_FLOW_CTRL_STATUS(RNIC_FLOW_CTRL_STATUS_STOP, ucRmNetId);
@@ -673,21 +458,7 @@ unsigned int RNIC_StopFlowCtrl(unsigned char ucRmNetId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : RNIC_CheckNetCardStatus
- 功能描述  : 检查RNIC网卡设备的状态
- 输入参数  : pstNetCntxt --- 网卡上下文
- 输出参数  : 无
- 返 回 值  : RNIC_RESULT_TYPE_ENUM
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_INT32 RNIC_CheckNetCardStatus(RNIC_SPEC_CTX_STRU *pstNetCntxt)
 {
     RNIC_NETCARD_DEV_INFO_STRU         *pstPriv    = VOS_NULL_PTR;
@@ -715,23 +486,7 @@ VOS_INT32 RNIC_CheckNetCardStatus(RNIC_SPEC_CTX_STRU *pstNetCntxt)
     return enRet;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_AddMacHead
- 功能描述  : RNIC添加MAC头
- 输入参数  : enRmNetId   --- rmnet网卡ID
-             pstImmZc    --- 数据包
-             enPktType   --- 数据类型
- 输出参数  : 无
- 返 回 值  : RNIC_RESULT_TYPE_ENUM
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_INT32 RNIC_AddMacHead(
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt,
     IMM_ZC_STRU                        *pstImmZc,
@@ -779,22 +534,7 @@ VOS_INT32 RNIC_AddMacHead(
     return enRet;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_NetIfRx
- 功能描述  : 发送下行数据到网络协议栈，只支持netif_rx和netif_rx_ni接口
- 输入参数  : pstNetCntxt --- 网卡上下文
-             pstImmZc    --- 数据包
- 输出参数  : 无
- 返 回 值  : VOS_INT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_INT32 RNIC_NetIfRx(
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt,
     IMM_ZC_STRU                        *pstImmZc
@@ -828,22 +568,7 @@ VOS_INT32 RNIC_NetIfRx(
     return RNIC_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_NetIfRxEx
- 功能描述  : 发送下行数据到网络协议栈，支持NAPI+GRO功能
- 输入参数  : pstNetCntxt --- 网卡上下文
-             pstImmZc    --- 数据包
- 输出参数  : 无
- 返 回 值  : VOS_INT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_INT32 RNIC_NetIfRxEx(
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt,
     IMM_ZC_STRU                        *pstImmZc
@@ -905,23 +630,7 @@ VOS_INT32 RNIC_NetIfRxEx(
     return RNIC_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_EncapEthHead
- 功能描述  : RNIC添加以太网头部
- 输入参数  : pstNetCntxt --- 网卡上下文
-             pstImmZc    --- 数据包
-             enPktType   --- 数据类型
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_EncapEthHead(
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt,
     IMM_ZC_STRU                        *pstImmZc,
@@ -953,23 +662,7 @@ VOS_UINT32 RNIC_EncapEthHead(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_NetRxData
- 功能描述  : 向IP协议栈递交数据
- 输入参数  : pstNetCntxt --- 网卡上下文
-             pstImmZc    --- 数据包
-             enPktType   --- 数据类型
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : RNIC新增NAPI+GRO功能降低复杂度
-
-*****************************************************************************/
 VOS_UINT32 RNIC_NetRxData(
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt,
     IMM_ZC_STRU                        *pstImmZc,
@@ -995,23 +688,7 @@ VOS_UINT32 RNIC_NetRxData(
     return (VOS_UINT32)RNIC_NetIfRx(pstNetCntxt, pstImmZc);
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_NetRxDataEx
- 功能描述  : 向IP协议栈递交数据，支持NAPI+GRO功能
- 输入参数  : pstNetCntxt --- 网卡上下文
-             pstImmZc    --- 数据包
-             enPktType   --- 数据类型
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : RNIC新增NAPI+GRO功能
-
-*****************************************************************************/
 VOS_UINT32 RNIC_NetRxDataEx(
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt,
     IMM_ZC_STRU                        *pstImmZc,
@@ -1038,21 +715,7 @@ VOS_UINT32 RNIC_NetRxDataEx(
 }
 
 
-/*****************************************************************************
- 函 数 名  : RNIC_BST_GetModemInfo
- 功能描述  : RNIC提供给BASTET的接口, 用于获取MDOEM信息
- 输入参数  : pstNetDev    --- net device
- 输出参数  : pstModemInfo --- modem info
- 返 回 值  : VOS_OK/VOS_ERROR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月28日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_INT RNIC_BST_GetModemInfo(
     struct net_device                  *pstNetDev,
     BST_RNIC_MODEM_INFO_STRU           *pstModemInfo
@@ -1090,21 +753,7 @@ VOS_INT RNIC_BST_GetModemInfo(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_CalcNapiWeight
- 功能描述  : RNIC网卡计算NAPI weight值
- 输入参数  : ulRmNetId --- RMNET网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年04月25日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_INT32 RNIC_CalcNapiWeight(VOS_UINT8 ucRmNetId)
 {
     VOS_INT32                           lWeight;
@@ -1141,21 +790,7 @@ VOS_INT32 RNIC_CalcNapiWeight(VOS_UINT8 ucRmNetId)
 
     return lWeight;
 }
-/*****************************************************************************
- 函 数 名  : RNIC_AdjustNapiWeight
- 功能描述  : RNIC网卡调整NAPI weight值
- 输入参数  : ulRmNetId --- RMNET网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年04月25日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_AdjustNapiWeight(VOS_UINT32 ulExParam)
 {
     RNIC_NETCARD_DEV_INFO_STRU         *pstPriv     = VOS_NULL_PTR;
@@ -1193,21 +828,7 @@ VOS_VOID RNIC_AdjustNapiWeight(VOS_UINT32 ulExParam)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_NapiSchedule
- 功能描述  : RNIC网卡挂载NAPI Poll List并触发软中断
- 输入参数  : ulRmNetId --- RMNET网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_NapiSchedule(VOS_UINT32 ulExParam)
 {
     RNIC_NETCARD_DEV_INFO_STRU         *pstPriv     = VOS_NULL_PTR;
@@ -1231,22 +852,7 @@ VOS_VOID RNIC_NapiSchedule(VOS_UINT32 ulExParam)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_Poll
- 功能描述  : RNIC网卡NAPI Poll函数
- 输入参数  : pstNapi  --- RMNET网卡设备的NAPI结构
-             ulWeight --- RMNET网卡设备一次poll的最大包个数
- 输出参数  : 无
- 返 回 值  : VOS_INT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_INT32 RNIC_Poll(
     struct napi_struct                 *pstNapi,
     VOS_INT32                           lWeight
@@ -1266,7 +872,14 @@ VOS_INT32 RNIC_Poll(
             break;
         }
 
-        napi_gro_receive(&pstPriv->stNapi, pstImmZc);
+        if (RNIC_NAPI_GRO_RCV_IF == RNIC_GET_NAPI_RCV_IF(pstPriv->enRmNetId))
+        {
+            napi_gro_receive(&pstPriv->stNapi, pstImmZc);
+        }
+        else
+        {
+            netif_receive_skb(pstImmZc);
+        }
     }
 
     /* If weight not fully consumed, exit the polling mode */
@@ -1277,6 +890,14 @@ VOS_INT32 RNIC_Poll(
 
     RNIC_DBG_SEND_DL_PKT_NUM(lRxNum, pstPriv->enRmNetId);
     RNIC_ADD_NAPI_RECV_PKT_NUM(lRxNum, pstPriv->enRmNetId);
+    if (RNIC_NAPI_GRO_RCV_IF == RNIC_GET_NAPI_RCV_IF(pstPriv->enRmNetId))
+    {
+        RNIC_ADD_NAPI_GRO_RCV_PKT_NUM(lRxNum, pstPriv->enRmNetId);
+    }
+    else
+    {
+        RNIC_ADD_NAPI_NETIF_RCV_PKT_NUM(lRxNum, pstPriv->enRmNetId);
+    }
 
     return lRxNum;
 }

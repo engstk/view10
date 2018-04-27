@@ -91,6 +91,9 @@ typedef struct list_header LIST_S;
 #define blist_for_each(pos, head) \
     for (pos = (head)->next; pos != (head); pos = pos->next)
 
+#define blist_for_each_safe(pos, n, head) \
+    for (pos = (head)->next, n = pos->next; pos != (head); \
+        pos = n, n = pos->next)
 
 extern void __blist_add(struct list_header * newnew,
         struct list_header * prev,

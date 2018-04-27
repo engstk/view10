@@ -14,7 +14,9 @@ obj-$(CONFIG_NOVATEK_HYBRID_TS_KIT)  += novatek_hybrid/
 obj-$(CONFIG_ATMEL_TS_KIT)  += atmel/
 obj-$(CONFIG_WACOM_TS_KIT)  += wacom/
 obj-$(CONFIG_SAMSUNG_TS_KIT)  += samsung/
+obj-$(CONFIG_ST_TS_KIT)  += st/
 obj-$(CONFIG_HIMAX_TS_KIT_64)  += himax_64/
+obj-$(CONFIG_ELAN_TS_KIT)  += elan/
 #ifeq ($(CONFIG_HUAWEI_TS_TEST),y)
 #EXTRA_CFLAGS += -DHUAWEI_TOUCHSCREEN_TEST
 #endif

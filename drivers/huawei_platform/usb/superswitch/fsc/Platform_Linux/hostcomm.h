@@ -108,7 +108,7 @@ void FUSB3601_fusb_hc_Handle_I2CRead(FSC_U8* inBuf, FSC_U8* outBuf);
 
 /*******************************************************************************
 * Function:        fusb_hc_Handle_I2CWrite
-* Input:           inBuf: Input buffer to parse. 
+* Input:           inBuf: Input buffer to parse.
 *                       inBuf[1]: Start of address range to write to
 *                       inBuf[2]: Num bytes to write
 *                       inBuf[3.. inBuf[1]]: Data to write
@@ -203,6 +203,16 @@ void FUSB3601_fusb_hc_GetGPIO_SM_Toggle(FSC_U8* outMsgBuffer);
 * Description:     Set the value of the SM toggle GPIO
 *******************************************************************************/
 void FUSB3601_fusb_hc_SetGPIO_SM_Toggle(FSC_U8* inMsgBuffer, FSC_U8* outMsgBuffer);
+
+
+/*******************************************************************************
+* Function:        FUSB3601_tx_pd_cmd_msg
+* Input:           port:			port object from chip structure
+*                  message_type:	pd message type defined in core/PDTypes.h
+* Return:          none
+* Description:     Send PD Command Message
+*******************************************************************************/
+void FUSB3601_tx_pd_cmd_msg(struct Port *port, FSC_U8 message_type);
 
 #endif /* __FSC_HOSTCOMM_H_ */
 

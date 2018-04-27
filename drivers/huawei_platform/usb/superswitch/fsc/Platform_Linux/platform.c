@@ -6,11 +6,15 @@
 #include "platform_helpers.h"       /* Implementation details */
 #include "../core/platform.h"
 #include <huawei_platform/usb/hw_pd_dev.h>
+#include <huawei_platform/log/hw_log.h>
+#include <linux/delay.h>
+#define HWLOG_TAG FUSB3601_TAG
+HWLOG_REGIST();
 #define TCP_VBUS_CTRL_PD_DETECT (1 << 7)
 typedef enum
 {
-	  TCPC_CTRL_PLUG_ORIENTATION = (1 << 0),
-	  TCPC_CTRL_BIST_TEST_MODE = (1 << 1)
+	TCPC_CTRL_PLUG_ORIENTATION = (1 << 0),
+	TCPC_CTRL_BIST_TEST_MODE = (1 << 1)
 }tcpc_ctrl_t;
 
 //FSC_BOOL g_pd_notified;
@@ -25,78 +29,60 @@ typedef enum
 ******************************************************************************/
 FSC_BOOL FUSB3601_platform_get_device_irq_state(FSC_U8 port)
 {
-    if (port == 1)
-        return FUSB3601_fusb_GPIO_Get_IntN() ? TRUE : FALSE;
-    else {
-        pr_err("%s - Error: Invalid Port ID!\n", __func__);
-
-        return FALSE;
-    }
+	if (port == 1)
+		return FUSB3601_fusb_GPIO_Get_IntN() ? TRUE : FALSE;
+	else {
+		hwlog_err("%s - Error: Invalid Port ID!\n", __func__);
+		return FALSE;
+	}
 }
 
 /* Temporary GPIO Src Vbus control */
 void FUSB3601_platform_set_vbus_output(FSC_BOOL enable)
 {
-    //fusb_GPIO_Set_VBus5v(enable);
-    struct pd_dpm_vbus_state vbus_state;
-    struct fusb3601_chip* chip = fusb3601_GetChip();
-    if(!chip)
-    	{
-    		pr_err("FUSB %s - Error:Chip structure is NULL!\n",__func__);
-    		return;
-    	}
-    	
-    	if(enable==FALSE)
-    	{
-    		chip->port.pd_notified_ = FALSE;
-    		if(chip->port.vbus_enabled_ == TRUE)
-    			{
-    				pr_info("FUSB Sending VBUS Disable Command\n");
-    				pd_dpm_handle_pe_event(PD_DPM_PE_EVT_DIS_VBUS_CTRL,NULL);
-    				pr_info("FUSB Returning from VBUS Disable Command\n");
-    			}
-    	}
-    	else 
-    		{//bInEnable == TRUE
-    	  if(chip->port.vbus_enabled_ == FALSE)
-    	  	{
-    	  		vbus_state.mv=5000;
-    	  		if(chip->port.policy_has_contract_)
-    	  			{
-    	  				vbus_state.vbus_type = TCP_VBUS_CTRL_PD_DETECT;
-    	  				vbus_state.ma = chip->port.usb_pd_contract_.FVRDO.OpCurrent * 10;
-    	  				chip->port.pd_notified_ = TRUE;
-    	  			}
-    	  		else
-    	  			{
-    	  				vbus_state.vbus_type = TCP_VBUS_CTRL_PD_DETECT;
-    	  				vbus_state.ma = 900;
-    	  			}	
-    	  			pr_info("FUSB Sending VBUS Enable Command\n");
-    				  pd_dpm_handle_pe_event(PD_DPM_PE_EVT_SOURCE_VBUS,(void*)&vbus_state);
-    				  pr_info("FUSB Returning from VBUS Enable Command\n");
-    	  	}
-    	  else
-    	  	{
-    	  		if(chip->port.policy_has_contract_)
-    	  			{
-    	  			 if(chip->port.pd_notified_ == FALSE)
-    	  			 	{
-    	  			 	vbus_state.mv=5000;
-    	  			 	vbus_state.vbus_type = TCP_VBUS_CTRL_PD_DETECT;
-    	  			 	vbus_state.ma = chip->port.usb_pd_contract_.FVRDO.OpCurrent * 10;
-    	  			 	pr_info("FUSB Sending VBUS Enable Command\n");
-    				    pd_dpm_handle_pe_event(PD_DPM_PE_EVT_SOURCE_VBUS,(void*)&vbus_state);
-    				    pr_info("FUSB Returning from VBUS Enable Command\n");
-    				    chip->port.pd_notified_ = TRUE;
-    	  			  }
-    	  		  }
-    	  	}	
-    	  }
-    	  chip->port.vbus_enabled_ = enable;
-    	  return;
-    	  
-    		
+	struct pd_dpm_vbus_state vbus_state;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	if(!chip) {
+		pr_err("FUSB %s - Error:Chip structure is NULL!\n",__func__);
+		return;
+	}
+	if(enable==FALSE) {
+		chip->port.pd_notified_ = FALSE;
+		if(chip->port.vbus_enabled_ == TRUE) {
+			hwlog_info("FUSB Sending VBUS Disable Command\n");
+			pd_dpm_handle_pe_event(PD_DPM_PE_EVT_DIS_VBUS_CTRL,NULL);
+			hwlog_info("FUSB Returning from VBUS Disable Command\n");
+		}
+	} else {
+		if(chip->port.vbus_enabled_ == FALSE) {
+			vbus_state.mv=5000;
+			if(chip->port.policy_has_contract_) {
+				vbus_state.vbus_type = TCP_VBUS_CTRL_PD_DETECT;
+				vbus_state.ma = chip->port.usb_pd_contract_.FVRDO.OpCurrent * 10;
+				chip->port.pd_notified_ = TRUE;
+			} else {
+				vbus_state.vbus_type = TCP_VBUS_CTRL_PD_DETECT;
+				vbus_state.ma = 900;
+			}	
+			pr_info("FUSB Sending VBUS Enable Command\n");
+			pd_dpm_handle_pe_event(PD_DPM_PE_EVT_SOURCE_VBUS,(void*)&vbus_state);
+			pr_info("FUSB Returning from VBUS Enable Command\n");
+		} else {
+			if(chip->port.policy_has_contract_) {
+				if(chip->port.pd_notified_ == FALSE) {
+					vbus_state.mv=5000;
+					vbus_state.vbus_type = TCP_VBUS_CTRL_PD_DETECT;
+					vbus_state.ma = chip->port.usb_pd_contract_.FVRDO.OpCurrent * 10;
+					pr_info("FUSB Sending VBUS Enable Command\n");
+					pd_dpm_handle_pe_event(PD_DPM_PE_EVT_SOURCE_VBUS,(void*)&vbus_state);
+					pr_info("FUSB Returning from VBUS Enable Command\n");
+					chip->port.pd_notified_ = TRUE;
+				}
+			}
+		}
+	}
+	chip->port.vbus_enabled_ = enable;
+	return;	
 }
 
 /*******************************************************************************
@@ -113,9 +99,8 @@ FSC_BOOL FUSB3601_platform_i2c_write(FSC_U8 SlaveAddress,
                             FSC_U8 DataLength,
                             FSC_U8* Data)
 {
-    FSC_BOOL ret = FALSE;
-    if (Data == NULL)
-    {
+	FSC_BOOL ret = FALSE;
+	if (Data == NULL) {
         pr_err("%s - Error: Write data buffer is NULL!\n", __func__);
         ret = TRUE;
     }

@@ -202,6 +202,9 @@ u32   nv_flash_access(const s8 * path, s32 mode);
 u32   nv_flash_update_info(const s8* path);
 void  nv_flash_help(u32 type);
 void  show_flash_info(void);
+u32 nv_support_multi_card(void);
+u32 nv_get_dload_file_len(void);
+#define NV_SUPPORT_MULTI_CARD nv_support_multi_card()
 
 #elif defined(FEATURE_NV_LFILE_ON)
 
@@ -259,12 +262,7 @@ u32   nv_emmc_remove(const s8 * path);
 u32   nv_emmc_seek(FILE * fp, u32 offset, s32 whence);
 u32   nv_emmc_access(const s8 * path, s32 mode);
 u32   nv_emmc_update_info(const s8* path);
-void  nv_emmc_help(u32 type);
-void  show_emmc_info(void);
 #endif
-u32 nv_support_multi_card(void);
-u32 nv_get_dload_file_len(void);
-#define NV_SUPPORT_MULTI_CARD nv_support_multi_card()
 #ifdef __cplusplus
 #if __cplusplus
 }

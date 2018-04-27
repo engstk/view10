@@ -75,13 +75,7 @@ extern "C" {
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 结构名    : TAF_LOG_PRIVACY_AT_CMD_ENUM
- 结构说明  :
- 1.日    期   : 2017年6月2日
-   作    者   : z00382546
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_LOG_PRIVACY_AT_CMD_ENUM
 {
     TAF_LOG_PRIVACY_AT_CMD_BUTT                     = 0,
@@ -111,51 +105,26 @@ typedef VOS_UINT32 TAF_LOG_PRIVACY_AT_CMD_ENUM_UINT32;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*****************************************************************************
- 结构名    : NA
- 结构说明  : TAF消息脱敏过滤匹配函数指针
- 1.日    期   : 2017年3月15日
-   作    者   : y00307564
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef VOS_VOID* (*pTafLogPrivacyMatchFunc)(
     MsgBlock                           *pstMsg
 );
 
-/*****************************************************************************
- 结构名    : TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU
- 结构说明  : log打印脱敏消息过滤函数匹配处理表
- 1.日    期   : 2017年3月15日
-   作    者   : y00307564
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulMsgName;                          /* 消息类型 */
     pTafLogPrivacyMatchFunc             pFuncPrivacyMatch;                  /* 消息对应的过滤函数 */
 }TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_LOG_PRIVACY_RCV_PID_MATCH_TBL_STRU
- 结构说明  : log打印脱敏消息匹配处理表
- 1.日    期   : 2017年3月15日
-   作    者   : y00307564
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {   VOS_UINT32                          ulReceiverPid;                      /* 消息接收PID */
     VOS_UINT32                          ulTblSize;                          /* 消息过滤函数匹配处理表大小 */
     TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU *pstLogPrivacyMatchMsgTbl;           /* 消息过滤函数匹配处理表 */
 }TAF_LOG_PRIVACY_RCV_PID_MATCH_TBL_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_LOG_PRIVACY_MATCH_MODEM_PID_MAP_TBL_STRU
- 结构说明  : MODEM0/MODEM1/MODEM2 PID映射表
 
-  1.日    期   : 2017年3月27日
-    作    者   : t00323010
-    修改内容   : 新生成
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                           ulModem0Pid;
@@ -163,14 +132,7 @@ typedef struct
     VOS_UINT32                           ulModem2Pid;
 }TAF_LOG_PRIVACY_MATCH_MODEM_PID_MAP_TBL_STRU;
 
-/*****************************************************************************
- 结构名    : AT_LOG_PRIVACY_MATCH_AT_CMD_MAP_TBL_STRU
- 结构说明  : at命令脱敏映射表
 
-  1.日    期   : 2017年3月27日
-    作    者   : t00323010
-    修改内容   : 新生成
-*****************************************************************************/
 typedef struct
 {
     VOS_CHAR                           *pcOriginalAtCmd;
@@ -181,14 +143,7 @@ typedef AT_MSG_STRU* (*AT_PRIVACY_FILTER_AT_PROC_FUNC)(
     AT_MSG_STRU                        *pstAtMsg
 );
 
-/*****************************************************************************
- 结构名    : AT_LOG_PRIVACY_MAP_CMD_TO_FUNC_STRU
- 结构说明  : at命令脱敏映射表(AT命令->处理函数)
 
-  1.日    期   : 2017年6月1日
-    作    者   : z00382546
-    修改内容   : 新生成
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulAtCmdType;
@@ -212,6 +167,7 @@ VOS_UINT32 TAF_MnCallBackSsLcsEvtIsNeedLogPrivacy(
     TAF_SSA_EVT_ID_ENUM_UINT32          enEvtId
 );
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_VOID* AT_PrivacyMatchCallAppSendCustomDialReq(
     MsgBlock                           *pstMsg
 );
@@ -219,6 +175,7 @@ VOS_VOID* AT_PrivacyMatchCallAppSendCustomDialReq(
 VOS_VOID* AT_PrivacyMatchAppMsgTypeSendReq(
     MsgBlock                           *pstMsg
 );
+#endif
 
 VOS_VOID*  AT_PrivacyMatchCposSetReq(
     MsgBlock                           *pstMsg
@@ -226,6 +183,7 @@ VOS_VOID*  AT_PrivacyMatchCposSetReq(
 VOS_VOID*  AT_PrivacyMatchMeidSetReq(
     MsgBlock                           *pstMsg
 );
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_VOID* AT_PrivacyMatchAppMsgTypeWriteReq(
     MsgBlock                           *pstMsg
 );
@@ -233,6 +191,7 @@ VOS_VOID* AT_PrivacyMatchAppMsgTypeWriteReq(
 VOS_VOID* AT_PrivacyMatchAppMsgTypeDeleteReq(
     MsgBlock                           *pstMsg
 );
+#endif
 
 VOS_VOID* TAF_PrivacyMatchAppMnCallBackCsCall(
     MsgBlock                           *pstMsg
@@ -292,6 +251,7 @@ VOS_VOID* TAF_CALL_PrivacyMatchAppCnapInfoInd(
     MsgBlock                           *pstMsg
 );
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_VOID* TAF_XSMS_PrivacyMatchAppMsgTypeRcvInd(
     MsgBlock                           *pstMsg
 );
@@ -299,8 +259,6 @@ VOS_VOID* TAF_XSMS_PrivacyMatchAppMsgTypeRcvInd(
 VOS_VOID*  TAF_XSMS_PrivacyMatchAppMsgTypeWriteCnf(
     MsgBlock                           *pstMsg
 );
-
-#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 
 VOS_VOID* AT_PrivacyMatchCallAppSendFlashReq(
     MsgBlock                           *pstMsg

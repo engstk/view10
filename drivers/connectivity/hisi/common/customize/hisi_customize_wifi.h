@@ -42,11 +42,11 @@ extern "C" {
 #define RTC_CLK_FREQ_MIN                (32000)
 #define RTC_CLK_FREQ_MAX                (33000)
 #define RF_LINE_TXRX_GAIN_DB_2G_MIN     (-32)
-#define RF_LINE_TXRX_GAIN_DB_5G_MIN     (-12)
+#define RF_LINE_TXRX_GAIN_DB_5G_MIN     (-48)
 #define PSD_THRESHOLD_MIN               (-15)
 #define PSD_THRESHOLD_MAX               (-10)
-#define LNA_GAIN_DB_MIN                 (-10)
-#define LNA_GAIN_DB_MAX                 (20)
+#define LNA_GAIN_DB_MIN                 (-40)
+#define LNA_GAIN_DB_MAX                 (80)
 #define NUM_OF_NV_MAX_TXPOWER           (45)                                /* NVRAM中存储的各协议速率最大发射功率参数的个数 From:24G_11b_1M To:5G_VHT80_MCS7 */
 #define NUM_OF_NV_PARAMS                (2 * NUM_OF_NV_MAX_TXPOWER + 1)     /* NVRAM中存储的参数值的总个数:每项power值对应一项scale，加上dpd开关 */
 #define MAX_TXPOWER_MIN                 (130)                               /* 最大发送功率的最小有效值:130 13.0dbm */

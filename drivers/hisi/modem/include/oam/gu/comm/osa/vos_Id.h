@@ -318,6 +318,8 @@ VOS_VOID VOS_QueryPidInfo(VOS_VOID *pBuf);
 
 VOS_VOID VOS_SetPidInfo(VOS_VOID *pBuf, VOS_UINT16 usLen);
 
+VOS_VOID VOS_SetCpuPidInfo(VOS_UINT32 ulCpuID, VOS_VOID *pBuf, VOS_UINT16 usLen);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

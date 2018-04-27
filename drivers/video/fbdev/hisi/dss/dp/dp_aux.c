@@ -116,7 +116,7 @@ again:
 	tries++;
 	if (tries > 100) {
 		HISI_FB_ERR("AUX exceeded retries\n");
-		return -EINVAL;
+		return -EAGAIN;
 	}
 
 	HISI_FB_DEBUG("device addr=0x%08x, len=%d, try=%d\n",
@@ -189,7 +189,7 @@ again:
 	case DPTX_AUX_STS_STATUS_NACK:
 	case DPTX_AUX_STS_STATUS_I2C_NACK:
 		HISI_FB_INFO("AUX Nack\n");
-		return -EINVAL;
+		return -ECONNREFUSED;
 	case DPTX_AUX_STS_STATUS_I2C_DEFER:
 	case DPTX_AUX_STS_STATUS_DEFER:
 		HISI_FB_INFO("AUX Defer\n");
@@ -238,8 +238,10 @@ int dptx_aux_rw_bytes(struct dp_ctrl *dptx,
 			retval = dptx_aux_rw(dptx, rw, i2c, true, false,
 					addr, &bytes[i], curlen);
 
-		if (retval)
+		if (retval) {
+			dp_imonitor_set_param_aux_rw(rw, i2c, addr, len, retval);
 			return retval;
+		}
 
 		i += curlen;
 	}

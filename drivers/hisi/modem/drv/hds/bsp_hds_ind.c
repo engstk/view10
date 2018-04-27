@@ -59,6 +59,7 @@
 #include <linux/cdev.h>
 #include <linux/module.h>
 #include <osl_bio.h>
+#include <securec.h>
 #include "mdrv_diag_system_common.h"
 #include "bsp_hds_service.h"
 #include "bsp_hds_ind.h"
@@ -109,16 +110,7 @@ void bsp_print_level_cfg(u32 *level)
     }
 }
 
-/*************************************************************************
- 函 数 名	: bsp_log_write_socp_chan
- 功能描述	: LOG数据写入SOCP源通道
- 输入参数	: 无
- 返 回 值	: 成功与否标识码
- 修改历史	:
- 日    期	: 2016年8月10日
- 作    者	: l00354607
- 修改内容	:
-*************************************************************************/
+
 s32 bsp_log_write_socp_chan(u8* data,u32 len)
 {
 
@@ -133,7 +125,7 @@ s32 bsp_log_write_socp_chan(u8* data,u32 len)
 
     if((wbuf.u32Size >= len) && (NULL != wbuf.pBuffer))
     {
-        memcpy((void*)(wbuf.pBuffer), data, (unsigned long)len);
+        (void)memcpy_s((void*)(wbuf.pBuffer), wbuf.u32Size, data, (unsigned long)len);
         //LOG_FLUSH_CACHE(wbuf.pBuffer, (unsigned long)len);
         if(HDS_OK != bsp_socp_write_done(SOCP_CODER_SRC_LOG_IND, len))
         {
@@ -146,9 +138,9 @@ s32 bsp_log_write_socp_chan(u8* data,u32 len)
         wbuf.pRbBuffer = (char *)bsp_MemPhyToVirt((u8*)(wbuf.pRbBuffer), g_logSrcCfg.pucPhyStart, g_logSrcCfg.pucVirtStart, g_logSrcCfg.ulBufLen);
         if((NULL != wbuf.pBuffer) && (NULL != wbuf.pRbBuffer))
         {
-            memcpy((void*)(wbuf.pBuffer),data,(unsigned long)(wbuf.u32Size));
+            (void)memcpy_s((void*)(wbuf.pBuffer),(unsigned long)(wbuf.u32Size), data,(unsigned long)(wbuf.u32Size));
             //LOG_FLUSH_CACHE(wbuf.pBuffer, (unsigned long)(wbuf.u32Size));
-            memcpy((void*)(wbuf.pRbBuffer), data+wbuf.u32Size, (unsigned long)(len-wbuf.u32Size));
+            (void)memcpy_s((void*)(wbuf.pRbBuffer), wbuf.u32RbSize, data+wbuf.u32Size, (unsigned long)(len-wbuf.u32Size));
             //LOG_FLUSH_CACHE(wbuf.pRbBuffer, (unsigned long)(len-wbuf.u32Size));
 
             if(HDS_OK != bsp_socp_write_done(SOCP_CODER_SRC_LOG_IND, len))
@@ -204,7 +196,7 @@ s32 bsp_transreport(TRANS_IND_STRU *pstData)
 
     spin_lock_irqsave(&g_hds_lock_ctrl.trans_lock,lock_flag);
 
-    memcpy(g_trans_sendbuf->data,pstData->pData, (unsigned long)(pstData->ulLength));
+    (void)memcpy_s(g_trans_sendbuf->data, TRANSLOG_MAX_HIDS_BUFF_LEN, pstData->pData, (unsigned long)(pstData->ulLength));
 
     /*fill trans head*/
     trans_head->ulModule   = 0x8003;            /*Pid,0x8003代表BSP*/
@@ -212,7 +204,7 @@ s32 bsp_transreport(TRANS_IND_STRU *pstData)
     trans_head->ulNo       = g_Translog_pkgnum++;
     /*fill diag head*/
     bsp_slice_getcurtime(&auctime);
-    memcpy(diag_head->stService.aucTimeStamp,&auctime, sizeof(diag_head->stService.aucTimeStamp));
+    (void)memcpy_s(diag_head->stService.aucTimeStamp, sizeof(diag_head->stService.aucTimeStamp), &auctime, sizeof(auctime));
     /*pstData->ulModule:31-24bit,代表mdmid3b,主副卡*/
     diag_head->stService.mdmid3b = ((pstData->ulModule) & 0xff000000)>>24;
     diag_head->stService.MsgTransId  = g_translog_transId;
@@ -242,16 +234,7 @@ s32 bsp_transreport(TRANS_IND_STRU *pstData)
 }
 /*lint -restore +e550 */
 
-/*************************************************************************
- 函 数 名	: bsp_printreport
- 功能描述	: PRINT数据上报到工具
- 输入参数	: 无
- 返 回 值	: 成功与否标识码
- 修改历史	:
- 日    期	: 2016年8月10日
- 作    者	: l00354607
- 修改内容	:
-*************************************************************************/
+
 s32 bsp_printreport(char *logdata,u32 level,u32 module_id)
 {
     s32 ret;
@@ -271,14 +254,14 @@ s32 bsp_printreport(char *logdata,u32 level,u32 module_id)
        return HDS_ERR;
     }
 
-    prelen = (u32)snprintf((char *)(g_print_sendbuf->data), (unsigned long)PRINTLOG_MAX_FILENAME_LEN,"%s:%d[%d]", "module", module_id, 0);
+    prelen = (u32)snprintf_s((char *)(g_print_sendbuf->data), (unsigned long)PRINTLOG_MAX_FILENAME_LEN, (unsigned long)(PRINTLOG_MAX_FILENAME_LEN-1), "%s:%d[%d]", "module", module_id, 0);
     if(prelen > PRINTLOG_MAX_FILENAME_LEN)
     {
        printk(KERN_ERR"print prelen err!\n");
        return HDS_ERR;
     }
 
-    datalen = (u32)snprintf((char *)(g_print_sendbuf->data+prelen), (unsigned long)PRINTLOG_MAX_BUFF_LEN,"%s", logdata);/* [false alarm]:fortify */
+    datalen = (u32)snprintf_s((char *)(g_print_sendbuf->data+prelen), (unsigned long)PRINTLOG_MAX_BUFF_LEN, (unsigned long)(PRINTLOG_MAX_BUFF_LEN-1),"%s", logdata);/* [false alarm]:fortify */
     if(datalen > PRINTLOG_MAX_BUFF_LEN)
     {
        printk(KERN_ERR"print datalen err!\n");
@@ -307,7 +290,7 @@ s32 bsp_printreport(char *logdata,u32 level,u32 module_id)
 
     /*fill diag head*/
     bsp_slice_getcurtime(&auctime);
-    memcpy(diag_head->stService.aucTimeStamp,&auctime, sizeof(diag_head->stService.aucTimeStamp));
+    (void)memcpy_s(diag_head->stService.aucTimeStamp, sizeof(diag_head->stService.aucTimeStamp), &auctime, sizeof(auctime));
     diag_head->stService.MsgTransId  = g_printlog_transId;
     diag_head->stID.sec5b    = DIAG_FRAME_MSG_PRINT;
     diag_head->stID.mode4b   = DIAG_FRAME_MODE_COMM;
@@ -378,7 +361,7 @@ s32 bsp_socp_log_chan_cfg(void)
     struct device dev;
 
     /* coverity[secure_coding] */
-    memset(&dev,0,sizeof(dev));
+    memset_s(&dev, sizeof(dev), 0, sizeof(dev));
     p =(u8 *) dma_alloc_coherent(&dev, (unsigned long)LOG_SRC_BUF_LEN, &ulAddress, GFP_KERNEL);
 
     if(HDS_NULL == p)
@@ -418,16 +401,7 @@ s32 bsp_socp_log_chan_cfg(void)
 /*lint -restore +e429 */
 
 
-/*************************************************************************
- 函 数 名	: bsp_hds_init
- 功能描述	: 初始化函数
- 输入参数	: 无
- 返 回 值	: 成功与否标识码
- 修改历史	:
- 日    期	: 2016年8月10日
- 作    者	: l00354607
- 修改内容	:
-*************************************************************************/
+
 int __init bsp_hds_init(void)
 {
     int ret;
@@ -477,3 +451,5 @@ int __init bsp_hds_init(void)
 
 /*lint --e{528}*/
 module_init(bsp_hds_init);
+
+EXPORT_SYMBOL(bsp_transreport);

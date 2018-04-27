@@ -24,6 +24,8 @@
 #ifdef CONFIG_HUAWEI_DSM
 #include <dsm/dsm_pub.h>
 #endif
+#define PD_DPM_POWER_18_W		18000000
+static int optional_max_power = 0;
 
 typedef struct __pd_device_policy_manager {
 	uint8_t temp;
@@ -335,6 +337,8 @@ static bool dpm_find_match_req_info(struct dpm_rdo_info_t *req_info,
 
 		uw = dpm_calc_src_cap_power_uw(&source, &sink);
 
+		optional_max_power = (uw > optional_max_power) ? uw : optional_max_power;
+
 		overload = uw > max_uw;
 
 		if (caps & DPM_CAP_SNK_PREFER_LOW_VOLTAGE)
@@ -380,6 +384,7 @@ static bool dpm_build_request_info(
 	int i, max_uw = -1;
 	pd_port_power_caps *snk_cap = &pd_port->local_snk_cap;
 	pd_port_power_caps *src_cap = &pd_port->remote_src_cap;
+	optional_max_power = 0;
 
 	memset(req_info, 0, sizeof(struct dpm_rdo_info_t));
 
@@ -404,6 +409,12 @@ static bool dpm_build_request_info(
 					"Mismatch" : "Match", max_uw/1000);
 			pd_port->local_selected_cap = i + 1;
 		}
+	}
+
+	if (optional_max_power >= PD_DPM_POWER_18_W) {
+		pd_dpm_set_optional_max_power_status(true);
+	} else {
+		pd_dpm_set_optional_max_power_status(false);
 	}
 
 	return max_uw > 0;
@@ -1328,6 +1339,7 @@ void pd_dpm_dr_inform_sink_cap(pd_port_t *pd_port, pd_event_t *pd_event)
 #ifdef CONFIG_HUAWEI_DSM
 			rt_dsm_report(ERROR_RT_PD_MSG_NULL, buf);
 #endif
+			return;
 		}
 		snk_cap->nr = PD_HEADER_CNT(pd_msg->msg_hdr);
 		memcpy(snk_cap->pdos, pd_msg->payload,
@@ -1358,6 +1370,7 @@ void pd_dpm_dr_inform_source_cap(pd_port_t *pd_port, pd_event_t *pd_event)
 #ifdef CONFIG_HUAWEI_DSM
 			rt_dsm_report(ERROR_RT_PD_MSG_NULL, buf);
 #endif
+			return;
 		}
 		src_cap->nr = PD_HEADER_CNT(pd_msg->msg_hdr);
 		memcpy(src_cap->pdos, pd_msg->payload,

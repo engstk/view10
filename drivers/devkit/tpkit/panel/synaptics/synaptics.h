@@ -143,6 +143,7 @@ enum FW_uptate_state
 #define NOISE_RECORD_NUM_MAX 10000
 
 #define F35_WRITE_LENGTH_MAX 65535
+#define SYNAPTICS_RMI4_F12_QUERY_8_MAX  6
 
 struct synaptics_grip_data {
     u8 ewx; // Width of upper and lower edges
@@ -237,6 +238,7 @@ struct synaptics_rmi4_f12_extra_data {
 	unsigned char data15_offset;
 	unsigned char data15_size;
 	unsigned char data15_data[(F12_FINGERS_TO_SUPPORT + 7) / 8];
+	unsigned char data36_offset;
 };
 
 /*
@@ -266,6 +268,7 @@ struct synaptics_rmi4_fn {
 	int data_size;
 	void *data;
 	void *extra;
+	void *eratio_data;
 };
 
 /*
@@ -409,8 +412,38 @@ struct synaptics_rmi4_f12_query_8 {
 				unsigned char data14_is_present:1;
 				unsigned char data15_is_present:1;
 			} __packed;
+			struct {
+				unsigned char data16_is_present:1;
+				unsigned char data17_is_present:1;
+				unsigned char data18_is_present:1;
+				unsigned char data19_is_present:1;
+				unsigned char data20_is_present:1;
+				unsigned char data21_is_present:1;
+				unsigned char data22_is_present:1;
+				unsigned char data23_is_present:1;
+			} __packed;
+			struct {
+				unsigned char data24_is_present:1;
+				unsigned char data25_is_present:1;
+				unsigned char data26_is_present:1;
+				unsigned char data27_is_present:1;
+				unsigned char data28_is_present:1;
+				unsigned char data29_is_present:1;
+				unsigned char data30_is_present:1;
+				unsigned char data31_is_present:1;
+			} __packed;
+			struct {
+				unsigned char data32_is_present:1;
+				unsigned char data33_is_present:1;
+				unsigned char data34_is_present:1;
+				unsigned char data35_is_present:1;
+				unsigned char data36_is_present:1;
+				unsigned char data37_is_present:1;
+				unsigned char data38_is_present:1;
+				unsigned char data39_is_present:1;
+			} __packed;
 		};
-		unsigned char data[5];
+		unsigned char data[SYNAPTICS_RMI4_F12_QUERY_8_MAX];
 	};
 };
 
@@ -455,10 +488,23 @@ struct synaptics_rmi4_f12_finger_data {
 #ifdef REPORT_2D_Z
 	unsigned char z;
 #endif
+	union {
+		struct {
 #ifdef REPORT_2D_W
-	unsigned char wx;
-	unsigned char wy;
+			unsigned char wx;
+			unsigned char wy;
 #endif
+		} __packed;
+		struct {
+			unsigned char new_ew;
+			unsigned char new_w;
+		} __packed;
+	};
+};
+
+struct synaptics_rmi4_f12_eratio_data {
+	unsigned char eratio_x;
+	unsigned char eratio_y;
 };
 
 struct synaptics_rmi4_feature {
@@ -584,6 +630,7 @@ enum synaptics_ic_type {
 	SYNAPTICS_S3718,
 	SYNAPTICS_TD4322,
 	SYNAPTICS_TD4310,
+	SYNAPTICS_S3706, 
 };
 struct touch_settings {
 	unsigned char build_id[SYNAPTICS_RMI4_BUILD_ID_SIZE];

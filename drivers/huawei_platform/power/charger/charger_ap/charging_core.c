@@ -20,6 +20,9 @@
 #include <huawei_platform/log/hw_log.h>
 #include <linux/raid/pq.h>
 #include <linux/power/hisi/coul/hisi_coul_drv.h>
+#ifdef CONFIG_WIRELESS_CHARGER
+#include <huawei_platform/power/wireless_charger.h>
+#endif
 #include <charging_core.h>
 #ifdef CONFIG_TCPC_CLASS
 #include <huawei_platform/usb/hw_pd_dev.h>
@@ -646,7 +649,24 @@ struct charge_core_data *charge_core_get_params(void)
 
 	return &di->data;
 }
+#ifdef CONFIG_WIRELESS_CHARGER
+/**********************************************************
+*  Function:       charge_core_get_wireless_params
+*  Discription:    provide the wireless charge parameters
+*  Parameters:   NULL
+*  return value:  wireless charge parameters
+**********************************************************/
+struct wireless_core_data *charge_core_get_wireless_params(void)
+{
+	struct charge_core_info *di = g_core_info;
+	if (!di) {
+		hwlog_err("[%s], charge_core_info is NULL!\n", __func__);
+		return NULL;
+	}
 
+	return &di->wireless_data;
+}
+#endif
 /**********************************************************
 *  Function:       charge_core_battery_data
 *  Discription:    get the charge raw data from hisi_battery_data module
@@ -784,7 +804,166 @@ static int charge_core_battery_data(struct charge_core_info *di)
 
 	return 0;
 }
+#ifdef CONFIG_WIRELESS_CHARGER
+static int charge_core_parse_wireless_charge_para
+		(struct device_node* np, struct charge_core_info *di)
+{
+	int ret = 0;
+	unsigned int i = 0;
+	int array_len = 0;
+	u32 tmp_para[WIRELESS_PARA_TOTAL*WIRELESS_CORE_PARA_LEVEL];
 
+	ret = of_property_read_u32(np, "iin_wireless", &(di->data.iin_wireless));
+	if (ret) {
+		hwlog_err("get iin_wireless failed\n");
+		return -EINVAL;
+	}
+	hwlog_info("iin_wireless = %d\n", di->data.iin_wireless);
+	ret = of_property_read_u32(np, "ichg_wireless", &(di->data.ichg_wireless));
+	if (ret) {
+		hwlog_err("get ichg_wireless failed\n");
+		return -EINVAL;
+	}
+	hwlog_info("ichg_wireless = %d\n", di->data.ichg_wireless);
+
+	/* wireless_charge para */
+	array_len = of_property_count_u32_elems(np, "wireless_para");
+	if ((array_len <= 0) ||(array_len % WIRELESS_PARA_TOTAL != 0)) {
+		di->wireless_data.total_type = 0;
+		hwlog_err("wireless_para is invaild, please check wireless_para number!!\n");
+	} else if (array_len > WIRELESS_PARA_TOTAL * WIRELESS_CORE_PARA_LEVEL) {
+		di->wireless_data.total_type = 0;
+		hwlog_err("wireless_para is too long(%d)!!\n" , array_len);
+	} else {
+		ret = of_property_read_u32_array(np, "wireless_para", tmp_para, array_len);
+		if (ret) {
+			di->wireless_data.total_type = 0;
+			hwlog_err("dts:get wireless_para fail!\n");
+		} else {
+			di->wireless_data.total_type = (int)(array_len / WIRELESS_PARA_TOTAL);
+			hwlog_info("wireless_total_type = %d\n", di->wireless_data.total_type);
+			for (i = 0; i < di->wireless_data.total_type; i++) {
+				/*lint !e64*//*(int) for pclint and can never be out of bounds*/
+				di->wireless_data.rx_cap[i].charger_type =
+							tmp_para[(u8)(WIRELESS_PARA_CHARGER_TYPE+WIRELESS_PARA_TOTAL*i)];
+				di->wireless_data.rx_cap[i].cable_detect =
+							tmp_para[(u8)(WIRELESS_PARA_CABLE_DETECT+WIRELESS_PARA_TOTAL*i)];
+				di->wireless_data.rx_cap[i].certification=
+							tmp_para[(u8)(WIRELESS_PARA_CERTIFICATION+WIRELESS_PARA_TOTAL*i)];
+				di->wireless_data.rx_cap[i].fast_chrg_flag =
+							tmp_para[(u8)(WIRELESS_PARA_FAST_CHRG_FLAG+WIRELESS_PARA_TOTAL*i)];
+				di->wireless_data.rx_cap[i].fast_vout_max =
+							tmp_para[(int)(WIRELESS_PARA_FAST_VOUT_MAX+WIRELESS_PARA_TOTAL*i)];
+				di->wireless_data.rx_cap[i].fast_iout_max =
+							tmp_para[(int)(WIRELESS_PARA_FAST_IOUT_MAX+WIRELESS_PARA_TOTAL*i)];
+				di->wireless_data.rx_cap[i].normal_vout_max =
+							tmp_para[(int)(WIRELESS_PARA_NORMAL_VOUT_MAX+WIRELESS_PARA_TOTAL*i)];
+				di->wireless_data.rx_cap[i].normal_iout_max =
+							tmp_para[(int)(WIRELESS_PARA_NORMAL_IOUT_MAX+WIRELESS_PARA_TOTAL*i)];
+				hwlog_info("wireless_para[%d], charger_type: 0x%-2x cable_detect: %d certification: %d fast_chrg_flag: %d "
+							"fast_vout_max: %-5d fast_iout_max: %-4d normal_vout_max: %-5d normal_iout_max: %-4d\n",
+							i, di->wireless_data.rx_cap[i].charger_type, di->wireless_data.rx_cap[i].cable_detect,
+							di->wireless_data.rx_cap[i].certification, di->wireless_data.rx_cap[i].fast_chrg_flag,
+							di->wireless_data.rx_cap[i].fast_vout_max, di->wireless_data.rx_cap[i].fast_iout_max,
+							di->wireless_data.rx_cap[i].normal_vout_max, di->wireless_data.rx_cap[i].normal_iout_max);
+			}
+		}
+	}
+	return ret;
+}
+#endif
+static int charge_core_parse_vdpm_para(struct device_node* np, struct charge_core_info *di)
+{
+	int ret = 0;
+	int i = 0;
+	int array_len = 0;
+	int idata = 0;
+	const char *chrg_data_string = NULL;
+	unsigned int vdpm_control_type = VDPM_BY_CAPACITY;
+	unsigned int vdpm_buf_limit = VDPM_DELTA_LIMIT_5;
+	/*vdpm_para*/
+	/*vdpm control type : 0 vdpm controlled by cbat; 1 vdpm controlled by vbat*/
+	ret = of_property_read_u32(np, "vdpm_control_type", &(vdpm_control_type));
+	if(ret) {
+		hwlog_err("get vdpm_control_type failed, use default config.\n");
+	}
+	di->data.vdpm_control_type = vdpm_control_type;
+	hwlog_info("vdpm_control_type = %d\n",di->data.vdpm_control_type);
+	/*vdpm buffer setting*/
+	ret = of_property_read_u32(np, "vdpm_buf_limit", &(vdpm_buf_limit));
+	if(ret){
+        hwlog_err("get vdpm_buf_limit failed,use default config.\n");
+	}
+	di->data.vdpm_buf_limit = vdpm_buf_limit;
+	hwlog_info("vdpm_buf_limit = %d\n",di->data.vdpm_buf_limit);
+	array_len = of_property_count_strings(np, "vdpm_para");
+	if ((array_len <= 0) || (array_len % VDPM_PARA_TOTAL != 0)) {
+		hwlog_err
+		    ("vdpm_para is invaild,please check vdpm_para number!!\n");
+		return -EINVAL;
+	}
+
+	if (array_len > VDPM_PARA_LEVEL * VDPM_PARA_TOTAL) {
+		array_len = VDPM_PARA_LEVEL * VDPM_PARA_TOTAL;
+		hwlog_err("vdpm_para is too long,use only front %d paras!!\n",
+			  array_len);
+		return -EINVAL;
+	}
+
+	memset(di->vdpm_para, 0, VDPM_PARA_LEVEL * sizeof(struct charge_vdpm_data));	/* data reset to 0*/
+
+	for (i = 0; i < array_len; i++) {
+		ret =
+		    of_property_read_string_index(np, "vdpm_para", i,
+						  &chrg_data_string);
+		if (ret) {
+			hwlog_err("get vdpm_para failed\n");
+			return -EINVAL;
+		}
+
+		idata = simple_strtol(chrg_data_string, NULL, 10);
+		switch (i % VDPM_PARA_TOTAL) {
+		case VDPM_PARA_CAP_MIN:
+			if ((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX)) {
+				hwlog_err
+				    ("the vdpm_para cap_min is out of range!!\n");
+				return -EINVAL;
+			}
+			di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_min = idata;
+			break;
+		case VDPM_PARA_CAP_MAX:
+			if ((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX)) {
+				hwlog_err
+				    ("the vdpm_para cap_max is out of range!!\n");
+				return -EINVAL;
+			}
+			di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_max = idata;
+			break;
+		case VDPM_PARA_DPM:
+			if ((idata < VDPM_VOLT_MIN) || (idata > VDPM_VOLT_MAX)) {
+				hwlog_err
+				    ("the vdpm_para vin_dpm is out of range!!\n");
+				return -EINVAL;
+			}
+			di->vdpm_para[i / (VDPM_PARA_TOTAL)].vin_dpm = idata;
+			break;
+		case VDPM_PARA_CAP_BACK:
+			if((idata < 0) || (idata > (int)(di->data.vdpm_buf_limit))){
+				hwlog_err
+				    ("the vdpm_para cap_back is out of range!!\n");
+				return -EINVAL;
+			}
+			di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_back = idata;
+			break;
+		default:
+			hwlog_err("get vdpm_para failed\n");
+		}
+		hwlog_info("di->vdpm_para[%d][%d] = %d\n",
+			    i / (VDPM_PARA_TOTAL), i % (VDPM_PARA_TOTAL), idata);
+	}
+
+	return ret;
+}
 static void charge_core_parse_high_temp_limit(struct device_node *np,
 				 struct charge_core_info *di)
 {
@@ -799,7 +978,6 @@ static void charge_core_parse_high_temp_limit(struct device_node *np,
 
 	hwlog_info("high_temp_limit = %d\n",di->data.high_temp_limit);
 }
-
 static int get_basp_vol_segement_para(struct device_node* np)
 {
 	int array_len = 0;
@@ -845,6 +1023,62 @@ static void check_basp_vol_segement(struct device_node* np)
 		}
 	}
 }
+
+static int charging_core_parse_iterm(struct charge_core_info *di, struct device_node* np)
+{
+	int ret, i, array_len;
+	int iterm = 0;
+	char *outstring;
+	char *batt_brand = hisi_battery_brand();
+	char buff[BATT_BRAND_STRING_MAX] = {0};
+
+	ret = of_property_read_u32(np, "iterm", &(di->data.iterm));
+	if (ret) {
+		hwlog_err("get iterm failed\n");
+		return -EINVAL;
+	}
+	hwlog_info("iterm = %d\n", di->data.iterm);
+
+	/*check if iterm_para is set. iterm is different, as the model of the battery varies*/
+	array_len = of_property_count_strings(np, "iterm_para");
+	if ((array_len <= 0) || (array_len % CHARGE_ITERM_PARA_TOTAL != 0)) {
+		hwlog_err("iterm_para is invaild, not necessay, please check!\n");
+		return 0;
+	}
+	if (array_len > BATT_BRAND_NUM_MAX * CHARGE_ITERM_PARA_TOTAL) {
+		hwlog_err("iterm_para is too long, please check!\n");
+		return 0;
+	}
+	for (i = 0; i < array_len; i++) {
+		ret = of_property_read_string_index(np, "iterm_para", i, &outstring);
+		if(ret) {
+			hwlog_err("get iterm_para failed\n");
+			return 0;
+		}
+		switch (i % CHARGE_ITERM_PARA_TOTAL) {
+			case CHARGE_ITERM_PARA_BATT_BRAND:
+				if (strlen(outstring) < BATT_BRAND_STRING_MAX) {
+					strncpy(buff, outstring, strlen(outstring));
+				}
+				break;
+			case CHARGE_ITERM_PARA_ITERM:
+				iterm = simple_strtol(outstring, NULL, 10);
+				break;
+			default:
+				hwlog_err("iterm_para get failed \n");
+		}
+		/*match battery model*/
+		if (i % CHARGE_ITERM_PARA_TOTAL == CHARGE_ITERM_PARA_ITERM) {
+			if (!strcmp(buff, batt_brand)) {
+				di->data.iterm = iterm;
+				hwlog_info("update iterm = %d\n", di->data.iterm);
+				break;
+			}
+			memset(&buff, 0, sizeof(buff));
+		}
+	}
+	return 0;
+}
 /**********************************************************
 *  Function:       charge_core_parse_dts
 *  Discription:    parse the module dts config value
@@ -860,8 +1094,6 @@ static int charge_core_parse_dts(struct device_node *np,
 	int array_len = 0;
 	int idata = 0;
 	const char *chrg_data_string = NULL;
-	unsigned int vdpm_control_type = VDPM_BY_CAPACITY;
-	unsigned int vdpm_buf_limit = VDPM_DELTA_LIMIT_5;
 
 	/*ac charge current */
 	ret = of_property_read_u32(np, "iin_ac", &(di->data.iin_ac));
@@ -951,12 +1183,11 @@ static int charge_core_parse_dts(struct device_node *np,
 	}
 	hwlog_debug("iin_weaksource = %d\n", di->data.iin_weaksource);
 	/*terminal current */
-	ret = of_property_read_u32(np, "iterm", &(di->data.iterm));
+	ret = charging_core_parse_iterm(di, np);
 	if (ret) {
 		hwlog_err("get iterm failed\n");
 		return -EINVAL;
 	}
-	hwlog_debug("iterm = %d\n", di->data.iterm);
 	/*otg current */
 	ret = of_property_read_u32(np, "otg_curr", &(di->data.otg_curr));
 	if (ret) {
@@ -997,86 +1228,16 @@ static int charge_core_parse_dts(struct device_node *np,
 	hwlog_info("typec high mode ibat curr = %d\n", di->data.ichg_typech);
 
 	charge_core_parse_high_temp_limit(np, di);
-
-	/*vdpm_para*/
-	/*vdpm control type : 0 vdpm controlled by cbat; 1 vdpm controlled by vbat*/
-	ret = of_property_read_u32(np, "vdpm_control_type", &(vdpm_control_type));
-	if(ret){
-        hwlog_err("get vdpm_control_type failed, use default config.\n");
+#ifdef CONFIG_WIRELESS_CHARGER
+	ret = charge_core_parse_wireless_charge_para(np, di);
+	if (ret) {
+		hwlog_err("get wireless charge para failed\n");
 	}
-	di->data.vdpm_control_type = vdpm_control_type;
-	hwlog_info("vdpm_control_type = %d\n",di->data.vdpm_control_type);
-	/*vdpm buffer setting*/
-	ret = of_property_read_u32(np, "vdpm_buf_limit", &(vdpm_buf_limit));
-	if(ret){
-        hwlog_err("get vdpm_buf_limit failed,use default config.\n");
-	}
-	di->data.vdpm_buf_limit = vdpm_buf_limit;
-	hwlog_info("vdpm_buf_limit = %d\n",di->data.vdpm_buf_limit);
-	array_len = of_property_count_strings(np, "vdpm_para");
-	if ((array_len <= 0) || (array_len % VDPM_PARA_TOTAL != 0)) {
-		hwlog_err
-		    ("vdpm_para is invaild,please check vdpm_para number!!\n");
+#endif
+	ret = charge_core_parse_vdpm_para(np, di);
+	if (ret) {
+		hwlog_err("get vdpm_para para failed\n");
 		return -EINVAL;
-	}
-
-	if (array_len > VDPM_PARA_LEVEL * VDPM_PARA_TOTAL) {
-		array_len = VDPM_PARA_LEVEL * VDPM_PARA_TOTAL;
-		hwlog_err("vdpm_para is too long,use only front %d paras!!\n",
-			  array_len);
-		return -EINVAL;
-	}
-
-	memset(di->vdpm_para, 0, VDPM_PARA_LEVEL * sizeof(struct charge_vdpm_data));	/* data reset to 0*/
-
-	for (i = 0; i < array_len; i++) {
-		ret =
-		    of_property_read_string_index(np, "vdpm_para", i,
-						  &chrg_data_string);
-		if (ret) {
-			hwlog_err("get vdpm_para failed\n");
-			return -EINVAL;
-		}
-
-		idata = simple_strtol(chrg_data_string, NULL, 10);
-		switch (i % VDPM_PARA_TOTAL) {
-		case VDPM_PARA_CAP_MIN:
-			if ((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX)) {
-				hwlog_err
-				    ("the vdpm_para cap_min is out of range!!\n");
-				return -EINVAL;
-			}
-			di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_min = idata;
-			break;
-		case VDPM_PARA_CAP_MAX:
-			if ((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX)) {
-				hwlog_err
-				    ("the vdpm_para cap_max is out of range!!\n");
-				return -EINVAL;
-			}
-			di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_max = idata;
-			break;
-		case VDPM_PARA_DPM:
-			if ((idata < VDPM_VOLT_MIN) || (idata > VDPM_VOLT_MAX)) {
-				hwlog_err
-				    ("the vdpm_para vin_dpm is out of range!!\n");
-				return -EINVAL;
-			}
-			di->vdpm_para[i / (VDPM_PARA_TOTAL)].vin_dpm = idata;
-			break;
-		case VDPM_PARA_CAP_BACK:
-			if((idata < 0) || (idata > (int)(di->data.vdpm_buf_limit))){
-				hwlog_err
-				    ("the vdpm_para cap_back is out of range!!\n");
-				return -EINVAL;
-			}
-			di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_back = idata;
-			break;
-		default:
-			hwlog_err("get vdpm_para failed\n");
-		}
-		hwlog_debug("di->vdpm_para[%d][%d] = %d\n",
-			    i / (VDPM_PARA_TOTAL), i % (VDPM_PARA_TOTAL), idata);
 	}
 
 	/* inductance_para */

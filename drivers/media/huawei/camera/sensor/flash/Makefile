@@ -24,5 +24,6 @@ obj-$(CONFIG_HISI_CAMERA_LM3646) += lm3646.o
 obj-$(CONFIG_HISI_CAMERA_MP3336) += mp3336.o
 obj-$(CONFIG_HISI_CAMERA_LM3646_MIX) += lm3646_mix.o
 obj-$(CONFIG_HISI_CAMERA_MP3336_MIX) += mp3336_mix.o
+obj-$(CONFIG_HISI_CAMERA_MP3336_MIX_IR) += mp3336_mix_ir.o
 #obj-y += lm3646_front.o
 obj-$(CONFIG_HISI_CAMERA_SCHARGER) += scharger_flash.o

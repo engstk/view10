@@ -88,6 +88,7 @@ static int ipf_pm_suspend(struct device *pdev)
 {
     unsigned long flags;
     struct ipf_share_mem_map* sm = bsp_ipf_get_sharemem();
+    pr_info("%s +\n", __func__);
 
     spin_lock_irqsave(&g_ipf_ctx.filter_spinlock, flags);
     bsp_ipc_spin_lock(IPC_SEM_IPF_PWCTRL);
@@ -103,8 +104,8 @@ static int ipf_pm_suspend(struct device *pdev)
     spin_unlock_irqrestore(&g_ipf_ctx.filter_spinlock, flags);
 
     g_ipf_ctx.stax.suspend++;
-
     (void)pdev;
+    pr_info("%s -\n", __func__);
     return IPF_SUCCESS;
 }
 
@@ -113,7 +114,8 @@ static int ipf_pm_resume(struct device *pdev)
     HI_IPF_INT1_T status;
     unsigned long flags;
     struct ipf_share_mem_map* sm = bsp_ipf_get_sharemem();
-
+	
+    pr_info("%s +\n", __func__);
     spin_lock_irqsave(&g_ipf_ctx.filter_spinlock, flags);
     bsp_ipc_spin_lock(IPC_SEM_IPF_PWCTRL);
 
@@ -141,6 +143,7 @@ static int ipf_pm_resume(struct device *pdev)
 
     g_ipf_ctx.stax.resume++;
     (void)pdev;
+    pr_info("%s -\n", __func__);
     return IPF_SUCCESS;
 }
 

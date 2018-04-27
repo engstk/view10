@@ -101,58 +101,6 @@ ssize_t circ_buf_copy(struct circular_buffer *incb, char *text)
 	return (ssize_t)len;
 }
 
-/*
- * Function which prints TLK logs.
- * Tokenizes the TLK logs into lines, tags each line
- * and prints it out to kmsg file.
- */
-void hhee_print_logs(void)
-{
-	char *text;
-	char *temp;
-	char *buffer;
-
-	if (!hhee_logging_enabled)
-		return;
-	pr_info("[HHEE] Printing logs\n");
-
-	buffer = (char *)kzalloc(cb->size, GFP_KERNEL);
-	if (!buffer) {
-		pr_err("kzalloc failed\n");
-		return;
-	}
-
-	circ_buf_init(cb);
-	/* This detects if the buffer proved to be too small to hold the data.
-	 * If buffer is not large enough, it overwrites it's oldest data,
-	 * This warning serves to alert the user to possibly use a bigger buffer
-	 */
-	if (cb->overflow == 1) {
-		pr_info("\n[HHEE] buffer overwritten.\n\n");
-		cb->overflow = 0;
-	}
-
-	if (circ_buf_copy(cb, buffer) < 0) {
-		kfree(buffer);
-		return;
-	}
-	cb->buf[cb->end] = '\0';
-
-	/* In case no delimiter was found,
-	 * the token is taken to be the entire string *stringp,
-	 * and *stringp is made NULL.
-	 */
-	text = buffer;
-	temp = strsep(&text, "\n");
-	while (temp != NULL) {
-		if (strnlen(temp, cb->size))
-			pr_info("[HHEE] %s\n", temp);
-		temp = strsep(&text, "\n");
-	}
-
-	kfree(buffer);
-}
-
 ssize_t hhee_copy_logs(char __user *buf, size_t count,
 		       loff_t *offp, int logtype)
 {
@@ -207,7 +155,7 @@ ssize_t hhee_copy_logs(char __user *buf, size_t count,
 int cb_init(uint64_t inlog_addr, uint64_t inlog_size,
 			struct circular_buffer **incb, unsigned int logtype)
 {
-	uint64_t log_addr, log_size;
+	uint64_t log_addr;
 	struct circular_buffer *tmp_cb;
 
 	log_addr = (uint64_t)ioremap_cache(inlog_addr, inlog_size);
@@ -215,18 +163,18 @@ int cb_init(uint64_t inlog_addr, uint64_t inlog_size,
 		pr_err("fail to get virtal addr of hhee\n");
 		return -EINVAL;
 	}
-	log_size = inlog_size;
 
 	tmp_cb = (struct circular_buffer *) kzalloc(sizeof(struct circular_buffer),
 						    GFP_KERNEL);
 	if (!tmp_cb) {
+		iounmap((void __iomem *)log_addr);
 		pr_err("%s: no memory avaiable for circular buffer struct\n",
 			__func__);
 		return -ENOMEM;
 	}
 
 	tmp_cb->virt_log_addr = log_addr;
-	tmp_cb->virt_log_size = log_size;
+	tmp_cb->virt_log_size = inlog_size;
 	tmp_cb->logtype = logtype;
 	*incb = tmp_cb;
 	return 0;
@@ -252,19 +200,19 @@ int hhee_logger_init(void)
 	pr_info("hhee logger init\n");
 	/* get logging information*/
 	/*normal buffer*/
-	ret_res = _hhee_fn_hvc((unsigned long)HHEE_LOGBUF_INFO, 0ul, 0ul, 0ul);
+	ret_res = hhee_fn_hvc((unsigned long)HHEE_LOGBUF_INFO, 0ul, 0ul, 0ul);
 	ret = cb_init(ret_res.a0, ret_res.a1, &cb, NORMAL_LOG);
 	if (ret)
 		goto outfail1;
 
 	/*crash buffer*/
-	ret_res = _hhee_fn_hvc((unsigned long)HHEE_CRASHLOG_INFO, 0ul, 0ul, 0ul);
+	ret_res = hhee_fn_hvc((unsigned long)HHEE_CRASHLOG_INFO, 0ul, 0ul, 0ul);
 	ret = cb_init(ret_res.a0, ret_res.a1, &crash_cb, CRASH_LOG);
 	if (ret)
 		goto outfail2;
 
 	/*monitor buffer*/
-	ret_res = _hhee_fn_hvc((unsigned long)HHEE_PMFBUFLOG_INFO, 0ul, 0ul, 0ul);
+	ret_res = hhee_fn_hvc((unsigned long)HHEE_PMFBUFLOG_INFO, 0ul, 0ul, 0ul);
 	ret = cb_init(ret_res.a0, ret_res.a1, &monitor_cb, MONITOR_LOG);
 	if (ret)
 		goto outfail3;
@@ -274,11 +222,10 @@ int hhee_logger_init(void)
 	pr_info("HHEE logger init done\n");
 	return 0;
 outfail3:
-	cb_deinit(monitor_cb);
-outfail2:
 	cb_deinit(crash_cb);
-outfail1:
+outfail2:
 	cb_deinit(cb);
+outfail1:
 	pr_info("HHEE log init failed!\n");
 	return -EINVAL;
 }

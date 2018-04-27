@@ -29,6 +29,12 @@
 
 #define FINGERSENSE_TRANS_TOUT  msecs_to_jiffies(100)   /* Wait 100ms for data transmitting */
 #define FINGERSENSE_FRESH_TIME  msecs_to_jiffies(10)    /* We think the data is fresh if it is collected in 10ms */
+#define CALIBRATE_DATA_LENGTH 15
+#define ACC_GYRO_OFFSET_CALIBRATE_LENGTH 3
+#define MAX_VALUE 4294967296
+#define MAX_AIRPRESS_OFFSET (500)
+#define MIN_AIRPRESS_OFFSET (-500)
+#define GYRO_RANGE_1000DPS (1000)
 
 uint16_t sensorlist[SENSOR_LIST_NUM] = { 0 };
 unsigned int sensor_read_number[TAG_END] = {0,0,0,0,0};
@@ -41,6 +47,7 @@ int flag_for_sensor_test = 0; /*fordden sensor cmd from HAL*/
 int stop_auto_accel;
 int stop_auto_als;
 int stop_auto_ps;
+int gyro_range = 2000;
 static uint8_t debug_read_data_buf[DEBUG_DATA_LENGTH] = { 0 };
 static uint8_t i2c_rw16_data_buf[2] = { 0 };
 static RET_TYPE return_calibration = RET_INIT;	/*acc calibrate result*/
@@ -54,12 +61,51 @@ static int als_close_after_calibrate = true;
 static int gyro_close_after_calibrate = true;
 static int32_t ps_calib_data[3] = { 0 };
 static int32_t gyro_calib_data[15] = {0};
+static int32_t set_gyro_calib_data[15] = {0};
+static int32_t set_acc_calib_data[15] = {0};
 static int cap_prox_calibrate_len = 0;
 static uint8_t cap_prox_calibrate_data[CAP_PROX_CALIDATA_NV_SIZE]={0};
 static struct work_struct cap_prox_calibrate_work;
 static int airpress_cali_flag;
 static struct work_struct handpress_calibrate_work;
 static int is_gsensor_gather_enable;
+struct acc_gyr_offset_threshold acc_calib_threshold[CALIBRATE_DATA_LENGTH] = {
+	{-320, 320},  //x-offset unit:mg
+	{-320, 320},  //y-offset unit:mg
+	{-320, 320},  //z-offset unit:mg
+	{6500, 13500},//x-sensitivity
+	{6500, 13500},//y-sensitivity
+	{6500, 13500},//z-sensitivity
+/******* The following is the interaxial interference *********/
+	{6500, 13500},
+	{-2000, 2000},
+	{-2000, 2000},
+	{-2000, 2000},
+	{6500, 13500},
+	{-2000, 2000},
+	{-2000, 2000},
+	{-2000, 2000},
+	{6500, 13500},
+};
+struct acc_gyr_offset_threshold gyro_calib_threshold[CALIBRATE_DATA_LENGTH] = {
+	{-572, 572},  //x-offset
+	{-572, 572},  //y-offset
+	{-572, 572},  //z-offset
+	{6500, 13500},//x-sensitivity
+	{6500, 13500},//y-sensitivity
+	{6500, 13500},//z-sensitivity
+/******* The following is the interaxial interference *********/
+	{6500, 13500},
+	{-2000, 2000},
+	{-2000, 2000},
+	{-2000, 2000},
+	{6500, 13500},
+	{-2000, 2000},
+	{-2000, 2000},
+	{-2000, 2000},
+	{6500, 13500},
+};
+
 /*pass mark as NA*/
 static char *cali_error_code_str[] = {"NULL", "NA", "EXEC_FAIL", "NV_FAIL", "COMMU_FAIL", "RET_TYPE_MAX"};
 static unsigned long fingersense_data_ts;    /* timestamp for the data */
@@ -70,14 +116,21 @@ extern int ams_tmd2620_ps_flag;
 extern int avago_apds9110_ps_flag;
 extern u8 tplcd_manufacture;
 extern u8 phone_color;
+extern int is_cali_supported;
 extern int rohm_rgb_flag;
 extern int avago_rgb_flag;
 extern int ams_tmd3725_rgb_flag;
 extern int ams_tmd3725_ps_flag;
+extern int liteon_ltr582_ps_flag;
+extern int liteon_ltr582_rgb_flag;
 extern struct hisi_nve_info_user user_info;
 extern struct airpress_platform_data airpress_data;
 extern union sar_calibrate_data sar_calibrate_datas;
 extern struct sar_platform_data sar_pdata;
+extern struct g_sensor_platform_data gsensor_data;
+extern struct gyro_platform_data gyro_data;
+extern struct ps_platform_data ps_data;
+
 extern int get_airpress_data;
 extern int get_temperature_data;
 extern uint8_t hp_offset[24];
@@ -89,12 +142,16 @@ extern spinlock_t	fsdata_lock;
 extern bool fingersense_data_intrans;
 extern bool fingersense_data_ready;
 extern s16 fingersense_data[FINGERSENSE_DATA_NSAMPLES];
+extern uint8_t gyro_cali_way;
+extern uint8_t acc_cali_way;
+extern s16 minThreshold_als_para;
+extern s16 maxThreshold_als_para;
 #ifdef CONFIG_HUAWEI_DSM
 extern struct dsm_client *shb_dclient;
 #endif
 extern void enable_motions_when_recovery_iom3(void);
 extern void disable_motions_when_sysreboot(void);
-
+extern int send_calibrate_data_to_mcu(int tag, uint32_t subcmd, const void *data, int length, bool is_recovery);
 static ssize_t show_sensor_list_info(struct device *dev,	struct device_attribute *attr, char *buf)
 {
 	int i;
@@ -286,7 +343,7 @@ static int init_event_of_msg(struct event *events,struct sensor_eng_cal_test sen
 	if(events == NULL )
 		return -1;
 	memset(events,0,sizeof(struct event));
-	events->error_code = -1;
+	events->error_code = 0;
 	events->cycle = 0;
 	memcpy(events->station, NA, sizeof(NA));
 	memcpy(events->device_name, sensor_test.name, sizeof(sensor_test.name));
@@ -313,12 +370,10 @@ static int enq_msg_data_in_sensorhub_single(struct event events)
 	msg->data_source = DATA_FROM_KERNEL;
 	msg->num_events = 1;
 	msg->version = 1;
-	events.error_code = -1;
+	events.error_code = 0;
 	events.cycle = 0;
 	memcpy(events.station, NA, sizeof(NA));
 	memcpy(events.bsn, NA, sizeof(NA));
-	memcpy(events.min_threshold, NA, sizeof(NA));
-	memcpy(events.max_threshold, NA, sizeof(NA));
 	memcpy(events.firmware, NA, sizeof(NA));
 	memcpy(events.description, NA, sizeof(NA));
 	memcpy(&(msg->events[0]), &events, sizeof(events));
@@ -365,6 +420,10 @@ static int enq_msg_data_in_sensorhub(struct sensor_eng_cal_test sensor_test)
 				return ret;
 			}
 			snprintf(msg->events[pEvents].value,MAX_VAL_LEN,"%d",*(sensor_test.cal_value+pCalValue));
+			if(pCalValue < sensor_test.threshold_num){
+				snprintf(msg->events[pEvents].min_threshold,MAX_VAL_LEN,"%d",*(sensor_test.min_threshold+pCalValue));
+				snprintf(msg->events[pEvents].max_threshold,MAX_VAL_LEN,"%d",*(sensor_test.max_threshold+pCalValue));
+			}
 			memcpy(msg->events[pEvents].test_name,sensor_test.test_name[pCalValue],(strlen(sensor_test.test_name[pCalValue])+1));
 			msg->events[pEvents].item_id = sensor_test.first_item+pCalValue;
 		}
@@ -400,7 +459,7 @@ static void enq_notify_work_sensor(struct sensor_eng_cal_test sensor_test)
 	}
 }
 
-static void cap_prox_enq_notify_work(const int item_id, uint16_t value,const char *test_name)
+static void cap_prox_enq_notify_work(const int item_id, uint16_t value,uint16_t min_threshold,uint16_t max_threshold,const char *test_name)
 {
 	int ret = -1;
 	struct event cap_prox_event;
@@ -414,6 +473,8 @@ static void cap_prox_enq_notify_work(const int item_id, uint16_t value,const cha
 	memcpy(cap_prox_event.result,CAP_PROX_RESULT,sizeof(CAP_PROX_RESULT));
 	memcpy(cap_prox_event.test_name,test_name,(strlen(test_name)+1));
 	snprintf(cap_prox_event.value,MAX_VAL_LEN,"%d",value);
+	snprintf(cap_prox_event.min_threshold,MAX_VAL_LEN,"%u",min_threshold);
+	snprintf(cap_prox_event.max_threshold,MAX_VAL_LEN,"%u",max_threshold);
 
 	ret = enq_msg_data_in_sensorhub_single(cap_prox_event);
 	if(ret > 0){
@@ -428,10 +489,14 @@ static void cap_prox_do_enq_work(int calibrate_index)
 	if(!strncmp(sensor_chip_info[CAP_PROX], "huawei,semtech-sx9323", strlen("huawei,semtech-sx9323"))){
 		switch(calibrate_index){
 			case 1:
-				cap_prox_enq_notify_work(SAR_SENSOR_DIFF_MSG,sar_calibrate_datas.semtech_cali_data.diff,CAP_PROX_DIFF);
+				cap_prox_enq_notify_work(SAR_SENSOR_DIFF_MSG,sar_calibrate_datas.semtech_cali_data.diff,
+					sar_pdata.sar_datas.semteck_data.calibrate_thred[DIFF_MIN_THREDHOLD],
+					sar_pdata.sar_datas.semteck_data.calibrate_thred[DIFF_MAX_THREDHOLD],CAP_PROX_DIFF);
 				break;
 			case 2:
-				cap_prox_enq_notify_work(SAR_SENSOR_OFFSET_MSG,sar_calibrate_datas.semtech_cali_data.offset,CAP_PROX_OFFSET);
+				cap_prox_enq_notify_work(SAR_SENSOR_OFFSET_MSG,sar_calibrate_datas.semtech_cali_data.offset,
+					sar_pdata.sar_datas.semteck_data.calibrate_thred[OFFSET_MIN_THREDHOLD],
+					sar_pdata.sar_datas.semteck_data.calibrate_thred[OFFSET_MAX_THREDHOLD],CAP_PROX_OFFSET);
 				break;
 			default:
 				break;
@@ -604,6 +669,7 @@ static void get_test_time(char *date_str, size_t size)
 static ssize_t attr_acc_calibrate_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	int val = return_calibration;
+	hwlog_info("acc_calibrate_show is old way,result=%d\n",val);
 	return snprintf(buf, PAGE_SIZE, "%d\n", val);
 }
 
@@ -611,6 +677,7 @@ static int acc_calibrate_save(const void *buf, int length)
 {
 	const int32_t *poffset_data = (const int32_t *)buf;
 	int ret = 0;
+	int i = 0;
 	if (buf == NULL || length <= 0) {
 		hwlog_err("%s invalid argument.", __func__);
 		return_calibration = EXEC_FAIL;
@@ -620,6 +687,16 @@ static int acc_calibrate_save(const void *buf, int length)
 		__func__, *poffset_data, *(poffset_data + 1),*(poffset_data + 2), *(poffset_data + 3),*(poffset_data + 4),
 		*(poffset_data + 5),*(poffset_data + 6), *(poffset_data + 7),*(poffset_data + 8), *(poffset_data + 9),
 		*(poffset_data + 10),*(poffset_data + 11), *(poffset_data + 12),*(poffset_data + 13), *(poffset_data + 14));
+
+	for(i=0; i < ACC_GYRO_OFFSET_CALIBRATE_LENGTH;i++)
+	{
+		if (*(poffset_data+ i) < acc_calib_threshold[i].low_threshold || *(poffset_data+ i) > acc_calib_threshold[i].high_threshold) {
+			hwlog_err("%s: acc calibrated_data is out of range. i = %d, num = %d.\n", __FUNCTION__, i, *(poffset_data+ i));
+			return_calibration = NV_FAIL;
+			return -1;
+		}
+	}
+
 	ret = write_gsensor_offset_to_nv((char *)buf, length);
 	if (ret) {
 		hwlog_err("nv write fail.\n");
@@ -652,8 +729,7 @@ static read_info_t send_calibrate_cmd(uint8_t tag, unsigned long val, RET_TYPE *
 	if (ret) {
 		*rtype = COMMU_FAIL;
 		hwlog_err("send tag %d calibrate cmd to mcu fail,ret=%d\n", tag, ret);
-	}
-	if (pkg_mcu.errno != 0) {
+	} else if (pkg_mcu.errno != 0) {
 		hwlog_err("send tag %d calibrate fail, %d\n", tag, pkg_mcu.errno);
 		*rtype = EXEC_FAIL;
 	} else {
@@ -661,6 +737,11 @@ static read_info_t send_calibrate_cmd(uint8_t tag, unsigned long val, RET_TYPE *
 		*rtype = SUC;
 	}
 	return pkg_mcu;
+}
+
+read_info_t send_airpress_calibrate_cmd(uint8_t tag, unsigned long val, RET_TYPE *rtype)
+{
+	return send_calibrate_cmd(tag, val, rtype);
 }
 
 static const char * acc_calibrate_param[] = {
@@ -675,10 +756,14 @@ static ssize_t attr_acc_calibrate_write(struct device *dev, struct device_attrib
 	int ret = 0, i;
 	char content[CLI_CONTENT_LEN_MAX] = { 0 };
 	const int32_t *acc_cali_data = NULL;
+	const int32_t *minThreshold = NULL;
+	const int32_t *maxThreshold = NULL;
 	char date_str[CLI_TIME_STR_LEN] = { 0 };
 	interval_param_t param;
 	read_info_t read_pkg;
 	#ifdef SENSOR_DATA_ACQUISITION
+	int32_t minThreshold_acc[ACC_THRESHOLD_NUM] = {-gsensor_data.x_calibrate_thredhold,-gsensor_data.y_calibrate_thredhold,-gsensor_data.z_calibrate_thredhold};
+	int32_t maxThreshold_acc[ACC_THRESHOLD_NUM] = {gsensor_data.x_calibrate_thredhold,gsensor_data.y_calibrate_thredhold,gsensor_data.z_calibrate_thredhold};
 	struct sensor_eng_cal_test acc_test;
 	int pAccTest = 0;
 	#endif
@@ -729,9 +814,14 @@ static ssize_t attr_acc_calibrate_write(struct device *dev, struct device_attrib
 	acc_cali_data = (const int32_t *)read_pkg.data;
 
 	#ifdef SENSOR_DATA_ACQUISITION
+	minThreshold = (const int32_t *)minThreshold_acc;
+	maxThreshold = (const int32_t *)maxThreshold_acc;
 	acc_test.cal_value = acc_cali_data;
 	acc_test.value_num = ACC_CAL_NUM;
+	acc_test.threshold_num = ACC_THRESHOLD_NUM;
 	acc_test.first_item = ACC_CALI_X_OFFSET_MSG;
+	acc_test.min_threshold = minThreshold;
+	acc_test.max_threshold = maxThreshold;
 	memcpy(acc_test.name, ACC_TEST_CAL,sizeof(ACC_TEST_CAL));
 	memcpy(acc_test.result,ACC_CAL_RESULT,sizeof(ACC_CAL_RESULT));
 	for(pAccTest=0; pAccTest<ACC_CAL_NUM;pAccTest++){
@@ -765,6 +855,7 @@ static DEVICE_ATTR(acc_calibrate, 0664, attr_acc_calibrate_show, attr_acc_calibr
 static ssize_t attr_gyro_calibrate_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	int val = gyro_calibration_res;
+	hwlog_info("gyro_calibrate_show is old way,result=%d\n",val);
 	return snprintf(buf, PAGE_SIZE, "%d\n", val);
 }
 
@@ -772,6 +863,8 @@ static int gyro_calibrate_save(const void *buf, int length)
 {
 	const int32_t *poffset_data = (const int32_t *)buf;
 	int ret = 0;
+	int gyro_range_factor = 1;
+	int i = 0;
 	if (buf == NULL || length <= 0) {
 		hwlog_err("%s invalid argument.", __func__);
 		gyro_calibration_res = EXEC_FAIL;
@@ -780,6 +873,19 @@ static int gyro_calibrate_save(const void *buf, int length)
 	hwlog_info( "%s:gyro_sensor calibrate ok, %d  %d  %d %d  %d  %d %d  %d  %d %d  %d  %d  %d  %d  %d\n", __func__, *poffset_data, *(poffset_data + 1), *(poffset_data + 2),
             *(poffset_data + 3), *(poffset_data + 4),*(poffset_data + 5),*(poffset_data + 6), *(poffset_data + 7),*(poffset_data + 8), *(poffset_data + 9),*(poffset_data + 10),
             *(poffset_data + 11), *(poffset_data + 12),*(poffset_data + 13), *(poffset_data + 14));
+
+	if(gyro_range == GYRO_RANGE_1000DPS){
+		gyro_range_factor = 2;
+	}
+	for(i=0; i < ACC_GYRO_OFFSET_CALIBRATE_LENGTH;i++)
+	{
+		if (*(poffset_data+ i) < gyro_calib_threshold[i].low_threshold*gyro_range_factor || *(poffset_data+ i) > gyro_calib_threshold[i].high_threshold*gyro_range_factor) {
+			hwlog_err("%s: gyro calibrated_data is out of range. i = %d, num = %d.\n", __FUNCTION__, i, *(poffset_data+ i));
+			gyro_calibration_res = NV_FAIL;
+			return -1;
+		}
+	}
+
 	ret = write_gyro_sensor_offset_to_nv((char *)buf, length);
 	if (ret) {
 		hwlog_err("nv write fail.\n");
@@ -803,9 +909,13 @@ static ssize_t attr_gyro_calibrate_write(struct device *dev, struct device_attri
 	read_info_t read_pkg;
 	char content[CLI_CONTENT_LEN_MAX] = { 0 };
 	const int32_t *gyro_cali_data = NULL;
+	const int32_t *minThreshold = NULL;
+	const int32_t *maxThreshold = NULL;
 	char date_str[CLI_TIME_STR_LEN] = { 0 };
 	interval_param_t param;
 	#ifdef SENSOR_DATA_ACQUISITION
+	int32_t minThreshold_gyro[GYRO_THRESHOLD_NUM] = {-gyro_data.calibrate_thredhold,-gyro_data.calibrate_thredhold,-gyro_data.calibrate_thredhold};//-40dps
+	int32_t maxThreshold_gyro[GYRO_THRESHOLD_NUM] = {gyro_data.calibrate_thredhold,gyro_data.calibrate_thredhold,gyro_data.calibrate_thredhold};//40dps
 	struct sensor_eng_cal_test gyro_test;
 	int pGyroTest = 0;
 	#endif
@@ -858,7 +968,7 @@ static ssize_t attr_gyro_calibrate_write(struct device *dev, struct device_attri
 			gyro_calib_data[1] = *(gyro_cali_data+1);
 			gyro_calib_data[2] = *(gyro_cali_data+2);
 			gyro_calibrate_save(gyro_calib_data, sizeof(gyro_calib_data));
-		} else if(val == 7) {
+		} else if(val == GYRO_DYN_CALIBRATE_END_ORDER) {
 			gyro_calib_data[3] = *(gyro_cali_data+3);
 			gyro_calib_data[4] = *(gyro_cali_data+4);
 			gyro_calib_data[5] = *(gyro_cali_data+5);
@@ -882,13 +992,18 @@ static ssize_t attr_gyro_calibrate_write(struct device *dev, struct device_attri
 
 	}
 
-	if(val == 1 || val == 7) {
+	if(val == 1 || val == GYRO_DYN_CALIBRATE_END_ORDER) {
 
 		get_test_time(date_str, sizeof(date_str));
 		#ifdef SENSOR_DATA_ACQUISITION
+		minThreshold = (const int32_t *)minThreshold_gyro;
+		maxThreshold = (const int32_t *)maxThreshold_gyro;
 		gyro_test.cal_value = gyro_calib_data;
 		gyro_test.first_item = GYRO_CALI_X_OFFSET_MSG;
 		gyro_test.value_num = GYRO_CAL_NUM;
+		gyro_test.threshold_num = GYRO_THRESHOLD_NUM;
+		gyro_test.min_threshold = minThreshold;
+		gyro_test.max_threshold = maxThreshold;
 		memcpy(gyro_test.name, GYRO_TEST_CAL,sizeof(GYRO_TEST_CAL));
 		memcpy(gyro_test.result,GYRO_CAL_RESULT,sizeof(GYRO_CAL_RESULT));
 		for(pGyroTest=0; pGyroTest<GYRO_CAL_NUM; pGyroTest++){
@@ -981,17 +1096,22 @@ static ssize_t attr_ps_calibrate_write(struct device *dev, struct device_attribu
 	read_info_t	pkg_mcu;
 	char content[CLI_CONTENT_LEN_MAX] = {0};
 	char date_str[CLI_TIME_STR_LEN] = {0};
+	const int32_t *ps_cali_data = NULL;
+	const int32_t *minThreshold = NULL;
+	const int32_t *maxThreshold = NULL;
 	#ifdef SENSOR_DATA_ACQUISITION
-	struct event    ps_event;
-	int ret = 0;
+	int32_t minThreshold_ps[PS_CAL_NUM] = {0,0,0};
+	int32_t maxThreshold_ps[PS_CAL_NUM] = {ps_data.ps_calib_20cm_threshold,ps_data.ps_calib_5cm_threshold,ps_data.ps_calib_3cm_threshold};
+	struct sensor_eng_cal_test ps_test;
+	int pPsTest = 0;
 	#endif
 
 	#ifdef SENSOR_DATA_ACQUISITION
-	memset(&ps_event, 0, sizeof(ps_event));
+	memset(&ps_test,0,sizeof(ps_test));
 	#endif
 
-	if((txc_ps_flag != 1) && (ams_tmd2620_ps_flag != 1) &&	(avago_apds9110_ps_flag != 1) && (ams_tmd3725_ps_flag != 1)) {
-		hwlog_info("ps sensor is not txc_ps_224 or ams_tmd2620 or avago_apds9110 or ams_tmd3725,no need calibrate\n");
+	if((txc_ps_flag != 1) && (ams_tmd2620_ps_flag != 1) &&	(avago_apds9110_ps_flag != 1) && (ams_tmd3725_ps_flag != 1) && (liteon_ltr582_ps_flag != 1)) {
+		hwlog_info("ps sensor is not txc_ps_224 or ams_tmd2620 or avago_apds9110 or ams_tmd3725 or liteon_ltr582,no need calibrate\n");
 		return count;
 	}
 
@@ -1018,17 +1138,23 @@ static ssize_t attr_ps_calibrate_write(struct device *dev, struct device_attribu
 
 save_log:
 	get_test_time(date_str, sizeof(date_str));
+	ps_cali_data = (const int32_t *)ps_calib_data;
 
 	#ifdef SENSOR_DATA_ACQUISITION
-	ps_event.item_id = PS_CALI_XTALK;
-	memcpy(ps_event.device_name,PS_TEST_CAL,sizeof(PS_TEST_CAL));
-	memcpy(ps_event.result,PS_CAL_RESULT,sizeof(PS_CAL_RESULT));
-	memcpy(ps_event.test_name,PS_CALI_NAME,sizeof(PS_CALI_NAME));
-	snprintf(ps_event.value,MAX_VAL_LEN,"%d",ps_calib_data[val-1]);
-	ret = enq_msg_data_in_sensorhub_single(ps_event);
-	if(ret > 0){
-		hwlog_info("ps enq_msg_data_in_sensorhub_single succ !!\n");
+	minThreshold = (const int32_t *)minThreshold_ps;
+	maxThreshold = (const int32_t *)maxThreshold_ps;
+	ps_test.cal_value = ps_cali_data;
+	ps_test.first_item = PS_CALI_XTALK;
+	ps_test.value_num = PS_CAL_NUM;
+	ps_test.threshold_num = PS_THRESHOLD_NUM;
+	ps_test.min_threshold = minThreshold;
+	ps_test.max_threshold = maxThreshold;
+	memcpy(ps_test.name,PS_TEST_CAL,sizeof(PS_TEST_CAL));
+	memcpy(ps_test.result,PS_CAL_RESULT,sizeof(PS_CAL_RESULT));
+	for(pPsTest=0; pPsTest<PS_CAL_NUM; pPsTest++){
+		ps_test.test_name[pPsTest] = ps_test_name[pPsTest];
 	}
+	enq_notify_work_sensor(ps_test);
 	#endif
 
 	memset(&content, 0, sizeof(content));
@@ -1129,10 +1255,15 @@ static ssize_t attr_als_calibrate_write(struct device *dev, struct device_attrib
 	int ret = 0, i;
 	read_info_t pkg_mcu;
 	char content[CLI_CONTENT_LEN_MAX] = { 0 };
+	const uint16_t *cali_data_u16 = NULL;
 	const int32_t *als_cali_data = NULL;
+	const int32_t *minThreshold = NULL;
+	const int32_t *maxThreshold = NULL;
 	char date_str[CLI_TIME_STR_LEN] = { 0 };
 	interval_param_t param;
 	#ifdef SENSOR_DATA_ACQUISITION
+	int32_t minThreshold_als[ALS_CAL_NUM] = {minThreshold_als_para,minThreshold_als_para,minThreshold_als_para,minThreshold_als_para,minThreshold_als_para,minThreshold_als_para};
+	int32_t maxThreshold_als[ALS_CAL_NUM] = {maxThreshold_als_para,maxThreshold_als_para,maxThreshold_als_para,maxThreshold_als_para,maxThreshold_als_para,maxThreshold_als_para};
 	struct sensor_eng_cal_test als_test;
 	int pAlsTest = 0;
 	#endif
@@ -1141,8 +1272,8 @@ static ssize_t attr_als_calibrate_write(struct device *dev, struct device_attrib
 	memset(&als_test,0,sizeof(als_test));
 	#endif
 
-	if (rohm_rgb_flag != 1 && avago_rgb_flag != 1 && ams_tmd3725_rgb_flag != 1) {
-		hwlog_info("als sensor is not rohm_bh1745 or avago apds9251 or ams_tmd3725,no need calibrate\n");
+	if (rohm_rgb_flag != 1 && avago_rgb_flag != 1 && ams_tmd3725_rgb_flag != 1  && liteon_ltr582_rgb_flag != 1 && is_cali_supported !=1 ) {
+		hwlog_info("als sensor is not rohm_bh1745 or avago apds9251 or ams_tmd3725 or liteon_ltr582 , is_cali_supported = %d, no need calibrate\n", is_cali_supported);
 		return count;
 	}
 
@@ -1190,9 +1321,20 @@ static ssize_t attr_als_calibrate_write(struct device *dev, struct device_attrib
 	als_cali_data = (const int32_t *)pkg_mcu.data;
 
 	#ifdef SENSOR_DATA_ACQUISITION
-	als_test.cal_value = als_cali_data;
+	cali_data_u16 = (const uint16_t *)pkg_mcu.data;
+	int32_t als_cali_data_int32[ALS_CAL_NUM] = {*cali_data_u16,*(cali_data_u16 + 1),*(cali_data_u16 + 2),*(cali_data_u16 + 3),*(cali_data_u16 + 4),*(cali_data_u16 + 5)};
+	hwlog_info("als calibrate data for collect, %d %d %d %d %d %d\n",*cali_data_u16, *(cali_data_u16 + 1), *(cali_data_u16 + 2),
+		*(cali_data_u16 + 3), *(cali_data_u16 + 4), *(cali_data_u16 + 5));
+
+	minThreshold = (const int32_t *)minThreshold_als;
+	maxThreshold = (const int32_t *)maxThreshold_als;
+	als_test.cal_value = (const int32_t *)als_cali_data_int32;
 	als_test.first_item = ALS_CALI_R_MSG;
 	als_test.value_num = ALS_CAL_NUM;
+	als_test.threshold_num = ALS_THRESHOLD_NUM;
+	als_test.min_threshold = minThreshold;
+	als_test.max_threshold = maxThreshold;
+
 	memcpy(als_test.name,ALS_TEST_CAL,sizeof(ALS_TEST_CAL));
 	memcpy(als_test.result,ALS_CAL_RESULT,sizeof(ALS_CAL_RESULT));
 	for(pAlsTest=0; pAlsTest<ALS_CAL_NUM; pAlsTest++){
@@ -1620,18 +1762,16 @@ static ssize_t attr_fingersense_req_data(struct device *dev, struct device_attri
 		return size;
 	}
 	fingersense_data_ready = false;
+	fingersense_data_intrans = true;   /* the data is on the way */
+	fingersense_data_ts = jiffies;     /* record timestamp for the data */
 	spin_unlock_irqrestore(&fsdata_lock, flags);
 	ret = fingersense_commu(sub_cmd, sub_cmd, NO_RESP, true);
 	if (ret) {
-		hwlog_err("%s: finger sense send requst data failed\n", __FUNCTION__);
-		return size;
-	}
 	spin_lock_irqsave(&fsdata_lock, flags);
-
-	fingersense_data_intrans = true;   /* the data is on the way */
-	fingersense_data_ts = jiffies;     /* record timestamp for the data */
-
+	fingersense_data_intrans = false;
 	spin_unlock_irqrestore(&fsdata_lock, flags);
+		hwlog_err("%s: finger sense send requst data failed\n", __FUNCTION__);
+	}
 	return size;
 }
 
@@ -2258,6 +2398,10 @@ static ssize_t store_airpress_set_calidata(struct device *dev, struct device_att
 		return -1;
 	}
 	source = simple_strtol(buf, NULL, 10);
+	if (source > MAX_AIRPRESS_OFFSET || source < MIN_AIRPRESS_OFFSET) {
+		hwlog_err("Incorrect offset. source = %d\n", source);
+		return -1;
+	}
 	airpress_data.offset += (int)source;
 
 	for (i = 0; i < 48; i++)
@@ -2307,6 +2451,209 @@ static ssize_t store_airpress_set_calidata(struct device *dev, struct device_att
 	return size;
 }
 static DEVICE_ATTR(airpress_set_calidata, 0664, show_airpress_set_calidata, store_airpress_set_calidata);
+static ssize_t show_gyro_set_calidata(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	if(!gyro_cali_way)
+	{
+		return 0;
+	}
+	if (strlen(sensor_chip_info[GYRO]) != 0)
+		return snprintf(buf, MAX_STR_SIZE, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+			set_gyro_calib_data[0], set_gyro_calib_data[1], set_gyro_calib_data[2], set_gyro_calib_data[3], set_gyro_calib_data[4],
+			set_gyro_calib_data[5],set_gyro_calib_data[6],set_gyro_calib_data[7],set_gyro_calib_data[8], set_gyro_calib_data[9],
+			set_gyro_calib_data[10],set_gyro_calib_data[11],set_gyro_calib_data[12],set_gyro_calib_data[13], set_gyro_calib_data[14]);
+	else
+		return -1;
+}
+
+static ssize_t store_gyro_set_calidata(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
+{
+
+	const int32_t *set_gyro_cali_data = NULL;
+	int i = 0;
+	int set_gyro_sensor_offset[GYRO_CALIBRATE_DATA_LENGTH];
+	memset(set_gyro_sensor_offset, 0, sizeof(set_gyro_sensor_offset));
+	if(!gyro_cali_way)
+	{
+		hwlog_info("%s: now is gyro self_calibreate \n", __FUNCTION__);
+		return size;
+	}
+	if (strlen(sensor_chip_info[GYRO]) == 0) {
+		hwlog_err("GYRO not exits !!\n");
+		return -1;
+	}
+	set_gyro_cali_data = (const int32_t *)buf;
+	set_gyro_calib_data[0] = *set_gyro_cali_data;
+	set_gyro_calib_data[1] = *(set_gyro_cali_data+1);
+	set_gyro_calib_data[2] = *(set_gyro_cali_data+2);
+	set_gyro_calib_data[3] = *(set_gyro_cali_data+3);
+	set_gyro_calib_data[4] = *(set_gyro_cali_data+4);
+	set_gyro_calib_data[5] = *(set_gyro_cali_data+5);
+	set_gyro_calib_data[6] = *(set_gyro_cali_data+6);
+	set_gyro_calib_data[7] = *(set_gyro_cali_data+7);
+	set_gyro_calib_data[8] = *(set_gyro_cali_data+8);
+	set_gyro_calib_data[9] = *(set_gyro_cali_data+9);
+	set_gyro_calib_data[10] = *(set_gyro_cali_data+10);
+	set_gyro_calib_data[11] = *(set_gyro_cali_data+11);
+	set_gyro_calib_data[12] = *(set_gyro_cali_data+12);
+	set_gyro_calib_data[13] = *(set_gyro_cali_data+13);
+	set_gyro_calib_data[14] = *(set_gyro_cali_data+14);
+	for(i=0; i < CALIBRATE_DATA_LENGTH;i++)
+	{
+		if (set_gyro_calib_data[i] < gyro_calib_threshold[i].low_threshold || set_gyro_calib_data[i] > gyro_calib_threshold[i].high_threshold) {
+			hwlog_err("%s: gyro calibrated_data is out of range. i = %d, num = %d.\n", __FUNCTION__, i, set_gyro_calib_data[i]);
+			return -1;
+		}
+	}
+	gyro_calibrate_save(set_gyro_calib_data, sizeof(set_gyro_calib_data));
+	hwlog_info("set gyro calibrate success, data=%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+			set_gyro_calib_data[0], set_gyro_calib_data[1], set_gyro_calib_data[2], set_gyro_calib_data[3], set_gyro_calib_data[4],
+			set_gyro_calib_data[5],set_gyro_calib_data[6],set_gyro_calib_data[7],set_gyro_calib_data[8], set_gyro_calib_data[9],
+			set_gyro_calib_data[10],set_gyro_calib_data[11],set_gyro_calib_data[12],set_gyro_calib_data[13], set_gyro_calib_data[14]);
+	if (read_calibrate_data_from_nv(GYRO_CALIDATA_NV_NUM, GYRO_CALIDATA_NV_SIZE, "GYRO"))
+		return -1;
+
+	/*copy to gsensor_offset by pass*/
+	memcpy(set_gyro_sensor_offset, user_info.nv_data, sizeof(set_gyro_sensor_offset));
+	hwlog_info( "nve_direct_access read gyro_sensor offset: %d %d %d  sensitity:%d %d %d \n",
+		set_gyro_sensor_offset[0],set_gyro_sensor_offset[1],set_gyro_sensor_offset[2], set_gyro_sensor_offset[3],set_gyro_sensor_offset[4],set_gyro_sensor_offset[5]);
+	hwlog_info( "nve_direct_access read gyro_sensor xis_angle: %d %d %d  %d %d %d %d %d %d \n",
+		set_gyro_sensor_offset[6], set_gyro_sensor_offset[7], set_gyro_sensor_offset[8], set_gyro_sensor_offset[9], set_gyro_sensor_offset[10],
+		set_gyro_sensor_offset[11],set_gyro_sensor_offset[12],set_gyro_sensor_offset[13],set_gyro_sensor_offset[14]);
+	if (send_calibrate_data_to_mcu(TAG_GYRO, SUB_CMD_SET_OFFSET_REQ, set_gyro_sensor_offset, GYRO_CALIDATA_NV_SIZE, false))
+		return -1;
+	return size;
+}
+
+static DEVICE_ATTR(gyro_set_calidata, 0660, show_gyro_set_calidata, store_gyro_set_calidata);
+static ssize_t show_acc_set_calidata(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	if(!acc_cali_way)
+	{
+		return 0;
+	}
+	if (strlen(sensor_chip_info[ACC]) != 0)
+		return snprintf(buf, MAX_STR_SIZE, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+			set_acc_calib_data[0], set_acc_calib_data[1], set_acc_calib_data[2], set_acc_calib_data[3], set_acc_calib_data[4],
+			set_acc_calib_data[5],set_acc_calib_data[6],set_acc_calib_data[7],set_acc_calib_data[8], set_acc_calib_data[9],
+			set_acc_calib_data[10],set_acc_calib_data[11],set_acc_calib_data[12],set_acc_calib_data[13], set_acc_calib_data[14]);
+	else
+		return -1;
+}
+
+static ssize_t store_acc_set_calidata(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
+{
+
+	const int32_t *set_acc_cali_data = NULL;
+	int set_acc_sensor_offset[ACC_CALIBRATE_DATA_LENGTH];
+	int i = 0;
+	memset(set_acc_sensor_offset, 0, sizeof(set_acc_sensor_offset));
+	if(!acc_cali_way)
+	{
+		hwlog_info("%s: now is acc self_calibreate \n", __FUNCTION__);
+		return size;
+	}
+	if (strlen(sensor_chip_info[ACC]) == 0) {
+		hwlog_err("ACC not exits !!\n");
+		return -1;
+	}
+	set_acc_cali_data = (const int32_t *)buf;
+	set_acc_calib_data[0] = *set_acc_cali_data;
+	set_acc_calib_data[1] = *(set_acc_cali_data+1);
+	set_acc_calib_data[2] = *(set_acc_cali_data+2);
+	set_acc_calib_data[3] = *(set_acc_cali_data+3);
+	set_acc_calib_data[4] = *(set_acc_cali_data+4);
+	set_acc_calib_data[5] = *(set_acc_cali_data+5);
+	set_acc_calib_data[6] = *(set_acc_cali_data+6);
+	set_acc_calib_data[7] = *(set_acc_cali_data+7);
+	set_acc_calib_data[8] = *(set_acc_cali_data+8);
+	set_acc_calib_data[9] = *(set_acc_cali_data+9);
+	set_acc_calib_data[10] = *(set_acc_cali_data+10);
+	set_acc_calib_data[11] = *(set_acc_cali_data+11);
+	set_acc_calib_data[12] = *(set_acc_cali_data+12);
+	set_acc_calib_data[13] = *(set_acc_cali_data+13);
+	set_acc_calib_data[14] = *(set_acc_cali_data+14);
+	for(i=0; i < CALIBRATE_DATA_LENGTH;i++)
+	{
+		if (set_acc_calib_data[i] < acc_calib_threshold[i].low_threshold || set_acc_calib_data[i] > acc_calib_threshold[i].high_threshold) {
+			hwlog_err("%s: acc calibrated_data is out of range. i = %d, num = %d.\n", __FUNCTION__, i, set_acc_calib_data[i]);
+			return -1;
+		}
+	}
+	acc_calibrate_save(set_acc_calib_data, sizeof(set_acc_calib_data));
+	hwlog_info("set acc calibrate success, data=%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n",
+			set_acc_calib_data[0], set_acc_calib_data[1], set_acc_calib_data[2], set_acc_calib_data[3], set_acc_calib_data[4],
+			set_acc_calib_data[5],set_acc_calib_data[6],set_acc_calib_data[7],set_acc_calib_data[8], set_acc_calib_data[9],
+			set_acc_calib_data[10],set_acc_calib_data[11],set_acc_calib_data[12],set_acc_calib_data[13], set_acc_calib_data[14]);
+	if (read_calibrate_data_from_nv(ACC_OFFSET_NV_NUM, ACC_OFFSET_NV_SIZE, "gsensor"))
+		return -1;
+
+	/*copy to gsensor_offset by pass*/
+	memcpy(set_acc_sensor_offset, user_info.nv_data, sizeof(set_acc_sensor_offset));
+	hwlog_info( "nve_direct_access read gyro_sensor offset: %d %d %d  sensitity:%d %d %d \n",
+		set_acc_sensor_offset[0],set_acc_sensor_offset[1],set_acc_sensor_offset[2], set_acc_sensor_offset[3],set_acc_sensor_offset[4],set_acc_sensor_offset[5]);
+	hwlog_info( "nve_direct_access read gyro_sensor xis_angle: %d %d %d  %d %d %d %d %d %d \n",
+		set_acc_sensor_offset[6], set_acc_sensor_offset[7], set_acc_sensor_offset[8], set_acc_sensor_offset[9], set_acc_sensor_offset[10],
+		set_acc_sensor_offset[11],set_acc_sensor_offset[12],set_acc_sensor_offset[13],set_acc_sensor_offset[14]);
+
+	if (send_calibrate_data_to_mcu(TAG_ACCEL, SUB_CMD_SET_OFFSET_REQ, set_acc_sensor_offset, ACC_OFFSET_NV_SIZE, false))
+		return -1;
+	return size;
+}
+
+static DEVICE_ATTR(acc_set_calidata, 0660, show_acc_set_calidata, store_acc_set_calidata);
+
+static ssize_t store_set_data_type(struct device *dev, struct device_attribute *attr, const char *buf, size_t size)
+{
+	int32_t set_data_type[2];
+	const int32_t *set_type = NULL;
+	write_info_t pkg_ap;
+	read_info_t pkg_mcu;
+	pkt_parameter_req_t spkt;
+	pkt_header_t *shd = (pkt_header_t *)&spkt;
+	int ret = 0;
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&pkg_mcu, 0, sizeof(pkg_mcu));
+	memset(&set_data_type, 0, sizeof(set_data_type));
+	memset(&spkt, 0, sizeof(spkt));
+	set_type = (const int32_t *)buf;
+	set_data_type[0] = *set_type;
+	set_data_type[1] = *(set_type+1);
+	if(!acc_cali_way)
+	{
+		hwlog_info("%s: now is self_calibreate \n", __FUNCTION__);
+		return size;
+	}
+	hwlog_info("%s: data type tag is %d (1.acc2.gyro),type is %d(1.raw_data2.cali_data4.nor_data)\n", __FUNCTION__, set_data_type[0],set_data_type[1]);
+	if (set_data_type[0] < 1 || set_data_type[0] > 2) {
+		hwlog_err("%s:set sensor tag is fail, invalid val\n", __FUNCTION__);
+		return -1;
+	}
+	if (set_data_type[1] < 1 || set_data_type[1] > 4) {
+		hwlog_err("%s:set data type is fail, invalid val\n", __FUNCTION__);
+		return -1;
+	}
+	if(set_data_type[0]==1)
+	{
+		pkg_ap.tag = TAG_ACCEL;
+	}
+	if(set_data_type[0]==2)
+	{
+		pkg_ap.tag = TAG_GYRO;
+	}
+	spkt.subcmd = SUB_CMD_SET_DATA_TYPE_REQ;
+
+	pkg_ap.cmd=CMD_CMN_CONFIG_REQ;
+	pkg_ap.wr_buf=&shd[1];
+	pkg_ap.wr_len=sizeof(set_data_type[1])+SUBCMD_LEN;
+	memcpy(spkt.para, &set_data_type[1], sizeof(set_data_type[1]));
+	ret = write_customize_cmd(&pkg_ap, &pkg_mcu, true);
+	if (pkg_mcu.errno != 0) {
+		hwlog_err("send tag %d get diff data cmd to mcu fail,ret=%d\n", set_data_type[0], ret);
+	}
+	return size;
+}
+static DEVICE_ATTR(set_data_type, 0220, NULL, store_set_data_type);
 
 static ssize_t attr_handpress_calibrate_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
@@ -2782,6 +3129,8 @@ static struct attribute *sensor_attributes[] = {
 	&dev_attr_acc_calibrate.attr,
 	&dev_attr_acc_enable.attr,
 	&dev_attr_acc_setdelay.attr,
+	&dev_attr_acc_set_calidata.attr,
+	&dev_attr_set_data_type.attr,
 	&dev_attr_set_fingersense_enable.attr,
 	&dev_attr_fingersense_req_data.attr,
 	&dev_attr_fingersense_data_ready.attr,
@@ -2790,6 +3139,7 @@ static struct attribute *sensor_attributes[] = {
 	&dev_attr_gyro_calibrate.attr,
 	&dev_attr_gyro_enable.attr,
 	&dev_attr_gyro_setdelay.attr,
+	&dev_attr_gyro_set_calidata.attr,
 	&dev_attr_mag_enable.attr,
 	&dev_attr_mag_setdelay.attr,
 	&dev_attr_als_calibrate.attr,

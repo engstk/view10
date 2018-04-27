@@ -45,33 +45,15 @@ static irqreturn_t hi64xx_sound_trigger_handler(int irq, void *data)
 	snd_soc_write(pdata->codec, HI64xx_REG_IRQ_1, 1<<HI64xx_VAD_BIT);
 
 	soundtrigger_event = snd_soc_read(pdata->codec, HI6402_DSP_VAD_CMD);
-	pr_info("%s,soundtrigger_event = %d\n", __FUNCTION__, soundtrigger_event);
+	pr_info("%s,soundtrigger_event = %d, fast_mode_enable = %d\n",
+		__FUNCTION__, soundtrigger_event, vad_data->fast_mode_enable);
 
-	switch(soundtrigger_event) {
-	case ST_EVENT_TRIGGER_EMY:
-		if (0 == vad_data->fast_mode_enable) {
-			hw_soundtrigger_event_input(soundtrigger_event);
-			pr_info("soundtrigger input[%d].\n",ST_EVENT_TRIGGER_EMY);
-		} else {
-			hw_soundtrigger_event_uevent(soundtrigger_event);
-			pr_info("soundtrigger uevent[%d].\n",ST_EVENT_TRIGGER_EMY);
-		}
-		break;
-	case ST_EVENT_COMMAND_FINDPHONE:
+	if (0 == vad_data->fast_mode_enable) {
 		hw_soundtrigger_event_input(soundtrigger_event);
-		break;
-	case ST_EVENT_TRIGGER_OKGOOGLE:
-		if (0 == vad_data->fast_mode_enable) {
-			hw_soundtrigger_event_input(soundtrigger_event);
-			pr_info("soundtrigger input[%d].\n",ST_EVENT_TRIGGER_OKGOOGLE);
-		} else {
-			hw_soundtrigger_event_uevent(soundtrigger_event);
-			pr_info("soundtrigger uevent[%d].\n",ST_EVENT_TRIGGER_OKGOOGLE);
-		}
-		break;
-	default:
-		hw_soundtrigger_event_input(soundtrigger_event);
-		break;
+		pr_info("soundtrigger input[%d].\n",soundtrigger_event);
+	} else {
+		hw_soundtrigger_event_uevent(soundtrigger_event);
+		pr_info("soundtrigger uevent[%d].\n",soundtrigger_event);
 	}
 
 	return IRQ_HANDLED;

@@ -59,7 +59,7 @@
 #include "FcIntraMsg.h"
 #include "nv_id_gucttf.h"
 #include "nv_stru_gucttf.h"
-
+#include "TTFComm.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -135,6 +135,19 @@ extern "C" {
 #define FC_ACPU_PTR_OCTET_OCCUPIED      (2)       /* ACPU上指针占用1个U32 */
 #define FC_PTR_MAX_OCTET_OCCUPIED       (2)
 
+#define FC_LOG(ulLevel, pcString)                   \
+    TTF_LOG(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM, ulLevel, pcString)
+#define FC_LOG1(ulLevel, pcString, lPara1)          \
+    TTF_LOG1(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM, ulLevel, pcString, lPara1)
+#define FC_LOG2(ulLevel, pcString, lPara1, lPara12)     \
+    TTF_LOG2(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM, ulLevel, pcString, lPara1, lPara12)
+#define FC_LOG3(ulLevel, pcString, lPara1, lPara2, lPara3)     \
+    TTF_LOG3(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM, ulLevel, pcString, lPara1, lPara2, lPara3)
+#define FC_LOG4(ulLevel, pcString, lPara1, lPara2, lPara3, lPara4)      \
+    TTF_LOG4(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM, ulLevel, pcString, lPara1, lPara2, lPara3, lPara4)
+
+
+
 
 /*****************************************************************************
   3 枚举定义
@@ -187,7 +200,9 @@ enum FC_PRIVATE_POLICY_ID_ENUM
     FC_PRIVATE_POLICY_ID_GPRS_MODEM_0,
     FC_PRIVATE_POLICY_ID_TMP_MODEM_0,
     FC_PRIVATE_POLICY_ID_CPU_C_MODEM_0,
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     FC_PRIVATE_POLICY_ID_CDMA_MODEM_0,
+#endif    
     FC_PRIVATE_POLICY_ID_MEM_MODEM_1,
     FC_PRIVATE_POLICY_ID_CPU_A_MODEM_1,
     FC_PRIVATE_POLICY_ID_CDS_MODEM_1,
@@ -195,7 +210,9 @@ enum FC_PRIVATE_POLICY_ID_ENUM
     FC_PRIVATE_POLICY_ID_GPRS_MODEM_1,
     FC_PRIVATE_POLICY_ID_TMP_MODEM_1,
     FC_PRIVATE_POLICY_ID_CPU_C_MODEM_1,
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)    
     FC_PRIVATE_POLICY_ID_CDMA_MODEM_1,
+#endif    
     FC_PRIVATE_POLICY_ID_BUTT
 };
 typedef VOS_UINT8 FC_PRIVATE_POLICY_ID_ENUM_UINT8;
@@ -459,7 +476,9 @@ typedef struct
     FC_CFG_CPU_STRU                     stFcCfgCpuC;                            /* C核CPU流控门限 */
     FC_CFG_UM_UL_RATE_STRU              stFcCfgUmUlRateForCpu;                  /* C核CPU流控上行速率档位配置 */
     FC_CFG_UM_UL_RATE_STRU              stFcCfgUmUlRateForTmp;                  /* C核温度流控上行行速率档位配置 */
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)    
     FC_CFG_CDMA_STRU                    stFcCfgCdma;                            /* X模流控门限 */
+#endif
 } FC_CFG_STRU;
 
 
@@ -544,46 +563,6 @@ typedef struct
 /*****************************************************************************
   10 函数声明
 *****************************************************************************/
-extern VOS_VOID     FC_LOG
-(
-    VOS_UINT32          ulLevel,
-    const VOS_CHAR     *pcString
-);
-
-extern VOS_VOID     FC_LOG1
-(
-    VOS_UINT32          ulLevel,
-    const VOS_CHAR     *pcString,
-    VOS_INT32           lPara1
-);
-
-extern VOS_VOID     FC_LOG2
-(
-    VOS_UINT32          ulLevel,
-    const VOS_CHAR     *pcString,
-    VOS_INT32           lPara1,
-    VOS_INT32           lPara2
-);
-
-extern VOS_VOID     FC_LOG3
-(
-    VOS_UINT32          ulLevel,
-    const VOS_CHAR     *pcString,
-    VOS_INT32           lPara1,
-    VOS_INT32           lPara2,
-    VOS_INT32           lPara3
-);
-
-extern VOS_VOID     FC_LOG4
-(
-    VOS_UINT32          ulLevel,
-    const VOS_CHAR     *pcString,
-    VOS_INT32           lPara1,
-    VOS_INT32           lPara2,
-    VOS_INT32           lPara3,
-    VOS_INT32           lPara4
-);
-
 extern VOS_UINT32 FC_SndTemperatureMsg
 (
     FC_MSG_TYPE_ENUM_UINT16 usMsgName
@@ -659,7 +638,6 @@ extern VOS_VOID FC_MNTN_TracePointFcEvent
     VOS_UINT32                          ulIsFuncInvoked,
     VOS_UINT32                          ulResult
 );
-extern VOS_UINT32  FC_SetDebugLev( VOS_UINT32 ulLev );
 extern VOS_UINT32 FC_CPUA_UpJudge
 (
     VOS_UINT32       ulCpuLoad,

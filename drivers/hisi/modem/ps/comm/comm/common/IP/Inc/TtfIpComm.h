@@ -143,6 +143,12 @@ typedef VOS_UINT8 IP_DATA_TYPE_ENUM_UINT8;
 #define TTF_IP_HEAD_TO_REAL_LEN         (0x2)
 #define TTF_IP_FRAG_TO_REAL_LEN         (0x3)
 
+/* IP flags. */
+#define TTF_IP_CE                       (0x8000)  /* Flag: "Congestion"       */
+#define TTF_IP_DF                       (0x4000)  /* Flag: "Don't Fragment"   */
+#define TTF_IP_MF                       (0x2000)  /* Flag: "More Fragments"   */
+#define TTF_IP_OFFSET                   (0x1FFF)  /* "Fragment Offset" part   */
+
 
 #define TTF_TCP_HEAD_TO_REAL_LEN        (0x2)
 
@@ -168,6 +174,51 @@ typedef VOS_UINT8 IP_DATA_TYPE_ENUM_UINT8;
 /*****************************************************************************
   7 STRUCT∂®“Â
 *****************************************************************************/
+typedef struct 
+{
+    VOS_UINT8   ihl:4,
+                ver:4;
+    VOS_UINT8   tos;
+    VOS_UINT16  tot_len;
+    VOS_UINT16  id;
+    VOS_UINT16  frag_off;
+    VOS_UINT8   ttl;
+    VOS_UINT8   protocol;
+    VOS_UINT16  csum;
+    VOS_UINT32  saddr;
+    VOS_UINT32  daddr;
+    /*The options start here. */
+}TTF_IP_HDR;
+
+typedef struct
+{
+    VOS_UINT16  sPort;
+    VOS_UINT16  dPort;
+    VOS_UINT32  seq;
+    VOS_UINT32  ack_seq;
+    VOS_UINT16  doff:4,
+                res:4,
+                cwr:1,
+                ece:1,
+                urg:1,
+                ack:1,
+                psh:1,
+                rst:1,
+                syn:1,
+                fin:1;
+    VOS_UINT16  windowsize;
+    VOS_UINT16  csum;
+    VOS_UINT16  urg_ptr;
+}TTF_TCP_HDR;
+
+typedef struct
+{
+    VOS_UINT16  sPort;
+    VOS_UINT16  dPort;
+    VOS_UINT16  len;
+    VOS_UINT16  csum;
+}TTF_UDP_HDR;
+
 typedef struct
 {
     IP_DATA_TYPE_ENUM_UINT8                 enParseDataType;
@@ -209,6 +260,7 @@ VOS_UINT16 TTF_GetIpDataTraceLen
     VOS_UINT8                          *pData,
     VOS_UINT16                          usSduLen
 );
+
 
 #pragma pack()
 

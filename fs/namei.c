@@ -36,6 +36,7 @@
 #include <linux/posix_acl.h>
 #include <linux/hash.h>
 #include <asm/uaccess.h>
+#include <linux/hisi/hisi_hkip.h>
 
 #include "internal.h"
 #include "mount.h"
@@ -289,6 +290,14 @@ static int check_acl(struct inode *inode, int mask)
 static int acl_permission_check(struct inode *inode, int mask)
 {
 	unsigned int mode = inode->i_mode;
+
+	if (uid_eq(inode->i_uid, GLOBAL_ROOT_UID) &&
+		unlikely(hkip_check_uid_root()))
+		return -EACCES;
+
+	if (gid_eq(inode->i_gid, GLOBAL_ROOT_GID) &&
+		unlikely(hkip_check_gid_root()))
+		return -EACCES;
 
 	if (likely(uid_eq(current_fsuid(), inode->i_uid)))
 		mode >>= 6;

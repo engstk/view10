@@ -17,6 +17,8 @@
 
 #define HALL_COVERD     (1)
 
+#define SENSOR_VOLTAGE_3V 3000000
+
 #define NV_READ_TAG	1
 #define NV_WRITE_TAG	0
 #define PS_CALIDATA_NV_NUM	334
@@ -26,21 +28,24 @@
 #define GYRO_CALIDATA_NV_NUM	341
 #define GYRO_TEMP_CALI_NV_NUM	377
 #define GYRO_CALIDATA_NV_SIZE  72
-#define GYRO_TEMP_CALI_NV_SIZE  40
+#define GYRO_TEMP_CALI_NV_SIZE  56
 #define HANDPRESS_CALIDATA_NV_NUM  354
 #define HANDPRESS_CALIDATA_NV_SIZE  24
 #define AIRPRESS_CALIDATA_NV_NUM	332
 #define AIRPRESS_CALIDATA_NV_SIZE  4
 #define CAP_PROX_CALIDATA_NV_NUM  310
 #define CAP_PROX_CALIDATA_NV_SIZE  28
-#define pinhole_para_size (6)
-#define TMD2745_PARA_SIZE (6)
-#define RPR531_PARA_SIZE (12)
+#define pinhole_para_size (10)
+#define TMD2745_PARA_SIZE (10)
+#define RPR531_PARA_SIZE (16)
 #define ACC_OFFSET_NV_NUM	307
 #define ACC_OFFSET_NV_SIZE	(60)
 #define MAG_CALIBRATE_DATA_NV_NUM 233
 #define MAG_CALIBRATE_DATA_NV_SIZE (MAX_MAG_CALIBRATE_DATA_LENGTH)
 #define MAG_AKM_CALIBRATE_DATA_NV_SIZE (MAX_MAG_AKM_CALIBRATE_DATA_LENGTH)
+#define VIB_CALIDATA_NV_NUM 337
+#define VIB_CALIDATA_NV_SIZE 3
+#define VIB_CALIDATA_NV_NAME "VIBCAL"
 
 enum ALS_SENSNAME{
 	APDS9922 = 1,
@@ -109,8 +114,17 @@ typedef struct _TMD3725_ALS_PARA_TABLE {
 	uint8_t phone_version;
 	uint8_t tp_lcd_manufacture;
 	uint8_t tp_color;
-	s16 tmd3725_para[19];/*give to tmd3725 rgb sensor use,output lux and cct will use these par*/
-} TMD3725_ALS_PARA_TABLE;/*the apds251_para size must small SENSOR_PLATFORM_EXTEND_DATA_SIZE*/
+	s16 tmd3725_para[29];/*give to tmd3725 rgb sensor use,output lux and cct will use these par*/
+} TMD3725_ALS_PARA_TABLE;/*the tmd3725_para size must small SENSOR_PLATFORM_EXTEND_DATA_SIZE*/
+
+
+typedef struct _LTR582_ALS_PARA_TABLE {
+	uint8_t phone_type;
+	uint8_t phone_version;
+	uint8_t tp_lcd_manufacture;
+	uint8_t tp_color;
+	s16 ltr582_para[26];/*give to ltr582 rgb sensor use,output lux and cct will use these par*/
+} LTR582_ALS_PARA_TABLE;/*the ltr582_para size must small SENSOR_PLATFORM_EXTEND_DATA_SIZE*/
 
 
 typedef struct _PINHOLE_ALS_PARA_TABLE {

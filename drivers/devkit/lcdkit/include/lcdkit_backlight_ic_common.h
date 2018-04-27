@@ -102,4 +102,8 @@ void lcdkit_parse_backlight_ic_config(struct device_node *np);
 int lcdkit_backlight_ic_get_ctrl_mode(void);
 struct lcdkit_bl_ic_info * lcdkit_get_lcd_backlight_ic_info(void);
 void lcdkit_before_init_delay(void);
+#if defined (CONFIG_HUAWEI_DSM)
+void lcdkit_backlight_ic_ovp_check(void);
+#endif
+
 #endif

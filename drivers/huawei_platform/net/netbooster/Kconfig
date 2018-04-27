@@ -1,0 +1,5 @@
+config HW_NETBOOSTER_MODULE
+	tristate "netbooster:video acceleration and net ai change"
+    default n
+    help
+	  This module adds netbooster kernel suport for kirin chipset.

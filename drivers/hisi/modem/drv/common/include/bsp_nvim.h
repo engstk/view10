@@ -76,7 +76,14 @@ extern "C" {
 
 #define NV_REF_LIST_ITEM_SIZE       (sizeof(nv_item_info_s))
 
+#ifdef FEATURE_NV_CARRIER_CUST
+#define NV_MBN_NV_SIZE         ((unsigned long)1024*128)
+#define NV_MBN_NV_ADDR         (SHM_MEM_NV_ADDR + (SHM_MEM_NV_SIZE - NV_MBN_NV_SIZE))
+
+#define NV_MAX_FILE_SIZE       (SHM_MEM_NV_SIZE - (NV_GLOBAL_INFO_SIZE + NV_MBN_NV_SIZE))
+#else
 #define NV_MAX_FILE_SIZE            (SHM_MEM_NV_SIZE - NV_GLOBAL_INFO_SIZE)
+#endif
 /****************************************************************/
 
 /****************************************************************/
@@ -250,6 +257,9 @@ enum
 #define NV_CUST_CARD3_PATH                      "/system/cust_card2.xml"
 #define NV_DEFAULT_PATH                         "/system/manufactrue_ver.bin"
 
+#ifdef FEATURE_NV_CARRIER_CUST
+#define NV_MBN_COMM_PATH                        "/mnvm2:0/mbn_nv/comm.mbn"
+#endif
 
 #ifdef BSP_CONFIG_PHONE_TYPE
 #define NV_IMG_PATH                             "/mnvm2:0/modem_nv/nv.bin"
@@ -331,7 +341,7 @@ enum
 #define BSP_ERR_NV_CRC_RESUME_SUCC              (BSP_ERR_NV_BASE + 0x42)
 #define BSP_ERR_NV_SEM_CREATE_ERR               (BSP_ERR_NV_BASE + 0x43)/*信号量创建错误*/
 #define BSP_ERR_NV_RELEASE_SEM_ERR              (BSP_ERR_NV_BASE + 0x44)/*信号量释放错误*/
-#define BSP_ERR_NV_CUST_PINFO_ERR               (BSP_ERR_NV_BASE + 0x45) 
+#define BSP_ERR_NV_CUST_PINFO_ERR               (BSP_ERR_NV_BASE + 0x45)
 #define BSP_ERR_NV_CUST_PMAP_ERR                (BSP_ERR_NV_BASE + 0x46)
 #define BSP_ERR_NV_CUST_SECINFO_ERR             (BSP_ERR_NV_BASE + 0x47)
 #define BSP_ERR_NV_CUST_DECPRS_ERR              (BSP_ERR_NV_BASE + 0x48)
@@ -505,7 +515,14 @@ enum
 u32 nv_readEx(u32 modem_id, u32 itemid, u32 offset, u8 * pdata, u32 datalen);
 u32 nv_writeEx(u32 modem_id, u32 itemid, u32 offset, u8 * pdata, u32 datalen);
 
+#ifndef NV_NOT_INIT
 u32 bsp_nvm_dcread(u32 modem_id, u32 itemid, u8 * pdata, u32 datalen);
+#else
+static inline u32 bsp_nvm_dcread(u32 modem_id, u32 itemid, u8 * pdata, u32 datalen)
+{
+    return 0;
+}
+#endif
 u32 bsp_nvm_dcwrite(u32 modem_id, u32 itemid, u8 * pdata, u32 datalen);
 
 u32 bsp_nvm_dcreadpart(u32 modem_id, u32 itemid, u32 offset, u8 * pdata, u32 datalen);
@@ -517,36 +534,6 @@ u32 bsp_nvm_dcwrite_direct(u32 modem_id, u32 itemid, u8 * pdata, u32 datalen);
 u32 bsp_nvm_auth_dcread(u32 modem_id, u32 itemid, u8 * pdata, u32 datalen);
 u32 bsp_nvm_auth_dcwrite(u32 modem_id, u32 itemid, u8 * pdata, u32 datalen);
 
-
-#if defined(INSTANCE_1)
-
-#define bsp_nvm_read(itemid,pdata,datalen)             bsp_nvm_dcread(NV_USIMM_CARD_2,itemid,pdata,datalen)
-#define bsp_nvm_write(itemid,pdata,datalen)            bsp_nvm_dcwrite(NV_USIMM_CARD_2,itemid,pdata,datalen)
-
-#define bsp_nvm_readpart(itemid,offset,pdata,datalen)  bsp_nvm_dcreadpart(NV_USIMM_CARD_2,itemid,offset,pdata,datalen)
-#define bsp_nvm_writepart(itemid,offset,pdata,datalen) bsp_nvm_dcwritepart(NV_USIMM_CARD_2,itemid,offset,pdata,datalen)
-
-#define bsp_nvm_read_direct(itemid,pdata,datalen)      bsp_nvm_dcread_direct(NV_USIMM_CARD_2,itemid,pdata,datalen)
-#define bsp_nvm_write_direct(itemid,pdata,datalen)     bsp_nvm_dcwrite_direct(NV_USIMM_CARD_2,itemid,pdata,datalen)
-
-#define bsp_nvm_authread(itemid,pdata,datalen)         bsp_nvm_auth_dcread(NV_USIMM_CARD_2,itemid,pdata,datalen)
-#define bsp_nvm_authwrite(itemid,pdata,datalen)        bsp_nvm_auth_dcwrite(NV_USIMM_CARD_2,itemid,pdata,datalen)
-
-#elif defined(INSTANCE_2)
-
-#define bsp_nvm_read(itemid,pdata,datalen)             bsp_nvm_dcread(NV_USIMM_CARD_3,itemid,pdata,datalen)
-#define bsp_nvm_write(itemid,pdata,datalen)            bsp_nvm_dcwrite(NV_USIMM_CARD_3,itemid,pdata,datalen)
-
-#define bsp_nvm_readpart(itemid,offset,pdata,datalen)  bsp_nvm_dcreadpart(NV_USIMM_CARD_3,itemid,offset,pdata,datalen)
-#define bsp_nvm_writepart(itemid,offset,pdata,datalen) bsp_nvm_dcwritepart(NV_USIMM_CARD_3,itemid,offset,pdata,datalen)
-
-#define bsp_nvm_read_direct(itemid,pdata,datalen)      bsp_nvm_dcread_direct(NV_USIMM_CARD_3,itemid,pdata,datalen)
-#define bsp_nvm_write_direct(itemid,pdata,datalen)     bsp_nvm_dcwrite_direct(NV_USIMM_CARD_3,itemid,pdata,datalen)
-
-#define bsp_nvm_authread(itemid,pdata,datalen)         bsp_nvm_auth_dcread(NV_USIMM_CARD_3,itemid,pdata,datalen)
-#define bsp_nvm_authwrite(itemid,pdata,datalen)        bsp_nvm_auth_dcwrite(NV_USIMM_CARD_3,itemid,pdata,datalen)
-
-#else
 
 #define bsp_nvm_read(itemid,pdata,datalen)             bsp_nvm_dcread(NV_USIMM_CARD_1,itemid,pdata,datalen)
 #define bsp_nvm_write(itemid,pdata,datalen)            bsp_nvm_dcwrite(NV_USIMM_CARD_1,itemid,pdata,datalen)
@@ -560,8 +547,6 @@ u32 bsp_nvm_auth_dcwrite(u32 modem_id, u32 itemid, u8 * pdata, u32 datalen);
 #define bsp_nvm_authread(itemid,pdata,datalen)         bsp_nvm_auth_dcread(NV_USIMM_CARD_1,itemid,pdata,datalen)
 #define bsp_nvm_authwrite(itemid,pdata,datalen)        bsp_nvm_auth_dcwrite(NV_USIMM_CARD_1,itemid,pdata,datalen)
 
-
-#endif
 
 u32 bsp_nvm_backup(u32 crc_flag);
 
@@ -594,8 +579,16 @@ u32 bsp_nvm_xml_decode(void);
 u32 nvm_read_rand(u32 nvid);
 u32 nvm_read_randex(u32 nvid, u32 modem_id);
 
+/* acore */
+u32 bsp_nvm_get_modem_num(void);
 u32 bsp_nvm_get_nv_num(void);
 u32 bsp_nvm_get_nvidlist(NV_LIST_INFO_STRU*  nvlist);
+void bsp_nvm_get_auth_list(u32**list_addr, u32 * list_num);
+
+/* ccore */
+void * bsp_nvm_get_addr(u32 modemid, u32 itemid);
+u32 bsp_nvm_get_addrlist(u32 modemid, u32 itemid, u32 item_num, u32 * addr, u32 addr_len);
+u32 bsp_nvm_carrier_opt(u32 modemid, u32 cmd_type);
 
 /*ccore/mcore init*/
 int bsp_nvm_init(void);

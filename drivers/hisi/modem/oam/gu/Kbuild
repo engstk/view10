@@ -77,7 +77,6 @@ EXTRA_CFLAGS += -I$(MODEM_DIR)/oam/inc/gu/ccore/nvim/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/oam/inc/gu/ccore/om/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/oam/inc/gu/ccore/pstool/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/oam/inc/gu/ccore/sc/
-EXTRA_CFLAGS += -I$(MODEM_DIR)/oam/inc/gu/ccore/sleep/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/oam/inc/gu/comm/om/
 
 
@@ -120,15 +119,13 @@ gumsp-objs += $(OAMDIR)/gu/acore/usimm/usimmappbase.o
 gumsp-objs += $(OAMDIR)/gu/acore/cbtcpm/CbtCpm.o
 gumsp-objs += $(OAMDIR)/gu/acore/cbtppm/CbtPpm.o
 gumsp-objs += $(OAMDIR)/gu/acore/cbtscm/CBTSCMSoftDecode.o
+gumsp-objs += $(OAMDIR)/gu/acore/cbtscm/OmHdlc.o
 gumsp-objs += $(OAMDIR)/gu/acore/cbtfun/cbtappfunction.o
 gumsp-objs += $(OAMDIR)/gu/acore/cbtfun/cbtapprl.o
 gumsp-objs += $(OAMDIR)/gu/acore/osa/linux_sem.o
 gumsp-objs += $(OAMDIR)/gu/acore/osa/linux_task.o
 gumsp-objs += $(OAMDIR)/gu/acore/si/PcscProc.o
-gumsp-objs += $(OAMDIR)/gu/acore/sc/ScAppComm.o
-gumsp-objs += $(OAMDIR)/gu/comm/om/OmHdlc.o
 gumsp-objs += $(OAMDIR)/gu/comm/om/omringbuffer.o
-gumsp-objs += $(OAMDIR)/gu/comm/om/ombufmngr.o
 gumsp-objs += $(OAMDIR)/gu/comm/osa/v_blkmem.o
 gumsp-objs += $(OAMDIR)/gu/comm/osa/v_private.o
 gumsp-objs += $(OAMDIR)/gu/comm/osa/v_int.o
@@ -146,6 +143,7 @@ gumsp-objs += $(OAMDIR)/gu/comm/si/pbmsg.o
 gumsp-objs += $(OAMDIR)/gu/comm/si/pbdata.o
 gumsp-objs += $(OAMDIR)/gu/comm/si/stkapi.o
 gumsp-objs += $(OAMDIR)/gu/comm/si/pihapi.o
+gumsp-objs += $(OAMDIR)/gu/comm/si/pbapi_phone.o
 
 
 obj-y  := gumsp.o

@@ -228,7 +228,7 @@ int ivp_smmu_trans_enable(struct ivp_smmu_dev *smmu_dev)
      * gfre--0b1(bit1): global fault report enable
      * clientpd-0b0(bit0):transcation enable
      */
-    writel(0x200036, (smmu_dev->reg_base + SMMU_NS_CR0));
+    writel(0x300036, (smmu_dev->reg_base + SMMU_NS_CR0));
 
     /**
      * valid-0b1(bit31): entry is included in the stream mapping table search

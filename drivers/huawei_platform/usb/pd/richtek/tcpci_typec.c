@@ -391,6 +391,7 @@ static inline int typec_disable_low_power_mode(
 
 static void typec_unattached_power_entry(struct tcpc_device *tcpc_dev)
 {
+	dp_aux_ldo_supply_disable(DP_AUX_LDO_CTRL_TYPECPD);
 	typec_wait_ps_change(tcpc_dev, TYPEC_WAIT_PS_DISABLE);
 
 	if (tcpc_dev->typec_power_ctrl) {
@@ -716,7 +717,8 @@ static inline void typec_trywait_src_entry(struct tcpc_device *tcpc_dev)
 	tcpc_disable_timer(tcpc_dev, TYPEC_RT_TIMER_SAFE5V_TOUT);
 #endif	/* RICHTEK_PD_COMPLIANCE_FAKE_TRY_SNK_RP */
 
-	tcpci_set_cc(tcpc_dev, TYPEC_CC_RP_DFT);
+	/* tcpci_set_cc(tcpc_dev, TYPEC_CC_RP_DFT); */
+	tcpci_set_cc(tcpc_dev, TYPEC_CC_RP_1_5);
 	tcpci_sink_vbus(tcpc_dev, TCP_VBUS_CTRL_TYPEC, TCPC_VBUS_SINK_0V, 0);
 	tcpc_enable_timer(tcpc_dev, TYPEC_TRY_TIMER_DRP_TRY);
 }
@@ -1187,7 +1189,6 @@ static inline bool typec_handle_cc_changed_entry(struct tcpc_device *tcpc_dev)
 	else
 		typec_cc_change_source_entry(tcpc_dev);
 
-	pd_dpm_handle_pe_event(PD_DPM_PE_ABNORMAL_CC_CHANGE_HANDLER, NULL);
 	typec_alert_attach_state_change(tcpc_dev);
 	return true;
 }
@@ -1238,7 +1239,7 @@ static inline void typec_attach_wait_entry(struct tcpc_device *tcpc_dev)
 
 	case typec_trywait_src:
 		dp_aux_ldo_supply_enable(DP_AUX_LDO_CTRL_TYPECPD);
-		tcpc_enable_timer(tcpc_dev, TYPEC_TIMER_PDDEBOUNCE);
+		tcpc_enable_timer(tcpc_dev, TYPEC_TIMER_TRYSRCDEBOUNCE);
 		return;
 #endif
 
@@ -1451,6 +1452,7 @@ int tcpc_typec_handle_cc_change(struct tcpc_device *tcpc_dev)
 	if (ret < 0)
 		return ret;
 
+	pd_dpm_handle_pe_event(PD_DPM_PE_ABNORMAL_CC_CHANGE_HANDLER, NULL);
 	if (typec_is_drp_toggling()) {
 		TYPEC_DBG("[Waring] DRP Toggling\r\n");
 		if (tcpc_dev->typec_lpm)
@@ -1521,10 +1523,8 @@ int tcpc_typec_handle_cc_change(struct tcpc_device *tcpc_dev)
 	if (typec_is_cc_attach(tcpc_dev)) {
 		typec_attach_wait_entry(tcpc_dev);
 	}
-	else {
-		dp_aux_ldo_supply_disable(DP_AUX_LDO_CTRL_TYPECPD);
+	else
 		typec_detach_wait_entry(tcpc_dev);
-	}
 
 	return 0;
 }
@@ -1723,6 +1723,7 @@ int tcpc_typec_handle_timeout(struct tcpc_device *tcpc_dev, uint32_t timer_id)
 	switch (timer_id) {
 	case TYPEC_TIMER_CCDEBOUNCE:
 	case TYPEC_TIMER_PDDEBOUNCE:
+	case TYPEC_TIMER_TRYSRCDEBOUNCE:
 		ret = typec_handle_debounce_timeout(tcpc_dev);
 		break;
 
@@ -2162,8 +2163,8 @@ extern int tcpm_typec_notify_direct_charge(struct tcpc_device *tcpc_dev, bool dc
 static struct pd_dpm_ops tcpc_device_pd_dpm_ops = {
 	.pd_dpm_hard_reset = tcpc_pd_dpm_hard_reset,
 	.pd_dpm_get_hw_dock_svid_exist = tcpc_pd_dpm_get_hw_dock_svid_exist,
-	.pd_dpm_set_cc_mode = rt1711h_set_cc_mode,
 	.pd_dpm_notify_direct_charge_status = tcpm_typec_notify_direct_charge,
+	.pd_dpm_set_cc_mode = rt1711h_set_cc_mode,
 };
 int tcpc_typec_init(struct tcpc_device *tcpc_dev, uint8_t typec_role)
 {

@@ -85,7 +85,7 @@
 		<< (SCSI_LOG_##name##_SHIFT))
 
 #define UFS_SCSI_LOGGING_LEVEL                                                 \
-	(LOGGING_LEVEL(ERROR, 7) | LOGGING_LEVEL(TIMEOUT, 1) |                 \
+	(LOGGING_LEVEL(ERROR, 3) | LOGGING_LEVEL(TIMEOUT, 1) |                 \
 		LOGGING_LEVEL(SCAN, 1) | LOGGING_LEVEL(MLQUEUE, 1) |           \
 		LOGGING_LEVEL(MLCOMPLETE, 1) | LOGGING_LEVEL(LLQUEUE, 1) |     \
 		LOGGING_LEVEL(LLCOMPLETE, 1) | LOGGING_LEVEL(HLQUEUE, 1) |     \

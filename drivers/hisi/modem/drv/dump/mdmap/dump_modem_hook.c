@@ -48,10 +48,9 @@
 
 
 #include <product_config.h>
-
 #include <osl_sem.h>
 #include <osl_malloc.h>
-
+#include "securec.h"
 #include "bsp_dump.h"
 #include "mdrv_om_common.h"
 #include "dump_modem_hook.h"
@@ -90,7 +89,7 @@ dump_handle bsp_dump_register_hook(char * name, dump_hook func)
     }
     
     /*coverity[secure_coding]*/
-    memset(pfieldhook,0,sizeof(struct dump_hook_s));
+    memset_s(pfieldhook,sizeof(*pfieldhook),0,sizeof(*pfieldhook));
 
     pfieldhook->pfunc = func;
     
@@ -248,4 +247,9 @@ void bsp_dump_show_exthook(void)
 
 
 
+EXPORT_SYMBOL_GPL(bsp_dump_unregister_hook);
+
+EXPORT_SYMBOL_GPL(bsp_dump_register_hook);
+
+EXPORT_SYMBOL(bsp_dump_show_exthook);
 

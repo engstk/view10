@@ -202,6 +202,11 @@ typedef enum
 #define AOD_SINGLE_CLOCK_OFFSET_X_2 (2)
 #define AOD_SINGLE_CLOCK_OFFSET_Y_2 (10)
 #define AOD_SINGLE_CLOCK_RES_X_2 (140)
+#define MIN_SINGNED_SHORT (-32678)
+#define MAX_SINGNED_SHORT (32767)
+#define ALS_PARAM	25
+#define SET_ALS_TYPE_NUMB_MAX    (2) //permit type number is 0 or 1 or 2
+#define SET_PS_TYPE_NUMB_MAX     (1) //permit type number is 0 or 1
 
 #define AOD_DRV_FB_PIXEL_ALIGN(val, al)    (((val) + ((al)-1)) & ~((al)-1))
 #define AOD_DRV_X_RES_PIXELS_ALIGN	(16)
@@ -212,5 +217,13 @@ typedef enum
 #define SINGLE_CLOCK_DIGITS_BITMAPS_SIZE (DIGITS_COUNT * SINGLE_CLOCK_DIGITS_BITMAP_MAX_SIZE)
 #define DDR_MEMORY_SIZE (FRAMEBUFFER_SIZE + SINGLE_CLOCK_DIGITS_BITMAPS_SIZE + sizeof(uint32_t))
 #define DIGITS_BITMAPS_OFFSET (FRAMEBUFFER_SIZE + sizeof(uint32_t))
+
+#define SAR_SET_REGISTER (1)
+#define SAR_SET_THRESHOLD (2)
+#define SAR_SET_THRESHOLD_AND_REGISTER (3)
+#define SEMTECH_SAR_INIT_REG_VAL_LENGTH (17)
+#define SEMTECH_SAR_THRESHOLD_TO_MODEM_LENGTH (8)
+#define SAR_DEBUG_MODE (1)
+#define SAR_NORMAL_MODE (0)
 
 #endif

@@ -6,6 +6,7 @@
 #include <mdrv_ipf_comm.h>
 #include <osl_malloc.h>
 #include <linux/dma-mapping.h>
+#include <securec.h>
 
 extern struct ipf_ctx g_ipf_ctx;
 
@@ -73,7 +74,7 @@ int ipf_cd_en_get(void* bd_base, unsigned int index){
 void ipf_cd_clear(void* cd_base, unsigned int index)
 {
 	ipf_cd_s* cd = (ipf_cd_s*)cd_base;
-	memset(&cd[index], 0, sizeof(ipf_cd_s));
+	memset_s(&cd[index], sizeof(cd[index]), 0, sizeof(ipf_cd_s));
 }
 
 void ipf_bd_s2h(IPF_CONFIG_PARAM_S* param, void* bd_base, unsigned int index)
@@ -256,23 +257,32 @@ unsigned int ipf32_get_dlrd_num(void)
 void ipf32_dump_callback(void)
 {
     unsigned char* p = g_ipf_ctx.dump_area;
-    
+    unsigned int size = IPF_DUMP_SIZE;
+
+    if(size<(sizeof(ipf64_rd_s)+sizeof(ipf64_bd_s)+sizeof(ipf64_ad_s)+sizeof(ipf64_ad_s)))
+    {
+        return;
+    }
     if(!p) return;
     if(!g_ipf_ctx.last_rd) return;
-    memcpy(p, g_ipf_ctx.last_rd, sizeof(ipf_rd_s));
+    memcpy_s(p, size, g_ipf_ctx.last_rd, sizeof(ipf_rd_s));
     p += sizeof(ipf_rd_s);
+    size -= sizeof(ipf_rd_s);
 
     if(!g_ipf_ctx.last_bd) return;
-    memcpy(p, g_ipf_ctx.last_bd, sizeof(ipf_bd_s));
+    memcpy_s(p, size, g_ipf_ctx.last_bd, sizeof(ipf_bd_s));
     p += sizeof(ipf_bd_s);
+    size -= sizeof(ipf_bd_s);
 
     if(!g_ipf_ctx.last_ad0) return;
-    memcpy(p, g_ipf_ctx.last_ad0, sizeof(ipf_ad_s));
+    memcpy_s(p, size, g_ipf_ctx.last_ad0, sizeof(ipf_ad_s));
     p += sizeof(ipf_ad_s);
+    size -= sizeof(ipf_ad_s);
 
     if(!g_ipf_ctx.last_ad1) return;
-    memcpy(p, g_ipf_ctx.last_ad1, sizeof(ipf_ad_s));
+    memcpy_s(p, size, g_ipf_ctx.last_ad1, sizeof(ipf_ad_s));
 }
+
 void ipf_acpu_wake_ccpu(void)
 {
     unsigned int reg;

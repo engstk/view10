@@ -1,4 +1,4 @@
-/* MD5: d7744665333621e8fb26cbf29547ee65*/
+/* MD5: dedfd0f03d390c3f92d06175313398a5*/
 #if !defined(__PRODUCT_CONFIG_DRV_H__)
 #define __PRODUCT_CONFIG_DRV_H__
 
@@ -16,14 +16,6 @@
 
 #ifndef PRODUCT_CFG_CHIP_SOLUTION_NAME
 #define PRODUCT_CFG_CHIP_SOLUTION_NAME "Balong" 
-#endif 
-
-#ifndef PRODUCT_FULL_VERSION_STR
-#define PRODUCT_FULL_VERSION_STR "Boston V100R001C10B567" 
-#endif 
-
-#ifndef PRODUCT_DLOAD_SOFTWARE_VER
-#define PRODUCT_DLOAD_SOFTWARE_VER "21C10B567S000C000" 
 #endif 
 
 #ifndef CCPU_OS
@@ -335,6 +327,13 @@
 #define CONFIG_DIAG_SYSTEM 
 #endif 
 
+#ifndef CONFIG_FILEBROSWER
+#endif 
+
+#ifndef SOCP_DECODE_ENABLE
+#define SOCP_DECODE_ENABLE 
+#endif 
+
 #ifdef CHIP_TYPE_CS 
 #ifndef FEATURE_SOCP_ADDR_64BITS
 #define FEATURE_SOCP_ADDR_64BITS 
@@ -356,7 +355,6 @@
 #endif 
 
 #ifndef CONFIG_APPLOG
-#define CONFIG_APPLOG 
 #endif 
 
 #ifndef CONFIG_DIAG_FRAME
@@ -422,6 +420,10 @@
 #define FEATURE_SCI_PROTOL_T1 FEATURE_OFF 
 #endif 
 
+#ifndef FEATURE_SCI_ESIM
+#define FEATURE_SCI_ESIM FEATURE_OFF 
+#endif 
+
 #ifndef CONFIG_SC
 #endif 
 
@@ -451,8 +453,28 @@
 #define FEATURE_DSP_DFS FEATURE_ON 
 #endif 
 
+#ifndef FEATURE_GUBBP_HANDSHAKE
+#define FEATURE_GUBBP_HANDSHAKE FEATURE_ON 
+#endif 
+
+#ifndef FEATURE_GUDRX_NEWVERSION
+#define FEATURE_GUDRX_NEWVERSION FEATURE_ON 
+#endif 
+
+#ifndef FEATURE_BOSTON_ONLY_FEATURE
+#define FEATURE_BOSTON_ONLY_FEATURE FEATURE_ON 
+#endif 
+
 #ifndef FEATURE_DSP_PM_SEPARATE_MODE
 #define FEATURE_DSP_PM_SEPARATE_MODE FEATURE_ON 
+#endif 
+
+#ifndef FEATURE_CSDR_COMBINE
+#define FEATURE_CSDR_COMBINE FEATURE_OFF 
+#endif 
+
+#ifndef FEATURE_GUC_TRANSPLANT
+#define FEATURE_GUC_TRANSPLANT FEATURE_OFF 
 #endif 
 
 #ifndef CONFIG_DFS_DDR
@@ -460,6 +482,13 @@
 
 #ifndef CONFIG_DFS_NOC
 #define CONFIG_DFS_NOC 
+#endif 
+
+#ifndef FEATURE_IQI_PLV
+#endif 
+
+#ifndef FEATURE_TCM_RETENTION
+#define FEATURE_TCM_RETENTION FEATURE_OFF 
 #endif 
 
 #ifndef FEATURE_MULTI_CHANNEL			
@@ -525,6 +554,14 @@
 
 #ifndef CONFIG_PMU_NEW
 #define CONFIG_PMU_NEW 
+#endif 
+
+#ifndef CONFIG_PMU_RAMP_EN
+#define CONFIG_PMU_RAMP_EN 
+#endif 
+
+#ifndef CONFIG_PMU_DELAY_LIMIT_VOLT
+#define CONFIG_PMU_DELAY_LIMIT_VOLT 
 #endif 
 
 #ifndef CONFIG_COUL
@@ -773,9 +810,6 @@
 #define CONFIG_SYSCTRL 
 #endif 
 
-#ifndef CONFIG_SYSCTRL_TEST
-#endif 
-
 #ifndef CONFIG_S_MEMORY
 #endif 
 
@@ -939,31 +973,31 @@
 
 #endif
 #ifndef DDR_SECMEM_SIZE
-#define DDR_SECMEM_SIZE 0xD500000 
+#define DDR_SECMEM_SIZE 0xA380000 
 #endif 
 
 #ifndef DDR_MCORE_SIZE
-#define DDR_MCORE_SIZE 0xC280000 
+#define DDR_MCORE_SIZE 0x8DC0000 
 #endif 
 
 #ifndef DDR_TLPHY_IMAGE_SIZE
-#define DDR_TLPHY_IMAGE_SIZE 0x600000 
+#define DDR_TLPHY_IMAGE_SIZE 0x400000 
 #endif 
 
 #ifndef DDR_GU_SIZE
-#define DDR_GU_SIZE 0x100000 
+#define DDR_GU_SIZE 0x4B000 
 #endif 
 
 #ifndef DDR_MCORE_DTS_SIZE
-#define DDR_MCORE_DTS_SIZE 0x100000 
+#define DDR_MCORE_DTS_SIZE 0x80000 
 #endif 
 
 #ifndef DDR_CBBE_IMAGE_SIZE
-#define DDR_CBBE_IMAGE_SIZE 0x200000 
+#define DDR_CBBE_IMAGE_SIZE 0x1b5000 
 #endif 
 
 #ifndef DDR_LPHY_SDR_SIZE
-#define DDR_LPHY_SDR_SIZE 0xE00000 
+#define DDR_LPHY_SDR_SIZE 0xC40000 
 #endif 
 
 #ifndef DDR_LCS_SIZE
@@ -974,32 +1008,16 @@
 #define DDR_SEC_SHARED_SIZE 0x80000 
 #endif 
 
-#ifndef MODEM_PHY_EX_BASE
-#define MODEM_PHY_EX_BASE 0x12780000 
-#endif 
-
-#ifndef DDR_TLPHY_IMAGE_ADDR
-#define DDR_TLPHY_IMAGE_ADDR ( (MODEM_PHY_EX_BASE 						          ) ) 
-#endif 
-
-#ifndef DDR_TLPHY_IMAGE_ADDR
-#define DDR_TLPHY_IMAGE_ADDR $(CFG_MODEM_PHY_EX_BASE) 
-#endif 
-
-#ifndef DDR_LCS_ADDR
-#define DDR_LCS_ADDR ( (DDR_TLPHY_IMAGE_ADDR       ) + (DDR_TLPHY_IMAGE_SIZE   ) ) 
-#endif 
-
 #ifndef DDR_MCORE_ADDR
-#define DDR_MCORE_ADDR ( (DDR_MEM_ADDR									          ) ) 
+#define DDR_MCORE_ADDR ((DDR_MEM_ADDR)) 
+#endif 
+
+#ifndef DDR_TLPHY_IMAGE_ADDR
+#define DDR_TLPHY_IMAGE_ADDR ((DDR_MCORE_ADDR)+(DDR_MCORE_SIZE)) 
 #endif 
 
 #ifndef DDR_GU_ADDR
-#define DDR_GU_ADDR ( (DDR_MCORE_ADDR 		      ) + (DDR_MCORE_SIZE         ) ) 
-#endif 
-
-#ifndef DDR_GU_ADDR
-#define DDR_GU_ADDR $(CFG_DDR_MCORE_ADDR)+$(CFG_DDR_MCORE_SIZE) 
+#define DDR_GU_ADDR ((DDR_TLPHY_IMAGE_ADDR)+(DDR_TLPHY_IMAGE_SIZE)) 
 #endif 
 
 #ifndef DDR_MCORE_DTS_ADDR
@@ -1014,8 +1032,12 @@
 #define DDR_LPHY_SDR_ADDR ( (DDR_CBBE_IMAGE_ADDR      ) + (DDR_CBBE_IMAGE_SIZE      ) ) 
 #endif 
 
+#ifndef DDR_LCS_ADDR
+#define DDR_LCS_ADDR ( (DDR_LPHY_SDR_ADDR        ) + (DDR_LPHY_SDR_SIZE        ) ) 
+#endif 
+
 #ifndef DDR_SEC_SHARED_ADDR
-#define DDR_SEC_SHARED_ADDR ( (DDR_LPHY_SDR_ADDR        ) + (DDR_LPHY_SDR_SIZE        ) ) 
+#define DDR_SEC_SHARED_ADDR ( (DDR_LCS_ADDR             ) + (DDR_LCS_SIZE             ) ) 
 #endif 
 
 #ifdef MODEM_SANITIZER 
@@ -1044,12 +1066,12 @@
 #endif 
 
 #else
-#ifndef DDR_MCORE_UNCACHE_ADDR
-#define DDR_MCORE_UNCACHE_ADDR (( DDR_MCORE_ADDR ) + (DDR_MCORE_SIZE) - (DDR_MCORE_UNCACHE_SIZE)) 
+#ifndef DDR_MCORE_UNCACHE_SIZE
+#define DDR_MCORE_UNCACHE_SIZE 0x2800000 
 #endif 
 
-#ifndef DDR_MCORE_UNCACHE_SIZE
-#define DDR_MCORE_UNCACHE_SIZE 0x3D00000 
+#ifndef DDR_MCORE_UNCACHE_ADDR
+#define DDR_MCORE_UNCACHE_ADDR (( DDR_MCORE_ADDR ) + (DDR_MCORE_SIZE) - (DDR_MCORE_UNCACHE_SIZE)) 
 #endif 
 
 #endif
@@ -1069,32 +1091,8 @@
 #define DDR_CQI_SIZE 0x00003400 
 #endif 
 
-#ifndef DDR_APT_ADDR
-#define DDR_APT_ADDR ((DDR_CQI_ADDR) + (DDR_CQI_SIZE)) 
-#endif 
-
-#ifndef DDR_APT_SIZE
-#define DDR_APT_SIZE 0x00008400 
-#endif 
-
-#ifndef DDR_ET_ADDR
-#define DDR_ET_ADDR ((DDR_APT_ADDR) + (DDR_APT_SIZE)) 
-#endif 
-
-#ifndef DDR_ET_SIZE
-#define DDR_ET_SIZE 0x00004800 
-#endif 
-
-#ifndef DDR_NV_ADDR
-#define DDR_NV_ADDR ((DDR_ET_ADDR) + (DDR_ET_SIZE)) 
-#endif 
-
-#ifndef DDR_NV_SIZE
-#define DDR_NV_SIZE 0x00000000 
-#endif 
-
 #ifndef DDR_ZSP_UP_ADDR
-#define DDR_ZSP_UP_ADDR ((DDR_NV_ADDR) + (DDR_NV_SIZE)) 
+#define DDR_ZSP_UP_ADDR ((DDR_CQI_ADDR) + (DDR_CQI_SIZE)) 
 #endif 
 
 #ifndef DDR_ZSP_UP_SIZE
@@ -1109,59 +1107,40 @@
 #define DDR_ZSP_UP_1_SIZE 0x00008000 
 #endif 
 
-#ifndef DDR_ECS_TEE_ADDR
-#define DDR_ECS_TEE_ADDR ((DDR_ZSP_UP_1_ADDR) + (DDR_ZSP_UP_1_SIZE)) 
+#ifndef SHM_SEC_SIZE          		
+#define SHM_SEC_SIZE          		 (DDR_SEC_SHARED_SIZE) 
 #endif 
 
-#ifndef DDR_ECS_TEE_SIZE
-#define DDR_ECS_TEE_SIZE 0x00001800 
+#ifndef SHM_SIZE_PROTECT_BARRIER
+#define SHM_SIZE_PROTECT_BARRIER (0x1000) 
 #endif 
 
-#ifndef DDR_MDM_GU_RESERVE_ADDR
-#define DDR_MDM_GU_RESERVE_ADDR ((DDR_ECS_TEE_ADDR) + (DDR_ECS_TEE_SIZE)) 
+#ifndef SHM_SIZE_PARAM_CFG
+#define SHM_SIZE_PARAM_CFG (0x4000) 
 #endif 
 
-#ifndef DDR_MDM_GU_RESERVE_SIZE
-#define DDR_MDM_GU_RESERVE_SIZE 0x0007A800 
+#ifndef SHM_SIZE_SEC_ICC
+#define SHM_SIZE_SEC_ICC (0x20000) 
 #endif 
 
-#ifndef DDR_EVDO_ADDR
-#define DDR_EVDO_ADDR DDR_MDM_GU_RESERVE_ADDR 
+#ifndef SHM_SIZE_SEC_RESERVED
+#define SHM_SIZE_SEC_RESERVED (0xb000) 
 #endif 
 
-#ifndef DDR_EVDO_SIZE
-#define DDR_EVDO_SIZE 0x00003C00 
+#ifndef SHM_SIZE_SEC_MDMA9_PM_BOOT
+#define SHM_SIZE_SEC_MDMA9_PM_BOOT (0x2000) 
 #endif 
 
-#ifndef DDR_1X_ADDR
-#define DDR_1X_ADDR ((DDR_EVDO_ADDR) + (DDR_EVDO_SIZE)) 
-#endif 
-
-#ifndef DDR_1X_SIZE
-#define DDR_1X_SIZE 0x00012C00 
-#endif 
-
-#ifndef DDR_RESERVE_ADDR
-#define DDR_RESERVE_ADDR ((DDR_1X_ADDR) + (DDR_1X_SIZE)) 
-#endif 
-
-#ifndef DDR_RESERVE_SIZE
-#define DDR_RESERVE_SIZE CFG_DDR_MDM_GU_RESERVE_SIZE 
-#endif 
-
-#ifdef CONFIG_HISI_FAMA 
-#ifndef MODEM_SHARED_DDR_BASE
-#define MODEM_SHARED_DDR_BASE (0xAE800000) 
-#endif 
-
-#else
 #ifndef MODEM_SHARED_DDR_BASE
 #define MODEM_SHARED_DDR_BASE (0x8E800000) 
 #endif 
 
-#endif
+#ifndef MODEM_MNTN_DDR_BASE
+#define MODEM_MNTN_DDR_BASE (0x8F400000) 
+#endif 
+
 #ifndef DDR_SHARED_MEM_SIZE
-#define DDR_SHARED_MEM_SIZE 0xC00000 
+#define DDR_SHARED_MEM_SIZE 0xB00000 
 #endif 
 
 #ifndef DDR_MNTN_SIZE
@@ -1173,7 +1152,7 @@
 #endif 
 
 #ifndef DDR_MNTN_ADDR
-#define DDR_MNTN_ADDR ( (DDR_SHARED_MEM_ADDR      ) + (DDR_SHARED_MEM_SIZE      ) ) 
+#define DDR_MNTN_ADDR ( (MODEM_MNTN_DDR_BASE                               ) ) 
 #endif 
 
 #ifndef MODEM_SOCP_DDR_BASE
@@ -1205,7 +1184,7 @@
 #endif 
 
 #ifndef NV_DDR_SIZE
-#define NV_DDR_SIZE 0xA00000 
+#define NV_DDR_SIZE 0x980000 
 #endif 
 
 #ifndef NV_COMM_BIN_FILE_MAX_SIZE
@@ -1221,7 +1200,7 @@
 #endif 
 
 #ifndef SHM_SIZE_TLPHY
-#define SHM_SIZE_TLPHY (12*1024) 
+#define SHM_SIZE_TLPHY (0) 
 #endif 
 
 #ifndef SHM_SIZE_TEMPERATURE
@@ -1241,7 +1220,7 @@
 #endif 
 
 #ifndef SHM_SIZE_TENCILICA_MULT_BAND
-#define SHM_SIZE_TENCILICA_MULT_BAND (0x8000) 
+#define SHM_SIZE_TENCILICA_MULT_BAND (0) 
 #endif 
 
 #ifndef SHM_SIZE_ICC
@@ -1257,7 +1236,7 @@
 #endif 
 
 #ifndef SHM_SIZE_WAN
-#define SHM_SIZE_WAN (0x8000) 
+#define SHM_SIZE_WAN (0) 
 #endif 
 
 #ifndef SHM_SIZE_M3_MNTN

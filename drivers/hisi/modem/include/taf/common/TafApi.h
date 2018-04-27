@@ -100,7 +100,6 @@ typedef VOS_UINT8 MN_CALLBACK_TYPE_T;   /* Type of callback functions for event 
 
 
 
-    /* Added by y00245242 for VoLTE_PhaseI  项目, 2013-7-11, begin */
 #define TAF_CALL_APP_MSG_BASE           (0x0000)                                /* AT与CALL模块间消息起始 */
 #define TAF_MSG_APP_MSG_BASE            (0x1000)                                /* AT与MSG模块间消息起始 */
 #define TAF_SSA_APP_MSG_BASE            (0x2000)                                /* AT与SSA模块间消息起始 */
@@ -115,7 +114,6 @@ typedef VOS_UINT8 MN_CALLBACK_TYPE_T;   /* Type of callback functions for event 
 #define TAF_IMSA_COMM_MSG_BASE          (0xc000)                                /* TAF与IMSA公共消息起始 */
 #define TAF_SSA_IMSA_MSG_BASE           (0xd000)                                /* IMSA与SSA模块间消息起始 */
 #define TAF_IMSA_MSG_MASK               (0xf000)                                /* IMSA与TAF间的MASK */
-    /* Added by y00245242 for VoLTE_PhaseI  项目, 2013-7-11, end */
 
 
 
@@ -129,13 +127,7 @@ typedef VOS_UINT8 MN_CALLBACK_TYPE_T;   /* Type of callback functions for event 
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : TAF_LMM_MULTIMODE_CARD_TYPE_ENUM
- 枚举说明  : 定义多模卡类型,临时为LMM提供接口查询当前卡类型,后续修改为消息通知
- 1.日    期   : 2017年07月15日
-   作    者   : h00360002
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_LMM_MULTIMODE_CARD_TYPE_ENUM
 {
     TAF_LMM_CTCC_CDMA_SINGLE_MODE_CARD,                         /* 中国电信CDMA单模卡 */
@@ -166,15 +158,7 @@ typedef VOS_UINT8 TAF_LMM_MULTIMODE_CARD_TYPE_ENUM_UINT8;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*****************************************************************************
- 结构名称: TAF_CTRL_STRU
- 结构说明: 控制结构
 
- 修改历史      :
-  1.日    期   : 2013年07月18日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulModuleId;         /* 填入PID */
@@ -183,30 +167,14 @@ typedef struct
     VOS_UINT8                           aucReserved[1];
 } TAF_CTRL_STRU;
 
-/*****************************************************************************
- 结构名称: TAF_PS_MSG_STRU
- 结构说明: PS域消息结构
 
- 修改历史      :
-  1.日    期   : 2013年07月18日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     MSG_HEADER_STRU                     stHeader;
     VOS_UINT8                           aucContent[4];
 } TAF_PS_MSG_STRU;
 
-/*****************************************************************************
- 结构名称: TAF_SSA_MSG_STRU
- 结构说明: SS业务消息结构
 
- 修改历史      :
-  1.日    期   : 2015年09月09日
-    作    者   : l00198894
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef TAF_PS_MSG_STRU     TAF_SSA_MSG_STRU;
 
 

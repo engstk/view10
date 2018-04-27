@@ -688,7 +688,7 @@ static int psy_register_thermal(struct power_supply *psy)
 		return 0;
 
 	/* Register battery zone device psy reports temperature */
-	for (i = 0; i < psy->desc->num_properties; i++) {
+	for (i = 0; i < psy->desc->num_properties; i++) {/*lint !e574*/
 		if (psy->desc->properties[i] == POWER_SUPPLY_PROP_TEMP) {
 #ifdef CONFIG_HISI_THERMAL_TRIP
 			psy->tzd = thermal_zone_device_register(psy->desc->name,
@@ -773,7 +773,7 @@ static int psy_register_cooler(struct power_supply *psy)
 	int i;
 
 	/* Register for cooling device if psy can control charging */
-	for (i = 0; i < psy->desc->num_properties; i++) {
+	for (i = 0; i < psy->desc->num_properties; i++) {/*lint !e574*/
 		if (psy->desc->properties[i] ==
 				POWER_SUPPLY_PROP_CHARGE_CONTROL_LIMIT) {
 			psy->tcd = thermal_cooling_device_register(

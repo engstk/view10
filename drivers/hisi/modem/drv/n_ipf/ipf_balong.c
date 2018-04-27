@@ -63,10 +63,11 @@
 #include <bsp_ddr.h>
 #include <n_bsp_psam.h>
 #include <n_bsp_ipf.h>
-#include <ipf_balong.h>
+#include "ipf_balong.h"
 #include <bsp_reset.h>
 #include <bsp_vic.h>
 #include <bsp_slice.h>
+#include <securec.h>
 
 #define IPF_VIC_LEVEL		5
 #define DELAY_WAIT_CIPHER   2
@@ -157,8 +158,9 @@ static int ipf_get_limit_addr(void)
 }
 
 static void ipf_dl_job_done_cb(void){
-	if(g_ipf_ctx.dl_info.pFnDlIntCb)
-		g_ipf_ctx.dl_info.pFnDlIntCb();
+    if(g_ipf_ctx.dl_info.pFnDlIntCb){
+        g_ipf_ctx.dl_info.pFnDlIntCb();
+    }
 }
 
 static void ipf_dl_ads_empty_cb(void){
@@ -225,20 +227,20 @@ struct int_handler ipf_int_table[32] = {
 
 static irqreturn_t ipf_interrupt(int irq, void* dev)
 {
-	int bit;
-	unsigned long reg[1] = {0};
+    int bit;
+    unsigned long reg[1] = {0};
 
-	reg[0] = ipf_readl(HI_IPF_INT1_OFFSET);
-	ipf_writel(reg[0], HI_IPF_INT_STATE_OFFSET);
+    reg[0] = ipf_readl(HI_IPF_INT1_OFFSET);
+    ipf_writel(reg[0], HI_IPF_INT_STATE_OFFSET);
 
-	for_each_set_bit(bit, reg, 32)
-	{
-		ipf_int_table[bit].cnt++;
-		if(ipf_int_table[bit].callback){
-		    ipf_int_table[bit].callback();
-		}
-	}
-	
+    for_each_set_bit(bit, reg, 32)
+    {
+        ipf_int_table[bit].cnt++;
+        if(ipf_int_table[bit].callback){
+            ipf_int_table[bit].callback();
+        }
+    }
+    
     return IRQ_HANDLED;
 }
 
@@ -311,8 +313,6 @@ int ipf_init(void)
 	int ret = 0;
 	struct ipf_share_mem_map* sm = bsp_ipf_get_sharemem();
 
-    memset(&sm->debug[0], 0, sizeof(sm->debug[0]));
-    
 	ipf_get_version();
 	g_ipf_ctx.desc = ipf_get_desc_handler(g_ipf_ctx.ipf_version);
 	
@@ -336,7 +336,7 @@ int ipf_init(void)
     }
 
 	/*acore use first block,ccore use scnd block*/
-	memset(&sm->debug[0], 0, sizeof(struct ipf_debug));
+	memset_s(sm->debug, sizeof(sm->debug), 0, sizeof(struct ipf_debug));
 	g_ipf_ctx.status = (struct ipf_debug*)&sm->debug[0] ;
 
 	g_ipf_ctx.desc = ipf_get_desc_handler(g_ipf_ctx.ipf_version);
@@ -442,58 +442,75 @@ unsigned int ipf_ccore_is_down(void)
 
 int bsp_ipf_reset_ccore_cb(DRV_RESET_CB_MOMENT_E eparam, int userdata)
 {
-	unsigned int idle_cnt = 10;
-	unsigned int time_out = 2000;
-	unsigned int u32DlStateValue = 0;
-	int psam_status = 0;
+    unsigned int idle_cnt = 10;
+    unsigned int time_out = 2000;
+    unsigned int u32DlStateValue = 0;
+    int psam_status = 0;
+    unsigned int tmp0,tmp1;
+    struct ipf_share_mem_map* sm = bsp_ipf_get_sharemem();
+    (void)userdata;
+    
+    if(MDRV_RESET_CB_BEFORE == eparam)
+    {
+        bsp_ipf_set_control_flag_for_ccore_reset(IPF_FORRESET_CONTROL_FORBID);
 
-	(void)userdata;
-	
-	if(MDRV_RESET_CB_BEFORE == eparam)
-	{
-		bsp_ipf_set_control_flag_for_ccore_reset(IPF_FORRESET_CONTROL_FORBID);
+        do{
+            udelay(DELAY_WAIT_CIPHER);  //wait cipher idle
+            if(g_ipf_ctx.ipf_version <  IPF_VERSION_160){
+                u32DlStateValue = ipf_readl(HI_IPF32_CH1_STATE_OFFSET);
+            }
+            else{
+                u32DlStateValue = ipf_readl(HI_IPF64_CH1_STATE_OFFSET);
+            }
+            psam_status = bsp_psam_idle();
+            time_out--;
+            if((u32DlStateValue == IPF_CHANNEL_STATE_IDLE) && psam_status){
+                idle_cnt--;
+            }else{
+                idle_cnt = 10;
+            }
+        }while(idle_cnt && time_out);
 
-		do{
-			udelay(DELAY_WAIT_CIPHER);	//wait cipher idle
-			if(g_ipf_ctx.ipf_version <  IPF_VERSION_160){
-				u32DlStateValue = ipf_readl(HI_IPF32_CH1_STATE_OFFSET);
-			}
-			else{
-				u32DlStateValue = ipf_readl(HI_IPF64_CH1_STATE_OFFSET);
-			}
-			psam_status = bsp_psam_idle();
-			time_out--;
-			if((u32DlStateValue == IPF_CHANNEL_STATE_IDLE) && psam_status){
-				idle_cnt--;
-			}else{
-				idle_cnt = 10;
-			}
-		}while(idle_cnt && time_out);
+        if(!idle_cnt){
+            g_ipf_ctx.ccore_rst_idle = 1;
+        }
 
-		if(!idle_cnt){
-			g_ipf_ctx.ccore_rst_idle = 1;
-		}
+        if (!time_out)
+        {
+            bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_IPF,
+                "\r IPF dl channel on after bsp_ipf_reset_ccore_cb called \n");
+            g_ipf_ctx.stax.crst_timeout = bsp_get_slice_value();    
+        }
+        g_ipf_ctx.cb_before++;
+    }
+    else if(MDRV_RESET_CB_AFTER == eparam)
+    {
+        g_ipf_ctx.ccore_rst_idle = 0;
+        g_ipf_ctx.status->cp_flag = sm->init.status.modem;
+        g_ipf_ctx.status->rst_ts = bsp_get_slice_value();
+        memcpy_s(g_ipf_ctx.backup.debug, sizeof(g_ipf_ctx.backup.debug),
+                &sm->debug[0] ,sizeof(struct ipf_debug)*2);
+        g_ipf_ctx.backup.flag = sm->init.status.modem;
 
-		if (!time_out)
-		{
-			bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_IPF,
-				"\r IPF dl channel on after bsp_ipf_reset_ccore_cb called \n");
-		}
-	}
-	else if(MDRV_RESET_CB_AFTER == eparam)
-	{
-		g_ipf_ctx.ccore_rst_idle = 0;
-		bsp_ipf_set_control_flag_for_ccore_reset(IPF_FORRESET_CONTROL_ALLOW);
-		return IPF_SUCCESS;
-	}
-	else
-	{
-		/*under the requeset of yaoguocai*/
-		return IPF_SUCCESS;
-	}
+        psam_get_dlad_num(&tmp0, &tmp1);
+        if(tmp0==0 || tmp1==0)
+        {
+            bsp_ipf_show_status();
+        }
 
-	return IPF_SUCCESS;
+        bsp_ipf_set_control_flag_for_ccore_reset(IPF_FORRESET_CONTROL_ALLOW);
+        g_ipf_ctx.status->ccore_reset++;
+        return IPF_SUCCESS;
+    }
+    else
+    {
+        g_ipf_ctx.cb_undef++;
+        return IPF_SUCCESS;
+    }
+
+    return IPF_SUCCESS;
 }
+
 
 int ipf_register_wakeup_dlcb(BSP_IPF_WakeupDlCb pFnWakeupDl)
 {
@@ -604,7 +621,6 @@ int mdrv_ipf_config_ulbd(unsigned int u32Num, IPF_CONFIG_ULPARAM_S* pstUlPara)
     }
 
     g_ipf_ctx.desc->config_bd(u32Num, pstUlPara);
-
     return IPF_SUCCESS;
 }
 int mdrv_ipf_config_dlad(IPF_AD_TYPE_E eAdType, unsigned int u32AdNum, IPF_AD_DESC_S * pstAdDesc)
@@ -636,8 +652,6 @@ void mdrv_ipf_get_dlrd(unsigned int* pu32Num, IPF_RD_DESC_S *pstRd)
 int mdrv_ipf_get_dlad_num (unsigned int* pu32AD0Num, unsigned int* pu32AD1Num)
 {
 	struct ipf_share_mem_map* sm = bsp_ipf_get_sharemem();
-	g_ipf_ctx.status->get_ad_num_times++;
-
 	/* if ipf suspended, return fail*/
 	if(sm->init.status.acore==IPF_PWR_DOWN){
 		return -EINVAL;
@@ -706,7 +720,7 @@ static int ipf_probe(struct platform_device *pdev)
 	if (!regs)
 		return -ENXIO;
 
-    memset(&g_ipf_ctx, 0, sizeof(ipf_ctx_t));
+    memset_s(&g_ipf_ctx, sizeof(g_ipf_ctx), 0, sizeof(ipf_ctx_t));
 	g_ipf_ctx.irq = platform_get_irq(pdev, 0);
 	if (unlikely(g_ipf_ctx.irq == 0))
 		return -ENXIO;
@@ -741,8 +755,8 @@ static int ipf_probe(struct platform_device *pdev)
     }
 	g_ipf_ctx.limit_addr = (IPF_LIMIT_ADDR_S *)sm->trans_limit;
     g_ipf_ctx.memblock_show = (unsigned long *)sm->memlock;
-	memset((void*)sm->trans_limit, 0x0, IPF_TRANS_LIMIT_SIZE);
-    memset((void*)sm->memlock, 0x0, IPF_ADDR_MEMBLOCK_SIZE);
+	memset_s((void*)sm->trans_limit, sizeof(sm->trans_limit), 0x0, IPF_TRANS_LIMIT_SIZE);
+    memset_s((void*)sm->memlock, sizeof(sm->memlock), 0x0, IPF_ADDR_MEMBLOCK_SIZE);
 
 	if(ipf_get_limit_addr()){
 		g_ipf_ctx.not_get_space++;
@@ -752,7 +766,7 @@ static int ipf_probe(struct platform_device *pdev)
 	ipf_init();
 
 	g_ipf_ctx.pm = &ipf_dev_pm_ops;
-	sm->init.status.acore = IPF_PWR_INIT;
+	sm->init.status.acore = IPF_PWR_UP;
 	printk("sm->init.status.save = %x\n", sm->init.status.save);
     sm->init.status.save = 0;
 
@@ -760,7 +774,6 @@ static int ipf_probe(struct platform_device *pdev)
     
 	return 0;
 }
-
 static int ipf_remove(struct platform_device *pdev)
 {
     return IPF_SUCCESS;
@@ -799,7 +812,6 @@ EXPORT_SYMBOL(mdrv_ipf_get_dlrd_num);
 EXPORT_SYMBOL(mdrv_ipf_get_ulrd_num);
 EXPORT_SYMBOL(mdrv_ipf_register_ops);
 EXPORT_SYMBOL(ipf_register_wakeup_dlcb);
-
 
 module_platform_driver(ipf_pltfm_driver);//lint !e64
 MODULE_LICENSE("GPL v2");

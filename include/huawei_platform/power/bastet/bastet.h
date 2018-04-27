@@ -42,6 +42,7 @@ struct bastet_hbm {
 	atomic_t reply_filter_cnt;		/* heartbeat reply start filter counter */
 	atomic_t reply_matched_cnt;		/* heartbeat reply matched counter */
 	atomic_t frozen;				/* process frozen state */
+	spinlock_t hbm_lock;
 };
 
 struct bastet_sock {

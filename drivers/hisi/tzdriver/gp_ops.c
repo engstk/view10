@@ -701,17 +701,18 @@ static int32_t save_token_info(void *dst_teec, uint8_t *src_buf,
 
 	return EOK;
 }
-
+/*lint -e613*/
 static int fill_token_info(TC_NS_SMC_CMD *smc_cmd,
 			TC_NS_ClientContext *client_context,
 			TC_NS_Token *tc_ns_token,
 			TC_NS_DEV_File *dev_file, bool global,
 			uint8_t *mb_pack_token, uint32_t mb_pack_token_size) {
 	uint8_t temp_libteec_token[TOKEN_SAVE_LEN] = {0};
-
-	if ((!smc_cmd) || (!client_context)
+	errno_t ret_s;
+	int paramcheck = (!smc_cmd) || (!client_context)
 		|| (!dev_file) || (!tc_ns_token)
-		|| (!mb_pack_token) || (mb_pack_token_size < TOKEN_BUFFER_LEN)) {
+		|| (!mb_pack_token) || (mb_pack_token_size < TOKEN_BUFFER_LEN);
+	if (paramcheck) {
 		tloge("in parameter is ivalid.\n");
 		return -EFAULT;
 	}
@@ -745,8 +746,11 @@ static int fill_token_info(TC_NS_SMC_CMD *smc_cmd,
 					temp_libteec_token,
 					TIMESTAMP_SAVE_INDEX)) {
 			tloge("copy temp_libteec_token failed!\n");
-			(void) memset_s(tc_ns_token->token_buffer, TOKEN_BUFFER_LEN,
+			ret_s = memset_s(tc_ns_token->token_buffer, TOKEN_BUFFER_LEN,
 					0, TOKEN_BUFFER_LEN);
+			if (ret_s != EOK) {
+				tloge("fill_token_info memset_s error=%d\n", ret_s);
+			}
 			return -EFAULT;
 		}
 
@@ -755,8 +759,11 @@ static int fill_token_info(TC_NS_SMC_CMD *smc_cmd,
 				KERNAL_API_LEN, &dev_file->kernel_api,
 				KERNAL_API_LEN)) {
 			tloge("copy KERNAL_API_LEN failed!\n");
-			(void) memset_s(tc_ns_token->token_buffer, TOKEN_BUFFER_LEN,
+			ret_s = memset_s(tc_ns_token->token_buffer, TOKEN_BUFFER_LEN,
 					0, TOKEN_BUFFER_LEN);
+			if (ret_s != EOK) {
+				tloge("fill_token_info memset_s error=%d\n", ret_s);
+			}
 			return -EFAULT;
 		}
 	} else { /* open_session, set token_buffer 0 */
@@ -780,6 +787,7 @@ static int fill_token_info(TC_NS_SMC_CMD *smc_cmd,
 
 	return EOK;
 }
+/*lint +e613*/
 
 static int load_security_enhance_info(TC_NS_SMC_CMD *smc_cmd,
 			TC_NS_ClientContext *client_context,
@@ -828,6 +836,7 @@ static int append_teec_token(TC_NS_ClientContext *client_context,
 			bool global,
 			uint8_t *mb_pack_token, uint32_t mb_pack_token_size) {
 	uint8_t temp_libteec_token[TOKEN_SAVE_LEN] = {0};
+	int sret;
 	if ((!client_context) || (!dev_file) || (!tc_ns_token)) {
 		tloge("in parameter is invalid.\n");
 		return -EFAULT;
@@ -854,8 +863,12 @@ static int append_teec_token(TC_NS_ClientContext *client_context,
 					temp_libteec_token,
 					TIMESTAMP_SAVE_INDEX)) {
 			tloge("copy temp_libteec_token failed!\n");
-			(void) memset_s(tc_ns_token->token_buffer, TOKEN_BUFFER_LEN,
+			sret = memset_s(tc_ns_token->token_buffer, TOKEN_BUFFER_LEN,
 					0, TOKEN_BUFFER_LEN);
+			if (sret != 0 ) {
+				tloge("memset_s failed!\n");
+				return -EFAULT;
+			}
 			return -EFAULT;
 		}
 
@@ -972,6 +985,8 @@ int tc_client_call(TC_NS_ClientContext *client_context,
 	TC_NS_Temp_Buf local_temp_buffer[4] = {{0, 0}, {0, 0}, {0, 0}, {0, 0} };
 	bool global = flags & TC_CALL_GLOBAL;
 	uint32_t uid;
+	int needchecklogin = 0;
+	int needreset = 0;
 	bool is_token_work = false;
 	struct mb_cmd_pack *mb_pack;
 	bool operation_init = false;
@@ -1033,7 +1048,7 @@ int tc_client_call(TC_NS_ClientContext *client_context,
 	smc_cmd->cmd_id = client_context->cmd_id;
 	smc_cmd->dev_file_id = dev_file->dev_file_id;
 	smc_cmd->context_id = client_context->session_id;
-	smc_cmd->err_origin = 0;
+	smc_cmd->err_origin = client_context->returns.origin;
 	smc_cmd->started = client_context->started;
 	smc_cmd->uid = uid;
 	TZMP2_uid(client_context, smc_cmd, global);
@@ -1047,9 +1062,10 @@ int tc_client_call(TC_NS_ClientContext *client_context,
 	}
 
 	smc_cmd->login_method = client_context->login.method;
-	if (sizeof(uint32_t) == dev_file->pub_key_len &&
-	    GLOBAL_CMD_ID_OPEN_SESSION == smc_cmd->cmd_id &&
-	    (current->mm != NULL)) {
+	needchecklogin = sizeof(uint32_t) == dev_file->pub_key_len &&
+		GLOBAL_CMD_ID_OPEN_SESSION == smc_cmd->cmd_id &&
+		(current->mm != NULL);
+	if (needchecklogin) {
 		ret = do_encryption(g_ca_auth_hash_buf,
 		                    sizeof(g_ca_auth_hash_buf),
 		                    MAX_SHA_256_SZ);
@@ -1087,6 +1103,12 @@ int tc_client_call(TC_NS_ClientContext *client_context,
 	tee_ret = TC_NS_SMC(smc_cmd, flags);
 
 	client_context->session_id = smc_cmd->context_id;
+       // if tee_ret error except TEEC_PENDING,but context_id is seted,need to reset to 0.
+	needreset = global && client_context->cmd_id == GLOBAL_CMD_ID_OPEN_SESSION && 
+		tee_ret !=0 && TEEC_PENDING != tee_ret;/*lint !e650 */
+	if (needreset) {
+		client_context->session_id = 0;/*lint !e63 */
+	}
 
 	if (is_token_work) {
 		ret = post_process_token(smc_cmd, client_context, tc_ns_token,
@@ -1094,6 +1116,7 @@ int tc_client_call(TC_NS_ClientContext *client_context,
 				dev_file->kernel_api, global);
 		if (EOK != ret) {
 			tloge("post_process_token  failed.\n");
+			smc_cmd->err_origin = TEEC_ORIGIN_COMMS;
 			goto error;
 		}
 	}
@@ -1170,8 +1193,10 @@ int tc_client_call(TC_NS_ClientContext *client_context,
 		ret = update_client_operation(dev_file, client_context,
 					      &mb_pack->operation, local_temp_buffer,
 					      true);
-		if (ret)
+		if (ret) {
+			smc_cmd->err_origin = TEEC_ORIGIN_COMMS;
 			goto error;
+		}
 	}
 
 	ret = 0;
@@ -1185,16 +1210,18 @@ error1:
 						      &mb_pack->operation,
 						      local_temp_buffer,
 						      false);
-			if (ret)
+			if (ret) {
+				smc_cmd->err_origin = TEEC_ORIGIN_COMMS;
 				goto error;
+			}
 		}
 	}
 
-	client_context->returns.code = tee_ret;
-	client_context->returns.origin = smc_cmd->err_origin;
 	ret = EFAULT;
 error:
 	/* kfree(NULL) is safe and this check is probably not required*/
+	client_context->returns.code = tee_ret;
+	client_context->returns.origin = smc_cmd->err_origin;
 	kfree(smc_cmd);
 	if (operation_init)
 		free_operation(client_context, &mb_pack->operation, local_temp_buffer);

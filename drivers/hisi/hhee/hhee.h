@@ -25,8 +25,10 @@ enum ltype {
 
 irqreturn_t hhee_irq_handle(int irq, void *data);
 int hhee_logger_init(void);
+#ifdef CONFIG_HISI_HHEE_DEBUG
 int hhee_init_debugfs(void);
 void hhee_cleanup_debugfs(void);
+#endif
 
 ssize_t hhee_copy_logs(char __user *buf, size_t count,
 		       loff_t *offp, int logtpye);

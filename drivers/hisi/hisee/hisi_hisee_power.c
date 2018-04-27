@@ -38,6 +38,7 @@
 #include "hisi_hisee.h"
 #include "hisi_hisee_fs.h"
 #include "hisi_hisee_power.h"
+#include "hisi_hisee_chip_test.h"
 
 #define POWER_VOTE_OFF_STATUS	        0x0
 #define POWER_VOTE_UNIT_MASK		0xFF
@@ -47,6 +48,10 @@
 hisee_power_vote_status g_power_vote_status;
 unsigned int g_power_vote_cnt;
 unsigned int g_cos_id;
+
+/*保存当前启动运行的cos镜像id*/
+unsigned int g_runtime_cosid = COS_IMG_ID_0;
+
 hisee_power_vote_record g_vote_record_method;
 /*whether we need to pre enable clk before powering on hisee:
 0->needn't ; 1->need*/
@@ -59,10 +64,12 @@ static struct mutex g_poweron_timeout_mutex;
 static struct list_head g_unhandled_timer_list;
 
 extern int hisee_mntn_can_power_up_hisee(void);
+extern u32 hisee_mntn_get_vote_val_lpm3(void);
+extern u32 hisee_mntn_get_vote_val_atf(void);
+extern int hisee_mntn_collect_vote_value_cmd(void);
 void hisee_power_ctrl_init(void)
 {
 	g_vote_record_method = HISEE_POWER_VOTE_RECORD_PRO;
-
 	g_power_vote_status.value = POWER_VOTE_OFF_STATUS;
 	g_power_vote_cnt = 0;
 	mutex_init(&g_poweron_timeout_mutex);
@@ -77,9 +84,7 @@ static int hisee_powerctrl_paras_check(unsigned int vote_process, hisee_power_op
 		return HISEE_INVALID_PARAMS;
 	}
 
-	if ((op_type != HISEE_POWER_OFF) && (op_type != HISEE_POWER_ON_BOOTING) &&\
-		(op_type != HISEE_POWER_ON_UPGRADE) && (op_type != HISEE_POWER_ON_BOOTING_MISC) &&\
-		(op_type != HISEE_POWER_ON_UPGRADE_SM)) {
+	if (op_type < HISEE_POWER_OFF || op_type >= HISEE_POWER_MAX_OP) {
 		pr_err("%s(): op_type=%x invalid\n",  __func__, op_type);
 		return HISEE_INVALID_PARAMS;
 	}
@@ -94,6 +99,11 @@ static int hisee_powerctrl_paras_check(unsigned int vote_process, hisee_power_op
 		return HISEE_INVALID_PARAMS;
 	}
 
+	if (((op_type != HISEE_POWER_OFF) && (power_cmd == HISEE_POWER_CMD_OFF))
+		|| ((op_type == HISEE_POWER_OFF) && (power_cmd != HISEE_POWER_CMD_OFF))) {
+		pr_err("%s(): power_cmd and op_type is not match.\n",  __func__);
+		return HISEE_INVALID_PARAMS;
+	}
 	return HISEE_OK;
 }
 
@@ -119,8 +129,9 @@ static int hisee_power_ctrl(hisee_power_operation op_type, unsigned int op_cosid
 				goto end;
 			}
 		}
-	} else
+	} else {
 		cmd_to_atf = (u64)CMD_HISEE_POWER_OFF;
+	}
 
 	/* send power command to atf */
 	ret = atfd_hisee_smc((u64)HISEE_FN_MAIN_SERVICE_CMD, cmd_to_atf, (u64)op_type, (u64)op_cosid);
@@ -153,7 +164,7 @@ static int hisee_set_power_vote_status(u32 vote_process, hisee_power_cmd power_c
 				pr_err("Vote is the maximum number.\n");
 				ret = HISEE_ERROR;
 			} else {
-				current_count++; 
+				current_count++;
 			}
 			g_power_vote_status.value |= current_count << shift;
 		} else {
@@ -221,13 +232,14 @@ static int hisee_power_vote(u32 vote_process, hisee_power_operation op_type,
 		(HISEE_POWER_CMD_ON == power_cmd)) {
 		/* from the off status to on status */
 		ret = hisee_power_ctrl(op_type, op_cosid, power_cmd);
-		if (HISEE_OK != ret)
+		if (HISEE_OK != ret) {
 			pr_err("%s(): hisee power on failed.\n",  __func__);
-		else {
+			goto exit;
+		}
 			ret = hisee_set_power_vote_status(vote_process, power_cmd);
 			if (HISEE_OK != ret) {
 				pr_err("%s(): status is off, hisee power on vote failed.\n",  __func__);
-			}
+			goto exit;
 		}
 	} else if ((HISEE_POWER_STATUS_ON == power_status) && /*lint !e456*/
 		(HISEE_POWER_CMD_ON == power_cmd)) {
@@ -235,6 +247,7 @@ static int hisee_power_vote(u32 vote_process, hisee_power_operation op_type,
 		ret = hisee_set_power_vote_status(vote_process, power_cmd);
 		if (HISEE_OK != ret) {
 			pr_err("%s(): status is on, hisee power on vote failed.\n",  __func__);
+			goto exit;
 		}
 	} else if ((HISEE_POWER_STATUS_ON == power_status) &&
 		(HISEE_POWER_CMD_OFF == power_cmd)) {
@@ -256,6 +269,7 @@ static int hisee_power_vote(u32 vote_process, hisee_power_operation op_type,
 					pr_err("%s(): hisee power off failed, vote the on status failed.\n",  __func__);
 				}
 				pr_err("%s(): hisee power off failed.\n",  __func__);
+				goto exit;
 			}
 		}
 	} else if ((HISEE_POWER_STATUS_OFF == power_status) &&
@@ -263,6 +277,9 @@ static int hisee_power_vote(u32 vote_process, hisee_power_operation op_type,
 		/* hisee is already off */
 		pr_err("%s(): hisee is already off.\n",  __func__);
 		ret = HISEE_OK;
+	} else {
+		pr_err("%s(): input power status(0x%x) or cmd(0x%x) error.\n",  __func__, power_status, power_cmd);
+		ret = HISEE_INVALID_PARAMS;
 	}
 
 exit:
@@ -289,32 +306,37 @@ int hisee_get_cosid_processid(void *buf, unsigned int *cos_id, unsigned int *pro
 		('0' <= arg_vector[2]) && ('0' + MAX_POWER_PROCESS_ID > arg_vector[2])) {
 		*cos_id = arg_vector[1] - '0';
 		*process_id = arg_vector[2] - '0';
+		if (COS_PROCESS_UNKNOWN == *process_id) {
+			pr_err("%s(): input process_id is unknow.", __func__);
+			ret = HISEE_INVALID_PARAMS;
+		}
 	} else {
 		pr_err("%s(): input cos_id process_id error", __func__);
 		ret = HISEE_INVALID_PARAMS;
 	}
 
-	pr_info("%s(): cos_id is %d\n", __func__, *cos_id);
+	pr_info("hisee:%s():cos_id is %d\n", __func__, *cos_id);
 	return ret;
 }
 
 int hisee_poweron_booting_func(void *buf, int para)
 {
 	int ret;
-	unsigned int cos_id = 0;
+	unsigned int cos_id = COS_IMG_ID_0;
 	unsigned int process_id = 0;
 
 	mutex_lock(&g_hisee_data.hisee_mutex);
 
-	/*don't power up hisee, if current is dm mode and cos has not been upgraded,
-	of there will be many hisee exception log reporting to apr*/
-	if (HISEE_ERROR == hisee_mntn_can_power_up_hisee()) {
-		ret = HISEE_ERROR;
-		goto end;
-	}
-	ret = hisee_get_cosid_processid(buf, &cos_id,&process_id);
+	ret = hisee_get_cosid_processid(buf, &cos_id, &process_id);
 	if (HISEE_OK != ret) {
 		pr_err("%s() hisee_get_cosid failed ret=%d\n", __func__, ret);
+		goto end;
+	}
+	/*don't power up hisee, if current is dm mode and cos has not been upgraded,
+	 *of there will be many hisee exception log reporting to apr.
+	 *COS_FLASH is the specific cos_flash image, bypass the judgement*/
+	if (HISEE_ERROR == hisee_mntn_can_power_up_hisee()) {
+		ret = HISEE_ERROR;
 		goto end;
 	}
 
@@ -333,10 +355,12 @@ int hisee_poweron_booting_func(void *buf, int para)
 		pr_err("%s() hisee_power_vote failed ret=%d\n", __func__, ret);
 		goto end;
 	}
+	/*record the current cosid in booting phase*/
+	g_runtime_cosid = cos_id;
 
 end:
 	mutex_unlock(&g_hisee_data.hisee_mutex);
-	check_and_print_result();
+	check_and_print_result_with_cosid();
 	set_errno_and_return(ret);
 }/*lint !e715*/
 
@@ -344,7 +368,7 @@ int hisee_poweron_upgrade_func(void *buf, int para)
 {
 	int ret;
 	unsigned int hisee_lcs_mode = 0;
-	unsigned int cos_id = 0;
+	unsigned int cos_id = COS_IMG_ID_0;
 	unsigned int process_id = 0;
 
 	ret = get_hisee_lcs_mode(&hisee_lcs_mode);
@@ -356,21 +380,23 @@ int hisee_poweron_upgrade_func(void *buf, int para)
 	if (HISEE_SM_MODE_MAGIC == hisee_lcs_mode)
 	{
 		para = HISEE_POWER_ON_UPGRADE_SM;
-	} else
+	} else {
 		para = HISEE_POWER_ON_UPGRADE;
+	}
+	mutex_lock(&g_hisee_data.hisee_mutex);
 
 	ret = hisee_get_cosid_processid(buf, &cos_id, &process_id);
 	if (HISEE_OK != ret) {
 		pr_err("%s() hisee_get_cosid failed ret=%d\n", __func__, ret);
-		set_errno_and_return(ret);
+		goto end;
 	}
-	
+
 	if ((HISEE_POWER_VOTE_RECORD_PRO == g_vote_record_method)
 				&& (COS_PROCESS_UPGRADE != process_id)
 				&& (COS_PROCESS_UNKNOWN != process_id)) {
 		ret = HISEE_INVALID_PARAMS;
 		pr_err("%s() process_id error ret=%d\n", __func__, ret);
-		set_errno_and_return(ret);/*lint !e1058*/
+		goto end;
 	}
 
 	/* To fit chiptest, change unkonw process id to upgrade id. */
@@ -378,8 +404,6 @@ int hisee_poweron_upgrade_func(void *buf, int para)
 
 	/*Record the cosid for check usr mismatch operation.*/
 	g_cos_id = cos_id;
-
-	mutex_lock(&g_hisee_data.hisee_mutex);
 
 	ret = hisee_power_vote(process_id, (hisee_power_operation)para, cos_id, HISEE_POWER_CMD_ON);
 	if (HISEE_OK != ret) {
@@ -389,14 +413,14 @@ int hisee_poweron_upgrade_func(void *buf, int para)
 
 end:
 	mutex_unlock(&g_hisee_data.hisee_mutex);
-	check_and_print_result();
+	check_and_print_result_with_cosid();
 	set_errno_and_return(ret);
 }/*lint !e715*/
 
 int hisee_poweroff_func(void *buf, int para)
 {
 	int ret;
-	unsigned int cos_id = 0;
+	unsigned int cos_id = COS_IMG_ID_0;
 	unsigned int process_id = 0;
 
 	mutex_lock(&g_hisee_data.hisee_mutex);
@@ -422,7 +446,7 @@ int hisee_poweroff_func(void *buf, int para)
 
 end:
 	mutex_unlock(&g_hisee_data.hisee_mutex);
-	check_and_print_result();
+	check_and_print_result_with_cosid();
 	set_errno_and_return(ret);/*lint !e1058*/
 }/*lint !e715*/
 
@@ -450,7 +474,7 @@ static int hisee_poweroff_daemon_body(void *arg)
 			g_unhandled_timer_cnt--;
 			if (0 == g_unhandled_timer_cnt) {
 				unsigned int process_id = COS_PROCESS_TIMEOUT;
-				unsigned int cos_id = 0;	/* the default cos */
+				unsigned int cos_id = HISEE_DEFAULT_COSID;	/* the default cos */
 				ret = hisee_power_vote(process_id, HISEE_POWER_OFF,
 				cos_id, HISEE_POWER_CMD_OFF);
 				if (HISEE_OK != ret)
@@ -526,15 +550,23 @@ static int parse_arg_get_timeout(void *buf, int para, unsigned int *time, unsign
 	char timeout[TIMEOUT_MAX_LEN + 1] = {0};/* 1bit terminated char */
 	unsigned int i = 0;
 	int ret = HISEE_OK;
+
 	/* interface for direct call */
 	if ((NULL == buf) || (NULL == time) || (NULL == id)) {
-		if (para <= 0) return HISEE_INVALID_PARAMS;
-		return (unsigned int)para;
+		if (para <= 0) {
+		      return HISEE_INVALID_PARAMS;
+		}
+		return para;
 	}
 	/* called through powerctrl_cmd */
-	while ('\0' != *p && ' ' != *p) p++;/* bypass cmd name. */
-	if ('\0' == *p) return HISEE_INVALID_PARAMS;
-	while (' ' == *p) p++;/* bypass blank */
+	while ('\0' != *p && ' ' != *p) {
+		p++;/* bypass cmd name. */
+	}
+	if ('\0' == *p)
+	      return HISEE_INVALID_PARAMS;
+	while (' ' == *p) {
+		p++;/* bypass blank */
+	}
 	cmd = p;
 	/* extract timeout value */
 	while (('\n' != *p) && (' ' != *p) &&
@@ -548,12 +580,14 @@ static int parse_arg_get_timeout(void *buf, int para, unsigned int *time, unsign
 	/* if there is other para(id), there will be a blank */
 	if (' ' == *p) {
 		timeout[i] = '\0';
-		if (kstrtouint(timeout, 0, time))
+		if (kstrtouint(timeout, 0, time)) {
 			return HISEE_INVALID_PARAMS;
+		}
 		ret = parse_arg_get_id(p, id);
 	} else {
-		if (kstrtouint(cmd, 0, time)) /*its ok that cmd end with new line*/
+		if (kstrtouint(cmd, 0, time)) {/*its ok that cmd end with new line*/
 			return HISEE_INVALID_PARAMS;
+		}
 		*id = NFC_SERVICE;
 	}
 	return ret;
@@ -581,7 +615,7 @@ int hisee_poweron_timeout_func(void *buf, int para)
 			goto end;
 	}
 
-	p_timer_entry = (timer_entry_list *)kmalloc(sizeof(timer_entry_list), GFP_KERNEL);
+	p_timer_entry = (timer_entry_list *)kzalloc(sizeof(timer_entry_list), GFP_KERNEL);
 	if (NULL == p_timer_entry) {
 		pr_err("%s()  timer kmalloc failed\n", __func__);
 		ret = HISEE_NO_RESOURCES;
@@ -597,10 +631,9 @@ int hisee_poweron_timeout_func(void *buf, int para)
 
 	if (0 == g_unhandled_timer_cnt) {
 		unsigned int process_id = COS_PROCESS_TIMEOUT;
-		unsigned int cos_id = 0;	/* the default cos */
+		unsigned int cos_id = HISEE_DEFAULT_COSID;/* the default cos */
 		ret = hisee_power_vote(process_id, HISEE_POWER_ON_BOOTING,
 				cos_id, HISEE_POWER_CMD_ON);
-
 		if (HISEE_OK != ret) {
 			int ret_tmp;
 			ret_tmp = hisee_power_vote(process_id, HISEE_POWER_OFF,
@@ -611,6 +644,8 @@ int hisee_poweron_timeout_func(void *buf, int para)
 			if (HISEE_OK != ret_tmp) pr_err("%s()  also poweroff failed, ret=%d\n", __func__, ret_tmp);
 			goto end;
 		}
+			/*record the current cosid in booting phase*/
+		g_runtime_cosid = cos_id;
 	}
 
 	add_timer(p_timer);
@@ -692,6 +727,8 @@ ssize_t hisee_check_ready_show(struct device *dev, struct device_attribute *attr
 {
 	hisee_state state;
 	int ret;
+	u32	vote_lpm3;
+	u32	vote_atf;
 
 	if (NULL == buf) {
 		pr_err("%s buf paramters is null\n", __func__);
@@ -719,7 +756,13 @@ ssize_t hisee_check_ready_show(struct device *dev, struct device_attribute *attr
 		snprintf(buf, (u64)4, "%d,", -1);
 		strncat(buf, "failed", (unsigned long)strlen("failed"));
 	}
-
+	if (HISEE_STATE_COS_READY != state) {
+		hisee_mntn_collect_vote_value_cmd();
+		vote_lpm3 = hisee_mntn_get_vote_val_lpm3();
+		vote_atf = hisee_mntn_get_vote_val_atf();
+		pr_err("%s(): votes:lpm3 0x%08x atf 0x%08x kernel 0x%lx\n", __func__, vote_lpm3, vote_atf, g_power_vote_status.value);
+	}
 	pr_err("%s(): state=%d, %s\n", __func__, (int)state, buf);
 	return (ssize_t)strlen(buf);
 }/*lint !e715*/
+

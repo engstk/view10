@@ -88,69 +88,6 @@ extern "C" {
 /*****************************************************************************
    5 STRUCT
 *****************************************************************************/
-/*****************************************************************************
-描述 :
-ID   : DIAG_CMD_DRX_SAMPLE_REG_WR
-REQ : DIAG_CMD_DRX_SAMPLE_REG_WR_REQ_STRU
-CNF : DIAG_CMD_DRX_SAMPLE_REG_WR_CNF_STRU
-IND : DIAG_CMD_DRX_REG_WR_IND_STRU
-*****************************************************************************/
-typedef struct
-{
-    VOS_UINT32 ulOmDrxSampleId;
-	VOS_UINT16 usOpid;
-	VOS_UINT16 usPowrDomainBitmap;
-	VOS_UINT8  ucDrxRegData[0];
-}DIAG_CMD_DRX_SAMPLE_REG_WR_REQ_STRU;
-
-typedef struct
-{
-    VOS_UINT32  ulAuid;                     /* 原AUID*/
-    VOS_UINT32  ulSn;                       /* HSO分发，插件命令管理*/
-    VOS_UINT32   ulRet;  /*命令执行返回值，成功返回0，失败返回-1*/
-} DIAG_CMD_DRX_SAMPLE_REG_WR_CNF_STRU;
-
-typedef struct
-{
-    VOS_UINT32  ulAuid;                     /* 原AUID*/
-    VOS_UINT32  ulSn;                       /* HSO分发，插件命令管理*/
-    VOS_UINT32   ulDrxSampleType;
-    VOS_UINT32   ulDrxSampleAddr;
-    VOS_UINT32   ulRet;  /*命令执行返回值，成功返回0，失败返回-1*/
-} DIAG_CMD_DRX_SAMPLE_GET_ADDR_CNF_STRU;
-
-
-/*****************************************************************************
-描述 : 配置SOCP 基地址
-ID   : DIAG_CMD_DRX_SAMPLE_REG_WR
-REQ : DIAG_CMD_DRX_SAMPLE_CFG_CHNADDR_REQ_STRU
-CNF : DIAG_CMD_DRX_SAMPLE_CFG_CHNADDR_CNF_STRU
-IND : DIAG_CMD_DRX_REG_WR_IND_STRU
-*****************************************************************************/
-#define DIAG_PRODUCT_VERSION_LENGTH  (16)
-
-typedef struct
-{
-    VOS_UINT32  ulAddrType; /* config here */
-}DIAG_CMD_DRX_SAMPLE_GET_VERSION_REQ_STRU;
-
-typedef struct
-{
-    VOS_UINT32  ulAuid;                     /* 原AUID*/
-    VOS_UINT32  ulSn;                       /* HSO分发，插件命令管理*/
-	VOS_UINT8   ulProductName[DIAG_PRODUCT_VERSION_LENGTH];
-	VOS_UINT8   ulSolutiongName[DIAG_PRODUCT_VERSION_LENGTH];
-    VOS_UINT32   ulRet;  /*命令执行返回值，成功返回0，失败返回-1*/
-} DIAG_CMD_DRX_SAMPLE_GET_VERSION_CNF_STRU;
-
-
-typedef enum
-{
-	SOCP_BBP_DMA_LOG0_CHNSIZE = 0x10000,
-	SOCP_BBP_DMA_LOG1_CHNSIZE = 0x0,
-	SOCP_BBP_DMA_LOG_COM_CHNSIZE = 0x2000,
-}DIAG_SOCP_SAMPLE_CHNSIZE_E;
-
 /* DIAG_CMD_DRX_DATA_SAMPLE_REG_WR_REQ命令对应的CNF，底软Sleep模块接收到该命令后即可返回成功*/
 typedef struct
 {
@@ -172,9 +109,15 @@ IND : DIAG_CMD_DRX_REG_WR_IND_STRU
 *****************************************************************************/
 typedef enum
 {
-	DRX_SAMPLE_SOCP_CHN_ENABLE   = 0x00,
-	DRX_SAMPLE_SOCP_CHN_DISABLE  = 0x01
-}DIAG_CMD_DRX_SAMPLE_ABLE_CHN_E; 
+    DRX_SAMPLE_DATA_CHN_ENABLE = 0x00,
+    DRX_SAMPLE_DATA_CHN_DISABLE = 0x01, 
+    
+    DRX_SAMPLE_5G_DATA_CHN_ENABLE = 0x10,
+    DRX_SAMPLE_5G_DATA_CHN_DISABLE = 0x11,
+
+    DRX_SAMPLE_ACCESS_DATA_CHN_ENABLE = 0x20,
+    DRX_SAMPLE_ACCESS_DATA_CHN_DISABLE = 0x21,
+}DIAG_CMD_DRX_SAMPLE_ABLE_CHN_E;
 
 typedef struct
 {
@@ -256,9 +199,7 @@ VOS_VOID diag_BbpMsgInit(VOS_VOID);
 VOS_VOID diag_BbpInitSocpChan(VOS_VOID);
 VOS_VOID diag_BbpEnableSocpChan(VOS_VOID);
 VOS_VOID diag_BbpShowDebugInfo(VOS_VOID);
-#if ((VOS_OS_VER == VOS_VXWORKS)||(VOS_OS_VER == VOS_RTOSCK))
-VOS_UINT32 Diag_BbpSendDsinfo2phy(VOS_VOID);
-#endif
+
 /*****************************************************************************
   9 OTHERS
 *****************************************************************************/

@@ -31,31 +31,23 @@
 #ifndef __HHEE_MSG_H__
 #define __HHEE_MSG_H__
 
-#include <linux/hisi/hisi_hhee.h>
+#define HHEE_MSG_SIZE		0x400 /* 1KB */
+#define HHEE_MSG_MAX_SLOTS	15
+#define HHEE_MSG_MAX_PAYLOAD	(HHEE_MSG_SIZE - sizeof(struct hhee_msg))
 
-/*Support max message types 31*/
-#define MAX_MSG_TYPES (31)
-/*1k for each msg*/
-#define HHEE_MSG_SIZE 0x400
-#define MAX_MSG_NAME (16)
+struct hhee_msg_state {
+	uint32_t read_pos;
+	uint32_t write_pos;
+	uint64_t count;
+	uint64_t lost;
+	uint8_t enabled[HHEE_MSG_ID_MAX];
+} __aligned(8);
 
-typedef struct msg_type {
-	char name[MAX_MSG_NAME];
-	unsigned short handle; /*msg ID*/
-	callback_t fn;
-}hhee_msg_type __attribute__((aligned(sizeof(long))));
-
-typedef struct head {
-	unsigned short handle;
-	unsigned int len;
-}msg_list __attribute__((aligned(sizeof(long))));
-
-typedef struct msg_info{
-	unsigned short type; /*service count*/
-	unsigned int send_count;
-	unsigned int ack_count;
-	char str[MAX_MSG_NAME]; /*El1 to El2 register name*/
-	int len; /*name len*/
-}hhee_msg_state __attribute__((aligned(sizeof(long))));
+struct hhee_msg {
+	uint64_t seq;
+	uint32_t id;
+	uint32_t len;
+	uint8_t payload[];
+} __aligned(8);
 
 #endif

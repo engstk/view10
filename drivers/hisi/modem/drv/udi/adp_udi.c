@@ -55,6 +55,8 @@
 #include "udi_balong.h"
 
 
+#include <securec.h>
+
 
 static int udiAdpAcmInit(void);
 
@@ -63,6 +65,7 @@ static int udiAdpAcmInit(void);
 #define UDI_USB_NCM_NDIS_CAPA   (UDI_CAPA_READ_CB | UDI_CAPA_BUFFER_LIST)
 #define UDI_USB_NCM_CTRL_CAPA   (UDI_CAPA_READ_CB | UDI_CAPA_CTRL_OPT)
 #define UDI_UART_CAPA           (UDI_CAPA_BLOCK_READ | UDI_CAPA_BLOCK_WRITE)
+
 
 /* 各模块初始化函数定义 */
 void* g_udiInitFuncTable[(unsigned int)UDI_DEV_MAX+1] =
@@ -121,7 +124,7 @@ static int udiAdpAcmInit(void)
 		printk(KERN_ERR "BSP_MODU_UDI NO Mem, line:%d\n", __LINE__);
 		return (-1);
 	}
-	memset((void*)pDrvInterface, 0, sizeof(UDI_DRV_INTEFACE_TABLE));
+	memset_s((void*)pDrvInterface, sizeof(*pDrvInterface), 0, sizeof(UDI_DRV_INTEFACE_TABLE));
 
 	/* 只设置需要实现的几个接口 */
 	pDrvInterface->udi_open_cb = udiAcmAdpOpen;

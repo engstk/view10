@@ -68,23 +68,7 @@
   3 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : RNIC_MNTN_TransReport
- 功能描述  : 可维可测透明消息输出
- 输入参数  : ulMsgId --- 消息ID
-             pData   --- 数据指针
-             ulLen   --- 数据长度
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年08月07日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_MNTN_TransReport(
     VOS_UINT32                          ulMsgId,
     VOS_VOID                           *pData,
@@ -104,21 +88,7 @@ VOS_VOID RNIC_MNTN_TransReport(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_MNTN_ReportULPktStats
- 功能描述  : 上行报文统计信息上报
- 输入参数  : VOS_UINT8 ucRmNetId  --- 网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年08月08日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_MNTN_ReportULPktStats(VOS_UINT8 ucRmNetId)
 {
     RNIC_MNTN_UL_PKT_STATS_STRU         stStats;
@@ -161,21 +131,7 @@ VOS_VOID RNIC_MNTN_ReportULPktStats(VOS_UINT8 ucRmNetId)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_MNTN_ReportDLPktStats
- 功能描述  : 下行报文统计信息上报
- 输入参数  : VOS_UINT8 ucRmNetId  --- 网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年08月08日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_MNTN_ReportDLPktStats(VOS_UINT8 ucRmNetId)
 {
     RNIC_MNTN_DL_PKT_STATS_STRU         stStats;
@@ -220,21 +176,7 @@ VOS_VOID RNIC_MNTN_ReportDLPktStats(VOS_UINT8 ucRmNetId)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_MNTN_ReportAllStatsInfo
- 功能描述  : RNIC统计信息上报
- 输入参数  : VOS_UINT8 ucRmNetId  --- 网卡ID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年08月18日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_MNTN_ReportAllStatsInfo(VOS_UINT8 ucRmNetId)
 {
     RNIC_MNTN_ReportULPktStats(ucRmNetId);

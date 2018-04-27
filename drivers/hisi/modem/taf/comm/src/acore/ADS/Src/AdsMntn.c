@@ -72,26 +72,7 @@ ADS_MNTN_DL_IP_PKT_REC_STRU                g_stAdsDlPktRecInfo = {0};
   3 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_TransReport
- 功能描述  : 可维可测透明消息输出
- 输入参数  : ulMsgId --- 消息ID
-             pData   --- 数据指针
-             ulLen   --- 数据长度
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-  1.日    期   : 2016年08月17日
-    作    者   : l00373346
-    修改内容   : 修改函数名
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_TransReport(
     VOS_UINT32                          ulMsgId,
     VOS_VOID                           *pData,
@@ -111,21 +92,7 @@ VOS_VOID ADS_MNTN_TransReport(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_SndULIpfProcStatsInd
- 功能描述  : 上行IPF统计信息上报
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_SndULIpfProcStatsInd(VOS_VOID)
 {
     ADS_MNTN_UL_IPF_PROC_STATS_STRU     stStats;
@@ -172,21 +139,7 @@ VOS_VOID ADS_MNTN_SndULIpfProcStatsInd(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_SndDLIpfProcStatsInd
- 功能描述  : 下行IPF统计信息上报
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_SndDLIpfProcStatsInd(VOS_VOID)
 {
     ADS_MNTN_DL_IPF_PROC_STATS_STRU     stStats;
@@ -238,21 +191,7 @@ VOS_VOID ADS_MNTN_SndDLIpfProcStatsInd(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_SndULPktProcStatsInd
- 功能描述  : 上行数据统计信息上报
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_SndULPktProcStatsInd(VOS_VOID)
 {
     ADS_MNTN_UL_PKT_PROC_STATS_STRU     stStats;
@@ -278,21 +217,7 @@ VOS_VOID ADS_MNTN_SndULPktProcStatsInd(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_SndDLPktProcStatsInd
- 功能描述  : 下行数据统计信息上报
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_SndDLPktProcStatsInd(VOS_VOID)
 {
     ADS_MNTN_DL_PKT_PROC_STATS_STRU     stStats;
@@ -314,21 +239,7 @@ VOS_VOID ADS_MNTN_SndDLPktProcStatsInd(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_SndThroughputStatsInd
- 功能描述  : 下行数据统计信息上报
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_SndThroughputStatsInd(VOS_VOID)
 {
     ADS_MNTN_THROUGHPUT_STATS_STRU      stStats;
@@ -349,26 +260,7 @@ VOS_VOID ADS_MNTN_SndThroughputStatsInd(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_HookIpPkt
- 功能描述  : IP包信息勾包
- 输入参数  : pstImmZc  --- imm memory
-             usMsgType --- msg type
-             ulParam1
-             ulParam2
-             ulParam3
-             ulParam4
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_HookIpPkt(
     IMM_ZC_STRU                        *pstImmZc,
     VOS_UINT16                          usMsgType,
@@ -400,21 +292,7 @@ VOS_VOID ADS_MNTN_HookIpPkt(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_ReportAllStatsInfo
- 功能描述  : 上报ADS统计信息
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月06日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_ReportAllStatsInfo(VOS_VOID)
 {
     ADS_MNTN_SndULIpfProcStatsInd();
@@ -427,21 +305,7 @@ VOS_VOID ADS_MNTN_ReportAllStatsInfo(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_ReportULPktInfo
- 功能描述  : ADS 下行PKT记录
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_ReportULPktInfo(VOS_VOID)
 {
     ADS_MNTN_UL_IP_PKT_REC_STRU        *pstRecStru   = VOS_NULL_PTR;
@@ -468,21 +332,7 @@ VOS_VOID ADS_MNTN_ReportULPktInfo(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_ReportDLPktInfo
- 功能描述  : ADS 下行PKT记录
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_ReportDLPktInfo(VOS_VOID)
 {
     ADS_MNTN_DL_IP_PKT_REC_STRU        *pstRecStru   = VOS_NULL_PTR;
@@ -509,22 +359,7 @@ VOS_VOID ADS_MNTN_ReportDLPktInfo(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_DecodeL4PktInfo
- 功能描述  : 解析IP包层4关键信息
- 输入参数  : pucIpPkt    --  下行IP报文数据
-             pstPktInfo  --  记录IP报文数组项地址
- 输出参数  :
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_DecodeL4PktInfo(
     VOS_UINT8                          *pucIpPkt,
     ADS_MNTN_IP_PKT_INFO_STRU          *pstPktInfo
@@ -573,22 +408,7 @@ VOS_VOID ADS_MNTN_DecodeL4PktInfo(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_DecodeIpv6PktInfo
- 功能描述  : 解析IPv6包关键信息
- 输入参数  : pucIpPkt    --  下行IP报文数据
-             pstPktInfo  --  记录IP报文数组项地址
- 输出参数  :
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_DecodeIpv6PktInfo(
     VOS_UINT8                          *pucIpPkt,
     ADS_MNTN_IP_PKT_INFO_STRU          *pstPktInfo
@@ -608,22 +428,7 @@ VOS_VOID ADS_MNTN_DecodeIpv6PktInfo(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_DecodeIpv4PktInfo
- 功能描述  : 解析IPv4包关键信息
- 输入参数  : pucIpPkt    --  下行IP报文数据
-             pstPktInfo  --  记录IP报文数组项地址
- 输出参数  :
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_DecodeIpv4PktInfo(
     VOS_UINT8                          *pucIpPkt,
     ADS_MNTN_IP_PKT_INFO_STRU          *pstPktInfo
@@ -643,22 +448,7 @@ VOS_VOID ADS_MNTN_DecodeIpv4PktInfo(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_DecodeIpPktInfo
- 功能描述  : 解析IP包关键信息
- 输入参数  : pucIpPkt    --  下行IP报文数据
-             pstPktInfo  --  记录IP报文数组项地址
- 输出参数  :
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_DecodeIpPktInfo(
     VOS_UINT8                          *pucIpPkt,
     ADS_MNTN_IP_PKT_INFO_STRU          *pstPktInfo
@@ -676,24 +466,7 @@ VOS_VOID ADS_MNTN_DecodeIpPktInfo(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_RecULIpPktInfo
- 功能描述  : 记录上行IP包信息
- 输入参数  : pstImmZc  --- imm memory
-             ulParam1  --- 自定义参数1
-             ulParam2  --- 自定义参数2
-             ulParam3  --- 自定义参数3
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_RecULIpPktInfo(
     IMM_ZC_STRU                        *pstImmZc,
     VOS_UINT32                          ulParam1,
@@ -751,24 +524,7 @@ VOS_VOID ADS_MNTN_RecULIpPktInfo(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_MNTN_RecIpPktInfo
- 功能描述  : 记录IP包信息
- 输入参数  : pstImmZc  --- imm memory
-             ulParam1  --- 自定义参数1
-             ulParam2  --- 自定义参数2
-             ulParam3  --- 自定义参数3
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月17日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID ADS_MNTN_RecDLIpPktInfo(
     IMM_ZC_STRU                        *pstImmZc,
     VOS_UINT32                          ulParam1,

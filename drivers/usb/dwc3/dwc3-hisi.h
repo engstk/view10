@@ -219,10 +219,10 @@ struct hisi_dwc3_device {
 	void __iomem *pctrl_reg_base;
 	void __iomem *sctrl_reg_base;
 	void __iomem *pmctrl_reg_base;
+	void __iomem *bc_ctrl_reg;
 
 	struct regulator *usb_regu;
 	unsigned int is_regu_on;
-	unsigned int runtime_suspended;
 
 	enum usb_state state;
 	enum hisi_charger_type charger_type;
@@ -235,6 +235,7 @@ struct hisi_dwc3_device {
 	unsigned long start_host_time_stamp;
 	unsigned long stop_host_time_stamp;
 	unsigned long start_hifi_usb_time_stamp;
+	unsigned long hifi_usb_setconfig_time_stamp;
 
 	struct mutex lock;
 	struct wake_lock wake_lock;
@@ -284,15 +285,23 @@ struct hisi_dwc3_device {
 	u32 support_dp;
 	struct usb3_phy_ops *phy_ops;
 
-	wait_queue_head_t phy_idle_wq;
-	unsigned int phy_idle_flag;
-
 	u32 is_hanle_event_sync;
 	struct completion event_completion;
 	unsigned int speed;
 	unsigned int check_voltage;
 	unsigned int suspend_error_flag;
 	unsigned int set_hi_impedance;
+	unsigned quirk_enable_hst_imm_retry:1;
+	unsigned quirk_disable_rx_thres_cfg:1;
+	unsigned quirk_disable_usb2phy_suspend:1;
+	unsigned quirk_clear_svc_opp_per_hs:1;
+	unsigned quirk_set_svc_opp_per_hs_sep:1;
+	unsigned quirk_adjust_dtout:1;
+	unsigned quirk_force_disable_host_lpm:1;
+	unsigned quirk_enable_p4_gate:1;
+	unsigned int hifi_ip_first;
+	unsigned int plug_orien;
+	TCPC_MUX_CTRL_TYPE mode_type;
 };
 
 #ifdef CONFIG_PM
@@ -318,6 +327,7 @@ struct usb3_phy_ops {
 	void (*check_voltage)(struct hisi_dwc3_device *hisi_dwc3);
 	int (*cptest_enable)(struct hisi_dwc3_device *hisi_dwc3);
 	void (*lscdtimer_set)(void);
+	int (*tcpc_is_usb_only)(void);
 };
 
 
@@ -337,21 +347,29 @@ int hisi_dwc3_probe(struct platform_device *pdev, struct usb3_phy_ops *phy_ops);
 int hisi_dwc3_remove(struct platform_device *pdev);
 
 const char *charger_type_string(enum hisi_charger_type type);
+enum usb_device_speed hisi_dwc3_get_dt_host_maxspeed(void);
 /*
  * hisi usb bc
  */
 
 #define BC_AGAIN_DELAY_TIME_1 200
 #define BC_AGAIN_DELAY_TIME_2 8000
+#define BC_AGAIN_ONCE	1
+#define BC_AGAIN_TWICE	2
 void notify_charger_type(struct hisi_dwc3_device *hisi_dwc3);
-void disable_vdp_src(struct hisi_dwc3_device *hisi_dwc3);
-void enable_vdp_src(struct hisi_dwc3_device *hisi_dwc3);
+
+/* bc interface */
+void hisi_bc_disable_vdp_src(struct hisi_dwc3_device *hisi_dwc3);
+void hisi_bc_enable_vdp_src(struct hisi_dwc3_device *hisi_dwc3);
+void hisi_bc_dplus_pulldown(struct hisi_dwc3_device *hisi_dwc);
+void hisi_bc_dplus_pullup(struct hisi_dwc3_device *hisi_dwc);
 enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3);
 /*
  * hisi usb
  */
-int wait_for_phy_idle(struct hisi_dwc3_device *hisi_dwc);
 void hisi_dwc3_cpmode_enable(void);
 void dwc3_lscdtimer_set(void);
+void hisi_dwc3_platform_host_quirks(void);
+void hisi_dwc3_platform_device_quirks(void);
 
 #endif /* _DWC3_HISI_H_ */

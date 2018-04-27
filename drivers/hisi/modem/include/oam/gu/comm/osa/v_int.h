@@ -85,7 +85,10 @@ extern "C" {
 #endif /* __cpluscplus */
 #endif /* __cpluscplus */
 
-
+#if (VOS_TEN == VOS_OS_VER)
+/* 自旋锁类型定义 */
+typedef VOS_UINT32          VOS_SPINLOCK;
+#endif
 
 #if (VOS_VXWORKS == VOS_OS_VER)
 

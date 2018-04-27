@@ -119,6 +119,11 @@
 #define PA_SLEEPNOCONFIGTIME	0x15A2
 #define PA_STALLNOCONFIGTIME	0x15A3
 #define PA_SAVECONFIGTIME	0x15A4
+#define PA_TXHSADAPTTYPE	0x15D4
+
+/*UFS Device UniPro version*/
+#define UNIPRO_VER_1_6_1	4
+#define UNIPRO_VER_1_8		5
 
 /* PA power modes */
 enum {
@@ -151,8 +156,15 @@ enum ufs_hs_gear_tag {
 	UFS_HS_G1,		/* HS Gear 1 (default for reset) */
 	UFS_HS_G2,		/* HS Gear 2 */
 	UFS_HS_G3,		/* HS Gear 3 */
+	UFS_HS_G4,		/* HS Gear 4 */
 };
 
+enum {
+	PA_HS_APT_REFRESH,	/* REFRESH */
+	PA_HS_APT_INITIAL,	/* INITIAL */
+	PA_HS_APT_RESERVED,	/* Reserved */
+	PA_HS_APT_NO,		/* No ADAPT */
+};
 /*
  * Data Link Layer Attributes
  */

@@ -75,54 +75,17 @@ osl_sem_id                                 g_ulOmAcpuHsicSem;
   4 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  :
- 功能描述  :
- 输入参数  :
- 输出参数  :
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2014年5月31日
-    作    者   : XXXXXXXX
-    修改内容   : V8R1 OM_Optimize项目新增
-
-*****************************************************************************/
 
 
-/*****************************************************************************
- 函 数 名  : PPM_GetHsicPortStatus
- 功能描述  : OM口和HSIC关联状态
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 状态状态
- 修改历史      :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
+
 OM_HSIC_PORT_STATUS_ENUM_UINT32 PPM_GetHsicPortStatus(void)
 {
     /* 返回OM口和HSIC关联状态 */
     return g_ulOmHsicConnectStatus;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicIndWriteDataCB
- 功能描述  : 用于处理Hsic 口的异步发送数据的回调
- 输入参数  : pucData:   需要发送的数据内容
-             ulDataLen: 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年2月2日
-     作    者  : zhuli
-     修改内容  : Creat Function
-*****************************************************************************/
+
 void PPM_HsicIndWriteDataCB(u8* pucVirData, u8* pucPhyData, s32 lLen)
 {
     /*当前只承载OM数据*/
@@ -132,17 +95,7 @@ void PPM_HsicIndWriteDataCB(u8* pucVirData, u8* pucPhyData, s32 lLen)
 }
 
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicCfgReadDataCB
- 功能描述  : 用于ACPU上面底软把HSIC CFG口数据通过ICC发送给OM模块
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : BSP_ERROR/BSP_OK
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 s32 PPM_HsicCfgReadDataCB(void)
 {
     if (OM_HSIC_PORT_STATUS_OFF == PPM_GetHsicPortStatus())
@@ -153,18 +106,7 @@ s32 PPM_HsicCfgReadDataCB(void)
     return PPM_ReadPortData(CPM_HSIC_CFG_PORT, g_astOMPortUDIHandle[OM_HSIC_CFG_PORT_HANDLE], OM_HSIC_CFG_PORT_HANDLE);
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicCfgWriteDataCB
- 功能描述  : 用于处理Hsic CFG口的异步发送数据的回调
- 输入参数  : pucData:   需要发送的数据内容
-             ulDataLen: 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicCfgWriteDataCB(u8* pucVirData, u8* pucPhyData, s32 lLen)
 {
     /*当前只承载OM数据*/
@@ -173,17 +115,7 @@ void PPM_HsicCfgWriteDataCB(u8* pucVirData, u8* pucPhyData, s32 lLen)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicCfgPortOpen
- 功能描述  : 用于初始化OM使用的Hsic CFG端口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicCfgPortOpen(void)
 {
 
@@ -196,17 +128,7 @@ void PPM_HsicCfgPortOpen(void)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicIndPortOpen
- 功能描述  : 用于初始化OM使用的Hsic IND端口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史      :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicIndPortOpen(void)
 {
     /* HSIC IND 端口不会收数据，没有断开处理 */
@@ -219,19 +141,7 @@ void PPM_HsicIndPortOpen(void)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicIndPortClose
- 功能描述  : Hsic IND端口已经消失，需要关闭USB端口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicIndPortClose(void)
 {
     PPM_PortCloseProc(OM_HSIC_IND_PORT_HANDLE, CPM_HSIC_IND_PORT);
@@ -239,17 +149,7 @@ void PPM_HsicIndPortClose(void)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicCfgPortClose
- 功能描述  : Hsic IND端口已经消失，需要关闭USB端口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicCfgPortClose(void)
 {
     PPM_PortCloseProc(OM_HSIC_CFG_PORT_HANDLE, CPM_HSIC_CFG_PORT);
@@ -257,53 +157,19 @@ void PPM_HsicCfgPortClose(void)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : GU_OamHsicIndSendData
- 功能描述  : 将输入的数据通过Hsic IND发送给PC侧
- 输入参数  : pucVirAddr:   数据虚地址
-             pucPhyAddr:   数据实地址
-             ulDataLen: 数据长度
- 输出参数  : 无
- 返 回 值  : VOS_ERROR/BSP_OK
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 u32 PPM_HsicIndSendData(u8 *pucVirAddr, u8 *pucPhyAddr, u32 ulDataLen)
 {
     return PPM_PortSend(OM_HSIC_IND_PORT_HANDLE, pucVirAddr, pucPhyAddr, ulDataLen);
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicCfgSendData
- 功能描述  : 将输入的数据通过Hsic CFG发送给PC侧
- 输入参数  : pucVirAddr:   数据虚地址
-             pucPhyAddr:   数据实地址
-             ulDataLen: 数据长度
- 输出参数  : 无
- 返 回 值  : VOS_ERROR/BSP_OK
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 u32 PPM_HsicCfgSendData(u8 *pucVirAddr, u8 *pucPhyAddr, u32 ulDataLen)
 {
     return PPM_PortSend(OM_HSIC_CFG_PORT_HANDLE, pucVirAddr, pucPhyAddr, ulDataLen);
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicIndStatusCB
- 功能描述  : 用于ACPU上面处理HSIC IND端口断开后的OM链接断开
- 输入参数  : enPortState:   端口状态
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicIndStatusCB(ACM_EVT_E enPortState)
 {
     PPM_PortStatus(OM_HSIC_IND_PORT_HANDLE, CPM_HSIC_IND_PORT, enPortState);
@@ -311,17 +177,7 @@ void PPM_HsicIndStatusCB(ACM_EVT_E enPortState)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicIndStatusCB
- 功能描述  : 用于ACPU上面处理HSIC CFG端口断开后的OM链接断开
- 输入参数  : enPortState:   端口状态
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicCfgStatusCB(ACM_EVT_E enPortState)
 {
     PPM_PortStatus(OM_HSIC_CFG_PORT_HANDLE, CPM_HSIC_CFG_PORT, enPortState);
@@ -329,17 +185,7 @@ void PPM_HsicCfgStatusCB(ACM_EVT_E enPortState)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_HsicPortInit
- 功能描述  : 用于HSIC口通道的初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-  1.日    期   : 2014年5月31日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 void PPM_HsicPortInit(void)
 {
     /* 产品不支持HSIC特性，直接返回 */

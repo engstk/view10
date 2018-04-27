@@ -48,6 +48,7 @@ struct hi6522_device_info {
     int ico_iin;
     int ico_iin_lim_opt;
     int hiz_iin_limit_open_flag;
+    int wled_ovp_vol;
 	/*power_on_config_reg00*/
 	unsigned char 	  flash_led_torch_en;
 	unsigned char 	  flash_led_flash_en;
@@ -473,8 +474,19 @@ struct hi6522_device_info {
 #define IIN_LIMIT_OPTION_DEFAULT        (4)
 #define DPM_VALID_CHECK_COUNT           (5)
 #define ICO_HIG_THR_COUNT_MAX           (4)
-
+#define BAT_TEMP_50                     (50)
+#define BAT_TEMP_0                      (0)
 #define HIZ_IIN_FLAG_TRUE                (1)
 #define HIZ_IIN_FLAG_FALSE               (0)
+
+/*wled_ovp_set*/
+#define WLED_OVP_REG                    (SOC_SCHARGER_WLED_REG9_ADDR(0))
+#define WLED_OVP_SHIFT                  (6)
+#define WLED_OVP_MASK                   (0x03<<WLED_OVP_SHIFT)
+#define VOL_960                         (0)
+#define VOL_1000                        (1)
+#define VOL_900                         (2)
+#define VOL_880                         (3)
+#define VOL_DEFAULT                     (4)
 #endif
 

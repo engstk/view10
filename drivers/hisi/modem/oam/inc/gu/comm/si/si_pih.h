@@ -46,19 +46,7 @@
  *
  */
 
-/************************************************************************
-Copyright   : 2005-2008, Huawei Tech. Co., Ltd.
-File name   : SI_SIM.h
-Author      : H59254
-Version     : V200R001
-Date        : 2008-10-18
-Description : SIM卡的头文件
-History     :
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : H59254
-  修改内容  : Create
-************************************************************************/
+
 #ifndef __SI_PIH_H__
 #define __SI_PIH_H__
 
@@ -78,9 +66,9 @@ extern "C" {
 #include "NVIM_Interface.h"
 #if (OSA_CPU_CCPU == VOS_OSA_CPU)
 #include "usimmvsimauth.h"
+#include "omlist.h"
 #endif  /*(OSA_CPU_CCPU == VOS_OSA_CPU)*/
 #include "mdrv.h"
-#include "omlist.h"
 #include "msp_diag_comm.h"
 #include "omerrorlog.h"
 
@@ -111,24 +99,24 @@ extern "C" {
 
 #define SI_PIH_SEC_ICC_VSIM_VER         (10000)
 
-#define SI_PIH_POLL_TIMER_START(pTimer,ulLength, Name)      VOS_StartRelTimer(pTimer,\
-                                                                                MAPS_PIH_PID,\
+#define SI_PIH_POLL_TIMER_START(pTimer,ulPid,ulLength, Name)      VOS_StartRelTimer(pTimer,\
+                                                                                ulPid,\
                                                                                 ulLength,\
                                                                                 Name,\
                                                                                 0,\
                                                                                 VOS_RELTIMER_NOLOOP,\
                                                                                 VOS_TIMER_NO_PRECISION)
 
-#define SI_PIH_POLL_32K_TIMER_START(pTimer,ulLength, Name)  VOS_StartDrxTimer(pTimer,\
-                                                                                MAPS_PIH_PID,\
+#define SI_PIH_POLL_32K_TIMER_START(pTimer,ulPid,ulLength, Name)  VOS_StartDrxTimer(pTimer,\
+                                                                                ulPid,\
                                                                                 ulLength,\
                                                                                 Name,\
                                                                                 0)
 
 #define SI_PIH_POLL_32K_TIMER_STOP(pTimer)                  VOS_StopDrxTimer(pTimer)
 
-#define SI_PIH_POLL_REL_32K_TIMER_START(pTimer,ulLength, Name)  VOS_StartRelTimer(pTimer,\
-                                                                                MAPS_PIH_PID,\
+#define SI_PIH_POLL_REL_32K_TIMER_START(pTimer,ulPid,ulLength, Name)  VOS_StartRelTimer(pTimer,\
+                                                                                ulPid,\
                                                                                 ulLength,\
                                                                                 Name,\
                                                                                 0,\
@@ -137,19 +125,47 @@ extern "C" {
 
 #define SI_PIH_POLL_REL_32K_TIMER_STOP(pTimer)                  VOS_StopRelTimer(pTimer)
 
+#if  ((OSA_CPU_ACPU == VOS_OSA_CPU) || (VOS_OS_VER == VOS_WIN32))
+#define PIH_GEN_LOG_MODULE(Level)       (DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(I0_MAPS_PIH_PID), DIAG_MODE_COMM, Level))
 
-#define PIH_GEN_LOG_MODULE(Level)       (DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(MAPS_PIH_PID), DIAG_MODE_COMM, Level))
+#define PIH_INFO_LOG(string)            (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_INFO),I0_MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s", string)
+#define PIH_NORMAL_LOG(string)          (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_NORMAL),I0_MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s", string)
+#define PIH_WARNING_LOG(string)         (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_WARNING),I0_MAPS_PIH_PID, __FILE__, __LINE__, "WARNING:%s", string)
+#define PIH_ERROR_LOG(string)           (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_ERROR),I0_MAPS_PIH_PID, __FILE__, __LINE__, "ERROR:%s", string)
 
-#define PIH_INFO_LOG(string)            (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_NORMAL),MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s", string)
-#define PIH_NORMAL_LOG(string)          (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_NORMAL),MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s", string)
-#define PIH_WARNING_LOG(string)         (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_WARNING),MAPS_PIH_PID, __FILE__, __LINE__, "WARNING:%s", string)
-#define PIH_ERROR_LOG(string)           (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_ERROR),MAPS_PIH_PID, __FILE__, __LINE__, "ERROR:%s", string)
+#define PIH_INFO1_LOG(string, para1)    (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_INFO),I0_MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s,%d", string, para1)
+#define PIH_NORMAL1_LOG(string, para1)  (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_NORMAL),I0_MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s,%d", string, para1)
+#define PIH_WARNING1_LOG(string, para1) (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_WARNING),I0_MAPS_PIH_PID, __FILE__, __LINE__, "WARNING%s,%d", string, para1)
+#define PIH_ERROR1_LOG(string, para1)   (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_ERROR),I0_MAPS_PIH_PID, __FILE__, __LINE__, "ERROR:%s,%d", string, para1)
 
-#define PIH_INFO1_LOG(string, para1)    (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_NORMAL),MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s,%d", string, para1)
-#define PIH_NORMAL1_LOG(string, para1)  (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_NORMAL),MAPS_PIH_PID, __FILE__, __LINE__, "NORMAL:%s,%d", string, para1)
-#define PIH_WARNING1_LOG(string, para1) (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_WARNING),MAPS_PIH_PID, __FILE__, __LINE__, "WARNING%s,%d", string, para1)
-#define PIH_ERROR1_LOG(string, para1)   (VOS_VOID)DIAG_LogReport(PIH_GEN_LOG_MODULE(PS_LOG_LEVEL_ERROR),MAPS_PIH_PID, __FILE__, __LINE__, "ERROR:%s,%d", string, para1)
+#elif  (OSA_CPU_CCPU == VOS_OSA_CPU)
 
+#define PIH_INFO_LOG_WITH_SLOT_ID(enSlotId, string)                 USIMM_LogPrint(enSlotId, PS_LOG_LEVEL_INFO, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Info:%s", string)
+
+#define PIH_NORMAL_LOG_WITH_SLOT_ID(enSlotId, string)               USIMM_LogPrint(enSlotId, PS_LOG_LEVEL_NORMAL, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Normal:%s", string)
+
+#define PIH_WARNING_LOG_WITH_SLOT_ID(enSlotId, string)              USIMM_LogPrint(enSlotId, PS_LOG_LEVEL_WARNING, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Warning:%s", string)
+
+#define PIH_ERROR_LOG_WITH_SLOT_ID(enSlotId, string)                USIMM_LogPrint(enSlotId, PS_LOG_LEVEL_ERROR, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Error:%s", string)
+
+#define PIH_INFO_LOG1_WITH_SLOT_ID(enSlotId, string, para1)         USIMM_LogPrint1(enSlotId, PS_LOG_LEVEL_INFO, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Info:%s,%d", string, para1)
+
+#define PIH_NORMAL_LOG1_WITH_SLOT_ID(enSlotId, string, para1)       USIMM_LogPrint1(enSlotId, PS_LOG_LEVEL_NORMAL, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Normal:%s,%d", string, para1)
+
+#define PIH_WARNING_LOG1_WITH_SLOT_ID(enSlotId, string, para1)      USIMM_LogPrint1(enSlotId, PS_LOG_LEVEL_WARNING, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Warning:%s,%d", string, para1)
+
+#define PIH_ERROR_LOG1_WITH_SLOT_ID(enSlotId, string, para1)        USIMM_LogPrint1(enSlotId, PS_LOG_LEVEL_ERROR, I0_MAPS_PIH_PID, __FILE__, __LINE__, "Error:%s,%d", string, para1)
+
+#define PIH_INFO_LOG(string)                PIH_INFO_LOG_WITH_SLOT_ID(enSlotId, string)
+#define PIH_NORMAL_LOG(string)              PIH_NORMAL_LOG_WITH_SLOT_ID(enSlotId, string)
+#define PIH_WARNING_LOG(string)             PIH_WARNING_LOG_WITH_SLOT_ID(enSlotId, string)
+#define PIH_ERROR_LOG(string)               PIH_ERROR_LOG_WITH_SLOT_ID(enSlotId, string)
+
+#define PIH_INFO1_LOG(string, para1)        PIH_INFO_LOG1_WITH_SLOT_ID(enSlotId, string, para1)
+#define PIH_NORMAL1_LOG(string, para1)      PIH_NORMAL_LOG1_WITH_SLOT_ID(enSlotId, string, para1)
+#define PIH_WARNING1_LOG(string, para1)     PIH_WARNING_LOG1_WITH_SLOT_ID(enSlotId, string, para1)
+#define PIH_ERROR1_LOG(string, para1)       PIH_ERROR_LOG1_WITH_SLOT_ID(enSlotId, string, para1)
+#endif
 
 #define PIH_BIT_N(num)                  (0x01 << (num))
 
@@ -250,6 +266,11 @@ enum SI_PIH_REQ_ENUM
 
     SI_PIH_CARDTYPEEX_QUERY_REQ     = 33,
 
+#if (FEATURE_ON == FEATURE_PHONE_SC)
+    SI_PIH_SILENT_PIN_SET_REQ       = 34,
+    SI_PIH_SILENT_PININFO_SET_REQ   = 35,
+#endif
+
     SI_PIH_REQ_BUTT
 };
 typedef VOS_UINT32      SI_PIH_REQ_ENUM_UINT32;
@@ -348,12 +369,7 @@ enum SI_PIH_HVTEE_DATAFLAG_ENUM
 };
 typedef VOS_UINT32      SI_PIH_HVTEE_DATAFLAG_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : SI_PIH_RACCESS_SRC_TYPE_ENUM
- 结构说明  : 用来区分PIH发来的CRSM命令类型
-  1.日    期   : 2015年4月9日
-    作    者   : g00256031
-*****************************************************************************/
+
 enum SI_PIH_RACCESS_SRC_TYPE_ENUM
 {
     SI_PIH_RACCESS_FROM_PIH      = 0,
@@ -361,13 +377,7 @@ enum SI_PIH_RACCESS_SRC_TYPE_ENUM
 };
 typedef VOS_UINT8      SI_PIH_RACCESS_SRC_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : SI_PIH_INFO_LIST_ENUM_UINT8
- 结构说明  :
- 1.日    期   : 2012年08月28日
-   作    者   : h59254
-   修改内容   : 新建
-*****************************************************************************/
+
 enum SI_PIH_INFO_LIST_ENUM
 {
     SI_PIH_INFO_USED_LIST_ID = 0,
@@ -377,13 +387,7 @@ enum SI_PIH_INFO_LIST_ENUM
 
 typedef VOS_UINT8  SI_PIH_INFO_LIST_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : SI_PIH_ERR_LOG_ALM_ID_ENUM
- 枚举说明  : 故障告警ID
- 1.日    期   : 2016年06月24日
-   作    者   : d00212987
-   修改内容   : 新建
-*****************************************************************************/
+
 enum SI_PIH_ERR_LOG_ALM_ID_ENUM
 {
     SI_PIH_ERR_LOG_ALM_REQ_RPT_FAIL          = 0x01,             /* 卡Errlog查询上报(已经使用) */
@@ -399,26 +403,14 @@ typedef VOS_UINT16 SI_PIH_ERR_LOG_ALM_ID_ENUM_UINT16;
   4 STRUCT定义
 *****************************************************************************/
 
-/*****************************************************************************
- 枚举名    : SI_PIH_ERR_LOG_ACTIVE_RPT_STRU
- 枚举说明  : usim初始化告警主动上报
- 1.日    期   : 2016年06月24日
-   作    者   : d00212987
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     OM_ERR_LOG_HEADER_STRU             stHeader;
     VOS_UINT8                          aucData[4];
 }SI_PIH_ERR_LOG_ACTIVE_RPT_STRU;
 
-/*****************************************************************************
- 枚举名    : SI_PIH_CARD_SCI_ERR_INFO_STRU
- 枚举说明  : usim统计卡异常
- 1.日    期   : 2016年06月24日
-   作    者   : d00212987
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulStartCountSlice;
@@ -433,13 +425,7 @@ typedef struct
     VOS_UINT32                          ulEndCountSlice;
 }SI_PIH_CARD_SCI_ERR_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CARD_FETCH_INFO_STRU
- 结构说明  : 上报fetch事件的数据结构
- 1.日    期   : 2017年04月13日
-   作    者   : x00306642
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulSlice;
@@ -475,13 +461,7 @@ typedef struct
     VOS_UINT8                           aucData[8];
 }SI_PIH_GACCESS_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_ISDB_ACCESS_REQ_STRU
- 结构说明  : ISDB透传APDU的请求数据结构
- 1.日    期   : 2012年08月28日
-   作    者   : h59254
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_PIH_MSG_HEADER_STRU              stMsgHeader;        /* PIH消息头    */
@@ -498,7 +478,7 @@ typedef struct
     VOS_UINT8                       aucAPDU[8];
 }SI_PIH_PCSC_REQ_STRU;
 
-typedef VOS_VOID (*PUSIMPCSCPROC)(SI_PIH_PCSC_REQ_STRU *pstMsg);
+typedef VOS_VOID (*PUSIMPCSCPROC)(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId, SI_PIH_PCSC_REQ_STRU *pstMsg);
 
 typedef struct
 {
@@ -590,13 +570,7 @@ typedef struct
     VOS_UINT8                       aucContent[4];      /* 数据内容 */
 }SI_PIH_HOOK_MSG_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CCHO_SET_REQ_STRU
- 结构说明  : 打开逻辑通道请求数据结构
- 1.日    期   : 2013年05月14日
-   作    者   : g47350
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_PIH_MSG_HEADER_STRU              stMsgHeader;                            /* PIH消息头 */
@@ -604,13 +578,7 @@ typedef struct
     VOS_UINT8                           aucADFName[2*USIMM_AID_LEN_MAX];        /* 考虑到中移动不对AID长度检测的需求将长度增大1倍 */
 }SI_PIH_CCHO_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CCHP_SET_REQ_STRU
- 结构说明  : 打开逻辑通道请求数据结构,带APDU的参数P2
- 1.日    期   : 2016年09月26日
-   作    者   : z00377832
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_PIH_MSG_HEADER_STRU              stMsgHeader;                            /* PIH消息头 */
@@ -620,26 +588,14 @@ typedef struct
     VOS_UINT8                           ucRsv[3];
 }SI_PIH_CCHP_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CCHC_SET_REQ_STRU
- 结构说明  : 打开逻辑通道请求数据结构
- 1.日    期   : 2013年05月14日
-   作    者   : g47350
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_PIH_MSG_HEADER_STRU              stMsgHeader;                            /* PIH消息头 */
     VOS_UINT32                          ulSessionID;                            /* 逻辑通道号 */
 }SI_PIH_CCHC_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CGLA_REQ_STRU
- 结构说明  : 透传逻辑通道APDU的请求数据结构
- 1.日    期   : 2013年05月14日
-   作    者   : g47350
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_PIH_MSG_HEADER_STRU              stMsgHeader;                            /* PIH消息头    */
@@ -710,26 +666,14 @@ typedef struct
     VOS_UINT8                           *pucEfContent;  /* 更新数据内容 */
 }SI_PIH_SETFILE_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CRSM_SET_REQ_STRU
- 结构说明  : CRSM请求数据结构
- 1.日    期   : 2015年04月08日
-   作    者   : g00256031
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_PIH_MSG_HEADER_STRU              stMsgHeader;                            /* PIH消息头 */
     SI_PIH_CRSM_STRU                    stMsgContent;
 }SI_PIH_CRSM_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CRLA_SET_REQ_STRU
- 结构说明  : CRLA请求数据结构
- 1.日    期   : 2015年04月08日
-   作    者   : g00256031
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_PIH_MSG_HEADER_STRU              stMsgHeader;                            /* PIH消息头 */
@@ -742,13 +686,8 @@ typedef struct
     VOS_UINT32                          ulSessionID;
 }SI_PIH_CHANNELAPPINFO_STRU;
 
-/*****************************************************************************
- 结构名    : SI_PIH_CTRL_INFO_NODE_STRU
- 结构说明  : PIH控制信息节点
- 1.日    期   : 2015年05月12日
-   作    者   : g00256031
-   修改内容   : 新建
-*****************************************************************************/
+#if (OSA_CPU_CCPU == VOS_OSA_CPU)
+
 typedef struct
 {
     OM_LIST_NODE_STRU                   stListNode;
@@ -758,15 +697,9 @@ typedef struct
     VOS_UINT32                          enCmdType;
     SI_PIH_EVENT                        ulEventType;
 }SI_PIH_CTRL_INFO_NODE_STRU;
+#endif
 
-/*****************************************************************************
- 结构名    : SI_PIH_KEY_FILE_LIST_STRU
- 结构说明  : PIH关键待检测文件信息
 
-1. 日    期   : 2016年9月5日
-   作    者   : d00212987
-   修改内容   : USIM API接口优化修改
-*****************************************************************************/
 typedef struct
 {
     SI_PIH_FILE_INFO_STRU               stFileInfo;
@@ -774,14 +707,7 @@ typedef struct
 }SI_PIH_NEED_CHECK_FILE_STRU;
 
 #if (OSA_CPU_CCPU == VOS_OSA_CPU)
-/*****************************************************************************
- 结构名    : SI_PIH_KEY_FILE_LIST_STRU
- 结构说明  : PIH关键待检测文件信息
 
-1. 日    期   : 2016年9月5日
-   作    者   : d00212987
-   修改内容   : USIM API接口优化修改
-*****************************************************************************/
 typedef struct
 {
     SI_PIH_NEED_CHECK_FILE_STRU         stNeedCheckList[SI_PIH_KEYFILE_MAX_NUM];
@@ -794,14 +720,7 @@ typedef struct
 }SI_PIH_KEY_FILE_LIST_STRU;
 #endif
 
-/*****************************************************************************
- 结构名    : SI_PIH_CARD_STATUS_STRU
- 结构说明  : PIH模块保存USIM卡信息数据结构
 
-1. 日    期   : 2016年9月20日
-   作    者   : Z00316370
-   修改内容   : USIM API接口优化修改
-*****************************************************************************/
 typedef struct
 {
     USIMM_PHYCARD_TYPE_ENUM_UINT32      enPhyCardType;      /*物理卡状态*/
@@ -814,15 +733,19 @@ typedef struct
     USIMM_CARDSTATUS_ADDINFO_STRU       stAddInfo;          /*卡状态有效时候才能使用里面的信息*/
 }SI_PIH_CARD_STATUS_STRU;
 
+
+typedef VOS_UINT32 (*PFSIPIHPIDMSGPROC)(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId, PS_SI_MSG_STRU *pMsg);
+
+
+typedef struct
+{
+    VOS_PID                             ulSenderPid;
+    PFSIPIHPIDMSGPROC                   pProcFunc;        /* 处理函数 */
+}SI_PIH_PIDMSGPROC_FUNC;
+
 #if ((FEATURE_VSIM == FEATURE_ON) && (FEATURE_ON == FEATURE_VSIM_ICC_SEC_CHANNEL))
 
-/*****************************************************************************
- 结构名    : SI_TEE_REQ_ENUM
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 enum SI_TEE_REQ_MSG_TYPE_ENUM
 {
     SI_TEE_MSG_TYPE_APNSET_REQ               = 0xA5A50001UL,    /*APN设置数据消息*/
@@ -831,13 +754,7 @@ enum SI_TEE_REQ_MSG_TYPE_ENUM
 };
 typedef  VOS_UINT32  SI_TEE_REQ_ENUM_UINT32;
 
-/*****************************************************************************
- 结构名    : SI_TEE_REQ_ENUM
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 enum SI_TEE_CNF_MSG_TYPE_ENUM
 {
     SI_TEE_MSG_TYPE_APNSET_CNF               = 0x5A5A0001,    /*APN设置数据*/
@@ -846,13 +763,7 @@ enum SI_TEE_CNF_MSG_TYPE_ENUM
 };
 typedef  VOS_UINT32  SI_TEE_CNF_ENUM_UINT32;
 
-/*****************************************************************************
- 结构名    : SI_TEE_MSG_IND_ENUM
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 enum SI_TEE_IND_MSG_TYPE_ENUM
 {
     SI_TEE_MSG_TYPE_AUTH_RESULT_IND          = 0xAAAA0001,    /*APN设置数据*/
@@ -860,13 +771,7 @@ enum SI_TEE_IND_MSG_TYPE_ENUM
 };
 typedef  VOS_UINT32  SI_TEE_MSG_IND_ENUM_UINT32;
 
-/*****************************************************************************
- 结构名    : SI_TEE_VSIM_CARD_TYPE_ENUM_UINT8
- 结构说明  :
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 enum SI_TEE_VSIM_CARD_TYPE_ENUM
 {
     SI_TEE_VSIM_CARD_TYPE_SIM           = 0,
@@ -875,13 +780,7 @@ enum SI_TEE_VSIM_CARD_TYPE_ENUM
 };
 typedef  VOS_UINT8  SI_TEE_VSIM_CARD_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : SI_TEE_VSIM_AUTH_TYPE_ENUM_UINT8
- 结构说明  :
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 enum SI_TEE_VSIM_AUTH_TYPE_ENUM
 {
     SI_TEE_VSIM_AUTH_TYPE_MILENAGE              = 0,
@@ -890,13 +789,7 @@ enum SI_TEE_VSIM_AUTH_TYPE_ENUM
 };
 typedef  VOS_UINT8  SI_TEE_VSIM_AUTH_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : SI_PIH_ICC_SEC_CH_CALL_BACK_STRU
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -905,13 +798,7 @@ typedef struct
     VOS_UINT32                                              ulChannelId;        /* CHANNEL ID */
 } SI_PIH_ICC_SEC_CH_CALL_BACK_STRU;
 
-/*****************************************************************************
- 结构名    : SI_TEE_REQ_ENUM
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_TEE_REQ_ENUM_UINT32              enReqMsgId;         /*消息ID*/
@@ -920,13 +807,7 @@ typedef struct
     VOS_UINT8                           aucReqData[4];      /*数据内容，根据实际长度增加*/
 } SI_TEE_REQDATA_STRU;
 
-/*****************************************************************************
- 结构名    : SI_TEE_CNFDATA_STRU
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_TEE_CNF_ENUM_UINT32              enCnfMsgId;     /*消息ID*/
@@ -936,13 +817,7 @@ typedef struct
     VOS_UINT8                           aucCnfData[4];  /*数据内容，根据实际长度增加*/
 } SI_TEE_CNFDATA_STRU;
 
-/*****************************************************************************
- 结构名    : SI_TEE_MSGDATA_IND_STRU
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     SI_TEE_CNF_ENUM_UINT32              enCnfMsgId;     /*消息ID*/
@@ -951,13 +826,7 @@ typedef struct
     VOS_UINT8                           aucCnfData[4];  /*数据内容，根据实际长度增加*/
 } SI_TEE_MSGDATA_IND_STRU;
 
-/*****************************************************************************
- 结构名    : SI_VSIM_FILEDATA_STRU
- 结构说明  : 发送消息请求ID
- 1.日    期   : 2016年05月06日
-   作    者   : c00299064
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucAESKey[SI_PIH_VSIM_AES_KEY_LEN];      /* AES密钥 */
@@ -969,42 +838,59 @@ typedef struct
 
 #endif
 
+
+typedef struct
+{
+    SI_PIH_MSG_HEADER_STRU              stMsgHeader;
+    SI_PIH_CRYPTO_PIN_STRU              stCryptoPin;
+}SI_PIH_SILENT_PIN_REQ_STRU;
+
+
+typedef struct
+{
+    SI_PIH_MSG_HEADER_STRU              stMsgHeader;
+    VOS_UINT32                          ulDataLen;
+    VOS_UINT8                           aucData[USIMM_PINNUMBER_LEN];
+}SI_PIH_SILENT_PININFO_REQ_STRU;
+
 /*****************************************************************************
   5 全局变量声明
 *****************************************************************************/
 extern VOS_MSG_HOOK_FUNC            vos_MsgHook;
 
-extern VOS_UINT32                   g_aulPIHUsimBCPid[SI_PIH_BCPID_REG_MAX];
+extern VOS_UINT32                   g_aulPIHUsimBCPid[USIMM_SLOT_SIZE][SI_PIH_BCPID_REG_MAX];
 
-extern VOS_UINT32                   g_aulPIHRefreshBCPid[SI_PIH_BCPID_REG_MAX];
+extern VOS_UINT32                   g_aulPIHRefreshBCPid[USIMM_SLOT_SIZE][SI_PIH_BCPID_REG_MAX];
 
 /*****************************************************************************
   6 函数声明
 *****************************************************************************/
 #if (OSA_CPU_CCPU == VOS_OSA_CPU)
-extern VOS_VOID SI_PIH_InitTEEShareAddr(VOS_VOID);
+extern VOS_VOID SI_PIH_InitTEEShareAddr(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId);
 
-extern VOS_UINT32 SI_PIH_Stop32KCheckStatusTimer(HTIMER *pstTimer);
+extern VOS_UINT32 SI_PIH_Stop32KCheckStatusTimer(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId, HTIMER *pstTimer);
 
 extern VOS_UINT32 SI_PIH_Start32KCheckStatusTimer(
+    SI_PIH_CARD_SLOT_ENUM_UINT32         enSlotId,
     HTIMER                              *pstTimer,
     VOS_UINT32                          ulTimerLen,
     VOS_UINT32                          ulTimerName);
 
-extern VOS_UINT32 SI_PIH_CheckGCFTestCard(VOS_VOID);
+extern VOS_UINT32 SI_PIH_CheckGCFTestCard(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId);
 
-extern VOS_UINT32 USIMM_CCB_IsCardExist(VOS_VOID);
+extern VOS_UINT32 USIMM_CCB_IsCardExist(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId);
 
-extern VOS_UINT32 USIMM_CCB_GetUsimSimulateIsimStatus(VOS_VOID);
+extern VOS_UINT32 USIMM_CCB_GetUsimSimulateIsimStatus(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId);
 
 #if (FEATURE_ON == FEATURE_PTM)
-extern VOS_VOID SI_PIH_ErrLogVarInit(VOS_VOID);
+extern VOS_VOID SI_PIH_ErrLogVarInit(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId);
 #endif
 
 #if ((FEATURE_VSIM == FEATURE_ON) && (FEATURE_ON == FEATURE_VSIM_ICC_SEC_CHANNEL))
-VOS_VOID SI_PIH_RegVsimIccSecChannel(VOS_VOID);
+VOS_VOID SI_PIH_RegVsimIccSecChannel(SI_PIH_CARD_SLOT_ENUM_UINT32 enSlotId);
 
 VOS_VOID SI_PIH_IccSecChReadCallBackHandle(
+    SI_PIH_CARD_SLOT_ENUM_UINT32          enSlotId,
     SI_PIH_ICC_SEC_CH_CALL_BACK_STRU     *pstSecChCallBack
 );
 
@@ -1016,30 +902,36 @@ VOS_VOID SI_PIH_SndPihIccSecChCallbak(
 );
 
 VOS_VOID SI_PIH_SendTeeCnfMsg(
+    SI_PIH_CARD_SLOT_ENUM_UINT32        enSlotId,
     SI_TEE_CNF_ENUM_UINT32              enMsgName,
     VOS_UINT32                          ulResult,
     VOS_UINT32                          ulModemId
 );
 
 VOS_VOID SI_PIH_SendUsimVsimWriteReqMsg(
+    SI_PIH_CARD_SLOT_ENUM_UINT32        enSlotId,
     VOS_UINT32                          ulModemId,
     VOS_UINT32                          ulFileDataLen,
     SI_VSIM_FILELIST_STRU              *pstVsimFile
 );
 
 VOS_UINT32 SI_PIH_GetUsimPidByModemID(
+    SI_PIH_CARD_SLOT_ENUM_UINT32        enSlotId,
     VOS_UINT32                          ulModemId
 );
 
 USIMM_PHYCARD_TYPE_ENUM_UINT32 SI_PIH_GetVsimCardType(
+    SI_PIH_CARD_SLOT_ENUM_UINT32        enSlotId,
     SI_TEE_VSIM_CARD_TYPE_ENUM_UINT8    enCardType
 );
 
 VOS_UINT8 SI_PIH_GetVsimAuthType(
+    SI_PIH_CARD_SLOT_ENUM_UINT32        enSlotId,
     SI_TEE_VSIM_AUTH_TYPE_ENUM_UINT8    enAuthType
 );
 
 VOS_VOID SI_PIH_IccChannelReadCallBackHandle(
+    SI_PIH_CARD_SLOT_ENUM_UINT32        enSlotId,
     VOS_UINT                            ulChannelID,
     VOS_INT                             lLen
 );

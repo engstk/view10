@@ -5,4 +5,6 @@
  *---------------------------------------------------------------------------*/
 
 
+/include/ "neo_tugl_auo_otm1901a_5p2_1080p_video_default.dtsi"
+/include/ "neo_tugl_boe_sw43404_5p99_1440plus_cmd.dtsi"
 /include/ "neo_tugl_lg_ea9151_5p99_1440plus_cmd.dtsi"

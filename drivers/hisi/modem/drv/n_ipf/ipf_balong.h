@@ -116,8 +116,14 @@ struct ipf_statics
     unsigned int reset_index;
     unsigned int reset[8];
     unsigned int timerout_count;
+    unsigned int crst_timeout;
 };
 
+struct ipf_error_backup_s
+{
+	struct ipf_debug debug[2];
+	int flag;
+};
 typedef struct ipf_ctx {
 	void * regs;
     unsigned int irq;
@@ -166,6 +172,12 @@ typedef struct ipf_ctx {
     unsigned char* dump_area;
     struct ipf_statics stax;
     spinlock_t filter_spinlock;
+#ifdef CONFIG_MPERF
+    struct ipf_runtime_info rinfo;
+#endif
+    struct ipf_error_backup_s backup;
+    unsigned int cb_undef;
+    unsigned int cb_before;
 } ipf_ctx_t;
 
 struct ipf_filter_handler{    
@@ -208,6 +220,7 @@ int ipf_rd_rate(unsigned int enable, IPF_CHANNEL_TYPE_E eChnType);
 int bsp_ipf_bdinfo(IPF_CHANNEL_TYPE_E eChnType, unsigned int u32BdqPtr);
 int bsp_ipf_adinfo(IPF_CHANNEL_TYPE_E eChnType, unsigned int u32AdqPtr, unsigned int u32AdType);
 int reset_ipf_psam_from_sys(void);
+void bsp_ipf_show_status(void);
 
 #ifdef __cplusplus
 }

@@ -57,7 +57,10 @@ static int hw_ep0_handler(struct usb_composite_dev *cdev,
 						ctrl->bRequest, w_index, w_value, w_length);
 
 				mode = hw_usb_port_mode_get();
-				state = hw_usb_port_switch_request(w_value);
+				/* INDEX_FACTORY_REWORK stands for manufacture,adb */
+				if (INDEX_FACTORY_REWORK == w_value) {
+					state = hw_usb_port_switch_request(w_value);
+				}
 				value = min(w_length, (u16)(sizeof(mode) + sizeof(state)));
 				memcpy(req->buf, &state, value / 2);
 				memcpy(req->buf + value / 2, &mode, value / 2);

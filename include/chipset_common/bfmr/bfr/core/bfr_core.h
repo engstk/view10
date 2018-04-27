@@ -156,33 +156,6 @@ typedef enum bfr_boot_fail_stage
     BFS_APP,
 } bfr_boot_fail_stage_e;
 
-typedef struct bfr_rrecord_misc_msg_param
-{
-    /* "boot-erecovery" */
-    char command[32];
-
-    /* main reason*/
-    bfr_enter_erecovery_reason_e enter_erecovery_reason;
-
-    /* sub reason need for BI */
-    int enter_erecovery_reason_number;
-
-    /* boot stage when boot fail occurs */
-    bfr_boot_fail_stage_e boot_fail_stage_for_erecovery;
-
-    /* boot fail no */
-    unsigned int boot_fail_no;
-
-    /* recovery method */
-    unsigned int recovery_method;
-
-    /* mark if the misc write success,yes:0xAA55AA55 */
-    unsigned int sync_misc_flag;
-
-    /* reserved for future usage */
-    char reserved[968];
-} bfr_rrecord_misc_msg_param_t;
-
 typedef struct bfr_boot_fail_no_range
 {
     unsigned int start;
@@ -257,7 +230,9 @@ typedef struct bfr_recovery_record
     bfr_recovery_method_run_result_e method_run_result;
     bfr_boot_fail_recovery_result_e recovery_result;
     unsigned int factory_reset_flag;
-    char reserved[92];
+    unsigned int recovery_method_original;
+    unsigned int boot_fail_time; /* boot time when bootfail happened */
+    char reserved[84];
 } bfr_recovery_record_t;
 
 typedef struct bfr_recovery_record_param
@@ -271,7 +246,12 @@ typedef struct bfr_recovery_record_param
 
 typedef struct
 {
+    unsigned int boot_fail_rtc_time[BFM_LOG_MAX_COUNT];
+    unsigned int boot_fail_time[BFM_LOG_MAX_COUNT];
+    unsigned int boot_fail_no[BFM_LOG_MAX_COUNT];
+    unsigned int boot_fail_stage[BFM_LOG_MAX_COUNT];
     unsigned int recovery_method[BFM_LOG_MAX_COUNT];
+    unsigned int recovery_method_original[BFM_LOG_MAX_COUNT];
     int record_count;
 } bfr_real_recovery_info_t;
 
@@ -293,9 +273,9 @@ typedef enum bfr_misc_cmd
 /* 0x72656364-'r' 'e' 'c' 'd' */
 #define BFR_RRECORD_MAGIC_NUMBER ((unsigned int)0x72656364)
 
-#define BFR_ENTER_ERECOVERY_REASON_SIZE (sizeof(bfr_rrecord_misc_msg_param_t))
+#define BFR_ENTER_ERECOVERY_REASON_SIZE (sizeof(bfmr_rrecord_misc_msg_param_t))
 #define BFR_EACH_RECORD_PART_SIZE ((unsigned int)0x100000)
-#define BFR_ENTER_ERECOVERY_REASON_OFFSET ((unsigned int)0x0)
+#define BFR_ENTER_ERECOVERY_REASON_OFFSET (BFR_MISC_PART_OFFSET)
 #define BFR_RRECORD_FIRST_PART_OFFSET (BFR_ENTER_ERECOVERY_REASON_SIZE)
 #define BFR_RRECORD_SECOND_PART_OFFSET (BFR_RRECORD_FIRST_PART_OFFSET + BFR_EACH_RECORD_PART_SIZE)
 #define BFR_RRECORD_THIRD_PART_OFFSET (BFR_RRECORD_SECOND_PART_OFFSET + BFR_EACH_RECORD_PART_SIZE)

@@ -670,7 +670,7 @@ int tas2560_set_volume(struct tas2560_priv *pTAS2560, int volume)
 	int ret = -1;
 
 	dev_dbg(pTAS2560->dev,"%s\n",__func__);
-	ret = pTAS2560->update_bits(pTAS2560, TAS2560_SPK_CTRL_REG, 0x0f, volume&0x0f);
+	ret = pTAS2560->update_bits(pTAS2560, TAS2560_SPK_CTRL_REG, 0x0f, ((unsigned int)volume)&0x0f);
 
 	return ret;
 }
@@ -685,7 +685,7 @@ int tas2560_mute(struct tas2560_priv *pTAS2560, int mute)
 	pTAS2560->write(pTAS2560,TAS2560_FADETIME_CTRL_REG4, 0x0);
 
 	dev_dbg(pTAS2560->dev,"%s device mute %d\n",__func__,mute);
-	ret = pTAS2560->update_bits(pTAS2560, TAS2560_MUTE_REG, 0x01, mute&0x1);
+	ret = pTAS2560->update_bits(pTAS2560, TAS2560_MUTE_REG, 0x01, ((unsigned int)mute)&0x1);
 
 	return ret;
 }
@@ -707,7 +707,7 @@ int tas2560_fadeIn_fadeout(struct tas2560_priv *pTAS2560, int muteflag, unsigned
 		pTAS2560->write(pTAS2560,TAS2560_FADETIME_CTRL_REG2, fadein_fadeout_table[find_reg_val][2]);
 		pTAS2560->write(pTAS2560,TAS2560_FADETIME_CTRL_REG3, fadein_fadeout_table[find_reg_val][3]);
 		pTAS2560->write(pTAS2560,TAS2560_FADETIME_CTRL_REG4, fadein_fadeout_table[find_reg_val][4]);
-		ret = pTAS2560->update_bits(pTAS2560, TAS2560_MUTE_REG, 0x01, muteflag&0x1);
+		ret = pTAS2560->update_bits(pTAS2560, TAS2560_MUTE_REG, 0x01, ((unsigned int)muteflag)&0x1);
 	}else{
 		dev_err(pTAS2560->dev,"%s find compared time failed\n",__func__);
 	}
@@ -930,7 +930,7 @@ void tas2560_force_reprogram_chip(struct tas2560_priv *pTAS2560)
 {
     if (pTAS2560 == NULL)
     {
-        dev_err(pTAS2560->dev, "%s: input null pointer\n", __func__);
+        printk(KERN_ERR "%s: input null pointer\n", __func__);
         return;
     }
     tas2560_reprogram_chip(pTAS2560);
@@ -985,7 +985,7 @@ void tas2560_handle_irq(struct work_struct *work)
 		||((pTAS2560->mbPowerUp)&&(!(power_reg&0x40)||(power_status_reg!=0xFC)))){
 			audio_dsm_report_info(AUDIO_SMARTPA, DSM_SMARTPA_INT_ERR,
 								"tas2560 exception:0x07=0x%x,0x26=0x%x,0x27=0x%x,0x2A=0x%x",
-								irq_status_reg1,irq_status_reg2,power_reg,power_status_reg);
+								power_reg,irq_status_reg1,irq_status_reg2,power_status_reg);
 		}
 #endif
 

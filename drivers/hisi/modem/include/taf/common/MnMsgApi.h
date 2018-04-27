@@ -153,14 +153,7 @@ typedef VOS_UINT8    MN_MSG_OPER_TYPE_T;
 /*****************************************************************************
   3 类型定义
 *****************************************************************************/
-/*****************************************************************************
-枚举名    : NAS_SMS_FAIL_CLOSE_LINK_CTRL_CFG_ENUM
-结构说明  : 短信发送失败是否关闭短信连发功能
-1.日    期   : 2016年07月27日
-  作    者   : j00174725
-  修改内容   : 创建
 
-*****************************************************************************/
 enum NAS_SMS_FAIL_CLOSE_LINK_CTRL_CFG_ENUM
 {
     NAS_SMS_FAIL_CLOSE_LINK_CTRL_CFG_DISABLE        = 0,
@@ -170,16 +163,7 @@ enum NAS_SMS_FAIL_CLOSE_LINK_CTRL_CFG_ENUM
 };
 typedef VOS_UINT8 NAS_SMS_FAIL_CLOSE_LINK_CTRL_CFG_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : MN_MSG_MO_DOMAIN_CUSTOMIZE_TYPE
- 结构说明  : 短信发送域定制类型
-             0: 通用的短信发送域定制，自动选择可用的发送域，不受+CGSMS命令的限制
-             1: 短信发送流程严格按照+CGSMS命令的配置执行；
 
-  1.日    期   : 2013年01月04日
-    作    者   : f62575
-    修改内容   : 创建
-*****************************************************************************/
 enum MN_MSG_MO_DOMAIN_CUSTOMIZE_TYPE
 {
     MN_MSG_MO_DOMAIN_CUSTOMIZE_GLOBAL,
@@ -323,13 +307,7 @@ enum MN_MSG_TP_CAUSE_ENUM
 typedef VOS_UINT8  MN_MSG_TP_CAUSE_ENUM_U8;
 
 /* IMS cause */
-/*****************************************************************************
- 枚举名    : MN_MSG_IMS_CAUSE_ENUM_UINT8
- 枚举说明  : IMS cause值
- 1.日    期   : 2013年12月25日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 enum MN_MSG_IMS_CAUSE_ENUM
 {
     MN_MSG_IMS_CAUSE_INNER_ERROR                            = 0x01,
@@ -341,13 +319,7 @@ enum MN_MSG_IMS_CAUSE_ENUM
 };
 typedef VOS_UINT8  MN_MSG_IMS_CAUSE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : MN_MSG_IMSA_CAUSE_ENUM_UINT8
- 枚举说明  : IMSA内部 cause值
- 1.日    期   : 2013年12月25日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 enum MN_MSG_IMSA_CAUSE_ENUM
 {
     MN_MSG_IMSA_CAUSE_NO_SERVICE                             = 0x01,
@@ -583,13 +555,7 @@ enum MN_MSG_NPI_ENUM
 typedef VOS_UINT8   MN_MSG_NPI_ENUM_U8;
 
 
-/*****************************************************************************
- 枚举名    : MN_MSG_CNMI_MT_TYPE_ENUM_U8
- 结构说明  : <mt>类型
- 1.日    期   : 2013年10月17日
-   作    者   : w00167002
-   修改内容   : 新增结构体
-*****************************************************************************/
+
 enum MN_MSG_CNMI_MT_TYPE_ENUM
 {
     MN_MSG_CNMI_MT_NO_SEND_TYPE                             = 0,                /* No SMS-DELIVER indications are routed to the TE */
@@ -641,13 +607,7 @@ enum MN_MSG_MEM_FLAG_ENUM
 typedef VOS_UINT8  MN_MSG_MEM_FLAG_ENUM_U8;
 
 /*Status of Sms Status Report*/
-/*****************************************************************************
- 结构名    : MN_MSG_RPT_STATUS_ENUM
- 结构说明  : TAF给AT上报的短信发送结果分类
-  1.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级，新增MN_MSG_RPT_USER_ABORT
-*****************************************************************************/
+
 enum MN_MSG_RPT_STATUS_ENUM
 {
     MN_MSG_RPT_OK,                                                              /*Success: submit_report_ack info*/
@@ -705,13 +665,7 @@ typedef VOS_UINT8 MN_MSG_ACTIVE_MESSAGE_STATUS_ENUM_UINT8;
 
 #if ((FEATURE_ON == FEATURE_GCBS) || (FEATURE_ON == FEATURE_WCBS))
 
-/*****************************************************************************
- 枚举名    : MN_MSG_CBLANG_ENUM_U8
- 结构说明  : 语言类型
- 1.日    期   : 2017年5月10日
-   作    者   : f00317170
-   修改内容   : 新增MN_MSG_CBLANG_UNSPECIFIED
-*****************************************************************************/
+
 enum MN_MSG_CBLANG_ENUM
 {
     MN_MSG_CBLANG_GERMAN                                    = 0x00,
@@ -770,13 +724,7 @@ enum MN_MSG_CSMS_MSG_VERSION_ENUM
 typedef VOS_UINT8 MN_MSG_CSMS_MSG_VERSION_ENUM_U8;
 
 
-/*****************************************************************************
- 枚举名    : TAF_CBA_ETWS_PRIM_NTF_AUTH_RSLT_ENUM
- 结构说明  : ETWS主通知信息鉴权结果
- 1.日    期   : 2012年3月30日
-   作    者   : l00171473
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_CBA_ETWS_PRIM_NTF_AUTH_RSLT_ENUM
 {
     TAF_CBA_ETWS_PRIM_NTF_AUTH_SUCCESS,                                         /* ETWS主通知信息通过鉴权 */
@@ -784,13 +732,7 @@ enum TAF_CBA_ETWS_PRIM_NTF_AUTH_RSLT_ENUM
 };
 typedef VOS_UINT8 TAF_CBA_ETWS_PRIM_NTF_AUTH_RSLT_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_CBA_CBMI_RANGE_RCV_TYPE_ENMU
- 结构说明  : 每个CBMI RANGE 的接收类型, 目前仅支持 ACCEPT的模式
- 1.日    期   : 2012年3月30日
-   作    者   : l00171473
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_CBA_CBMI_RANGE_RCV_MODE_ENMU
 {
     TAF_CBA_CBMI_RANGE_RCV_MODE_REJECT,                                         /* 不接收该范围的消息 */
@@ -799,14 +741,7 @@ enum TAF_CBA_CBMI_RANGE_RCV_MODE_ENMU
 };
 typedef VOS_UINT32 TAF_CBA_CBMI_RANGE_RCV_MODE_ENMU_UINT32;
 
-/* Added by y00245242 for VoLTE_PhaseI  项目, 2013-7-11, begin */
-/*****************************************************************************
- 枚举名    : TAF_MSG_SIGNALLING_TYPE_ENUM
- 结构说明  : SMS发送基于stack发送类型定义
- 1.日    期   : 2013年7月11日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MSG_SIGNALLING_TYPE_ENUM
 {
     /* SMS基于GSM，UTRAN或LTE信令发送 */
@@ -817,7 +752,6 @@ enum TAF_MSG_SIGNALLING_TYPE_ENUM
     TAF_MSG_SIGNALLING_TYPE_BUTT
 };
 typedef VOS_UINT32 TAF_MSG_SIGNALLING_TYPE_ENUM_UINT32;
-/* Added by y00245242 for VoLTE_PhaseI  项目, 2013-7-11, end */
 
 /*****************************************************************************
   7 STRUCT定义
@@ -1335,11 +1269,14 @@ typedef struct
 /*->f62575*/
 
 /*Content of Other TP User Data Header*/
+
 #define  MN_MSG_UDH_OTHER_SIZE                              160
 typedef struct
 {
-   VOS_UINT8                            ucLen;                                  /*Length of other user header type*/
-    VOS_UINT8                           aucReserve1[3];
+    MN_MSG_UDH_TYPE_ENUM_U8             enUdhType;
+
+    VOS_UINT8                           ucLen;                                  /*Length of other user header type*/
+    VOS_UINT8                           aucReserve1[2];
    VOS_UINT8                            aucData[MN_MSG_UDH_OTHER_SIZE];         /*Content of other user header type*/
 } MN_MSG_UDH_OTHER_STRU;
 
@@ -1591,24 +1528,7 @@ typedef struct
 }MN_MSG_RP_CAUSE_STRU;
 
 /* Added by f62575 for V9R1 STK升级, 2013-6-26, begin */
-/*****************************************************************************
- 枚举名    : TAF_MSG_ERROR_ENUM
- 结构说明  : TAF与TAF用户的接口错误码
-             0              无错误，仅用于短信命令或短信命令发送成功
-             1     - 0x100  内部错误码
-             0x100 - 0x200  CP-ERROR消息错误码，由TAF_MSG_ERROR_CP_ERROR_BEGIN和CP-ERROR空口消息的错误码(低8BIT)组成
-             0x200 - 0x300  RP-ERROR消息错误码，由TAF_MSG_ERROR_RP_ERROR_BEGIN和RP-ERROR空口消息的错误码(低8BIT)组成
-             0x300 - 0x400  CS域通道错误码，由TAF_MSG_ERROR_CS_ERROR_BEGIN和MM上报消息MMSMS_REL_IND的错误码(低8BIT)组成
-             0x400 - 0x500  PS域通道错误码，由TAF_MSG_ERROR_PS_ERROR_BEGIN和GMM上报消息PMMSMS_ERROR_IND的错误码(低8BIT)组成
-             0x500 - 0x600  EPS域通道错误码，由TAF_MSG_ERROR_EPS_ERROR_BEGIN和GMM上报消息ID_LMM_SMS_ERR_IND的错误码(低8BIT)组成
-1.日    期   : 2013年6月26日
-  作    者   : f62575
-  修改内容   : V9R1 STK升级，新创建
-2.日    期   : 2013年10月11日
-  作    者   : s00217060
-  修改内容   : VoLTE_PhaseII项目，适应IMSA接口
 
-*****************************************************************************/
 enum TAF_MSG_ERROR_ENUM
 {
     TAF_MSG_ERROR_NO_ERROR                = 0x0000,
@@ -1625,7 +1545,6 @@ enum TAF_MSG_ERROR_ENUM
 
     TAF_MSG_ERROR_USER_ABORT              = 0x0006,
 
-	/* Modified by s00217060 for VoLTE_PhaseII  项目, 2013-10-11, begin */
     TAF_MSG_ERROR_TP_ERROR_BEGIN          = 0x010000,
 
     TAF_MSG_ERROR_TP_FCS_TELEMATIC_INTERWORKING_NOT_SUPPORTED                   = 0x010080,
@@ -1688,7 +1607,6 @@ enum TAF_MSG_ERROR_ENUM
     TAF_MSG_ERROR_EPS_ERROR_BEGIN         = 0x200000,
 
     TAF_MSG_ERROR_IMS_ERROR_BEGIN         = 0x400000,
-    /* Modified by s00217060 for VoLTE_PhaseII  项目, 2013-10-11, end */
 
     TAF_MSG_ERROR_CHECK_ERROR_BEGIN       = 0x800000,
 
@@ -1706,14 +1624,7 @@ typedef VOS_UINT32 TAF_MSG_ERROR_ENUM_UINT32;
 /* Added by f62575 for V9R1 STK升级, 2013-6-26, end */
 
 /*event report:MN_MSG_SUBMIT_RPT_EVT_INFO_STRU*/
-/*****************************************************************************
- 结构名    : MN_MSG_SUBMIT_RPT_EVT_INFO_STRU
- 结构说明  : TAF给AT上报的短信发送结果消息结构
-  1.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级，删除aucReserve1，stRpCause
-                 增加enErrorCode
-*****************************************************************************/
+
 typedef struct
 {
     TAF_MSG_ERROR_ENUM_UINT32           enErrorCode;
@@ -1747,14 +1658,7 @@ typedef struct
 }MN_MSG_DELIVER_EVT_INFO_STRU;
 
 /*event report:MN_MSG_EVT_DELIVER_ERR*/
-/*****************************************************************************
- 结构名    : MN_MSG_DELIVER_ERR_EVT_INFO_STRU
- 结构说明  : TAF给AT上报的短信或状态报告接收失败消息结构
-  1.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级，删除enRptStatus，enRpCause，ulInternalError
-                 增加enErrorCode
-*****************************************************************************/
+
 typedef struct
 {
     TAF_MSG_ERROR_ENUM_UINT32           enErrorCode;
@@ -1801,15 +1705,7 @@ typedef struct
 }MN_MSG_EACHSM_LIST_INFO_STRU;
 /*event report:MN_MSG_EVT_LIST*/
 
-/*****************************************************************************
- 结构名    : MN_MSG_LIST_PARM_STRU
- 结构说明  : SMS查询信息
- 1.日    期   : 2013年9月29日
-   作    者   : wumai 00167002
-   修改内容   : DTS2013092100149修改:在CMGL命令查询短消息时候，如果当前短消息
-                条数大于10条，则AT收到当前上报的10条消息后，需要通知SMS继续
-                上报其余的SMS。
-*****************************************************************************/
+
 typedef struct
 {
     MN_MSG_STATUS_TYPE_ENUM_U8          enStatus;                               /*sms status*/
@@ -1822,14 +1718,7 @@ typedef struct
 
 #define  MN_MSG_MAX_REPORT_EVENT_NUM                        10                  /*Max Report Number when List Event Report*/
 
-/*****************************************************************************
- 结构名    : MN_MSG_LIST_EVT_INFO_STRU
- 结构说明  : SMS查询上报信息
- 1.日    期   : 2013年9月29日
-   作    者   : wumai 00167002
-   修改内容   : DTS2013092100149修改:上报收到的LIST参数信息,AT根据此信息继续
-                进行请求。
-*****************************************************************************/
+
 typedef struct
 {
     VOS_BOOL                            bSuccess;                               /*list sms success or failure*/
@@ -2037,13 +1926,7 @@ typedef struct
 }MN_MSG_CBPAGE_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_CBA_CBMI_RANGE_STRU
- 结构说明  : 小区广播消息的范围信息
- 1.日    期   : 2012年03月17日
-   作    者   : z40661
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                                               ucLabel[TAF_CBA_MAX_LABEL_NUM]; /* 小区广播消息id范围标签 */
@@ -2052,13 +1935,7 @@ typedef struct
     TAF_CBA_CBMI_RANGE_RCV_MODE_ENMU_UINT32                 enRcvMode;                      /* 每个CBMI RANGE 的接收模式, 目前仅支持 ACCEPT的模式 */
 }TAF_CBA_CBMI_RANGE_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CBA_CBMIR_LIST_STRU
- 结构说明  : 小区广播消息ID的范围列表信息
- 1.日    期   : 2012年03月17日
-   作    者   : z40661
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usCbmirNum;                             /* 小区广播消息的ID个数 */
@@ -2066,13 +1943,7 @@ typedef struct
     TAF_CBA_CBMI_RANGE_STRU             astCbmiRangeInfo[TAF_CBA_MAX_CBMID_RANGE_NUM]; /* 小区广播消息的范围信息 */
 }TAF_CBA_CBMI_RANGE_LIST_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CBA_PLMN_ID_STRU
- 结构说明  : PLMN ID的结构
- 1.日    期   : 2012年3月01日
-   作    者   : l00171473
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulMcc;              /* MCC,3 bytes      */
@@ -2124,13 +1995,7 @@ typedef struct
 
 #if (FEATURE_ON == FEATURE_ETWS)
 
-/*****************************************************************************
- 结构名    : TAF_CBA_ETWS_PRIM_NTF_EVT_INFO_STRU
- 结构说明  : 需要上报到AT的主通知信息的结构
- 1.日    期   : 2012年3月01日
-   作    者   : l00171473
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CBA_PLMN_ID_STRU                                    stPlmn;             /* plmn */
@@ -2289,9 +2154,7 @@ typedef struct
     MN_MSG_MEM_STORE_ENUM_U8            enMemStore;
     MN_MSG_CLIENT_TYPE_ENUM_UINT8       enClientType;
     VOS_UINT8                           aucReserve1[1];
-    /* Addedd by y00245242 for VoLTE_PhaseI  项目, 2013-7-9, begin */
     TAF_MSG_SIGNALLING_TYPE_ENUM_UINT32 enMsgSignallingType;
-    /* Addedd by y00245242 for VoLTE_PhaseI  项目, 2013-7-9, end */
     MN_MSG_MSG_INFO_STRU                stMsgInfo;
 }MN_MSG_SEND_PARM_STRU;
 
@@ -2301,9 +2164,7 @@ typedef struct
     MN_MSG_SEND_DOMAIN_ENUM_U8          enDomain;
     MN_MSG_MEM_STORE_ENUM_U8            enMemStore;
     VOS_UINT8                           aucReserve1[2];
-    /* Addedd by y00245242 for VoLTE_PhaseI  项目, 2013-7-9, begin */
     TAF_MSG_SIGNALLING_TYPE_ENUM_UINT32 enMsgSignallingType;
-    /* Addedd by y00245242 for VoLTE_PhaseI  项目, 2013-7-9, end */
     VOS_UINT32                          ulIndex;                                /*sms memory index*/
     MN_MSG_BCD_ADDR_STRU                stDestAddr;                             /*destination addr of sms*/
 }MN_MSG_SEND_FROMMEM_PARM_STRU;
@@ -2623,8 +2484,6 @@ VOS_UINT32   MN_MSG_BuildDefSubmitMsg(
     MN_MSG_RAW_TS_DATA_STRU             *pstRawData
 );
 
-/* Deleted by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, begin */
-/* Deleted by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, end */
 
 
 
@@ -2682,129 +2541,39 @@ VOS_UINT32 MN_MSG_BcdAddrToAscii(
     MN_MSG_ASCII_ADDR_STRU              *pstAsciiAddr
 );
 
-/* Deleted by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, begin */
-/* Deleted by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, end */
 
-/***********************************************************************
-函 数 名  : MN_MSG_GetSmStatus
-功能描述  : 获取存在USIM或NVIM中的短信状态
-输入参数  : enMemStore:需要获取短信状态的存储位置,USIM或NVIM中
-            ulIndex:需要获取短信状态的索引号
-输出参数  : penStatus:索引为ulIndex的短信状态
-返 回 值  : 无
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2009年7月14日
-   作    者   : z40661
-   修改内容   : 新生成函数
-************************************************************************/
 VOS_VOID MN_MSG_GetSmStatus(
     MN_MSG_MEM_STORE_ENUM_U8            enMemStore,
     VOS_UINT32                          ulIndex,
     MN_MSG_STATUS_TYPE_ENUM_U8          *penStatus
 );
 
-/***********************************************************************
-函 数 名  : MN_MSG_GetTotalSmCapacity
-功能描述  : 获取最大能存在USIM或NVIM中短信的容量
-输入参数  : enMemStore:需要获取短信容量的存储位置,USIM或NVIM中
-输出参数  : NONE
-返 回 值  : 当前存储器的短信容量
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2007年12月06日
-   作    者   : z40661
-   修改内容   : 新生成函数
-************************************************************************/
 VOS_UINT32 MN_MSG_GetTotalSmCapacity(
     MN_MSG_MEM_STORE_ENUM_U8            enMemStore
 );
 
-/***********************************************************************
-函 数 名  : MN_MSG_MoRetryFlag
-功能描述  : 获取短信重传功能标记
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_TRUE 当前启用了短信重传功能，VOS_FALSE 当前没有启用重传功能；
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2009年09月01日
-   作    者   : f62575
-   修改内容   : 新生成函数
-************************************************************************/
 VOS_UINT32 MN_MSG_MoRetryFlag(
     VOS_VOID
 );
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_GetSmsServicePara
- 功能描述  : 获取短信业务参数
- 输入参数  : 无
- 输出参数  : MN_MSG_CONFIG_PARM_STRU  *pstMsgCfgParm  短信业务参数
-             MN_MSG_ME_STORAGE_STATUS_UINT8     *penMeStorageEnable ME使能状态
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年2月11日
-    作    者   : 傅映君/f62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID MN_MSG_GetSmsServicePara(
     MN_MSG_CONFIG_PARM_STRU             *pstMsgCfgParm,
     MN_MSG_ME_STORAGE_STATUS_ENUM_UINT8 *penMeStorageEnable
 );
 
 /* Added by f62575 for AT Project，2011-10-03,  Begin*/
-/*****************************************************************************
- 函 数 名  : MN_MSG_ReqStub
- 功能描述  : 请求C核执行短信桩请求
- 输入参数  : MN_CLIENT_ID_T                 clientId 发起该请求的Client的ID
-             MN_OPERATION_ID_T              opId     Operation ID, 标识本次操作
-             const MN_MSG_STUB_MSG_STRU     *pstStubParam 桩操作参数
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月3日
-    作    者   : f62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 MN_MSG_ReqStub(
     MN_CLIENT_ID_T                      clientId,
     MN_OPERATION_ID_T                   opId,
     const MN_MSG_STUB_MSG_STRU         *pstStubParam
 );
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_ChkDate
- 功能描述  : 检查日期是否在有效范围内
- 输入参数  : pstTimeStamp   - 绝对有效时间数据结构,其中的年月日都是用BCD码顺序表示的;
- 输出参数  : pucInvalidType - 无效日期类型集合;
- 返 回 值  : VOS_UINT32:函数返回的结果,成功以及失败的原因值
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年3月1日
-    作    者   : fuyingjun
-    修改内容   : 新生成函数
-  2.日    期   : 2010年04月10日
-    作    者   : f62575
-    修改内容   : 问题单号AT2D18035
-                 写PDU短信到SIM卡,BALONG对TP-SCTS的检查与标杆不一致；
-*****************************************************************************/
 VOS_UINT32 MN_MSG_ChkDate(
     const MN_MSG_TIMESTAMP_STRU         *pstTimeStamp,
     MN_MSG_DATE_INVALID_TYPE_ENUM_UINT8 *pucInvalidType
@@ -2812,21 +2581,7 @@ VOS_UINT32 MN_MSG_ChkDate(
 
 /* Added by f62575 for AT Project，2011-10-03,  End*/
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_GetMoSmsCtrlFlag
- 功能描述  : 获取MO SMS CONTROL特性的激活标志
- 输入参数  : 无
- 输出参数  : VOS_BOOL  *pbMoSmsCtrlFlag  MO SMS CONTROL特性的激活标志
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年6月22日
-    作    者   : 傅映君/f62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID MN_MSG_GetMoSmsCtrlFlag(
     VOS_UINT8                           *pucMoSmsCtrlFlag
 );
@@ -2891,23 +2646,7 @@ VOS_UINT32 MSG_SendAppReq(
     const VOS_VOID                      *pSendParm
 );
 
-/*****************************************************************************
- 枚举名    : MN_MSG_MT_CUSTOMIZE_ENUM
- 结构说明  : 短信接收定制类型
-  1.日    期   : 2012年11月07日
-    作    者   : f62575
-    修改内容   : 短信接收定制标志
-  2.日    期   : 2015年1月07日
-    作    者   : x00182239
-    修改内容   : 新增法电定制MN_MSG_MT_CUSTOMIZE_FT.
-                 从原文件MnMsgSmCommProc.h中移植过来。
-                 MN_MSG_MT_CUSTOMIZE_NONE       无定制；
-                 MN_MSG_MT_CUSTOMIZE_DCM        DCM定制
-                 MN_MSG_MT_CUSTOMIZE_FT         法电定制，扩展^SMMEFULL使用范围，由原来的短信接收溢出上报，
-  3.日    期   : 2017年1月20日
-    作    者   : lwx331495
-    修改内容   : 增加KT定制NV项打开标志
-*****************************************************************************/
+
 enum MN_MSG_MT_CUSTOMIZE_ENUM
 {
     MN_MSG_MT_CUSTOMIZE_NONE,

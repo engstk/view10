@@ -207,12 +207,9 @@ extern "C"
 #define IPF_VER_160    				    (0x31363061)
 #define IPF_VER_170    				    (0x31373061)
 
-#define IPF_PWR_INIT                    0xe
-#define IPF_PWR_RESET                   0xd
-#define IPF_PWR_PREPARED				0xc
 #define IPF_PWR_UP						0xb
 #define IPF_PWR_DOWN					0xa
-
+#define IPF_FAST_TIMEOUT    			1
 
 
 #define IPF_REG_BAK_NUM		0x100
@@ -460,6 +457,19 @@ typedef enum tagIPF_FORRESET_CONTROL_E
     IPF_FORRESET_CONTROL_MAX
 }IPF_FORRESET_CONTROL_E;
 
+#ifdef CONFIG_MPERF
+struct ipf_runtime_info{
+    u32 eclapse_time;
+    u32 bd_cfg_cnt;
+    u32 rd_rcv_cnt;
+    u32 adq0_depth;
+    u32 adq1_depth;
+    u32 bdq_depth;
+    u32 rdq_depth;
+    u32 byte_cnt;
+};
+#endif
+
 typedef struct ipf_ddr {
 	unsigned int start;
 	unsigned int ul_start;
@@ -507,12 +517,16 @@ struct ipf_debug
 	int reg_scur_wr_err;
 	int reg_scur_rd_err;
 	unsigned int ccore_rst_err;
+    unsigned int ccore_reset;
+    unsigned int core_rst_done;
+    unsigned int cp_flag;
+    unsigned int rst_ts;
 	int rsr_suspend_begin;
 	int rsr_suspend_end;
 	int rsr_resume_begin;
 	int rsr_resume_end;
-}
-;
+};
+
 #ifdef __KERNEL__
 struct ipf_desc_handler_s{
     char* name;
@@ -547,6 +561,9 @@ struct ipf_desc_handler_s{
     void (*save_reg)(unsigned int*);
     void (*restore_reg)(unsigned int*);
     void (*dump)(void);
+#ifdef CONFIG_MPERF
+    unsigned int (*get_rd_num)(void);
+#endif
 };
 #else
 struct ipf_desc_handler_s{
@@ -580,6 +597,9 @@ struct ipf_desc_handler_s{
     void (*rx)(void);
     void (*dump)(void);
     void (*ccpu_wake_acpu)(void);
+#ifdef CONFIG_MPERF
+    unsigned int (*get_rd_num)(void);
+#endif
 };
 #endif
 typedef void (*ipf_bd_empty)(void);
@@ -801,14 +821,16 @@ int bsp_ipf_srest(void);
 void bsp_ipf_set_debug_para(void ** psam_get_debug);
 void bsp_set_init_status(int stat);
 int bsp_get_init_status(void);
-
+#ifdef CONFIG_MPERF
+int ipf_perf_info(struct ipf_runtime_info* info);
+#endif
 #if defined(__OS_VXWORKS__) || defined(__OS_RTOSCK__)||defined(__OS_RTOSCK_SMP__)
 int ipf_config_cd(void* pstTtf, unsigned short* pu16TotalDataLen, unsigned int* pu32BdInPtr);
 void bsp_ipf_dl_rpt1_switch(int value);
 int ipf_init(void);
 IPF_FORRESET_CONTROL_E bsp_ipf_get_control_flag_for_ccore_reset(void);
 void ipf_clear_ptr(void);
-
+void bsp_ipf_stop(void);
 #endif
 
 #ifdef __cplusplus

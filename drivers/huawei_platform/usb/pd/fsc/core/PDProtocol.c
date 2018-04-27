@@ -409,7 +409,13 @@ void ProtocolTransmitMessage(void)
 void ProtocolSendingMessage(void)
 {
     //FSC_U8 data = 0x02;
-	FSC_PRINT("FUSB %s, I_TXSENT=%d, I_GCRCSENT=%d\n", __func__, Registers.Status.I_TXSENT, Registers.Status.I_GCRCSENT);
+    static int I_TXSENT = -1, I_GCRCSENT = -1;
+    if((I_TXSENT != (int)Registers.Status.I_TXSENT) || (I_GCRCSENT != (int)Registers.Status.I_GCRCSENT))
+    {
+        I_TXSENT = (int)Registers.Status.I_TXSENT;
+        I_GCRCSENT = (int)Registers.Status.I_GCRCSENT;
+        FSC_PRINT("FUSB %s, I_TXSENT=%d, I_GCRCSENT=%d\n", __func__, Registers.Status.I_TXSENT, Registers.Status.I_GCRCSENT);
+    }
     if (Registers.Status.I_TXSENT)
     {
         Registers.Status.I_TXSENT = 0;

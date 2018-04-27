@@ -69,6 +69,9 @@ extern "C"
 #define SOCP_REAL_CHAN_ID(unique_chan_id)   (unique_chan_id & 0xFFFF)
 #define SOCP_REAL_CHAN_TYPE(unique_chan_id) (unique_chan_id>>16)
 
+#define SOCP_DEST_DSM_ENABLE                0x01
+#define SOCP_DEST_DSM_DISABLE               0x00
+
 /* 编码源通道ID枚举定义 */
 /* 见soc_socp_adapter.h 中enum SOCP_CODER_SRC_ENUM枚举定义 */
 typedef unsigned int SOCP_CODER_SRC_ENUM_U32;
@@ -217,7 +220,6 @@ enum tagSOCP_DECSRC_CHNMODE_E
 typedef unsigned int SOCP_DECSRC_CHNMODE_ENUM_UIN32;
 
 /* 超时选择及使能数据结构体SOCP_TIMEOUT_DECODE_TRF */
-/* 2014年2月22日15:34:11 l00258701 modify add */
 enum tagSOCP_TIMEOUT_EN_E
 {
     SOCP_TIMEOUT_BUFOVF_DISABLE        = 0,       /* buffer溢出，不上报中断 */
@@ -270,6 +272,24 @@ enum tagSOCP_DATA_TYPE_EN_E
     SOCP_DATA_TYPE_EN_BUTT
 };
 typedef unsigned int SOCP_DATA_TYPE_EN_ENUM_UIN32;
+
+/* 编码源通道Trans Id使能位 */
+enum tagSOCP_TRANS_ID_EN_E
+{
+    SOCP_TRANS_ID_DIS           = 0,      /* Trans Id不使能，默认值 */
+    SOCP_TRANS_ID_EN,                     /* Trans Id使能 */
+    SOCP_TRANS_ID_EN_BUTT
+};
+typedef unsigned int SOCP_TRANS_ID_EN_ENUM_UINT32;
+
+/* 编码源通道Trans Id使能位 */
+enum tagSOCP_PTR_IMG_EN_E
+{
+    SOCP_PTR_IMG_DIS           = 0,      /* Ptr Img不使能，默认值 */
+    SOCP_PTR_IMG_EN,                     /* Ptr Img使能 */
+    SOCP_PTR_IMG_EN_BUTT
+};
+typedef unsigned int SOCP_PTR_IMG_EN_ENUM_UINT32;
 
 /* 编码源通道debug 使能位 */
 enum tagSOCP_ENC_DEBUG_EN_E
@@ -331,6 +351,8 @@ typedef struct tagSOCP_CODER_SRC_CHAN_S
 {
     unsigned int                         u32DestChanID;      /* 目标通道ID*/
     unsigned int                         u32BypassEn;        /* 通道bypass使能*/
+    unsigned int                         eTransIdEn;
+    unsigned int                         ePtrImgEn;
     SOCP_DATA_TYPE_ENUM_UIN32        eDataType;          /* 数据类型，指明数据封装协议，用于复用多平台*/
     SOCP_DATA_TYPE_EN_ENUM_UIN32     eDataTypeEn;        /* 数据类型使能位*/
     SOCP_ENC_DEBUG_EN_ENUM_UIN32     eDebugEn;           /* 调试位使能*/
@@ -485,6 +507,16 @@ typedef struct
 * 返 回 值  : 初始化成功的标识码
 *****************************************************************************/
 int DRV_SOCP_INIT(void);
+
+/*****************************************************************************
+ 函 数 名  : mdrv_socp_send_data_manager
+ 功能描述  : 此接口控制SOCP目的端数据上报管理状态机
+ 输入参数  : EncDestChanID:编码目的通道号
+             bEnable:是否打开socp目的端中断
+ 输出参数  : 无
+ 返 回 值  : 无
+*****************************************************************************/
+void mdrv_socp_send_data_manager(unsigned int EncDestChanID, unsigned int bEnable);
 
 /*****************************************************************************
 函 数 名  : mdrv_socp_corder_set_src_chan
@@ -834,7 +866,7 @@ unsigned int  DRV_SOCP_INIT_LTE_BBP_LOG(unsigned int ulChanId,unsigned int ulPhy
 
 unsigned int  DRV_SOCP_INIT_LTE_BBP_DS(unsigned int ulChanId,unsigned int ulPhyAddr,unsigned int ulSize);
 
-void DRV_SOCP_ENABLE_LTE_BBP_DSP(unsigned int ulChanId);
+void DRV_SOCP_ENABLE_LTE_BBP_DSP(unsigned int ulChanId, unsigned char state);
 
 void BSP_SOCP_RefreshSDLogCfg(unsigned int ulTimerLen);
 

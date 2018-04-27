@@ -2308,29 +2308,29 @@
                      pinctrl-single,bias-pulldown = <0 2 0 2>;
                      pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x20 0x70>;
-                     pinctrl-single,slew-rate = <0x0 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 		gpio192_cfg_idle: gpio192_cfg_idle {
                      pinctrl-single,pins = <0x064  0>;
                      pinctrl-single,bias-pulldown = <2 2 0 2>;
                      pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x20 0x70>;
-                     pinctrl-single,slew-rate = <0x0 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 
 		gpio193_cfg_func: gpio193_cfg_func {
                      pinctrl-single,pins = <0x068  0>;
-                     pinctrl-single,bias-pulldown = <0 2 0 2>;
-                     pinctrl-single,bias-pullup = <0 1 0 1>;
+                     pinctrl-single,bias-pulldown = <2 2 0 2>;
+                     pinctrl-single,bias-pullup = <1 1 0 1>;
                      pinctrl-single,drive-strength = <0x20 0x70>;
-                     pinctrl-single,slew-rate = <0x0 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 		gpio193_cfg_idle: gpio193_cfg_idle {
                      pinctrl-single,pins = <0x068  0>;
                      pinctrl-single,bias-pulldown = <2 2 0 2>;
-                     pinctrl-single,bias-pullup = <0 1 0 1>;
+                     pinctrl-single,bias-pullup = <1 1 0 1>;
                      pinctrl-single,drive-strength = <0x20 0x70>;
-                     pinctrl-single,slew-rate = <0x0 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 
 		gpio194_cfg_func: gpio194_cfg_func {
@@ -2515,15 +2515,15 @@
 
 		gpio207_cfg_func: gpio207_cfg_func {
                      pinctrl-single,pins = <0x0A0  0>;
-                     pinctrl-single,bias-pulldown = <0 2 0 2>;
-                     pinctrl-single,bias-pullup = <1 1 0 1>;
+                     pinctrl-single,bias-pulldown = <2 2 0 2>;
+                     pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x00 0x70>;
                      pinctrl-single,slew-rate = <0x0 0x80>;
 		};
 		gpio207_cfg_idle: gpio207_cfg_idle {
                      pinctrl-single,pins = <0x0A0  0>;
-                     pinctrl-single,bias-pulldown = <0 2 0 2>;
-                     pinctrl-single,bias-pullup = <1 1 0 1>;
+                     pinctrl-single,bias-pulldown = <2 2 0 2>;
+                     pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x00 0x70>;
                      pinctrl-single,slew-rate = <0x0 0x80>;
 		};
@@ -2767,14 +2767,14 @@
                      pinctrl-single,bias-pulldown = <0 2 0 2>;
                      pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x30 0x70>;
-                     pinctrl-single,slew-rate = <0x1 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 		gpio225_cfg_idle: gpio225_cfg_idle {
                      pinctrl-single,pins = <0x0BC  0>;
                      pinctrl-single,bias-pulldown = <0 2 0 2>;
                      pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x30 0x70>;
-                     pinctrl-single,slew-rate = <0x1 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 
 		gpio226_cfg_func: gpio226_cfg_func {
@@ -2782,14 +2782,14 @@
                      pinctrl-single,bias-pulldown = <0 2 0 2>;
                      pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x30 0x70>;
-                     pinctrl-single,slew-rate = <0x1 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 		gpio226_cfg_idle: gpio226_cfg_idle {
                      pinctrl-single,pins = <0x0C0  0>;
                      pinctrl-single,bias-pulldown = <0 2 0 2>;
                      pinctrl-single,bias-pullup = <0 1 0 1>;
                      pinctrl-single,drive-strength = <0x30 0x70>;
-                     pinctrl-single,slew-rate = <0x1 0x80>;
+                     pinctrl-single,slew-rate = <0x80 0x80>;
 		};
 
 		gpio227_cfg_func: gpio227_cfg_func {

@@ -34,7 +34,7 @@ static void sdcardfs_put_super(struct super_block *sb)
 		errln("%s, unexpected sbi->devpath_s == NULL",
 			__FUNCTION__);
 	else {
-		infoln("unmounting on top of %s\n", sbi->devpath_s);
+		infoln("unmounting on top of %s", sbi->devpath_s);
 		__putname(sbi->devpath_s);
 	}
 

@@ -312,28 +312,18 @@ void scsi_device_unbusy(struct scsi_device *sdev)
 	struct scsi_target *starget = scsi_target(sdev);
 	unsigned long flags;
 
-#ifdef CONFIG_HISI_BLK_MQ
-	spin_lock_irqsave(shost->host_lock, flags);
-#endif
 	atomic_dec(&shost->host_busy);
 	if (starget->can_queue > 0)
 		atomic_dec(&starget->target_busy);
 
 	if (unlikely(scsi_host_in_recovery(shost) &&
 		     (shost->host_failed || shost->host_eh_scheduled))) {
-#ifndef CONFIG_HISI_BLK_MQ
 		spin_lock_irqsave(shost->host_lock, flags);
-#endif
 		scsi_eh_wakeup(shost);
-#ifndef CONFIG_HISI_BLK_MQ
 		spin_unlock_irqrestore(shost->host_lock, flags);
-#endif
 	}
 
 	atomic_dec(&sdev->device_busy);
-#ifdef CONFIG_HISI_BLK_MQ
-	spin_unlock_irqrestore(shost->host_lock, flags);
-#endif
 }
 
 static void scsi_kick_queue(struct request_queue *q)
@@ -1512,18 +1502,15 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
 				   struct Scsi_Host *shost,
 				   struct scsi_device *sdev)
 {
-	int ret = 0;
 	unsigned int busy;
 
-	spin_lock_irq(shost->host_lock);
 	if (scsi_host_in_recovery(shost))
-		goto out_unlock;
+		return 0;
 
 	busy = atomic_inc_return(&shost->host_busy) - 1;
 	if (atomic_read(&shost->host_blocked) > 0) {
-		if (busy){
+		if (busy)
 			goto starved;
-		}
 
 		/*
 		 * unblock after host_blocked iterates to zero
@@ -1543,24 +1530,27 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
 
 	/* We're OK to process the command, so we can't be starved */
 	if (!list_empty(&sdev->starved_entry)) {
+		spin_lock_irq(shost->host_lock);
 		if (!list_empty(&sdev->starved_entry))
 			list_del_init(&sdev->starved_entry);
+		spin_unlock_irq(shost->host_lock);
 	}
 
-	ret = 1;
-	goto out_unlock;
+	return 1;
 
 starved:
+	spin_lock_irq(shost->host_lock);
 	if (list_empty(&sdev->starved_entry))
 		list_add_tail(&sdev->starved_entry, &shost->starved_list);
+	spin_unlock_irq(shost->host_lock);
 out_dec:
 	atomic_dec(&shost->host_busy);
+	spin_lock_irq(shost->host_lock);
 	if (unlikely(scsi_host_in_recovery(shost) &&
 		     (shost->host_failed || shost->host_eh_scheduled)))
 		scsi_eh_wakeup(shost);
-out_unlock:
 	spin_unlock_irq(shost->host_lock);
-	return ret;
+	return 0;
 }
 
 /*
@@ -2045,8 +2035,8 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
 	return BLK_MQ_RQ_QUEUE_OK;
 
 out_dec_host_busy:
-	spin_lock_irq(shost->host_lock);
 	atomic_dec(&shost->host_busy);
+	spin_lock_irq(shost->host_lock);
 	scsi_eh_try_wakeup(shost);
 	spin_unlock_irq(shost->host_lock);
 
@@ -2183,14 +2173,16 @@ static void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
 	 * blk_queue_update_dma_alignment() later.
 	 */
 	blk_queue_dma_alignment(q, 0x03);
-	blk_lld_dump_register(q,shost->hostt->dump_status ? scsi_dump_status : NULL);
 	blk_direct_flush_register(q,shost->hostt->direct_flush ? scsi_direct_flush : NULL);
 #ifdef CONFIG_SCSI_HISI_MQ
+	blk_lld_dump_register(q, shost->hostt->dump_status ? scsi_dump_status : NULL,
+		!(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_MQ_DUMP)));
 	if(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_FORCE_SAME_CPU))
 		queue_flag_set_unlocked(QUEUE_FLAG_SAME_FORCE, q);
 	blk_flush_reduce(q,(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_FLUSH_REDUCING)));
 	blk_queue_busy_idle_enable(q,(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_BUSY_IDLE_ENABLE)));
 	blk_queue_io_latency_check_enable(q,(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_IO_LATENCY_WARNING)));
+	blk_queue_idle_intr_enable(q,(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_BUSY_IDLE_INTR_ENABLE)));
 #endif /* CONFIG_SCSI_HISI_MQ */
 #ifdef CONFIG_HISI_IO_LATENCY_TRACE
 	blk_queue_io_latency_warning_threshold(q, 2000);
@@ -2262,8 +2254,6 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
 #ifdef CONFIG_SCSI_HISI_MQ
 	if(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_MQ_DISPATCH_STRATEGY))
 		hisi_blk_mq_tagset_set_flag(&shost->tag_set,HISI_MQ_DISPATCH_STRATEGY);
-	if(shost->queue_quirk_flag & SHOST_MQ_QUIRK(SHOST_QUIRK_MQ_DUMP))
-		hisi_blk_mq_tagset_set_flag(&shost->tag_set,HISI_MQ_DUMP_SUPPORT);
 	shost->tag_set.ops = kzalloc_node(sizeof(struct blk_mq_ops), GFP_KERNEL, NUMA_NO_NODE);
 	shost->tag_set.ops->map_queue = scsi_mq_ops.map_queue;
 	shost->tag_set.ops->queue_rq = scsi_mq_ops.queue_rq;

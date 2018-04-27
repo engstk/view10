@@ -45,13 +45,19 @@
 #include <dsm/dsm_pub.h>
 #define HISEE_EFUSE_GROUP_BIT_SIZE    32
 #define HISEE_PWR_ERRNO_PRINT_SIZE	8
+#define HISEE_EFUSE_GROUP_NUM 2
+#define HISEE_EFUSE_LENGTH 8
+#define HISEE_EFUSE_TIMEOUT 1000
+#define HISEE_EFUSE_MASK 1
 #define HISEE_SM_EFUSE_GROUP    (g_hisee_sm_efuse_pos/HISEE_EFUSE_GROUP_BIT_SIZE)
 #define HISEE_SM_EFUSE_OFFSET   (g_hisee_sm_efuse_pos%HISEE_EFUSE_GROUP_BIT_SIZE)
+#define HISEE_HIBENCH_EFUSE_GROUP    (g_hisee_hibench_efuse_pos/HISEE_EFUSE_GROUP_BIT_SIZE)
+#define HISEE_HIBENCH_EFUSE_OFFSET   (g_hisee_hibench_efuse_pos%HISEE_EFUSE_GROUP_BIT_SIZE)
 
 hisee_module_data g_hisee_data;
 struct mutex hisee_apdu_mutex;
 atomic_t g_hisee_errno;
-unsigned int g_misc_version = 0;
+unsigned int g_misc_version[HISEE_SUPPORT_COS_FILE_NUMBER] = {0};
 int g_hisee_partition_byname_find = 0;
 unsigned int g_platform_id = 0;
 unsigned int g_cos_image_upgrade_done = 0;
@@ -62,12 +68,23 @@ unsigned int g_cos_image_upgrade_done = 0;
  defualt value is invalid
 */
 static u32 g_hisee_sm_efuse_pos = 0xFFFF;
+
+/*
+ the bit position for hibench flag recorded in efuse
+ which is started from 0.
+ defualt value is invalid
+*/
+static u32 g_hisee_hibench_efuse_pos = 0xFFFF;
 /*
  cos upgrade procedure may cost more time on non-asic platform
 */
 u32 g_hisee_cos_upgrade_time = HISEE_ATF_COS_TIMEOUT;
 bool g_hisee_is_fpga = false;
 extern unsigned int g_power_pre_enable_clk;
+extern hisee_power_vote_status g_power_vote_status;
+extern unsigned int g_runtime_cosid;
+
+extern u32 g_hisee_sm_flag;
 
 extern int get_rpmb_init_status(void);
 extern int get_rpmb_key_status(void);
@@ -193,20 +210,39 @@ noinline int atfd_hisee_smc(u64 function_id, u64 arg0, u64 arg1, u64 arg2)
 int get_hisee_lcs_mode(unsigned int *mode)
 {
 	int ret;
-	u32 hisee_value[2] = {0};
+	u32 hisee_value[HISEE_EFUSE_GROUP_NUM] = {0};
 
-	if(HISEE_SM_EFUSE_GROUP >= 2) {
+	if(HISEE_SM_EFUSE_GROUP >= HISEE_EFUSE_GROUP_NUM) {
 		pr_err("sm_flag_pos invalid\n");
 		set_errno_and_return(HISEE_GET_HISEE_VALUE_ERROR);
 	}
 
-	ret = get_efuse_hisee_value((unsigned char *)hisee_value, 8, 1000);
+	ret = get_efuse_hisee_value((unsigned char *)hisee_value, HISEE_EFUSE_LENGTH, HISEE_EFUSE_TIMEOUT);
 	if (HISEE_OK != ret) {
 		pr_err("%s() get_efuse_hisee_value failed,ret=%d\n", __func__, ret);
 		set_errno_and_return(HISEE_GET_HISEE_VALUE_ERROR);
 	}
-	*mode = ((hisee_value[HISEE_SM_EFUSE_GROUP] >> HISEE_SM_EFUSE_OFFSET) & 1) ?\
+	*mode = ((hisee_value[HISEE_SM_EFUSE_GROUP] >> HISEE_SM_EFUSE_OFFSET) & HISEE_EFUSE_MASK) ?\
 		 HISEE_SM_MODE_MAGIC : HISEE_DM_MODE_MAGIC;
+	return ret;
+}
+
+int get_hisee_hibench_flag(unsigned int *mode)
+{
+	int ret;
+	u32 hisee_value[HISEE_EFUSE_GROUP_NUM] = {0};
+
+	if(HISEE_HIBENCH_EFUSE_GROUP >= HISEE_EFUSE_GROUP_NUM) {
+		pr_err("hibench_flag_pos invalid\n");
+		set_errno_and_return(HISEE_GET_HISEE_VALUE_ERROR);
+	}
+
+	ret = get_efuse_hisee_value((unsigned char *)hisee_value, HISEE_EFUSE_LENGTH, HISEE_EFUSE_TIMEOUT);
+	if (HISEE_OK != ret) {
+		pr_err("%s() get_efuse_hisee_value failed,ret=%d\n", __func__, ret);
+		set_errno_and_return(HISEE_GET_HISEE_VALUE_ERROR);
+	}
+	*mode = ((hisee_value[HISEE_HIBENCH_EFUSE_GROUP] >> HISEE_HIBENCH_EFUSE_OFFSET) & HISEE_EFUSE_MASK);
 	return ret;
 }
 
@@ -470,9 +506,7 @@ static int load_cosimg_appdata_ddr(void)
 	p_message_header = (atf_message_header *)buff_virt;
 	set_message_header(p_message_header, CMD_PRESAVE_COS_APPDATA);
 	image_size = HISEE_ATF_MESSAGE_HEADER_LEN;
-	rpmb_cos = g_hisee_data.hisee_img_head.rpmb_cos_cnt;
-	if (0 == rpmb_cos)
-		rpmb_cos = HISEE_MAX_RPMB_COS_NUMBER;
+	rpmb_cos = HISEE_MIN_RPMB_COS_NUMBER;
 	for (i = 0; i < rpmb_cos; i++) {
 		p_message_header->ack = i;
 		ret = send_smc_process(p_message_header, buff_phy, image_size,
@@ -485,28 +519,29 @@ static int load_cosimg_appdata_ddr(void)
 
 static int hisee_wait_partition_ready(void)
 {
-        char fullpath[128] = {0};
-        int  retry = 10 * 5;
-        unsigned int timeout = 500;
-        int  ret;
+	char fullpath[128] = {0};
+	int  retry = 10 * 5;
+	unsigned int timeout = 500;
+	int  ret;
 
-        ret = flash_find_ptn(HISEE_IMAGE_PARTITION_NAME, fullpath);
-        if (0 != ret) {
-                pr_err("%s():flash_find_ptn fail\n", __func__);
+	ret = flash_find_ptn(HISEE_IMAGE_PARTITION_NAME, fullpath);
+	if (0 != ret) {
+		pr_err("%s():flash_find_ptn fail\n", __func__);
 		return ret;
-        }
-        do {
-                if(0==sys_access(fullpath,0)) {
-                        break;
-                }
-                msleep(timeout);
-                retry--;
-        } while(retry > 0);
+	}
+	do {
+	        if(0==sys_access(fullpath,0)) {
+	                break;
+	        }
+	        msleep(timeout);
+	        retry--;
+	} while(retry > 0);
 
-	if (retry <= 0)
-	      return HISEE_ERROR;
+	if (retry <= 0) {
+	  return HISEE_ERROR;
+	}
 
-        return HISEE_OK;
+	  return HISEE_OK;
 }
 
 
@@ -594,45 +629,82 @@ static void set_hisee_lcs_mode(void)
 	*(volatile unsigned int *)(HISEE_STATE_ADDR) = value; /*lint !e747*/
 
 }
-static void cos_image_upgrade_in_task(void)
+
+/*************************************************************
+函数原型：int cos_image_upgrade_by_self(void)
+函数功能：执行多cos镜像的升级操作，对hisee.img镜像的每一个cos镜像文件，做cos镜像升级动作。
+参数：
+输入：无
+输出：无。
+返回值：HISEE_OK:多cos镜像升级成功；不是HISEE_OK:多cos镜像升级失败
+前置条件：hisee_img分区写入了有效的hisee.img文件
+后置条件： 无
+*************************************************************/
+int cos_image_upgrade_by_self(void)
 {
 	int ret = HISEE_ERROR;
-	int new_cos_exist = 0;
+	int new_cos_exist;
+	unsigned int cos_id;
+	char buf_para[MAX_CMD_BUFF_PARAM_LEN] = {0};
 
 	wake_lock(&g_hisee_data.wake_lock);
 	if (!get_rpmb_key_status()) {
-		pr_err("%s(): rpmb key is not ready. cos upgrade bypassed", __func__);
+		pr_err("hisee:%s() rpmb key is not ready. cos upgrade bypassed", __func__);
 		goto exit;
 	}
-
-	ret = check_new_cosimage(0, &new_cos_exist);
-	if (HISEE_OK == ret) {
-		if (!new_cos_exist) {
-			pr_err("%s(): there is no new cosimage, no need to upgrade\n", __func__);
+	buf_para[0] = HISEE_CHAR_SPACE;/*space character*/
+	buf_para[2] = '0' + COS_PROCESS_UPGRADE;
+	for (cos_id = 0; cos_id < HISEE_SUPPORT_COS_FILE_NUMBER; cos_id++) {
+		new_cos_exist = HISEE_FALSE;
+		ret = check_new_cosimage(cos_id, &new_cos_exist);
+		if (HISEE_OK == ret) {
+			if (HISEE_FALSE == new_cos_exist) {
+				pr_err("hisee:%s() cos_id=%d no new cosimage, no need to upgrade\n", __func__, cos_id);
+				continue;
+			}
+		} else {
+			pr_err("hisee:%s() cos_id=%d check_new_cosimage failed,ret=%d\n", __func__, cos_id, ret);
 			goto exit;
 		}
-	} else {
-		pr_err("%s(): check_new_cosimage failed,ret=%d\n", __func__, ret);
-		goto exit;
-	}
+		buf_para[1] = '0' + cos_id;
+		ret = hisee_poweron_upgrade_func(buf_para, 0);
+		if (HISEE_OK != ret) {
+			pr_err("hisee:%s() power failed, cos_id=%d,ret=%d\n", __func__, cos_id, ret);
+			goto exit;
+		}
 
-	ret = hisee_poweron_upgrade_func(NULL, 0);
-	if (HISEE_OK != ret) {
-		pr_err("%s power failed, ret = %d\n", __func__, ret);
-		goto exit;
-	}
-
-	hisee_mdelay(200);
-	ret = cos_image_upgrade_func(NULL, 0);
-
-	if (HISEE_OK != ret) {
-		pr_err("%s upgrade failed, ret = %d\n", __func__, ret);
+		hisee_mdelay(DELAY_FOR_HISEE_POWERON_UPGRADE);
+		ret = handle_cos_image_upgrade(buf_para, 0);
+		if (HISEE_OK != ret) {
+			pr_err("hisee:%s() upgrade failed, cos_id=%d,ret=%d\n", __func__, cos_id, ret);
+			goto exit;
+		}
 	}
 exit:
 	wake_unlock(&g_hisee_data.wake_lock);
 	g_cos_image_upgrade_done = 1;
+	check_and_print_result();
+	return ret;
 }
 
+static void hisee_cos_patch_load(void)
+{
+	int ret = HISEE_OK;
+	int retry = 5;
+	do {
+                ret = hisee_cos_patch_read(MISC3_IMG_TYPE);
+                if (HISEE_OK == ret)
+                        break;
+                msleep(1000);
+                retry--;
+        } while ((HISEE_OK != ret) && retry > 0);
+
+	if (HISEE_OK != ret) {
+		pr_err("cos patch read failed %d", ret);
+	}
+
+	return ;
+}
 
 static int rpmb_ready_body(void *arg)
 {
@@ -641,6 +713,7 @@ static int rpmb_ready_body(void *arg)
 	int ret = HISEE_OK;
 	int find_part_res = HISEE_ERROR;
 	cosimage_version_info misc_version;
+	unsigned int hisee_hibench_flag = 1;
 
 	misc_version.img_version_num[0] = 0;
 
@@ -670,10 +743,20 @@ static int rpmb_ready_body(void *arg)
 		find_part_res = hisee_wait_partition_ready();
 	}
 
+	/* get hibench flag for efuse */
+	if (HISEE_OK != get_hisee_hibench_flag(&hisee_hibench_flag)) {
+		pr_err("%s() get hisee hibench flag failed.\n", __func__);
+	}
+
 	if (HISEE_OK != find_part_res) {
 		pr_err("%s ERROR:HISEE partition is not OK, find_part_res = %d\n", __func__, find_part_res);
 	} else {
-		cos_image_upgrade_in_task();
+		if (!g_hisee_is_fpga && (hisee_hibench_flag)) {
+			ret = cos_image_upgrade_by_self();
+			if(HISEE_OK != ret) {
+				pr_err("hisee:%s() cos_image_upgrade_by_self() failed, retcode=%d\n", __func__, ret);
+			}
+		}
 	}
 
 	ret = load_cosimg_appdata_ddr();
@@ -682,25 +765,158 @@ static int rpmb_ready_body(void *arg)
 	}
 
 	/* cos patch upgrade only supported in this function */
-	retry = 5;
-	do {
-		ret = hisee_cos_patch_read(MISC3_IMG_TYPE);
-		if (HISEE_OK == ret)
-			break;
-		msleep(1000);
-		retry--;
-	} while ((HISEE_OK != ret) && retry > 0);
+	hisee_cos_patch_load();
 
 	check_and_print_result();
 	g_cos_image_upgrade_done = 1;
 	set_errno_and_return(ret);  /*lint !e1058*/
 }
 
+#define HISEE_TEST_APDU_FULLNAME0 "/hisee_fs/test.apdu.bin"
+#define HISEE_TEST_APDU_FULLNAME1 "/hisee_fs/applet.apdu.bin"
+extern int run_hisee_nvmformat(void);
+
+/*************************************************************
+函数原型：int filesys_rm_one_file(void)
+函数功能：删除指定的文件(ext4文件系统格式)
+参数：
+输入：filename:指定的文件。
+输出：无。
+返回值：0:删除指定的文件成功；非0:失败
+前置条件：当前系统的指定路径下存在fullname执行的文件
+后置条件： 无
+*************************************************************/
+static int filesys_rm_one_file( char *file_name)
+{
+    int ret = HISEE_OK;
+    mm_segment_t old_fs;
+    int retry = 5;
+   ;
+
+    old_fs = get_fs();/*lint !e501*/
+    set_fs(KERNEL_DS);/*lint !e501*/
+
+    ret = (int)sys_access(file_name, 0);
+    if (0 == ret) {/*success*/
+        do {
+            ret = (int)sys_unlink(file_name);
+            if (-EBUSY == ret) {
+                pr_err("hisee:%s() file %s busy, do retry,retry=%d!\n", __func__, file_name, retry);
+				hisee_mdelay(100);
+            } else {
+                pr_err("hisee:%s() rm file %s exit, ret=%d!\n", __func__, file_name, ret);
+                break;
+            }
+        } while (--retry);
+    }
+
+    set_fs(old_fs);
+    return ret;
+}
+
+/*************************************************************
+函数原型：int filesys_rm_test_apdu_file(void)
+函数功能：删除指定的测试文件(ext4文件系统格式)
+参数：
+输入：无。
+输出：无。
+返回值：0:删除指定的文件成功；非0:失败
+前置条件：当前系统的指定路径下存在fullname执行的文件
+后置条件： 无
+*************************************************************/
+int filesys_rm_test_apdu_file( void)
+{
+    int ret = HISEE_OK;
+
+    ret = filesys_rm_one_file(HISEE_TEST_APDU_FULLNAME0);
+    ret |= filesys_rm_one_file(HISEE_TEST_APDU_FULLNAME1);
+
+    return ret;
+}
+
+/*************************************************************
+函数原型：int erase_hisee_image_partition(void)
+函数功能：擦除hisee镜像分区
+参数：
+输入：无。
+输出：无。
+返回值：0:擦除成功；非0:失败
+前置条件： 无
+后置条件： 无
+*************************************************************/
+int erase_hisee_image_partition(void)
+{
+#define BUFFER_SIZE	128
+#define HISEE_IMG_SIZE	0x400000
+	int fd;
+	ssize_t cnt;
+	mm_segment_t old_fs;
+	char fullpath[BUFFER_SIZE] = {0};
+	int ret;
+	char data_buf[BUFFER_SIZE] = {0};
+	int i;
+
+	if (1 == g_hisee_partition_byname_find) {
+		ret = flash_find_ptn(HISEE_IMAGE_PARTITION_NAME, fullpath);
+		if (0 != ret) {
+			pr_err("%s():flash_find_ptn fail\n", __func__);
+			ret = HISEE_OPEN_FILE_ERROR;
+			set_errno_and_return(ret);
+		}
+	} else {
+		flash_find_hisee_ptn(HISEE_IMAGE_A_PARTION_NAME, fullpath);
+	}
+
+	old_fs = get_fs();/*lint !e501*/
+	set_fs(KERNEL_DS);/*lint !e501*/
+
+	fullpath[BUFFER_SIZE - 1] = 0;
+	fd = (int)sys_open(fullpath, O_WRONLY, HISEE_FILESYS_DEFAULT_MODE);
+	if (fd < 0) {
+		pr_err("%s():open %s failed %d\n", __func__, fullpath, fd);
+		ret = HISEE_OPEN_FILE_ERROR;
+		set_fs(old_fs);
+		set_errno_and_return(ret);
+	}
+
+	cnt = 0;
+	for (i = 0; i < HISEE_IMG_SIZE/BUFFER_SIZE; i++) {
+		cnt += sys_write((unsigned int)fd, (char __user *)data_buf, sizeof(data_buf));
+	}
+	ret = sys_fsync((unsigned int)fd);
+	if (ret < 0) {
+		pr_err("%s():fail to sync %s.\n", __func__, fullpath);
+		ret = HISEE_ENCOS_SYNC_FILE_ERROR;
+	}
+
+	if (cnt != (ssize_t)(HISEE_IMG_SIZE)) {
+		pr_err("%s(): access %s failed, return [%ld]\n", __func__, fullpath, cnt);
+		ret = HISEE_ACCESS_FILE_ERROR;
+	}
+
+	sys_close((unsigned int)fd);
+	set_fs(old_fs);
+	check_and_print_result();
+	set_errno_and_return(ret);
+}
+
+
+
 static int flash_hisee_debug_switchs(void)
 {
     int ret;
+	char buf_para[MAX_CMD_BUFF_PARAM_LEN] = {0};
 
-    ret = hisee_poweron_booting_func(NULL, 0);
+	buf_para[0] = HISEE_CHAR_SPACE;/*space character*/
+	buf_para[1] = '0' + COS_IMG_ID_0;
+	buf_para[2] = '0' + COS_PROCESS_UPGRADE;
+
+    if (g_hisee_sm_flag) {
+        ret = HISEE_OK;
+        goto exit;
+    }
+
+   ret = hisee_poweron_booting_func((void *)buf_para, 0);
     if (HISEE_OK != ret) {
         set_errno_and_return(ret);
     }
@@ -713,7 +929,25 @@ static int flash_hisee_debug_switchs(void)
     }
 
     hisee_mdelay(DELAY_BETWEEN_STEPS);
-    (void)hisee_poweroff_func(NULL, (int)HISEE_PWROFF_LOCK);
+    (void)hisee_poweroff_func((void *)buf_para, (int)HISEE_PWROFF_LOCK);
+
+exit:
+	/* 格式化RPMB中的HiSEE区域 */
+	ret = run_hisee_nvmformat();
+	if (HISEE_OK != ret) {
+		set_errno_and_return(ret);
+	}
+	/* 删除hisee_img分区里的镜像数据 */
+	ret = erase_hisee_image_partition();
+	if (HISEE_OK != ret) {
+		set_errno_and_return(ret);
+	}
+
+	/* 删除hisee_fs目录里的生产测试文件 */
+	ret = filesys_rm_test_apdu_file();
+	if (HISEE_OK != ret) {
+		set_errno_and_return(ret);
+	}
 
     check_and_print_result();
     set_errno_and_return(ret);/*lint !e1058*/
@@ -723,6 +957,7 @@ static void show_hisee_module_status(char *buff)
 {
 	char counter_value[12] = {0};
 	char *index_name = "rpmb_is_ready=";
+
 	snprintf(counter_value, sizeof(counter_value), "%d\n", g_hisee_data.rpmb_is_ready);
 	strncpy(buff, index_name, strlen(index_name));
 	strncpy(buff + strlen(buff), counter_value, strlen(counter_value));
@@ -732,7 +967,6 @@ static void show_hisee_module_status(char *buff)
 	snprintf(counter_value, sizeof(counter_value), "%d\n", g_hisee_data.smc_cmd_running);
 	strncpy(buff + strlen(buff), index_name, strlen(index_name));
 	strncpy(buff + strlen(buff), counter_value, strlen(counter_value));
-
 	return;
 }
 
@@ -858,7 +1092,7 @@ static ssize_t hisee_powerctrl_store(struct device *dev, struct device_attribute
 	if (ret !=  HISEE_OK) {
 		pr_err("%s powerctrl_cmd:%s failed, retcode=%d\n", __func__, g_hisee_lpm3_function_list[cmd_index].function_name, ret);
 		record_hisee_log_by_dmd(DSM_HISEE_POWER_ON_OFF_ERROR_NO, ret);
-		set_errno_and_return(ret);
+		set_errno_and_return(HISEE_INVALID_PARAMS);
 	} else {
 		pr_err("%s :%s success\n", __func__, g_hisee_lpm3_function_list[cmd_index].function_name);
 		if ((unsigned int)HISEE_SM_MODE_MAGIC == hisee_lcs_mode && (0 == cmd_index)) {
@@ -1035,7 +1269,7 @@ static ssize_t hisee_apdu_store(struct device *dev, struct device_attribute *att
 */
 static ssize_t hisee_power_debug_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	char buff[HISEE_ERROR_DESCRIPTION_MAX] = {0};
+	char buff[HISEE_BUF_SHOW_LEN] = {0};
 	u32	vote_lpm3;
 	u32	vote_atf;
 
@@ -1047,8 +1281,9 @@ static ssize_t hisee_power_debug_show(struct device *dev, struct device_attribut
 	hisee_mntn_collect_vote_value_cmd();
 	vote_lpm3 = hisee_mntn_get_vote_val_lpm3();
 	vote_atf = hisee_mntn_get_vote_val_atf();
-	snprintf(buff, HISEE_ERROR_DESCRIPTION_MAX, "lpm3 0x%08x atf 0x%08x\n", vote_lpm3, vote_atf);
-	memcpy(buf, buff, HISEE_ERROR_DESCRIPTION_MAX);
+	snprintf(buff, HISEE_BUF_SHOW_LEN, "lpm3 0x%08x atf 0x%08x kernel 0x%lx cos_id 0x%x\n",
+			vote_lpm3, vote_atf, g_power_vote_status.value, g_runtime_cosid);
+	memcpy(buf, buff, HISEE_BUF_SHOW_LEN);
 	pr_err("%s(): success.\n", __func__);
 	return strlen(buf);
 }/*lint !e715*/
@@ -1088,30 +1323,13 @@ static int hisee_remove(struct platform_device *pdev)
 	return ret;
 }
 
-static int __init hisee_probe(struct platform_device *pdev)
+static void hisee_read_dts(struct device *pdevice)
 {
-	struct device *pdevice = &(pdev->dev);
-	struct task_struct *rpmb_ready_task = NULL;
 	unsigned int dts_u32_value = 0;
-	int ret = HISEE_OK;
-
-	memset((void *)&g_hisee_data, 0, sizeof(g_hisee_data));
-	ret = of_reserved_mem_device_init(pdevice);
-	if (ret != HISEE_OK) {
-		pr_err("hisee shared cma pool with ATF registered failed!\n");
-		set_errno_and_return(HISEE_CMA_DEVICE_INIT_ERROR);
+	if (NULL == pdevice) {
+		pr_err("hisee read dts fail ,pdevice is null!\n");
+		return;
 	}
-	if (of_find_property(pdevice->of_node, "hisee_partition_byname_find", NULL)) {
-		g_hisee_partition_byname_find = 1;
-	}
-
-	ret = set_lpmcu_nfc_irq();
-	if (HISEE_OK != ret) {
-		pr_err("hisee send cmd to lpmcu failed. ignored\n");
-	}
-
-	g_hisee_data.cma_device = pdevice;
-	pr_err("hisee shared cma pool with ATF registered success!\n");
 
 	if (0 == of_property_read_u32(pdevice->of_node, "platform_id", &dts_u32_value))
 		g_platform_id = dts_u32_value;
@@ -1121,6 +1339,13 @@ static int __init hisee_probe(struct platform_device *pdev)
 		pr_info("hisee sm_flag_pos %u\n", g_hisee_sm_efuse_pos);
 	} else {
 		pr_err("hisee get sm_flag_pos fail\n");
+	}
+
+	if (0 == of_property_read_u32(pdevice->of_node, "hibench_flag_pos", &dts_u32_value)) {
+		g_hisee_hibench_efuse_pos = dts_u32_value;
+		pr_info("hisee hibench_flag_pos %u\n", g_hisee_hibench_efuse_pos);
+	} else {
+		pr_err("hisee get hibench_flag_pos fail\n");
 	}
 
 	if (of_find_property(pdevice->of_node, "pre_enable_hisee_clk", NULL)) {
@@ -1143,6 +1368,34 @@ static int __init hisee_probe(struct platform_device *pdev)
 		g_hisee_is_fpga = false;
 		pr_info("hisee is on non-fpga\n");
 	}
+
+}
+
+static int __init hisee_probe(struct platform_device *pdev)
+{
+	struct device *pdevice = &(pdev->dev);
+	struct task_struct *rpmb_ready_task = NULL;
+	int ret = HISEE_OK;
+
+	memset((void *)&g_hisee_data, 0, sizeof(g_hisee_data));
+	ret = of_reserved_mem_device_init(pdevice);
+	if (ret != HISEE_OK) {
+		pr_err("hisee shared cma pool with ATF registered failed!\n");
+		set_errno_and_return(HISEE_CMA_DEVICE_INIT_ERROR);
+	}
+	if (of_find_property(pdevice->of_node, "hisee_partition_byname_find", NULL)) {
+		g_hisee_partition_byname_find = 1;
+	}
+
+	ret = set_lpmcu_nfc_irq();
+	if (HISEE_OK != ret) {
+		pr_err("hisee send cmd to lpmcu failed. ignored\n");
+	}
+
+	g_hisee_data.cma_device = pdevice;
+	pr_err("hisee shared cma pool with ATF registered success!\n");
+
+	hisee_read_dts(pdevice);
 
 	if (device_create_file(pdevice, &dev_attr_hisee_ioctl)) {
 		ret = HISEE_IOCTL_NODE_CREATE_ERROR;
@@ -1208,9 +1461,9 @@ static int __init hisee_probe(struct platform_device *pdev)
 	pr_err("hisee module init success!\n");
 	set_errno_and_return(HISEE_OK);  /*lint !e1058*/
 err_device_remove_file_end:
-	device_remove_file(pdevice, &dev_attr_hisee_check_upgrade);
-err_device_remove_file5:
 	device_remove_file(pdevice, &dev_attr_hisee_power_debug);
+err_device_remove_file5:
+	device_remove_file(pdevice, &dev_attr_hisee_check_upgrade);
 err_device_remove_file4:
 	device_remove_file(pdevice, &dev_attr_hisee_has_new_cos);
 err_device_remove_file3:

@@ -46,24 +46,7 @@
  *
  */
 
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : OM_Hdlc.c
-  版 本 号   : 初稿
-  作    者   : zengfei 57034
-  生成日期   : 2008年6月4日
-  最近修改   :
-  功能描述   :
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2008年6月4日
-    作    者   : zengfei 57034
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 
 
@@ -132,149 +115,8 @@ u16 const g_ausDiagHdlcFcsTab[256] = {
    5 函数实现
 ******************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : Om_HdlcEncap
- 功能描述  : 将输入的原始数据封装成HDLC帧
- 输入参数  : u8 *pucSrc
-             u16 usSrcLen
-             u8 *pucDest
-             u16 usDestBuffLen
- 输出参数  : u16* pusDestLen
- 返 回 值  : u32
-             PS_SUCC: 成功
-             PS_FAIL: 失败
 
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年6月3日
-    作    者   : zengfei 57034
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-u32 diag_HdlcEncap(
-                const u8  *pucSrc,
-                u16  usSrcLen,
-                u8  *pucDest,
-                u16  usDestBuffLen,
-                u16 *pusDestLen )
-{
-    u16  usFcs       = OM_HDLC_INIT_FCS;
-    u8  *pucDestPos  = pucDest;
-    u8   ucFcsChar;
-
-    if ((NULL == pucSrc) || (NULL == pucDest) ||(NULL == pusDestLen))
-    {
-        (void)soft_decode_printf("\n\rERROR, Om_HdlcEncap, Pointer Para is NULL !\n\r");
-        return ERR_MSP_FAILURE;
-    }
-
-    if (0 == usSrcLen)
-    {
-        *pusDestLen = 0;
-        (void)soft_decode_printf("\n\rWARNING, Om_HdlcEncap, Src Data Len is 0 !\n\r");
-        return ERR_MSP_FAILURE;
-    }
-
-    if (usDestBuffLen <= 4)             /* 信息域长度不为0的HDLC帧长度至少为5 */
-    {
-        *pusDestLen = 0;
-        (void)soft_decode_printf("\n\rWARNING, Om_HdlcEncap, Dst Buf is not Enough #1:BufLen:%d !\n\r", usDestBuffLen);
-        return ERR_MSP_FAILURE;
-    }
-
-    /* 填帧头 */
-    *pucDestPos++   = OM_HDLC_FRAME_FLAG;
-
-    /* 遍历输入数据，计算FCS并转义 */
-    while (usSrcLen-- && ((pucDestPos - pucDest) <= (usDestBuffLen - 3)))
-    {
-        usFcs = (usFcs >> 8) ^ g_ausDiagHdlcFcsTab[(usFcs ^ *pucSrc) & 0xff];
-
-        if ((OM_HDLC_FRAME_FLAG == *pucSrc) || (OM_HDLC_ESC == *pucSrc))
-        {
-            *pucDestPos++ = OM_HDLC_ESC;
-            *pucDestPos++ = (*pucSrc++) ^ OM_HDLC_ESC_MASK;
-        }
-        else
-        {
-            *pucDestPos++ = *pucSrc++;
-        }
-    }
-
-    /* 判断目的BUFFER是否够添加FCS和帧尾 */
-    if ((pucDestPos - pucDest) > (usDestBuffLen - 3))
-    {
-        *pusDestLen = 0;
-        (void)soft_decode_printf("\n\rWARNING, Om_HdlcEncap, Dst Buf is not Enough #2:BufLen:%d !\n\r", usDestBuffLen);
-        return ERR_MSP_FAILURE;
-    }
-
-    usFcs       = ~usFcs;
-
-    /* 转义并添加FCS第一个字节 */
-    ucFcsChar   = usFcs & 0xFF;
-    if ((OM_HDLC_FRAME_FLAG == ucFcsChar) || (OM_HDLC_ESC == ucFcsChar))
-    {
-        *pucDestPos++ = OM_HDLC_ESC;
-        *pucDestPos++ = ucFcsChar ^ OM_HDLC_ESC_MASK;
-    }
-    else
-    {
-        *pucDestPos++ = ucFcsChar;
-    }
-
-    /* 判断目的BUFFER是否够添加FCS和帧尾 */
-    if ((pucDestPos - pucDest) > (usDestBuffLen - 2))
-    {
-        *pusDestLen = 0;
-        (void)soft_decode_printf("\n\rWARNING, Om_HdlcEncap, Dst Buf is not Enough #3:BufLen:%d !\n\r", usDestBuffLen);
-        return ERR_MSP_FAILURE;
-    }
-
-    /* 转义并添加FCS第二个字节 */
-    ucFcsChar       = (usFcs >> 8) & 0xFF;
-    if ((OM_HDLC_FRAME_FLAG == ucFcsChar) || (OM_HDLC_ESC == ucFcsChar))
-    {
-        *pucDestPos++ = OM_HDLC_ESC;
-        *pucDestPos++ = ucFcsChar ^ OM_HDLC_ESC_MASK;
-    }
-    else
-    {
-        *pucDestPos++ = ucFcsChar;
-    }
-
-    /* 判断目的BUFFER是否够添加帧尾 */
-    if ((pucDestPos - pucDest) > (usDestBuffLen - 1))
-    {
-        *pusDestLen = 0;
-        (void)soft_decode_printf("\n\rWARNING, Om_HdlcEncap, Dst Buf is not Enough #4:BufLen:%d !\n\r", usDestBuffLen);
-        return ERR_MSP_FAILURE;
-    }
-
-    *pucDestPos++   = OM_HDLC_FRAME_FLAG;
-
-    *pusDestLen     = (u16)(pucDestPos - pucDest);
-    return BSP_OK;
-}
-
-/*****************************************************************************
- 函 数 名  : Om_HdlcInit
- 功能描述  : 该接口初始化HDLC实体的内部变量, 每个应用在第一次使用解封装功能
-             Om_HdlcDecap前需要调用一次该函数
- 输入参数  : OM_HDLC_STRU *pstHdlc
- 输出参数  : OM_HDLC_STRU *pstHdlc
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2008年6月4日
-    作    者   : zengfei 57034
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void diag_HdlcInit( OM_HDLC_STRU *pstHdlc )
 {
     if (NULL == pstHdlc)
@@ -288,22 +130,7 @@ void diag_HdlcInit( OM_HDLC_STRU *pstHdlc )
     pstHdlc->ulMode     = OM_HDLC_MODE_HUNT;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_HdlcFcs
- 功能描述  : 计算FCS. 见RFC 1662 Appendix C and CCITT X.25 section 2.27.
- 输入参数  : u8 *pucData
-             u32 ulDataLen
- 输出参数  : 无
- 返 回 值  : u16
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年6月3日
-    作    者   : zengfei 57034
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 u16 diag_HdlcFcs( u8 *pucData, u32 ulDataLen )
 {
     u16 usFcs = OM_HDLC_INIT_FCS;
@@ -316,22 +143,7 @@ u16 diag_HdlcFcs( u8 *pucData, u32 ulDataLen )
     return usFcs;
 }
 
-/*****************************************************************************
- 函 数 名  : Om_HdlcDecap
- 功能描述  : 从输入的HDLC帧字符流中解析出数据内容
- 输入参数  : OM_HDLC_STRU *pstHdlc
-             u8 ucChar
- 输出参数  : 无
- 返 回 值  : u32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年6月3日
-    作    者   : zengfei 57034
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OM_HDLC_RESULT_ENUM_UINT32 diag_HdlcDecap( OM_HDLC_STRU *pstHdlc, u8 ucChar )
 {
     u16  usFcs;

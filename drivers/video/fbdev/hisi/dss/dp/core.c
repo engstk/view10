@@ -394,27 +394,12 @@ void dptx_phy_set_lanes_status(struct dp_ctrl *dptx, bool bopen)
 
 	phyifctrl = dptx_readl(dptx, DPTX_PHYIF_CTRL);
 	if (bopen) {
-		if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-			phyifctrl &= ~DPTX_PHYIF_CTRL_PWRDOWN_MASK;
-		} else {
-			phyifctrl &= ~DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(0);
-			phyifctrl &= ~DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(1);
-			phyifctrl &= ~DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(2);
-			phyifctrl &= ~DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(3);
-		}
+		phyifctrl &= ~DPTX_PHYIF_CTRL_PWRDOWN_MASK;
 	} else {
-		if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-			//phyifctrl |= DPTX_PHYIF_CTRL_PWRDOWN_MASK;
-			phyifctrl |= (3 << 17);
-		} else {
-			phyifctrl |= DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(0);
-			phyifctrl |= DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(1);
-			phyifctrl |= DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(2);
-			phyifctrl |= DPTX_PHYIF_CTRL_LANE_PWRDOWN_MASK(3);
-		}
+		//phyifctrl |= DPTX_PHYIF_CTRL_PWRDOWN_MASK;
+		phyifctrl |= (3 << 17);
 	}
 	dptx_writel(dptx, DPTX_PHYIF_CTRL, phyifctrl);
-
 	if (bopen) {
 		usb31phy_cr_write(0x4, 0x211);
 		usb31phy_cr_write(0x4, 0);

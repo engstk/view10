@@ -877,9 +877,6 @@ typedef  VOS_UINT32 TTF_SENSITIVE_TRACE_STATUS_ENUM_UINT32;
 /*****************************************************************************
   4 全局变量声明
 *****************************************************************************/
-/* R99 Mailbox VTB 译码数据地址 */
-extern VOS_UINT32  g_aulR99MailboxVtbAddr[];
-
 
 /*****************************************************************************
   5 消息头定义
@@ -1367,7 +1364,6 @@ typedef struct{
     VOS_UINT32                                     ulSimuClock;
     OM_TTF_WCDMA_RLC_DATA_TRANS_INFO_REQ_STRU      stOmRlcReq;
     TTF_OM_WCDMA_RLC_DATA_TRANS_INFO_IND_STRU      stRlcOmInd;
-    VOS_UINT8                                      aucAmReTxNumPerDataPdu[WTTF_MNTN_MAX_AM_RB_NUM][WTTF_MNTN_RLC_AM_MAX_SN_NUM];
 } WTTF_MNTN_RLC_DATA_TRANS_INFO_OBJ_STRU;
 
 /*****************************************************************************
@@ -2870,8 +2866,11 @@ typedef struct
 extern VOS_VOID TTF_TraceModuleSet(VOS_UINT8 *paucModuleId);
 #endif
 extern VOS_VOID WTTF_TraceModuleCfgReq(VOS_VOID* pMsg);
-extern VOS_VOID WTTF_MAC_R99MailBox_ReadForIpcHalt(VOS_VOID);
-extern VOS_VOID WTTF_R99MailboxInitForCbt(VOS_VOID);
+extern VOS_VOID WTTF_MAC_R99MailBox_ReadForIpcHalt(MODEM_ID_ENUM_UINT16 enModemId);
+extern VOS_VOID WTTF_R99MailboxInitForCbt(MODEM_ID_ENUM_UINT16 enModemId);
+extern VOS_UINT8 NAS_LOG_PRIVACY_GetPrivacyFilterFlagByModemId(
+    MODEM_ID_ENUM_UINT16                enModemId
+);
 
 
 #pragma pack()

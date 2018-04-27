@@ -70,6 +70,7 @@ enum {
 #define DSI_CMD_DST_FORMAT_RGB666	1
 #define DSI_CMD_DST_FORMAT_RGB888	2
 
+#define GEN_VID_LP_CMD		BIT(24)	/* vid lowpwr cmd write*/
 /* dcs read/write */
 #define DTYPE_DCS_WRITE		0x05	/* short write, 0 parameter */
 #define DTYPE_DCS_WRITE1	0x15	/* short write, 1 parameter */
@@ -108,11 +109,11 @@ enum {
 #define DSI_PLD_DATA4(data)		(((data) & 0x0ff) << 24)
 
 struct dsi_cmd_desc {
-	int dtype;
-	int vc;
-	int wait;
-	int waittype;
-	int dlen;
+	uint32_t dtype;
+	uint32_t vc;
+	uint32_t wait;
+	uint32_t waittype;
+	uint32_t dlen;
 	char *payload;
 };
 
@@ -126,9 +127,25 @@ struct mipi_dsi_read_compare_data {
 	int cnt;
 };
 
+#define DEFAULT_MAX_TX_ESC_CLK	(10 * 1000000UL)
+//#define DEFAULT_DSI_BURST_MODE	DSI_BURST_SYNC_PULSES_1
+
+#define DEFAULT_MIPI_CLK_RATE	(192 * 100000L)
+#define DEFAULT_PCLK_DSI_RATE	(120 * 1000000L)
+
+struct dsi_phy_seq_info {
+	uint32_t min_range;
+	uint32_t max_range;
+	uint32_t rg_pll_vco_750M;
+	uint32_t rg_hstx_ckg_sel;
+};
+
 /******************************************************************************
 ** FUNCTIONS PROTOTYPES
 */
+int mipi_dsi_on(struct platform_device *pdev);
+int mipi_dsi_set_fastboot(struct platform_device *pdev);
+int mipi_dsi_off(struct platform_device *pdev);
 void mipi_dsi_max_return_packet_size(struct dsi_cmd_desc *cm,
 	char __iomem *dsi_base);
 void mipi_dsi_sread(uint32_t *out, char __iomem *dsi_base);
@@ -152,5 +169,6 @@ int mipi_dsi_clk_enable(struct hisi_fb_data_type *hisifd);
 int mipi_dsi_clk_disable(struct hisi_fb_data_type *hisifd);
 int mipi_dsi_bit_clk_upt_isr_handler(struct hisi_fb_data_type *hisifd);
 void mipi_dsi_reset(struct hisi_fb_data_type *hisifd);
+void mipi_init(struct hisi_fb_data_type *hisifd, char __iomem *mipi_dsi_base);
 
 #endif  /* HISI_MIPI_DSI_H */

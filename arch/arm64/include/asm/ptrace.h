@@ -21,8 +21,6 @@
 
 #include <uapi/asm/ptrace.h>
 
-#define _PSR_PAN_BIT		22
-
 /* Current Exception Level values, as contained in CurrentEL */
 #define CurrentEL_EL1		(1 << 2)
 #define CurrentEL_EL2		(2 << 2)
@@ -120,7 +118,8 @@ struct pt_regs {
 	u64 orig_x0;
 	u64 syscallno;
 	u64 orig_addr_limit;
-	u64 unused;	// maintain 16 byte alignment
+	u32 orig_addr_limit_hkip[2];
+	// maintain 16 byte alignment
 };
 
 #define MAX_REG_OFFSET offsetof(struct pt_regs, pstate)

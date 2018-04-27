@@ -139,6 +139,7 @@ typedef struct tui_memory {
 } tui_ion_mem;
 
 
+
 static tui_ion_mem tui_display_mem;
 static tui_ion_mem normal_font_mem;
 static tui_ion_mem unusual_font_mem;
@@ -159,7 +160,7 @@ static size_t get_tui_font_file_size(ttf_type type)
 	struct kstat ttf_file_stat;
 	mm_segment_t old_fs;
 
-	old_fs = get_fs();
+	old_fs = get_fs(); /*lint !e501 */
 	set_fs(KERNEL_DS); /*lint !e501 */
 	/*get ttf file size*/
 	if (normal == type) {
@@ -374,7 +375,7 @@ static int copy_tui_font_file(size_t font_file_size, void *font_virt_addr, ttf_t
 		return -1;
 	}
 
-	old_fs = get_fs();
+	old_fs = get_fs(); /*lint !e501 */
 	set_fs(KERNEL_DS); /*lint !e501 */
 
 	count = (unsigned int)vfs_read(filep, (char __user *)font_virt_addr, font_file_size, &pos);
@@ -535,7 +536,7 @@ EXPORT_SYMBOL(unregister_tui_driver);
 
 static int add_tui_msg(int type, int val, void *data)
 {
-	struct tui_msg_node *tui_msg;
+	struct tui_msg_node *tui_msg = NULL;
 	unsigned long flags;
 
 	/* Return error if pdata is invalid */
@@ -545,7 +546,7 @@ static int add_tui_msg(int type, int val, void *data)
 	}
 
 	/* Allocate memory for tui_msg */
-	tui_msg = kmalloc(sizeof(*tui_msg), GFP_KERNEL);
+	tui_msg = kzalloc(sizeof(*tui_msg), GFP_KERNEL);
 	if (!tui_msg)
 		return -ENOMEM;
 
@@ -967,6 +968,7 @@ next:
 	switch (type) {
 	case TUI_POLL_CFG_OK:
 		if (DSS_CONFIG_INDEX == tui_ctl->s2n.value) {
+
 			phys_addr_t tui_addr_t;
 			tui_addr_t = get_frame_addr();
 			if (0 == tui_addr_t) { /*lint !e568 !e685 */
@@ -1045,6 +1047,7 @@ static int agent_process_work_tui(void)
 	if ( NULL == event_data || 0 == event_data->agent_alive) {
 		/*TODO: if return, the pending task in S can't be resumed!! */
 		tloge("tui agent is not exist\n");
+		put_agent_event(event_data);
 		return TEEC_ERROR_GENERIC;/*lint !e570*/
 	}
 
@@ -1053,7 +1056,7 @@ static int agent_process_work_tui(void)
 	event_data->ret_flag = 1;
 	/* Wake up tui agent that will process the command */
 	wake_up(&event_data->wait_event_wq);
-
+	put_agent_event(event_data);
 	return TEEC_SUCCESS;
 }
 
@@ -1490,6 +1493,7 @@ int __init init_tui(struct device *class_dev)
 		return -ENOMEM;
 	}
 
+
 	tui_client = hisi_ion_client_create(ion_name);
 	if(!tui_client) {
 		tloge("create ion client failed\n");
@@ -1552,6 +1556,7 @@ void tui_exit(void)
 		tloge("tui power key unregister failed.\n");
 	}
 	tui_mem_free();
+
 	if(tui_client) {
 		ion_client_destroy(tui_client);
 		tui_client = NULL;

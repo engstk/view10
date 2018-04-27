@@ -84,6 +84,7 @@ typedef enum
     NV_ID_DRV_PMU                          = 0xd158,    //DRV_PMU_CFG_STRU
     NV_ID_DRV_CORESIGHT                    = 0xd168,    //DRV_CORESIGHT_CFG_STRU
     NV_ID_DRV_DIAG_PORT                    = 0xd16f,    //DIAG_CHANNLE_PORT_CFG_STRU
+    NV_ID_DRV_IQI                          = 0xd17e,    //DRV_IQI_CFG_STRU
 
     NV_ID_DRV_ID_MAX                       = 0xd1ff
 

@@ -31,6 +31,7 @@
 #include <linux/console.h>
 #include <linux/wakelock.h>
 #include <soc_crgperiph_interface.h>
+#include <soc_acpu_baseaddr_interface.h>
 #include <soc_uart_interface.h>
 #include <soc_sctrl_interface.h>
 #include "hisi_lpregs.h"
@@ -86,6 +87,9 @@
 #define PROCESSOR_IOMCU_LENGTH  5
 #define IPC_MBXDATA_MIN			0
 #define IPC_MBXDATA_MAX			8
+#define IPC_MBXDATA_TAG			2
+#define MATCH_TAG_SHAREMEM(m)			(((m) & 0xFF) == 0x8F)
+#define DUBAI_UPDATE_TAG(m, value)		(((m) & 0xFF00) | ((value) & 0xFF))
 #define IPC_MBX_SOURCE_OFFSET(m)		((m) << 6)
 #define IPC_MBX_DSTATUS_OFFSET(m)		(0x0C + ((m) << 6))
 #define IPC_MBXDATA_OFFSET(m, idex)		(0x20 + 4 * (idex) + ((m) << 6))
@@ -554,6 +558,7 @@ void ipc_mbx_irq_show(struct seq_file *s, void __iomem *base, unsigned int mbx)
 	unsigned int src_id = 0;
 	unsigned int dest_id = 0;
 	unsigned int i = 0;
+	unsigned int dubai_data = 0;
 
 	ipc_source = readl(base + IPC_MBX_SOURCE_OFFSET(mbx));
 	src_id = proc_mask_to_id(ipc_source);
@@ -578,9 +583,16 @@ void ipc_mbx_irq_show(struct seq_file *s, void __iomem *base, unsigned int mbx)
 	/*if ((g_usavedcfg & DEBG_SUSPEND_IPC_DATA_SHOW) > 0) {*/
 	for (i = 0; i < IPC_MBXDATA_MAX; i++) {
 		ipc_data = readl(base + IPC_MBXDATA_OFFSET(mbx, i));
-		if ((i == IPC_MBXDATA_MIN) && (src_id < IPC_PROCESSOR_MAX)) {
-			if (strncmp(processor_name[src_id], "iomcu", PROCESSOR_IOMCU_LENGTH) == 0)
-				HWDUBAI_LOGE("DUBAI_TAG_SENSORHUB_WAKE", "data=%u", ipc_data);
+		if ((src_id < IPC_PROCESSOR_MAX) &&
+			(strncmp(processor_name[src_id], "iomcu", PROCESSOR_IOMCU_LENGTH) == 0)) {
+			if (i == IPC_MBXDATA_MIN) {
+				dubai_data = ipc_data;
+			}
+			if (i == IPC_MBXDATA_TAG) {
+				dubai_data = MATCH_TAG_SHAREMEM(dubai_data) ?
+					DUBAI_UPDATE_TAG(dubai_data, ipc_data) : dubai_data;
+				HWDUBAI_LOGE("DUBAI_TAG_SENSORHUB_WAKE", "data=%u", dubai_data);
+			}
 		}
 		LOWPM_MSG(s, "SR:[MBXDATA%u]:0x%x\n", i, ipc_data); //lint !e666
 	}
@@ -630,6 +642,7 @@ void ao_ipc_mbx_irq_show(struct seq_file *s, void __iomem *base, unsigned int mb
 	unsigned int src_id = 0;
 	unsigned int dest_id = 0;
 	unsigned int i = 0;
+	unsigned int dubai_data = 0;
 
 	ipc_source = readl(base + IPC_MBX_SOURCE_OFFSET(mbx));
 	src_id = ao_proc_mask_to_id(ipc_source);
@@ -654,9 +667,16 @@ void ao_ipc_mbx_irq_show(struct seq_file *s, void __iomem *base, unsigned int mb
 	/*if ((g_usavedcfg & DEBG_SUSPEND_IPC_DATA_SHOW) > 0) {*/
 	for (i = 0; i < IPC_MBXDATA_MAX; i++) {
 		ipc_data = readl(base + IPC_MBXDATA_OFFSET(mbx, i));
-		if ((i == IPC_MBXDATA_MIN) && (src_id < AO_IPC_PROCESSOR_MAX)) {
-			if (strncmp(aoipc_processor_name[src_id], "iomcu", PROCESSOR_IOMCU_LENGTH) == 0)
-				HWDUBAI_LOGE("DUBAI_TAG_SENSORHUB_WAKE", "data=%u", ipc_data);
+		if ((src_id < AO_IPC_PROCESSOR_MAX) &&
+			(strncmp(aoipc_processor_name[src_id], "iomcu", PROCESSOR_IOMCU_LENGTH) == 0)) {
+			if (i == IPC_MBXDATA_MIN) {
+				dubai_data = ipc_data;
+			}
+			if (i == IPC_MBXDATA_TAG) {
+				dubai_data = MATCH_TAG_SHAREMEM(dubai_data) ?
+					DUBAI_UPDATE_TAG(dubai_data, ipc_data) : dubai_data;
+				HWDUBAI_LOGE("DUBAI_TAG_SENSORHUB_WAKE", "data=%u", dubai_data);
+			}
 		}
 		LOWPM_MSG(s, "SR:[MBXDATA%u]:0x%x\n", i, ipc_data); //lint !e666
 	}

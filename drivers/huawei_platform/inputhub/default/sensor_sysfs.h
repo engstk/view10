@@ -3,11 +3,18 @@
 #ifndef __SENSOR_SYSFS_H
 #define __SENSOR_SYSFS_H
 
+#include "sensor_config.h"
+
 struct pdr_start_config {
 	unsigned int report_interval;
 	unsigned int report_precise;
 	unsigned int report_count;
 	unsigned int report_times;
+};
+
+struct acc_gyr_offset_threshold {
+	int32_t low_threshold;
+	int32_t high_threshold;
 };
 
 typedef struct {
@@ -17,6 +24,13 @@ typedef struct {
 		unsigned int stop_param;
 	};
 } pdr_ioctl_t;
+
+typedef enum{
+	OFFSET_MIN_THREDHOLD,
+	OFFSET_MAX_THREDHOLD,
+	DIFF_MIN_THREDHOLD,
+	DIFF_MAX_THREDHOLD
+}SEMTECK_THREDHOLD;
 
 #ifdef CONFIG_HUAWEI_DSM
 #ifdef CONFIG_HUAWEI_DATA_ACQUISITION
@@ -40,8 +54,13 @@ typedef struct {
 #define CAP_PROX_RESULT             "pass"
 
 #define ACC_CAL_NUM                  15
+#define ACC_THRESHOLD_NUM            3
 #define GYRO_CAL_NUM                 15
+#define GYRO_THRESHOLD_NUM           3
 #define ALS_CAL_NUM                  6
+#define ALS_THRESHOLD_NUM            6
+#define PS_CAL_NUM                  3
+#define PS_THRESHOLD_NUM            3
 #define AIRPRESS_CAL_NUM             1
 
 #define MAX_COPY_EVENT_SIZE          32
@@ -91,8 +110,8 @@ typedef struct {
 #define SAR_SENSOR_DIFF_MSG          703016002
 
 #define PS_CALI_XTALK                703018001
-#define PS_NEAR_PDATA                703018002
-#define PS_FAIR_PDATA                703018003
+#define PS_FAR_PDATA                703018002
+#define PS_NEAR_PDATA                703018003
 
 #define PS_CALI_NAME                 "PS_CALI_XTALK"
 #define CAP_PROX_OFFSET              "SAR_SENSOR_OFFSET_MSG"
@@ -113,11 +132,16 @@ static char *gyro_test_name[GYRO_CAL_NUM] =
 static char *als_test_name[ALS_CAL_NUM] =
 	{"ALS_CALI_R_MSG", "ALS_CALI_G_MSG", "ALS_CALI_B_MSG",
 	"ALS_CALI_C_MSG", "ALS_CALI_LUX_MSG", "ALS_CALI_CCT_MSG"};
+static char *ps_test_name[PS_CAL_NUM] =
+	{"PS_CALI_XTALK_MSG", "PS_FAR_PDATA_MSG", "PS_NEAR_PDATA_MSG"};
 
 struct sensor_eng_cal_test{
 	int first_item;
 	int32_t *cal_value;
 	int value_num;
+	int32_t *min_threshold;
+	int32_t *max_threshold;
+	int threshold_num;
 	char name[MAX_TEST_NAME_LEN];
 	char result[MAX_RESULT_LEN];
 	char *test_name[MAX_COPY_EVENT_SIZE];
@@ -174,6 +198,7 @@ struct sensor_eng_cal_test{
 
 #define RGB_SENSOR_CAL_FILE_PATH "/data/light"
 #define RGB_SENSOR_CAL_RESULT_MAX_LEN  (96)
+#define GYRO_DYN_CALIBRATE_END_ORDER  (5)
 extern int read_calibrate_data_from_nv(int nv_number, int nv_size, char *nv_name);
 extern int fingersense_commu(unsigned int cmd, unsigned int pare, unsigned int responsed, bool is_subcmd);
 extern int fingersense_enable(unsigned int enable);
@@ -183,5 +208,7 @@ extern ssize_t show_sensor_read_airpress_common(struct device *dev, struct devic
 extern int ois_commu(int tag, unsigned int cmd, unsigned int pare, unsigned int responsed, bool is_subcmd);
 extern ssize_t show_cap_prox_calibrate_method(struct device *dev, struct device_attribute *attr, char *buf);
 extern ssize_t show_cap_prox_calibrate_orders(struct device *dev, struct device_attribute *attr, char *buf);
+
+read_info_t send_airpress_calibrate_cmd(uint8_t tag, unsigned long val, RET_TYPE *rtype);
 
 #endif //__SENSOR_SYSFS_H

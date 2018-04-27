@@ -65,7 +65,6 @@
 
 
 
-
 #define    THIS_FILE_ID        PS_FILE_ID_GU_NAS_LOG_FILTER_C
 
 #define    AT_CMD_LEN_7             (7)
@@ -81,13 +80,7 @@ typedef VOS_VOID* (*pGuNasMsgFilterProcFunc)(
 );
 
 
-/*******************************************************************************
- 结构名    : GUNAS_MSG_FILTER_PROC_TBL_FUNC
- 结构说明  : 过滤消息处理函数结构体
- 1.日    期   : 2015年09月25日
-   作    者   : h00313353
-   修改内容   : 新建
-*******************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                                  ulSenderPid;
@@ -182,25 +175,9 @@ VOS_CHAR*                                       g_apcATFileterTable[]=
         /* SIM LOCK相关 */
         "AT^SIMLOCKUNLOCK"  ,
         "AT^CMLCK"          ,
-        /* 电话本相关 */
-        "AT+CPBS"           ,
-        "\r\n+CPBS:"        ,
-        "AT+CPBR"           ,
-        "\r\n+CPBR:"        ,
-        "AT+CPBW"           ,
-        "\r\n+CPBW:"        ,
-        "AT+CNUM"           ,
-        "\r\n+CNUM:"        ,
-        "AT+CPBF"           ,
-        "\r\n+CPBF:"        ,
-        "AT^CPBR"           ,
-        "\r\n^CPBR:"        ,
-        "AT^CPBW"           ,
-        "\r\n^CPBW:"        ,
-        "AT^SCPBR"          ,
-        "\r\n^SCPBR:"       ,
-        "AT^SCPBW"          ,
-        "\r\n^SCPBW:"       ,
+
+        "AT^SILENTPININFO"  ,
+
 };
 
 
@@ -209,22 +186,7 @@ VOS_CHAR*                                       g_apcATFileterTable[]=
 *****************************************************************************/
 
 
-/*****************************************************************************
- 函 数 名  : GUNAS_ATCmdFilter
- 功能描述  : 过滤At到At的USIM层间消息函数
- 输入参数  : pucATData     -- 消息中的数据
-             usLen         -- 数据长度
- 输出参数  : NONE
- 返 回 值  : VOS_TRUE :表示这个消息被过滤掉了，不需要上报给OM
-             VOS_FALSE:表示这个消息需要上报OM
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年01月31日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 
 VOS_UINT32 GUNAS_ATCmdFilter(
     VOS_UINT8                          *pucATData,
@@ -257,26 +219,7 @@ VOS_UINT32 GUNAS_ATCmdFilter(
     return VOS_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_FilterAtToAtMsg
- 功能描述  : 过滤At到At层间消息的函数
- 输入参数  : pstMsg     -- 消息指针
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月17日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_FilterAtToAtMsg(
     PS_MSG_HEADER_STRU                 *pstMsg
 )
@@ -299,6 +242,7 @@ VOS_VOID* GUNAS_FilterAtToAtMsg(
         case ID_AT_MNTN_PC_REPLAY_MSG:
         case ID_AT_MNTN_PC_REPLAY_CLIENT_TAB:
         case ID_AT_MNTN_RPT_PORT:
+        case ID_AT_MNTN_PS_CALL_ENTITY_RPT:
         case ID_AT_COMM_CCPU_RESET_START:
         case ID_AT_COMM_CCPU_RESET_END:
         case ID_AT_COMM_HIFI_RESET_START:
@@ -337,26 +281,7 @@ VOS_VOID* GUNAS_FilterAtToAtMsg(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_FilterAtToMmaMsg
- 功能描述  : 过滤At到Mma层间消息的函数
- 输入参数  : pstMsg -- 消息内容
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月17日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_FilterAtToMmaMsg(
     PS_MSG_HEADER_STRU                 *pstMsg
 )
@@ -375,26 +300,7 @@ VOS_VOID* GUNAS_FilterAtToMmaMsg(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_FilterAtToMtaMsg
- 功能描述  : 过滤At到Mta层间消息的函数
- 输入参数  : pstMsg -- 消息内容
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月02日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_FilterAtToMtaMsg(
     PS_MSG_HEADER_STRU                 *pstMsg
 )
@@ -411,26 +317,7 @@ VOS_VOID* GUNAS_FilterAtToMtaMsg(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_FilterAtToPihMsg
- 功能描述  : 过滤At到Pih层间消息的函数
- 输入参数  : pstMsg -- 消息内容
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月02日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_FilterAtToPihMsg(
     PS_MSG_HEADER_STRU                 *pstMsg
 )
@@ -450,26 +337,7 @@ VOS_VOID* GUNAS_FilterAtToPihMsg(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_FilterAtToTafMsg
- 功能描述  : 过滤At到Taf层间消息的函数
- 输入参数  : pstMsg -- 消息内容
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月17日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_FilterAtToTafMsg(
     PS_MSG_HEADER_STRU                 *pstMsg
 )
@@ -497,26 +365,7 @@ VOS_VOID* GUNAS_FilterAtToTafMsg(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_FilterTafToAtMsg
- 功能描述  : 过滤Taf到At层间消息的函数
- 输入参数  : pstMsg     -- 消息指针
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月17日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_FilterTafToAtMsg(
     PS_MSG_HEADER_STRU                 *pstMsg
 )
@@ -550,26 +399,7 @@ VOS_VOID* GUNAS_FilterTafToAtMsg(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_FilterLayerMsg
- 功能描述  : 过滤短信层间消息的函数
- 输入参数  : pstMsg     -- 消息指针
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月17日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_FilterLayerMsg(
     struct MsgCB                       *pstMsg
 )
@@ -577,9 +407,13 @@ VOS_VOID* GUNAS_FilterLayerMsg(
     PS_MSG_HEADER_STRU                 *pstTempMsg = VOS_NULL_PTR;
     pGuNasMsgFilterProcFunc             pfunFilter;
     VOS_UINT32                          i;
+    VOS_UINT32                          ulSenderPid;
+    VOS_UINT32                          ulReceiverPid;
 
-    pstTempMsg      = (PS_MSG_HEADER_STRU *)pstMsg;
-    pfunFilter      = VOS_NULL_PTR;
+    pstTempMsg    = (PS_MSG_HEADER_STRU *)pstMsg;
+    pfunFilter    = VOS_NULL_PTR;
+    ulSenderPid   = pstMsg->ulSenderPid;
+    ulReceiverPid = pstMsg->ulReceiverPid;
 
     if (VOS_FALSE == AT_GetPrivacyFilterEnableFlg())
     {
@@ -589,8 +423,8 @@ VOS_VOID* GUNAS_FilterLayerMsg(
 
     for (i = 0; i < (sizeof(g_astGuNasMsgFilterProcFuncTbl)/sizeof(GUNAS_MSG_FILTER_PROC_TBL_FUNC)); i++)
     {
-        if ((pstTempMsg->ulSenderPid    == g_astGuNasMsgFilterProcFuncTbl[i].ulSenderPid)
-         && (pstTempMsg->ulReceiverPid  == g_astGuNasMsgFilterProcFuncTbl[i].ulReceiverPid))
+        if ((ulSenderPid   == g_astGuNasMsgFilterProcFuncTbl[i].ulSenderPid)
+         && (ulReceiverPid == g_astGuNasMsgFilterProcFuncTbl[i].ulReceiverPid))
         {
             pfunFilter = g_astGuNasMsgFilterProcFuncTbl[i].pFuncFilterProc;
             break;
@@ -605,26 +439,7 @@ VOS_VOID* GUNAS_FilterLayerMsg(
     return pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_OM_LayerMsgFilter
- 功能描述  : GUNAS用于过滤层间消息的函数
- 输入参数  : pstMsg     -- 消息指针
- 输出参数  : NONE
- 返 回 值  : 1. 返回值与入参相同，对输入消息不进行匹配过滤，勾取原始输入消息
-             2. 返回值为VOS_NULL，对输入消息进行屏蔽处理，不再勾取出来
-             3. 返回值与入参不同，对输入消息进行替换处理，将返回内存中的内容勾取出来，
-             返回的内存消息必须使用VOS_MemAlloc进行动态申请，由底软统一进行释放
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月17日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-  2.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 过滤函数接口变更
-*****************************************************************************/
 VOS_VOID* GUNAS_OM_LayerMsgFilter(
     struct MsgCB                       *pstMsg
 )
@@ -635,16 +450,7 @@ VOS_VOID* GUNAS_OM_LayerMsgFilter(
     return GUNAS_FilterLayerMsg(pstMsg);
 }
 
-/*****************************************************************************
- Function Name   : NAS_OM_LogFilterImsaAtMtStatesIndMsgAcpu
- Description     : Filter IMSA 发送到 AT之间的敏感信息(层间消息)
- Input           :
- Output          : None
- Return          : VOS_VOID
 
- History         :
-     1.houfuguo 00376942          2017-02-06  Draft Enact
-*****************************************************************************/
 VOS_VOID  *NAS_OM_LogFilterImsaAtMtStatesIndMsgAcpu(VOS_VOID *pMsg)
 {
     IMSA_AT_MT_STATES_IND_STRU          *pstSrcImsaAtMsg = VOS_NULL_PTR;
@@ -672,16 +478,7 @@ VOS_VOID  *NAS_OM_LogFilterImsaAtMtStatesIndMsgAcpu(VOS_VOID *pMsg)
 
 }
 
-/*****************************************************************************
- Function Name   : NAS_OM_LogFilterImsaAtVolteImpuCnfMsgAcpu
- Description     : Filter IMSA 发送到 AT之间的敏感信息(层间消息)
- Input           :
- Output          : None
- Return          : VOS_VOID
 
- History         :
-     1.houfuguo 00376942          2017-02-06  Draft Enact
-*****************************************************************************/
 VOS_VOID  *NAS_OM_LogFilterImsaAtVolteImpuCnfMsgAcpu(VOS_VOID *pMsg)
 {
     IMSA_AT_VOLTEIMPU_QRY_CNF_STRU          *pstSrcImsaAtMsg = VOS_NULL_PTR;
@@ -709,16 +506,7 @@ VOS_VOID  *NAS_OM_LogFilterImsaAtVolteImpuCnfMsgAcpu(VOS_VOID *pMsg)
 
 }
 
-/*****************************************************************************
- Function Name   : NAS_OM_LogFilterImsaAtDmuserQryCnfMsgAcpu
- Description     : 过滤ID_IMSA_AT_DMUSER_QRY_CNF消息
- Input           : VOS_VOID *pMsg:消息
- Output          : None
- Return          : VOS_UINT8
 
- History         :
-    1. h00376942      2017-03-21  Draft Enact
-*****************************************************************************/
 STATIC VOS_VOID *NAS_OM_LogFilterImsaAtDmuserQryCnfMsgAcpu(VOS_VOID *pMsg)
 {
     IMSA_AT_DMUSER_QRY_CNF_STRU          *pstSrcImsaAtMsg = VOS_NULL_PTR;
@@ -756,16 +544,7 @@ STATIC VOS_VOID *NAS_OM_LogFilterImsaAtDmuserQryCnfMsgAcpu(VOS_VOID *pMsg)
     return pstDstImsaAtMsg;
 }
 
-/*****************************************************************************
- Function Name   : NAS_OM_LogFilterImsaAtMsgAcpu
- Description     : Filter IMSA 发送到 AT之间的敏感信息(层间消息)
- Input           :
- Output          : None
- Return          : VOS_VOID
 
- History         :
-     1.houfuguo 00376942          2017-03-06  Draft Enact
-*****************************************************************************/
 VOS_VOID *NAS_OM_LogFilterImsaAtMsgAcpu(
     struct MsgCB                       *pMsg
 )
@@ -808,21 +587,8 @@ VOS_VOID *NAS_OM_LogFilterImsaAtMsgAcpu(
     return pReturnTraceMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : GUNAS_OM_LayerMsgReplaceCBReg
- 功能描述  : GUNAS为各pid注册过滤函数
- 输入参数  : NONE
- 输出参数  : NONE
- 返 回 值  : NA
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月24日
-    作    者   : h00360002
-    修改内容   : 新生成函数
-*****************************************************************************/
-VOS_VOID GUNAS_OM_LayerMsgReplaceCBReg(VOS_VOID)
+VOS_VOID GUNAS_OM_LayerMsgReplaceCBRegACore(VOS_VOID)
 {
     PS_OM_LayerMsgReplaceCBReg(WUEPS_PID_AT, GUNAS_OM_LayerMsgFilter);
 
@@ -834,6 +600,6 @@ VOS_VOID GUNAS_OM_LayerMsgReplaceCBReg(VOS_VOID)
 
     PS_OM_LayerMsgReplaceCBReg(I0_PS_PID_IMSA, NAS_OM_LogFilterImsaAtMsgAcpu);
     PS_OM_LayerMsgReplaceCBReg(I1_PS_PID_IMSA, NAS_OM_LogFilterImsaAtMsgAcpu);
-
 }
+
 

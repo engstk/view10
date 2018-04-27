@@ -50,6 +50,7 @@
 #include <linux/kernel.h>
 #include <linux/rtc.h>
 #include <asm/string.h>
+#include "securec.h"
 #include "drv_comm.h"
 #include "osl_types.h"
 #include "bsp_dump.h"
@@ -931,11 +932,11 @@ void dump_save_rdr_exc_info(u32 modid, u32 etype, u64 coreid, char* logpath, pfn
         return ;
     }
     /*coverity[secure_coding]*/
-    memset(g_rdr_exc_info.log_path,'\0',(unsigned long)RDR_DUMP_FILE_PATH_LEN);
+    memset_s(g_rdr_exc_info.log_path,sizeof(g_rdr_exc_info.log_path),'\0',(unsigned long)(sizeof(g_rdr_exc_info.log_path)));
     /*coverity[secure_coding]*/
-    memcpy(g_rdr_exc_info.log_path, logpath, strlen(logpath));
+    memcpy_s(g_rdr_exc_info.log_path,sizeof(g_rdr_exc_info.log_path), logpath, strlen(logpath));
     /*coverity[secure_coding]*/
-    memcpy(g_rdr_exc_info.log_path + strlen(logpath) , RDR_DUMP_FILE_CP_PATH, strlen(RDR_DUMP_FILE_CP_PATH));
+    memcpy_s(g_rdr_exc_info.log_path + strlen(logpath) ,(sizeof(g_rdr_exc_info.log_path)-strlen(logpath)), RDR_DUMP_FILE_CP_PATH, strlen(RDR_DUMP_FILE_CP_PATH));
 
     dump_fetal("log path is %s\n", g_rdr_exc_info.log_path);
 
@@ -1408,4 +1409,4 @@ u32 dump_match_rdr_mod_id(u32 drv_mod_id)
     return rdr_mod_id;
 
 }
-
+EXPORT_SYMBOL(dump_callback_dmss_noc_proc);

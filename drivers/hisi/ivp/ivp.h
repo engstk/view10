@@ -13,6 +13,11 @@
 #define IVP_REGULATOR                 "hisi-ivp"
 #define IVP_MEDIA_REGULATOR           "hisi-ivp-media"
 
+#define IVP_CLK_LEVEL_DEFAULT         0
+#define IVP_CLK_LEVEL_LOW             1
+#define IVP_CLK_LEVEL_MEDIUM          2
+#define IVP_CLK_LEVEL_HIGH            3
+
 //dts info
 #define OF_IVP_SECTION_NAME           "section_mem"
 #define OF_IVP_SECTION_NODE_NAME      "ivp_mem_section"
@@ -22,6 +27,7 @@
 
 #define OF_IVP_CLK_NAME               "hisi-ivp-clk"
 #define OF_IVP_CLK_RATE_NAME          "ivp-clk-rate"
+#define OF_IVP_LOW_CLK_RATE_NAME      "ivp-low-clk-rate"
 #define OF_IVP_LOWFREQ_CLK_RATE_NAME  "lowfrq-pd-clk-rate"
 
 #define OF_IVP_DYNAMIC_MEM            "ivp-dynamic-mem"
@@ -41,6 +47,21 @@
 
 #define IVP_IOCTL_SMMU_INVALIDATE_TLB _IOW('v', 0x7b, unsigned int)
 #define IVP_IOCTL_BM_INIT             _IOW('v', 0x7c, unsigned int)
+#define IVP_IOCTL_CLK_LEVEL           _IOW('v', 0x7d, unsigned int)
+
 
 #define IVP_IOCTL_IPC_FLUSH_ENABLE    _IOWR('v', 0x89, unsigned int)
+
+struct ivp_sect_info {
+    char name[64];
+    unsigned int index;
+    unsigned int len;
+    unsigned int ivp_addr;
+    unsigned int reserved;
+    union {
+        unsigned long acpu_addr;
+        char compat32[8];
+    };
+};
+
 #endif /* IVP_H_ */

@@ -1,14 +1,10 @@
 #include <linux/mmc/host.h>
 #include <linux/mmc/card.h>
 #include <linux/mmc/mmc.h>
-#include <linux/of.h>
 #include "emmc-rpmb.h"
 #ifdef CONFIG_HISI_BOOTDEVICE
 #include <linux/bootdevice.h>
 #endif
-
-#define RPMB_PARTITION_SIZE_4M (4*1024*1024)
-
 /**
  * emmc_get_rpmb_info - get rpmb info from emmc device and set the rpmb config
  *
@@ -17,11 +13,6 @@ void emmc_get_rpmb_info(struct mmc_card *card, u8 *ext_csd)
 {
 		struct rpmb_config_info rpmb_config = {0};
 		int i;
-#ifdef CONFIG_HISI_MMC_RPMB_AUTO_RESIZE
-		struct device_node *np = NULL;
-		char *value;
-#endif
-
 		rpmb_config.rpmb_unit_size = MAX_RPMB_REGION_UNIT_SIZE;
 		rpmb_config.rpmb_blk_size = RPMB_BLK_SIZE;
 		/*emmc read support 32bit on means 1-32 frames*/
@@ -63,12 +54,6 @@ void emmc_get_rpmb_info(struct mmc_card *card, u8 *ext_csd)
 		if((rpmb_config.rpmb_region_size[0] | rpmb_config.rpmb_region_size[1] | rpmb_config.rpmb_region_size[2] | rpmb_config.rpmb_region_size[3]) == 0x0)
 			rpmb_config.rpmb_region_size[0] = card->ext_csd.raw_rpmb_size_mult;
 
-#ifdef CONFIG_HISI_MMC_RPMB_AUTO_RESIZE
-		if (card->host && card->host->parent && card->host->parent->of_node)
-			np = card->host->parent->of_node;
-		if (np && of_property_read_string_index(np, "mmc_rpmb_size", 0, &value))
-			rpmb_config.rpmb_total_blks = ((RPMB_PARTITION_SIZE_4M) >> rpmb_config.rpmb_blk_size);
-#endif
 		set_rpmb_total_blks(rpmb_config.rpmb_total_blks);
 		set_rpmb_blk_size(rpmb_config.rpmb_blk_size);
 		set_rpmb_unit_size(rpmb_config.rpmb_unit_size);

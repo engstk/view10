@@ -84,21 +84,7 @@ oal_int wlan_pm_work_submit(struct wlan_pm_s    *pst_wlan_pm, oal_work_stru* pst
 void wlan_pm_info_clean(void);
 
 extern oal_atomic g_wakeup_dev_wait_ack;
-/*****************************************************************************
- 函 数 名  : wlan_pm_get_drv
- 功能描述  : 获取全局wlan结构
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 struct wlan_pm_s*  wlan_pm_get_drv(oal_void)
 {
     return gpst_wlan_pm_info;
@@ -106,21 +92,7 @@ struct wlan_pm_s*  wlan_pm_get_drv(oal_void)
 
 EXPORT_SYMBOL_GPL(wlan_pm_get_drv);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_set_device_ready
- 功能描述  : 接受到deviceready的信号，设置host侧 device ready状态
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : oal_void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年10月31日
-    作    者   : z00273164
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32  wlan_pm_set_device_ready(oal_void* data)
 {
     struct wlan_pm_s    *pst_wlan_pm = (struct wlan_pm_s*)data;
@@ -128,82 +100,26 @@ oal_int32  wlan_pm_set_device_ready(oal_void* data)
     OAL_COMPLETE(&pst_wlan_pm->st_device_ready);
     return OAL_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : wlan_pm_init_device_ready
- 功能描述  : 初始化host侧 device ready状态
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : oal_void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年10月31日
-    作    者   : z00273164
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void wlan_pm_init_device_ready(struct wlan_pm_s    *pst_wlan_pm)
 {
     OAL_INIT_COMPLETION(&pst_wlan_pm->st_device_ready);
 }
-/*****************************************************************************
- 函 数 名  : wlan_pm_wait_device_ready
- 功能描述  : 等待host侧 device ready状态
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : oal_void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年10月31日
-    作    者   : z00273164
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wlan_pm_wait_device_ready(struct wlan_pm_s    *pst_wlan_pm)
 {
     /* 等待host下半部初始化完成 */
     return oal_wait_for_completion_timeout(&pst_wlan_pm->st_device_ready, (oal_uint32)OAL_MSECS_TO_JIFFIES(HOST_WAIT_BOTTOM_INIT_TIMEOUT));
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_sleep_request
- 功能描述  : 发送sleep 请求给device
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : SUCC/FAIL
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年10月31日
-    作    者   : z00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32 wlan_pm_sleep_request(struct wlan_pm_s    *pst_wlan_pm)
 {
     return oal_sdio_send_msg(pst_wlan_pm->pst_sdio,H2D_MSG_SLEEP_REQ);
 
 
 }
-/*****************************************************************************
- 函 数 名  : wlan_pm_allow_sleep_callback
- 功能描述  : device应答allow_sleep消息处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_int32 wlan_pm_allow_sleep_callback(void *data)
 {
@@ -217,21 +133,7 @@ oal_int32 wlan_pm_allow_sleep_callback(void *data)
     return SUCCESS;
 
 }
-/*****************************************************************************
- 函 数 名  : wlan_pm_disallow_sleep_callback
- 功能描述  : device应答allow_sleep消息处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_int32 wlan_pm_disallow_sleep_callback(void *data)
 {
@@ -249,21 +151,7 @@ oal_int32 wlan_pm_disallow_sleep_callback(void *data)
 }
 
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_init
- 功能描述  : WLAN PM初始化接口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 struct wlan_pm_s*  wlan_pm_init(oal_void)
 {
     struct wlan_pm_s*   pst_wlan_pm;
@@ -350,21 +238,7 @@ struct wlan_pm_s*  wlan_pm_init(oal_void)
     return  pst_wlan_pm;
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_exit
- 功能描述  : WLAN pm退出接口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint  wlan_pm_exit(oal_void)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -396,21 +270,7 @@ oal_uint  wlan_pm_exit(oal_void)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_is_poweron
- 功能描述  : wifi是否上电
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wlan_pm_is_poweron(oal_void)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -436,21 +296,7 @@ oal_uint32 wlan_pm_is_poweron(oal_void)
 }
 EXPORT_SYMBOL_GPL(wlan_pm_is_poweron);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_get_wifi_srv_handler
- 功能描述  : 获取回调handler指针
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 struct wifi_srv_callback_handler* wlan_pm_get_wifi_srv_handler(oal_void)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -464,21 +310,7 @@ struct wifi_srv_callback_handler* wlan_pm_get_wifi_srv_handler(oal_void)
 }
 EXPORT_SYMBOL_GPL(wlan_pm_get_wifi_srv_handler);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_open
- 功能描述  : open wifi,如果bfgx没有开启,上电,否则，下命令开WCPU
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32 wlan_pm_open(oal_void)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -627,21 +459,7 @@ EXPORT_SYMBOL_GPL(wlan_device_mem_check_result);
 
 EXPORT_SYMBOL_GPL(wlan_pm_open);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_close
- 功能描述  : close wifi,如果bfgx没有开,下电，否则下命令关WCPU
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 extern int isAsic(void);
 oal_uint32 wlan_pm_close(oal_void)
 {
@@ -733,21 +551,7 @@ oal_uint32 wlan_pm_close(oal_void)
 }
 EXPORT_SYMBOL_GPL(wlan_pm_close);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_enable
- 功能描述  : 使能wlan平台低功耗
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wlan_pm_enable(oal_void)
 {
 
@@ -789,21 +593,7 @@ oal_uint32 wlan_pm_enable(oal_void)
 }
 EXPORT_SYMBOL_GPL(wlan_pm_enable);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_disable
- 功能描述  : 去使能wlan平台低功耗
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wlan_pm_disable_check_wakeup(oal_int32 flag)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -858,21 +648,7 @@ oal_uint32 wlan_pm_disable(oal_void)
 }
 EXPORT_SYMBOL_GPL(wlan_pm_disable);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_init_dev
- 功能描述  : 初始化device的状态
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint wlan_pm_init_dev(void)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -911,21 +687,7 @@ oal_uint wlan_pm_init_dev(void)
 
 
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_wakeup_dev
- 功能描述  : 唤醒device
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint wlan_pm_wakeup_dev(oal_void)
 {
     oal_uint32           ul_ret;
@@ -1099,21 +861,7 @@ oal_void wlan_pm_wakeup_dev_ack(oal_void)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_open_bcpu
- 功能描述  : 唤醒BCPU
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint  wlan_pm_open_bcpu(oal_void)
 {
 #define RETRY_TIMES (3)
@@ -1176,21 +924,7 @@ oal_uint  wlan_pm_open_bcpu(oal_void)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_wakeup_host
- 功能描述  : device唤醒host
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint wlan_pm_wakeup_host(void)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -1215,21 +949,7 @@ oal_uint wlan_pm_wakeup_host(void)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_work_submit
- 功能描述  : 提交一个kernel work
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_int wlan_pm_work_submit(struct wlan_pm_s    *pst_wlan_pm, oal_work_stru* pst_worker)
 {
@@ -1254,21 +974,7 @@ done:
     return i_ret;
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_wakeup_work
- 功能描述  : device唤醒host work
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void wlan_pm_wakeup_work(oal_work_stru *pst_worker)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -1295,21 +1001,7 @@ void wlan_pm_wakeup_work(oal_work_stru *pst_worker)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_wakeup_done_callback
- 功能描述  : device应答wakeup succ消息处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 int32 wlan_pm_wakeup_done_callback(void *data)
 {
@@ -1325,21 +1017,7 @@ int32 wlan_pm_wakeup_done_callback(void *data)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_close_done_callback
- 功能描述  : device应答poweroff ack消息处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 int32 wlan_pm_close_done_callback(void *data)
 {
@@ -1359,21 +1037,7 @@ int32 wlan_pm_close_done_callback(void *data)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_open_bcpu_done_callback
- 功能描述  : device应答open bcpu ack消息处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 int32 wlan_pm_open_bcpu_done_callback(void *data)
 {
@@ -1389,21 +1053,7 @@ int32 wlan_pm_open_bcpu_done_callback(void *data)
     return SUCCESS;
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_close_bcpu_done_callback
- 功能描述  : device应答open bcpu ack消息处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 int32 wlan_pm_close_bcpu_done_callback(void *data)
 {
@@ -1419,21 +1069,7 @@ int32 wlan_pm_close_bcpu_done_callback(void *data)
     return SUCCESS;
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_halt_bcpu_done_callback
- 功能描述  : device应答open bcpu ack消息处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 int32 wlan_pm_halt_bcpu_done_callback(void *data)
 {
@@ -1448,21 +1084,7 @@ int32 wlan_pm_halt_bcpu_done_callback(void *data)
     return SUCCESS;
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_sleep_work
- 功能描述  :
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void wlan_pm_sleep_work(oal_work_stru *pst_worker)
 {
    struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -1645,21 +1267,7 @@ void wlan_pm_freq_adjust_work(oal_work_stru *pst_worker)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_state_get
- 功能描述  : 获取pm的sleep状态
- 输入参数  :
- 输出参数  :
- 返 回 值  : 1:allow to sleep; 0:disallow to sleep
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_uint wlan_pm_state_get(void)
 {
@@ -1668,21 +1276,7 @@ oal_uint wlan_pm_state_get(void)
     return pst_wlan_pm->ul_wlan_dev_state;
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_state_set
- 功能描述  : 获取pm的sleep状态
- 输入参数  :
- 输出参数  :
- 返 回 值  : 1:allow to sleep; 0:disallow to sleep
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_void wlan_pm_state_set(struct wlan_pm_s  *pst_wlan_pm,oal_uint ul_state)
 {
@@ -1690,21 +1284,7 @@ oal_void wlan_pm_state_set(struct wlan_pm_s  *pst_wlan_pm,oal_uint ul_state)
     pst_wlan_pm->ul_wlan_dev_state = ul_state;
 
 }
-/*****************************************************************************
- 函 数 名  : wlan_pm_set_timeout
- 功能描述  : 睡眠定时器超时时间设置
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void  wlan_pm_set_timeout(oal_uint32 ul_timeout)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -1726,21 +1306,7 @@ oal_void  wlan_pm_set_timeout(oal_uint32 ul_timeout)
 
 }
 EXPORT_SYMBOL_GPL(wlan_pm_set_timeout);
-/*****************************************************************************
- 函 数 名  : wlan_pm_feed_wdg
- 功能描述  : 启动50ms睡眠定时器
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void  wlan_pm_feed_wdg(oal_void)
 {
     struct wlan_pm_s    *pst_wlan_pm = wlan_pm_get_drv();
@@ -1761,21 +1327,7 @@ oal_void  wlan_pm_feed_wdg(oal_void)
 }
 
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_stop_wdg
- 功能描述  : 停止50ms睡眠定时器
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 int32 wlan_pm_stop_wdg(struct wlan_pm_s *pst_wlan_pm_info)
 {
@@ -1796,21 +1348,7 @@ int32 wlan_pm_stop_wdg(struct wlan_pm_s *pst_wlan_pm_info)
 }
 
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_wdg_timeout
- 功能描述  : 50ms睡眠定时器超时处理，提交一个sleep work
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 void wlan_pm_wdg_timeout(struct wlan_pm_s *pm_data)
 {
@@ -1878,21 +1416,7 @@ restart_timer:
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_adjust_feq
- 功能描述  : 提交一个work，调整host和device的CPU和DDR频率
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 初始化返回值，成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_uint wlan_pm_adjust_feq(void)
 {
@@ -1913,21 +1437,7 @@ oal_uint wlan_pm_adjust_feq(void)
 }
 EXPORT_SYMBOL_GPL(wlan_pm_adjust_feq);
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_poweroff_cmd
- 功能描述  : 发消息到device，wifi device关闭wifi系统资源，等待bcpu给它下电
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32 wlan_pm_poweroff_cmd(oal_void)
 {
     oal_int32            ret;
@@ -1977,21 +1487,7 @@ oal_int32 wlan_pm_poweroff_cmd(oal_void)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_shutdown_bcpu_cmd
- 功能描述  : 发消息到device，wifi device关闭BCPU
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32 wlan_pm_shutdown_bcpu_cmd(oal_void)
 {
 #define RETRY_TIMES (3)
@@ -2048,21 +1544,7 @@ oal_int32 wlan_pm_shutdown_bcpu_cmd(oal_void)
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_dump_info
- 功能描述  : debug, 发消息到device，串口输出维测信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 void wlan_pm_dump_host_info(void)
 {
@@ -2107,21 +1589,7 @@ void wlan_pm_dump_host_info(void)
 
 }
 
-/*****************************************************************************
- 函 数 名  : wlan_pm_host_info_print
- 功能描述  : cat维测节点输出host低功耗统计
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_int32 wlan_pm_host_info_print(struct wlan_pm_s *pst_wlan_pm,char* buf,oal_int32 buf_len)
 {

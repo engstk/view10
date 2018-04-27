@@ -21,6 +21,7 @@ obj-$(CONFIG_HUAWEI_TS_KIT)  += panel/
 obj-$(CONFIG_HUAWEI_HOST_TS_KIT) += hostprocessing/
 EXTRA_CFLAGS += -Idrivers/devkit/lcdkit/core/common
 EXTRA_CFLAGS += -Idrivers/devkit/lcdkit/include
+EXTRA_CFLAGS += -Idrivers/hwspinlock
 
 ifeq ($(CONFIG_HUAWEI_TS_KIT_TEST),y)
 EXTRA_CFLAGS += -DHUAWEI_TS_KIT_TEST

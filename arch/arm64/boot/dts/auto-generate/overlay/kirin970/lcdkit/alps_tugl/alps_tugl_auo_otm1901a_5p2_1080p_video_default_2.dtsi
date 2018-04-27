@@ -17,8 +17,8 @@
  *-----------------------------------------------------------------------*/
 / {
 	dsi_alps_tugl_auo_otm1901a_5p2_1080p_video_default_2: lcdkit_alps_tugl_auo_otm1901a_5p2_1080p_video_default_2 {
-		compatible = "auo_otm1901a_5p2_1080p_video_default";
-		hw,lcdkit-panel-name = "AUO_OTM1901A 5.2' VIDEO TFT 1080 x 1920 DEFAULT-2";
+		compatible = "auo_otm1901a_5p2_1080p_video_default_2";
+		hw,lcdkit-panel-name = "AUO_OTM1901A 5.2' VIDEO TFT 1080 x 1920 DEFAULT2";
 		hw,lcdkit-panel-type = <0x01>;
 		hw,lcdkit-panel-xres = <1080>;
 		hw,lcdkit-panel-yres = <1920>;
@@ -80,6 +80,7 @@
 		hw,lcdkit-panel-lv-detect-support = <0>;
 		hw,lcdkit-reset-shutdown-later = <1>;
 		hw,lcdkit-panel-pcd-errflag-check-support = <0>;
+		hw,lcdkit-panel-pt-ulps-support = <0>;
 		hw,lcdkit-panel-aod-support = <0>;
 		hw,lcdkit-panel-orientation = <1>;
 		hw,lcdkit-panel-bpp = <0>;
@@ -92,6 +93,7 @@
 		hw,lcdkit-panel-getblmaxnit-type = <0>;
 		hw,lcdkit-panel-cmd-type = <16>;
 		hw,lcdkit-panel-ifbctype = <9>;
+		hw,lcdkit-panel-ifbc-vesa3x-set = <0>;
 		hw,lcdkit-panel-frc-enable = <0>;
 		hw,lcdkit-panel-esd-skip-mipi-check = <1>;
 		hw,lcdkit-panel-pxl-clk = <277>;
@@ -154,6 +156,8 @@
 		hw,lcdkit-mipi-clk-t-hs-zero-adjust = <0>;
 		hw,lcdkit-mipi-data-t-lpx-adjust = <0>;
 		hw,lcdkit-mipi-phy-mode = <1>;
+		hw,lcdkit-mipi-eotp-disable-flag = <0>;
+		hw,lcdkit-blpwm-input-disable = <0>;
 		hw,lcdkit-dirt-left-align = <2>;
 		hw,lcdkit-dirt-right-align = <2>;
 		hw,lcdkit-dirt-top-align = <2>;
@@ -164,6 +168,8 @@
 		hw,lcdkit-dirt-height-min = <2>;
 		hw,lcdkit-dirt-top-start = <0xffff>;
 		hw,lcdkit-dirt-bott-start = <0xffff>;
+		hw,lcdkit-bl-byte-order = <0>;
+		hw,lcdkit-iovcc-before-vci-flag = <0>;
 		hw,lcdkit-gpios = <&gpio4 2 0>,<&gpio6 3 0>,<&gpio1 4 0>,<&gpio26 2 0>,<&gpio24 4 0>,<&gpio4 3 0>;
 		lcdio-vcc-supply = <&ldo4>;
 		lcdanalog-vcc-supply = <&ldo17>;
@@ -240,6 +246,7 @@
 		hw,lcdkit-h-sync-skew = <0>;
 		hw,lcdkit-lcd-type = <1>;
 		hw,lcdkit-panel-pt-test-support = <0>;
+		hw,lcdkit-mipi-clk-config-support = <0>;
 		hw,lcdkit-panel-hkadc-support = <0>;
 		hw,lcdkit-bias-power-ctrl-mode = <4>;
 		hw,lcdkit-iovcc-power-ctrl-mode = <1>;

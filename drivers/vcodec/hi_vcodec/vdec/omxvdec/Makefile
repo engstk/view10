@@ -21,10 +21,6 @@ ifeq ($(TARGET_BOARD_PLATFORM), hi3660)
 EXTRA_CFLAGS +=-DPLATFORM_HI3660
 endif
 
-ifeq ($(TARGET_BOARD_PLATFORM), kirin970)
-EXTRA_CFLAGS +=-DPLATFORM_KIRIN970
-endif
-
 #build in
 obj-$(CONFIG_HI_VCODEC_VDEC_HI3660) += hi_omxvdec.o
 hi_omxvdec-objs := $(PLATFORM_DIR)/platform.o $(PLATFORM_DIR)/regulator.o $(PLATFORM_DIR)/memory.o

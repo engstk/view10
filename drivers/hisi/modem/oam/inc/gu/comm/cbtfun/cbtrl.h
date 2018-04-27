@@ -148,14 +148,21 @@ extern "C"{
 #define CBT_CALL_GSM_RX_LEVEL_PARA                      (316)
 #define CBT_WCDMA_FREQ_MEASURE_PARA                     (65535)
 
+#define CBT_WRITE_NV_HEAD_SIZE                  (8)
+
 #define OM_BER_DATA_MAX_SIZE                    (1024)
 
 #define OM_STATE_IDLE                               0 /*IDLE态，OM不能正常与工具进行通信*/
 #define OM_STATE_ACTIVE                             1 /*ACTIVE态，OM能够正常工作*/
 
 /*OM<->APP : Just for LMT.*/
+#define APP_OM_WRITE_NV_REQ                       0x8023
+#define OM_APP_WRITE_NV_CNF                       0x8024
+
+/*OM<->APP : Just for LMT.*/
 #define APP_OM_HANDLE_LMT_REQ                     0x80a1
 #define OM_APP_HANDLE_LMT_CNF                     0x80a2
+
 /*OM<->APP : Just for LMT.*/
 #define APP_OM_ACTIVE_PHY_REQ                     0x80a3
 #define OM_APP_ACTIVE_PHY_CNF                     0x80a4
@@ -442,6 +449,30 @@ typedef struct
     VOS_UINT8                       aucData[4];
 }CBT_CTOA_MSG_STRU;
 
+/*****************************************************************************
+结构名    : CBT_WRITE_NV_REQ_STRU
+结构说明  : 写NV请求
+*****************************************************************************/
+typedef struct
+{
+    VOS_UINT32 ulCount;             /*要写入的NV项个数*/
+    VOS_UINT16 ausNvItemData[2];    /*包括NVID值、NVID内容的长度、NVID的内容*/
+}CBT_WRITE_NV_REQ_STRU;
+
+/*****************************************************************************
+结构名    : CBT_WRITE_NV_CNF_STRU
+结构说明  : 写NV结果
+*****************************************************************************/
+typedef struct
+{
+    CBT_MSG_HEAD_STRU           stMsgHead;
+    VOS_UINT16                  usMsgId;      /* 消息ID */
+    CBT_COMPONENT_MODE_STRU     stCompMode;
+    VOS_UINT32                  ulMsgLength;
+
+    VOS_UINT32                  ulErrorCode;        /*返回执行结果*/
+    VOS_UINT32                  ulErrNvId;          /*返回出现错误的NVID*/
+}CBT_WRITE_NV_CNF_STRU;
 
 typedef VOS_UINT32 (*CBT_FUN)(CBT_UNIFORM_MSG_STRU *pstCbtMsg, VOS_UINT16 usReturnPrimId);
 
@@ -502,6 +533,10 @@ typedef struct
     VOS_SEM                     ulCbtTxSegmentFrameSem;
     VOS_SEM                     ulCbtSyncSem;
     VOS_SEM                     ulCbtGeDlQualitySem;
+
+#if ( FEATURE_ON == FEATURE_GSM_WHOLE_SDR )
+    VOS_SEM                     ulCbtEdgeBlerSem;
+#endif
 }CBT_LISI_MODE_CTRL_STRU;
 /*****************************************************************************
  结构名    : CBT_GE_DL_STATUS_STRU
@@ -552,7 +587,8 @@ typedef struct
     VOS_UINT32              ulErrorCode;
     VOS_UINT16              usTotalFrameNum;
     VOS_UINT16              usBadFrameNum;
-
+    VOS_UINT32              ulTotalBitsNum;
+    VOS_UINT32              ulErrorBitsNum;
 }CBT_C_FER_DATA_CNF_STRU;
 
 /*****************************************************************************
@@ -602,6 +638,7 @@ typedef struct
     VOS_UINT16              usListModeSegIndex; /* list mode segment index, start by 1 */
     VOS_UINT16              usRsv;
     VOS_INT32               lRxLevel;           /* 上报的RX level 0.125dBm */
+    VOS_INT32               lRscp;                /* 上报的Rscp 0.125dBm */
 }CBT_LIST_MODE_RSSI_IND_STRU;
 
 /*****************************************************************************

@@ -6,6 +6,7 @@
 ifneq ($(strip $(CFG_ATE_VECTOR)),YES)
 obj-y				+= sysctrl/
 obj-y				+= s_memory/
+obj-y				+= mperf/
 obj-y				+= fiq/
 ifeq ($(strip $(CFG_CONFIG_MODULE_TIMER)),YES)
 obj-y				+= balong_timer/
@@ -28,6 +29,9 @@ obj-y				+= sync/
 ifeq ($(strip $(CFG_ENABLE_BUILD_SOCP)),YES)
 obj-y			+= socp/
 endif
+ifeq ($(strip $(CFG_CONFIG_NRDSP)),YES)
+obj-y				+= nrdsp/
+endif
 ifeq ($(strip $(CFG_ENABLE_BUILD_OM)),YES)
 obj-y				+= dump/
 endif
@@ -35,9 +39,15 @@ obj-y				+= nvim/
 ifeq ($(strip $(CFG_CONFIG_FAULT_INFLOOD)),YES)
 obj-y				+= fault_inflood/
 endif
+
+ifeq ($(strip $(CFG_CONFIG_MLOADER)),YES)
+obj-y += mloader/
+else
 obj-$(CONFIG_IMAGE_LOAD) += loadm/
+endif
+
 ifeq ($(strip $(CFG_CONFIG_ZSTD_DECOMPRESS)),YES)
-obj-y			+= zstd/
+obj-y                   += zstd/
 endif
 
 obj-y			+= adp/
@@ -54,6 +64,14 @@ endif
 endif
 obj-y			+= hds/
 
+ifeq ($(strip $(att_iqi)),true)
+obj-y			+= iqi/
+endif
+ifeq ($(strip $(att_iqi)),true)
+subdir-ccflags-y += -DFEATURE_IQI=FEATURE_ON
+else
+subdir-ccflags-y += -DFEATURE_IQI=FEATURE_OFF
+endif
 
 ifeq ($(strip $(CFG_BOARD_TRACE)),YES)
 obj-y			+= board_trace/
@@ -62,6 +80,10 @@ endif
 ifeq ($(strip $(CFG_CONFIG_SYSBUS)),YES)
 obj-y			+= sys_bus/
 endif
+
+
+obj-$(CONFIG_BALONG_ESPE)	+= espe/
+
 ifeq ($(strip $(CFG_CONFIG_NEW_PLATFORM)),YES)
 obj-y			+= n_ipf/
 obj-y 			+= n_psam/
@@ -110,6 +132,7 @@ obj-$(CONFIG_HISI_SIM_HOTPLUG_SPMI)     += sim_hotplug/
 else
 obj-y				+= sysctrl/
 obj-y				+= s_memory/
+obj-y				+= mperf/
 ifeq ($(strip $(CFG_CONFIG_MODULE_TIMER)),YES)
 obj-y				+= balong_timer/
 endif
@@ -130,4 +153,5 @@ ifeq ($(strip $(CFG_CONFIG_DLOCK)),YES)
 obj-y			    += dlock/
 endif
 obj-$(CONFIG_BBP_ACORE)			    += bbp/
-obj-y				+= modem_avs/
+obj-y				+= net_helper/
+obj-y				+= mbb_kernel_stub/

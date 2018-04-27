@@ -71,6 +71,7 @@
 #define RMNET_INTERFACE (0)
 #define WLAN_INTERFACE (1)
 #define RNT_STAT_SIZE (2)
+#define MAX_JIFFIES	(0xFFFFFFFFFFFFFFFF)
 
 /*response and report type*/
 enum {
@@ -117,6 +118,7 @@ struct http_stream {
 	u32 uid;
 	u32 resp_code;
 	u8 interface;
+	unsigned long ack_time_stamp;
 };
 
 #define CHR_MAX_REPORT_APP_COUNT (10)
@@ -168,6 +170,23 @@ struct http_return {
 	u32 uid;
 	u32 http_resp;
 	struct report_app_stat report_app_stat_list[CHR_MAX_REPORT_APP_COUNT];
+	u32 highest_tcp_rtt;
+	u32 lowest_tcp_rtt;
+	u32 last_tcp_rtt;
+	u32 highest_web_delay;
+	u32 lowest_web_delay;
+	u32 last_web_delay;
+	u32 server_addr;
+	u32 rtt_abn_server_addr;
+	u32 vod_avg_speed;
+	u32 vod_freez_num;
+	u32 vod_time;
+	u32 uvod_avg_speed;
+	u32 uvod_freez_num;
+	u32 uvod_time;
+	u32 tcp_handshake_delay;
+	u32 http_get_delay;
+	u32 http_send_get_num;
 };
 
 /*this is temporarily stores the RTT*/
@@ -175,6 +194,7 @@ struct rtt_from_stack {
 	u32 tcp_rtt;
 	u32 is_valid;
 	u32 uid;
+	u32 rtt_dst_addr;
 };
 void wifi_disconnect_report(void);
 int set_report_app_uid(int index, u32 uid);

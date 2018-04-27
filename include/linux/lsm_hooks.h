@@ -28,6 +28,12 @@
 #include <linux/init.h>
 #include <linux/rculist.h>
 
+#ifdef CONFIG_HISI_RO_LSM_HOOKS
+#define  HISI_RO_LSM_HOOKS __ro_after_init
+#else
+#define  HISI_RO_LSM_HOOKS
+#endif
+
 /**
  * Security hooks for program execution operations.
  *

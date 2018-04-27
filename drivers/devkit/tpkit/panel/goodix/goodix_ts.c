@@ -438,9 +438,12 @@ static int goodix_check_key_gesture_report(struct ts_fingers *info,
 
 static int goodix_check_gesture(struct ts_fingers *info)
 {
+	int i = 0;
 	int ret = NO_ERR;
 	unsigned char gesture_id[2] = {0};
 	unsigned char doze_buf = 0;
+	unsigned char buf = GTP_CMD_GESTURE_WAKEUP;
+
 	struct ts_easy_wakeup_info *gesture_report_info = &g_goodix_dev_data->easy_wakeup_info;
 
 	if (NULL == info){
@@ -470,6 +473,33 @@ static int goodix_check_gesture(struct ts_fingers *info)
 			return RESULT_ERR;
 		}
 	}else{
+		/* get gesture data susccess Clear 0x814B */
+		ret = goodix_i2c_write(GTP_REG_WAKEUP_GESTURE, &doze_buf, 1);
+		if(ret < 0){
+			TS_LOG_ERR("%s: Clear 0x814B fail\n", __func__);
+			return RESULT_ERR;
+		}
+
+		/*Wakeup Gesture (d0) set 1 */
+		while(i++ < WRITE_REG_GESTURE_RETRY){
+			ret = goodix_i2c_write(GTP_REG_GESTURE, &buf,1);
+			if (ret < 0){
+				TS_LOG_ERR("failed to set doze flag into 0x8046, %d", ret);
+				msleep(GTP_SLEEP_TIME_10);
+				continue;
+			}
+
+			ret = goodix_i2c_write(GTP_REG_CMD, &buf,1);
+			if (ret < 0){
+				TS_LOG_ERR("failed to set doze flag into 0x8040, %d", ret);
+				msleep(GTP_SLEEP_TIME_10);
+				continue;
+			}
+
+			msleep(GTP_SLEEP_TIME_10);
+			break;
+		}
+
 		TS_LOG_ERR("%s: read gestrue data error\n", __func__);
 		return RESULT_ERR;
 	}
@@ -615,9 +645,7 @@ static int goodix_irq_bottom_half(struct ts_cmd_node *in_cmd,
 	ret = goodix_touch_evt_handler(ts, ts_fingers);
 	if (ret == 0)
 		out_cmd->command = TS_INPUT_ALGO;
-
-	if (!ts->rawdiff_mode)
-		ret = goodix_i2c_write(GTP_READ_COOR_ADDR, &sync_val, 1);
+	ret = goodix_i2c_write(GTP_READ_COOR_ADDR, &sync_val, 1);
 
 	return ret;
 }
@@ -1760,6 +1788,7 @@ static int
 	goodix_ts->ops.parse_cfg_data = goodix_parse_cfg_data;
 	goodix_ts->tools_support = true;
 	goodix_ts->open_threshold_status = false;
+	goodix_ts->rawdiff_mode = false;
 	mutex_init(&goodix_ts->mutex_cfg);
 	mutex_init(&goodix_ts->mutex_cmd);
 

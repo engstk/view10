@@ -81,6 +81,8 @@ int ieee80211_channel_to_frequency(int chan, enum ieee80211_band band)
 			return 2407 + chan * 5;
 		break;
 	case IEEE80211_BAND_5GHZ:
+		if (chan >= 0x7fff) /*0x7fff is max int value for 16 bit*/
+			return 0;
 		if (chan >= 182 && chan <= 196)
 			return 4000 + chan * 5;
 		else

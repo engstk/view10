@@ -183,16 +183,6 @@ typedef struct
   10 º¯ÊýÉùÃ÷
 *****************************************************************************/
 
-extern VOS_UINT32 MMA_VerifyOperatorLockPwd(VOS_UINT8 *pucPwd);
-extern VOS_UINT8 MMA_GetCurrentPhoneMode(VOS_VOID);
-extern VOS_UINT32 MN_MSG_Decode_UsimMsg(
-    VOS_UINT8                           *pucData,
-    VOS_UINT32                          ulLen,
-    MN_MSG_SUBMIT_LONG_STRU             *pstLongSubmit
-);
-
-
-
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()
 #else

@@ -91,7 +91,7 @@ struct scsi_host_template {
 	 */
 	int (* compat_ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
 #endif
-#ifndef CONFIG_SCSI_UFS_HIVV_VCMD
+#ifndef CONFIG_SCSI_UFS_HI1861_VCMD
 	/*
 	 * Compat handler. Handle 32bit ABI.
 	 * When unknown ioctl is passed return -ENOIOCTLCMD.
@@ -551,18 +551,18 @@ enum scsi_host_queue_quirk{
 	SHOST_QUIRK_IO_LATENCY_WARNING,
 	SHOST_QUIRK_MQ_DISPATCH_STRATEGY,
 	SHOST_QUIRK_MQ_DUMP,
+	SHOST_QUIRK_BUSY_IDLE_INTR_ENABLE,
 };
 
 #define SHOST_MQ_QUIRK(x)	(1 << x)
 #endif
-#ifdef CONFIG_HISI_UFS_MANUAL_BKOPS
+
 enum hisi_dev_quirk{
 	SHOST_QUIRK_BKOPS_ENABLE = 0,
+	SHOST_QUIRK_IDLE_ENABLE,
 };
-
 #define SHOST_HISI_DEV_QUIRK(x)	(1 << x)
 
-#endif
 struct Scsi_Host {
 	/*
 	 * __devices is protected by the host_lock, but you should

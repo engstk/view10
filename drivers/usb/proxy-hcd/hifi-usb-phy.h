@@ -1,7 +1,7 @@
 #ifndef _HIFI_USB_PHY_H_
 #define _HIFI_USB_PHY_H_
 
-#ifdef CONFIG_USB_DWC3_KIRIN970
+#ifdef CONFIG_USB_DWC3_FEB
 #include <linux/mfd/hisi_pmic.h>
 
 static inline void hisi_usb_ldo23_on(void)

@@ -33,7 +33,6 @@
 
 #include "zram_drv.h"
 
-
 static DEFINE_IDR(zram_index_idr);
 /* idr index must be protected */
 static DEFINE_MUTEX(zram_index_mutex);
@@ -46,6 +45,7 @@ static const char *default_pool_type = ZRAM_ZPOOL_DEFAULT;
 static unsigned int num_devices = 1;
 static size_t max_zpage_size = (PAGE_SIZE / 4 )* 3;
 
+static atomic_t zram_flag = ATOMIC_INIT(0);
 
 static inline void deprecated_attr_warn(const char *name)
 {
@@ -578,6 +578,7 @@ static struct zram_meta *zram_meta_alloc(char *pool_type ,char *pool_name, u64 d
 out_error:
 	vfree(meta->table);
 	kfree(meta);
+	meta = NULL;
 	return NULL;
 }
 
@@ -635,7 +636,7 @@ static int zram_decompress_page(struct zram *zram, char *mem, u32 index)
 	if (size == PAGE_SIZE)
 		memcpy(mem, cmem, PAGE_SIZE);
 	else
-		ret = zcomp_decompress(zram->comp, cmem, size, mem);
+		ret = zcomp_decompress(zram->comp, cmem, size, mem); /*lint !e64*/
 	zpool_unmap_handle(meta->mem_pool, handle);
 	bit_spin_unlock(ZRAM_ACCESS, &meta->table[index].value);
 
@@ -672,7 +673,7 @@ static int zram_bvec_read(struct zram *zram, struct bio_vec *bvec,
 
 	user_mem = kmap_atomic(page);
 	if (!is_partial_io(bvec))
-		uncmem = user_mem;
+		uncmem = user_mem; /*lint !e423*/
 
 	if (!uncmem) {
 		pr_err("Unable to allocate temp memory\n");
@@ -680,7 +681,7 @@ static int zram_bvec_read(struct zram *zram, struct bio_vec *bvec,
 		goto out_cleanup;
 	}
 
-	ret = zram_decompress_page(zram, uncmem, index);
+	ret = zram_decompress_page(zram, uncmem, index); /*lint !e64*/
 	/* Should NEVER happen. Return bio error if it does. */
 	if (unlikely(ret))
 		goto out_cleanup;
@@ -693,8 +694,10 @@ static int zram_bvec_read(struct zram *zram, struct bio_vec *bvec,
 	ret = 0;
 out_cleanup:
 	kunmap_atomic(user_mem);
-	if (is_partial_io(bvec))
+	if (is_partial_io(bvec)) {
 		kfree(uncmem);
+		uncmem = NULL;
+	}
 	return ret;
 }
 
@@ -721,7 +724,7 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 			ret = -ENOMEM;
 			goto out;
 		}
-		ret = zram_decompress_page(zram, uncmem, index);
+		ret = zram_decompress_page(zram, uncmem, index); /*lint !e64*/
 		if (ret)
 			goto out;
 	}
@@ -731,7 +734,7 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 
 	if (is_partial_io(bvec)) {
 		memcpy(uncmem + offset, user_mem + bvec->bv_offset,
-		       bvec->bv_len);
+		       bvec->bv_len); /*lint !e613*/
 		kunmap_atomic(user_mem);
 		user_mem = NULL;
 	} else {
@@ -770,10 +773,13 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 			src = uncmem;
 	}
 
-        if (zpool_malloc(meta->mem_pool, clen, __GFP_IO | __GFP_NOWARN,
-		&handle) != 0) {
-		pr_err("Error allocating memory for compressed page: %u, size=%zu\n",
-			index, clen);
+	if (zpool_malloc(meta->mem_pool, clen, __GFP_IO | __GFP_NOWARN,
+			 &handle) != 0) {
+		if (!atomic_read(&zram_flag)) {
+			atomic_inc(&zram_flag);
+			pr_err("Error allocating memory for compressed page: %u, size=%zu\n",
+				index, clen);
+		}
 		ret = -ENOMEM;
 		goto out;
 	}
@@ -794,7 +800,7 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 		memcpy(cmem, src, PAGE_SIZE);
 		kunmap_atomic(src);
 	} else {
-		memcpy(cmem, src, clen);
+		memcpy(cmem, src, clen); /*lint !e668*/
 	}
 
 	zcomp_strm_release(zram->comp, zstrm);
@@ -818,8 +824,10 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 out:
 	if (zstrm)
 		zcomp_strm_release(zram->comp, zstrm);
-	if (is_partial_io(bvec))
+	if (is_partial_io(bvec)) {
 		kfree(uncmem);
+		uncmem = NULL;
+	}
 	return ret;
 }
 
@@ -912,7 +920,7 @@ static void __zram_make_request(struct zram *zram, struct bio *bio)
 	bio_for_each_segment(bvec, bio, iter) {
 		int max_transfer_size = PAGE_SIZE - offset;
 
-		if (bvec.bv_len > max_transfer_size) {
+		if (bvec.bv_len > max_transfer_size) { /*lint !e574*/
 			/*
 			 * zram_bvec_rw() can only make operation on a single
 			 * zram page. Split the bio vector.
@@ -964,12 +972,12 @@ static blk_qc_t zram_make_request(struct request_queue *queue, struct bio *bio)
 
 	__zram_make_request(zram, bio);
 	zram_meta_put(zram);
-	return BLK_QC_T_NONE;
+	return BLK_QC_T_NONE; /*lint !e501*/
 put_zram:
 	zram_meta_put(zram);
 error:
 	bio_io_error(bio);
-	return BLK_QC_T_NONE;
+	return BLK_QC_T_NONE; /*lint !e501*/
 }
 
 static void zram_slot_free_notify(struct block_device *bdev,
@@ -1302,6 +1310,8 @@ static int zram_add(void)
 	blk_queue_io_min(zram->disk->queue, PAGE_SIZE);
 	blk_queue_io_opt(zram->disk->queue, PAGE_SIZE);
 	zram->disk->queue->limits.discard_granularity = PAGE_SIZE;
+	zram->disk->queue->limits.max_sectors = SECTORS_PER_PAGE;
+	zram->disk->queue->limits.chunk_sectors = 0;
 	blk_queue_max_discard_sectors(zram->disk->queue, UINT_MAX);
 	/*
 	 * zram_bio_discard() will clear all logical blocks if logical block

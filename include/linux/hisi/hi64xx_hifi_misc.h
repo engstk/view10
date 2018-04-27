@@ -62,6 +62,7 @@ enum {
 	LOW_FREQ_SCENE_FAST_TRANS_SET,
 	LOW_FREQ_SCENE_PWR_TEST,
 	LOW_FREQ_SCENE_MSG_PROC,
+	LOW_FREQ_SCENE_MULTI_WAKE_UP,
 	LOW_FREQ_SCENE_BUTT,
 };
 
@@ -242,6 +243,7 @@ struct hi64xx_dsp_config {
 	unsigned int cmd1_addr;
 	unsigned int cmd2_addr;
 	unsigned int cmd3_addr;
+	unsigned int cmd4_addr;
 	unsigned int wtd_irq_num;
 	unsigned int vld_irq_num;
 	unsigned int dump_ocram_addr;

@@ -1560,7 +1560,7 @@ static int synaptics_get_oem_info(struct ts_oem_info_param *info)
 	int latest_index = 0;
 	int i;
 	int count = 0;
-
+	int infolength = 0;
 	TS_LOG_INFO("%s called\n", __func__);
 
 	memset(info->data, 0x0, TS_CHIP_TYPE_MAX_SIZE);
@@ -1612,7 +1612,8 @@ static int synaptics_get_oem_info(struct ts_oem_info_param *info)
 
 		if (latest_index) {
 			TS_LOG_INFO("%s type data find. len = %d\n", __func__, info->length);
-			memcpy(info->data, &(info->buff[latest_index*16]), info->length*16 );
+			infolength = min(TS_CHIP_TYPE_MAX_SIZE,info->length*16+1);
+			memcpy(info->data, &(info->buff[latest_index*16]), infolength-1);
 		} else {
 			info->data[0] = 0x1;
 			TS_LOG_INFO("%s No type data find. info->data[0] = %2x\n", __func__, info->data[0]);
@@ -1632,7 +1633,8 @@ static int synaptics_get_oem_info(struct ts_oem_info_param *info)
 
 		if (latest_index) {
 			TS_LOG_INFO("%s type data find. len = %d\n", __func__, info->buff[latest_index*16+1]*16);
-			memcpy(info->data, &(info->buff[latest_index*16]), info->buff[latest_index*16+1]*16 );
+			infolength = min(TS_CHIP_TYPE_MAX_SIZE,info->buff[latest_index*16+1]*16+1);
+			memcpy(info->data, &(info->buff[latest_index*16]), infolength-1);
 		} else {
 			info->data[0] = 0x1;
 			TS_LOG_INFO("%s No type data find. info->data[0] = %2x\n", __func__, info->data[0]);

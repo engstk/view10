@@ -108,11 +108,12 @@ struct icc_init_info
 	const char *name;
 };
 
+#define ICC_CHAN_NAME_LEN_MAX 16
 struct icc_dynamic_info
 {
 	u32        real_channel_id;
 	u32        fifo_size;
-	char       name[16];
+	char       name[ICC_CHAN_NAME_LEN_MAX];
 };
 
 /* Ã¶¾Ù¶¨Òåstart */

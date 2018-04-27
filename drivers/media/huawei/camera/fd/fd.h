@@ -86,6 +86,7 @@ struct fd_device {
     struct mutex wlock;
     struct mutex rlock;
     unsigned int smmu_flag;            /*1: enable smmu;0 :smmu stream bypass*/
+    unsigned int ram_config;           /*1: need config ram; 0: use asic register default value*/
     struct regulator *                          fd_supply;
     struct regulator *                          fd_media1_supply;
     struct clk *                                clk;

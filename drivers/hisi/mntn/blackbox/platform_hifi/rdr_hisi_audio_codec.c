@@ -60,6 +60,7 @@ void rdr_codec_hifi_watchdog_process(void)
 /*lint -e715*/
 static int irq_handler_thread(void *arg)
 {
+	unsigned int addr;
 	BB_PRINT_START();
 
 	while (!kthread_should_stop()) {
@@ -68,7 +69,12 @@ static int irq_handler_thread(void *arg)
 			continue;
 		}
 
-		BB_PRINT_PN("%s():codechifi watchdog coming\n", __func__);
+		addr = hi64xx_misc_get_ocram_dump_addr();
+		if(addr){
+			addr += 0x14;
+			BB_PRINT_PN("%s():[codechifi timestamp: %u]codechifi watchdog coming\n", __func__, hi64xx_hifi_read_reg(addr));
+		}else
+			BB_PRINT_PN("%s():codechifi watchdog coming\n", __func__);
 
 		BB_PRINT_PN("enter rdr process for codechifi watchdog\n");
 		rdr_system_error(RDR_AUDIO_CODEC_WD_TIMEOUT_MODID, 0, 0);

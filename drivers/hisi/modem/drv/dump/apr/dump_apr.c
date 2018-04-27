@@ -67,6 +67,7 @@
 #include <linux/wakelock.h>
 #include <asm/string.h>
 #include <asm/traps.h>
+#include "securec.h"
 #include "product_config.h"
 #include <linux/syscalls.h>
 #include "osl_types.h"
@@ -168,14 +169,14 @@ s32 dump_apr_init(void)
     {
         dump_fetal("p_module_info malloc fail, size:0x%x\n", (u32)alloc_size);
     }
-    memset(g_p_modid_table, 0, alloc_size);
+    memset_s(g_p_modid_table, alloc_size,0, alloc_size);
     alloc_size = int_sum*(sizeof(interupt_table_t) - sizeof(u32)) + sizeof(u32);
     g_cp_interupt_table = (interupt_table_t *)(uintptr_t)osl_malloc((u32)alloc_size);
     if(NULL == g_cp_interupt_table)
     {
         dump_fetal("g_cp_interupt_table malloc fail, size:0x%x\n", (u32)alloc_size);
     }
-    memset(g_cp_interupt_table, 0, alloc_size);
+    memset_s(g_cp_interupt_table, alloc_size,0, alloc_size);
 
     alloc_size = task_sum*(sizeof(task_table_t) - sizeof(u32)) + sizeof(u32);
     g_cp_task_table = (task_table_t *)(uintptr_t)osl_malloc((u32)alloc_size);
@@ -183,7 +184,7 @@ s32 dump_apr_init(void)
     {
         dump_fetal("g_cp_task_table malloc fail, size:0x%x\n", (u32)alloc_size);
     }
-    memset(g_cp_task_table, 0, alloc_size);
+    memset_s(g_cp_task_table, alloc_size,0, alloc_size);
 
     for_each_child_of_node(dev_node,child)
     {
@@ -431,17 +432,17 @@ void dump_apr_get_reset_task(dump_except_info_t dump_except_info,  u8 * task_nam
         if(DUMP_CPU_COMM == reboot_core)
         {
             task_info_filed = DUMP_CP_BASE_INFO_SMP;
-   
+
             task_name_offset = DUMP_TASK_NAME_OFFSET;
-  
+
 
         }
         else if(DUMP_CPU_APP == reboot_core)
         {
             task_info_filed = DUMP_MODEMAP_BASE_INFO_SMP;
-         
+
             task_name_offset = DUMP_TASK_NAME_OFFSET;
-        
+
 
         }
         else
@@ -923,7 +924,7 @@ void dump_apr_get_reset_info(char * reset_info, u32 size)
     if(ret == BSP_OK && area_info.vaddr)
     {
         area_head = (dump_area_head_t*)(area_info.vaddr);
-        memcpy((u8*)&flag,(u8*)(area_head->version + 12),sizeof(u32));
+        memcpy_s((u8*)&flag,(sizeof(area_head->version) - 12),(u8*)(area_head->version + 12),sizeof(flag));
     }
 
     dump_get_reboot_contex(&reboot_core,&reboot_reason);
@@ -1012,7 +1013,7 @@ void dump_save_apr_data(char* dir_name)
     {
         dump_apr_get_reset_info(temp_reset_info, 256);
         /*coverity[secure_coding]*/
-        memset(file_name, 0, sizeof(file_name));
+        memset_s(file_name,sizeof(file_name), 0, sizeof(file_name));
         /*coverity[secure_coding]*/
         snprintf(file_name, sizeof(file_name), "%sreset.log", dir_name);
         dump_save_file(file_name, (u8 *)temp_reset_info, (u32)strlen(temp_reset_info));
@@ -1021,3 +1022,4 @@ void dump_save_apr_data(char* dir_name)
 
 }
 
+EXPORT_SYMBOL(dump_apr_show_cfg);

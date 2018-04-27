@@ -1,4 +1,4 @@
-# MD5: 9505c9a2107555648065b18dc81c19c2
+# MD5: 10a9c5bdd15e6857e196e84e3605d304
 CFG_BBP_MASTER_NONE                             := 0
 CFG_BBP_MASTER_VER1                             := 1
 CFG_BBP_MASTER_VER2                             := 2
@@ -19,8 +19,6 @@ CFG_FEATURE_UE_UICC_MULTI_APP_SUPPORT           := FEATURE_ON
 CFG_FEATURE_VSIM                                := FEATURE_ON
 CFG_FEATURE_GUC_BBP_TRIG                        := FEATURE_ON
 CFG_FEATURE_GUC_BBP_TRIG_NEWVERSION             := FEATURE_ON
-CFG_FEATURE_GUBBP_HANDSHAKE                     := FEATURE_ON
-CFG_FEATURE_GUDRX_NEWVERSION                    := FEATURE_ON
 CFG_FEATURE_VOS_REDUCE_MEM_CFG                  := FEATURE_OFF
 CFG_FEATURE_RTC_TIMER_DBG                       := FEATURE_ON
 CFG_FEATURE_PHONE_SC                            := FEATURE_ON
@@ -28,6 +26,7 @@ CFG_FEATURE_SC_SEC_UPDATE                       := FEATURE_ON
 CFG_FEATURE_SC_OS_SEC_FILE                      := FEATURE_OFF
 CFG_FEATURE_SC_DATA_STRUCT_EXTERN               := FEATURE_OFF
 CFG_FEATURE_SC_NETWORK_UPDATE                   := FEATURE_OFF
+CFG_FEATURE_SC_SIGNATURE_UPDATE                 := FEATURE_OFF
 CFG_FEATURE_VSIM_ICC_SEC_CHANNEL                := FEATURE_ON
 CFG_FEATURE_BOSTON_AFTER_FEATURE                := FEATURE_ON
-CFG_FEATURE_BOSTON_ONLY_FEATURE                 := FEATURE_ON
+CFG_FEATURE_XSIM                                := FEATURE_OFF

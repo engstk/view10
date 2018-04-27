@@ -77,8 +77,9 @@ extern "C" {
 #define FC_POLICY_MASK_GPRS             ( ((VOS_UINT32)1) << FC_POLICY_ID_GPRS )
 #define FC_POLICY_MASK_TMP              ( ((VOS_UINT32)1) << FC_POLICY_ID_TMP )
 #define FC_POLICY_MASK_CPU_C            ( ((VOS_UINT32)1) << FC_POLICY_ID_CPU_C)
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 #define FC_POLICY_MASK_CDMA             ( ((VOS_UINT32)1) << FC_POLICY_ID_CDMA )
-
+#endif
 
 /*****************************************************************************
   3 Ã¶¾Ù¶¨Òå
@@ -93,7 +94,9 @@ enum FC_POLICY_ID_ENUM
     FC_POLICY_ID_GPRS,
     FC_POLICY_ID_TMP,
     FC_POLICY_ID_CPU_C,
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)    
     FC_POLICY_ID_CDMA,
+#endif    
     FC_POLICY_ID_BUTT
 };
 typedef VOS_UINT8 FC_POLICY_ID_ENUM_UINT8;

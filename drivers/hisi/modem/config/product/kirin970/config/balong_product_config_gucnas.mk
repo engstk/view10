@@ -1,4 +1,4 @@
-# MD5: 5a9008abf695ed6977a127fa593108fa
+# MD5: 4457c1df57ed461c5bbdc5b608be2bbe
 CFG_FEATURE_UE_MODE_G                           := FEATURE_ON
 CFG_FEATURE_UE_MODE_W                           := FEATURE_ON
 CFG_FEATURE_LTE                                 := FEATURE_ON
@@ -24,7 +24,7 @@ CFG_FEATURE_E5                                  := FEATURE_OFF
 CFG_FEATURE_POWER_ON_OFF                        := FEATURE_OFF
 CFG_FEATURE_SECURITY_SHELL          			:= FEATURE_ON
 CFG_FEATURE_WIFI                                := FEATURE_OFF
-CFG_FEATURE_HUAWEI_VP                           := FEATURE_ON
+CFG_FEATURE_HUAWEI_VP                           := FEATURE_OFF
 CFG_PS_PTL_VER_PRE_R99                          := (-2)
 CFG_PS_PTL_VER_R99                              := (-1)
 CFG_PS_PTL_VER_R3                               := 0
@@ -36,7 +36,7 @@ CFG_PS_PTL_VER_R8                               := 5
 CFG_PS_PTL_VER_R9                               := 6
 CFG_PS_UE_REL_VER                               := PS_PTL_VER_R9
 CFG_FEATURE_PROBE_FREQLOCK                      := FEATURE_ON
-CFG_FEATURE_CHINA_TELECOM_VOICE_ENCRYPT         := FEATURE_OFF
+CFG_FEATURE_CHINA_TELECOM_VOICE_ENCRYPT         := FEATURE_ON
 CFG_FEATURE_CHINA_TELECOM_VOICE_ENCRYPT_TEST_MODE := FEATURE_OFF
 CFG_FEATURE_DX_SECBOOT                          := FEATURE_OFF
 CFG_FEATURE_EDA_SUPPORT                         := FEATURE_ON

@@ -236,6 +236,7 @@ struct voice_proxy_voice_encrypt_key_end {
 #define HIFI_MISC_IOCTL_WAKEUP_PCM_READ_THREAD _IOW('A',  0x7a, unsigned int)
 #define HIFI_MISC_IOCTL_AUDIO_EFFECT_PARAMS        _IOWR('A', 0x7B, struct misc_io_async_param)
 #define HIFI_MISC_IOCTL_USBAUDIO        _IOW('A', 0x7C, struct misc_io_sync_param)      //for usbaudio
+#define HIFI_MISC_IOCTL_SMARTPA_PARAMS  _IOWR('A', 0x7D, struct misc_io_async_param)   //for smartpakit algo params
 
 #ifdef CLT_VOICE
 #define CLT_HIFI_MISC_IOCTL_SEND_VOICE _IOWR('A', 0x90, struct misc_io_async_param)

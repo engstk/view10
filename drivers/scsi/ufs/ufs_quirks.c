@@ -18,9 +18,12 @@
 #include <linux/bootdevice.h>
 #endif
 #include <linux/of.h>
+#include <linux/string.h>
 
 #define SERIAL_NUM_SIZE 12
 #define BOARDID_SIZE 4
+#define SAMSUNG_512G_PRODUCT_NAME "KLUFG8R1EM-B0C1"
+#define PRODUCT_NAME_CMP_COUNT (sizeof(SAMSUNG_512G_PRODUCT_NAME) - 1)
 
 static struct ufs_card_fix ufs_fixups[] = {
 	/* UFS cards deviations table */
@@ -66,10 +69,11 @@ static void ufs_set_sec_unique_number(struct ufs_hba *hba,
 
 	switch (hba->manufacturer_id) {
 	case UFS_VENDOR_SAMSUNG:
-		if (product_name[9] == 'A' && !((boardid[0]==6 && boardid[1]==4 && boardid[2]==5 && boardid[3]==3) /*for board_id == 6453, keep old uid for workaround*/
+		if ((product_name[9] == 'A' && !((boardid[0]==6 && boardid[1]==4 && boardid[2]==5 && boardid[3]==3) /*for board_id == 6453, keep old uid for workaround*/
 			|| (boardid[0]==6 && boardid[1]==4 && boardid[2]==5 && boardid[3]==5) /*for board_id == 6455, keep old uid for workaround*/
 			|| (boardid[0]==6 && boardid[1]==9 && boardid[2]==0 && boardid[3]==8) /*for board_id == 6908, keep old uid for workaround*/
-			|| (boardid[0]==6 && boardid[1]==9 && boardid[2]==1 && boardid[3]==3))) {/*for board_id == 6913, keep old uid for workaround*/
+			|| (boardid[0]==6 && boardid[1]==9 && boardid[2]==1 && boardid[3]==3))) /*for board_id == 6913, keep old uid for workaround*/
+			|| !strncmp(product_name, SAMSUNG_512G_PRODUCT_NAME, PRODUCT_NAME_CMP_COUNT)) { /*Get uid for product name "KLUFG8R1EM-B0C1" by the way below*/
 			/* Samsung V4 UFS need 24 Bytes for serial number, transfer unicode to 12 bytes
 			 * the magic number 12 here was following original below HYNIX/TOSHIBA decoding method
 			*/
@@ -101,8 +105,14 @@ static void ufs_set_sec_unique_number(struct ufs_hba *hba,
 		snum_buf[10] = 0;
 		snum_buf[11] = 0;
 		break;
-	case UFS_VENDOR_HIVV:
+	case UFS_VENDOR_HI1861:
 		memcpy(snum_buf, str_desc_buf + QUERY_DESC_HDR_SIZE, 12);
+		break;
+	case UFS_VENDOR_MICRON:
+		memcpy(snum_buf, str_desc_buf + QUERY_DESC_HDR_SIZE, 4);
+		for(i = 4; i < 12; i++) {
+			snum_buf[i] = 0;
+		}
 		break;
 	default:
 		dev_err(hba->dev, "unknown ufs manufacturer id\n");

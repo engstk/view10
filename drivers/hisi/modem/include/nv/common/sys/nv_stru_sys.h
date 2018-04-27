@@ -71,15 +71,7 @@ typedef unsigned long long   u64;
 #endif
 
 #define NV_ITEM_IMEI_SIZE 16
-/*****************************************************************************
- 结构名    : IMEI_STRU
- 结构说明  : en_NV_Item_IMEI(0)结构
 
- 修改历史      :
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     u8                           aucImei[NV_ITEM_IMEI_SIZE];
@@ -185,22 +177,7 @@ typedef struct
     u32 value;
 } NV_SCI_CFG_STRU;
 
-/*****************************************************************************
-结构名    : NV_ID_ERR_LOG_CTRL_INFO_STRU
-结构说明  :
-对应NVID: 133 NV_ID_ERR_LOG_CTRL_INFO
 
-  1.日    期   : 2013年8月27日
-    作    者   : d00212987
-    修改内容   : 初始生成
-    ucAlmLevel:Warning：0x04代表提示，Minor：0x03代表次要, Critical：0x01代表紧急（默认）
-                        值为0x03， 0x03/0x02/0x01都上报
-    aucReportBitMap:A0000000 00000DCB
-                    A代表主动上报开关
-                    B代表语音质量特性开关
-                    C代表搜网特性故障主动上报开关
-                    D代表RAT频繁切换主动上报开关
-*****************************************************************************/
 typedef struct
 {
     u8 ucAlmStatus; /* 告警状态,默认0:close;1:open  */
@@ -208,42 +185,20 @@ typedef struct
     u8 aucReportBitMap[2];
 }NV_ID_ERR_LOG_CTRL_INFO_STRU;
 
-/*****************************************************************************
-结构名    : OM_ALARM_ID_DETAIL_STRU
-结构说明  :
-  1.日    期   : 2013年8月27日
-    作    者   : d00212987
-    修改内容   : 初始生成
-*****************************************************************************/
+
 typedef struct
 {
     u32                          ulAlarmid;        /* 告警标识 */
     u32                          ulAlarmidDetail;  /* 告警相关性，32bit，每个bit代表一种相关性，0代表和该相关性无关 */
 }OM_ALARM_ID_DETAIL_STRU;
 
-/*****************************************************************************
-结构名    : NV_ALARM_ID_RELATIONSHIP_STRU
-结构说明  :
-对应NVID: 134 NV_ALARM_ID_RELATIONSHIP
 
-  1.日    期   : 2013年8月27日
-    作    者   : d00212987
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct
 {
     OM_ALARM_ID_DETAIL_STRU          astOmAlarmidRelationship[40]; /* 预设40组 */
 }NV_ALARM_ID_RELATIONSHIP_STRU;
 
-/*****************************************************************************
-结构名    : NV_ID_FTM_DETAIL_STRU
-结构说明  :
-对应NVID: 135 NV_ID_FTM_DETAIL
 
-  1.日    期   : 2013年8月27日
-    作    者   : d00212987
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct
 {
     u32                          ulFTMDetail; /* 工程模式相关性，32bit，每个bit代表一种相关性，0代表和该相关性无关 */
@@ -296,6 +251,7 @@ typedef struct
 {
     u16 hkadc[32];
 }NV_KADC_CHANNEL_CFG_STRU;
+
 typedef struct
 {
     u32   outconfig;
@@ -331,16 +287,7 @@ typedef struct
     u32 tcxo_cfg;
 }NV_TCXO_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : NV_UART_SWITCH_STRU
- 协议表格  : 无
- 结构说明  :  用于记录UART功能是否处于使能状态 ID=9239
 
- 修改历史      :
-  1.日    期   : 2013年12月19日
-    作    者   : f00204170
-    修改内容   :
-*****************************************************************************/
 typedef struct
 {
     u8  enUartEnableCfg;

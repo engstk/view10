@@ -67,4 +67,5 @@ obj-y           += adp_vic.o
 endif
 
 obj-y           += adp_diag_system.o
+obj-y           += adp_iqi.o
 

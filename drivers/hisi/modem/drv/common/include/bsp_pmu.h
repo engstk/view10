@@ -80,6 +80,12 @@ extern "C" {
 #define PMU_STATE_OVER_CUR  (1 << 2)
 #define PMU_STATE_OVER_TEMP (1 << 3)
 
+#define PMIC_VERSION_REG0   0x00
+#define PMIC_VERSION_REG1   0x01
+#define PMIC_VERSION_REG2   0x02
+#define PMIC_VERSION_REG3   0x03
+#define PMIC_VERSION_REG4   0x04
+#define PMIC_VERSION_REG5   0x05
 #ifdef __KERNEL__
 
 /*PMU 32K CLK Ã¶¾ÙÀàÐÍ */
@@ -353,8 +359,8 @@ void bsp_pmu_rfclk_disable(u32 rf_id);
 int bsp_pmu_rfclk_is_enabled(u32 rf_id);
 unsigned int bsp_pmu_get_rtc_value(void);
 void* bsp_pmic_get_base_addr(void);
-void bsp_pmic_reg_write(u32 addr, u32 value);
-void bsp_pmic_reg_read(u32 addr, u32 *pValue);
+int bsp_pmic_reg_write(u32 addr, u32 value);
+int bsp_pmic_reg_read(u32 addr, u32 *pValue);
 void bsp_pmic_reg_write_mask(u32 addr, u32 value, u32 mask);
 int bsp_pmic_reg_show(u32 addr);
 

@@ -2806,6 +2806,11 @@ static inline void mmdrop(struct mm_struct * mm)
 
 /* mmput gets rid of the mappings and all user-space */
 extern void mmput(struct mm_struct *);
+/* same as above but performs the slow path from the async kontext. Can
+ * be called from the atomic context as well
+ */
+extern void mmput_async(struct mm_struct *);
+
 /* Grab a reference to a task's mm, if it is not already going away */
 extern struct mm_struct *get_task_mm(struct task_struct *task);
 /*
@@ -3060,7 +3065,7 @@ static inline int object_is_on_stack(void *obj)
 	return (obj >= stack) && (obj < (stack + THREAD_SIZE));
 }
 
-extern void thread_info_cache_init(void);
+extern void thread_stack_cache_init(void);
 
 #ifdef CONFIG_DEBUG_STACK_USAGE
 static inline unsigned long stack_not_used(struct task_struct *p)
@@ -3359,6 +3364,17 @@ static inline void add_wchar(struct task_struct *tsk, ssize_t amt)
 	tsk->ioac.wchar += amt;
 }
 
+static inline void add_file_rchar(struct task_struct *tsk, ssize_t amt)
+{
+
+	tsk->ioac.file_rchar += amt;
+}
+
+static inline void add_file_wchar(struct task_struct *tsk, ssize_t amt)
+{
+	tsk->ioac.file_wchar += amt;
+}
+
 static inline void inc_syscr(struct task_struct *tsk)
 {
 	tsk->ioac.syscr++;
@@ -3379,6 +3395,14 @@ static inline void add_rchar(struct task_struct *tsk, ssize_t amt)
 }
 
 static inline void add_wchar(struct task_struct *tsk, ssize_t amt)
+{
+}
+
+static inline void add_file_rchar(struct task_struct *tsk, ssize_t amt)
+{
+}
+
+static inline void add_file_wchar(struct task_struct *tsk, ssize_t amt)
 {
 }
 

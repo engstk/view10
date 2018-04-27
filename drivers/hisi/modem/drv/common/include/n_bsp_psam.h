@@ -78,6 +78,17 @@ extern "C"
 #define PSAM_VER_150A	(0x31353061)
 #define PSAM_VER_160	(0x31363061)
 
+#define PSAM_ADQ_SETTING_TABLE  	{HI_PSAM_ADQ_CTRL_OFFSET, 0xfffffff0},  \
+	{HI_PSAM64_ADQ0_BASE_H_OFFSET, 0xffffffff}, \
+	{HI_PSAM64_ADQ0_BASE_L_OFFSET, 0xffffffff}, \
+	{HI_PSAM64_ADQ1_BASE_H_OFFSET, 0xffffffff}, \
+	{HI_PSAM64_ADQ1_BASE_L_OFFSET, 0xffffffff}, \
+	{HI_PSAM_ADQ0_WPTR_OFFSET, 0xffffffff},     \
+	{HI_PSAM_ADQ1_WPTR_OFFSET, 0xffffffff}, \
+	{HI_PSAM_ADQ0_RPTR_OFFSET, 0xffffffff},     \
+	{HI_PSAM_ADQ1_RPTR_OFFSET, 0xffffffff}, \
+	{HI_PSAM_ADQ_CTRL_OFFSET, 0xffffffff}, 
+
 enum psam_version{
 	PSAM_VERSION_0000  = 0x0,
 	PSAM_VERSION_100a  = 0x1,		
@@ -195,7 +206,7 @@ void bsp_psam_config_adthred(unsigned int u32DlADThr);
 int bsp_psam_idle_status(void);
 int bsp_psam_cbdq_idle(void);
 void psam_clear_ptr(void);
-
+void bsp_psam_stop(void);
 #else
 static inline int bsp_psam_get_cipher_bd(struct tagpsam_cipher_reg * param)
 {

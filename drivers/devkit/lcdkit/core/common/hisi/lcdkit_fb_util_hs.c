@@ -3316,7 +3316,155 @@ out:
 
     return count;
 }
+ssize_t lcd_dynamic_porch_store(struct device* dev,
+                              struct device_attribute* attr, const char* buf, size_t count)
+{
+    struct fb_info* fbi = NULL;
+    struct hisi_fb_data_type* hisifd = NULL;
+    struct hisi_fb_panel_data* pdata = NULL;
+    struct hisi_panel_info* pinfo = NULL;
+    unsigned int h_back_porch = 0;
+    unsigned int h_front_porch = 0;
+    unsigned int h_pulse_width = 0;
+    unsigned int v_back_porch = 0;
+    unsigned int v_front_porch = 0;
+    unsigned int v_pulse_width = 0;
+    unsigned int pixel_clk = 0;
 
+    if (NULL == dev)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -ENXIO;
+    }
+
+    fbi = dev_get_drvdata(dev);
+
+    if (NULL == fbi)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+    hisifd = (struct hisi_fb_data_type*)fbi->par;
+
+    if (NULL == hisifd)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+    pdata = dev_get_platdata(&hisifd->pdev->dev);
+
+    if (NULL == pdata)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+    if (NULL == buf)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+       if (strlen(buf) >= MAX_BUF) {
+            HISI_FB_ERR("buf overflow!\n");
+            return -EINVAL;
+        }
+
+    pinfo = &(hisifd->panel_info);
+
+    if (!sscanf(buf, "%d,%d,%d,%d,%d,%d,%d",&h_back_porch,&h_front_porch,&h_pulse_width,
+                              &v_back_porch,&v_front_porch,&v_pulse_width,&pixel_clk)) {
+    LCDKIT_INFO("bad command\n");
+    return count;
+    }
+
+    down(&hisifd->blank_sem);
+
+    hisifb_activate_vsync(hisifd);
+
+    pinfo->ldi.h_back_porch = h_back_porch;
+    pinfo->ldi.h_front_porch = h_front_porch;
+    pinfo->ldi.h_pulse_width = h_pulse_width;
+    pinfo->ldi.v_back_porch = v_back_porch;
+    pinfo->ldi.v_front_porch = v_front_porch;
+    pinfo->ldi.v_pulse_width = v_pulse_width;
+    pinfo->pxl_clk_rate = pixel_clk * 1000000UL;
+
+out:
+    hisifb_deactivate_vsync(hisifd);
+
+    up(&hisifd->blank_sem);
+
+    return count;
+}
+
+ssize_t lcd_dynamic_porch_show(struct device* dev,
+                             struct device_attribute* attr, char* buf)
+{
+    ssize_t ret = 0;
+    struct fb_info* fbi = NULL;
+    struct hisi_fb_data_type* hisifd = NULL;
+    struct hisi_fb_panel_data* pdata = NULL;
+    struct hisi_panel_info* pinfo = NULL;
+
+    if (NULL == dev)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -ENXIO;
+    }
+
+    fbi = dev_get_drvdata(dev);
+
+    if (NULL == fbi)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+    hisifd = (struct hisi_fb_data_type*)fbi->par;
+
+    if (NULL == hisifd)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+    pdata = dev_get_platdata(&hisifd->pdev->dev);
+
+    if (NULL == pdata)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+    if (NULL == buf)
+    {
+        LCDKIT_ERR("NULL Pointer!\n");
+        return -EINVAL;
+    }
+
+    pinfo = &(hisifd->panel_info);
+
+    ret = snprintf(buf, PAGE_SIZE,
+          "h_back_porch=%d\n"
+          "h_front_porch=%d\n"
+          "h_pulse_width=%d\n"
+          "v_back_porch=%d\n"
+          "v_front_porch=%d\n"
+          "v_pulse_width=%d\n"
+          "pixel clk = %d\n",
+          pinfo->ldi.h_back_porch,
+          pinfo->ldi.h_front_porch,
+          pinfo->ldi.h_pulse_width,
+          pinfo->ldi.v_back_porch,
+          pinfo->ldi.v_front_porch,
+          pinfo->ldi.v_pulse_width,
+          pinfo->pxl_clk_rate);
+
+    return ret;
+}
 ssize_t lcd_test_config_show(struct device* dev, struct lcdkit_panel_data* lcdkit_info, char* buf)
 {
     ssize_t ret = 0;
@@ -3924,4 +4072,40 @@ ssize_t lcd_ldo_check_show(struct device* dev, char* buf)
 err_out:
     up(&hisifd->blank_sem);
     return ret;
+}
+
+ssize_t lcd_mipi_config_store(struct device* dev, struct lcdkit_panel_data* lcdkit_info, const char* buf)
+{
+	ssize_t ret = -EINVAL;
+
+	if (NULL == dev || NULL == lcdkit_info || NULL == buf)
+	{
+		LCDKIT_ERR("%s: NULL Pointer!\n",__func__);
+		return ret;
+	}
+
+	struct hisi_fb_data_type* hisifd = get_fb_data(dev);
+	if (NULL == hisifd) {
+		LCDKIT_ERR("hisifd is NULL Pointer!\n");
+		return ret;
+	}
+
+	down(&hisifd->blank_sem);
+
+	do{
+		if (!hisifd->panel_power_on) {
+			LCDKIT_ERR("fb%d, panel power off!\n", hisifd->index);
+			break;
+		}
+
+		if (lcdkit_info->lcdkit_mipi_config_store)
+		{
+			hisifb_activate_vsync(hisifd);
+			ret = lcdkit_info->lcdkit_mipi_config_store(hisifd, buf);
+			hisifb_deactivate_vsync(hisifd);
+		}
+	} while (0);
+
+	up(&hisifd->blank_sem);
+	return ret;
 }

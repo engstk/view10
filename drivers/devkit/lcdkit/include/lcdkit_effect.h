@@ -58,9 +58,67 @@
 
 #include "bkl_vn2_auo_otm1901a_5p2_1080p_video_default_1.h"
 
-#include "emily_tugl_jdi_nt35696h_5p1_1080p_cmd.h"
+#include "bkl_l04_tianma_nt36672_5p99_1080p_video.h"
+
+#include "bkl_l04_boe_td4310_5p99_1080p_video.h"
+
+#include "bkl_l04_ctc_td4310_5p99_1080p_video.h"
+
+#include "bkl_l04_truly_nt36672_5p99_1080p_video.h"
+
+#include "bkl_l04_auo_otm1901a_5p2_1080p_video_default_1.h"
+
+#include "emily_tugl_sharp_hx83112a_5p82_1080plus_video.h"
+
+#include "emily_tugl_jdi_hx83112a_5p82_1080plus_video.h"
+
+#include "emily_tugl_lg_hx83112a_5p82_1080plus_video.h"
+
+#include "emily_tugl_sharp_hx83112c_5p82_1080plus_cmd.h"
+
+#include "emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video.h"
+
+#include "emily_tugl_jdi_hx83112c_5p82_1080plus_cmd.h"
+
+#include "emily_tugl_boe_hx83112a_5p82_1080plus_video.h"
+
+#include "emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd.h"
+
+#include "emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd.h"
+
+#include "emily_tugl_sharp_td4336_5p82_1080plus_cmd.h"
+
+#include "emily_tugl_jdi_td4336_5p82_1080plus_cmd.h"
+
+#include "emily_tugl_lg_nt36772a_5p82_1080plus_cmd.h"
+
+#include "emily_tugl_auo_otm1901a_5p2_1080p_video_default_2.h"
+
+#include "emily_tugl_auo_otm1901a_5p2_1080p_video_default_1.h"
 
 #include "neo_tugl_lg_ea9151_5p99_1440plus_cmd.h"
+
+#include "neo_tugl_boe_sw43404_5p99_1440plus_cmd.h"
+
+#include "neo_tugl_auo_otm1901a_5p2_1080p_video_default.h"
+
+#include "charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd.h"
+
+#include "charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd.h"
+
+#include "charlotte_tugl_auo_otm1901a_5p2_1080p_video_default.h"
+
+#include "col_boe_otm1911a_5p84_1080p_video.h"
+
+#include "col_tm_otm1911a_5p84_1080p_video.h"
+
+#include "col_ctc_otm1911a_5p84_1080p_video.h"
+
+#include "col_auo_otm1911a_5p84_1080p_video.h"
+
+#include "col_tm_hx8399c_5p84_1080p_video.h"
+
+#include "col_auo_otm1901a_5p2_1080p_video_default_1.h"
 
 #include "default_auo_otm1901a_5p2_1080p_video_default.h"
 
@@ -93,8 +151,37 @@ BKL_VN2_BOE_TD4310_5P99_1080P_VIDEO_PANEL,
 BKL_VN2_CTC_TD4310_5P99_1080P_VIDEO_PANEL,
 BKL_VN2_TRULY_NT36672_5P99_1080P_VIDEO_PANEL,
 BKL_VN2_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL,
-EMILY_TUGL_JDI_NT35696H_5P1_1080P_CMD_PANEL,
+BKL_L04_TIANMA_NT36672_5P99_1080P_VIDEO_PANEL,
+BKL_L04_BOE_TD4310_5P99_1080P_VIDEO_PANEL,
+BKL_L04_CTC_TD4310_5P99_1080P_VIDEO_PANEL,
+BKL_L04_TRULY_NT36672_5P99_1080P_VIDEO_PANEL,
+BKL_L04_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL,
+EMILY_TUGL_SHARP_HX83112A_5P82_1080PLUS_VIDEO_PANEL,
+EMILY_TUGL_JDI_HX83112A_5P82_1080PLUS_VIDEO_PANEL,
+EMILY_TUGL_LG_HX83112A_5P82_1080PLUS_VIDEO_PANEL,
+EMILY_TUGL_SHARP_HX83112C_5P82_1080PLUS_CMD_PANEL,
+EMILY_TUGL_SHARP_V3_HX83112A_5P82_1080PLUS_VIDEO_PANEL,
+EMILY_TUGL_JDI_HX83112C_5P82_1080PLUS_CMD_PANEL,
+EMILY_TUGL_BOE_HX83112A_5P82_1080PLUS_VIDEO_PANEL,
+EMILY_TUGL_SHARP_HX83112C_CUT2_5P82_1080PLUS_CMD_PANEL,
+EMILY_TUGL_JDI_HX83112C_CUT2_5P82_1080PLUS_CMD_PANEL,
+EMILY_TUGL_SHARP_TD4336_5P82_1080PLUS_CMD_PANEL,
+EMILY_TUGL_JDI_TD4336_5P82_1080PLUS_CMD_PANEL,
+EMILY_TUGL_LG_NT36772A_5P82_1080PLUS_CMD_PANEL,
+EMILY_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_2_PANEL,
+EMILY_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL,
 NEO_TUGL_LG_EA9151_5P99_1440PLUS_CMD_PANEL,
+NEO_TUGL_BOE_SW43404_5P99_1440PLUS_CMD_PANEL,
+NEO_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL,
+CHARLOTTE_TUGL_SAMSUNG_EA8074_CLT_6P10_1080PLUS_CMD_PANEL,
+CHARLOTTE_TUGL_SAMSUNG_EA8074_CLT_TEMP_6P01_1080PLUS_CMD_PANEL,
+CHARLOTTE_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL,
+COL_BOE_OTM1911A_5P84_1080P_VIDEO_PANEL,
+COL_TM_OTM1911A_5P84_1080P_VIDEO_PANEL,
+COL_CTC_OTM1911A_5P84_1080P_VIDEO_PANEL,
+COL_AUO_OTM1911A_5P84_1080P_VIDEO_PANEL,
+COL_TM_HX8399C_5P84_1080P_VIDEO_PANEL,
+COL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL,
 DEFAULT_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL,
 INVALID_PANEL_ID,
 };
@@ -115,7 +202,7 @@ static struct lcdkit_board_map lcdkit_map[] = {
     {ALPS_TUGL_JDI_NT36860_TEMP_5P88_1440P_CMD_PANEL, "jdi_nt36860_temp_5p88_1440P_cmd", 1000},
     {ALPS_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL, "auo_otm1901a_5p2_1080p_video_default", 1000},
     {ALPS_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL, "auo_otm1901a_5p2_1080p_video_default_1", 1001},
-    {ALPS_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_2_PANEL, "auo_otm1901a_5p2_1080p_video_default", 1002},
+    {ALPS_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_2_PANEL, "auo_otm1901a_5p2_1080p_video_default_2", 1002},
     {ALPS_TUGL_LGD_2LANE_NT36870_5P88_1440P_CMD_PANEL, "lgd_2lane_nt36870_5p88_1440P_cmd", 1001},
     {ALPS_TUGL_SHARP_2LANE_NT36870_5P88_1440P_CMD_PANEL, "sharp_2lane_nt36870_5p88_1440P_cmd", 1001},
     {ALPS_TUGL_JDI_2LANE_NT36860C_5P88_1440P_CMD_PANEL, "jdi_2lane_nt36860_5p88_1440P_cmd", 1001},
@@ -135,8 +222,37 @@ static struct lcdkit_board_map lcdkit_map[] = {
     {BKL_VN2_CTC_TD4310_5P99_1080P_VIDEO_PANEL, "ctc_td4310_5p99_1080p_video", 3002},
     {BKL_VN2_TRULY_NT36672_5P99_1080P_VIDEO_PANEL, "truly_nt36672_5p99_1080p_video", 3002},
     {BKL_VN2_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL, "auo_otm1901a_5p2_1080p_video_default_1", 3002},
-    {EMILY_TUGL_JDI_NT35696H_5P1_1080P_CMD_PANEL, "jdi_nt35696h_5p1_1080P_cmd", 4000},
+    {BKL_L04_TIANMA_NT36672_5P99_1080P_VIDEO_PANEL, "tianma_nt36672_5p99_1080p_video", 3003},
+    {BKL_L04_BOE_TD4310_5P99_1080P_VIDEO_PANEL, "boe_td4310_5p99_1080p_video", 3003},
+    {BKL_L04_CTC_TD4310_5P99_1080P_VIDEO_PANEL, "ctc_td4310_5p99_1080p_video", 3003},
+    {BKL_L04_TRULY_NT36672_5P99_1080P_VIDEO_PANEL, "truly_nt36672_5p99_1080p_video", 3003},
+    {BKL_L04_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL, "auo_otm1901a_5p2_1080p_video_default_1", 3003},
+    {EMILY_TUGL_SHARP_HX83112A_5P82_1080PLUS_VIDEO_PANEL, "sharp_hx83112a_5p82_1080plus_video", 4000},
+    {EMILY_TUGL_JDI_HX83112A_5P82_1080PLUS_VIDEO_PANEL, "jdi_hx83112a_5p82_1080plus_video", 4000},
+    {EMILY_TUGL_LG_HX83112A_5P82_1080PLUS_VIDEO_PANEL, "lg_hx83112a_5p82_1080plus_video", 4000},
+    {EMILY_TUGL_SHARP_HX83112C_5P82_1080PLUS_CMD_PANEL, "sharp_hx83112c_5p82_1080plus_cmd", 4001},
+    {EMILY_TUGL_SHARP_V3_HX83112A_5P82_1080PLUS_VIDEO_PANEL, "sharp_v3_hx83112a_5p82_1080plus_video", 4002},
+    {EMILY_TUGL_JDI_HX83112C_5P82_1080PLUS_CMD_PANEL, "jdi_hx83112c_5p82_1080plus_cmd", 4002},
+    {EMILY_TUGL_BOE_HX83112A_5P82_1080PLUS_VIDEO_PANEL, "boe_hx83112a_5p82_1080plus_video", 4002},
+    {EMILY_TUGL_SHARP_HX83112C_CUT2_5P82_1080PLUS_CMD_PANEL, "sharp_hx83112c_cut2_5p82_1080plus_cmd", 4003},
+    {EMILY_TUGL_JDI_HX83112C_CUT2_5P82_1080PLUS_CMD_PANEL, "jdi_hx83112c_cut2_5p82_1080plus_cmd", 4003},
+    {EMILY_TUGL_SHARP_TD4336_5P82_1080PLUS_CMD_PANEL, "sharp_td4336_5p82_1080plus_cmd", 4003},
+    {EMILY_TUGL_JDI_TD4336_5P82_1080PLUS_CMD_PANEL, "jdi_td4336_5p82_1080plus_cmd", 4003},
+    {EMILY_TUGL_LG_NT36772A_5P82_1080PLUS_CMD_PANEL, "lg_nt36772a_5p82_1080plus_cmd", 4003},
+    {EMILY_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_2_PANEL, "auo_otm1901a_5p2_1080p_video_default_2", 4003},
+    {EMILY_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL, "auo_otm1901a_5p2_1080p_video_default_1", 4000},
     {NEO_TUGL_LG_EA9151_5P99_1440PLUS_CMD_PANEL, "lg_ea9151_5p99_1440plus_cmd", 5000},
+    {NEO_TUGL_BOE_SW43404_5P99_1440PLUS_CMD_PANEL, "boe_sw43404_5p99_1440plus_cmd", 5000},
+    {NEO_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL, "auo_otm1901a_5p2_1080p_video_default", 5000},
+    {CHARLOTTE_TUGL_SAMSUNG_EA8074_CLT_6P10_1080PLUS_CMD_PANEL, "samsung_ea8074_clt_6p10_1080plus_cmd", 6000},
+    {CHARLOTTE_TUGL_SAMSUNG_EA8074_CLT_TEMP_6P01_1080PLUS_CMD_PANEL, "samsung_ea8074_clt_temp_6p01_1080plus_cmd", 6000},
+    {CHARLOTTE_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL, "auo_otm1901a_5p2_1080p_video_default", 6000},
+    {COL_BOE_OTM1911A_5P84_1080P_VIDEO_PANEL, "boe_otm1911a_5p84_1080p_video", 7000},
+    {COL_TM_OTM1911A_5P84_1080P_VIDEO_PANEL, "tm_otm1911a_5p84_1080p_video", 7000},
+    {COL_CTC_OTM1911A_5P84_1080P_VIDEO_PANEL, "ctc_otm1911a_5p84_1080p_video", 7000},
+    {COL_AUO_OTM1911A_5P84_1080P_VIDEO_PANEL, "auo_otm1911a_5p84_1080p_video", 7000},
+    {COL_TM_HX8399C_5P84_1080P_VIDEO_PANEL, "tm_hx8399c_5p84_1080p_video", 7000},
+    {COL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL, "auo_otm1901a_5p2_1080p_video_default_1", 7000},
     {DEFAULT_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL, "auo_otm1901a_5p2_1080p_video_default", 0},
 };
 
@@ -1468,57 +1584,1011 @@ static void lcdkit_effect_get_data(uint8_t panel_id, struct hisi_panel_info* pin
             pinfo->xcc_table_len = ARRAY_SIZE(bkl_vn2_auo_otm1901a_5p2_1080p_video_default_1_xcc_table);
         }
         break;
-    case EMILY_TUGL_JDI_NT35696H_5P1_1080P_CMD_PANEL:
+    case BKL_L04_TIANMA_NT36672_5P99_1080P_VIDEO_PANEL:
         if (pinfo->acm_support == 1)
         {
-            pinfo->acm_lut_hue_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_hue_table;
-            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_hue_table);
-            pinfo->acm_lut_sata_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_sata_table;
-            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_sata_table);
-            pinfo->acm_lut_satr_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr_table;
-            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr_table);
-            pinfo->acm_lut_satr0_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr0_table;
-            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr0_table);
-            pinfo->acm_lut_satr1_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr1_table;
-            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr1_table);
-            pinfo->acm_lut_satr2_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr2_table;
-            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr2_table);
-            pinfo->acm_lut_satr3_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr3_table;
-            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr3_table);
-            pinfo->acm_lut_satr4_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr4_table;
-            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr4_table);
-            pinfo->acm_lut_satr5_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr5_table;
-            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr5_table);
-            pinfo->acm_lut_satr6_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr6_table;
-            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr6_table);
-            pinfo->acm_lut_satr7_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr7_table;
-            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_acm_lut_satr7_table);
-            pinfo->video_acm_lut_hue_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_hue_table;
-            pinfo->video_acm_lut_sata_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_sata_table;
-            pinfo->video_acm_lut_satr0_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr0_table;
-            pinfo->video_acm_lut_satr1_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr1_table;
-            pinfo->video_acm_lut_satr2_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr2_table;
-            pinfo->video_acm_lut_satr3_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr3_table;
-            pinfo->video_acm_lut_satr4_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr4_table;
-            pinfo->video_acm_lut_satr5_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr5_table;
-            pinfo->video_acm_lut_satr6_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr6_table;
-            pinfo->video_acm_lut_satr7_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_video_acm_lut_satr7_table;
+            pinfo->acm_lut_hue_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = bkl_l04_tianma_nt36672_5p99_1080p_video_video_acm_lut_satr7_table;
         }
         if (pinfo->gamma_support == 1)
         {
-            pinfo->gamma_lut_table_R = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_gamma_lut_table_R;
-            pinfo->gamma_lut_table_G = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_gamma_lut_table_G;
-            pinfo->gamma_lut_table_B = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_gamma_lut_table_B;
-            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_gamma_lut_table_R);
-            pinfo->igm_lut_table_R = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_igm_lut_table_R;
-            pinfo->igm_lut_table_G = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_igm_lut_table_G;
-            pinfo->igm_lut_table_B = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_igm_lut_table_B;
-            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_igm_lut_table_R);
-            pinfo->gmp_lut_table_low32bit = &emily_tugl_jdi_nt35696h_5p1_1080p_cmd_gmp_lut_table_low32bit[0][0][0];
-            pinfo->gmp_lut_table_high4bit = &emily_tugl_jdi_nt35696h_5p1_1080p_cmd_gmp_lut_table_high4bit[0][0][0];
-            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_gmp_lut_table_low32bit);
-            pinfo->xcc_table = emily_tugl_jdi_nt35696h_5p1_1080p_cmd_xcc_table;
-            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_jdi_nt35696h_5p1_1080p_cmd_xcc_table);
+            pinfo->gamma_lut_table_R = bkl_l04_tianma_nt36672_5p99_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = bkl_l04_tianma_nt36672_5p99_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = bkl_l04_tianma_nt36672_5p99_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = bkl_l04_tianma_nt36672_5p99_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = bkl_l04_tianma_nt36672_5p99_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = bkl_l04_tianma_nt36672_5p99_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &bkl_l04_tianma_nt36672_5p99_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &bkl_l04_tianma_nt36672_5p99_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = bkl_l04_tianma_nt36672_5p99_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(bkl_l04_tianma_nt36672_5p99_1080p_video_xcc_table);
+        }
+        break;
+    case BKL_L04_BOE_TD4310_5P99_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = bkl_l04_boe_td4310_5p99_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = bkl_l04_boe_td4310_5p99_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = bkl_l04_boe_td4310_5p99_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = bkl_l04_boe_td4310_5p99_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = bkl_l04_boe_td4310_5p99_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = bkl_l04_boe_td4310_5p99_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = bkl_l04_boe_td4310_5p99_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &bkl_l04_boe_td4310_5p99_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &bkl_l04_boe_td4310_5p99_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = bkl_l04_boe_td4310_5p99_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(bkl_l04_boe_td4310_5p99_1080p_video_xcc_table);
+        }
+        break;
+    case BKL_L04_CTC_TD4310_5P99_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = bkl_l04_ctc_td4310_5p99_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = bkl_l04_ctc_td4310_5p99_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = bkl_l04_ctc_td4310_5p99_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = bkl_l04_ctc_td4310_5p99_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = bkl_l04_ctc_td4310_5p99_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = bkl_l04_ctc_td4310_5p99_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = bkl_l04_ctc_td4310_5p99_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &bkl_l04_ctc_td4310_5p99_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &bkl_l04_ctc_td4310_5p99_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = bkl_l04_ctc_td4310_5p99_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(bkl_l04_ctc_td4310_5p99_1080p_video_xcc_table);
+        }
+        break;
+    case BKL_L04_TRULY_NT36672_5P99_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = bkl_l04_truly_nt36672_5p99_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = bkl_l04_truly_nt36672_5p99_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = bkl_l04_truly_nt36672_5p99_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = bkl_l04_truly_nt36672_5p99_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = bkl_l04_truly_nt36672_5p99_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = bkl_l04_truly_nt36672_5p99_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = bkl_l04_truly_nt36672_5p99_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &bkl_l04_truly_nt36672_5p99_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &bkl_l04_truly_nt36672_5p99_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = bkl_l04_truly_nt36672_5p99_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(bkl_l04_truly_nt36672_5p99_1080p_video_xcc_table);
+        }
+        break;
+    case BKL_L04_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_R;
+            pinfo->igm_lut_table_G = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_G;
+            pinfo->igm_lut_table_B = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_low32bit);
+            pinfo->xcc_table = bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(bkl_l04_auo_otm1901a_5p2_1080p_video_default_1_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_SHARP_HX83112A_5P82_1080PLUS_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_sharp_hx83112a_5p82_1080plus_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_sharp_hx83112a_5p82_1080plus_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_sharp_hx83112a_5p82_1080plus_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_sharp_hx83112a_5p82_1080plus_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_sharp_hx83112a_5p82_1080plus_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_sharp_hx83112a_5p82_1080plus_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_sharp_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_sharp_hx83112a_5p82_1080plus_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_sharp_hx83112a_5p82_1080plus_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112a_5p82_1080plus_video_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_JDI_HX83112A_5P82_1080PLUS_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_jdi_hx83112a_5p82_1080plus_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_jdi_hx83112a_5p82_1080plus_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_jdi_hx83112a_5p82_1080plus_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_jdi_hx83112a_5p82_1080plus_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_jdi_hx83112a_5p82_1080plus_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_jdi_hx83112a_5p82_1080plus_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_jdi_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_jdi_hx83112a_5p82_1080plus_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_jdi_hx83112a_5p82_1080plus_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112a_5p82_1080plus_video_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_LG_HX83112A_5P82_1080PLUS_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_lg_hx83112a_5p82_1080plus_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_lg_hx83112a_5p82_1080plus_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_lg_hx83112a_5p82_1080plus_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_lg_hx83112a_5p82_1080plus_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_lg_hx83112a_5p82_1080plus_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_lg_hx83112a_5p82_1080plus_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_lg_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_lg_hx83112a_5p82_1080plus_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_lg_hx83112a_5p82_1080plus_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_lg_hx83112a_5p82_1080plus_video_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_SHARP_HX83112C_5P82_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_5p82_1080plus_cmd_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_SHARP_V3_HX83112A_5P82_1080PLUS_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_sharp_v3_hx83112a_5p82_1080plus_video_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_JDI_HX83112C_5P82_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_5p82_1080plus_cmd_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_BOE_HX83112A_5P82_1080PLUS_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_boe_hx83112a_5p82_1080plus_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_boe_hx83112a_5p82_1080plus_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_boe_hx83112a_5p82_1080plus_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_boe_hx83112a_5p82_1080plus_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_boe_hx83112a_5p82_1080plus_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_boe_hx83112a_5p82_1080plus_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_boe_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_boe_hx83112a_5p82_1080plus_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_boe_hx83112a_5p82_1080plus_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_boe_hx83112a_5p82_1080plus_video_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_SHARP_HX83112C_CUT2_5P82_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_sharp_hx83112c_cut2_5p82_1080plus_cmd_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_JDI_HX83112C_CUT2_5P82_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_jdi_hx83112c_cut2_5p82_1080plus_cmd_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_SHARP_TD4336_5P82_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_sharp_td4336_5p82_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_sharp_td4336_5p82_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_sharp_td4336_5p82_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_sharp_td4336_5p82_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_sharp_td4336_5p82_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_sharp_td4336_5p82_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_sharp_td4336_5p82_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_sharp_td4336_5p82_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_sharp_td4336_5p82_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_sharp_td4336_5p82_1080plus_cmd_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_JDI_TD4336_5P82_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_jdi_td4336_5p82_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_jdi_td4336_5p82_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_jdi_td4336_5p82_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_jdi_td4336_5p82_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_jdi_td4336_5p82_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_jdi_td4336_5p82_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_jdi_td4336_5p82_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_jdi_td4336_5p82_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_jdi_td4336_5p82_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_jdi_td4336_5p82_1080plus_cmd_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_LG_NT36772A_5P82_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_lg_nt36772a_5p82_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_lg_nt36772a_5p82_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_lg_nt36772a_5p82_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_lg_nt36772a_5p82_1080plus_cmd_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_2_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_2_xcc_table);
+        }
+        break;
+    case EMILY_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_R;
+            pinfo->igm_lut_table_G = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_G;
+            pinfo->igm_lut_table_B = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_low32bit);
+            pinfo->xcc_table = emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(emily_tugl_auo_otm1901a_5p2_1080p_video_default_1_xcc_table);
         }
         break;
     case NEO_TUGL_LG_EA9151_5P99_1440PLUS_CMD_PANEL:
@@ -1572,6 +2642,589 @@ static void lcdkit_effect_get_data(uint8_t panel_id, struct hisi_panel_info* pin
             pinfo->gmp_lut_table_len = ARRAY_SIZE(neo_tugl_lg_ea9151_5p99_1440plus_cmd_gmp_lut_table_low32bit);
             pinfo->xcc_table = neo_tugl_lg_ea9151_5p99_1440plus_cmd_xcc_table;
             pinfo->xcc_table_len = ARRAY_SIZE(neo_tugl_lg_ea9151_5p99_1440plus_cmd_xcc_table);
+        }
+        break;
+    case NEO_TUGL_BOE_SW43404_5P99_1440PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = neo_tugl_boe_sw43404_5p99_1440plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = neo_tugl_boe_sw43404_5p99_1440plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = neo_tugl_boe_sw43404_5p99_1440plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = neo_tugl_boe_sw43404_5p99_1440plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = neo_tugl_boe_sw43404_5p99_1440plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = neo_tugl_boe_sw43404_5p99_1440plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &neo_tugl_boe_sw43404_5p99_1440plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &neo_tugl_boe_sw43404_5p99_1440plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = neo_tugl_boe_sw43404_5p99_1440plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(neo_tugl_boe_sw43404_5p99_1440plus_cmd_xcc_table);
+        }
+        break;
+    case NEO_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = neo_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = neo_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = neo_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = neo_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_R;
+            pinfo->igm_lut_table_G = neo_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_G;
+            pinfo->igm_lut_table_B = neo_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &neo_tugl_auo_otm1901a_5p2_1080p_video_default_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &neo_tugl_auo_otm1901a_5p2_1080p_video_default_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_gmp_lut_table_low32bit);
+            pinfo->xcc_table = neo_tugl_auo_otm1901a_5p2_1080p_video_default_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(neo_tugl_auo_otm1901a_5p2_1080p_video_default_xcc_table);
+        }
+        break;
+    case CHARLOTTE_TUGL_SAMSUNG_EA8074_CLT_6P10_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_6p10_1080plus_cmd_xcc_table);
+        }
+        break;
+    case CHARLOTTE_TUGL_SAMSUNG_EA8074_CLT_TEMP_6P01_1080PLUS_CMD_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_igm_lut_table_R;
+            pinfo->igm_lut_table_G = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_igm_lut_table_G;
+            pinfo->igm_lut_table_B = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_gmp_lut_table_low32bit);
+            pinfo->xcc_table = charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(charlotte_tugl_samsung_ea8074_clt_temp_6p01_1080plus_cmd_xcc_table);
+        }
+        break;
+    case CHARLOTTE_TUGL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_R;
+            pinfo->igm_lut_table_G = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_G;
+            pinfo->igm_lut_table_B = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_gmp_lut_table_low32bit);
+            pinfo->xcc_table = charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(charlotte_tugl_auo_otm1901a_5p2_1080p_video_default_xcc_table);
+        }
+        break;
+    case COL_BOE_OTM1911A_5P84_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = col_boe_otm1911a_5p84_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = col_boe_otm1911a_5p84_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = col_boe_otm1911a_5p84_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = col_boe_otm1911a_5p84_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = col_boe_otm1911a_5p84_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = col_boe_otm1911a_5p84_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = col_boe_otm1911a_5p84_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = col_boe_otm1911a_5p84_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &col_boe_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &col_boe_otm1911a_5p84_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = col_boe_otm1911a_5p84_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(col_boe_otm1911a_5p84_1080p_video_xcc_table);
+        }
+        break;
+    case COL_TM_OTM1911A_5P84_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = col_tm_otm1911a_5p84_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = col_tm_otm1911a_5p84_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = col_tm_otm1911a_5p84_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = col_tm_otm1911a_5p84_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = col_tm_otm1911a_5p84_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = col_tm_otm1911a_5p84_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = col_tm_otm1911a_5p84_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = col_tm_otm1911a_5p84_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &col_tm_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &col_tm_otm1911a_5p84_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = col_tm_otm1911a_5p84_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(col_tm_otm1911a_5p84_1080p_video_xcc_table);
+        }
+        break;
+    case COL_CTC_OTM1911A_5P84_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = col_ctc_otm1911a_5p84_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = col_ctc_otm1911a_5p84_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = col_ctc_otm1911a_5p84_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = col_ctc_otm1911a_5p84_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = col_ctc_otm1911a_5p84_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = col_ctc_otm1911a_5p84_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = col_ctc_otm1911a_5p84_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &col_ctc_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &col_ctc_otm1911a_5p84_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = col_ctc_otm1911a_5p84_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(col_ctc_otm1911a_5p84_1080p_video_xcc_table);
+        }
+        break;
+    case COL_AUO_OTM1911A_5P84_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = col_auo_otm1911a_5p84_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = col_auo_otm1911a_5p84_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = col_auo_otm1911a_5p84_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = col_auo_otm1911a_5p84_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = col_auo_otm1911a_5p84_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = col_auo_otm1911a_5p84_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = col_auo_otm1911a_5p84_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = col_auo_otm1911a_5p84_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &col_auo_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &col_auo_otm1911a_5p84_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = col_auo_otm1911a_5p84_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(col_auo_otm1911a_5p84_1080p_video_xcc_table);
+        }
+        break;
+    case COL_TM_HX8399C_5P84_1080P_VIDEO_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = col_tm_hx8399c_5p84_1080p_video_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = col_tm_hx8399c_5p84_1080p_video_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = col_tm_hx8399c_5p84_1080p_video_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = col_tm_hx8399c_5p84_1080p_video_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = col_tm_hx8399c_5p84_1080p_video_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = col_tm_hx8399c_5p84_1080p_video_igm_lut_table_R;
+            pinfo->igm_lut_table_G = col_tm_hx8399c_5p84_1080p_video_igm_lut_table_G;
+            pinfo->igm_lut_table_B = col_tm_hx8399c_5p84_1080p_video_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &col_tm_hx8399c_5p84_1080p_video_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &col_tm_hx8399c_5p84_1080p_video_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_gmp_lut_table_low32bit);
+            pinfo->xcc_table = col_tm_hx8399c_5p84_1080p_video_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(col_tm_hx8399c_5p84_1080p_video_xcc_table);
+        }
+        break;
+    case COL_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_1_PANEL:
+        if (pinfo->acm_support == 1)
+        {
+            pinfo->acm_lut_hue_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_hue_table;
+            pinfo->acm_lut_hue_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_hue_table);
+            pinfo->acm_lut_sata_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_sata_table;
+            pinfo->acm_lut_sata_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_sata_table);
+            pinfo->acm_lut_satr_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr_table;
+            pinfo->acm_lut_satr_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr_table);
+            pinfo->acm_lut_satr0_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr0_table;
+            pinfo->acm_lut_satr0_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr0_table);
+            pinfo->acm_lut_satr1_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr1_table;
+            pinfo->acm_lut_satr1_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr1_table);
+            pinfo->acm_lut_satr2_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr2_table;
+            pinfo->acm_lut_satr2_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr2_table);
+            pinfo->acm_lut_satr3_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr3_table;
+            pinfo->acm_lut_satr3_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr3_table);
+            pinfo->acm_lut_satr4_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr4_table;
+            pinfo->acm_lut_satr4_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr4_table);
+            pinfo->acm_lut_satr5_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr5_table;
+            pinfo->acm_lut_satr5_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr5_table);
+            pinfo->acm_lut_satr6_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr6_table;
+            pinfo->acm_lut_satr6_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr6_table);
+            pinfo->acm_lut_satr7_table = col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr7_table;
+            pinfo->acm_lut_satr7_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_acm_lut_satr7_table);
+            pinfo->video_acm_lut_hue_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_hue_table;
+            pinfo->video_acm_lut_sata_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_sata_table;
+            pinfo->video_acm_lut_satr0_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr0_table;
+            pinfo->video_acm_lut_satr1_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr1_table;
+            pinfo->video_acm_lut_satr2_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr2_table;
+            pinfo->video_acm_lut_satr3_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr3_table;
+            pinfo->video_acm_lut_satr4_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr4_table;
+            pinfo->video_acm_lut_satr5_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr5_table;
+            pinfo->video_acm_lut_satr6_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr6_table;
+            pinfo->video_acm_lut_satr7_table = col_auo_otm1901a_5p2_1080p_video_default_1_video_acm_lut_satr7_table;
+        }
+        if (pinfo->gamma_support == 1)
+        {
+            pinfo->gamma_lut_table_R = col_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_R;
+            pinfo->gamma_lut_table_G = col_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_G;
+            pinfo->gamma_lut_table_B = col_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_B;
+            pinfo->gamma_lut_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_gamma_lut_table_R);
+            pinfo->igm_lut_table_R = col_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_R;
+            pinfo->igm_lut_table_G = col_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_G;
+            pinfo->igm_lut_table_B = col_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_B;
+            pinfo->igm_lut_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_igm_lut_table_R);
+            pinfo->gmp_lut_table_low32bit = &col_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_low32bit[0][0][0];
+            pinfo->gmp_lut_table_high4bit = &col_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_high4bit[0][0][0];
+            pinfo->gmp_lut_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_gmp_lut_table_low32bit);
+            pinfo->xcc_table = col_auo_otm1901a_5p2_1080p_video_default_1_xcc_table;
+            pinfo->xcc_table_len = ARRAY_SIZE(col_auo_otm1901a_5p2_1080p_video_default_1_xcc_table);
         }
         break;
     case DEFAULT_AUO_OTM1901A_5P2_1080P_VIDEO_DEFAULT_PANEL:

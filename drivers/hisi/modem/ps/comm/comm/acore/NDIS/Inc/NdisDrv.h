@@ -73,7 +73,7 @@ extern "C" {
 #define NDIS_VER_GET_INFO mdrv_ver_get_info
 
 /*mdrv_nv_readex*/
-#define NDIS_NV_READX NV_ReadEx
+#define NDIS_NV_READX mdrv_nv_readex
 
 /*DIAG_TraceReport*/
 

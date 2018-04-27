@@ -114,7 +114,7 @@ VOS_UINT32 atSetNVRDLenPara(VOS_UINT8 ucClientId)
     {
         usNVID = (VOS_UINT16)gastAtParaList[0].ulParaValue;
     }
-    ulRet = NV_GetLength(usNVID, (VOS_UINT32 *)&ulNVLen);
+    ulRet = TAF_ACORE_NV_GET_LENGTH(usNVID, &ulNVLen);
 	//vos_printf("\n usNVID=0x%x ulNVLen =0x%x\n",usNVID,ulNVLen);
     //vos_printf("\n nvim_GetItemLenById ulRet=0x%x \n",ulRet);
    // HAL_DIAG_SDM_FUN(EN_SDM_NVRD_GETNVLEN, ulRet, usNVID, ulNVLen);
@@ -170,7 +170,7 @@ VOS_UINT32 atSetNVRDExPara(VOS_UINT8 ucClientId)
     usOffset = (VOS_UINT16)gastAtParaList[1].ulParaValue;
     usRdLen = (VOS_UINT16)gastAtParaList[2].ulParaValue;
 
-    ulRet = NV_GetLength(usNVID, (VOS_UINT32 *)&ulNVLen);
+    ulRet = TAF_ACORE_NV_GET_LENGTH(usNVID, &ulNVLen);
 	//vos_printf("\n usNVID=0x%x ulNVLen =0x%x\n",usNVID,ulNVLen);
     //vos_printf("\n nvim_GetItemLenById ulRet=0x%x \n",ulRet);
 //    HAL_DIAG_SDM_FUN(EN_SDM_NVRD_GETNVLEN, ulRet, usNVID, ulNVLen);
@@ -196,7 +196,7 @@ VOS_UINT32 atSetNVRDExPara(VOS_UINT8 ucClientId)
         return AT_ERROR;
     }
 
-    ulRet = NVM_Read((VOS_UINT32)usNVID, (VOS_VOID*)pu8Data, ulNVLen);
+    ulRet = TAF_ACORE_NV_READ(MODEM_ID_0, (VOS_UINT32)usNVID, (VOS_VOID*)pu8Data, ulNVLen);
     //vos_printf("NVM_Read ulRet = 0x%x",ulRet);
     //HAL_DIAG_SDM_FUN(EN_SDM_NVRD_READNVITEM, ulRet, usNVID, ulNVLen);
 
@@ -230,21 +230,7 @@ VOS_UINT32 atSetNVRDExPara(VOS_UINT8 ucClientId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_QryLwclashPara
- 功能描述  : ^LWCLASH命令查询处理
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年8月23日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryLwclashPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32 ulRet = ERR_MSP_SUCCESS;
@@ -269,21 +255,7 @@ VOS_UINT32 AT_QryLwclashPara(VOS_UINT8 ucIndex)
     return AT_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryLcacellPara
- 功能描述  : ^LCACELL命令查询处理
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年6月11日
-    作    者   : y00171698
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryLcacellPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32 ulRet = ERR_MSP_SUCCESS;
@@ -389,7 +361,7 @@ VOS_UINT32 At_SetLFromConnToIdlePara(VOS_UINT8 ucIndex)
         return AT_CME_INCORRECT_PARAMETERS;
     }
 
-    if(NV_OK != NVM_Read(EN_NV_ID_SWITCH_PARA, &stDrxControlFlag,sizeof(LPS_SWITCH_PARA_STRU)))
+    if(NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0, EN_NV_ID_SWITCH_PARA, &stDrxControlFlag,sizeof(LPS_SWITCH_PARA_STRU)))
     {
         return AT_ERROR;
     }
@@ -424,7 +396,7 @@ VOS_UINT32 At_SetLWThresholdCfgPara(VOS_UINT8 ucIndex)
     stReq.stCtrl.ulPid = WUEPS_PID_AT;
     stReq.ulFlag = gastAtParaList[0].ulParaValue;
 
-    if(NV_OK != NVM_Read(EN_NV_ID_SWITCH_PARA, &stDrxControlFlag,sizeof(LPS_SWITCH_PARA_STRU)))
+    if(NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0, EN_NV_ID_SWITCH_PARA, &stDrxControlFlag,sizeof(LPS_SWITCH_PARA_STRU)))
     {
         return AT_ERROR;
     }
@@ -463,7 +435,7 @@ VOS_UINT32 AT_SetLFastDormPara(VOS_UINT8 ucIndex)
     stReq.ulFlag = gastAtParaList[0].ulParaValue;
     stReq.ulTimerLen = gastAtParaList[1].ulParaValue;
 
-    if(NV_OK != NVM_Read(EN_NV_ID_SWITCH_PARA, &stDrxControlFlag,sizeof(LPS_SWITCH_PARA_STRU)))
+    if(NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0, EN_NV_ID_SWITCH_PARA, &stDrxControlFlag,sizeof(LPS_SWITCH_PARA_STRU)))
     {
         return AT_ERROR;
     }

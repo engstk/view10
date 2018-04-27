@@ -46,6 +46,7 @@
  *
  */
 
+ 
 
 #ifndef __DIAG_CFG_H__
 #define __DIAG_CFG_H__
@@ -168,63 +169,6 @@ typedef enum
 /*****************************************************************************
    5 STRUCT
 *****************************************************************************/
-
-
-/*****************************************************************************
- 描述 : HSO连接UE设备
-ID   : DIAG_CMD_HOST_CONNECT
-REQ  : DIAG_CMD_HOST_CONNECT_REQ_STRU
-CNF  : DIAG_CMD_HOST_CONNECT_CNF_STRU
-*****************************************************************************/
-typedef struct
-{
-    VOS_UINT32 ulMajorMinorVersion; /* 主版本号.次版本号*/
-    VOS_UINT32 ulRevisionVersion;   /* 修正版本号*/
-    VOS_UINT32 ulBuildVersion;      /* 内部版本号*/
-} DIAG_CMD_UE_SOFT_VERSION_STRU;
-
-typedef struct
-{
-    VOS_UINT16 usVVerNo;           /* V部分*/
-    VOS_UINT16 usRVerNo;           /* R部分*/
-    VOS_UINT16 usCVerNo;           /* C部分*/
-    VOS_UINT16 usBVerNo;           /* B部分*/
-    VOS_UINT16 usSpcNo;            /* SPC部分*/
-    VOS_UINT16 usHardwareVerNo;    /* 硬件PCB号和印制板版本号*/
-    VOS_UINT32 ulProductNo;        /* 产品类型编号，即不同外设组合的硬件平台*/
-} DIAG_CMD_UE_BUILD_VER_STRU; /* 内部版本*/
-
-typedef struct
-{
-    /* 010: OM通道融合的版本        */
-    /* 110: OM融合GU未融合的版本    */
-    /* 100: OM完全融合的版本        */
-    VOS_UINT32  ulDrxControlFlag:1; /* DRX部分*/
-    VOS_UINT32  ulPortFlag      :1; /* OM Port flag 0:old,1:new */
-    VOS_UINT32  ulOmUnifyFlag   :1; /* OM */
-    VOS_UINT32  ulReserved      :29;
-}DIAG_CONTROLFLAG_STRU;
-
-typedef struct
-{
-    VOS_UINT32 ulAuid;          /* 原AUID*/
-    VOS_UINT32 ulSn;            /* HSO分发，插件命令管理*/
-
-    VOS_UINT32 ulRc;            /* 结果码*/
-    VOS_CHAR szImei[16];
-    DIAG_CMD_UE_SOFT_VERSION_STRU stUeSoftVersion;
-    DIAG_CMD_UE_BUILD_VER_STRU stBuildVersion;
-    VOS_UINT32 ulChipBaseAddr;
-    union
-    {
-        VOS_UINT32              UintValue;
-        DIAG_CONTROLFLAG_STRU   CtrlFlag;
-    } diag_cfg;/* B135新增，标示低功耗特性版本: 1:低功耗版本；0：正常版本；0xFFFFFFFF:MSP读取NV项失败，HSO会认为连接不成功并给出提示，要求重新进行连接*/
-    VOS_UINT32 ulLpdMode;
-    NV_ITEM_AGENT_FLAG_STRU stAgentFlag;
-    VOS_CHAR szProduct[64];
-} DIAG_CMD_HOST_CONNECT_CNF_STRU;
-
 /* 断开连接 */
 typedef struct
 {
@@ -232,7 +176,6 @@ typedef struct
     VOS_UINT32 ulSn;            /* HSO分发，插件命令管理*/
     VOS_UINT32 ulRc;            /* 结果码*/
 } DIAG_CMD_HOST_DISCONNECT_CNF_STRU;
-
 
 /* 获取单板信息 */
 typedef struct
@@ -440,7 +383,6 @@ extern VOS_UINT32 diag_CfgSetGlobalBitValue(VOS_UINT32* pstDiagGlobal,ENUM_DIAG_
 extern VOS_UINT32 diag_CfgSetLayerSwt(DIAG_CMD_LOG_CAT_LAYER_REQ_STRU* pstLayerReq, VOS_UINT32 ulCfgSize);
 extern VOS_UINT32 diag_CfgSetMsgSwt(DIAG_CMD_LOG_CAT_CFG_REQ_STRU *pstCatCfgReq,VOS_UINT32 ulCfgSize);
 extern VOS_UINT32 diag_CfgSetPrintSwt(DIAG_CMD_LOG_CAT_PRINT_REQ_STRU* pstPrintReq, VOS_UINT32 ulCfgSize);
-extern VOS_UINT32 diag_ConnProc(VOS_UINT8* pstReq);
 extern VOS_UINT32 diag_GetTimeStampInitValue(VOS_UINT8* pstReq);
 extern VOS_UINT32 diag_GetModemNum(VOS_UINT8* pstReq);
 extern VOS_UINT32 diag_GetPidTable(VOS_UINT8* pstReq);
@@ -454,7 +396,7 @@ extern VOS_UINT32 diag_UsrPlaneCfgProc(VOS_UINT8* pstReq);
 extern VOS_UINT32 diag_AirCfgProc (VOS_UINT8* pstReq);
 extern VOS_VOID diag_AppAgentTimeOutProcEntry(VOS_VOID* pstPara);
 extern VOS_VOID diag_BbpEnableSocpChan(VOS_VOID);
-extern VOS_VOID diag_GetModemInfo(DIAG_FRAME_INFO_STRU *pstDiagHead);
+
 
 
 #if (VOS_OS_VER == VOS_WIN32)

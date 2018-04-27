@@ -14,7 +14,7 @@
 #define _HW_RSCAN_DYNAMIC_H_
 
 #include <chipset_common/security/root_scan.h>
-#include <linux/fs.h>	/* for reading "/rootscan.conf" */
+#include <linux/fs.h>	/* for reading "/vendor/etc/rootscan.conf" */
 #include <linux/kernel.h>
 #include <linux/mutex.h>
 #include <linux/power_supply.h>
@@ -23,7 +23,7 @@
 #include <linux/string.h>
 #include <linux/time.h>
 #include <linux/types.h>
-#include <linux/uaccess.h>	/* for reading "/rootscan.conf" */
+#include <linux/uaccess.h>	/* for reading "/vendor/etc/rootscan.conf" */
 #include "kcode.h"
 #include "rproc.h"
 #include "sescan.h"
@@ -32,7 +32,7 @@
 #include "hw_rscan_data_uploader.h"
 
 #define BATTERY_NAME "Battery"
-#define FILE_RPROC_WHITE_LIST "/rootscan.conf"
+#define FILE_RPROC_WHITE_LIST "/vendor/etc/rootscan.conf"
 
 int rscan_dynamic_init(void);
 

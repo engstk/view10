@@ -51,7 +51,9 @@ volatile bool g_wifi_firstwake = FALSE;
         ((unsigned char*)&addr)[1], \
         ((unsigned char*)&addr)[2], \
         ((unsigned char*)&addr)[3]
-
+#define IPADDR_IP_ANONYMOUS(addr) \
+        ((unsigned char*)&addr)[0], \
+        ((unsigned char*)&addr)[3]
 #define FILTER_ADDR(data) \
 		(((data) >= 1) && ((data) <= 223) && ((data) != 127))
 
@@ -356,7 +358,7 @@ static void parse_ipv4_packet(struct sk_buff *skb)
 	iph = (struct iphdr *)skb->data;
 	iphdr_len = iph->ihl*4;
 
-	HW_PRINT_HI("src ip:%d.%d.%d.%d, dst ip:%d.%d.%d.%d\n", IPADDR(iph->saddr), IPADDR(iph->daddr));
+	HW_PRINT_HI("src ip:%d.**.**.%d, dst ip:%d.**.**.%d\n", IPADDR_IP_ANONYMOUS(iph->saddr), IPADDR_IP_ANONYMOUS(iph->daddr));
 #ifdef CONFIG_HUAWEI_DUBAI
 	if (FILTER_ADDR(((unsigned char*)&iph->saddr)[0]) &&
 		FILTER_ADDR(((unsigned char*)&iph->daddr)[0])) {
@@ -509,13 +511,31 @@ static void parse_ipv6_packet(struct sk_buff *skb)
 	uint16_t src_port;
 	uint16_t des_port;
 	uint8_t *payload;
+	uint8_t icmpv6_type;
 
 	nh = (struct ipv6hdr *)skb->data;
-	HW_PRINT_HI("version: %d, payload length: %d, nh->nexthdr: %d. \n", nh->version, ntohs(nh->payload_len), nh->nexthdr);
+	HW_PRINT_HI("ipv6 version: %d, payload length: %d, nh->nexthdr: %d. \n", nh->version, ntohs(nh->payload_len), nh->nexthdr);
 	HW_PRINT_HI("ipv6 src addr: ");
 	dump_ipv6_addr((unsigned short *)&(nh->saddr));
 	HW_PRINT_HI("ipv6 dst addr: ");
 	dump_ipv6_addr((unsigned short *)&(nh->daddr));
+
+	/*print TCP/UDP port number and ICMPv6 type*/
+	payload = (uint8_t *)nh + sizeof(struct ipv6hdr);
+	if(payload != NULL)
+	{
+		if((nh->nexthdr == NEXTHDR_TCP) || (nh->nexthdr == NEXTHDR_UDP))
+		{
+			src_port = *((uint16_t *)payload);
+			des_port = *((uint16_t *)(payload + 2));
+			HW_PRINT_HI("ipv6 src_port: %d, dst_port: %d \n", src_port, des_port);
+		}
+		if(nh->nexthdr == NEXTHDR_ICMP)
+		{
+			icmpv6_type = *((uint8_t *)payload);
+			HW_PRINT_HI("ipv6 icmpv6 type: %d \n", icmpv6_type);
+		}
+	}
 
     /*
 	*This code may cause crash, so it should be closed  temporarily
@@ -809,15 +829,15 @@ static void hw_parse_special_dhcp_packet(uint8_t *buff, uint32_t buflen, uint8_t
     if (type == DHCP_DISCOVER) {
         HW_PRINT_HI("%s: type: DHCP_DISCOVER\n", __func__);
     } else if (type == DHCP_OFFER) {
-        HW_PRINT_HI("%s: type: DHCP_OFFER, ip:%d.%d.%d.%d srvip:%d.%d.%d.%d MAC:" HWMACSTR "\n",
-                __func__, IPADDR(msg->yiaddr), IPADDR(msg->siaddr), HWMAC2STR(dst));
+        HW_PRINT_HI("%s: type: DHCP_OFFER, ip:%d.**.**.%d srvip:%d.**.**.%d MAC:" HWMACSTR "\n",
+                __func__, IPADDR_IP_ANONYMOUS(msg->yiaddr), IPADDR_IP_ANONYMOUS(msg->siaddr), HWMAC2STR(dst));
     } else if (type == DHCP_REQUEST) {
         hw_dhcp_get_option_uint32(&req_ip, msg->options, len, DHO_IPADDRESS);
         hw_dhcp_get_option_uint32(&req_srv, msg->options, len, DHO_SERVERID);
         req_ip = ntoh32(req_ip);
         req_srv = ntoh32(req_srv);
-        HW_PRINT_HI("%s: type: DHCP_REQUEST, ip:%d.%d.%d.%d srvip:%d.%d.%d.%d\n",
-                __func__, IPADDR(req_ip), IPADDR(req_srv));
+        HW_PRINT_HI("%s: type: DHCP_REQUEST, ip:%d.**.**.%d srvip:%d.**.**.%d\n",
+                __func__, IPADDR_IP_ANONYMOUS(req_ip), IPADDR_IP_ANONYMOUS(req_srv));
     } else if (type == DHCP_ACK) {
         HW_PRINT_HI("%s: type: DHCP_ACK MAC:" HWMACSTR "\n", __func__, HWMAC2STR(dst));
     } else if (type == DHCP_NAK) {
@@ -1794,6 +1814,120 @@ void hw_dhd_log(const char *fmt, ...) {
     }
     va_end(ap);
     HW_PRINT_HI("BCMDHD: %s \n", dhd_log_buf);
+}
+#endif
+#ifdef HW_OTP_CHECK
+static void hw_check_otp_data(char *src, char *dst, int check_len, otp_check_info_t *pcheckinfo) {
+    int i;
+    if (NULL == src || NULL == dst || NULL == pcheckinfo) {
+        return;
+    }
+
+    memset(pcheckinfo, 0, sizeof(otp_check_info_t));
+    pcheckinfo->offset_start = -1;
+    for (i = 0; i < check_len; i++) {
+        if (*(src + i) != *(dst + i)) {
+            if (pcheckinfo->offset_start == -1) {
+                pcheckinfo->offset_start = i;
+            }
+            pcheckinfo->offset_end = i;
+            pcheckinfo->error_sum += 1;
+        }
+    }
+}
+
+static int hw_do_otpimage_cmd(dhd_pub_t *dhd, char *iovbuf, int bufsize) {
+    int ret = -1;
+
+    if (NULL == dhd || NULL == iovbuf || bufsize < WLC_IOCTL_SMLEN) {
+        HW_PRINT_HI("failed to get %s invalid params\n", HW_OTP_CMD);
+        return ret;
+    }
+
+    bcm_mkiovar(HW_OTP_CMD, NULL, 0, iovbuf, bufsize);
+
+    if ((ret = dhd_wl_ioctl_cmd(dhd, WLC_GET_VAR, iovbuf, bufsize, FALSE, 0)) < 0) {
+        HW_PRINT_HI("failed to get %s %d\n", HW_OTP_CMD, ret);
+    }
+
+    return ret;
+}
+
+void hw_check_chip_otp(dhd_pub_t *dhd) {
+    int ret = -1;
+    u16 crcvalue, readcrcvalue = 0;
+    char buf_read[OTP_BUF_SIZE] = {0};
+    char buf_chip[OTP_BUF_SIZE] = {0};
+
+    struct file* filp = NULL;
+    mm_segment_t old_fs;
+    otp_check_info_t checkinfo;
+
+    HW_PRINT_HI("hw_check_chip_otp enter\n");
+    if ((ret = hw_do_otpimage_cmd(dhd, buf_chip, SROM_MAX))) {
+        return;
+    }
+
+    filp = filp_open(HW_OTP_FILENAME, O_CREAT | O_RDWR, 0664);
+    if(IS_ERR(filp)) {
+        HW_PRINT_HI("wifi otp file error: %ld\n", PTR_ERR(filp)); //record error code
+        return;
+    }
+
+    memset(&checkinfo, 0, sizeof(checkinfo));
+    old_fs = get_fs();
+    set_fs(KERNEL_DS);
+
+    filp->f_pos = 0;
+    ret = vfs_read(filp, buf_read, sizeof(buf_read), &filp->f_pos);
+
+    if (ret == 0) {
+        //calculate crc16
+        crcvalue = crc16(0, buf_chip, SROM_MAX);
+        memcpy(&buf_chip[SROM_MAX], &crcvalue, CRC_16_SIZE);
+        filp->f_pos = 0;
+        vfs_write(filp, buf_chip, sizeof(buf_chip), &filp->f_pos);
+        HW_PRINT_HI("read length 0, write to filesystem\n");
+    } else if (ret == OTP_BUF_SIZE) {
+        memcpy(&readcrcvalue, &buf_read[SROM_MAX], CRC_16_SIZE);
+        crcvalue = crc16(0, buf_read, SROM_MAX);
+        if (crcvalue == readcrcvalue) {
+            hw_check_otp_data(buf_read, buf_chip, SROM_MAX, &checkinfo);
+        } else {
+            HW_PRINT_HI("invalid crc value, dont check\n");
+        }
+    } else {
+        //dont check the otp file
+        HW_PRINT_HI("read invalid length from file: %d\n", ret);
+    }
+
+    set_fs(old_fs);
+    filp_close(filp, NULL);
+
+    if (checkinfo.error_sum > 0) {
+#ifdef HW_WIFI_DMD_LOG
+        hw_wifi_dsm_client_notify(DSM_WIFI_OTP_CHECK,
+                "start pos:%d,end pos:%d,total num:%d\n",
+                checkinfo.offset_start, checkinfo.offset_end, checkinfo.error_sum);
+#endif
+    } else {
+        HW_PRINT_HI("start pos:%d,end pos:%d,total num:%d\n",
+                checkinfo.offset_start, checkinfo.offset_end, checkinfo.error_sum);
+    }
+}
+#endif
+#ifdef HW_SOFTAP_BUGFIX
+void hw_reset_beacon_interval(struct net_device *ndev) {
+    struct wireless_dev *wdev = NULL;
+    if (NULL == ndev) {
+        HW_PRINT_HI("interface is null, skip reset beacon interval\n");
+        return;
+    }
+    wdev = ndev_to_wdev(ndev);
+    if (NULL != wdev && NL80211_IFTYPE_AP == wdev->iftype) {
+        HW_PRINT_HI("reset beacon_interval\n");
+        wdev->beacon_interval = 0;
+    }
 }
 #endif
 ////end of file

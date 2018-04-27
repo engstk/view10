@@ -27,6 +27,9 @@
 #include <media/huawei/hjpeg_cfg.h>
 
 extern void hjpeg_config_cvdr(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config);
+extern int is_hjpeg_qos_update(void);
+extern int is_hjpeg_wr_port_addr_update(void);
+extern int is_hjpeg_iova_update(void);
 
 #define EXP_PIX                              1
 #define ACCESS_LIMITER                       7
@@ -35,6 +38,7 @@ extern void hjpeg_config_cvdr(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config);
 #define ACCESS_LIMITER_VP_WR_0                      0x2
 #define ACCESS_LIMITER_NR_RD_0                      0x4
 #define ALLOCATED_DU_NR_RD_0                        0x7
+#define ALLOCATED_DU_NR_RD_0_UPDATE                 0x6
 
 #define CVDR_AXI_JPEG_CVDR_CFG                      0x0
 #define AXI_JPEG_CVDR_CFG_max_axiwrite_id_OFFSET    24
@@ -49,6 +53,7 @@ extern void hjpeg_config_cvdr(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config);
 #define CVDR_AXI_JPEG_VP_WR_AXI_LINE_0_OFFSET       0x24
 #define CVDR_AXI_JPEG_VP_WR_IF_CFG_0_OFFSET         0x28
 #define CVDR_AXI_JPEG_LIMITER_VP_WR_0_OFFSET        0x400
+#define CVDR_AXI_JPEG_LIMITER_VP_WR_25_OFFSET       0x894
 #define CVDR_AXI_JPEG_NR_RD_CFG_0_OFFSET            0xA00
 #define CVDR_AXI_JPEG_NR_RD_DEBUG_0_OFFSET          0xA04
 #define CVDR_AXI_JPEG_LIMITER_NR_RD_0_OFFSET        0xA08
@@ -58,13 +63,21 @@ extern void hjpeg_config_cvdr(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config);
 #define CVDR_AXI_JPEG_DEBUG_3_OFFSET                0xB0C
 #define CVDR_AXI_JPEG_VP_WR_DEBUG_0_OFFSET          0xF00
 
-#define CVDR_SRT_VP_WR_CFG_25_OFFSET         0x1AC
-#define CVDR_SRT_VP_WR_AXI_FS_25_OFFSET      0x1B0
-#define CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET    0x1B4
-#define CVDR_SRT_VP_WR_IF_CFG_25_OFFSET      0x1B8
-#define CVDR_SRT_NR_RD_CFG_1_OFFSET          0xA10
-#define CVDR_SRT_LIMITER_NR_RD_1_OFFSET      0xA18
-#define CVDR_SRT_LIMITER_VP_WR_25_OFFSET     0x464
+#define CVDR_SRT_VP_WR_CFG_25_OFFSET                0x1AC
+#define CVDR_SRT_VP_WR_AXI_FS_25_OFFSET             0x1B0
+#define CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET           0x1B4
+#define CVDR_SRT_VP_WR_IF_CFG_25_OFFSET             0x1B8
+
+#define CVDR_SRT_VP_WR_CFG_25_OFFSET_UPDATE         0x1C0
+#define CVDR_SRT_VP_WR_AXI_FS_25_OFFSET_UPDATE      0x1C4
+#define CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET_UPDATE    0x1C8
+#define CVDR_SRT_VP_WR_IF_CFG_25_OFFSET_UPDATE      0x1CC
+
+#define CVDR_SRT_NR_RD_CFG_1_OFFSET                 0xA10
+#define CVDR_SRT_LIMITER_NR_RD_1_OFFSET             0xA18
+#define CVDR_SRT_LIMITER_VP_WR_25_OFFSET            0x464
+#define CVDR_AXI_JPEG_NR_RD_CFG_4                   0x1570
+#define CVDR_AXI_JPEG_LIMITER_NR_RD_4               0x1578
 
 typedef enum _cvdr_pix_fmt_e
 {
@@ -90,6 +103,7 @@ typedef enum _cvdr_rd_port
 {
     RD_PORT_0  = 0,
     RD_PORT_1  = 1,
+    RD_PORT_4  = 4,
 }cvdr_rd_port;
 
 typedef enum _cvdr_wr_port
@@ -193,6 +207,24 @@ typedef union
     uint32_t    reg32;
 
 } U_VP_WR_CFG;
+
+typedef union
+{
+    /* Define the struct bits */
+    struct
+    {
+        uint32_t    vpwr_pixel_format     : 4   ; /* [3..0]  */
+        uint32_t    vpwr_pixel_expansion  : 1   ; /* [4]  */
+        uint32_t    reserved_0            : 4   ; /* [8..5]  */
+        uint32_t    vpwr_access_limiter   : 4   ; /* [12..9]  */
+        uint32_t    vpwr_last_page        : 17  ; /* [29..13]  */
+        uint32_t    reserved_1            : 2   ; /* [31..30]  */
+    } bits;
+
+    /* Define an unsigned member */
+    uint32_t    reg32;
+
+} U_VP_WR_CFG_UPDATE;
 
 typedef union
 {

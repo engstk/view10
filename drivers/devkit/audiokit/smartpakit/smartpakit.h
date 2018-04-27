@@ -246,9 +246,12 @@ typedef struct smartpakit_priv {
 	unsigned int pa_num;
 	unsigned int i2c_num; // load successful i2c module
 
+	int gpio_of_hw_reset[SMARTPAKIT_PA_ID_MAX];
+	int gpio_of_irq[SMARTPAKIT_PA_ID_MAX];
 	// for simple pa(not smart pa) and smartpa(with dsp, plugin)
 	unsigned int chip_vendor;
 	const char *chip_model;
+	char chip_model_list[SMARTPAKIT_PA_ID_MAX][SMARTPAKIT_NAME_MAX];
 	unsigned int switch_num;
 	smartpakit_switch_node_t *switch_ctl;
 
@@ -280,6 +283,7 @@ int  smartpakit_deregister_i2c_device(smartpakit_i2c_priv_t *i2c_priv);
 void smartpakit_register_ioctl_ops(smartpakit_i2c_ioctl_ops_t *ops);
 int  smartpakit_parse_params(smartpakit_pa_ctl_sequence_t *sequence, void __user *arg, int compat_mode);
 int  smartpakit_set_poweron_regs(smartpakit_priv_t *pakit_priv, smartpakit_pa_ctl_sequence_t *sequence);
+bool smartpakit_is_gpio_request(int gpio, bool is_irq);
 
 #endif // __SMARTPAKIT_H__
 

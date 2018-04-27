@@ -98,15 +98,15 @@ static int adc_dev_notifier(struct notifier_block *nb, unsigned long len, void *
 			if ((_msg[1] & ADC_DATA_MASK) == hisi_adc_dev->info.channel) {
 				hisi_adc_dev->info.value = ADC_DATA_BIT_R(_msg[1], 16);
 				is_complete = 0;
+				pr_debug("%s: value msg[1][0x%x]\n", MODULE_NAME, _msg[1]);
 				goto exit;
 			}
 		} else {
 			is_complete = 0;
 			hisi_adc_dev->info.value = ADC_RESULT_ERR;
 		}
+		pr_err("%s: error value msg[1][0x%x]\n", MODULE_NAME, _msg[1]);
 	}
-
-	pr_err("%s: error value msg[1][0x%x]\n", MODULE_NAME, _msg[1]);
 
 exit:
 	if (!is_complete)

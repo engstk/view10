@@ -113,6 +113,11 @@ static void setup_sock_sync_request_timer(struct sock *sk, bool retry)
  */
 static int request_sock_sync(struct sock *sk)
 {
+	if (IS_ERR_OR_NULL(sk) ||IS_ERR_OR_NULL(sk->bastet)) {
+		BASTET_LOGE("invalid parameter");
+		return -EFAULT;
+	}
+
 	int err;
 	struct bst_sock_comm_prop prop;
 
@@ -128,6 +133,11 @@ static int request_sock_sync(struct sock *sk)
 
 static bool do_sock_send_prepare(struct sock *sk)
 {
+	if (IS_ERR_OR_NULL(sk) ||IS_ERR_OR_NULL(sk->bastet)) {
+		BASTET_LOGE("invalid parameter");
+		return false;
+	}
+
 	u8 sync_state = sk->bastet->bastet_sock_state;
 
 	switch (sync_state) {
@@ -165,6 +175,11 @@ bool bastet_sock_send_prepare(struct sock *sk)
 static inline bool bastet_rcvqueues_full(struct sock *sk,
 	const struct sk_buff *skb)
 {
+	if (IS_ERR_OR_NULL(skb) || IS_ERR_OR_NULL(sk) ||IS_ERR_OR_NULL(sk->bastet)) {
+		BASTET_LOGE("invalid parameter");
+		return false;
+	}
+
 	struct bastet_sock *bsk = sk->bastet;
 
 	return bsk->recv_len + skb->truesize > sk->sk_rcvbuf;
@@ -1131,6 +1146,11 @@ out_put:
  */
 void bastet_sock_release(struct sock *sk)
 {
+	if (IS_ERR_OR_NULL(sk)) {
+		BASTET_LOGE("invalid parameter");
+		return;
+	}
+
 	struct bst_close_sock_prop prop;
 	struct bastet_sock *bsk = sk->bastet;
 

@@ -46,16 +46,7 @@
  *
  */
 
-/************************************************************************
-  Copyright    : 2005-2007, Huawei Tech. Co., Ltd.
-  File name    : UsimmBase.c
-  Author       : zhuli 00100318
-  Version      : v00R002
-  Date         : 2008-5-15
-  Description  : 该C文件给出了---Base模块实现
-  Function List:
-  History      :
-************************************************************************/
+
 #include "pamappom.h"
 #include "omprivate.h"
 #include "NVIM_Interface.h"
@@ -77,18 +68,7 @@ OM_RECORD_BUF_STRU                      g_astAcpuRecordInfo[VOS_EXC_DUMP_MEM_NUM
 VOS_UINT32                              g_ulAcpuOmFilterFlag;
 
 
-/*****************************************************************************
- Prototype       : OM_RecordInfoEnd
- Description     : A核保留桩函数
- Input           : ulNumer -- 任务号
- Output          : None
- Return Value    : VOS_VOID
 
- History         : ---
-    Date         : 2012-07-09
-    Author       : s00207770
-    Modification : Created function
- *****************************************************************************/
 VOS_VOID OM_RecordInfoEnd(VOS_EXC_DUMP_MEM_NUM_ENUM_UINT32 enNumber)
 {
     VOS_UINT32 *pulBuf;
@@ -116,21 +96,7 @@ VOS_VOID OM_RecordInfoEnd(VOS_EXC_DUMP_MEM_NUM_ENUM_UINT32 enNumber)
     return;
 }
 
-/*****************************************************************************
- Prototype       : OM_RecordInfoStart
- Description     : A核保留桩函数
- Input           : ulNumer -- 任务号
-                   ulSendPid -- 发送PID
-                   ulRcvPid -- 接收PID
-                   ulMsgName -- 消息名称
- Output          : None
- Return Value    : VOS_VOID
 
- History         : ---
-    Date         : 2012-07-09
-    Author       : s00702770
-    Modification : Created function
- *****************************************************************************/
 VOS_VOID OM_RecordInfoStart(VOS_EXC_DUMP_MEM_NUM_ENUM_UINT32 enNumber, VOS_UINT32 ulSendPid, VOS_UINT32 ulRcvPid, VOS_UINT32 ulMsgName)
 {
     OM_RECORD_INFO_STRU     stRecordInfo;
@@ -154,7 +120,7 @@ VOS_VOID OM_RecordInfoStart(VOS_EXC_DUMP_MEM_NUM_ENUM_UINT32 enNumber, VOS_UINT3
     stRecordInfo.ulSliceEnd     = 0;
 
     PAM_MEM_CPY_S((g_astAcpuRecordInfo[enNumber].pucBuf + g_astAcpuRecordInfo[enNumber].ulLen),
-                  sizeof(OM_RECORD_INFO_STRU),
+                  (VOS_TASK_DUMP_INFO_SIZE - g_astAcpuRecordInfo[enNumber].ulLen),
                   &stRecordInfo,
                   sizeof(OM_RECORD_INFO_STRU));
 
@@ -163,18 +129,7 @@ VOS_VOID OM_RecordInfoStart(VOS_EXC_DUMP_MEM_NUM_ENUM_UINT32 enNumber, VOS_UINT3
     return;
 }
 
-/*****************************************************************************
- Prototype       : OM_RecordMemInit
- Description     : 可谓可测空间分配
- Input           : None
- Output          : None
- Return Value    : VOS_VOID
 
- History         : ---
-    Date         : 2012-06-28
-    Author       : j00168360
-    Modification : Created function
- *****************************************************************************/
 VOS_VOID OM_RecordMemInit(VOS_VOID)
 {
    VOS_UINT32 i;
@@ -267,21 +222,7 @@ VOS_VOID PAMOM_QuereyPidInfoMsgProc(MsgBlock* pMsg)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PAM_OM_AcpuPihToAtMsgFilter
- 功能描述  : 过滤pih到at 消息的函数 CGLA CRSM CRLA
- 输入参数  : pstMsg -- 消息内容
- 输出参数  : NONE
- 返 回 值  : VOS_TRUE :表示这个消息被过滤掉了，不需要上报给OM
-             VOS_FALSE:表示这个消息需要上报OM
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年08月29日
-    作    者   : z00316370
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 PAM_OM_AcpuPihToAtMsgFilter(
     const VOS_VOID                      *pMsg
 )
@@ -316,21 +257,7 @@ VOS_UINT32 PAM_OM_AcpuPihToAtMsgFilter(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : PAM_OM_AcpuAtToPihMsgFilter
- 功能描述  : 过滤at到pih 消息的函数 CGLA CRSM CRLA
- 输入参数  : pstMsg -- 消息内容
- 输出参数  : NONE
- 返 回 值  : VOS_TRUE :表示这个消息被过滤掉了，不需要上报给OM
-             VOS_FALSE:表示这个消息需要上报OM
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年08月29日
-    作    者   : z00316370
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 PAM_OM_AcpuAtToPihMsgFilter(
     const VOS_VOID                      *pMsg
 )
@@ -344,6 +271,7 @@ VOS_UINT32 PAM_OM_AcpuAtToPihMsgFilter(
         case OM_SI_PIH_CRSM_SET_REQ:
         case OM_SI_PIH_CRLA_SET_REQ:
         case OM_SI_PIH_CGLA_SET_REQ:
+        case OM_SI_PIH_SILENT_PININFO_SET_REQ:
         case OM_SI_PIH_GACCESS_REQ:
         case OM_SI_PIH_ISDB_ACCESS_REQ:
         case OM_SI_PIH_PRIVATECGLA_SET_REQ:
@@ -359,21 +287,7 @@ VOS_UINT32 PAM_OM_AcpuAtToPihMsgFilter(
     return VOS_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : PAM_OM_AcpuLayerMsgFilterOptProc
- 功能描述  : 过滤PAM中的敏感信息
- 输入参数  : const VOID *pMsg:消息指针
- 输出参数  : 无
- 返 回 值  : VOS_UINT32:
-                返回VOS_TRUE:  表示该消息需要进行过滤
-                返回VOS_FALSE: 表示该消息无需进行过滤
- 调用函数  :
- 被调函数  :
- 修改历史      :
-  1.日    期   : 2015年10月28日
-    作    者   : zhuli
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 VOS_UINT32 PAM_OM_AcpuLayerMsgFilterOptProc(
     const VOS_VOID                      *pMsg
 )
@@ -415,20 +329,7 @@ VOS_UINT32 PAM_OM_AcpuLayerMsgFilterOptProc(
     return VOS_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : PAM_OM_LayerMsgFilter
- 功能描述  : PAM OM消息过滤函数
- 输入参数  : NONE
- 输出参数  : NONE
- 返 回 值  : NA
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年04月06日
-    作    者   : z00316370
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID * PAM_OM_LayerMsgFilter(
     struct MsgCB                       *pMsg
 )
@@ -442,20 +343,7 @@ VOS_VOID * PAM_OM_LayerMsgFilter(
 
 }
 
-/*****************************************************************************
- 函 数 名  : PAM_OM_LayerMsgReplaceCBReg
- 功能描述  : PAM OM为各pid注册过滤函数
- 输入参数  : NONE
- 输出参数  : NONE
- 返 回 值  : NA
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年04月06日
-    作    者   : z00316370
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID PAM_OM_LayerMsgReplaceCBReg(VOS_VOID)
 {
     PS_OM_LayerMsgReplaceCBReg(WUEPS_PID_AT, PAM_OM_LayerMsgFilter);
@@ -543,7 +431,6 @@ VOS_UINT32 PAMOM_AcpuInit(VOS_VOID)
 
     PAMOM_QuereyPidInfo();
 
-
     g_ulAcpuOmFilterFlag = VOS_TRUE;
 
     return VOS_OK;
@@ -624,18 +511,7 @@ VOS_UINT32 PAMOM_APP_FID_Init(enum VOS_INIT_PHASE_DEFINE ip)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_OSAEvent
- 功能描述  : 上报OSA的可维可测消息
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史      :
-  1.日    期   : 2013年7月27日
-    作    者   : x51137
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID OM_OSAEvent(VOS_VOID *pData, VOS_UINT32 ulLength)
 {
     DIAG_EVENT_IND_STRU                 stEventInd;

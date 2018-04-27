@@ -40,7 +40,6 @@ struct slimbus_dai_data {
     struct mutex                    lock;
     int                             playback_count;
     int                             capture_count;
-    
 };
 
 static int slimbus_dai_startup(struct snd_pcm_substream *substream,
@@ -60,7 +59,7 @@ static int slimbus_dai_hw_params(struct snd_pcm_substream *substream,
                 struct snd_soc_dai *dai)
 {
     int ret = 0;
-    
+
     return ret;
 }
 
@@ -68,7 +67,7 @@ static  int slimbus_dai_trigger(struct snd_pcm_substream *substream, int cmd,
                 struct snd_soc_dai *dai)
 {
     int ret = 0;
-    
+
     return ret;
 }
 
@@ -76,7 +75,7 @@ static int slimbus_dai_hw_free(struct snd_pcm_substream *substream,
                 struct snd_soc_dai *dai)
 {
     int ret = 0;
-    
+
     return ret;
 }
 
@@ -130,20 +129,20 @@ static int slimbus_dai_module_probe(struct platform_device *pdev)
     struct device *dev = &pdev->dev;
     struct slimbus_dai_data *pdata = NULL;
     int ret = 0;
-        
+
     pr_info("[%s:%d] slimbus_dai probe!\n", __FUNCTION__, __LINE__);
     pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
     if (NULL == pdata){
         dev_err(dev, "cannot allocate hi6401 codec platform data\n");
         return -ENOMEM;
     }
-    
+
     mutex_init(&pdata->lock);
-    
+
     platform_set_drvdata(pdev, pdata);
-    
+
     dev_set_name(dev, "slimbus-dai");
-    
+
     pr_info("slimbus %s\n",dev_name(dev));
     ret = snd_soc_register_component(&pdev->dev, &slimbus_dai_component,
                       &slimbus_dai, 1);
@@ -156,10 +155,10 @@ static int slimbus_dai_module_remove(struct platform_device *pdev)
     struct device *dev = &pdev->dev;
     struct slimbus_dai_data *pdata = platform_get_drvdata(pdev);
 
-    devm_kfree(dev, pdata);
-    
     mutex_destroy(&pdata->lock);
-    
+
+    devm_kfree(dev, pdata);
+
     return 0;
 }
 

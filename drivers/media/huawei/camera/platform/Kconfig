@@ -1,0 +1,657 @@
+comment "Huawei Sensor"
+
+source "drivers/media/huawei/camera/sensor/vcm/Kconfig"
+source "drivers/media/huawei/camera/sensor/flash/Kconfig"
+source "drivers/media/huawei/camera/sensor/ois/Kconfig"
+
+config HUAWEI_CAMERA_USE_IMX230
+	bool "imx230"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX298
+	bool "imx298"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX298HYBIRD
+	bool "imx298hybird"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX179
+	bool "imx179"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX286DUAL
+	bool "imx286dual"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX286HYBIRD
+	bool "imx286hybird"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX386HYBIRD
+	bool "imx386hybird"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX380HYBRID
+    bool "imx380hybrid"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219
+	bool "imx219"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI843
+	bool "hi843"
+    default n
+
+config HUAWEI_CAMERA_USE_OV2281
+	bool "ov2281"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX486HYBIRD
+    bool "imx486hybird"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX319
+    bool "imx319"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX318
+    bool "imx318"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV13855
+    bool "ov13855"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI1333
+    bool "hi1333"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX258
+    bool "imx258"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16B10HYBIRD
+    bool "ov16b10hybird"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX498HYBIRD
+    bool "imx498hybird"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX318HYBIRD
+    bool "imx318hybird"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX600HYBRID
+    bool "imx600hybrid"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV13A40
+    bool "ov13a40"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX319_COL
+    bool "imx319_col"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16B10HYBIRD_COL
+    bool "ov16b10hybird_col"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX498HYBIRD_COL
+    bool "imx498hybird_col"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX576
+    bool "imx576"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX576_COL
+    bool "imx576_col"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16B10OV24AHYBIRD_COL
+    bool "ov16b10ov24ahybird_col"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX498IMX550HYBIRD_COL
+    bool "imx498imx550hybird_col"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV20880
+    bool "ov20880"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259B
+	bool "hi259b"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375
+	bool "gc2375"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX214
+	bool "imx214"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219BND
+	bool "imx219BND"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219FIG
+    bool "imx219FIG"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219FLA
+    bool "imx219FLA"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8856
+	bool "ov8856"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8856BND
+	bool "ov8856BND"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8856FIG
+    bool "ov8856FIG"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8856FLA
+    bool "ov8856FLA"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375BND
+	bool "gc2375BND"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375FIG
+    bool "gc2375FIG"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375RNE
+    bool "gc2375RNE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375RNEFRONT
+    bool "gc2375RNEFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259BND
+        bool "hi259BND"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259FIG
+    bool "hi259FIG"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259RNE
+    bool "hi259RNE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259RNEFRONT
+    bool "hi259RNEFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI843BND
+	bool "hi843BND"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI843FIG
+    bool "hi843FIG"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI843FLA
+    bool "hi843FLA"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX386E3
+	bool "imx386E3"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV12870E3
+        bool "ov12870E3"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV12A10
+        bool "ov12a10"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX486
+	bool "imx486"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX486PIC
+        bool "imx486PIC"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV12A10PIC
+        bool "ov12a10PIC"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV12A10HYBIRD
+        bool "ov12a10hybird"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV20880BAC
+        bool "ov20880BAC"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX376
+        bool "imx376"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX376BAC
+        bool "imx376BAC"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8858
+        bool "ov8858"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219HDN
+        bool "imx219HDN"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219HDN_BACK
+        bool "imx219HDN_BACK"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16B10BND
+    bool "ov16b10BND"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI846BACH2_BACK
+        bool "hi846BACH2_BACK"
+    default n 
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI846BACH2_FRONT
+        bool "hi846BACH2_FRONT"
+    default n 
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16B10RNE
+    bool "ov16b10RNE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX298RNE
+    bool "imx298RNE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX498RNE
+    bool "imx498RNE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX498
+	bool "imx498"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV13855RNE
+    bool "ov13855RNE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI1333FIG
+    bool "hi1333FIG"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI1333RNE
+    bool "hi1333RNE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX258FIG
+    bool "imx258FIG"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV13855FIG
+    bool "ov13855FIG"
+    default n
+    depends on HUAWEI_CAMERA
+config HUAWEI_CAMERA_USE_OV13855LLD
+    bool "ov13855LLD"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV13855FLA
+    bool "ov13855FLA"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI1333LLD
+    bool "hi1333LLD"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI1333FLA
+    bool "hi1333FLA"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX258LLD
+    bool "imx258LLD"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX258FLA
+    bool "imx258FLA"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259LLD
+    bool "hi259LLD"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259FLA
+    bool "hi259FLA"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375LLD
+    bool "gc2375LLD"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375FLA
+    bool "gc2375FLA"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV13855LLDFRONT
+    bool "ov13855LLDFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI1333LLDFRONT
+    bool "hi1333LLDFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+config HUAWEI_CAMERA_USE_HI259LLDFRONT
+    bool "hi259LLDFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259FLAFRONT
+    bool "hi259FLAFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375LLDFRONT
+    bool "gc2375LLDFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX258LLDFRONT
+    bool "imx258LLDFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375FLAFRONT
+    bool "gc2375FLAFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375ANE
+    bool "gc2375ANE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259ANE
+    bool "hi259ANE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16B10ANE
+    bool "ov16b10ANE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX498ANE
+    bool "imx498ANE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_S5K3P8FLAFRONT
+    bool "s5k3p8FLAFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX371FLAFRONT
+    bool "imx371FLAFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16885FLAFRONT
+    bool "ov16885FLAFRONT"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_S5K3P8ANE
+    bool "s5k3p8ANE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX371ANE
+    bool "imx371ANE"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375HANDEL
+    bool "gc2375HANDEL"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259HANDEL
+    bool "hi259HANDEL"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219HANDEL
+    bool "imx219HANDEL"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX258HANDEL
+    bool "imx258HANDEL"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV13855HANDEL
+    bool "ov13855HANDEL"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI1333HANDEL
+    bool "hi1333HANDEL"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16885
+    bool "ov16885"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX179_CMB
+	bool "imx179_cmb"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX286DUAL_CMB
+	bool "imx286dual_cmb"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX286DUAL_DUKE
+	bool "imx286dual_duke"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219_VIC
+	bool "imx219_vic"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219_DUKE
+	bool "imx219_duke"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX219_STF
+	bool "imx219_stf"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI843_DUKE
+	bool "hi843_duke"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8856_DUKE
+	bool "ov8856_duke"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8856_STF
+	bool "ov8856_stf"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI843_STF
+	bool "hi843_stf"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX386HYBIRD_STF
+	bool "imx386hybird_stf"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX486HYBIRD_OIS_NA
+	bool "imx486hybird_stf"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV12A10HYBIRD_STF
+	bool "ov12a10hybird_stf"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV16B10HYBIRD_HWI
+	bool "ov16b10hybird_hwi"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX498HYBIRD_HWI
+	bool "imx498hybird_hwi"
+    default n
+	depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV20880_HWI
+        bool "ov20880_hwi"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_IMX376_HWI
+        bool "imx376_hwi"
+    default n
+    depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_GC2375_HWI
+        bool "gc2375_hwi"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI259B_HWI
+        bool "hi259b"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8856_SHT
+        bool "ov8856sht_ofilm"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_HI846
+        bool "hi846"
+    default n
+        depends on HUAWEI_CAMERA
+
+config HUAWEI_CAMERA_USE_OV8865
+	bool "ov8865"
+    default n
+	    depends on HUAWEI_CAMERA

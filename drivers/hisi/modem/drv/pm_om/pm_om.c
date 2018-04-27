@@ -81,7 +81,7 @@ u32 g_pm_om_magic_tbl[PM_OM_MOD_ID_ENUM_MAX]={
 	PM_OM_MAGIC_CIPC,     /*14-CIPC : IPC CCORE */
 	PM_OM_MAGIC_AIPF,     /*15-AIPF : IPF ACORE */
 	PM_OM_MAGIC_CIPF,     /*16-CIPF : IPF CCORE */
-	PM_OM_MAGIC_AOSA,     /*17-AOSA : OSA ACORE */
+	0,
 	PM_OM_MAGIC_COSA,     /*18-COSA : OSA CCORE */
 	PM_OM_MAGIC_CMSP,     /*19-CMSP : MSP CCORE */
 	PM_OM_MAGIC_NVA,      /*20-NVA : NV */
@@ -102,7 +102,9 @@ u32 g_pm_om_magic_tbl[PM_OM_MOD_ID_ENUM_MAX]={
 	PM_OM_MAGIC_CASE,     /*35-CASE : CAS EVDO  */
 	PM_OM_MAGIC_CPRE,     /*36-CPRE : CPROC EVDO*/
 	PM_OM_MAGIC_TLPY,     /*37-TLPH : TL PHY    */
-	0, 0, 0, 0, 0, 0, 0, 0 ,0, 0
+	0, 0, 0, 0, 0, 
+	PM_OM_MAGIC_AOSA,    /*43-AOSA : OSA ACORE */
+	0, 0 ,0, 0
 };
 u32 ring_buffer_in(struct ring_buffer *rb, void *data, u32 len)
 {
@@ -142,7 +144,11 @@ int pm_om_log_out(u32 mod_id, u32 typeid, u32 data_len , void *data)
 	unsigned long flags = 0;
 	u32  consuming_time = 0;
 	UNUSED(flags);
-
+	if(mod_id>=PM_OM_MOD_ID_ENUM_MAX)
+	{
+		pmom_pr_err("mod_id(%d)\n", mod_id);
+		return PM_OM_ERR;
+	}
 	/* 记录log过长会影响DRX寻呼(栈上变量) */
 	if (data_len > PM_OM_LOG_MAX_LEN)
 	{
@@ -290,10 +296,7 @@ void *bsp_pm_dump_get(u32 mod_id, u32 len)
 __init int bsp_pm_om_log_init(void)
 {
 	DRV_PM_OM_CFG_STRU nv_cfg = {0};
-	unsigned long flags = 0;
-	struct pm_om_platform *platform;
 	void *temp = NULL;
-	UNUSED(flags);
 
 	(void)pmom_safe_memset((void *)&nv_cfg, sizeof(nv_cfg), 0, sizeof(nv_cfg));
 	(void)pmom_safe_memset((void *)&g_pmom_ctrl.log, sizeof(g_pmom_ctrl.log), 0, sizeof(g_pmom_ctrl.log));
@@ -322,37 +325,8 @@ __init int bsp_pm_om_log_init(void)
 	g_pmom_ctrl.log.rb.read      = 0;
 	g_pmom_ctrl.log.rb.write     = 0;
 	g_pmom_ctrl.log.threshold    = (g_pmom_ctrl.log.smem->nv_cfg.log_threshold[PM_OM_CPUID] * g_pmom_ctrl.log.rb.size)/100;
-
 	(void)pm_om_platform_init();
-	platform = (struct pm_om_platform *)g_pmom_ctrl.platform;
-
 	(void)pm_om_debug_init();
-
-	if (g_pmom_ctrl.log.smem->nv_cfg.mod_sw_bitmap)
-	{
-		if (PM_OM_PROT_MAGIC1 == g_pmom_ctrl.log.smem->mem_info.magic)
-		{
-			pm_om_spin_lock(&g_pmom_ctrl.log.lock, flags);/*lint !e550: (Warning -- Symbol '__dummy' not accessed)*/
-			g_pmom_ctrl.log.smem->mem_info.magic = PM_OM_PROT_MAGIC2;
-			pm_om_spin_unlock(&g_pmom_ctrl.log.lock, flags);
-			if (platform)
-			{
-				platform->log_info.mem_is_ok = 1; /*[false alarm]*/
-			}
-			g_pmom_ctrl.log.init_flag = PM_OM_INIT_MAGIC;
-		}
-		else if (PM_OM_PROT_MAGIC2 == g_pmom_ctrl.log.smem->mem_info.magic)
-		{
-			g_pmom_ctrl.log.init_flag = PM_OM_INIT_MAGIC;
-			pm_om_spin_lock(&g_pmom_ctrl.log.lock, flags);/*lint !e550: (Warning -- Symbol '__dummy' not accessed)*/
-			if (platform)
-			{
-				platform->log_info.mem_is_ok = 1; /*[false alarm]*/
-			}
-			pm_om_spin_unlock(&g_pmom_ctrl.log.lock, flags);
-		}
-	}
-
 	//pmom_pr_err("ok\n");
 
 	return 0;

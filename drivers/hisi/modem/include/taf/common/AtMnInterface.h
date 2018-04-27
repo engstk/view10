@@ -80,22 +80,12 @@
   3 枚举定义
 *****************************************************************************/
 /* Added by f62575 for AT Project，2011-10-03,  Begin*/
-/*****************************************************************************
- 枚举名    : MN_AT_MSGTYPE_ENUM
- 枚举说明  : AT与MN模块间的原语
- 1.日    期   : 2012年6月11日
-   作    者   : w00166186
-   修改内容   : AT&T&DCM项目
- 2.日    期   : 2013年07月22日
-   作    者   : s00217060
-   修改内容   : VoLTE_PhaseI项目
-*****************************************************************************/
+
 enum AT_MN_MSGTYPE_ENUM
 {
     /* 消息名称 */                                          /*消息ID*/          /* 备注 */
     /* AT与CALL模块间消息 */
     MN_APP_MSG_CLASS_CALL                                   = TAF_CALL_APP_MSG_BASE,
-    /* Added by f00179208 for AT Project，2011-10-14,  Begin*/
     /* 发起呼叫 */
     MN_CALL_APP_ORIG_REQ                                    = 0x0001,           /* _H2ASN_MsgChoice MN_CALL_APP_REQ_MSG_STRU */
     /* 结束呼叫 */
@@ -118,7 +108,6 @@ enum AT_MN_MSGTYPE_ENUM
     MN_CALL_APP_QRY_ALS_REQ,                                                    /* _H2ASN_MsgChoice MN_CALL_APP_REQ_MSG_STRU */
 
     MN_CALL_APP_MAX_REQ,
-    /* Added by f00179208 for AT Project，2011-10-14,  End */
 
     MN_CALL_APP_CUSTOM_ECC_NUM_REQ,                                             /* _H2ASN_MsgChoice MN_CALL_APP_REQ_MSG_STRU */
 
@@ -128,13 +117,9 @@ enum AT_MN_MSGTYPE_ENUM
 
     MN_CALL_APP_XLEMA_REQ,                                                      /* _H2ASN_MsgChoice MN_CALL_APP_REQ_MSG_STRU */
 
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, begin */
     MN_CALL_APP_SET_CSSN_REQ,                                                   /* _H2ASN_MsgChoice MN_CALL_APP_REQ_MSG_STRU */
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, end */
 
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, begin */
     MN_CALL_QRY_ECALL_INFO_REQ,                                                 /* _H2ASN_MsgChoice MN_CALL_QRY_ECALL_INFO_REQ_STRU */
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, end */
 
     /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, begin */
     TAF_CALL_APP_SEND_FLASH_REQ,                                                /* _H2ASN_MsgChoice TAF_CALL_APP_SEND_FLASH_REQ_STRU*/
@@ -206,8 +191,6 @@ enum AT_MN_MSGTYPE_ENUM
     TAF_MSG_REGPWD_MSG,
     TAF_MSG_PROCESS_USS_MSG,
     TAF_MSG_ERASECCENTRY_MSG,
-    /* Deleted by s00217060 for VoLTE_PhaseIII  项目, 2014-01-06, begin */
-    /* Deleted by s00217060 for VoLTE_PhaseIII  项目, 2014-01-06, end */
     TAF_MSG_RLEASE_MSG,
     TAF_MSG_SET_USSDMODE_MSG,
 /* Added by f62575 for SS FDN&Call Control, 2013-05-06, end */
@@ -224,9 +207,7 @@ enum AT_MN_MSGTYPE_ENUM
     /* AT与PS适配模块间消息 */
     MN_APP_MSG_CLASS_PS                                     = TAF_APS_MSG_BASE,
 
-    /* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-6-29, begin */
     /* 这部分消息的定义迁移到TafAppAps.h文件中 */
-    /* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-6-29, end */
 
 
     MN_APP_MSG_CLASS_MASK                                   = TAF_IMSA_MSG_MASK
@@ -339,8 +320,6 @@ typedef struct
 } MN_APP_REQ_MSG_STRU;
 
 
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, begin */
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, end */
 
 
 

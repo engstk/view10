@@ -23,7 +23,6 @@
 #include <linux/semaphore.h>
 #include <linux/compat.h>
 
-
 #include <linux/syscalls.h>
 #include <asm/uaccess.h>
 #include <linux/delay.h>
@@ -34,6 +33,7 @@
 #if CONFIG_HISI_NVE_WHITELIST
 #include "hisi_nve_whitelist.h"
 #endif
+#include "hisi_nve_log_blacklist.h"
 
 static struct semaphore nv_sem;
 static struct class *nve_class;
@@ -44,6 +44,7 @@ static char log_nv_info[NV_INFO_LEN];
 static char temp_nv_info[NV_INFO_LEN];
 #if CONFIG_HISI_NVE_WHITELIST
 extern unsigned int get_userlock(void);
+static int nve_whitelist_en = 1;
 #endif
 
 /*
@@ -191,8 +192,8 @@ static int nve_read(loff_t from, size_t len, u_char *buf)
 {
 	int ret;
 	int fd;
-	mm_segment_t oldfs = get_fs();
 	/*lint -e501*/
+	mm_segment_t oldfs = get_fs();
 	set_fs(get_ds());
 	/*lint +e501*/
 	fd = (int)sys_open(nve_block_device_name, O_RDONLY,
@@ -251,8 +252,8 @@ static int nve_write(loff_t from, size_t len, u_char *buf)
 {
 	int ret;
 	int fd;
-	mm_segment_t oldfs = get_fs();
 	/*lint -e501*/
+	mm_segment_t oldfs = get_fs();
 	set_fs(get_ds());
 	/*lint +e501*/
 	fd = (int)sys_open(nve_block_device_name, O_RDWR,
@@ -586,6 +587,8 @@ static int nve_restore(struct NVE_struct *nvep)
 	ret = write_ramdisk_to_device(nvep->nve_current_id, nvep->nve_store_ramdisk);
 	if(ret){
 		printk(KERN_ERR "[NVE][%s]write to device failed in line [%d].\n", __func__, __LINE__);
+		/*recover the current id*/
+		nve_decrement(nvep);
 		return ret;
 	}
 
@@ -596,6 +599,8 @@ static int nve_restore(struct NVE_struct *nvep)
 		ret = write_ramdisk_to_device(nvep->nve_current_id, nvep->nve_store_ramdisk);
 		if(ret){
 			printk(KERN_ERR "[NVE][%s]write to device failed in line [%d].\n", __func__, __LINE__);
+			/*recover the current id*/
+			nve_decrement(nvep);
 			return ret;
 		}
 	}
@@ -630,6 +635,29 @@ uint64_t g_nve_cost_time;
 struct hisi_nve_info_user nv_read_info;
 struct hisi_nve_info_user nv_write_info;
 struct hisi_nve_info_user nv_init_info;
+#if CONFIG_HISI_NVE_WHITELIST
+void nve_whitelist_en_set(int en_whitelist)
+{
+	nve_whitelist_en = en_whitelist;
+}
+
+void nve_dump_whitelist(void)
+{
+	unsigned int i;
+
+	pr_err("nv_num whitelist:\n");
+	for (i = 0; i < ARRAY_SIZE(nv_num_whitelist); i++) {
+		pr_err("%d ", nv_num_whitelist[i]);
+	}
+	pr_err("\n\n");
+
+	for (i = 0; i < ARRAY_SIZE(nv_process_whitelist); i++) {
+		pr_err("%s\n", nv_process_whitelist[i]);
+	}
+	pr_err("\n");
+}
+#endif /* CONFIG_HISI_NVE_WHITELIST */
+
 static int nve_print_partition_test(struct NVE_partittion *nve_partition)
 {
 	struct NVE_partition_header *nve_partiiton_header;
@@ -1008,6 +1036,13 @@ static void nve_out_log(struct hisi_nve_info_user *user_info, int isRead)
 		printk(KERN_DEBUG "[NVE][%s]:write nv:ID= %d \n", __func__,
 		       user_info->nv_number);
 	}
+	for (index = 0; index < (int)ARRAY_SIZE(nv_num_blacklist); index++) {
+		if (user_info->nv_number == nv_num_blacklist[index]) {
+			printk(KERN_DEBUG "[NVE][%s]:nv:ID= %d is in blacklist. Forbid print nve info!\n", __func__,
+		       user_info->nv_number);
+			return;
+		}
+	}
 	memset(log_nv_info, 0, sizeof(log_nv_info));
 	memset(temp_nv_info, 0, sizeof(temp_nv_info));
 	for (index = 0; index < (int)user_info->valid_size; index++) {
@@ -1029,6 +1064,7 @@ static void nve_out_log(struct hisi_nve_info_user *user_info, int isRead)
 		printk(KERN_DEBUG "[NVE][%s]:write data = %s\n", __func__,
 		       user_info->nv_data);
 	}
+	return;
 }
 #ifdef CONFIG_CRC_SUPPORT
 int nve_check_crc_and_recover(int nv_item_start, int check_items, struct NVE_struct *nvep)
@@ -1093,12 +1129,12 @@ static int hisi_nve_whitelist_check(struct hisi_nve_info_user *user_info)
 		return -1;
 	}
 
-	if (user_info->nv_operation != NV_READ) {
+	if (nve_whitelist_en && (user_info->nv_operation != NV_READ)) {
 		if ( nve_number_in_whitelist(user_info->nv_number) && (!nve_process_in_whitelist() || !get_userlock()) ) {
 			pr_err("%s nv_number: %d process %s is not in whitelist, or phone was unlocked. Forbid write to NVE!\n",
 					__func__, user_info->nv_number, current->comm);
 
-			return -1;
+			return -EPERM;
 		}
 	}
 
@@ -1115,15 +1151,13 @@ int hisi_nve_direct_access_for_ramdisk(struct hisi_nve_info_user *user_info){
 #if CONFIG_HISI_NVE_WHITELIST
 	if (hisi_nve_whitelist_check(user_info)) {
 		pr_err("%s hisi_nve_whitelist_check Failed!\n", __func__);
-		ret = -EINVAL;
-		goto out;
+		return -EINVAL;
 	}
 #else
 	/*input parameter invalid, return.*/
 	if (NULL == user_info) {
 		printk(KERN_ERR "[NVE][%s] input parameter is NULL.\n", __func__);
-		ret = -EINVAL;
-		goto out;
+		return -1;
 	}
 #endif /* CONFIG_HISI_NVE_WHITELIST */
 

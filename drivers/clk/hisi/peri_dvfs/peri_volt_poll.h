@@ -24,5 +24,6 @@ struct peri_volt_poll *peri_volt_poll_get(unsigned int dev_id, const char *name)
 unsigned int peri_get_volt(struct peri_volt_poll *pvp);
 int peri_set_volt(struct peri_volt_poll *pvp, unsigned int volt);
 int peri_poll_stat(struct peri_volt_poll *pvp);
+int peri_get_temperature(struct peri_volt_poll *pvp);
 
 #endif /* __PERIVOLT_POLL_INTERNAL_H */

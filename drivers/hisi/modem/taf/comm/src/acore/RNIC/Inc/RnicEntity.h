@@ -162,13 +162,7 @@ extern "C" {
   3 枚举定义
 *******************************************************************************/
 
-/*********************************************
- 枚举名   :RNIC_RESULT_TYPE_ENUM
- 枚举说明 :RNIC函数返回值枚举类型
- 1.日    期   : 2011年12月08日
-   作    者   : f00179208
-   修改内容   : 新建
-*********************************************/
+
 enum RNIC_RESULT_TYPE_ENUM
 {
     RNIC_OK             = 0,                                                    /* 正常返回 */
@@ -268,7 +262,6 @@ VOS_VOID RNIC_SendULIpv6Data(
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt
 );
 
-/* Modified by m00217266 for L-C互操作项目, 2014-01-06, Begin */
 VOS_UINT32 RNIC_SendDlData(
     RNIC_RMNET_ID_ENUM_UINT8            enRmNetId,
     IMM_ZC_STRU                        *pstData,
@@ -281,7 +274,6 @@ VOS_UINT32  RNIC_RcvAdsDlData(
     ADS_PKT_TYPE_ENUM_UINT8             enPktType,
     VOS_UINT32                          ucExParam
 );
-/* Modified by m00217266 for L-C互操作项目, 2014-01-06, End */
 
 VOS_VOID RNIC_ProcessTxData(
     struct sk_buff                     *pstSkb,

@@ -82,10 +82,8 @@ extern "C"{
 
 #define TAF_MMA_NET_SCAN_MAX_FREQ_NUM                       (20)
 
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, Begin */
 #define TAF_MMA_REG_MAX_PLMN_NUM                            (8)
 #define TAF_MMA_REG_MAX_CELL_NUM                            (8)
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, End */
 
 #define TAF_MMA_MAX_CDMA_PN_NUM                             (511)
 #define TAF_MMA_WILDCARD_CDMA_PN_NUM                        (0xFFFF)
@@ -105,9 +103,7 @@ extern "C"{
 #define TAF_MMA_MAX_EHPLMN_STR                              (128)
 
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-9-1, begin */
 #define TAF_MMA_MAX_CFG_BORDER_NUM                          (256)
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-9-1, end */
 
 /* CSG list搜网结果上报8个网络csg信息时大小2k */
 #define TAF_MMA_MAX_CSG_ID_LIST_NUM                         (8)
@@ -124,12 +120,10 @@ extern "C"{
 #define TAF_MMA_INVALID_MCC                                 (0xFFFFFFFF)
 #define TAF_MMA_INVALID_MNC                                 (0xFFFFFFFF)
 
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, begin */
 #define TAF_MMA_OSID_ORIGINAL_LEN                           (32)
 #define TAF_MMA_OSID_LEN                                    (16)
 #define TAF_MMA_MAX_APPID_LEN                               (128)
 #define TAF_MMA_ACDC_PARA_NUM                               (3)
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, end */
 
 #define TAF_MMA_LTE_BAND_MAX_LENGTH                         (8)
 
@@ -255,9 +249,7 @@ typedef VOS_UINT32 TAF_MMA_UPDATE_TYPEC_PDP_COUNT_ENUM_U32;
 #define TAF_MMA_RSSI_LOWER_LIMIT        (-114)
 #define TAF_MMA_UTRA_RSCP_UNVALID       (-140)
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, begin */
 #define TAF_MMA_RPT_CFG_MAX_SIZE         (8)
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, end */
 
 #define TAF_MMA_MSG_ID_BASE             (0x1000)
 
@@ -358,10 +350,13 @@ enum TAF_MMA_MSG_TYPE_ENUM
     ID_TAF_MMA_CMM_SET_REQ = TAF_MMA_MSG_ID_BASE + 0x3F,                                                   /* _H2ASN_MsgChoice TAF_MMA_CMM_SET_REQ_STRU */
     ID_TAF_MMA_CMM_SET_CNF = TAF_MMA_MSG_ID_BASE + 0x40,                                                  /* _H2ASN_MsgChoice TAF_MMA_CMM_SET_CNF_STRU */
 
-    ID_TAF_MMA_PLMN_AUTO_RESEL_REQ = TAF_MMA_MSG_ID_BASE + 0x41,                                           /* _H2ASN_MsgChoice TAF_MMA_PLMN_AUTO_RESEL_REQ_STRU */
-    ID_TAF_MMA_PLMN_AUTO_RESEL_CNF = TAF_MMA_MSG_ID_BASE + 0x42,                                       /* _H2ASN_MsgChoice TAF_MMA_PLMN_AUTO_RESEL_CNF_STRU */
-    ID_TAF_MMA_PLMN_SPECIAL_SEL_REQ = TAF_MMA_MSG_ID_BASE + 0x43,                                         /* _H2ASN_MsgChoice TAF_MMA_PLMN_SPECIAL_SEL_REQ_STRU */
-    ID_TAF_MMA_PLMN_SPECIAL_SEL_CNF = TAF_MMA_MSG_ID_BASE + 0x44,                                         /* _H2ASN_MsgChoice TAF_MMA_PLMN_SPECIAL_SEL_CNF_STRU */
+    ID_TAF_MMA_PLMN_SEARCH_REQ = TAF_MMA_MSG_ID_BASE + 0x41,           /* _H2ASN_MsgChoice TAF_MMA_PLMN_SEARCH_REQ_STRU */
+    ID_TAF_MMA_PLMN_SEARCH_CNF = TAF_MMA_MSG_ID_BASE + 0x42,           /* _H2ASN_MsgChoice TAF_MMA_PLMN_SEARCH_CNF_STRU */
+
+    /* TAF_MMA_MSG_ID_BASE + 0x43 reserved */
+
+    /* TAF_MMA_MSG_ID_BASE + 0x44 reserved */
+
     ID_TAF_MMA_PLMN_LIST_ABORT_REQ = TAF_MMA_MSG_ID_BASE + 0x45,                                         /* _H2ASN_MsgChoice TAF_MMA_PLMN_LIST_ABORT_REQ_STRU */
     ID_TAF_MMA_PLMN_LIST_ABORT_CNF = TAF_MMA_MSG_ID_BASE + 0x46,                                          /* _H2ASN_MsgChoice TAF_MMA_PLMN_LIST_ABORT_CNF_STRU */
 
@@ -419,17 +414,12 @@ enum TAF_MMA_MSG_TYPE_ENUM
     ID_TAF_MMA_SYSINFO_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0x6B,                                              /* _H2ASN_MsgChoice TAF_MMA_SYSINFO_QRY_REQ_STRU */
     ID_TAF_MMA_SYSINFO_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0x6C,                                              /* _H2ASN_MsgChoice TAF_MMA_SYSINFO_QRY_CNF_STRU */
 
-    ID_TAF_MMA_CSNR_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0x6D,                                                 /* _H2ASN_MsgChoice TAF_MMA_CSNR_QRY_REQ_STRU */
-    ID_TAF_MMA_CSNR_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0x6E,                                                 /* _H2ASN_MsgChoice TAF_MMA_CSNR_QRY_CNF_STRU */
+    /* 无调用点删除 */
 
     ID_TAF_MMA_CSQ_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0x6F,                                                  /* _H2ASN_MsgChoice TAF_MMA_CSQ_QRY_REQ_STRU */
     ID_TAF_MMA_CSQ_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0x70,                                                 /* _H2ASN_MsgChoice TAF_MMA_CSQ_QRY_CNF_STRU */
 
-    ID_TAF_MMA_CSQLVL_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0x71,                                              /* _H2ASN_MsgChoice TAF_MMA_CSQLVL_QRY_REQ_STRU */
-    ID_TAF_MMA_CSQLVL_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0x72,                                            /* _H2ASN_MsgChoice TAF_MMA_CSQLVL_QRY_CNF_STRU */
-
-    ID_TAF_MMA_ANTENNA_INFO_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0x73,                                         /* _H2ASN_MsgChoice TAF_MMA_ANTENNA_INFO_QRY_REQ_STRU */
-    ID_TAF_MMA_ANTENNA_INFO_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0x74,                                         /* _H2ASN_MsgChoice TAF_MMA_ANTENNA_INFO_QRY_CNF_STRU */
+    /* 无调用点删除 */
 
     ID_TAF_MMA_HOME_PLMN_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0x75,                                            /* _H2ASN_MsgChoice TAF_MMA_HOME_PLMN_QRY_REQ_STRU */
     ID_TAF_MMA_HOME_PLMN_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0x76,                                            /* _H2ASN_MsgChoice TAF_MMA_HOME_PLMN_QRY_CNF_STRU */
@@ -500,9 +490,9 @@ enum TAF_MMA_MSG_TYPE_ENUM
     ID_TAF_MMA_QUIT_CALLBACK_SET_CNF = TAF_MMA_MSG_ID_BASE + 0xA8,                                            /* _H2ASN_MsgChoice TAF_MMA_QUIT_CALLBACK_SET_CNF_STRU */
     ID_TAF_MMA_CSIDLIST_SET_REQ = TAF_MMA_MSG_ID_BASE + 0xA9,                                                 /* _H2ASN_MsgChoice TAF_MMA_CSIDLIST_SET_REQ_STRU */
     ID_TAF_MMA_CSIDLIST_SET_CNF = TAF_MMA_MSG_ID_BASE + 0xAA,                                                 /* _H2ASN_MsgChoice TAF_MMA_CSIDLIST_SET_CNF_STRU */
-    ID_TAF_MMA_1X_EMC_CALL_BACK_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0xAB,                                         /* _H2ASN_MsgChoice TAF_MMA_1X_EMC_CALL_BACK_QRY_REQ_STRU */
-    ID_TAF_MMA_1X_EMC_CALL_BACK_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0xAC,                                         /* _H2ASN_MsgChoice TAF_MMA_1X_EMC_CALL_BACK_QRY_CNF_STRU */
-    ID_TAF_MMA_1X_EMC_CALL_BACK_NTF = TAF_MMA_MSG_ID_BASE + 0xAD,                                             /* _H2ASN_MsgChoice TAF_MMA_1X_EMC_CALL_BACK_NTF_STRU */
+    ID_TAF_MMA_EMC_CALL_BACK_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0xAB,                                            /* _H2ASN_MsgChoice TAF_MMA_EMC_CALL_BACK_QRY_REQ_STRU */
+    ID_TAF_MMA_EMC_CALL_BACK_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0xAC,                                            /* _H2ASN_MsgChoice TAF_MMA_EMC_CALL_BACK_QRY_CNF_STRU */
+    ID_TAF_MMA_EMC_CALL_BACK_NTF = TAF_MMA_MSG_ID_BASE + 0xAD,                                                /* _H2ASN_MsgChoice TAF_MMA_EMC_CALL_BACK_NTF_STRU */
 
     ID_TAF_MMA_SRCHED_PLMN_INFO_IND = TAF_MMA_MSG_ID_BASE + 0xAE,                                             /* _H2ASN_MsgChoice TAF_MMA_SRCHED_PLMN_INFO_IND_STRU */
 
@@ -516,12 +506,10 @@ enum TAF_MMA_MSG_TYPE_ENUM
     ID_TAF_MMA_DPLMN_SET_REQ = TAF_MMA_MSG_ID_BASE + 0xB6,                                                    /* _H2ASN_MsgChoice TAF_MMA_DPLMN_SET_REQ_STRU */
     ID_TAF_MMA_DPLMN_SET_CNF = TAF_MMA_MSG_ID_BASE + 0xB7,                                                    /* _H2ASN_MsgChoice TAF_MMA_DPLMN_SET_CNF_STRU */
 
-    /* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, begin */
     ID_TAF_MMA_BORDER_INFO_SET_REQ = TAF_MMA_MSG_ID_BASE + 0xB8,                                             /* _H2ASN_MsgChoice TAF_MMA_BORDER_INFO_SET_REQ_STRU */
     ID_TAF_MMA_BORDER_INFO_SET_CNF = TAF_MMA_MSG_ID_BASE + 0xB9,                                            /* _H2ASN_MsgChoice TAF_MMA_BORDER_INFO_SET_CNF_STRU */
     ID_TAF_MMA_BORDER_INFO_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0xBA,                                               /* _H2ASN_MsgChoice TAF_MMA_BORDER_INFO_QRY_REQ_STRU */
     ID_TAF_MMA_BORDER_INFO_QRY_CNF = TAF_MMA_MSG_ID_BASE + 0xBB,                                               /* _H2ASN_MsgChoice TAF_MMA_BORDER_INFO_QRY_CNF_STRU */
-    /* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, end */
 
     ID_TAF_MMA_CLMODE_IND = TAF_MMA_MSG_ID_BASE + 0xBC,                                                        /* _H2ASN_MsgChoice TAF_MMA_CLMODE_IND_STRU*/
     ID_TAF_MMA_CURR_SID_NID_QRY_REQ = TAF_MMA_MSG_ID_BASE + 0xBD,                                              /* _H2ASN_MsgChoice TAF_MMA_CURR_SID_NID_QRY_REQ_STRU*/
@@ -609,9 +597,7 @@ enum TAF_MMA_MSG_TYPE_ENUM
 
     ID_TAF_MMA_STOP_SRVACQ_NOTIFY       = TAF_MMA_MSG_ID_BASE + 0xF4,           /* _H2ASN_MsgChoice TAF_MMA_STOP_SRVACQ_NOTIFY_STRU */
 
-    /* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-6, begin */
     ID_TAF_MMA_ACDC_APP_NOTIFY          = TAF_MMA_MSG_ID_BASE + 0xF5,           /* _H2ASN_MsgChoice TAF_MMA_ACDC_APP_NOTIFY_STRU */
-    /* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-6, end */
 
     ID_TAF_MMA_RESTART_REQ               = TAF_MMA_MSG_ID_BASE + 0xF6,           /* _H2ASN_MsgChoice TAF_MMA_RESTART_REQ_STRU */
     ID_TAF_MMA_RESTART_CNF               = TAF_MMA_MSG_ID_BASE + 0xF7,           /* _H2ASN_MsgChoice TAF_MMA_RESTART_CNF_STRU */
@@ -622,20 +608,23 @@ enum TAF_MMA_MSG_TYPE_ENUM
     ID_TAF_MMA_RCS_SWITCH_QRY_REQ               = TAF_MMA_MSG_ID_BASE + 0xFA,       /* _H2ASN_MsgChoice TAF_MMA_RCS_SWITCH_QRY_REQ_STRU */
     ID_TAF_MMA_RCS_SWITCH_QRY_CNF               = TAF_MMA_MSG_ID_BASE + 0xFB,       /* _H2ASN_MsgChoice TAF_MMA_RCS_SWITCH_QRY_CNF_STRU */
 
+    ID_TAF_MMA_EXCHANGE_MODEM_INFO_REQ         = TAF_MMA_MSG_ID_BASE + 0xFC,           /* _H2ASN_MsgChoice TAF_MMA_EXCHANGE_MODEM_INFO_REQ_STRU */
+    ID_TAF_MMA_EXCHANGE_MODEM_INFO_CNF         = TAF_MMA_MSG_ID_BASE + 0xFD,           /* _H2ASN_MsgChoice TAF_MMA_EXCHANGE_MODEM_INFO_CNF_STRU */
+
+    ID_TAF_MMA_MT_REATTACH_IND                 = TAF_MMA_MSG_ID_BASE + 0xFE,   /* _H2ASN_MsgChoice TAF_MMA_MTREATTACH_IND_STRU */
+
+    ID_TAF_MMA_CIND_SET_REQ                    = TAF_MMA_MSG_ID_BASE + 0xFF,    /* _H2ASN_MsgChoice TAF_MMA_CIND_SET_REQ_STRU */
+    ID_TAF_MMA_CIND_SET_CNF                    = TAF_MMA_MSG_ID_BASE + 0x100,   /* _H2ASN_MsgChoice TAF_MMA_CIND_SET_CNF_STRU */
+
+    ID_TAF_MMA_DSDS_STATE_SET_REQ = TAF_MMA_MSG_ID_BASE + 0x101,
+    ID_TAF_MMA_DSDS_STATE_SET_CNF = TAF_MMA_MSG_ID_BASE + 0x102,
+    ID_TAF_MMA_DSDS_STATE_NOTIFY  = TAF_MMA_MSG_ID_BASE + 0x103,
+
     ID_TAF_MMA_MSG_TYPE_BUTT
 };
 typedef VOS_UINT32 TAF_MMA_MSG_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_PH_RAT_TYPE_ENUM_U8
- 结构说明  : AT^syscfgex 中acqorder的取值
- 1.日    期 : 2011年06月9日
-   作    者 : l00130025
-   修改内容 : 新增结构
-  2.日    期   : 2015年4月10日
-    作    者   : h00313353
-    修改内容   : SysCfg重构
-*****************************************************************************/
+
 enum TAF_MMA_RAT_TYPE_ENUM
 {
     TAF_MMA_RAT_GSM,                                                             /* GSM接入技术 */
@@ -648,13 +637,7 @@ enum TAF_MMA_RAT_TYPE_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_RAT_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_APP_CFPLMN_OPER_RESULT_ENUM
- 结构说明  : APP操作回复结果枚举
- 1.日    期   : 2015年02月13日
-   作    者   : f00279542
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_APP_CFPLMN_OPER_RESULT_ENUM
 {
     TAF_MMA_APP_CFPLMN_OPER_RESULT_SUCCESS               = 0,/* 操作成功 */
@@ -666,15 +649,7 @@ enum TAF_MMA_APP_CFPLMN_OPER_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_APP_CFPLMN_OPER_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_USIMM_CARD_TYPE_ENUM
- 结构说明  : 消息ID_TAF_MMA_SYS_INFO_IND_IND结构体
 
- 修改历史      :
-  1.日    期   : 2014年02月20日
-    作    者   : w00167002
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 enum TAF_MMA_USIMM_CARD_TYPE_ENUM
 {
     TAF_MMA_USIMM_CARD_SIM           = 0,
@@ -688,13 +663,7 @@ enum TAF_MMA_USIMM_CARD_TYPE_ENUM
 };
 typedef VOS_UINT32      TAF_MMA_USIMM_CARD_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_RAT_NO_CHANGE_CMD_TYPE_ENUM
- 结构说明  : Rat Cmd No Change配置的命令类型
- 1.日    期   : 2017年05月06日
-   作    者   : g00261581
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_RAT_NO_CHANGE_CMD_TYPE_ENUM
 {
     TAF_MMA_RAT_NO_CHANGE_CMD_CPAM      = 1,
@@ -754,14 +723,7 @@ typedef struct
 }AT_MMA_SIMLOCK_STATUS_STRU;
 /* Added by f62575 for B050 Project, 2012-2-3, end   */
 
-/* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-10, begin */
-/******************************************************************************
-结构名    : TAF_MMA_CELL_RESTRICTION_TYPE_ENUM
-结构说明  : 小区接入禁止信息枚举类型
-1. 日    期: 2012年12月08日
-   作    者: w00176964
-   修改内容: 新建
-******************************************************************************/
+
 enum  TAF_MMA_CELL_RESTRICTION_TYPE_ENUM
 {
     TAF_MMA_CELL_RESTRICTION_TYPE_NONE                   = 0,                           /* 当前小区不限制任何业务 */
@@ -778,7 +740,6 @@ typedef VOS_UINT8   TAF_MMA_CELL_RESTRICTION_TYPE_ENUM_UINT8;
 /* Deleted by k902809 for Iteration 11, 2015-3-26, begin */
 
 /* Deleted by k902809 for Iteration 11, Iteration 11 2015-3-26, end */
-/* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-10, end */
 
 /*****************************************************************************
  枚举名    : MN_PH_CSQLVLEXT_BER_VALUE_ENUM
@@ -830,19 +791,7 @@ enum MN_PH_CSQLVLEXT_RSSILV_VALUE_ENUM
 };
 typedef VOS_UINT8 MN_PH_CSQLVLEXT_RSSILV_VALUE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_SYS_SUBMODE_ENUM
- 协议表格  :
- ASN.1描述 :
- 枚举说明  : 驻留网络的系统子模式枚举
 
-  1.日    期   : 2012年6月1日
-    作    者   : z40661
-    修改内容   : DTS2012053006110,显示DC-HSPA+
-  2.日    期   : 2015年2月11日
-    作    者   : w00208541
-    修改内容   : CDMA Iteration 8 增加EVDO 相应模式
-*****************************************************************************/
 enum TAF_SYS_SUBMODE_ENUM
 {
     TAF_SYS_SUBMODE_NONE                = 0,                /* 无服务 */
@@ -932,15 +881,7 @@ enum MN_PH_SUB_SYS_MODE_EX_ENUM
 };
 typedef VOS_UINT8  MN_PH_SUB_SYS_MODE_EX_ENUM_U8;
 
-/*****************************************************************************
- 枚举名    : TAF_PH_ACCESS_TECH_ENUM
- 协议表格  :
- ASN.1描述 :
- 枚举说明  : 驻留网络的接入技术枚举，用于CREG/CGREG的ACT参数
- 1.日    期   : 2015年2月11日
-   作    者   : w00208541
-   修改内容   : CDMA Iteration 8 增加EVDO 相应模式
-*****************************************************************************/
+
 enum TAF_PH_ACCESS_TECH_ENUM
 {
     TAF_PH_ACCESS_TECH_GSM              = 0,                /* GSM */
@@ -975,16 +916,7 @@ enum TAF_SIM_INSERT_STATE_ENUM
 typedef VOS_UINT32  TAF_SIM_INSERT_STATE_ENUM_UINT32;
 
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_PLMN_LIST_ABORT_CAUSE_ENUM
- 协议表格  :
- ASN.1描述 :
- 枚举说明  : PLMN LIST被打断的原因值枚举
 
-   1.日    期   : 2012年9月19日
-     作    者   : s00217060
-     修改内容   : 新增 for V7R1C50_At_Abort
-*****************************************************************************/
 enum TAF_MMA_PLMN_LIST_ABORT_PROC_ENUM
 {
     TAF_MMA_PLMN_LIST_ABORT_PROCESSING_TIMEOUT                   = 0,           /* 正在处理定时器超时打断列表搜 */
@@ -1004,14 +936,7 @@ enum TAF_MMA_PS_INIT_RSLT_ENUM
     TAF_PS_INIT_BUTT
 };
 typedef VOS_UINT32  TAF_MMA_PS_INIT_RSLT_ENUM_UINT32;
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, Begin */
-/*****************************************************************************
- 枚举名    : TAF_MMA_ACQ_REASON_ENUM
- 结构说明  : 获取网络原因枚举
- 1.日    期   : 2014年01月23日
-   作    者   : s00246516
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_ACQ_REASON_ENUM
 {
     TAF_MMA_ACQ_REASON_POWER_UP         = 0,    /* 开机获取网络 */
@@ -1021,13 +946,7 @@ enum TAF_MMA_ACQ_REASON_ENUM
 };
 typedef VOS_UINT8  TAF_MMA_ACQ_REASON_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_EPS_ATTACH_REASON_ENUM
- 结构说明  : Attach类型枚举
- 1.日    期   : 2014年01月23日
-   作    者   : s00246516
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_EPS_ATTACH_REASON_ENUM
 {
     TAF_MMA_ATTACH_REASON_INITIAL          = 0,    /* 非C->L重选时都填写该原因 */
@@ -1036,13 +955,7 @@ enum TAF_MMA_EPS_ATTACH_REASON_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_EPS_ATTACH_REASON_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_PLMN_PRIORITY_CLASS_ENUM
- 结构说明  : 网络优先级类别枚举
- 1.日    期   : 2014年01月23日
-   作    者   : s00246516
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_PLMN_PRIORITY_CLASS_ENUM
 {
     TAF_MMA_PLMN_PRIORITY_HOME               = 0,/* home or ehome plmn */
@@ -1071,13 +984,7 @@ enum TAF_MMA_CL_REG_STATUS_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_ATTACH_CL_REG_STATUS_ENUM8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_APP_OPER_RESULT_ENUM
- 结构说明  : APP操作回复结果枚举
- 1.日    期   : 2014年01月23日
-   作    者   : s00246516
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_APP_OPER_RESULT_ENUM
 {
     TAF_MMA_APP_OPER_RESULT_SUCCESS               = 0,/* 操作成功 */
@@ -1088,35 +995,20 @@ enum TAF_MMA_APP_OPER_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_APP_OPER_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_DETACH_CAUSE_ENUM
- 结构说明  : Detach原因枚举
- 1.日    期   : 2014年01月23日
-   作    者   : s00246516
-   修改内容   : 新增枚举
- 2.日    期   : 2015年4月13日
-   作    者   : y00245242
-   修改内容   : iteration 13开发
-*****************************************************************************/
+
 enum TAF_MMA_DETACH_CAUSE_ENUM
 {
     TAF_MMA_DETACH_CAUSE_USER_DETACH            = 0,/* 用户触发的detach操作 */
     TAF_MMA_DETACH_CAUSE_RAT_OR_BAND_DETACH     = 1,/* system configure中RAT或band触发的detach */
     TAF_MMA_DETACH_CAUSE_SRV_DOMAIN_DETACH      = 2,/* system configure中服务域触发的detach */
     TAF_MMA_DETACH_CAUSE_3GPP2_ATTACHED         = 3,/* 在3GPP2上附着成功 */
+    TAF_MMA_DETACH_CAUSE_COPS                   = 4,/* AT+COPS=2触发的detach操作 */
     TAF_MMA_DETACH_CAUSE_BUTT
 };
 typedef VOS_UINT8 TAF_MMA_DETACH_CAUSE_ENUM_UINT8;
 
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, End */
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_PLMN_WITH_CSG_ID_TYPE_ENUM_UINT8
- 结构说明  : CSG ID类型
-1.日    期   : 2015年9月6日
-  作    者   : z00161729
-  修改内容   : 支持LTE CSG功能新增
-*****************************************************************************/
+
 enum TAF_MMA_PLMN_WITH_CSG_ID_TYPE_ENUM
 {
     TAF_MMA_CSG_ID_TYPE_IN_ALLOWED_CSG_LIST                  = 1,  /* CSG ID在Allowed CSG List中*/
@@ -1128,13 +1020,7 @@ enum TAF_MMA_PLMN_WITH_CSG_ID_TYPE_ENUM
 typedef VOS_UINT8 TAF_MMA_PLMN_WITH_CSG_ID_TYPE_ENUM_UINT8;
 
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_APP_PREF_PLMN_OPER_RESULT_ENUM
- 结构说明  : 优选plmn操作回复结果枚举
- 1.日    期   : 2015年02月13日
-   作    者   : y00307564
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_APP_PREF_PLMN_OPER_RESULT_ENUM
 {
     TAF_MMA_APP_PREF_PLMN_OPER_RESULT_SUCCESS               = 0, /* 操作成功 */
@@ -1148,13 +1034,7 @@ enum TAF_MMA_APP_PREF_PLMN_OPER_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_APP_PREF_PLMN_OPER_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_VOICE_DOMAIN_ENUM
- 结构说明  : VOICE DOMAIN枚举
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
+
 enum TAF_MMA_VOICE_DOMAIN_ENUM
 {
     TAF_MMA_VOICE_DOMAIN_CS_ONLY            = 0,    /* CS voice only */
@@ -1166,13 +1046,7 @@ enum TAF_MMA_VOICE_DOMAIN_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_VOICE_DOMAIN_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_IMS_SWITCH_SET_ENUM_UINT8
- 结构说明  : IMS协议栈开关机操作类型枚举类型
- 1.日    期   : 2015年02月04日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_IMS_SWITCH_SET_ENUM
 {
     TAF_MMA_IMS_SWITCH_SET_OFF          = 0,
@@ -1200,13 +1074,7 @@ enum TAF_MMA_1X_CAS_P_REV_ENUM
 typedef VOS_UINT8 TAF_MMA_1X_CAS_P_REV_ENUM_UINT8;
 
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_RAT_TYPE_ENUM_UINT32
- 结构说明  : 当前的接入技术
- 1.日    期   : 2015年05月15日
-   作    者   : y00314741
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_PS_RAT_TYPE_ENUM
 {
     TAF_MMA_PS_RAT_TYPE_NULL,          /* 当前未在任何网络上驻留 */
@@ -1220,13 +1088,7 @@ enum TAF_MMA_PS_RAT_TYPE_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_PS_RAT_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_QRY_REG_STATUS_TYPE_ENUM_UINT32
- 结构说明  : 查询注册状态的类型
- 1.日    期   : 2015年08月19日
-   作    者   : w00176964
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_QRY_REG_STATUS_TYPE_ENUM
 {
     TAF_MMA_QRY_REG_STATUS_TYPE_CS,          /* CREG查询CS注册状态 */
@@ -1237,13 +1099,7 @@ enum TAF_MMA_QRY_REG_STATUS_TYPE_ENUM
 typedef VOS_UINT32 TAF_MMA_QRY_REG_STATUS_TYPE_ENUM_UINT32;
 
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_IMS_DOMAIN_CFG_TYPE_ENUM_UINT32
- 结构说明  : IMS优选域
- 1.日    期   : 2015年10月26日
-   作    者   : h00360002
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_IMS_DOMAIN_CFG_TYPE_ENUM
 {
     TAF_MMA_IMS_DOMAIN_CFG_TYPE_WIFI_PREFER     = 0,      /* WIFI prefer */
@@ -1254,13 +1110,7 @@ enum TAF_MMA_IMS_DOMAIN_CFG_TYPE_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_IMS_DOMAIN_CFG_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_IMS_DOMAIN_CFG_RESULT_ENUM_UINT32
- 结构说明  : IMS优选域设置返回结果
- 1.日    期   : 2015年10月26日
-   作    者   : h00360002
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_IMS_DOMAIN_CFG_RESULT_ENUM
 {
     TAF_MMA_IMS_DOMAIN_CFG_RESULT_SUCCESS       = 0,
@@ -1269,13 +1119,7 @@ enum TAF_MMA_IMS_DOMAIN_CFG_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_IMS_DOMAIN_CFG_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_ROAM_IMS_SUPPORT_ENUM_UINT32
- 结构说明  : 漫游下IMS是否支持
- 1.日    期   : 2016年3月10日
-   作    者   : W00316404
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_ROAM_IMS_SUPPORT_ENUM
 {
     TAF_MMA_ROAM_IMS_UNSUPPORT                   = 0,
@@ -1285,13 +1129,7 @@ enum TAF_MMA_ROAM_IMS_SUPPORT_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_ROAM_IMS_SUPPORT_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_ROAM_IMS_SUPPORT_RESULT_ENUM_UINT32
- 结构说明  : 漫游下IMS是否支持设置返回结果
- 1.日    期   : 2016年3月10日
-   作    者   : w00316404
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_ROAM_IMS_SUPPORT_RESULT_ENUM
 {
     TAF_MMA_ROAM_IMS_SUPPORT_RESULT_SUCCESS    = 0,
@@ -1300,13 +1138,7 @@ enum TAF_MMA_ROAM_IMS_SUPPORT_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_ROAM_IMS_SUPPORT_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_IMS_REG_DOMAIN_ENUM_UNIT8
- 结构说明  : IMS的注册域
- 1.日    期: 2016年5月5日
-   作    者: n00269697
-   修改内容: 新增
-*****************************************************************************/
+
 enum TAF_MMA_IMS_REG_DOMAIN_ENUM
 {
     TAF_MMA_IMS_REG_DOMAIN_NULL         = 0,
@@ -1315,13 +1147,7 @@ enum TAF_MMA_IMS_REG_DOMAIN_ENUM
     TAF_MMA_IMS_REG_DOMAIN_BUTT
 };
 typedef VOS_UINT8 TAF_MMA_IMS_REG_DOMAIN_ENUM_UINT8;
-/*****************************************************************************
-    枚举名    : TAF_MMA_IMS_REG_STATUS_ENUM
-    枚举说明  : ims的注册状态
-1.日    期: 2017年7月6日
-  作    者: l00359089
-  修改内容: 新增,参照TAF_SDC_IMS_REG_STATUS_ENUM_UINT8
-*****************************************************************************/
+
 enum TAF_MMA_IMS_REG_STATUS_ENUM
 {
     TAF_MMA_IMS_REG_STATUS_DEREG        = 0x00,
@@ -1333,13 +1159,7 @@ enum TAF_MMA_IMS_REG_STATUS_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_IMS_REG_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : TAF_MMA_LOC_UPDATE_STATUS_ENUM
-枚举说明  : LGU+卡文件6f7e中location_update_status项枚举
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_LOC_UPDATE_STATUS_ENUM
 {
     TAF_MMA_LOC_UPDATE_STATUS_UPDATED                       = 0,
@@ -1350,13 +1170,7 @@ enum TAF_MMA_LOC_UPDATE_STATUS_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_LOC_UPDATE_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    :  TAF_MMA_COMBINED_MODE_ENUM_UINT32
- 枚举说明  :  当前组合模式
- 1.日    期   : 2016年4月29日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_COMBINED_MODE_ENUM
 {
     TAF_MMA_COMBINED_MODE_GUL                = 0x00,     /* 组合模式为GUL模式 */
@@ -1365,13 +1179,7 @@ enum TAF_MMA_COMBINED_MODE_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_COMBINED_MODE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    :  TAF_MMA_ICC_APP_TYPE_SWITCH_STATE_ENUM_UINT32
- 枚举说明  :  USIM应用类型切换状态
- 1.日    期   : 2016年4月29日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_ICC_APP_TYPE_SWITCH_STATE_ENUM
 {
     TAF_MMA_ICC_APP_TYPE_SWITCH_STATE_BEGIN     = 0x00,     /* 切换开始 */
@@ -1379,7 +1187,6 @@ enum TAF_MMA_ICC_APP_TYPE_SWITCH_STATE_ENUM
     TAF_MMA_ICC_APP_TYPE_SWITCH_STATE_BUTT      = 0x02
 };
 typedef VOS_UINT32 TAF_MMA_ICC_APP_TYPE_SWITCH_STATE_ENUM_UINT32;
-
 
 #define  TAF_INVALID_TAB_INDEX          0
 /*TAF各模块ID*/
@@ -1407,13 +1214,7 @@ typedef struct
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_HPLMN_WITH_MNC_LEN_STRU
- 结构说明  : 带有MNC长度HPLMN值
- 1.日    期   : 2012年04月18日
-   作    者   : w00166186
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_PLMN_ID_STRU    stHplmn;
@@ -1449,13 +1250,7 @@ typedef struct
 }TAF_PH_COMPCAPLIST_STRU;
 
 
-/*****************************************************************************
- 枚举名    : MN_MMA_CPAM_RAT_TYPE_ENUM_UINT8
- 枚举说明  : at^cpam命令中带的接入技术
- 1.日    期   : 2011年8月03日
-   作    者   : z00161729
-   修改内容   : 新建
-*****************************************************************************/
+
 enum MN_MMA_CPAM_RAT_TYPE_ENUM
 {
     MN_MMA_CPAM_RAT_TYPE_WCDMA,          /* WCDMA单模**/
@@ -1515,13 +1310,7 @@ typedef TAF_UINT8 TAF_PH_MS_CLASS_TYPE;
 #define TAF_PH_MS_CLASS_B         6     /*对应于GSM下B类手机*/
 
 /* 原来宏定义的(TAF_PH_SERVICE_DOMAIN)改成枚举 */
-/*****************************************************************************
- 枚举名    : TAF_MMA_SERVICE_DOMAIN_ENUM_UINT8
- 结构说明  : 服务域的服务类型枚举
- 1.日    期   : 2015年04月09日
-   作    者   : h00313353
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_SERVICE_DOMAIN_ENUM
 {
     TAF_MMA_SERVICE_DOMAIN_CS                   = 0,   /* CS域 */
@@ -1535,13 +1324,7 @@ enum TAF_MMA_SERVICE_DOMAIN_ENUM
 };
 typedef TAF_UINT8 TAF_MMA_SERVICE_DOMAIN_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_ATTACH_TYPE_ENUM_UINT8
- 结构说明  : ATTACH类型枚举
- 1.日    期   : 2015年04月09日
-   作    者   : h00313353
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_ATTACH_TYPE_ENUM
 {
     TAF_MMA_ATTACH_TYPE_NULL            = 0,
@@ -1553,13 +1336,7 @@ enum TAF_MMA_ATTACH_TYPE_ENUM
 };
 typedef TAF_UINT8 TAF_MMA_ATTACH_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_DETACH_TYPE_ENUM_UINT8
- 结构说明  : DETACH类型枚举
- 1.日    期   : 2015年04月09日
-   作    者   : h00313353
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_DETACH_TYPE_ENUM
 {
     TAF_MMA_DETACH_TYPE_NULL            = 0,
@@ -1572,13 +1349,7 @@ enum TAF_MMA_DETACH_TYPE_ENUM
 typedef TAF_UINT8 TAF_MMA_DETACH_TYPE_ENUM_UINT8;
 
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_ATTACH_STATUS_ENUM_UINT8
- 结构说明  : 域的状态枚举类型
- 1.日    期   : 2015年04月09日
-   作    者   : h00313353
-   修改内容   : 新增枚举
-*****************************************************************************/
+
 enum TAF_MMA_ATTACH_STATUS_ENUM
 {
     TAF_MMA_ATTACH_STATUS_DETACHED       = 0,
@@ -1734,39 +1505,23 @@ typedef struct
      VOS_UINT8                          aucReserved[2];
 }TAF_PH_OP_MODE_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_W_CELL_SIGN_INFO_STRU
- 结构说明  : 信号质量相关信息
- 1.日    期   : 2012年11月21日
-   作    者   : z00161729
-   修改内容   : 支持cerssi和nmr
-*****************************************************************************/
+
 typedef struct
 {
     VOS_INT16                       sRscpValue;  /* 小区信号质量用于3g下^cerssi上报使用*/
     VOS_INT16                       sEcioValue;  /* 小区信噪比用于3g下^cerssi上报使用*/
+    VOS_INT8                        cEcno;       /* 增加ECNO, 比原有的sEcioValue增加0.5精度，目前仅为AT命令CESQ使用。范围为: -49~0 */
+    VOS_UINT8                       aucReserved[3];
 } TAF_MMA_W_CELL_SIGN_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_G_CELL_SIGN_INFO_STRU
- 结构说明  : 信号质量相关信息
- 1.日    期   : 2012年11月21日
-   作    者   : z00161729
-   修改内容   : 支持cerssi和nmr
-*****************************************************************************/
+
 typedef struct
 {
     VOS_INT16                       sRssiValue;   /* 小区信号质量用于2g下^cerssi上报使用,2g没有rscp的概念用的是rssi */
     VOS_UINT8                       aucReserve1[2];
 } TAF_MMA_G_CELL_SIGN_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SDC_4G_CELL_SIGN_INFO_STRU
- 结构说明  : 4G信号质量相关信息
- 1.日    期   : 2014年10月17日
-   作    者   : z00234330
-   修改内容   : 小区信号质量
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usRI;                                   /* RI*/
@@ -1839,12 +1594,10 @@ typedef struct
     VOS_UINT8                           ucCurrentUtranMode;
     VOS_UINT8                           aucReserv1;
 
-    /* Modified by z00161729 for 主动上报AT命令控制下移至C核, 2013-4-7, begin */
     VOS_UINT16                          usCellDlFreq;                           /*小区频点(下行)*/
     VOS_UINT16                          usCellUlFreq;                           /*当前频点(上行)*/
     VOS_INT16                           sUeRfPower;                             /*发射功率*/
     VOS_UINT8                           aucReserved[2];
-    /* Modified by z00161729 for 主动上报AT命令控制下移至C核, 2013-4-7, end */
 
     TAF_PH_RSSI_VALUE_STRU              aRssi[TAF_PH_RSSI_MAX_NUM];   /*每个小区的信号强度与误码率*/
 }TAF_PH_RSSI_STRU;
@@ -2197,15 +1950,8 @@ typedef TAF_UINT8 TAF_USIM_STATUS;
 
 #define TAF_PH_USIM_ROMSIM                240
 #define TAF_PH_USIM_NON                   255
-typedef struct
-{
-    /* Modified by z00161729 for 主动上报AT命令控制下移至C核, 2013-4-4, begin */
-    /* Added by z40661 for V7R1 phase I , 2011-04-17, begin */
-    VOS_UINT8                           aucImsi[NAS_MAX_IMSI_LENGTH];
-    VOS_UINT8                           aucReserve[3];
-    /* Added by z40661 for V7R1 phase I , 2011-04-17, end */
-   /* Modified by z00161729 for 主动上报AT命令控制下移至C核, 2013-4-4, end */
-}TAF_USIM_STATUS_ST;
+
+
 
 
 /*获取运营商信息，由华三AT命令（＋COPS）*/
@@ -2323,18 +2069,7 @@ typedef struct
     TAF_UINT32 ulBandHigh;/*高32位*/
 } TAF_USER_SET_PREF_BAND64;
 
-/*****************************************************************************
- 结构名    : TAF_USER_SET_LTE_PREF_BAND_INFO_STRU
- 结构说明  : 通过Bit位记录频段信息
-             aulBandInfo[0]代表低32, aulBandInfo[1]代表次高32个Band,以此类推，
-             Band与Bit位由低到高一一对应, 如: aulBandInfo[0]的Bit0代表Band1,
-             aulBandInfo[0]的Bit2代表Band3, aulBandInfo[0]的Bit31代表Band32
-             aulBandInfo[1]的Bit0代表Band33, aulBandInfo[1]的Bit6代表Band39
-             aulBandInfo[2]的Bit1代表Band66
-  1.日    期   : 2017年04月21日
-    作    者   : s00370485
-    修改内容   : LTE Band66升级新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_UINT32                          aulBandInfo[TAF_MMA_LTE_BAND_MAX_LENGTH];  /* 共8个U32字段标识LTE频段 */
@@ -2419,16 +2154,7 @@ typedef struct
 #define TAF_DEVICE_AT_MAX_W_BAND_NUM   9  /*当前用户可设置的W频段范围号*/
 
 /*漫游支持选项0，1不使用，只使用未变化即2，*/
-/*****************************************************************************
- 枚举名    : MN_MMA_ROAM_MODE_ENUM
- 结构说明  : 漫游特性开启时，漫游能力取值
- 1.日    期  : 2011年07月15日
-   作    者  : z00161729
-   修改内容  : 新增结构
- 2.日    期   : 2015年4月15日
-   作    者   : h00313353
-   修改内容   : SysCfg重构
-*****************************************************************************/
+
 enum TAF_MMA_ROAM_MODE_ENUM
 {
     TAF_MMA_ROAM_NATIONAL_ON_INTERNATIONAL_ON,                                   /* 开启国内国际漫游 */
@@ -2447,7 +2173,6 @@ typedef TAF_UINT8 TAF_PH_ROAM_STA;
 #define TAF_PH_NO_ROAM               1
 #define TAF_PH_ROAM_UNKNOW           2
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 #if(FEATURE_ON == FEATURE_LTE)
 
 #define TAF_PH_DOMESTIC_5776        1
@@ -2461,7 +2186,6 @@ typedef struct
 
 #endif
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 
 /*------------    域状态标志宏     ------------*/
@@ -2537,13 +2261,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }TAF_PH_SIM_CPHS_OPER_NAME_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PH_OPER_NAME_STRU
- 结构说明  : 运营商名称结构
- 1.日    期   : 2015年3月29日
-   作    者   : b00269685
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           bitExt    : 1;
@@ -2666,11 +2384,6 @@ typedef struct
     TAF_PH_PORT_INFO_STRU           PortId;                 /*数据卡端口分配信息*/
 }TAF_PH_PORT_STRU;
 
-/*该信息包的内容与USIM相关，当USIM不存在时都要置为无效值*/
-typedef struct
-{
-    TAF_USIM_STATUS_ST                UsimStatus;                               /*USIM状态*/
-}TAF_USIM_INFO_STRU;
 
 
 /*Taf_PhoneNetworkOperate*/
@@ -2695,15 +2408,7 @@ typedef TAF_UINT8 AT_COPS_FORMAT_TYPE;
 #define AT_COPS_SHORT_ALPH_TYPE           1
 #define AT_COPS_NUMERIC_TYPE              2
 
-/*****************************************************************************
- 结构名    : TAF_PLMN_USER_SEL_STRU
- 结构说明  : AT与MMA AT+COPS命令手动搜网设置结构
 
-  修改历史      :
-  1.日    期   : 2011年10月18日
-    作    者   : c00173809
-    修改内容   : 新生成函数
-*****************************************************************************/
 typedef struct
 {
     AT_COPS_FORMAT_TYPE         ucFormatType;
@@ -2712,15 +2417,7 @@ typedef struct
     VOS_CHAR                    ucOperName[TAF_PH_OPER_NAME_LONG];
 }TAF_PLMN_USER_SEL_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PLMN_NAME_LIST_STRU
- 结构说明  : PLMN名字列表结构，包含长短名和数字格式的名字
 
-  修改历史      :
-  1.日    期   : 2011年10月21日
-    作    者   : c00173809
-    修改内容   : 新生成函数
-*****************************************************************************/
 /*由于一个PLMN NAME包含长短名等有100字节左右，而核间通信缓冲最大为4K，所以只能存放个左右PLMN NAME*/
 #define TAF_MMA_MAX_PLMN_NAME_LIST_NUM   12
 typedef struct
@@ -2832,13 +2529,7 @@ typedef struct
 
 typedef TAF_UINT8 TAF_PH_INFO_RAT_TYPE;
 /*ucSysMode取值如下：*/
-/*****************************************************************************
- 枚举名    : TAF_SYS_MODE_ENUM
- 结构说明  : 驻留网络的系统模式枚举
- 1.日    期   : 2015年11月17日
-   作    者   : zwx247453
-   修改内容   : dallas gps参考时钟虚焊检测
-*****************************************************************************/
+
 enum TAF_SYS_MODE_ENUM
 {
     TAF_PH_INFO_NONE_RAT                = 0,        /*无服务*/
@@ -2900,14 +2591,7 @@ typedef struct
     TAF_USER_SET_PREF_BAND64            stOrigUserSetBand;
 }TAF_PH_SYS_CFG_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CELL_AC_INFO_STRU
-结构说明  : 小区禁止接入信息结构
 
-1.日    期: 2012年12月10日
-  作    者: W00176964
-  修改内容: 创建
-*******************************************************************************/
 typedef struct
 {
     TAF_MMA_SERVICE_DOMAIN_ENUM_UINT8           enSrvDomain; /* 服务域 0:CS,1:ps */
@@ -2962,17 +2646,7 @@ typedef struct
     TAF_PLMN_ID_STRU                    stPlmn;
 } TAF_PH_PREF_PLMN_OPERATE_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PH_SET_PREFPLMN_STRU
- 结构说明  : AT与MMA AT+CPOL命令设置结构
 
- 1.日    期 : 2011年10月24日
-   作    者 : c00173809
-   修改内容 : 新增结构
- 2.日    期   : 2011年12月5日
-   作    者   : w00176964
-   修改内容   : V7R1 PhaseIV调整:AT+CPOL支持增加或查询LTE的优选网络
-*****************************************************************************/
 typedef struct
 {
     MN_PH_PREF_PLMN_TYPE_ENUM_U8        enPrefPlmnType;                     /* 选中的优先级网络列表类型*/
@@ -2995,18 +2669,7 @@ typedef struct
     VOS_UINT32                          usEutrn;                            /* E-UTRN接入技术值*/
 } TAF_PH_SET_PREFPLMN_STRU;
 
-/*****************************************************************************
- 结构名    : MN_PH_SET_CPIN_REQ_STRU
- 结构说明  : AT与MMA AT^cpin命令设置结构
 
- 1.日    期 : 2011年11月4日
-   作    者 : c00173809
-   修改内容 : 新增结构
-
- 2.日    期 : 2012年04月21日
-   作    者 : l00198894
-   修改内容 : AP-Modem锁网锁卡项目扩展参数长度
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8   aucPara0[TAF_PH_UNLOCKCODELEN];         /* 用来放置解析出的参数字符串 */
@@ -3023,14 +2686,7 @@ enum TAF_PH_USIM_FILE_ENUM
 typedef VOS_UINT16 TAF_PH_USIM_FILE_ENUM_U16;
 #define TAF_PH_INVALID_USIM_REC             0xFFFFFFFFU
 
-/*****************************************************************************
-结构名    : TAF_MMA_PNN_INFO_QUERY_REQ_INDEX_STRU
-结构说明  : AT^PNN查询请求结构，用该结构记录进行分次查询，每次查询10个
 
-  1.日    期   : 2013年09月05日
-    作    者   : l00208543
-    修改内容   : DTS2013090309526
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usPnnCurrIndex; /* 查询PNN的起始位置 */
@@ -3103,9 +2759,7 @@ typedef TAF_UINT8 TAF_PHONE_EVENT;
 /* Added by L60609 for V7R1C50 AT&T&DCM, 2012-6-13, end */
 
 
-/* Added by w00176964 for VoLTE_PhaseI项目, 2013-8-1, begin */
 #define TAF_MMA_EVT_PS_INIT_RESULT_IND        (45)  /* 协议栈初始化结果指示消息 */
-/* Added by w00176964 for VoLTE_PhaseI项目, 2013-8-1, end */
 
 #define TAF_MMA_MAX_GUC_RAT_NUM                             (4)                 /* AT^syscfgex中acqorder代表的接入技术个数 */
 #define TAF_MMA_MAX_GUCL_RAT_NUM                            (5)                 /* AT^syscfgex中acqorder代表的接入技术个数 */
@@ -3115,16 +2769,7 @@ typedef TAF_UINT8 TAF_PHONE_EVENT;
 #define TAF_PH_MAX_LU_RAT_NUM                               (2)                 /* AT^syscfgex中acqorder代表的接入技术个数 */
 
 
-/*****************************************************************************
- 结构名    : TAF_PH_RAT_STRU
- 结构说明  : AT^syscfgex中设置的acqorder中的长度和数值
- 1.日    期 : 2011年06月9日
-   作    者 : l00130025
-   修改内容 : 新增结构
- 2.日    期 : 2015年4月16日
-   作    者 : y00245242
-   修改内容 : iteration 13开发
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucRatOrderNum;                          /* syscfgex中设置的acqoder中的指示个数 */
@@ -3132,14 +2777,7 @@ typedef struct
 }TAF_MMA_RAT_ORDER_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_MULTIMODE_RAT_CFG_STRU
- 结构说明  : 用户设置的多模配置结构，支持全指示的RAT配置；modem根据卡制式，决定
-             是否在CL与GUL模式之间切换；
- 1.日    期   : 2016年4月29日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                               ucRatNum;                           /* 当前支持的接入技术个数  */
@@ -3148,14 +2786,7 @@ typedef struct
     VOS_UINT8                               aucReserved[2];
 }TAF_MMA_MULTIMODE_RAT_CFG_STRU;
 
-/*****************************************************************************
- 枚举名    : TAF_PH_USER_SET_PRIO_RAT_ENUM
- 枚举说明  : 用户设置的接入优先级,主要用于显示给用户查看,如当前用户设置为
-              G单模，W优先,目前获取
- 1.日    期  : 2012年04月20日
-   作    者  : z40661
-   修改内容  : 新增结构
-*****************************************************************************/
+
 enum TAF_MMA_USER_SET_PRIO_RAT_ENUM
 {
     TAF_MMA_USER_SET_PRIO_AUTO,
@@ -3167,13 +2798,7 @@ enum TAF_MMA_USER_SET_PRIO_RAT_ENUM
 typedef VOS_UINT8 TAF_MMA_USER_SET_PRIO_RAT_ENUM_U8;
 
 
-/*****************************************************************************
- 枚举名    : TAF_PH_USER_SET_RAT_TYPE_ENUM_U8
- 枚举说明  : 用户设置的接入模式,保存在NVIM中
- 1.日    期  : 2012年04月20日
-   作    者  : z40661
-   修改内容  : 新增结构
-*****************************************************************************/
+
 enum TAF_PH_USER_SET_RAT_TYPE_ENUM
 {
     TAF_PH_USER_SET_RAT_WCDMA,
@@ -3185,25 +2810,8 @@ typedef VOS_UINT8 TAF_PH_USER_SET_RAT_TYPE_ENUM_U8;
 
 
 
-/* Deleted by w00167002 for L-C互操作项目, 2014-2-17, begin */
-/* Deleted by w00167002 for L-C互操作项目, 2014-2-17, end */
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-13, begin */
-/*****************************************************************************
- 结构名    : TAF_MMA_SYS_CFG_PARA_STRU
- 结构说明  : 手机系统设置参数结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : SrvDomain宏定义改枚举
-  3.日    期   : 2017年04月21日
-    作    者   : s00370485
-    修改内容   : LTE Band66升级修改LTE Band结构体
-*****************************************************************************/
 typedef struct
 {
     TAF_MMA_ROAM_MODE_ENUM_UINT8               enRoam;                          /* 漫游能力，0：开启国内国际漫游；1：开启国内漫游，关闭国际漫游；2：关闭国内漫游，开启国际漫游；3：关闭国内国际漫游 */
@@ -3215,7 +2823,6 @@ typedef struct
     TAF_USER_SET_LTE_PREF_BAND_INFO_STRU       stLBand;                         /* 记录L频段 */
 }TAF_MMA_SYS_CFG_PARA_STRU;
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-13, end */
 
 
 #define TAF_MAX_GROUP_CFG_OPLMN_NUM                  (50)            /* 单组允许配置的OPLMN的最大个数 */
@@ -3228,16 +2835,7 @@ typedef struct
 #define TAF_AT_EOPLMN_PARA_NUM                       (4)             /* ^EOPLMN设置命令参数的个数 */
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SET_EOPLMN_LIST_STRU
- 结构说明  : AT和MMA的EOPLMN设置接口
- 1.日    期  : 2013年10月15日
-   作    者  : s00190137
-   修改内容  : 新增结构
- 2.日    期  : 2013年11月26日
-   作    者  : s00190137
-   修改内容  : 添加分组机制，单组允许最大设置50个OPLMN
-*****************************************************************************/
+
 typedef struct
 {
     TAF_UINT8                           aucVersion[TAF_MAX_USER_CFG_OPLMN_VERSION_LEN];    /* OPLMN List版本号 */
@@ -3246,14 +2844,7 @@ typedef struct
     TAF_UINT8                           aucOPlmnWithRat[TAF_MAX_GROUP_CFG_OPLMN_DATA_LEN];  /* OPLMN的PDU数据，和EFOplmn文件一致 */
 }TAF_MMA_SET_EOPLMN_LIST_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PHONE_EVENT_EOPLMN_SET_CNF_STRU
- 结构说明  : EOPLMN设置结果上报事件
-  修改历史      :
-  1.日    期   : 2013年10月15日
-    作    者   : s00190137
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     TAF_PHONE_EVENT                     PhoneEvent;
@@ -3263,17 +2854,7 @@ typedef struct
     VOS_UINT32                          ulResult;
 }TAF_PHONE_EVENT_EOPLMN_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PHONE_EVENT_EOPLMN_QRY_CNF_STRU
- 结构说明  : EOPLMN查询结果上报事件
-  修改历史      :
-  1.日    期   : 2013年10月15日
-    作    者   : s00190137
-    修改内容   : 新生成函数
-  2.日    期    : 2013年11月26日
-    作    者    : s00190137
-    修改内容    : 将最大支持设置的OPLMN扩展到256个
-*****************************************************************************/
+
 typedef struct
 {
     TAF_PHONE_EVENT                     PhoneEvent;
@@ -3287,13 +2868,7 @@ typedef struct
     TAF_UINT8                           aucOPlmnList[TAF_MAX_USER_CFG_OPLMN_DATA_LEN];        /* OPLMN的PDU数据，和EFOplmn文件一致 */
 }TAF_PHONE_EVENT_EOPLMN_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_COPS_FORMAT_TYPE_SET_REQ_STRU
- 结构说明  : AT和MMA设置cops显示类型的接口
- 1.日    期   : 2015年3月9日
-   作    者   : z00161729
-   修改内容   : AT&T 支持EONS特性修改
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucCopsFormatType;
@@ -3301,13 +2876,7 @@ typedef struct
 }TAF_MMA_COPS_FORMAT_TYPE_SET_REQ_STRU;
 
 #define TAF_MMA_MAX_EF_LEN              (240)
-/*****************************************************************************
- 结构名    : TAF_MMA_USIM_STUB_SET_REQ_STRU
- 结构说明  : usim回复读文件内容给mma接口
- 1.日    期   : 2015年3月31日
-   作    者   : z00161729
-   修改内容   : AT&T 支持EONS特性修改
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usEfId;
@@ -3319,13 +2888,7 @@ typedef struct
 }TAF_MMA_USIM_STUB_SET_REQ_STRU;
 
 #define TAF_MMA_MAX_FILE_ID_NUM         (6)
-/*****************************************************************************
- 结构名    : TAF_MMA_REFRESH_STUB_SET_REQ_STRU
- 结构说明  : 模拟pih给指定模块发送refresh消息
- 1.日    期   : 2015年3月31日
-   作    者   : z00161729
-   修改内容   : AT&T 支持EONS特性修改
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulReceivePid;
@@ -3336,13 +2899,7 @@ typedef struct
 }TAF_MMA_REFRESH_STUB_SET_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_AUTO_RESEL_STUB_SET_REQ_STRU
- 结构说明  : 打桩设置at+cops=0是否会触发搜网
- 1.日    期   : 2015年5月29日
-   作    者   : b00269685
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucActiveFlg;
@@ -3353,13 +2910,7 @@ typedef struct
 
 /* Deleted by k902809 for Iteration 11, Iteration 11 2015-3-25, end */
 
-/*****************************************************************************
- 结构名    : TAF_MMA_NET_SCAN_INFO_STRU
- 结构说明  : 扫描某个频点的网络信息
- 1.日    期   : 2013年8月24日
-   作    者   : w00242748
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usArfcn;                                /* 频点 */
@@ -3388,13 +2939,7 @@ enum TAF_MMA_NET_SCAN_RESULT_ENUM
 };
 typedef VOS_UINT8  TAF_MMA_NET_SCAN_RESULT_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_NET_SCAN_CAUSE_ENUM
- 结构说明  : 扫描失败原因
- 1.日    期   : 2013年10月10日
-   作    者   : w00242748
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_NET_SCAN_CAUSE_ENUM
 {
     TAF_MMA_NET_SCAN_CAUSE_SIGNAL_EXIST        = 0,                /* 存在信令连接 */
@@ -3416,14 +2961,7 @@ typedef VOS_UINT8 TAF_MMA_NET_SCAN_CAUSE_ENUM_UINT8;
 
 /* Deleted by k902809 for Iteration 11, Iteration 11 2015-3-25, end */
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, begin */
-/*****************************************************************************
- 枚举名    : TAF_MMA_SET_BORDER_INFO_OPERATE_TYPE_ENUM
- 结构说明  : 设置边境类型，0:增加 1:删除所有
-  1.日    期   : 2016年9月1日
-    作    者   : s00217060
-    修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_SET_BORDER_INFO_OPERATE_TYPE_ENUM
 {
     TAF_MMA_SET_BORDER_INFO_OPERATE_TYPE_ADD                = 0,                /* 增加边境信息 */
@@ -3432,14 +2970,7 @@ enum TAF_MMA_SET_BORDER_INFO_OPERATE_TYPE_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_SET_BORDER_INFO_OPERATE_TYPE_ENUM_UINT8;
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-22, begin */
-/*****************************************************************************
- 枚举名    : TAF_MMA_LAC_TAC_TYPE_ENUM_UINT8
- 结构说明  : LAC或TAC类型枚举
-  1.日    期   : 2016年8月22日
-    作    者   : s00217060
-    修改内容   : 新建:枚举值和AT^BORDERINFO中的<BS>中的<type>对应，不能修改
-*****************************************************************************/
+
 enum NAS_MML_LAC_TAC_TYPE_ENUM
 {
     TAF_MMA_LAC_TAC_TYPE_LAC    = 0,                                            /* 类型为LAC */
@@ -3447,23 +2978,9 @@ enum NAS_MML_LAC_TAC_TYPE_ENUM
     TAF_MMA_LAC_TAC_TYPE_BUTT
 };
 typedef VOS_UINT8 TAF_MMA_LAC_TAC_TYPE_ENUM_UINT8;
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-22, end */
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, end */
 
-/*****************************************************************************
- 结构名    : TAF_PH_REG_REJ_INFO_STRU
- 结构说明  : AT和MMA的REJINFO设置接口
- 1.日    期  : 2013年08月15日
-   作    者  : l00208543
-   修改内容  : 新增结构
- 2.日    期   : 2014年4月1日
-   作    者   : z00161729
-   修改内容   : DTS2014040300125:service 被拒和网络detach ind被拒需要上报^rejinfo
-  3.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : SysCfg SrvDomain转枚举
-*****************************************************************************/
+
 typedef struct
 {
     /*该部分必须放在最前面，AT模块根据取该部分来判断消息类型*/
@@ -3483,13 +3000,7 @@ typedef struct
 }TAF_PH_REG_REJ_INFO_STRU;
 
 
-/*****************************************************************************
- 枚举名    : TAF_PH_PLMN_SELECTION_RESULT_ENUM_UINT32
- 结构说明  : 搜网结果
- 1.日    期   : 2013年10月09日
-   作    者   : l00208543
-   修改内容   : 新增
-*****************************************************************************/
+
 enum TAF_PH_PLMN_SELECTION_RESULT_ENUM
 {
     TAF_PH_PLMN_SELECTION_RESULT_NORMAL_SERVICE    = 0,                        /* 正常服务 */
@@ -3500,13 +3011,7 @@ enum TAF_PH_PLMN_SELECTION_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_PH_PLMN_SELECTION_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_PH_PLMN_SELECTION_START_END_FLAG_ENUM
- 结构说明  : 搜网开始/搜网结束标示
- 1.日    期   : 2013年10月09日
-   作    者   : l00208543
-   修改内容   : 新增
-*****************************************************************************/
+
 enum TAF_PH_PLMN_SELECTION_START_END_FLAG_ENUM
 {
     TAF_PH_PLMN_SELECTION_START      = 0,                        /* 搜网开始 */
@@ -3516,28 +3021,14 @@ enum TAF_PH_PLMN_SELECTION_START_END_FLAG_ENUM
 };
 typedef VOS_UINT32 TAF_PH_PLMN_SELECTION_START_END_FLAG_ENUM_UINT32;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PLMN_SELECTION_INFO_STRU
- 结构说明  : AT和MMA的PLMN_SELECTION_INFO接口
- 1.日    期  : 2013年10月9日
-   作    者  : l00208543
-   修改内容  : 新增结构
 
-*****************************************************************************/
 typedef struct
 {
     TAF_PH_PLMN_SELECTION_RESULT_ENUM_UINT32           ulPlmnSelectRlst;
     TAF_PH_PLMN_SELECTION_START_END_FLAG_ENUM_UINT32   ulPlmnSelectFlag; /* 标示搜网开始或搜网结束 */
 }TAF_MMA_PLMN_SELECTION_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PHONE_EVENT_PLMN_LIST_STRU
- 结构说明  : PLMN LIST搜上报事件
-  修改历史      :
-  1.日    期   : 2015年3月6日
-    作    者   : b00269685
-    修改内容   : 列表搜新增接口
-*****************************************************************************/
+
 typedef struct
 {
     TAF_UINT8                   ucOpError;
@@ -3549,17 +3040,7 @@ typedef struct
     TAF_PLMN_STATUS_STRU        astPlmnInfo[TAF_MMA_MAX_PLMN_NAME_LIST_NUM];
 }TAF_MMA_PLMN_LIST_CNF_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PHONE_EVENT_PLMN_LIST_STRU
- 结构说明  : PLMN LIST搜上报事件
-  修改历史      :
-  1.日    期   : 2011年11月5日
-    作    者   : c00173809
-    修改内容   : 新生成函数
-  2.日    期   : 2015年3月6日
-    作    者   : b00269685
-    修改内容   : 列表搜改为分段上报
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -3617,22 +3098,16 @@ typedef struct
 
     TAF_UINT32                         OP_CurPlmn           : 1;
 
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-11, begin */
     TAF_UINT32                         Op_CellAcInfo        : 1;
-    /* Modified by w00176964 for VoLTE_PhaseI项目, 2013-8-1, begin */
     TAF_UINT32                         OP_Spare             : 3;
     TAF_UINT32                         OP_PsInitRslt        : 1;
-    /* Modified by w00176964 for VoLTE_PhaseI项目, 2013-8-1, end */
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-11, end */
 
     TAF_ERROR_CODE_ENUM_UINT32         PhoneError;
 
     TAF_PH_OP_MODE_CNF_STRU            OperMode;
 
 
-    /* Modified by w00167002 for L-C互操作项目, 2014-2-13, begin */
     TAF_MMA_SYS_CFG_PARA_STRU          stSysCfg;
-    /* Modified by w00167002 for L-C互操作项目, 2014-2-13, end */
 
 
     TAF_PLMN_ID_STRU                   RegPlmn;
@@ -3663,14 +3138,10 @@ typedef struct
     /* Added by L60609 for V7R1C50 AT&T&DCM, 2012-6-13, end */
 
 
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, begin */
     VOS_UINT8                          aucCurcRptCfg[TAF_MMA_RPT_CFG_MAX_SIZE];         /* CURC设置的主动上报标识 */
     VOS_UINT8                          aucUnsolicitedRptCfg[TAF_MMA_RPT_CFG_MAX_SIZE];  /* 单个命令设置的主动上报标识 */
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, end */
 
-    /* Added by w00176964 for VoLTE_PhaseI项目, 2013-8-1, begin */
     TAF_MMA_PS_INIT_RSLT_ENUM_UINT32   ulPsInitRslt;                                    /* 协议栈初始化结果 */
-    /* Added by w00176964 for VoLTE_PhaseI项目, 2013-8-1, end */
 }TAF_PHONE_EVENT_INFO_STRU;
 
 #define TAF_SIM_LOCK_MCC_LEN            (3)
@@ -3744,13 +3215,7 @@ typedef struct
 }TAF_MMA_CSQLVL_PARA_STRU;
 /* Added by f62575 for AT Project, 2011-10-04,  End */
 
-/*****************************************************************************
- 枚举名    : MN_MMA_CPAM_RAT_PRIO_ENUM
- 结构说明  : AT^CPAM 中acqorder接入优先级的取值
-1.日    期  : 2011年07月15日
-  作    者  : z00161729
-  修改内容  : 新增结构
-*****************************************************************************/
+
 enum AT_CPAM_RAT_PRIO_ENUM
 {
     MN_MMA_CPAM_RAT_PRIO_GSM            = 0,                                    /* 接入优先级参数为GSM优先  */
@@ -3763,13 +3228,7 @@ typedef VOS_UINT8 MN_MMA_CPAM_RAT_PRIO_ENUM_UINT8;
 
 
 
-/*****************************************************************************
-结构名    : MN_MMA_ANQUERY_2G_3G_PARA_STRU
-结构说明  : AT^ANQUERY查询操作的2G/3G结果上报结构
-  1.日    期   : 2014年11月29日
-    作    者   : l00305157
-    修改内容   : 创建
-*******************************************************************************/
+
 typedef struct
 {
     VOS_INT16                           sCpichRscp;
@@ -3781,13 +3240,7 @@ typedef struct
 }MN_MMA_ANQUERY_2G_3G_PARA_STRU;
 
 
-/*****************************************************************************
-结构名    : MN_MMA_ANQUERY_4G_PARA_STRU
-结构说明  : AT^ANQUERY查询操作的LTE结果上报结构
-  1.日    期   : 2014年11月29日
-    作    者   : l00305157
-    修改内容   : 创建
-*******************************************************************************/
+
 typedef struct
 {
     VOS_INT16                           sRsrp;                                  /* 范围：(-141,-44), 99为无效 */
@@ -3797,14 +3250,7 @@ typedef struct
 }MN_MMA_ANQUERY_4G_PARA_STRU;
 
 
-/*****************************************************************************
-结构名    : MN_MMA_ANQUERY_PARA_STRU
-结构说明  : AT^ANQUERY查询操作的结果上报结构
 
-  1.日    期   : 2011年10月17日
-    作    者   : o00132663
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     TAF_MMA_RAT_TYPE_ENUM_UINT8             enServiceSysMode;                       /* 指示上报模式*/
@@ -3827,17 +3273,7 @@ typedef struct
     VOS_INT16                           sCpichEcNo;
 }TAF_MMA_CSNR_PARA_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CRPN_QRY_PARA_STRU
-结构说明  : AT^CRPN查询请求结构
 
-  1.日    期   : 2011年10月17日
-    作    者   : o00132663
-    修改内容   : 创建
-  2.日    期   : 2015年3月5日
-    作    者   : b00269685
-    修改内容   : 改为分段上报
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucCurrIndex;
@@ -3850,17 +3286,7 @@ typedef struct
 
 /* NAME长度增加了，每次上报的个数也要增加 */
 #define TAF_PH_CRPN_PLMN_MAX_NUM            (6)            /* AT^CRPN命令最大PLMN个数 */
-/*****************************************************************************
-结构名    : TAF_MMA_CRPN_QRY_INFO_STRU
-结构说明  : AT^CRPN查询请求回复结构
 
-  1.日    期   : 2011年10月17日
-    作    者   : o00132663
-    修改内容   : 创建
-  2.日    期   : 2015年3月5日
-    作    者   : b00269685
-    修改内容   : 改为分段上报
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucCurrIndex;
@@ -3872,14 +3298,7 @@ typedef struct
 }TAF_MMA_CRPN_QRY_INFO_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_SPN_PARA_STRU
-结构说明  : AT^SPN查询请求回复参数结构
 
-  1.日    期   : 2011年10月17日
-    作    者   : o00132663
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     TAF_PH_USIM_SPN_STRU                stSimSpnInfo;
@@ -3904,27 +3323,16 @@ enum MM_TEST_AT_CMD_ENUM
 
     MM_TEST_AT_CMD_SET_GMM_DEALY_SUSPENDRSP        = 9,    /* 设定gmm延迟回复挂起结果给MMC */
 
-    /* Modified by z00234330 for 主动上报AT命令控制下移至C核, 2013-4-16, begin */
     MM_TEST_AT_CMD_SET_CSFB_HIGH_PRIO_FLG         = 10,
-    /* Modified by z00234330 for 主动上报AT命令控制下移至C核, 2013-4-16, end */
 
-    /* Modified by z00234330 for C50问题单同步到V9, 2013-4-16, begin */
     MM_TEST_AT_CMD_CLEAR_USER_PLMN_                   = 11,
-    /* Modified by z00234330 for C50问题单同步到V9, 2013-4-16, end */
 
     MM_TEST_AT_CMD_SET_ORIGINAL_REJECT_CAUSE          = 12,
     MM_TEST_AT_CMD_BUTT,
 };
 typedef VOS_UINT8 MM_TEST_AT_CMD_ENUM_U8;
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-25, begin */
-/*****************************************************************************
- 枚举名    : TAF_MMA_CARD_STATUS_ENUM_UINT8
- 枚举说明  : 卡状态信息
-  1.日    期   : 2014年02月20日
-    作    者   : w00167002
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
+
 enum TAF_MMA_CARD_STATUS_ENUM
 {
     TAF_MMA_CARD_STATUS_AVAILABLE      = 0,
@@ -3934,16 +3342,8 @@ enum TAF_MMA_CARD_STATUS_ENUM
 typedef VOS_UINT8 TAF_MMA_CARD_STATUS_ENUM_UINT8;
 
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-25, end */
 
-/*****************************************************************************
-结构名    : MM_TEST_AT_CMD_STRU
-结构说明  : AT^CMM查询命令参数请求结构
 
-  1.日    期   : 2011年10月17日
-    作    者   : o00132663
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     MM_TEST_AT_CMD_ENUM_U8              ucCmd;
@@ -3952,14 +3352,7 @@ typedef struct
     TAF_UINT32                          aulPara[10];
 }MM_TEST_AT_CMD_STRU;
 
-/*****************************************************************************
-结构名    : MM_TEST_AT_CMD_STRU
-结构说明  : AT^CMM查询命令调用API Mm_AtTest出参结构
 
-  1.日    期   : 2011年10月17日
-    作    者   : o00132663
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulRsltNum;
@@ -3967,14 +3360,7 @@ typedef struct
 }MM_TEST_AT_RSLT_STRU;
 
 
-/*****************************************************************************
-结构名    : ATMMA_OM_MAINTAIN_INFO_IND_STRU
-结构说明  : MMA和AT间PC工具相关的可谓可测配置信息
 
-  1.日    期   : 2012年04月24日
-    作    者   : l00171473
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -3987,14 +3373,7 @@ typedef struct
 }ATMMA_OM_MAINTAIN_INFO_IND_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_MM_INFO_QUERY_CNF_STRU
-结构说明  : MM INFO中的名称信息
 
-  1.日    期   : 2013年01月10日
-    作    者   : l65478
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucLongNameLen;
@@ -4003,13 +3382,7 @@ typedef struct
     VOS_UINT8                           aucShortName[TAF_PH_OPER_NAME_SHORT];
     VOS_UINT8                           aucReserved[2];                             /* 保留   */
 }TAF_MMA_MM_INFO_PLMN_NAME_STRU;
-/*******************************************************************************
- 结构名    : TAF_USER_SRV_STATE_STRU
- 结构说明  : 用户业务状态结构体
- 1.日    期   : 2013年06月11日
-   作    者   : s00217060
-   修改内容   : 新增结构体
-*******************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulCsSrvExistFlg;                        /* CS业务是否存在标志 */
@@ -4017,29 +3390,14 @@ typedef struct
 }TAF_USER_SRV_STATE_STRU;
 
 
-/* Modified by w00167002 for L-C互操作项目, 2014-2-25, begin */
-/*****************************************************************************
-结构名    : TAF_MMA_CERSSI_INFO_QUERY_REQ_STRU
-结构说明  : AT^CERSSI查询请求结构
 
-  1.日    期   : 2013年2月4日
-    作    者   : z00161729
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucRsv[4];
 }TAF_MMA_CERSSI_INFO_QUERY_REQ_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_CPOL_INFO_QUERY_REQ_STRU
-结构说明  : AT+CPOL查询请求结构
 
-  1.日    期   : 2014年01月15日
-    作    者   : f62575
-    修改内容   : DTS2014011301359，+CPOL命令支持超过37个UPLMN
-*******************************************************************************/
 typedef struct
 {
     MN_PH_PREF_PLMN_TYPE_ENUM_U8        enPrefPLMNType;                         /* 查询运营商名称的类型 */
@@ -4052,16 +3410,7 @@ typedef struct
 /* Deleted by k902809 for Iteration 11, 2015-3-30, begin */
 /* Deleted by k902809 for Iteration 11, Iteration 11 2015-3-30, end */
 
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, Begin */
-/*****************************************************************************
- 结构名    : TAF_MMA_CTRL_STRU
- 结构说明  : MMA控制结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulModuleId;         /* 填入PID */
@@ -4070,13 +3419,7 @@ typedef struct
     VOS_UINT8                           aucReserved[1];
 }TAF_MMA_CTRL_STRU;
 
-/*****************************************************************************
- 结构名  : TAF_MMA_PLMN_LIST_CTRL_STRU
- 结构说明: 记录AT+COPS=?的信息
- 1.日    期   : 2015年2月25日
-   作    者   : b00269685
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usCurrIndex;                    /* 本次需要读取的PNN list起始位index */
@@ -4084,15 +3427,7 @@ typedef struct
 } TAF_MMA_PLMN_LIST_CTRL_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PHONE_MODE_STRU
- 结构说明  : 手机模式设置参数结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     TAF_PH_MODE                        PhMode;  /* 模式 */
@@ -4100,15 +3435,7 @@ typedef struct
     VOS_UINT8                          aucReserve[2];
 }TAF_MMA_PHONE_MODE_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PHONE_MODE_SET_REQ_STRU
- 结构说明  : 手机模式设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4118,15 +3445,7 @@ typedef struct
 }TAF_MMA_PHONE_MODE_SET_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SYS_CFG_REQ_STRU
- 结构说明  : 手机模式设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年02月13日
-    作    者   : b00269685
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4136,15 +3455,7 @@ typedef struct
 }TAF_MMA_SYS_CFG_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EONS_UCS2_REQ_STRU
- 结构说明  : AT^EONSUCS2 查询请求消息结构体
 
- 修改历史      :
-  1.日    期   : 2015年03月12日
-    作    者   : c00318887
-    修改内容   : AT&T phaseII新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4152,15 +3463,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_EONS_UCS2_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EONS_UCS2_PLMN_NAME_STRU
- 结构说明  : AT^EONSUCS2 查询内容结构体
 
- 修改历史      :
-  1.日    期   : 2015年03月12日
-    作    者   : c00318887
-    修改内容   : AT&T phaseII新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucLongNameLen;
@@ -4170,15 +3473,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];                             /* 保留   */
 }TAF_MMA_EONS_UCS2_PLMN_NAME_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EONS_UCS2_HNB_NAME_STRU
- 结构说明  : AT^EONSUCS2 查询内容结构体
 
- 修改历史      :
-  1.日    期   : 2016年02月2日
-    作    者   : y00358807
-    修改内容   : AT&T phaseII新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucHomeNodeBNameLen;
@@ -4186,15 +3481,7 @@ typedef struct
     VOS_UINT8                           aucHomeNodeBName[TAF_MMA_MAX_HOME_NODEB_NAME_LEN];
 }TAF_MMA_EONS_UCS2_HNB_NAME_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EONS_UCS2_CNF_STRU
- 结构说明  : AT^EONSUCS2 查询结果内容结构体
 
- 修改历史      :
-  1.日    期   : 2015年03月12日
-    作    者   : c00318887
-    修改内容   : AT&T phaseII新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4210,30 +3497,14 @@ typedef struct
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ACQ_PARA_STRU
- 结构说明  : 手机系统设置参数结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     TAF_MMA_ACQ_REASON_ENUM_UINT8    enAcqReason;
     VOS_UINT8                        aucReserve[3];
 }TAF_MMA_ACQ_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ACQ_REQ_STRU
- 结构说明  : 手机模式设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年02月13日
-    作    者   : b00269685
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4242,18 +3513,7 @@ typedef struct
     TAF_MMA_ACQ_PARA_STRU               stAcqPara;
 }TAF_MMA_ACQ_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_REG_CELL_INFO_STRU
- 结构说明  : 注册小区信息参数结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年7月20日
-   作    者   : w000316404
-   修改内容   : R11协议升级(LTE频点配置值扩展)
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulArfcn;
@@ -4264,18 +3524,7 @@ typedef struct
     VOS_UINT16                          ausCellId[TAF_MMA_REG_MAX_CELL_NUM];
 }TAF_MMA_REG_CELL_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_REG_PARA_STRU
- 结构说明  : 注册参数结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : SysCfg SrvDomain转枚举
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                                    bitOpPrioClass       : 1;
@@ -4289,15 +3538,7 @@ typedef struct
     TAF_MMA_REG_CELL_INFO_STRU                    stCellInfo;
 }TAF_MMA_REG_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_REG_REQ_STRU
- 结构说明  : 手机模式设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年02月13日
-    作    者   : b00269685
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4306,13 +3547,7 @@ typedef struct
     TAF_MMA_REG_PARA_STRU               stRegPara;
 }TAF_MMA_REG_REQ_STRU;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_SRV_ACQ_RESULT_ENUM_UINT8
- 结构说明  : MMA通知SPM当前搜网结果
- 1.日    期   : 2014年5月28日
-   作    者   : h00246512
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_SRV_ACQ_RESULT_ENUM
 {
     TAF_MMA_SRV_ACQ_RESULT_SUCCESS    = 0,                                /* 成功 */
@@ -4326,13 +3561,7 @@ enum TAF_MMA_SRV_ACQ_RESULT_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_SRV_ACQ_RESULT_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : NAS_MSCC_PIF_SRV_ACQ_FAIL_CAUSE_ENUM_UINT8
- 枚举说明  : 业务触发搜网失败原因
- 1.日    期   : 2017年3月27日
-   作    者   : z00385378
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_SRV_ACQ_FAIL_CAUSE_ENUM
 {
     TAF_MMA_SRV_ACQ_FAIL_CAUSE_UNKNOW      = 0,                           /* 未知 */
@@ -4341,13 +3570,7 @@ enum TAF_MMA_SRV_ACQ_FAIL_CAUSE_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_SRV_ACQ_FAIL_CAUSE_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SRV_ACQ_CNF_STRU
- 结构说明  : 业务触发搜网结果
- 1.日    期   : 2014年5月28日
-   作    者   : h00246512
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4357,16 +3580,7 @@ typedef struct
     VOS_UINT8                               aucReserved[2];
 }TAF_MMA_SRV_ACQ_CNF_STRU;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_SRV_TYPE_ENUM_UINT8
- 枚举说明  : CS域和PS域SESSION类型
- 1.日    期   : 2014年5月22日
-   作    者   : h00246512
-   修改内容   : 新建
- 2.日    期   : 2016年3月23日
-   作    者   : h00360002
-   修改内容   : 增加CS域紧急呼失败后触发的优先IMS的搜网
-*****************************************************************************/
+
 enum TAF_MMA_SRV_TYPE_ENUM
 {
     TAF_MMA_SRV_TYPE_CS_MO_NORMAL_CALL,
@@ -4384,14 +3598,7 @@ enum TAF_MMA_SRV_TYPE_ENUM
 };
 typedef VOS_UINT8 TAF_MMA_SRV_TYPE_ENUM_UINT8;
 
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, begin */
-/*****************************************************************************
- 枚举名    : TAF_MMA_SRV_TYPE_ENUM
- 枚举说明  :
- 1.日    期   : 2017年02月04日
-   作    者   : wx270776
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_APPLICATIONS_INDICATION_ENUM
 {
     TAF_MMA_APPLICATIONS_INDICATION_START                 = 0,
@@ -4400,15 +3607,8 @@ enum TAF_MMA_APPLICATIONS_INDICATION_ENUM
     TAF_MMA_APPLICATIONS_INDICATION_BUTT
 };
 typedef VOS_UINT32 TAF_MMA_APPLICATIONS_INDICATION_ENUM_UINT32;
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, end */
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_SRV_ACQ_RAT_TYPE_ENUM_UINT8
- 枚举说明  : 业务触发搜网的RAT类型
- 1.日    期   : 2014年5月15日
-   作    者   : l00301449
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_MMA_SRV_ACQ_RAT_TYPE_ENUM
 {
     TAF_MMA_SRV_ACQ_RAT_TYPE_GUL,
@@ -4421,26 +3621,14 @@ typedef VOS_UINT8 TAF_MMA_SRV_ACQ_RAT_TYPE_ENUM_UINT8;
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SRV_ACQ_RAT_LIST_STRU
- 结构说明  : 业务触发搜网的网络模式列表
- 1.日    期   : 2015年5月15日
-   作    者   : L00301449
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucRatNum;
     TAF_MMA_SRV_ACQ_RAT_TYPE_ENUM_UINT8 aenRatType[TAF_MMA_SRV_ACQ_RAT_NUM_MAX];
 }TAF_MMA_SRV_ACQ_RAT_LIST_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SRV_ACQ_REQ_STRU
- 结构说明  : 业务触发搜网指示
- 1.日    期   : 2014年5月28日
-   作    者   : h00246512
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4452,29 +3640,13 @@ typedef struct
 }TAF_MMA_SRV_ACQ_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_POWER_SAVE_PARA_STRU
- 结构说明  : Power Save参数结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucReserve[4];
 }TAF_MMA_POWER_SAVE_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_POWER_SAVE_REQ_STRU
- 结构说明  : 手机模式设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年02月13日
-    作    者   : b00269685
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4483,18 +3655,7 @@ typedef struct
     TAF_MMA_POWER_SAVE_PARA_STRU        stPowerSavePara;
 }TAF_MMA_POWER_SAVE_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_DETACH_PARA_STRU
- 结构说明  : Detach参数结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : SysCfg SrvDomain改为枚举
-*****************************************************************************/
 typedef struct
 {
     TAF_MMA_DETACH_CAUSE_ENUM_UINT8     enDetachCause;
@@ -4502,29 +3663,14 @@ typedef struct
     VOS_UINT8                           aucReserve[2];
 }TAF_MMA_DETACH_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PLMN_LIST_PARA_STRU
- 结构说明  : 列表搜参数
 
- 修改历史      :
-  1.日    期   : 2015年4月8日
-    作    者   : b00269685
-    修改内容   :
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usCurrIndex; /* 查询的起始位置 */
     VOS_UINT16                          usQryNum;    /* 查询的个数，由于A核和C核通讯，消息大小有限制 */
 } TAF_MMA_PLMN_LIST_PARA_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSG_LIST_ABORT_REQ_STRU
-结构说明  : CSG List Abort请求结构
 
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4533,14 +3679,7 @@ typedef struct
     VOS_UINT32                          ulReserved;
 }TAF_MMA_CSG_LIST_ABORT_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSG_LIST_ABORT_CNF_STRU
-结构说明  : CSG list Abort回复结果结构
 
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4549,15 +3688,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_CSG_LIST_ABORT_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CSG_LIST_SEARCH_REQ_STRU
- 结构说明  : CSG列表搜网请求结构
 
- 修改历史      :
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4566,13 +3697,7 @@ typedef struct
     TAF_MMA_PLMN_LIST_PARA_STRU         stPlmnListPara;
 }TAF_MMA_CSG_LIST_SEARCH_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CSG_TYPE_STRU
- 结构说明  : 保存CSG ID类型
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucCsgTypeLen;
@@ -4580,13 +3705,7 @@ typedef struct
     VOS_UINT8                           aucCsgType[TAF_MMA_MAX_CSG_TYPE_LEN];
 }TAF_MMA_CSG_TYPE_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CSG_ID_HOME_NODEB_NAME_STRU
- 结构说明  : 保存CSG ID对应的Home eNodeB name
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucHomeNodeBNameLen;
@@ -4595,14 +3714,7 @@ typedef struct
 }TAF_MMA_CSG_ID_HOME_NODEB_NAME_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CSG_ID_LIST_INFO_STRU
- 结构说明  : CSG list搜网上报结果结构
-  修改历史      :
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-*****************************************************************************/
+
 typedef struct
 {
     TAF_PLMN_ID_STRU                                        stPlmnId;
@@ -4618,14 +3730,7 @@ typedef struct
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CSG_LIST_CNF_PARA_STRU
- 结构说明  : CSG PLMN LIST搜上报事件
-  修改历史      :
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-*****************************************************************************/
+
 typedef struct
 {
     TAF_ERROR_CODE_ENUM_UINT32          enPhoneError;
@@ -4637,14 +3742,7 @@ typedef struct
 }TAF_MMA_CSG_LIST_CNF_PARA_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CSG_LIST_SEARCH_CNF_STRU
- 结构说明  : CSG PLMN LIST搜上报事件
-  修改历史      :
-  1.日    期   : 2015年9月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增,CSG列表搜网分段上报
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4657,15 +3755,7 @@ typedef struct
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CSG_SPEC_SEARCH_INFO_STRU
- 结构说明  : AT与MMA AT^CSGIDSRCH命令手动搜CSG ID设置结构
 
-  修改历史      :
-  1.日    期   : 2015年11月23日
-    作    者   : s00193151
-    修改内容   : 新生成结构
-*****************************************************************************/
 typedef struct
 {
     TAF_PLMN_ID_STRU            stPlmnId;
@@ -4674,14 +3764,7 @@ typedef struct
     VOS_UINT8                   aucReserved[3];
 }TAF_MMA_CSG_SPEC_SEARCH_INFO_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSG_SPEC_SEARCH_REQ_STRU
-结构说明  : 手动CSG搜网请求结构
 
-  1.日    期   : 2015年11月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4690,14 +3773,7 @@ typedef struct
     TAF_MMA_CSG_SPEC_SEARCH_INFO_STRU   stCsgSpecSearchInfo;
 }TAF_MMA_CSG_SPEC_SEARCH_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_QRY_CAMP_CSG_ID_INFO_REQ_STRU
-结构说明  : 查询当前驻留csg id信息消息结构
 
-  1.日    期   : 2015年11月16日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4706,13 +3782,7 @@ typedef struct
     VOS_UINT32                          ulReserved;
 }TAF_MMA_QRY_CAMP_CSG_ID_INFO_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_QRY_CAMP_CSG_ID_INFO_CNF_STRU
-结构说明  : 查询驻留csg id信息回复消息结构
-  1.日    期   : 2015年11月16日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-******************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4725,13 +3795,7 @@ typedef struct
 }TAF_MMA_QRY_CAMP_CSG_ID_INFO_CNF_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSG_SPEC_SEARCH_CNF_STRU
-结构说明  : 手动CSG搜网回复结构
-  1.日    期   : 2015年11月6日
-    作    者   : z00161729
-    修改内容   : 支持LTE CSG功能新增
-******************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4741,15 +3805,7 @@ typedef struct
 }TAF_MMA_CSG_SPEC_SEARCH_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_DETACH_REQ_STRU
- 结构说明  : 手机模式设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年02月13日
-    作    者   : b00269685
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4758,15 +3814,7 @@ typedef struct
     TAF_MMA_DETACH_PARA_STRU            stDetachPara;
 }TAF_MMA_DETACH_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SWITCH_RAT_STRU
- 结构说明  : IMS域接入技术开关结构体
 
- 修改历史      :
-  1.日    期   : 2017年02月24日
-    作    者   : l00198894
-    修改内容   : IMS Over GU
-*****************************************************************************/
 typedef struct
 {
     TAF_MMA_IMS_SWITCH_SET_ENUM_UINT8   enLteEnable;
@@ -4775,15 +3823,7 @@ typedef struct
     VOS_UINT8                           ucReserved;
 }TAF_MMA_IMS_SWITCH_RAT_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SWITCH_INFO_STRU
- 结构说明  : taf下发的IMS域开关信息
 
- 修改历史      :
-  1.日    期   : 2017年07月6日
-    作    者   : m00217266
-    修改内容   : VILTE
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          bitOpImsSwitch       :1;
@@ -4794,15 +3834,7 @@ typedef struct
     VOS_UINT32                          ulRcsSwitch;
 }TAF_MMA_IMS_SWITCH_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SWITCH_SET_REQ_STRU
- 结构说明  : IMS开关设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4812,15 +3844,7 @@ typedef struct
     TAF_MMA_IMS_SWITCH_INFO_STRU        stImsSwitchInfo;
 }TAF_MMA_IMS_SWITCH_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SWITCH_SET_CNF_STRU
- 结构说明  : IMS开关设置消息回复结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4834,15 +3858,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enResult;
 }TAF_MMA_IMS_SWITCH_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SWITCH_QRY_REQ_STRU
- 结构说明  : IMS开关查询消息结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4850,15 +3866,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_IMS_SWITCH_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SWITCH_QRY_CNF_STRU
- 结构说明  : IMS开关查询消息回复结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4868,15 +3876,7 @@ typedef struct
     TAF_MMA_IMS_SWITCH_RAT_STRU         stImsSwitchRat;
 }TAF_MMA_IMS_SWITCH_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_RCS_SWITCH_QRY_REQ_STRU
- 结构说明  : RCS开关查询消息结构体
 
- 修改历史      :
-  1.日    期   : 2017年07月10日
-    作    者   : m00217266
-    修改内容   : VILTE
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4884,15 +3884,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_RCS_SWITCH_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_RCS_SWITCH_QRY_CNF_STRU
- 结构说明  : RCS开关查询消息回复结构体
 
- 修改历史      :
-  1.日    期   : 2017年07月10日
-    作    者   : m00217266
-    修改内容   : VILTE
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4903,15 +3895,7 @@ typedef struct
     VOS_UINT32                          ulRcsSwitch;
 }TAF_MMA_RCS_SWITCH_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_VOICE_DOMAIN_SET_REQ_STRU
- 结构说明  : 语音优选域设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4920,15 +3904,7 @@ typedef struct
     TAF_MMA_VOICE_DOMAIN_ENUM_UINT32    enVoiceDomain;
 }TAF_MMA_VOICE_DOMAIN_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_VOICE_DOMAIN_SET_CNF_STRU
- 结构说明  : 语音优选域设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4940,15 +3916,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_VOICE_DOMAIN_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_VOICE_DOMAIN_QRY_REQ_STRU
- 结构说明  : 语音优选域查询消息结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4956,15 +3924,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_VOICE_DOMAIN_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_VOICE_DOMAIN_QRY_CNF_STRU
- 结构说明  : 语音优选域查询消息结构体
 
- 修改历史      :
-  1.日    期   : 2015年02月03日
-    作    者   : f00179208
-    修改内容   : IMS动态开关配置项目
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -4975,18 +3935,7 @@ typedef struct
     TAF_MMA_VOICE_DOMAIN_ENUM_UINT32    enVoiceDomain;
 }TAF_MMA_VOICE_DOMAIN_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PHONE_MODE_SET_CNF_STRU
- 结构说明  : 消息ID_TAF_MMA_PHONE_MODE_SET_CNF结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年2月11日
-    作    者   : s00217060
-    修改内容   : VOLTE SWITCH修改
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -4998,18 +3947,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_PHONE_MODE_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SYS_CFG_CNF_STRU
- 结构说明  : 消息ID_TAF_MMA_SYS_CFG_CNF结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年2月11日
-    作    者   : s00217060
-    修改内容   : VOLTE SWITCH修改
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5021,18 +3959,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_SYS_CFG_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ACQ_CNF_STRU
- 结构说明  : 消息ID_TAF_ACQ_CNF结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年7月20日
-    作    者   : w000316404
-    修改内容   : R11协议升级(LTE频点配置值扩展)
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5047,19 +3974,7 @@ typedef struct
     VOS_UINT8                                    aucReserve2[3];
 }TAF_MMA_ACQ_CNF_STRU;
 
-/* Modified by b00269685 for L-C互操作项目, 2014-2-14, begin */
-/*****************************************************************************
- 结构名    : TAF_MMA_REG_CNF_STRU
- 结构说明  : 消息ID_TAF_REG_CNF结构体
 
- 修改历史      :
-  1.日    期   : 2014年2月14日
-    作    者   : b00269685
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年7月20日
-    作    者   : w000316404
-    修改内容   : R11协议升级(LTE频点配置值扩展)
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5074,17 +3989,8 @@ typedef struct
     TAF_MMA_ATTACH_CL_REG_STATUS_ENUM8           enLmmAttachRegStatus;
     VOS_UINT8                                    aucReserve2[2];
 }TAF_MMA_REG_CNF_STRU;
-/* Modified by b00269685 for L-C互操作项目, 2014-2-14, end */
 
-/*****************************************************************************
- 结构名    : TAF_MMA_POWER_SAVE_CNF_STRU
- 结构说明  : 消息ID_TAF_MMA_POWER_SAVE_CNF结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5095,18 +4001,7 @@ typedef struct
     TAF_MMA_APP_OPER_RESULT_ENUM_UINT32 enRslt;
 }TAF_MMA_POWER_SAVE_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ACQ_IND_STRU
- 结构说明  : 消息ID_TAF_ACQ_IND结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年7月20日
-    作    者   : w000316404
-    修改内容   : R11协议升级(LTE频点配置值扩展)
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5121,18 +4016,7 @@ typedef struct
     VOS_UINT8                                     aucReserve2[3];
 }TAF_MMA_ACQ_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_DETACH_CNF_STRU
- 结构说明  : 消息ID_TAF_MMA_DETACH_CNF结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年2月11日
-    作    者   : s00217060
-    修改内容   : VOLTE SWITCH修改
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5144,15 +4028,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_DETACH_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SERVICE_STATUS_IND_STRU
- 结构说明  : 消息ID_TAF_MMA_SERVICE_STATUS_IND_IND结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5166,18 +4042,7 @@ typedef struct
     VOS_UINT8                           ucPsSimValid; /* PS卡是否有效，VOS_TRUE:有效，VOS_FALSE:无效 */
 }TAF_MMA_SERVICE_STATUS_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SYS_INFO_IND_STRU
- 结构说明  : 消息ID_TAF_MMA_SYS_INFO_IND_IND结构体
 
- 修改历史      :
-  1.日    期   : 2014年01月23日
-    作    者   : s00246516
-    修改内容   : L-C互操作项目新增
-  2.日    期   : 2015年7月20日
-   作    者   : w000316404
-   修改内容   : R11协议升级(LTE频点配置值扩展)
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5190,20 +4055,10 @@ typedef struct
     TAF_MMA_PLMN_PRIORITY_CLASS_ENUM_UINT8        enPrioClass;
     VOS_UINT8                                     aucReserve2[3];
 }TAF_MMA_SYS_INFO_IND_STRU;
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, End */
-
-/* Added by w00167002 for L-C互操作项目, 2014-2-20, begin */
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SYS_INFO_IND_STRU
- 结构说明  : 消息ID_TAF_MMA_SYS_INFO_IND_IND结构体
 
- 修改历史      :
-  1.日    期   : 2014年02月20日
-    作    者   : w00167002
-    修改内容   : L-C互操作项目新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5214,20 +4069,10 @@ typedef struct
     TAF_MMA_USIMM_CARD_TYPE_ENUM_UINT32           enCardType;                     /* 卡类型:SIM、USIM、ROM-SIM  */
 }TAF_MMA_SIM_STATUS_IND_STRU;
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-20, end */
-
-/* Modified by w00167002 for L-C互操作项目, 2014-2-25, end */
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PLMN_LIST_REQ_STRU
- 结构说明  : 消息ID_TAF_MMA_PLMN_LIST_REQ结构体
 
- 修改历史      :
-  1.日    期   : 2015年4月8日
-    作    者   : B00269685
-    修改内容   :
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -5236,15 +4081,7 @@ typedef struct
     TAF_MMA_PLMN_LIST_PARA_STRU         stPlmnListPara;
 } TAF_MMA_PLMN_LIST_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_CALL_INFO_STRU
- 结构说明  : TAF_MMA_IMS_CALL_INFO_STRU结构体
 
- 修改历史      :
-  1.日    期   : 2016年4月27日
-    作    者   : n00269697
-    修改内容   :
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucImsCallFlg;
@@ -5253,60 +4090,28 @@ typedef struct
     VOS_UINT8                           ucReserve;
 }TAF_MMA_IMS_CALL_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SMS_INFO_STRU
- 结构说明  : TAF_MMA_IMS_SMS_INFO_STRU结构体
 
- 修改历史      :
-  1.日    期   : 2016年5月6日
-    作    者   : n00269697
-    修改内容   :
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucImsSmsFlg;
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_IMS_SMS_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SS_INFO_STRU
- 结构说明  : TAF_MMA_IMS_SS_INFO_STRU结构体
 
- 修改历史      :
-  1.日    期   : 2016年5月6日
-    作    者   : n00269697
-    修改内容   :
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucImsSsFlg;
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_IMS_SS_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EMC_INFO_STRU
- 结构说明  : TAF_MMA_EMC_INFO_STRU结构体
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : y00245242
-    修改内容   :
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucEmcFlg;
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_EMC_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SRV_INFO_NOTIFY_STRU
- 结构说明  : 消息ID_TAF_MMA_SRV_INFO_NOTIFY结构体
 
- 修改历史      :
-  1.日    期   : 2014年11月06日
-    作    者   : s00217060
-    修改内容   :
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5323,30 +4128,36 @@ typedef struct
     TAF_MMA_EMC_INFO_STRU               stEmcInfo;
 }TAF_MMA_SRV_INFO_NOTIFY_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_STOP_SRVACQ_NOTIFY_STRU
- 结构说明  : SPM通知MMA模块cellular 业务捕获定时器超时消息结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月18日
-    作    者   : m00217266
-    修改内容   : 新增结构体
-*****************************************************************************/
+typedef struct
+{
+    VOS_MSG_HEADER
+    VOS_UINT32                          ulMsgName;
+    VOS_UINT32                          bitOpImsCall    : 1;
+    VOS_UINT32                          bitOpImsSms     : 1;
+    VOS_UINT32                          bitOpImsSs      : 1;
+    VOS_UINT32                          bitOpEmc        : 1;
+    VOS_UINT32                          bitOpCsCall     : 1;
+    VOS_UINT32                          bitOpCsSms      : 1;
+    VOS_UINT32                          bitOpCsSs       : 1;
+    VOS_UINT32                          bitSpare        : 25;
+    TAF_MMA_IMS_CALL_INFO_STRU          stImsCallInfo;
+    TAF_MMA_IMS_SMS_INFO_STRU           stImsSmsInfo;
+    TAF_MMA_IMS_SS_INFO_STRU            stImsSsInfo;
+    TAF_MMA_EMC_INFO_STRU               stEmcInfo;
+    VOS_UINT32                          ulCsCallFlag;
+    VOS_UINT32                          ulCsSmsFlag;
+    VOS_UINT32                          ulCsSsFlag;
+}TAF_MMA_EXTEND_SRV_INFO_NOTIFY_STRU;
+
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
     VOS_UINT32                              ulMsgName;                          /*_H2ASN_Skip*/
 }TAF_MMA_STOP_SRVACQ_NOTIFY_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_RESTART_REQ_STRU
- 结构说明  :
 
- 修改历史      :
-  1.日    期   : 2017年2月10日
-    作    者   : c00299063
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                          /*_H2ASN_Skip*/
@@ -5354,30 +4165,14 @@ typedef struct
     VOS_UINT32                          ulModuleId;
 }TAF_MMA_RESTART_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_RESTART_CNF_STRU
- 结构说明  :
 
- 修改历史      :
-  1.日    期   : 2017年2月10日
-    作    者   : c00299063
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                          /*_H2ASN_Skip*/
     TAF_MMA_MSG_TYPE_ENUM_UINT32        enMsgName;                          /*_H2ASN_Skip*/
 }TAF_MMA_RESTART_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_UPDATE_TYPE_C_PDP_COUNT_NOTIFY_STRU
- 结构说明  : 消息ID_TAF_MMA_UPDATE_TYPE_C_PDP_COUNT_NOTIFY结构体
 
- 修改历史      :
-  1.日    期   : 2016年05月19日
-    作    者   : w00316404
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5385,13 +4180,7 @@ typedef struct
     TAF_MMA_UPDATE_TYPEC_PDP_COUNT_ENUM_U32 enCPdpCount;
 }TAF_MMA_UPDATE_TYPE_C_PDP_COUNT_NOTIFY_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_LAI_STRU
- 结构说明  : ID_TAF_MMA_SRCHED_PLMN_INFO_IND消息中lai的结构体
- 1.日    期   : 2015年01月15日
-   作    者   : h00285180
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_PLMN_ID_STRU                           stPlmnId;
@@ -5400,13 +4189,7 @@ typedef struct
     VOS_UINT8                                  aucReserve[2];
 }TAF_LAI_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SRCHED_PLMN_INFO_IND_STRU
- 结构说明  : ID_TAF_MMA_SRCHED_PLMN_INFO_IND的结构体
- 1.日    期   : 2015年01月15日
-   作    者   : h00285180
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -5521,14 +4304,7 @@ typedef struct
 
 /* Deleted by k902809 for Iteration 11, Iteration 11 2015-3-25, end */
 
-/*****************************************************************************
-结构名    : TAF_MMA_TIME_ZONE_CTIME_STRU
-结构说明  : AT^CTIME主动上报
 
-  1.日    期   : 2014年12月27日
-    作    者   : x00314862
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucYear;
@@ -5542,14 +4318,7 @@ typedef struct
 }TAF_MMA_TIME_ZONE_CTIME_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_CTIME_IND_STRU
-结构说明  : AT^CTIME主动上报
 
-  1.日    期   : 2014年12月27日
-    作    者   : x00314862
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5562,24 +4331,10 @@ typedef struct
 
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_CFREQ_LOCK_SET_PARA_STRU
-结构说明  : AT^CFREQLOCK设置锁频
 
-  1.日    期   : 2014年12月29日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef TAF_NVIM_CFREQ_LOCK_CFG_STRU TAF_MMA_CFREQ_LOCK_SET_PARA_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CFREQ_LOCK_SET_REQ_STRU
-结构说明  : AT^CFREQLOCK设置锁频请求消息
 
-  1.日    期   : 2014年12月29日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5591,14 +4346,7 @@ typedef struct
     TAF_MMA_CFREQ_LOCK_SET_PARA_STRU    stCFreqLockPara;
 }TAF_MMA_CFREQ_LOCK_SET_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CFREQ_LOCK_SET_CNF_STRU
-结构说明  : AT^CFREQLOCK设置锁频应答消息
 
-  1.日    期   : 2014年12月29日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5607,15 +4355,7 @@ typedef struct
     VOS_UINT32                                  ulRslt;
 }TAF_MMA_CFREQ_LOCK_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CFREQ_LOCK_QRY_REQ_STRU
- 结构说明  : 锁频信息查询消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年12月25日
-    作    者   : m00312079
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5623,14 +4363,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CFREQ_LOCK_QUERY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CFREQ_LOCK_QUERY_CNF_STRU
-结构说明  : AT^CFREQLOCK查询锁频应答消息
 
-  1.日    期   : 2014年12月29日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5641,13 +4374,7 @@ typedef struct
 }TAF_MMA_CFREQ_LOCK_QUERY_CNF_STRU;
 
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_CDMA_CSQ_MODE_ENUM_UINT8
- 枚举说明  : 卡状态信息
-  1.日    期   : 2014年12月25日
-    作    者   : m00312079
-    修改内容   : 新添加
-*****************************************************************************/
+
 enum TAF_MMA_CDMA_CSQ_MODE_ENUM
 {
     TAF_MMA_CDMA_CSQ_MODE_DISABLE       = 0,
@@ -5657,13 +4384,7 @@ enum TAF_MMA_CDMA_CSQ_MODE_ENUM
 
 typedef VOS_UINT8 TAF_MMA_CDMA_CSQ_MODE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_MMA_HDR_CSQ_MODE_ENUM_UINT8
- 枚举说明  : 卡状态信息
-  1.日    期   : 2015年10月21日
-    作    者   : C00299064
-    修改内容   : 新添加
-*****************************************************************************/
+
 enum TAF_MMA_HDR_CSQ_MODE_ENUM
 {
     TAF_MMA_HDR_CSQ_MODE_DISABLE       = 0,
@@ -5673,15 +4394,7 @@ enum TAF_MMA_HDR_CSQ_MODE_ENUM
 
 typedef VOS_UINT8 TAF_MMA_HDR_CSQ_MODE_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_HDR_CSQ_PARA_STRU
- 结构说明  :
 
- 修改历史      :
-  1.日    期   : 2015年10月21日
-    作    者   : C00299064
-    修改内容   : 新添加
-*****************************************************************************/
 typedef struct
 {
     TAF_MMA_HDR_CSQ_MODE_ENUM_UINT8               enMode;                         /*主动上报模式*/
@@ -5694,18 +4407,7 @@ typedef struct
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CDMA_CSQ_STRU
- 结构说明  : 消息ID_TAF_MMA_CDMACSQ_SET_REQ结构体
 
- 修改历史      :
-  1.日    期   : 2014年12月25日
-    作    者   : m00312079
-    修改内容   : 新增结构
-  2.日    期   : 2015年10月16日
-    作    者   : m00312079
-    修改内容   : DTS2015101505057:添加ec/Io的上报门限
-*****************************************************************************/
 typedef struct
 {
     TAF_MMA_CDMA_CSQ_MODE_ENUM_UINT8              enMode;                         /*主动上报模式*/
@@ -5715,15 +4417,7 @@ typedef struct
 }TAF_MMA_CDMACSQ_PARA_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CDMACSQ_SET_REQ_STRU
- 结构说明  : 信号强度设置消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年12月25日
-    作    者   : m00312079
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5732,15 +4426,7 @@ typedef struct
     TAF_MMA_CDMACSQ_PARA_STRU           stCdmaCsqPara;
 }TAF_MMA_CDMACSQ_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CDMACSQ_SET_CNF_STRU
- 结构说明  :
 
- 修改历史      :
-  1.日    期   : 2014年12月25日
-    作    者   : m00312079
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5750,31 +4436,13 @@ typedef struct
     VOS_UINT8                           aucReserve[1];
     TAF_MMA_APP_OPER_RESULT_ENUM_UINT32 enRslt;
 }TAF_MMA_CDMACSQ_SET_CNF_STRU;
-/*****************************************************************************
-结构名    : TAF_MMA_SIG_QUALITY_RPT_INFO_STRU
-结构说明  : CDMACSQ上报结构
 
-  1.日    期   : 2014年12月27日
-    作    者   : m00312079
-    修改内容   : 创建
-
-  2.日    期   : 2015年10月16日
-    作    者   : m00312079
-    修改内容   : DTS2015101505057:添加ec/Io的上报门限
-*******************************************************************************/
 typedef struct
 {
     VOS_INT16                           sCdmaRssi;
     VOS_INT16                           sCdmaEcIo;
 }TAF_MMA_SIG_QUALITY_RPT_INFO_STRU;
-/*****************************************************************************
-结构名    : TAF_MMA_CDMACSQ_QUERY_CNF_STRU
-结构说明  : AT^CDMACSQ查询请求回复结构
 
-  1.日    期   : 2014年12月27日
-    作    者   : m00312079
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5786,18 +4454,7 @@ typedef struct
     VOS_UINT8                           ucEcIoRptThreshold;
     TAF_MMA_SIG_QUALITY_RPT_INFO_STRU   stSigQualityInfo;
 }TAF_MMA_CDMACSQ_QUERY_CNF_STRU;
-/*****************************************************************************
-结构名    : TAF_MMA_CDMACSQ_IND_STRU
-结构说明  : CDMACSQ主动上报结构
 
-  1.日    期   : 2014年12月27日
-    作    者   : m00312079
-    修改内容   : 创建
-
-  2.日    期   : 2015年10月16日
-    作    者   : m00312079
-    修改内容   : DTS2015101505057:添加ec/Io的上报门限
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5809,15 +4466,7 @@ typedef struct
     VOS_INT16                           sCdmaEcIo;
 }TAF_MMA_CDMACSQ_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CDMACSQ_QRY_REQ_STRU
- 结构说明  : 信号强度查询消息结构体
 
- 修改历史      :
-  1.日    期   : 2014年12月25日
-    作    者   : m00312079
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5826,14 +4475,7 @@ typedef struct
 }TAF_MMA_CDMACSQ_QRY_REQ_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_CLMODE_IND_STRU
-结构说明  : clmode主动上报结构
 
-  1.日    期   : 2015年10月22日
-    作    者   : f00279542
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5843,14 +4485,7 @@ typedef struct
     VOS_UINT8                           ucIsCLMode;
 }TAF_MMA_CLMODE_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CFPLMN_SET_REQ_STRU
-结构说明  : AT^CFPLMN设置禁止PLMN列表
 
-  1.日    期   : 2015年2月4日
-    作    者   : f00279542
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5859,14 +4494,7 @@ typedef struct
     TAF_PH_FPLMN_OPERATE_STRU           stCFPlmnPara;
 }TAF_MMA_CFPLMN_SET_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CFPLMN_QUERY_REQ_STRU
-结构说明  : AT^CFPLMN查询禁止PLMN列表
 
-  1.日    期   : 2015年2月4日
-    作    者   : f00279542
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5874,14 +4502,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CFPLMN_QUERY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CFPLMN_SET_CNF_STRU
- 结构说明  : mma 收到的confirm消息
 
-  1.日    期   : 2015年2月4日
-    作    者   : f00279542
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5892,14 +4513,7 @@ typedef struct
     TAF_UINT8                                               aucReserved[2];
     TAF_PLMN_ID_STRU                                        astPlmn[TAF_USER_MAX_PLMN_NUM];
 }TAF_MMA_CFPLMN_SET_CNF_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_CFPLMN_QUERY_CNF_STRU
- 结构说明  : mma 收到的confirm消息
 
-  1.日    期   : 2015年2月4日
-    作    者   : f00279542
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5911,26 +4525,13 @@ typedef struct
     TAF_PLMN_ID_STRU                                        astPlmn[TAF_USER_MAX_PLMN_NUM];
 }TAF_MMA_CFPLMN_QUERY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SIM_FORMAT_PLMN_STRU
- 结构说明  : Sim PLMN ID的存储结构
- 1.日    期   : 2015年2月17日
-   作    者   : b00269685
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct {
     VOS_UINT8                           aucSimPlmn[TAF_MMA_SIM_FORMAT_PLMN_LEN];
     VOS_UINT8                           aucReserve[1];
 }TAF_MMA_SIM_FORMAT_PLMN_STRU;
 
-/* Modified by s00217060 for 边境搜网优化PhaseI, 2016-9-1, begin */
-/*****************************************************************************
- 结构名    : TAF_MMA_PLMN_WITH_SIM_RAT_STRU
- 结构说明  : sim PLMN和Rat结构体
-  1.日    期   : 2015年10月13日
-    作    者   : n00355355
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_PLMN_ID_STRU                    stPlmnId;                               /* PLMN ID */
@@ -5939,13 +4540,7 @@ typedef struct
 }TAF_MMA_PLMN_WITH_SIM_RAT_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_DPLMN_INFO_SET_STRU
- 结构说明  : set dplmnlist命令中dplmn列表信息、ehplmn列表信息结构体
-  1.日    期   : 2015年10月13日
-    作    者   : n00355355
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usDplmnNum;                                     /* 预置DPLMN列表的个数 */
@@ -5954,15 +4549,8 @@ typedef struct
     TAF_PLMN_ID_STRU                    astEhPlmnInfo[TAF_MMA_MAX_EHPLMN_NUM];          /* EHPLMN ID列表 */
     TAF_MMA_PLMN_WITH_SIM_RAT_STRU      astDplmnList[TAF_MMA_MAX_DPLMN_NUM];            /* DPLMN列表 */
 }TAF_MMA_DPLMN_INFO_SET_STRU;
-/* Modified by s00217060 for 边境搜网优化PhaseI, 2016-9-1, end */
 
-/*****************************************************************************
- 结构名    : TAF_MMA_DPLMN_SET_REQ_STRU
- 结构说明  : AT+DPLMN设置DPLMN列表请求消息
-  1.日    期   : 2015年10月13日
-    作    者   : n00355355
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -5974,14 +4562,26 @@ typedef struct
     TAF_MMA_DPLMN_INFO_SET_STRU         stDplmnInfo;
 }TAF_MMA_DPLMN_SET_REQ_STRU;
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, begin */
-/*****************************************************************************
- 结构名    : TAF_MMA_BORDER_INFO_STRU
- 结构说明  : 边境信息结构体:包括流水号，版本号，EHPLMN列表，边境信息
-  1.日    期   : 2016年8月20日
-    作    者   : s00217060
-    修改内容   : 新建
-*****************************************************************************/
+
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
+    VOS_UINT32                          ulMsgName;                              /*_H2ASN_Skip*/
+    TAF_MMA_CTRL_STRU                   stCtrl;
+    MODEM_ID_ENUM_UINT16                enFirstModemId;
+    MODEM_ID_ENUM_UINT16                enSecondModemId;
+}TAF_MMA_EXCHANGE_MODEM_INFO_REQ_STRU;
+
+
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
+    VOS_UINT32                          ulMsgName;                              /*_H2ASN_Skip*/
+    TAF_MMA_CTRL_STRU                   stCtrl;
+    VOS_UINT32                          ulRslt;
+}TAF_MMA_EXCHANGE_MODEM_INFO_CNF_STRU;
+
+
 typedef struct
 {
     VOS_UINT8                                               ucSeq;                                  /* 流水号 */
@@ -5993,13 +4593,7 @@ typedef struct
     VOS_UINT8                                               aucBorderInfoBuff[4];                   /* 边境信息 */
 }TAF_MMA_BORDER_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_BORDER_INFO_SET_REQ_STRU
- 结构说明  : AT^BORDERINFO设置边境信息请求消息
-  1.日    期   : 2016年8月20日
-    作    者   : s00217060
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                                                  /*_H2ASN_Skip*/
@@ -6010,13 +4604,7 @@ typedef struct
     TAF_MMA_BORDER_INFO_STRU                                stBorderInfo;                           /* 边境信息 */
 }TAF_MMA_BORDER_INFO_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_BORDER_INFO_SET_CNF_STRU
- 结构说明  : ID_TAF_MMA_BORDER_INFO_SET_CNF的结构体
-  1.日    期   : 2016年8月24日
-    作    者   : s00217060
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -6025,14 +4613,7 @@ typedef struct
     VOS_UINT32                          ulRslt;
 }TAF_MMA_BORDER_INFO_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_BORDER_INFO_QRY_REQ_STRU
-结构说明  : ID_TAF_MMA_BORDER_INFO_QRY_REQ消息的结构体
 
-  1.日    期   : 2016年8月24日
-    作    者   : s00217060
-    修改内容   : 新建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6040,13 +4621,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_BORDER_INFO_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_BORDER_INFO_QRY_CNF_STRU
- 结构说明  : ID_TAF_MMA_BORDER_INFO_QRY_CNF消息的结构体
-  1.日    期   : 2016年8月24日
-    作    者   : s00217060
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -6055,17 +4630,39 @@ typedef struct
     VOS_UINT8                           aucVersionId[NAS_VERSION_LEN];
     VOS_UINT8                           aucReverse[3];
 }TAF_MMA_BORDER_INFO_QRY_CNF_STRU;
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, end */
+
+#if (FEATURE_ON == FEATURE_DSDS)
+
+typedef struct
+{
+    VOS_MSG_HEADER                                      /*_H2ASN_Skip*/
+    VOS_UINT32                          ulMsgName;      /*_H2ASN_Skip*/
+    TAF_MMA_CTRL_STRU                   stCtrl;
+    VOS_UINT8                           ucEnable;       /* 操作类型 0:不能主动上报 1:可以主动上报 */
+    VOS_UINT8                           aucReserve[3];
+}TAF_MMA_DSDS_STATE_SET_REQ_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_SET_REQ_STRU
-结构说明  : AT+CPOL设置优先网络列表
+typedef struct
+{
+    VOS_MSG_HEADER
+    VOS_UINT32                          ulMsgName;
+    TAF_MMA_CTRL_STRU                   stCtrl;
+    VOS_UINT32                          ulRslt;
+}TAF_MMA_DSDS_STATE_SET_CNF_STRU;
 
-  1.日    期   : 2014年2月3日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
+
+typedef struct
+{
+    VOS_MSG_HEADER
+    VOS_UINT32                          ulMsgName;
+    VOS_UINT16                          usClientId;
+    VOS_UINT8                           ucOpId;
+    VOS_UINT8                           ucSupportDsds3; /* 是否支持DSDS3.0， 1是DSDS3.0 0是DSDS2.0 */
+}TAF_MMA_DSDS_STATE_NOTIFY_STRU;
+#endif
+
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6074,14 +4671,7 @@ typedef struct
     TAF_PH_SET_PREFPLMN_STRU            stPrefPlmn;
 }TAF_MMA_PREF_PLMN_SET_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_SET_CNF_STRU
-结构说明  : AT+CPOL设置优先网络列表
 
-  1.日    期   : 2014年2月3日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6092,14 +4682,7 @@ typedef struct
     TAF_MMA_APP_PREF_PLMN_OPER_RESULT_ENUM_UINT32           enRslt;
 }TAF_MMA_PREF_PLMN_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_QUERY_REQ_STRU
-结构说明  : AT+CPOL查询优先网络列表
 
-  1.日    期   : 2014年2月3日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6108,14 +4691,7 @@ typedef struct
     TAF_MMA_CPOL_INFO_QUERY_REQ_STRU    stCpolInfo;
 }TAF_MMA_PREF_PLMN_QUERY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_QUERY_CNF_STRU
-结构说明  : AT+CPOL查询优先网络列表
 
-  1.日    期   : 2014年2月3日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6129,14 +4705,7 @@ typedef struct
     TAF_MMA_APP_PREF_PLMN_OPER_RESULT_ENUM_UINT32           enRslt;
 }TAF_MMA_PREF_PLMN_QUERY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_TEST_REQ_STRU
-结构说明  : AT+CPOL测试优先网络列表
 
-  1.日    期   : 2014年2月3日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6146,14 +4715,7 @@ typedef struct
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_PREF_PLMN_TEST_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_TEST_CNF_STRU
-结构说明  : AT+CPOL测试优先网络列表
 
-  1.日    期   : 2014年2月3日
-    作    者   : y00307564
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6166,15 +4728,7 @@ typedef struct
 }TAF_MMA_PREF_PLMN_TEST_CNF_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_PHONE_MODE_QRY_REQ_STRU
-结构说明  : Phone mode qry req stru
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/                                                              /*_H2ASN_Skip*/
@@ -6182,15 +4736,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_PHONE_MODE_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PHONE_MODE_QRY_CNF_STRU
-结构说明  : Phone mode qry cnf stru
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6202,16 +4748,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }TAF_MMA_PHONE_MODE_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_QUICKSTART_SET_REQ_STRU
-结构说明  : TAF_MMA_CQST_SET_REQ_STRU结构
 
-修改历史         :
-
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6219,16 +4756,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
     VOS_UINT32                          ulQuickStartMode;
 }TAF_MMA_QUICKSTART_SET_REQ_STRU;
-/*****************************************************************************
-结构名    : TAF_MMA_QUICKSTART_SET_CNF_STRU
-结构说明  : TAF_MMA_QUICKSTART_SET_CNF_STRU结构
 
-修改历史         :
-
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6238,16 +4766,7 @@ typedef struct
     TAF_PARA_SET_RESULT                 ucResult;
 }TAF_MMA_QUICKSTART_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_AUTO_ATTACH_SET_REQ_STRU
-结构说明  : TAF_MMA_AUTO_ATTACH_SET_REQ_STRU结构
 
-修改历史         :
-
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6256,15 +4775,7 @@ typedef struct
     VOS_UINT32                          ulAutoAttachEnable;
 }TAF_MMA_AUTO_ATTACH_SET_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_AUTO_ATTACH_SET_CNF_STRU
-结构说明  : TAF_MMA_AUTO_ATTACH_SET_CNF_STRU结构
 
-修改历史         :
-1.日    期   : 2015年3月19日
-  作    者   : f00279542
-  修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6274,15 +4785,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }TAF_MMA_AUTO_ATTACH_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SYSCFG_QRY_REQ_STRU
- 结构说明  : 手机模式查询消息结构体
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6290,15 +4793,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_SYSCFG_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SYSCFG_QRY_CNF_STRU
- 结构说明  : 手机模式查询消息结构体
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
 
@@ -6309,14 +4804,7 @@ typedef struct
     TAF_MMA_SYS_CFG_PARA_STRU           stSysCfg;
 }TAF_MMA_SYSCFG_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_SYSCFG_TEST_REQ_STRU
-结构说明  : ^syscfgex ^syscfg test req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
 
@@ -6325,14 +4813,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_SYSCFG_TEST_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_SYSCFG_TEST_CNF_STRU
-结构说明  : ^syscfgex ^syscfg test cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6342,15 +4823,7 @@ typedef struct
     TAF_PH_SYSCFG_BAND_STR              stBandInfo;
 }TAF_MMA_SYSCFG_TEST_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CRPN_QRY_REQ_STRU
- 结构说明  : 查询运营商结构体
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6359,15 +4832,7 @@ typedef struct
     TAF_MMA_CRPN_QRY_PARA_STRU          stCrpnQryPara;
 }TAF_MMA_CRPN_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CRPN_QRY_CNF_STRU
- 结构说明  :查询运营商结构体
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6377,15 +4842,7 @@ typedef struct
     TAF_MMA_CRPN_QRY_INFO_STRU          stCrpnQryInfo;
 }TAF_MMA_CRPN_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CMM_SET_REQ_STRU
- 结构说明  : 查询NAS内部模块状态结构体
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6394,15 +4851,7 @@ typedef struct
     MM_TEST_AT_CMD_STRU                 stCmmSetReq;
 }TAF_MMA_CMM_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CMM_SET_CNF_STRU
- 结构说明  :  查询NAS内部模块状态结构体
 
-修改历史         :
-    1.日    期   : 2015年3月19日
-      作    者   : f00279542
-      修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6412,14 +4861,7 @@ typedef struct
     MM_TEST_AT_RSLT_STRU                stAtCmdRslt;                            /* AT命令执行返回 */
 }TAF_MMA_CMM_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CERSSI_SET_REQ_STRU
-结构说明  : AT^CERSSI set command stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6432,14 +4874,7 @@ typedef struct
     VOS_UINT8                           ucMinRptTimerInterval;                  /*上报的间隔时间(1-20)S*/
 }TAF_MMA_CERSSI_SET_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CERSSI_SET_CNF_STRU
-结构说明  : AT^CERSSI set cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6448,14 +4883,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_CERSSI_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CERSSI_QRY_REQ_STRU
-结构说明  : AT^CERSSI qry command stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6463,14 +4891,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CERSSI_INFO_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CERSSI_INFO_QRY_CNF_STRU
-结构说明  : AT^CERSSI qry Cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6480,14 +4901,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_CERSSI_INFO_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_MT_POWER_DOWN_REQ_STRU
-结构说明  : ^Cpdw command req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6495,14 +4909,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_MT_POWER_DOWN_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_MT_POWER_DOWN_CNF_STRU
-结构说明  : ^Cpdw command cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6511,14 +4918,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_MT_POWER_DOWN_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_TYPE_SET_REQ_STRU
-结构说明  : +cpls command set req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6528,14 +4928,7 @@ typedef struct
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_PREF_PLMN_TYPE_SET_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PREF_PLMN_TYPE_SET_CNF_STRU
-结构说明  : +cpls command set cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6546,14 +4939,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }TAF_MMA_PREF_PLMN_TYPE_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CIPHER_QRY_REQ_STRU
-结构说明  : AT^CIPHERQRY? req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6561,13 +4947,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CIPHER_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CIPHER_QRY_CNF_STRU
-结构说明  : AT^CIPHERQRY? cnf stru
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6580,14 +4960,7 @@ typedef struct
     VOS_UINT8                           aucReserved2[3];
 }TAF_MMA_CIPHER_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_LOCATION_INFO_QRY_REQ_STRU
-结构说明  : AT^LOCINFO? qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6595,13 +4968,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_LOCATION_INFO_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_LOCATION_INFO_QRY_CNF_STRU
-结构说明  : AT^LOCINFO? cnf stru
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6616,75 +4983,7 @@ typedef struct
     VOS_UINT32                          ulCellid;
 }TAF_MMA_LOCATION_INFO_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PLMN_AUTO_RESEL_REQ_STRU
-结构说明  : plmn resel req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
-typedef struct
-{
-    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
-    TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;                              /*_H2ASN_Skip*/
-    TAF_MMA_CTRL_STRU                   stCtrl;
-}TAF_MMA_PLMN_AUTO_RESEL_REQ_STRU;
-
-/*****************************************************************************
-结构名    : TAF_MMA_PLMN_AUTO_RESEL_CNF_STRU
-结构说明  : Plmn resel cnf stru
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
-typedef struct
-{
-    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
-    TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;                              /*_H2ASN_Skip*/
-    TAF_MMA_CTRL_STRU                   stCtrl;
-    TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
-}TAF_MMA_PLMN_AUTO_RESEL_CNF_STRU;
-
-/*****************************************************************************
-结构名    : TAF_MMA_PLMN_SPECIAL_SEL_REQ_STRU
-结构说明  : plmn user sel req stru
-
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
-typedef struct
-{
-    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
-    TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;                              /*_H2ASN_Skip*/
-    TAF_MMA_CTRL_STRU                   stCtrl;
-    TAF_PLMN_USER_SEL_STRU              stPlmnUserSel;
-}TAF_MMA_PLMN_SPECIAL_SEL_REQ_STRU;
-
-/*****************************************************************************
-结构名    : TAF_MMA_PLMN_SPECIAL_SEL_CNF_STRU
-结构说明  : plmn user sel cnf stru
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
-typedef struct
-{
-    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
-    TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;                              /*_H2ASN_Skip*/
-    TAF_MMA_CTRL_STRU                   stCtrl;
-    TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
-}TAF_MMA_PLMN_SPECIAL_SEL_CNF_STRU;
-
-/*****************************************************************************
-结构名    : TAF_MMA_PLMN_LIST_ABORT_REQ_STRU
-结构说明  : cops Abort req
-
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6692,14 +4991,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_PLMN_LIST_ABORT_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PLMN_LIST_ABORT_CNF_STRU
-结构说明  : plmn list Abort cnf
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6708,6 +5000,12 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_PLMN_LIST_ABORT_CNF_STRU;
 
+
+
+typedef TAF_MMA_CERSSI_SET_REQ_STRU TAF_MMA_CIND_SET_REQ_STRU;
+
+
+typedef TAF_MMA_CERSSI_SET_CNF_STRU TAF_MMA_CIND_SET_CNF_STRU;
 
 /* Added by k902809 for Iteration 11, 2015-3-20, begin */
 
@@ -6878,14 +5176,7 @@ enum TAF_MMA_CDMA_LOC_INFO_RAT_MODE_ENUM
 typedef VOS_UINT8 TAF_MMA_CDMA_LOC_INFO_RAT_MODE_ENUM_UINT8;
 
 /* CLOCINFO */
-/*****************************************************************************
-结构名    : TAF_MMA_CLOCINFO_PARA_STRU
-结构说明  : ^CLOCINFO主动上报参数
 
-  1.日    期   : 2015年11月28日
-    作    者   : l00359089
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     TAF_MMA_CDMA_LOC_INFO_RAT_MODE_ENUM_UINT8               ucRatMode;
@@ -6901,14 +5192,7 @@ typedef struct
     VOS_INT32                                               lBaseLongitude;     /* Base stationLongitude */
 }TAF_MMA_CLOCINFO_PARA_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CLOCINFO_IND_STRU
-结构说明  : ^CLOCINFO主动上报
 
-  1.日    期   : 2015年11月28日
-    作    者   : l00359089
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6972,14 +5256,7 @@ typedef struct
 
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSIDNID_IND_STRU
-结构说明  : AT^CSIDNID主动上报
 
-  1.日    期   : 2014年11月27日
-    作    者   : g00261581
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -6989,14 +5266,7 @@ typedef struct
 
 }TAF_MMA_CSID_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_SRV_STATUS_IND_STRU
-结构说明  : 服务状态主动上报
 
-  1.日    期   : 2015年03月30日
-    作    者   : g00261581
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7006,14 +5276,7 @@ typedef struct
     TAF_PHONE_CHANGED_SERVICE_STATUS    ucSrvStatus;
 }TAF_MMA_SRV_STATUS_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_IMSI_REFRESH_IND_STRU
-结构说明  : IMSI Refresh时主动上报结构体
 
-  1.日    期   : 2016年7月6日
-    作    者   : n00355355
-    修改内容   : 新建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7023,14 +5286,7 @@ typedef struct
     VOS_UINT8                           ucReserve;
 }TAF_MMA_IMSI_REFRESH_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_RESET_NTF_STRU
-结构说明  : 平台能力设置失败后，由A核通知C核进行复位
 
-  1.日    期   : 2016年7月6日
-    作    者   : w00242748
-    修改内容   : 新建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7040,14 +5296,7 @@ typedef struct
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_RESET_NTF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_RSSI_INFO_IND_STRU
-结构说明  : RSSI Info Ind Msg
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7060,14 +5309,7 @@ typedef struct
     TAF_PH_RSSI_STRU                    stRssiInfo;
 }TAF_MMA_RSSI_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_REG_STATUS_IND_STRU
-结构说明  : PS/CS Reg Status Info Ind Msg
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7078,14 +5320,7 @@ typedef struct
     TAF_PH_REG_STATE_STRU               stRegStatus;
 }TAF_MMA_REG_STATUS_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_REG_REJ_INFO_IND_STRU
-结构说明  : Reg Rej Info Ind
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7096,14 +5331,7 @@ typedef struct
     TAF_PH_REG_REJ_INFO_STRU            stRegRejInfo;
 }TAF_MMA_REG_REJ_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_PLMN_SElECTION_INFO_IND_STRU
-结构说明  : Plmn Selection Info Ind Msg
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7215,14 +5443,7 @@ typedef struct
     VOS_UINT32                          ulCostTime;
 } TAF_MMA_POWER_ON_AND_REG_TIME_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ACCESS_MODE_QRY_REQ_STRU
-结构说明  : access mode qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7230,14 +5451,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_ACCESS_MODE_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ACCESS_MODE_QRY_CNF_STRU
-结构说明  : Access mode qry cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7274,14 +5488,7 @@ typedef struct
     VOS_UINT32                          ulQuickStartMode;                       /* 模式 */
 } TAF_MMA_QUICKSTART_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSNR_QRY_REQ_STRU
-结构说明  : csnr qry req stru
 
-  1.日    期   : 2015年3月28日
-    作    者   : y00322978
-    修改内容   : 创建
-******************************************************************************/
 
 typedef struct
 {
@@ -7290,14 +5497,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CSNR_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSNR_QRY_CNF_STRU
-结构说明  : csnr qry cnf stru
 
-  1.日    期   : 2015年3月28日
-    作    者   : y00322978
-    修改内容   : 创建
-******************************************************************************/
 
 typedef struct
 {
@@ -7308,14 +5508,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
 }TAF_MMA_CSNR_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSQ_QRY_REQ_STRU
-结构说明  : csq qry req stru
 
-  1.日    期   : 2015年3月28日
-    作    者   : y00322978
-    修改内容   : 创建
-******************************************************************************/
 
 typedef struct
 {
@@ -7324,14 +5517,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CSQ_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSQ_QRY_CNF_STRU
-结构说明  : csq qry cnf stru
 
-  1.日    期   : 2015年3月28日
-    作    者   : y00322978
-    修改内容   : 创建
-******************************************************************************/
 
 typedef struct
 {
@@ -7343,14 +5529,7 @@ typedef struct
 }TAF_MMA_CSQ_QRY_CNF_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSQLVL_QRY_REQ_STRU
-结构说明  : csqlvl qry req stru
 
-  1.日    期   : 2015年3月28日
-    作    者   : y00322978
-    修改内容   : 创建
-******************************************************************************/
 
 typedef struct
 {
@@ -7359,14 +5538,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CSQLVL_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CSQLVL_QRY_CNF_STRU
-结构说明  : csqlvl qry cnf stru
 
-  1.日    期   : 2015年3月28日
-    作    者   : y00322978
-    修改内容   : 创建
-******************************************************************************/
 
 typedef struct
 {
@@ -7379,13 +5551,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }TAF_MMA_CSQLVL_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_TIME_CHANGE_IND_STRU
- 结构说明  : mma上报TIME change结构体
- 1.日    期   : 2015年3月30日
-   作    者   : Y00322978
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     MSG_HEADER_STRU                     MsgHeader;          /* _H2ASN_Skip */
@@ -7403,13 +5569,7 @@ typedef struct
 }TAF_MMA_TIME_CHANGE_IND_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_MODE_CHANGE_IND_STRU
- 结构说明  : mma上报MODE change结构体
- 1.日    期   : 2015年3月30日
-   作    者   : Y00322978
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     MSG_HEADER_STRU                     MsgHeader;          /* _H2ASN_Skip */
@@ -7420,13 +5580,7 @@ typedef struct
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_MODE_CHANGE_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PLMN_CHANGE_IND_STRU
- 结构说明  : mma上报MODE change结构体
- 1.日    期   : 2015年3月30日
-   作    者   : Y00322978
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     MSG_HEADER_STRU                     MsgHeader;          /* _H2ASN_Skip */
@@ -7436,14 +5590,7 @@ typedef struct
     TAF_PLMN_ID_STRU                    stCurPlmn;
 }TAF_MMA_PLMN_CHANGE_IND_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_COPS_QRY_REQ_STRU
-结构说明  : cops qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7451,14 +5598,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_COPS_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_COPS_QRY_CNF_STRU
-结构说明  : Cops qry cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7469,14 +5609,7 @@ typedef struct
     TAF_PH_NETWORKNAME_STRU             stCopsInfo;
 }TAF_MMA_COPS_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_DPLMN_QRY_REQ_STRU
-结构说明  : ID_TAF_MMA_DPLMN_QRY_REQ消息的结构体
 
-  1.日    期   : 2015年10月8日
-    作    者   : n00355355
-    修改内容   : 新建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7485,13 +5618,7 @@ typedef struct
 }TAF_MMA_DPLMN_QRY_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_DPLMN_QRY_CNF_STRU
- 结构说明  : ID_TAF_MMA_DPLMN_QRY_CNF消息的结构体
-  1.日    期   : 2015年10月9日
-    作    者   : n00355355
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7501,13 +5628,7 @@ typedef struct
     VOS_UINT8                           aucReverse[3];
 }TAF_MMA_DPLMN_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_DPLMN_SET_CNF_STRU
- 结构说明  : ID_TAF_MMA_DLMN_SET_CNF的结构体
-  1.日    期   : 2015年10月12日
-    作    者   : n00355355
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7517,17 +5638,7 @@ typedef struct
 }TAF_MMA_DPLMN_SET_CNF_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_REG_STATE_QRY_REQ_STRU
-结构说明  : reg status qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-  2.日    期   : 2015年8月19日
-    作    者   : w00176964
-    修改内容   : DTS2015081907463修改
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7536,14 +5647,7 @@ typedef struct
     TAF_MMA_QRY_REG_STATUS_TYPE_ENUM_UINT32                 enQryRegStaType;
 }TAF_MMA_REG_STATE_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_REG_STATE_QRY_CNF_STRU
-结构说明  : Reg state qry cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7552,14 +5656,7 @@ typedef struct
     TAF_PH_REG_STATE_STRU               stRegInfo;
 }TAF_MMA_REG_STATE_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_AUTO_ATTACH_QRY_REQ_STRU
-结构说明  : Auto attach qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7567,14 +5664,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_AUTO_ATTACH_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_AUTO_ATTACH_QRY_CNF_STRU
-结构说明  : Auto attach qry cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7585,14 +5675,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }TAF_MMA_AUTO_ATTACH_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_SYSINFO_QRY_REQ_STRU
-结构说明  : System Info qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7601,14 +5684,7 @@ typedef struct
     VOS_UINT32                          ulSysInfoExFlag;                        /* 用于区分^sysinfo 还是 ^sysinfoex 命令 */
 }TAF_MMA_SYSINFO_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_SYSINFO_QRY_CNF_STRU
-结构说明  : System Info qry cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7619,14 +5695,7 @@ typedef struct
     TAF_PH_SYSINFO_STRU                 stSysInfo;
 }TAF_MMA_SYSINFO_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ANTENNA_INFO_QRY_REQ_STRU
-结构说明  : Antenna Info qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7634,14 +5703,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_ANTENNA_INFO_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ANTENNA_INFO_QRY_CNF_STRU
-结构说明  : Antenna Info qry cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7651,14 +5713,7 @@ typedef struct
     MN_MMA_ANQUERY_PARA_STRU            stAntennaInfo;
 }TAF_MMA_ANTENNA_INFO_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_HOME_PLMN_QRY_REQ_STRU
-结构说明  : Aphplmn Info qry req stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7666,14 +5721,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_HOME_PLMN_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_EHPLMN_INFO_STRU
-结构说明  : Aphplmn Info qry req stru
 
-  1.日    期   : 2015年10月23日
-    作    者   : s00217060
-    修改内容   : 新建
-******************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucImsi[NAS_MAX_IMSI_LENGTH];
@@ -7683,14 +5731,7 @@ typedef struct
     TAF_PLMN_ID_STRU                    astEHplmnList[TAF_MMA_MAX_EHPLMN_NUM];
 }TAF_MMA_EHPLMN_INFO_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_HOME_PLMN_QRY_CNF_STRU
-结构说明  : Aphplmn Info qry cnf stru
 
-  1.日    期   : 2015年3月19日
-    作    者   : g00261581
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -7700,14 +5741,7 @@ typedef struct
     TAF_MMA_EHPLMN_INFO_STRU            stEHplmnInfo;
 }TAF_MMA_HOME_PLMN_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_RATTYPE_CHANGE_NTF_STRU
-结构说明  : Aps ntf mma rattype change stru
 
-  1.日    期   : 2015年5月15日
-    作    者   : y00314741
-    修改内容   : 创建
-******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                     /*_H2ASN_Skip*/
@@ -7715,14 +5749,7 @@ typedef struct
     TAF_MMA_PS_RAT_TYPE_ENUM_UINT32     enRatType;
 }TAF_MMA_PS_RAT_TYPE_NTF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ATTACH_REQ_STRU
-结构说明  : AT向MMA发送ATTACH请求的消息结构体
 
-  1.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7732,14 +5759,7 @@ typedef struct
     VOS_UINT8                           aucRsved[3];
 }TAF_MMA_ATTACH_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ATTACH_CNF_STRU
-结构说明  : MMA向AT回复ATTACH结果的消息结构体
 
-  1.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7749,14 +5769,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32              enErrorCause;
 }TAF_MMA_ATTACH_CNF_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ATTACH_QRY_REQ_STRU
-结构说明  : AT向MMA发送ATTACH查询请求的消息结构体
 
-  1.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7766,14 +5779,7 @@ typedef struct
     VOS_UINT8                               aucReserved[3];
 }TAF_MMA_ATTACH_STATUS_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_ATTACH_QRY_CNF_STRU
-结构说明  : MMA向AT回复ATTACH状态查询结果的消息结构体
 
-  1.日    期   : 2015年4月9日
-    作    者   : h00313353
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7787,15 +5793,7 @@ typedef struct
     VOS_UINT8                               aucReserved[1];
 }TAF_MMA_ATTACH_STATUS_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CVER_QUERY_REQ_STRU
- 结构说明  : AT^1XCHAN查询请求结构
 
- 修改历史      :
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7803,14 +5801,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_1XCHAN_QUERY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CVER_QUERY_CNF_STRU
-结构说明  : AT^1XCHAN查询请求回复结构
 
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7821,15 +5812,7 @@ typedef struct
     VOS_UINT8                           aucReserve[2];
 }TAF_MMA_1XCHAN_QUERY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CVER_QUERY_REQ_STRU
- 结构说明  : AT^CVER查询请求结构
 
- 修改历史      :
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7837,14 +5820,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CVER_QUERY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CVER_QUERY_CNF_STRU
-结构说明  : AT^CVER查询请求回复结构
 
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7855,15 +5831,7 @@ typedef struct
     VOS_UINT8                           aucReserve[3];
 }TAF_MMA_CVER_QUERY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_STATE_QUERY_REQ_STRU
- 结构说明  : AT^GETST查询请求结构
 
- 修改历史      :
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7871,13 +5839,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_STATE_QUERY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_HANDSET_STATE_STRU
- 结构说明  : 手机状态的结构
- 1.日    期   : 2015年5月16日
-   作    者   : z00316370
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucCasState;
@@ -7885,14 +5847,7 @@ typedef struct
     VOS_UINT8                           aucReserve[2];
 }TAF_MMA_HANDSET_STATE_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_STATE_QUERY_CNF_STRU
-结构说明  : AT^GETST查询请求回复结构
 
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7903,15 +5858,7 @@ typedef struct
 }TAF_MMA_STATE_QUERY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CHIGHVER_QUERY_REQ_STRU
- 结构说明  : AT^CHIGHVER查询请求结构
 
- 修改历史      :
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7919,14 +5866,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CHIGHVER_QUERY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : TAF_MMA_CHIGHVER_QUERY_CNF_STRU
-结构说明  : AT^CHIGHVER查询请求回复结构
 
-  1.日    期   : 2015年05月16日
-    作    者   : z00316370
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7938,28 +5878,14 @@ typedef struct
 }TAF_MMA_CHIGHVER_QUERY_CNF_STRU;
 
 
-/*****************************************************************************
-结构名    : TAF_MMA_QUIT_CALLBACK_SET_REQ_STRU
-结构说明  : at QCCB req结构体
 
-  1.日    期   : 2015年05月16日
-    作    者   : y00322978
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
     TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_QUIT_CALLBACK_SET_REQ_STRU;
-/*****************************************************************************
-结构名    : TAF_MMA_QUIT_CALLBACK_SET_CNF_STRU
-结构说明  : at QCCB cnf结构体
 
-  1.日    期   : 2015年05月16日
-    作    者   : y00322978
-    修改内容   : 创建
-*******************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -7968,14 +5894,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCode;
 }TAF_MMA_QUIT_CALLBACK_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SID_WHITE_LIST_STRU
- 结构说明  : 保存的SID和MCC信息
 
- 1.日    期   : 2015年7月2日
-   作    者   : y00322978
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usStartSid;
@@ -7983,13 +5902,7 @@ typedef struct
     VOS_UINT32                          ulMcc;
 }TAF_MMA_SID_WHITE_LIST_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_OPER_LOCK_WHITE_SID_STRU
- 结构说明  : 保存的SID白名单信息
-  1.日    期   : 2015年7月2日
-    作    者   : y00322978
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucEnable;                          /* 白名单是否使能 */
@@ -7997,13 +5910,7 @@ typedef struct
     VOS_UINT16                          usWhiteSysNum;                     /* 支持白名单的个数,个数为0时表示不支持白名单 */
     TAF_MMA_SID_WHITE_LIST_STRU         astSysInfo[TAF_MMA_MAX_WHITE_LOCK_SID_NUM];
 }TAF_MMA_OPER_LOCK_WHITE_SID_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_CSIDLIST_SET_REQ_STRU
- 结构说明  : SID白名单信息 发送消息结构体
-  1.日    期   : 2015年7月2日
-    作    者   : y00322978
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8012,13 +5919,7 @@ typedef struct
     TAF_MMA_OPER_LOCK_WHITE_SID_STRU    stWhiteSidInfo;
 
 }TAF_MMA_CSIDLIST_SET_REQ_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_CSIDLIST_SET_CNF_STRU
- 结构说明  : SID白名单信息 cnf消息结构体
-  1.日    期   : 2015年7月2日
-    作    者   : y00322978
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8027,40 +5928,22 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCode;
 }TAF_MMA_CSIDLIST_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_1X_EMC_CALL_BACK_NTF_STRU
- 结构说明  : EMC CALL BACK 主动上报结构体
-  1.日    期   : 2015年7月2日
-    作    者   : y00322978
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                          /*_H2ASN_Skip*//* 消息头    */
     TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;          /*_H2ASN_Skip*//* 消息头    */
     TAF_MMA_CTRL_STRU                   stCtrl;
     VOS_UINT32                          ulIsInCallBack;     /* 是否处于CallBack模式中 */
-}TAF_MMA_1X_EMC_CALL_BACK_NTF_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_1X_EMC_CALL_BACK_QRY_REQ_STRU
- 结构说明  : EMC CALL BACK 查询请求结构体
-  1.日    期   : 2015年7月2日
-    作    者   : y00322978
-    修改内容   : 新建
-*****************************************************************************/
+}TAF_MMA_EMC_CALL_BACK_NTF_STRU;
+
 typedef struct
 {
     VOS_MSG_HEADER
     TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;
     TAF_MMA_CTRL_STRU                   stCtrl;
-}TAF_MMA_1X_EMC_CALL_BACK_QRY_REQ_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_1X_EMC_CALL_BACK_QRY_CNF_STRU
- 结构说明  : EMC CALL BACK 查询回复结构体
-  1.日    期   : 2015年7月2日
-    作    者   : y00322978
-    修改内容   : 新建
-*****************************************************************************/
+}TAF_MMA_EMC_CALL_BACK_QRY_REQ_STRU;
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8068,17 +5951,11 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
     VOS_UINT32                          ucIsInCallBackMode;
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCode;
-}TAF_MMA_1X_EMC_CALL_BACK_QRY_CNF_STRU;
+}TAF_MMA_EMC_CALL_BACK_QRY_CNF_STRU;
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_HDR_CSQ_SET_REQ_STRU
- 结构说明  : 设置HDR能量上报的参数
-  1.日    期   : 2015年10月20日
-    作    者   : c00299064
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8088,13 +5965,7 @@ typedef struct
 
 }TAF_MMA_HDR_CSQ_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : MMA_TAF_HDR_CSQ_SET_CNF_STRU
- 结构说明  : 设置HDR能量上报的参数的CNF
-  1.日    期   : 2015年10月20日
-    作    者   : c00299064
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8103,13 +5974,7 @@ typedef struct
     TAF_MMA_APP_OPER_RESULT_ENUM_UINT32 enRslt;
 }MMA_TAF_HDR_CSQ_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_HDR_CSQ_QRY_SETTING_REQ_STRU
- 结构说明  : 查询HDR能量上报的参数
-  1.日    期   : 2015年10月20日
-    作    者   : c00299064
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8117,13 +5982,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_HDR_CSQ_QRY_SETTING_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : MMA_TAF_HDR_CSQ_QRY_SETTING_CNF_STRU
- 结构说明  : 查询HDR能量上报的参数的回复
-  1.日    期   : 2015年10月20日
-    作    者   : c00299064
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8136,13 +5995,7 @@ typedef struct
     VOS_UINT8                           aucRsv[2];
 }MMA_TAF_HDR_CSQ_QRY_SETTING_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : MMA_TAF_HDR_CSQ_VALUE_IND_STRU
- 结构说明  : HDR能量主动上报
-  1.日    期   : 2015年10月20日
-    作    者   : c00299064
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8156,13 +6009,7 @@ typedef struct
 
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CURR_SID_NID_QRY_REQ_STRU
- 结构说明  : current system sid nid 查询请求结构体
-  1.日    期   : 2015年10月23日
-    作    者   : f00279542
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8170,13 +6017,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CURR_SID_NID_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CURR_SID_NID_QRY_CNF_STRU
- 结构说明  : home sid nid 查询结构体
-  1.日    期   : 2015年10月23日
-    作    者   : f00279542
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8187,13 +6028,7 @@ typedef struct
     VOS_INT32                           lNid;             /**<  Network identification */
 }TAF_MMA_CURR_SID_NID_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_INIT_LOC_INFO_IND_STRU
- 结构说明  : 初始位置信息上报结构体
-  1.日    期   : 2015年12月10日
-    作    者   : l00324781
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8205,13 +6040,7 @@ typedef struct
     VOS_INT32                           lSid;   /* 1x的初始位置信息的Sid， lSid等于-1，表示无效值 */
 }TAF_MMA_INIT_LOC_INFO_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ROAMING_MODE_SWITCH_IND_STRU
- 结构说明  : 国际漫游模式切换指示
- 1.日    期   : 2016年01月19日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8221,13 +6050,7 @@ typedef struct
     VOS_UINT8                           aucReserve[1];
 }TAF_MMA_ROAMING_MODE_SWITCH_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CCTC_ROAMING_NW_INFO_REPORT_IND_STRU
- 结构说明  : 多模MCC或SID变更指示
- 1.日    期   : 2016年01月20日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8241,13 +6064,7 @@ typedef struct
     VOS_UINT32                          ulModeType;
 }TAF_MMA_CTCC_ROAMING_NW_INFO_REPORT_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CCTC_ROAMING_NW_INFO_QRY_REQ_STRU
- 结构说明  : 多模MCC或SID查询请求
- 1.日    期   : 2016年01月20日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8255,13 +6072,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 }TAF_MMA_CTCC_ROAMING_NW_INFO_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CCTC_ROAMING_NW_INFO_QRY_CNF_STRU
- 结构说明  : 多模MCC或SID查询请求
- 1.日    期   : 2016年01月20日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8273,13 +6084,7 @@ typedef struct
     VOS_UINT32                          ulModeType;       /* 指示当前是CL还是GUL，0表示GUL，1表示CL */
 }TAF_MMA_CTCC_ROAMING_NW_INFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CCTC_ROAMING_NW_INFO_QRY_REQ_STRU
- 结构说明  : 多模MCC或SID查询请求
- 1.日    期   : 2016年01月20日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8289,13 +6094,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }TAF_MMA_CTCC_ROAMING_NW_INFO_RTP_CFG_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CCTC_ROAMING_NW_INFO_QRY_CNF_STRU
- 结构说明  : 多模MCC或SID查询请求
- 1.日    期   : 2016年01月20日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8304,13 +6103,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCode;
 }TAF_MMA_CTCC_ROAMING_NW_INFO_RTP_CFG_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CTCC_OOS_COUNT_SET_REQ_STRU
- 结构说明  : 设置中国电信OOS次数请求结构
- 1.日    期   : 2016年02月15日
-   作    者   : w00242748
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8320,13 +6113,7 @@ typedef struct
     VOS_UINT16                          usGulOosCount;
 }TAF_MMA_CTCC_OOS_COUNT_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_CTCC_OOS_COUNT_SET_CNF_STRU
- 结构说明  : ID_TAF_MMA_CTCC_OOS_COUNT_SET_CNF的结构体
-  1.日    期   : 2016年2月15日
-    作    者   : w00242748
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8335,13 +6122,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enErrorCode;
 }TAF_MMA_CTCC_OOS_COUNT_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_DOMAIN_CFG_SET_REQ_STRU
- 结构说明  : IMS注册域偏好设置信息结构体
-  1.日    期   : 2015年10月26日
-    作    者   : h00360002
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8350,13 +6131,7 @@ typedef struct
     TAF_MMA_IMS_DOMAIN_CFG_TYPE_ENUM_UINT32       enImsDoaminCfg;
 }TAF_MMA_IMS_DOMAIN_CFG_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_DOMAIN_CFG_QRY_REQ_STRU
- 结构说明  : IMS注册域偏好查询信息结构体
-  1.日    期   : 2015年10月26日
-    作    者   : h00360002
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8365,13 +6140,7 @@ typedef struct
 }TAF_MMA_IMS_DOMAIN_CFG_QRY_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_DOMAIN_CFG_SET_CNF_STRU
- 结构说明  : IMS注册域偏好设置返回消息结构体
-  1.日    期   : 2015年10月26日
-    作    者   : h00360002
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8382,13 +6151,7 @@ typedef struct
     TAF_MMA_IMS_DOMAIN_CFG_RESULT_ENUM_UINT32   enImsDomainCfgResult;
 }TAF_MMA_IMS_DOMAIN_CFG_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_DOMAIN_CFG_QRY_CNF_STRU
- 结构说明  : IMS注册域偏好查询返回消息结构体
-  1.日    期   : 2015年10月26日
-    作    者   : h00360002
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8399,15 +6162,7 @@ typedef struct
     TAF_MMA_IMS_DOMAIN_CFG_TYPE_ENUM_UINT32     enImsDomainCfgType;
 }TAF_MMA_IMS_DOMAIN_CFG_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ROAM_IMS_SUPPORT_SET_REQ_STRU
- 结构说明  : 设置漫游下IMS服务是否支持结构
 
- 修改历史      :
-  1.日    期   : 2016年3月9日
-    作    者   : w00316404
-    修改内容   : 新增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8416,13 +6171,7 @@ typedef struct
     TAF_MMA_ROAM_IMS_SUPPORT_ENUM_UINT32        enRoamingImsSupportFlag;
 }TAF_MMA_ROAM_IMS_SUPPORT_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ROAM_IMS_SUPPORT_SET_CNF_STRU
- 结构说明  : 漫游下IMS是否支持设置返回消息结构体
-  1.日    期   : 2016年3月10日
-    作    者   : w00316404
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8433,26 +6182,14 @@ typedef struct
     TAF_MMA_ROAM_IMS_SUPPORT_RESULT_ENUM_UINT32     enRoamImsSupportResult;
 }TAF_MMA_ROAM_IMS_SUPPORT_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PRLID_QRY_REQ_STRU
- 结构说明  : 查询PRLID ,MLPL version id, MSPL version id消息结构体
-  1.日    期   : 2016年3月10日
-    作    者   : w00316404
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
     TAF_MMA_MSG_TYPE_ENUM_UINT32                    enMsgName;
     TAF_MMA_CTRL_STRU                               stCtrl;
 }TAF_MMA_PRLID_QRY_REQ_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_PRLID_QRY_CNF_STRU
- 结构说明  : 查询PRLID ,MLPL version id, MSPL version id CNF 消息结构体
-  1.日    期   : 2016年3月10日
-    作    者   : w00316404
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8465,14 +6202,7 @@ typedef struct
     VOS_INT32                           lMsplId;
 }TAF_MMA_PRLID_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFLOCIINFO_STRU
- 结构说明  : LGU+6f7e卡文件信息结构体
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                              ulTmsi;
@@ -8483,14 +6213,7 @@ typedef struct
     VOS_UINT32                              aucReserve[2];
 } TAF_MMA_EFLOCIINFO_STRU;
 
-/*****************************************************************************
- 结构名    : AT_MTA_EFPSLOCIINFO_REQ_STRU
- 结构说明  : LGU+6f73卡文件信息结构体
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                              ulPTmsi;
@@ -8502,14 +6225,7 @@ typedef struct
     VOS_UINT32                              aucReserve[2];
 } TAF_MMA_EFPSLOCIINFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFLOCIINFO_SET_REQ_STRU
- 结构说明  : LGU+6f7e卡文件设置请求
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8518,14 +6234,7 @@ typedef struct
     TAF_MMA_EFLOCIINFO_STRU             stEflociInfo;
 } TAF_MMA_EFLOCIINFO_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFLOCIINFO_SET_CNF_STRU
- 结构说明  : LGU+6f7e卡文件设置请求回复
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8534,14 +6243,7 @@ typedef struct
     TAF_MMA_APP_OPER_RESULT_ENUM_UINT32 enRslt;
 } TAF_MMA_EFLOCIINFO_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFLOCIINFO_QRY_REQ_STRU
- 结构说明  : LGU+6f7e卡文件查询请求
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8549,14 +6251,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 } TAF_MMA_EFLOCIINFO_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFLOCIINFO_QRY_CNF_STRU
- 结构说明  : LGU+6f7e卡文件查询请求回复
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8566,14 +6261,7 @@ typedef struct
     TAF_MMA_APP_OPER_RESULT_ENUM_UINT32 enRslt;
 } TAF_MMA_EFLOCIINFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFPSLOCIINFO_SET_REQ_STRU
- 结构说明  : LGU+6f73卡文件设置请求
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8582,14 +6270,7 @@ typedef struct
     TAF_MMA_EFPSLOCIINFO_STRU           stPsEflociInfo;
 } TAF_MMA_EFPSLOCIINFO_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFPSLOCIINFO_SET_CNF_STRU
- 结构说明  : LGU+6f73卡文件设置请求回复
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8598,14 +6279,7 @@ typedef struct
     TAF_MMA_APP_OPER_RESULT_ENUM_UINT32 enRslt;
 } TAF_MMA_EFPSLOCIINFO_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFPSLOCIINFO_QRY_REQ_STRU
- 结构说明  : LGU+6f73卡文件查询请求
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8613,14 +6287,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
 } TAF_MMA_EFPSLOCIINFO_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_EFPSLOCIINFO_QRY_CNF_STRU
- 结构说明  : LGU+6f73卡文件查询请求回复
 
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8630,13 +6297,7 @@ typedef struct
     TAF_MMA_APP_OPER_RESULT_ENUM_UINT32 enRslt;
 } TAF_MMA_EFPSLOCIINFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_COMBINED_MODE_SWITCH_IND_STRU
- 结构说明  : 多模组合模式切换指示
- 1.日    期   : 2016年04月29日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8646,26 +6307,14 @@ typedef struct
     VOS_UINT8                           aucReserve[1];
     TAF_MMA_COMBINED_MODE_ENUM_UINT32   enCombinedMode;
 }TAF_MMA_COMBINED_MODE_SWITCH_IND_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_RAT_COMBINED_MODE_QRY_REQ_STRU
- 结构说明  : 查询多模组合的当前模式消息结构体
- 1.日    期   : 2016年07月18日
-   作    者   : l00359089
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
     TAF_MMA_MSG_TYPE_ENUM_UINT32                    enMsgName;
     TAF_MMA_CTRL_STRU                               stCtrl;
 }TAF_MMA_RAT_COMBINED_MODE_QRY_REQ_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_RAT_COMBINED_MODE_QRY_CNF_STRU
- 结构说明  : 查询多模组合的当前模式消息结构体 CNF 消息结构体
-  1.日    期   : 2016年07月18日
-    作    者   : l00359089
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8673,13 +6322,7 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
     TAF_MMA_COMBINED_MODE_ENUM_UINT32   enCombinedMode;
 }TAF_MMA_RAT_COMBINED_MODE_QRY_CNF_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_ICC_APP_TYPE_SWITCH_IND_STRU
- 结构说明  : ICC应用类型切换指示
- 1.日    期   : 2016年07月01日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8690,13 +6333,7 @@ typedef struct
     TAF_MMA_ICC_APP_TYPE_SWITCH_STATE_ENUM_UINT32           enSwitchState;
 }TAF_MMA_ICC_APP_TYPE_SWITCH_IND_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_SRV_END_NOTIFY_STRU
- 结构说明  : 通知mma 业务结束消息结构体
- 1.日    期   : 2016年07月05日
-   作    者   : c00299063
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8705,13 +6342,7 @@ typedef struct
     VOS_UINT8                                               aucReserved[3];
 }TAF_MMA_SRV_END_NOTIFY_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_REG_DOMAIN_NOTIFY_STRU
- 结构说明  : IMS REG DOMAIN通知消息结构体
-  1.日    期   : 2016年5月4日
-    作    者   : n00269697
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
@@ -8721,28 +6352,14 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }TAF_MMA_IMS_REG_DOMAIN_NOTIFY_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_PACSP_QRY_REQ_STRU
- 结构说明  : 查询ENS是否支持
 
-  1.日    期   : 2016年10月9日
-    作    者   : n00269697
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
     TAF_MMA_MSG_TYPE_ENUM_UINT32        enMsgName;
     TAF_MMA_CTRL_STRU                   stCtrl;
 } TAF_MMA_PACSP_QRY_REQ_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_PACSP_QRY_CNF_STRU
- 结构说明  : 查询ENS是否支持的回复
 
-  1.日    期   : 2016年10月9日
-    作    者   : n00269697
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8751,26 +6368,14 @@ typedef struct
     VOS_UINT8                           ucPlmnMode;
     VOS_UINT8                           aucReserved[3];
 } TAF_MMA_PACSP_QRY_CNF_STRU;
-/*****************************************************************************
- 结构名    : TAF_MMA_SMC_NO_ENTITY_NOTIFY_STRU
- 结构说明  : ID_TAF_MMA_SMC_NO_ENTITY_NOTIFY消息结构体
-  1.日    期   : 2016年5月4日
-    作    者   : n00269697
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
     TAF_MMA_MSG_TYPE_ENUM_UINT32        enMsgName;                              /*_H2ASN_Skip*/
 }TAF_MMA_SMC_NO_ENTITY_NOTIFY_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_VIDEO_CALL_CAP_TYPE_ENUM_UINT32
- 结构说明  : IMS VT能力类型
-  1.日    期   : 2017年05月15日
-    作    者   : n00269697
-    修改内容   :
-*****************************************************************************/
+
 enum TAF_MMA_IMS_VIDEO_CALL_CAP_TYPE_ENUM
 {
     TAF_MMA_IMS_VIDEO_CALL_CAP_SWITCH            = 0x00000000,                  /* IMS视频电话动态开关 */
@@ -8780,28 +6385,14 @@ enum TAF_MMA_IMS_VIDEO_CALL_CAP_TYPE_ENUM
 };
 typedef VOS_UINT32 TAF_MMA_IMS_VIDEO_CALL_CAP_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_VIDEO_CALL_CAP_REQ_STRU
- 结构说明  : IMS VT能力结构体
 
-  1.日    期   : 2017年05月10日
-    作    者   : n00269697
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     TAF_MMA_IMS_VIDEO_CALL_CAP_TYPE_ENUM_UINT32             enVideoCallCapType; /* 需要配置的IMS VT能力类型 */
     VOS_UINT32                                              ulVideoCallCapValue;/* IMS VT某个能力的配置值: VOS_FALSE,关；VOS_TRUE,开 */
 }TAF_MMA_IMS_VIDEO_CALL_CAP_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_VIDEO_CALL_CAP_REQ_STRU
- 结构说明  : 设置IMS VT能力
 
-  1.日    期   : 2017年05月10日
-    作    者   : n00269697
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8810,13 +6401,7 @@ typedef struct
     TAF_MMA_IMS_VIDEO_CALL_CAP_STRU     stImsVtCap;
 }TAF_MMA_IMS_VIDEO_CALL_CAP_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_VIDEO_CALL_CAP_SET_CNF_STRU
- 结构说明  : IMS VT能力设置返回消息结构体
-  1.日    期   : 2017年05月10日
-    作    者   : n00269697
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8826,13 +6411,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enResult;
 }TAF_MMA_IMS_VIDEO_CALL_CAP_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SMS_CFG_STRU
- 结构说明  : IMS短信能力配置结构体
-  1.日    期   : 2017年02月27日
-    作    者   : l00198894
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucWifiEnable;
@@ -8841,13 +6420,7 @@ typedef struct
     VOS_UINT8                           ucGsmEnable;
 }TAF_MMA_IMS_SMS_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SMS_CFG_SET_REQ_STRU
- 结构说明  : IMS短信能力设置信息结构体
-  1.日    期   : 2016年10月31日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8856,13 +6429,7 @@ typedef struct
     TAF_MMA_IMS_SMS_CFG_STRU            stImsSmsCfg;
 }TAF_MMA_IMS_SMS_CFG_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SMS_CFG_QRY_REQ_STRU
- 结构说明  : IMS短信能力查询信息结构体
-  1.日    期   : 2016年10月31日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8871,13 +6438,7 @@ typedef struct
 }TAF_MMA_IMS_SMS_CFG_QRY_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SMS_CFG_SET_CNF_STRU
- 结构说明  : IMS短信能力设置返回消息结构体
-  1.日    期   : 2016年10月31日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8887,13 +6448,7 @@ typedef struct
     TAF_ERROR_CODE_ENUM_UINT32          enResult;
 }TAF_MMA_IMS_SMS_CFG_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_IMS_SMS_CFG_QRY_CNF_STRU
- 结构说明  : IMS短信能力查询返回消息结构体
-  1.日    期   : 2016年10月31日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8904,14 +6459,7 @@ typedef struct
     TAF_MMA_IMS_SMS_CFG_STRU            stImsSmsCfg;
 }TAF_MMA_IMS_SMS_CFG_QRY_CNF_STRU;
 
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, begin */
-/*****************************************************************************
- 结构名    : TAF_MMA_ACDC_APP_INFO_STRU
- 结构说明  :
- 1.日    期  : 2017年02月04日
-   作    者  : wx270776
-   修改内容  : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                                               aucOsId[TAF_MMA_OSID_LEN];
@@ -8920,13 +6468,7 @@ typedef struct
     TAF_MMA_APPLICATIONS_INDICATION_ENUM_UINT32             enAppIndication;
 }TAF_MMA_ACDC_APP_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_MMA_ACDC_APP_NOTIFY_STRU
- 结构说明  :
- 1.日    期  : 2017年02月04日
-   作    者  : wx270776
-   修改内容  : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -8934,7 +6476,47 @@ typedef struct
     TAF_MMA_CTRL_STRU                   stCtrl;
     TAF_MMA_ACDC_APP_INFO_STRU          stAcdcAppInfo;
 }TAF_MMA_ACDC_APP_NOTIFY_STRU;
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, end */
+
+
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
+    VOS_UINT32                          ulMsgName;                              /*_H2ASN_Skip*/
+    VOS_UINT16                          usClientId;
+    VOS_UINT8                           ucOpid;
+    VOS_UINT8                           ucReserve;
+}TAF_MMA_MTREATTACH_IND_STRU;
+
+
+
+enum TAF_MMA_SEARCH_TYPE_ENUM
+{
+    TAF_MMA_SEARCH_TYPE_AUTO            = 0,
+    TAF_MMA_SEARCH_TYPE_MANUAL          = 1,
+    TAF_MMA_SEARCH_TYPE_MANUAL_AUTO     = 2,
+    TAF_MMA_SEARCH_TYPE_BUTT
+};
+
+typedef VOS_UINT32 TAF_MMA_SEARCH_TYPE_ENUM_UINT32;
+
+
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
+    TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;                              /*_H2ASN_Skip*/
+    TAF_MMA_SEARCH_TYPE_ENUM_UINT32     enSearchType;                           /* 0:表示自动搜网 1:表示手动搜网 2:先手动搜网再自动搜网 */
+    TAF_MMA_CTRL_STRU                   stCtrl;
+    TAF_PLMN_USER_SEL_STRU              stPlmnUserSel;
+}TAF_MMA_PLMN_SEARCH_REQ_STRU;
+
+
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /*_H2ASN_Skip*/
+    TAF_MMA_MSG_TYPE_ENUM_UINT32        ulMsgName;                              /*_H2ASN_Skip*/
+    TAF_MMA_CTRL_STRU                   stCtrl;
+    TAF_ERROR_CODE_ENUM_UINT32          enErrorCause;
+}TAF_MMA_PLMN_SEARCH_CNF_STRU;
 
 
 TAF_UINT32 Taf_DefPhClassType(MN_CLIENT_ID_T        ClientId,
@@ -8942,8 +6524,6 @@ TAF_UINT32 Taf_DefPhClassType(MN_CLIENT_ID_T        ClientId,
                                       TAF_PH_MS_CLASS_TYPE  MsClass);
 
 /* Taf_PhoneAttach */
-/* Deleted by w00167002 for L-C互操作项目, 2014-2-17, begin */
-/* Deleted by w00167002 for L-C互操作项目, 2014-2-17, end */
 TAF_UINT32 Taf_PhonePinHandle(MN_CLIENT_ID_T      ClientId,
                                       MN_OPERATION_ID_T   OpId,
                                       TAF_PH_PIN_DATA_STRU *pPinData);
@@ -8997,13 +6577,10 @@ VOS_VOID  Taf_GetSyscfgBandGroupStr(TAF_PH_SYSCFG_BAND_STR* pstSysCfgBandStr);
 /* MN_MMA_GetSyscfgExLteBandGroupStr */
 
 
-TAF_UINT32  Taf_QueryCSNR(TAF_INT16 *psCpichRscp,TAF_INT16 *psCpichEcNo);
+/* 无调用点，多实例项目删除 */
 
 
-TAF_UINT32 Taf_UsimRestrictedAccessCommand(
-                                MN_CLIENT_ID_T               ClientId,
-                                MN_OPERATION_ID_T            OpId,
-                                USIMM_RACCESS_REQ_STRU      *pPara);
+/* 无调用点，多实例项目删除 */
 
 TAF_UINT32 Taf_PhoneGetNetworkNameForListPlmn( TAF_PH_OPERATOR_NAME_FORMAT_OP_STRU *pstOperName );
 
@@ -9012,8 +6589,6 @@ VOS_UINT32 Taf_MePersonalisationHandle(
                             MN_OPERATION_ID_T                 OpId,
                             TAF_ME_PERSONALISATION_DATA_STRU *pMePersonalData);
 
-
-VOS_VOID   Taf_GetProductionID(VOS_CHAR *pcDest, VOS_UINT32 ulMaxMemLength);
 
 
 TAF_UINT32  TAF_SetPrefPlmnType(
@@ -9045,8 +6620,6 @@ VOS_UINT8 MN_MMA_GetServiceDomain(VOS_VOID);
 
 TAF_UINT32  Taf_DefMmTestPara(TAF_VOID *pInput,TAF_VOID *pRslt);
 
-/* Modified by w00167002 for L-C互操作项目, 2014-2-14, begin */
-/* Modified by w00167002 for L-C互操作项目, 2014-2-14, end */
 
 
 VOS_UINT32  MN_FillAndSndAppReqMsg(
@@ -9063,7 +6636,6 @@ VOS_VOID Taf_GetCurrentAttachStatus(
     TAF_MMA_ATTACH_STATUS_ENUM_UINT8    *penPsResult
 );
 
-/* Modified by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, begin */
 TAF_UINT32 Taf_ParaQuery(
     MN_CLIENT_ID_T              ClientId,
     MN_OPERATION_ID_T           OpId,
@@ -9072,7 +6644,6 @@ TAF_UINT32 Taf_ParaQuery(
 );
 
 
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, Begin */
 VOS_UINT32 TAF_MMA_PhoneModeSetReq(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usClientId,
@@ -9160,7 +6731,6 @@ VOS_UINT32 TAF_MMA_DetachReq(
     TAF_MMA_DETACH_PARA_STRU           *pstDetachPara
 );
 
-/* Added by s00246516 for L-C互操作项目, 2014-01-24, End */
 
 VOS_UINT32 TAF_MMA_AttachReq(
     VOS_UINT32                          ulModuleId,
@@ -9241,22 +6811,13 @@ VOS_UINT32 TAF_MMA_ProcCHVerQryReq(
     VOS_UINT16                          usClientId,
     VOS_UINT8                           ucOpId
 );
-VOS_UINT32 TAF_MMA_SetQuitCallBack(
-    VOS_UINT32                          ulModuleId,
-    VOS_UINT16                          usClientId,
-    VOS_UINT8                           ucOpId
-);
 VOS_UINT32 TAF_MMA_SetCSidList(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usClientId,
     VOS_UINT8                           ucOpId,
     TAF_MMA_OPER_LOCK_WHITE_SID_STRU   *pstWhiteSidList
 );
-VOS_UINT32 TAF_MMA_QryCurrEmcCallBackMode(
-    VOS_UINT32                          ulModuleId,
-    VOS_UINT16                          usClientId,
-    VOS_UINT8                           ucOpId
-);
+/* 移出CDMA编译开关 */
 
 VOS_UINT32 TAF_MMA_ProcHdrCsqSetReq(
     VOS_UINT32                          ulModuleId,
@@ -9317,7 +6878,26 @@ VOS_UINT32 TAF_MMA_QryRatCombinedMode(
     VOS_UINT16                          usClientId,
     VOS_UINT8                           ucOpId
 );
+
+VOS_UINT32 TAF_MMA_QryCLocInfoReq(
+    VOS_UINT32                          ulModuleId,
+    MN_CLIENT_ID_T                      usClientId,
+    MN_OPERATION_ID_T                   ucOpId
+);
+
 #endif
+
+VOS_UINT32 TAF_MMA_SetQuitCallBack(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usClientId,
+    VOS_UINT8                           ucOpId
+);
+
+VOS_UINT32 TAF_MMA_QryCurrEmcCallBackMode(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usClientId,
+    VOS_UINT8                           ucOpId
+);
 
 extern VOS_UINT32 TAF_MMA_SetFPlmnInfo(
     VOS_UINT32                          ulModuleId,
@@ -9352,11 +6932,7 @@ VOS_UINT32 TAF_MMA_TestCpolReq(
     MN_PH_PREF_PLMN_TYPE_ENUM_U8        enPrefPlmnType
 );
 
-extern VOS_UINT32 TAF_MMA_PlmnAutoReselReq(
-    VOS_UINT32                          ulModuleId,
-    VOS_UINT16                          usClientId,
-    VOS_UINT8                           ucOpId
-);
+
 VOS_UINT32  TAF_MMA_SetAutoAttachReq(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usClientId,
@@ -9364,12 +6940,6 @@ VOS_UINT32  TAF_MMA_SetAutoAttachReq(
     VOS_UINT32                          ulSetValue
 );
 
-extern VOS_UINT32 TAF_MMA_PlmnSpecialSelReq(
-    VOS_UINT32                          ulModuleId,
-    VOS_UINT16                          usClientId,
-    VOS_UINT8                           ucOpId,
-    TAF_PLMN_USER_SEL_STRU             *pstPlmnUserSel
-);
 
 extern VOS_UINT32 TAF_MMA_AbortPlmnListReq(
     VOS_UINT32                          ulModuleId,
@@ -9413,6 +6983,7 @@ VOS_UINT32 TAF_MMA_QryCerssiReq(
     VOS_UINT16                          usClientId,
     VOS_UINT8                           ucOpId
 );
+
 
 VOS_UINT32 TAF_MMA_QryAccessModeReq(
     VOS_UINT32                          ulModuleId,
@@ -9459,6 +7030,14 @@ VOS_UINT32 TAF_MMA_QryRegStateReq(
     TAF_MMA_QRY_REG_STATUS_TYPE_ENUM_UINT32                 enRegStaType
 );
 
+#if (FEATURE_ON == FEATURE_DSDS)
+VOS_UINT32 TAF_MMA_SetDsdsStateReq(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usClientId,
+    VOS_UINT32                          ulEnable
+);
+#endif
+
 VOS_UINT32 TAF_MMA_SetDplmnListReq(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usClientId,
@@ -9473,7 +7052,14 @@ VOS_UINT32 TAF_MMA_QryDplmnListReq(
     VOS_UINT8                           ucOpId
 );
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, begin */
+
+VOS_UINT32 TAF_MMA_ExchangeModemInfoReq(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usClientId,
+    MODEM_ID_ENUM_UINT16                enFirstModemId,
+    MODEM_ID_ENUM_UINT16                enSecondModemId
+);
+
 VOS_UINT32 TAF_MMA_SetBorderInfoReq(
     VOS_UINT32                                              ulModuleId,
     VOS_UINT16                                              usClientId,
@@ -9485,7 +7071,6 @@ VOS_UINT32 TAF_MMA_QryBorderInfoReq(
     VOS_UINT16                          usClientId,
     VOS_UINT8                           ucOpId
 );
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, end */
 
 VOS_UINT32 TAF_MMA_QrySystemInfoReq(
     VOS_UINT32                          ulModuleId,
@@ -9564,12 +7149,6 @@ VOS_UINT32 TAF_MMA_SetEOPlmnReq(
 );
 
 VOS_UINT32 TAF_MMA_QryEOPlmnReq(
-    VOS_UINT32                          ulModuleId,
-    MN_CLIENT_ID_T                      usClientId,
-    MN_OPERATION_ID_T                   ucOpId
-);
-
-VOS_UINT32 TAF_MMA_QryCLocInfoReq(
     VOS_UINT32                          ulModuleId,
     MN_CLIENT_ID_T                      usClientId,
     MN_OPERATION_ID_T                   ucOpId
@@ -9728,18 +7307,30 @@ VOS_UINT32 TAF_MMA_QryPacspReq(
 );
 VOS_VOID TAF_MMA_SendSmcNoEntityNtf(VOS_VOID);
 
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-13, begin */
 VOS_UINT32 TAF_MMA_AcdcAppNotify(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usClientId,
     VOS_UINT8                           ucOpId,
     TAF_MMA_ACDC_APP_INFO_STRU         *pstAcdcAppInfo
 );
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-13, end */
 
+/* 该接口是给层2调用的，luxiaotong负责开发层2的代码 */
 VOS_VOID TAF_MMA_SndRestartReq(
     VOS_UINT32                          ulModuleId,
     MODEM_ID_ENUM_UINT16                enModemId
+);
+
+VOS_UINT32 TAF_MMA_SetCindReq(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usClientId,
+    VOS_UINT8                           ucOpId,
+    TAF_START_INFO_IND_STRU            *pstStartInfoInd
+);
+
+VOS_UINT32 TAF_MMA_PlmnSearchReq(
+    TAF_MMA_CTRL_STRU                  *pstCtrl,
+    TAF_MMA_SEARCH_TYPE_ENUM_UINT32     enSearchType,
+    TAF_PLMN_USER_SEL_STRU             *pstPlmnUserSel
 );
 
 #if ((VOS_OS_VER == VOS_WIN32) || (TAF_OS_VER == TAF_NUCLEUS))

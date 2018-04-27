@@ -81,18 +81,17 @@ int hcfgk_set_cfg(struct file *file, void __user*arg)
 
 	mem_size = PAGE_ALIGN(sizeof(*table)+len);
 
-	table = module_alloc(mem_size);
+	table = vmalloc(mem_size);
 	if(!table) {
 		printk(KERN_ERR "Alloc hung config table failed.\n");
 		return -ENOMEM;
 	}
-	set_memory_nx(table, mem_size>>PAGE_SHIFT);
 	memset(table, 0, mem_size);
 
 	ret = copy_from_user(table, arg, sizeof(*table)+len);
 	if(ret) {
 		printk(KERN_ERR "copy hung config table from user failed.\n");
-		module_memfree(table);
+		vfree(table);
 		return ret;
 	}
 	/*
@@ -100,10 +99,6 @@ int hcfgk_set_cfg(struct file *file, void __user*arg)
 	 */
 	if(len > 0)
 		table->data[len-1] = '\0';
-
-	if((ret=set_memory_ro((unsigned long)table, mem_size>>PAGE_SHIFT))) {
-		printk(KERN_ERR "set memory ro failed.\n");
-	};
 
 	spin_lock(&lock);
 
@@ -115,7 +110,7 @@ int hcfgk_set_cfg(struct file *file, void __user*arg)
 	spin_unlock(&lock);
 
 	if(table != NULL) {
-		module_memfree(table);
+		vfree(table);
 	}
 
 	return ret;

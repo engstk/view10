@@ -25,7 +25,6 @@
 #include <linux/interrupt.h>
 #include <linux/delay.h>
 #include "asp_hdmi_dma.h"
-#include "asp_cfg.h"
 
 /*lint -e774 -e747 -e502 -e429*/
 
@@ -249,7 +248,7 @@ void asp_hdmi_tx3_disable(void)
 
 }
 
-void asp_hdmi_SIO_config(struct sio_config_parameters parameters)
+void asp_hdmi_spdif_config(struct sio_config_parameters parameters)
 {
 	struct asp_hdmi_dma_priv *priv = asp_hdmi_dma_priv;
 	unsigned int reg_value = 0x0;
@@ -258,15 +257,15 @@ void asp_hdmi_SIO_config(struct sio_config_parameters parameters)
 	BUG_ON(NULL == priv);
 
 	/* set channel type */
-	asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SIO_CH0_STATUS1_L, HDMI_SIO_CHANNEL_TYPE_BIT);
-	asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SIO_CH0_STATUS1_R, HDMI_SIO_CHANNEL_TYPE_BIT);
+	asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_CH0_STATUS1_L, HDMI_SIO_CHANNEL_TYPE_BIT);
+	asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_CH0_STATUS1_R, HDMI_SIO_CHANNEL_TYPE_BIT);
 
 	/* set sample rate */
 	if (parameters.sample_rate < SAMPLE_RATE_NO_SUPPORT){
-		reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SIO_CH0_STATUS1_L);
+		reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS1_L);
 		reg_value |=  (asp_hdmi_sio_sample_rate[parameters.sample_rate][1]) << HDMI_SIO_SAMPLE_RATE_BIT;
-		asp_hdmi_dmac_reg_write(ASP_HDMI_SIO_CH0_STATUS1_L, reg_value);
-		asp_hdmi_dmac_reg_write(ASP_HDMI_SIO_CH0_STATUS1_R, reg_value);
+		asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CH0_STATUS1_L, reg_value);
+		asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CH0_STATUS1_R, reg_value);
 		dev_info(priv->dev, "[%s:%d],set sio sample rate(%d).\n", __FUNCTION__, __LINE__, parameters.sample_rate);
 	}
 	else{
@@ -275,58 +274,9 @@ void asp_hdmi_SIO_config(struct sio_config_parameters parameters)
 
 	/* set copy right*/
 	if (parameters.is_hdcp){
-		asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SIO_CH0_STATUS1_L, HDMI_SIO_HDCP_BIT);
-		asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SIO_CH0_STATUS1_R, HDMI_SIO_HDCP_BIT);
-		dev_info(priv->dev, "[%s:%d],set sio hdcp bit to 1.\n", __FUNCTION__, __LINE__);
-	}
-
-	/* set bitwidth @TODO: you must modify this if used dynamic bitdth because now configure reg according to 16bit */
-	if (parameters.tx3_conf->bit_width < BIT_WIDTH_MAX){
-		reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SIO_CH0_STATUS2_L);
-		reg_value |=  HDMI_SIO_BITWIDTH_MASK;
-		asp_hdmi_dmac_reg_write(ASP_HDMI_SIO_CH0_STATUS2_L, reg_value);
-		asp_hdmi_dmac_reg_write(ASP_HDMI_SIO_CH0_STATUS2_R, reg_value);
-		dev_info(priv->dev, "[%s:%d],set sio bitwith(%d).\n", __FUNCTION__, __LINE__, parameters.tx3_conf->bit_width);
-	}
-	else{
-		dev_info(priv->dev, "[%s:%d],bitwith(%d) is no support, and will use defaulte sio bitwidth config.\n", __FUNCTION__, __LINE__, parameters.tx3_conf->bit_width);
-	}
-
-	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SIO_CH0_STATUS1_L vaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SIO_CH0_STATUS1_L));
-	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SIO_CH0_STATUS2_Lvaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SIO_CH0_STATUS2_L));
-	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SIO_CH0_STATUS1_R vaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SIO_CH0_STATUS1_R));
-	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SIO_CH0_STATUS2_R vaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SIO_CH0_STATUS2_R));
-
-}
-
-void asp_hdmi_spdif_config(struct sio_config_parameters parameters)
-{
-	struct asp_hdmi_dma_priv *priv = asp_hdmi_dma_priv;
-	unsigned int reg_value = 0x0;
-
-	BUG_ON(NULL == priv);
-
-	/* set channel type */
-	asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_CH0_STATUS1_L, HDMI_SIO_CHANNEL_TYPE_BIT);
-	asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_CH0_STATUS1_R, HDMI_SIO_CHANNEL_TYPE_BIT);
-
-	/* set sample rate */
-	if (parameters.sample_rate < SAMPLE_RATE_NO_SUPPORT) {
-		reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS1_L);
-		reg_value |=  (asp_hdmi_sio_sample_rate[parameters.sample_rate][1]) << HDMI_SIO_SAMPLE_RATE_BIT;
-		asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CH0_STATUS1_L, reg_value);
-		asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CH0_STATUS1_R, reg_value);
-		dev_info(priv->dev, "[%s:%d],set spdif sample rate(%d)\n", __FUNCTION__, __LINE__, parameters.sample_rate);
-	}
-	else {
-		dev_info(priv->dev, "[%s:%d],sample rate(%d) is no support,and will use defaulte spdif config\n", __FUNCTION__, __LINE__, parameters.sample_rate);
-	}
-
-	/* set copy right*/
-	if (parameters.is_hdcp) {
 		asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_CH0_STATUS1_L, HDMI_SIO_HDCP_BIT);
 		asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_CH0_STATUS1_R, HDMI_SIO_HDCP_BIT);
-		dev_info(priv->dev, "[%s:%d],set spdif hdcp bit to 1\n", __FUNCTION__, __LINE__);
+		dev_info(priv->dev, "[%s:%d],set sio hdcp bit to 1.\n", __FUNCTION__, __LINE__);
 	}
 
 	/* set bitwidth @TODO: you must modify this if used dynamic bitdth because now configure reg according to 16bit */
@@ -335,15 +285,16 @@ void asp_hdmi_spdif_config(struct sio_config_parameters parameters)
 		reg_value |=  HDMI_SIO_BITWIDTH_MASK;
 		asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CH0_STATUS2_L, reg_value);
 		asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CH0_STATUS2_R, reg_value);
-		dev_info(priv->dev, "[%s:%d],set spdif bitwith(%d)\n", __FUNCTION__, __LINE__, parameters.tx3_conf->bit_width);
+		dev_info(priv->dev, "[%s:%d],set sio bitwith(%d).\n", __FUNCTION__, __LINE__, parameters.tx3_conf->bit_width);
 	}
 	else{
-		dev_info(priv->dev, "[%s:%d],bitwith(%d) is no support, and will use defaulte spdif bitwidth config\n", __FUNCTION__, __LINE__, parameters.tx3_conf->bit_width);
+		dev_info(priv->dev, "[%s:%d],bitwith(%d) is no support, and will use defaulte sio bitwidth config.\n", __FUNCTION__, __LINE__, parameters.tx3_conf->bit_width);
 	}
 
-	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SPDIF_CH0 STATUS1_L vaule:%x, STATUS2_L vaule:%x, STATUS1_R vaule:%x, STATUS2_R vaule:%x\n", __FUNCTION__, __LINE__,
-		asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS1_L), asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS2_L),
-		asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS1_R), asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS2_R));
+	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SPDIF_CH0_STATUS1_L vaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS1_L));
+	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SPDIF_CH0_STATUS2_Lvaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS2_L));
+	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SPDIF_CH0_STATUS1_R vaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS1_R));
+	dev_info(priv->dev, "[%s:%d],set ASP_HDMI_SPDIF_CH0_STATUS2_R vaule:%x\n", __FUNCTION__, __LINE__, reg_value = asp_hdmi_dmac_reg_read(ASP_HDMI_SPDIF_CH0_STATUS2_R));
 
 }
 
@@ -375,16 +326,8 @@ int asp_hdmi_dma_config(
 		return -EINVAL;
 	}
 
-	if (asp_cfg_is_vr()) {
-		asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_SEL, 0);
-	} else {
-		/* clean up i2s configuration */
-		asp_hdmi_dmac_reg_write(ASP_HDMI_I2S_CLR, HDMI_I2S_CLR_MASK);
-
-		/* selete i2s interface as ASP_SPDIFSEL */
-		asp_hdmi_dmac_reg_clr_bit(ASP_HDMI_SPDIF_SEL, 0);
-	}
-	dev_info(priv->dev, "[%s:%d],selete %s interface as ASP_SPDIFSEL\n", __FUNCTION__, __LINE__, asp_cfg_is_vr() ? "spdif": "i2s");
+	/* selete spdif interface as ASP_SPDIFSEL */
+	asp_hdmi_dmac_reg_set_bit(ASP_HDMI_SPDIF_SEL, 0);
 
 	/* set PCMA src addr and buffer */
 	asp_hdmi_dmac_reg_write(ASP_HDMI_A_ADDR, addr);
@@ -423,13 +366,8 @@ int asp_hdmi_dma_start(void)
 	/* dma interrupt enable */
 	asp_hdmi_dmac_reg_write(ASP_HDMI_INT_EN, HDMI_INT_MASK);
 
-	/* set i2s */
-	if (asp_cfg_is_vr())
-		asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CONFIG, HDMI_SPDIF_SET_MASK);
-	else
-		asp_hdmi_dmac_reg_write(ASP_HDMI_I2S_SET, HDMI_I2S_SET_MASK);
-
-	dev_info(priv->dev, "[%s:%d],set %s interface as ASP_SPDIFSEL\n", __FUNCTION__, __LINE__, asp_cfg_is_vr() ? "spdif": "i2s");
+	/* set spdif */
+	asp_hdmi_dmac_reg_write(ASP_HDMI_SPDIF_CONFIG, HDMI_SPDIF_SET_MASK);
 
 #ifdef ASP_HDMI_DMA_DEBUG
 	asp_hdmi_dmac_dump();

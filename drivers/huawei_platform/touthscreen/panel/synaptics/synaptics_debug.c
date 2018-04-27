@@ -2572,6 +2572,7 @@ int synaptics_get_calib_data(struct ts_calibration_data_info *info)
 {
 	int rc = NO_ERR;
 	unsigned char command;
+	int infolength = 0;
 
 	TS_LOG_INFO("%s called\n", __FUNCTION__);
 
@@ -2584,8 +2585,8 @@ int synaptics_get_calib_data(struct ts_calibration_data_info *info)
 		TS_LOG_ERR("Failed to get data\n");
 		goto exit;
 	}
-
-	memcpy(info->data, f54->report_data, f54->report_size);
+	infolength = min(sizeof(info->data),f54->report_size+1);
+	memcpy(info->data, f54->report_data, infolength - 1);
 
 	info->used_size = f54->report_size;
 	TS_LOG_INFO("info->used_size = %d\n", info->used_size);
@@ -2628,6 +2629,7 @@ exit:
 int synaptics_debug_data_test(struct ts_diff_data_info *info)
 {
 	int rc = NO_ERR;
+	int infolength = 0;
 
 	TS_LOG_INFO("synaptics_get_debug_cap_data called\n");
 
@@ -2648,8 +2650,8 @@ int synaptics_debug_data_test(struct ts_diff_data_info *info)
 		TS_LOG_ERR("failed to recognize ic_ver\n");
 		break;
 	}
-
-	memcpy(info->buff, f54->rawdatabuf, rawdata_size * sizeof(int));
+	infolength = min(sizeof(info->buff),rawdata_size * sizeof(int)+1);
+	memcpy(info->buff, f54->rawdatabuf, infolength-1);
 	memcpy(info->result, buf_f54test_result, strlen(buf_f54test_result));
 	info->used_size = rawdata_size / 2;
 
@@ -3243,6 +3245,10 @@ static int match_module_name(const char *module_name)
 				   __func__);
 			return -EINVAL;
 		}
+	}else {
+		TS_LOG_ERR("%s: Failed to match module_name \n",
+				   __func__);
+		return -EINVAL;
 	}
 }
 

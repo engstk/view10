@@ -77,15 +77,23 @@ typedef enum{
     WAITI = 1,
 }P_WAIT_MODE;
 
+typedef struct
+{
+    u8                          ucLoadType  :2;             /* 加载类型: 0-每次上电时都加载; 1-上电时只加载一次; 2-不需要底软加载 */
+    u8                          ucStoreType :2;             /* 保存类型 */
+    u8                          ucSectOnSite:2;             /* 段在位标志 */
+    u8                          ucRsv       :2;             /* 保留比特 */
+}UNIPHY_SECT_LOAD_STORE_TYPE_STRU;
+
 struct dsp_sect_desc_stru
 {
-    u8                          usNo;                   /* 段序号 */
-    u8                          ucCrc8;                 /* 改为校验和 2017/08/25 */
-    u8                          ucTcmType;              /* 段类型: 0-代码(text); 1-rodata; 2-data; 3-bss */
-    u8                          ucLoadType;             /* 加载类型: 0-每次上电时都加载; 1-上电时只加载一次; 2-不需要底软加载 */
-    u32                         ulFileOffset;           /* 段在文件内的偏移 */
-    u32                         ulTargetAddr;           /* 加载的目标地址 */
-    u32                         ulSectSize;             /* 段的大小 */
+    u8                               usNo;                   /* 段序号 */
+    u8                               ucCrc8;                 /* 改为校验和 2017/08/25 */
+    u8                               ucTcmType;              /* 段类型: 0-代码(text); 1-rodata; 2-data; 3-bss */
+    UNIPHY_SECT_LOAD_STORE_TYPE_STRU ucLoadStoreType;   /* 扩展为结构体 */
+    u32                              ulFileOffset;           /* 段在文件内的偏移 */
+    u32                              ulTargetAddr;           /* 加载的目标地址 */
+    u32                              ulSectSize;             /* 段的大小 */
 };
 
 /* TLBBE16/CBBE16镜像头 */
@@ -373,11 +381,6 @@ static inline int bsp_dsp_pll_disable_ex(enum bsp_dsp_type_e etype)
     return 0;
 }
 
-static inline void bsp_dsp_pll_update_900mhz(enum bsp_dsp_type_e etype)
-{
-    return;
-}
-
 #endif
 
 #else
@@ -439,7 +442,40 @@ void bsp_dsp_pll_cfg_ex(enum bsp_dsp_type_e etype, u32 pll_freq);
 void bsp_bbe_chose_pll_ex(enum bsp_dsp_type_e etype, u32 flag);
 int bsp_dsp_pll_enable_ex(enum bsp_dsp_type_e etype);
 int bsp_dsp_pll_disable_ex(enum bsp_dsp_type_e etype);
-void bsp_dsp_pll_update_900mhz(enum bsp_dsp_type_e etype);
+int bsp_is_dsp_pll_enable(enum bsp_dsp_type_e etype);
+#if (FEATURE_TCM_RETENTION == FEATURE_ON)
+int bsp_bbe_l2mem_restore(enum bsp_dsp_type_e etype, enum bsp_dsp_wait_edma_type edma_type);
+int bsp_bbe_l2mem_store(enum bsp_dsp_type_e etype, enum bsp_dsp_wait_edma_type edma_type);
+int bsp_dsp_tcm_retention(enum bsp_dsp_type_e etype);
+int bsp_dsp_tcm_shutdown(enum bsp_dsp_type_e etype);
+int bsp_dsp_tcm_resume(enum bsp_dsp_type_e etype);
+int bsp_dsp_tcm_lightsleep(enum bsp_dsp_type_e etype);
+#else
+static inline int bsp_bbe_l2mem_restore(enum bsp_dsp_type_e etype, enum bsp_dsp_wait_edma_type edma_type)
+{
+    return 0;
+}
+static inline int bsp_bbe_l2mem_store(enum bsp_dsp_type_e etype, enum bsp_dsp_wait_edma_type edma_type)
+{
+    return 0;
+}
+static inline int bsp_dsp_tcm_retention(enum bsp_dsp_type_e etype)
+{
+    return 0;
+}
+static inline int bsp_dsp_tcm_shutdown(enum bsp_dsp_type_e etype)
+{
+    return 0;
+}
+static inline int bsp_dsp_tcm_resume(enum bsp_dsp_type_e etype)
+{
+    return 0;
+}
+static inline int bsp_dsp_tcm_lightsleep(enum bsp_dsp_type_e etype)
+{
+    return 0;
+}
+#endif
 
 
 #endif

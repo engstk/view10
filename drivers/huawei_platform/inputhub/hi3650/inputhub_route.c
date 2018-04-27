@@ -2797,8 +2797,6 @@ void inputhub_process_sensor_report(const pkt_header_t* head)
             if (sensor_event->xyz[0].y == 1 && ps_value != 0)
             {
                 hwlog_info("ps don't get the point!\n");
-                __dmd_log_report(DSM_SHB_ERR_MCU_PS, __func__,
-                                 "gesture worked\n");
             }
         }
 
@@ -2999,7 +2997,7 @@ int inputhub_route_recv_mcu_data(const char *buf, unsigned int length)
     {
         char* motion_data = (char*)head + sizeof(pkt_header_t);
 
-        if (((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF)
+        if ((((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF) || (((int)motion_data[0]) == MOTIONHUB_TYPE_PICKUP))
         {
             wake_lock_timeout(&wlock, HZ);
             hwlog_err("%s weaklock HZ motiontype = %d \n", __func__,

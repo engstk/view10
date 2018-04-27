@@ -27,3 +27,7 @@ config HI3660_DDR_AUTO_FSGT
 config KIRIN970_DDR_AUTO_FSGT
        bool "kirin970 ddr autofs/autogt"
        default n
+
+config DDR_AUTO_FSGT
+       bool "ddr autofs/autogt"
+       default n

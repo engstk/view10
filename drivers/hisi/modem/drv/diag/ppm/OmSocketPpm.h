@@ -105,7 +105,7 @@ extern "C" {
 #define SOCK_FD_CLR(d, set)       (HI_FD_CLR(d, set))
 #define SOCK_FD_ZERO(set)         (HI_FD_ZERO(set))
 
-#define socket(domain,type,protocol)        hi_socket(domain, type, protocol)
+#define socket(domain,type,protocol)        hi_socket(domain, type, protocol)//lint !e652
 #define shutdown(fd,how)                    do{\
                                                 hi_shutdown((Ip_fd)fd, how);\
                                                 hi_close((Ip_fd)fd);\

@@ -263,21 +263,21 @@ static int tas2560_i2c_probe(struct i2c_client *client,
 		tas2560_set_bit_rate(pTAS2560, 16);
 	}
 
-	of_property_read_u32(client->dev.of_node, "gpio_irq", &pTAS2560->gpio_irq);
+	int ret_check = of_property_read_u32(client->dev.of_node, "gpio_irq", &pTAS2560->gpio_irq);
+	if (ret_check) {
+		dev_err(&client->dev,"get gpio_irq failed\n");
+	}
 	if (pTAS2560->gpio_irq == 0) {
 		dev_err(&client->dev,"get gpio for tas irq failed\n");
-		lret = -1;
 	} else {
 		dev_err(&client->dev,"got gpio irq for tas %d\n", pTAS2560->gpio_irq);
 		if (!gpio_is_valid((int)pTAS2560->gpio_irq)) {
 			dev_err(&client->dev,"registed gpio for irq is not valid\n");
-			lret = -1;
 		}
 		lret = devm_gpio_request_one(&client->dev, pTAS2560->gpio_irq,
 									(unsigned long)GPIOF_DIR_IN, "tas2560_gpio_irq");
 		if (lret != 0) {
 			dev_err(&client->dev,"request GPIO for tas irq fail %d\n", lret);
-			lret = -1;
 		}
 		lret = devm_request_threaded_irq(&client->dev,
 					(unsigned int)gpio_to_irq((unsigned int)pTAS2560->gpio_irq),

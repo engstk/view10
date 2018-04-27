@@ -72,14 +72,14 @@ static __inline__ void spin_lock(spinlock_t *lock)
 	raw_spin_lock(&lock->rlock);
 }
 
-static __inline__ int spin_trylock(spinlock_t *lock)
-{
-	return raw_spin_trylock(&lock->rlock);
-}
-
 static __inline__ void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);
+}
+
+static __inline__ int spin_trylock(spinlock_t *lock)
+{
+	return raw_spin_trylock(&lock->rlock);
 }
 
 
@@ -114,7 +114,7 @@ typedef struct spinlock {
 		volatile unsigned int rlock;
 } spinlock_t;
 
-#define DEFINE_SPINLOCK(x)	spinlock_t x = (spinlock_t ) { .rlock = 0x0 }
+#define DEFINE_SPINLOCK(_lock)	spinlock_t _lock = (spinlock_t ) { .rlock = 0x0 }
 
 #define spin_lock_init(__specific_lock)				\
 do {							\
@@ -162,6 +162,7 @@ do { \
 		osl_task_unlock(); \
     } while (0)
 #elif defined(__OS_RTOSCK_SMP__)
+#include <osl_cpu.h>
 #include "osl_irq.h"
 #include "osl_thread.h"
 #include "osl_barrier.h"
@@ -176,30 +177,12 @@ do { \
 #ifndef typeof
 #define typeof __typeof__
 #endif
-/*
- * Prevent the compiler from merging or refetching accesses.  The compiler
- * is also forbidden from reordering successive instances of ACCESS_ONCE(),
- * but only when the compiler is aware of some particular ordering.  One way
- * to make the compiler aware of ordering is to put the two invocations of
- * ACCESS_ONCE() in different C statements.
- *
- * This macro does absolutely -nothing- to prevent the CPU from reordering,
- * merging, or refetching absolutely anything at any time.  Its main intended
- * use is to mediate communication between process-level code and irq/NMI
- * handlers, all running on the same CPU.
- */
-#define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
-/* Optimization barrier */
-/* The "volatile" is due to gcc bugs */
-#define TICKET_SHIFT	16
-#define wfe()	__asm__ __volatile__ ("wfe" : : : "memory")
-/*
- * sev and wfe are ARMv6K extensions.  Uniprocessor ARMv6 may not have the K
- * extensions, so when running on UP, we have to patch these instructions away.
- */
-#define ALT_SMP(smp, up)					\
-	"9998:	" smp "\n"					\
-	"	.pushsection \".alt.smp.init\", \"a\"\n"	\
+
+
+
+#define ALT_SMP(smp, up)					      \
+	"9998:	" smp "\n"					          \
+	"	.pushsection \".alt.smp.init\", \"a\"\n"  \
 	"	.long	9998b\n"				\
 	"	" up "\n"					\
 	"	.popsection\n"
@@ -224,13 +207,19 @@ typedef struct spinlock {
 			} tickets;
 		};
 } spinlock_t;
-#define DEFINE_SPINLOCK(x)	spinlock_t x = (spinlock_t ) { .slock = 0x0 }
+#define DEFINE_SPINLOCK(_lock)	spinlock_t _lock = (spinlock_t ) { .slock = 0x0 }
 
-static inline void raw_smp_spin_lock(spinlock_t *lock)
+#define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
+
+#define TICKET_SHIFT	16
+#define wfe()	__asm__ __volatile__ ("wfe" : : : "memory")
+
+
+static inline void raw_smp_spin_lock(spinlock_t *p_lock)
 {
 	unsigned long tmp;
 	u32 newval;
-	spinlock_t lockval;
+	spinlock_t lock_val;
 
 	__asm__ __volatile__(
 	"1:	ldrex	%0, [%3]\n"
@@ -238,18 +227,31 @@ static inline void raw_smp_spin_lock(spinlock_t *lock)
 	"	strex	%2, %1, [%3]\n"
 	"	teq	%2, #0\n"
 	"	bne	1b"
-	: "=&r" (lockval), "=&r" (newval), "=&r" (tmp)
-	: "r" (&lock->slock), "I" (1 << TICKET_SHIFT)
+	: "=&r" (lock_val), "=&r" (newval), "=&r" (tmp)
+	: "r" (&p_lock->slock), "I" (1 << TICKET_SHIFT)
 	: "cc");
 
-	while (lockval.tickets.next != lockval.tickets.owner) {
+	while ( lock_val.tickets.owner != lock_val.tickets.next) {
 		wfe();
-		lockval.tickets.owner = ACCESS_ONCE(lock->tickets.owner);
+		lock_val.tickets.owner = ACCESS_ONCE(p_lock->tickets.owner);
 	}
 
 	smp_mb();
 }
-static inline int raw_smp_spin_trylock(spinlock_t *lock)
+
+static inline void raw_smp_spin_unlock(spinlock_t *p_lock)
+{
+	smp_mb();
+	p_lock->tickets.owner++;
+	dsb_sev();
+}
+
+#define spin_lock_init(__specific_lock)				\
+do {							\
+	((spinlock_t*)__specific_lock)->slock = 0x0;		\
+} while (0)
+
+static inline int raw_smp_spin_trylock(spinlock_t *p_lock)
 {
 	volatile unsigned long contended, res;
 	u32 slock;
@@ -262,7 +264,7 @@ static inline int raw_smp_spin_trylock(spinlock_t *lock)
 		"	addeq	%0, %0, %4\n"
 		"	strexeq	%2, %0, [%3]"
 		: "=&r" (slock), "=&r" (contended), "=&r" (res)
-		: "r" (&lock->slock), "I" (1 << TICKET_SHIFT)
+		: "r" (&p_lock->slock), "I" (1 << TICKET_SHIFT)
 		: "cc");
 	} while (res);
 
@@ -274,31 +276,24 @@ static inline int raw_smp_spin_trylock(spinlock_t *lock)
 	}
 }
 
-static inline void raw_smp_spin_unlock(spinlock_t *lock)
+ static inline void spin_lock(spinlock_t *p_lock)
 {
-	smp_mb();
-	lock->tickets.owner++;
-	dsb_sev();
+#if (NR_CPUS > 1)
+	raw_smp_spin_lock(p_lock);
+#endif
 }
-#define spin_lock_init(__specific_lock)				\
-do {							\
-	((spinlock_t*)__specific_lock)->slock = 0x0;		\
-} while (0)
-
- static inline void spin_lock(spinlock_t *lock)
+ static inline void spin_unlock(spinlock_t *p_lock)
 {
-	raw_smp_spin_lock(lock);
+#if (NR_CPUS > 1)
+	raw_smp_spin_unlock(p_lock);
+#endif
 }
 
- static inline int spin_trylock(spinlock_t *lock)
+ static inline int spin_trylock(spinlock_t *p_lock)
 {
-	return raw_smp_spin_trylock(lock);
+	return raw_smp_spin_trylock(p_lock);
 }
 
- static inline void spin_unlock(spinlock_t *lock)
-{
-	raw_smp_spin_unlock(lock);
-}
 
 /*
 *参数类型

@@ -16,6 +16,9 @@
 #include <linux/device.h>	/*for struct charge_core_info */
 #include <linux/power/hisi/hisi_battery_data.h>	/*for struct charge_core_info */
 #include <huawei_platform/power/huawei_charger.h>	/*for struct charge_core_info */
+#ifdef CONFIG_WIRELESS_CHARGER
+#include <huawei_platform/power/wireless_charger.h> /*for struct wireless_charge_data*/
+#endif
 
 /*************************marco define area***************************/
 #define VDPM_BY_CAPACITY            (0)
@@ -47,6 +50,10 @@
 
 #define FIRST_RUN_TRUE               (1)
 #define FIRST_RUN_FALSE              (0)
+
+#define BATT_BRAND_STRING_MAX        (32)
+#define BATT_BRAND_NUM_MAX           (5)
+
 /*************************struct define area***************************/
 enum vdpm_para_info {
 	VDPM_PARA_CAP_MIN = 0,
@@ -102,6 +109,12 @@ struct charge_inductance_data {
 	int cap_back;
 };
 
+/*charge terminal current is different, based on battery model*/
+enum {
+	CHARGE_ITERM_PARA_BATT_BRAND,
+	CHARGE_ITERM_PARA_ITERM,
+	CHARGE_ITERM_PARA_TOTAL,
+};
 struct charge_core_info {
 	struct device *dev;
 	struct charge_temp_data temp_para[TEMP_PARA_LEVEL];
@@ -109,11 +122,17 @@ struct charge_core_info {
 	struct charge_vdpm_data vdpm_para[VDPM_PARA_LEVEL];
 	struct charge_segment_data segment_para[SEGMENT_PARA_LEVEL];
 	struct charge_inductance_data inductance_para[VDPM_PARA_LEVEL];
+#ifdef CONFIG_WIRELESS_CHARGER
+	struct wireless_core_data wireless_data;
+#endif
 	struct charge_core_data data;
 };
 
 /****************variable and function declarationn area******************/
 struct charge_core_data *charge_core_get_params(void);
+#ifdef CONFIG_WIRELESS_CHARGER
+struct wireless_core_data *charge_core_get_wireless_params(void);
+#endif
 void stop_charging_core_config(void);
 
 #endif

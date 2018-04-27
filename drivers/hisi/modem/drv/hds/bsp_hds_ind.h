@@ -76,8 +76,12 @@ extern unsigned long long g_log_dma_test_mask;
 #define PRINTLOG_MAX_BUFF_LEN          256
 #define PRINTLOG_MAX_HIDS_BUFF_LEN     (PRINTLOG_MAX_BUFF_LEN + PRINTLOG_MAX_FILENAME_LEN)
 #define TRANSLOG_MAX_HIDS_BUFF_LEN     ((4*1024) - (DIAG_SOCP_HEAD_SIZE + DIAG_FRAME_HEAD_SIZE + DIAG_TRANS_HEAD_SIZE))
-
+        
+#ifdef DIAG_SYSTEM_5G
+#define SOCP_CODER_SRC_LOG_IND         SOCP_CODER_SRC_ACPU_AP_BSP_IND
+#else
 #define SOCP_CODER_SRC_LOG_IND         SOCP_CODER_SRC_BSP_ACORE
+#endif
 
 #define LOG_PHYS_TO_VIRT(phy)       (void *)(phys_to_virt((unsigned long)phy))
 

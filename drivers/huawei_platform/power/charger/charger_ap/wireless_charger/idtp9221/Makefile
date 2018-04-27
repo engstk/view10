@@ -1,0 +1,1 @@
+obj-$(CONFIG_WIRELESS_IDTP9221) += idtp9221.o

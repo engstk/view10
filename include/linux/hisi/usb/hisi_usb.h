@@ -3,6 +3,7 @@
 
 #include <linux/usb.h>
 #include <linux/hisi/usb/hisi_hifi_usb.h>
+#include <linux/hisi/contexthub/tca.h>
 
 enum hisi_charger_type {
 	CHARGER_TYPE_SDP = 0,		/* Standard Downstreame Port */
@@ -66,13 +67,13 @@ enum hisi_charger_type hisi_get_charger_type(void);
  * Return: 0 means the event added sucessfully. others means event was rejected.
  */
 int hisi_usb_otg_event(enum otg_dev_event_type);
-int hisi_usb_otg_event_sync(enum otg_dev_event_type);
+int hisi_usb_otg_event_sync(TCPC_MUX_CTRL_TYPE mode_type, enum otg_dev_event_type);
 
 void hisi_usb_otg_bc_again(void);
 int hisi_usb_otg_irq_notifier_register(struct notifier_block *nb);
 int hisi_usb_otg_irq_notifier_unregister(struct notifier_block *nb);
 int hisi_usb_wakeup_hifi_usb(void);
-
+void hisi_usb_otg_update_mode_type(TCPC_MUX_CTRL_TYPE mode_type);
 #else
 static inline int hisi_charger_type_notifier_register(
 		struct notifier_block *nb){return 0;}
@@ -86,7 +87,7 @@ static inline int hisi_usb_otg_event(enum otg_dev_event_type event_type)
 {
 	return 0;
 }
-static inline int hisi_usb_otg_event_sync(enum otg_dev_event_type event_type)
+static inline int hisi_usb_otg_event_sync(TCPC_MUX_CTRL_TYPE mode_type, enum otg_dev_event_type event_type)
 {
 	return 0;
 }
@@ -98,6 +99,7 @@ int hisi_usb_otg_irq_notifier_register(
 int hisi_usb_otg_irq_notifier_unregister(
 	struct notifier_block *nb){return 0;}
 int hisi_usb_wakeup_hifi_usb(void){return 0;}
+void hisi_usb_otg_update_mode_type(TCPC_MUX_CTRL_TYPE mode_type){return;}
 #endif /* CONFIG_USB_SUSB_HDRC || CONFIG_USB_DWC3 */
 
 static inline int hisi_usb_id_change(enum otg_dev_event_type event)

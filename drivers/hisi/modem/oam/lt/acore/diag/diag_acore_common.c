@@ -61,6 +61,7 @@
 #include "diag_common.h"
 #include "diag_msgbsp.h"
 #include "diag_msgbbp.h"
+#include "diag_msg_easyrf.h"
 #include "diag_msgphy.h"
 #include "diag_msgps.h"
 #include "diag_msghifi.h"
@@ -73,8 +74,10 @@
 #include "nv_stru_sys.h"
 #include "soc_socp_adapter.h"
 #include "diag_debug.h"
-
-
+#include "diag_connect.h"
+#include "diag_msglrm.h"
+#include "diag_msgapplog.h"
+#include "diag_time_stamp.h"
 
 /*****************************************************************************
   2 Declare the Global Variable
@@ -83,7 +86,6 @@
 #define    THIS_FILE_ID        MSP_FILE_ID_DIAG_ACORE_COMMON_C
 
 DRV_RESET_CB_MOMENT_E g_DiagResetingCcore = MDRV_RESET_CB_INVALID;
-
 
 VOS_UINT32 g_ulDebugCfg = 0;
 
@@ -105,37 +107,6 @@ VOS_SPINLOCK             g_stScmCnfSrcBuffSpinLock;
 
 extern VOS_VOID SCM_StopAllSrcChan(VOS_VOID);
 
-
-/***********************************************************************
- Function Name   : diag_SocpVoteMsgProc
- Description     : DIAG APP AGENT SOCP投票处理
- Input           : MsgBlock* pMsgBlock
- Output          : None
- Return          : VOS_VOID
-
- History         :
-    1.z00212940      2014-2-21  Draft Enact
-
-*****************************************************************************/
-VOS_VOID diag_SocpVoteMsgProc(MsgBlock* pMsgBlock)
-{
-}
-
-/*****************************************************************************
- Function Name   : diag_AgentVoteToSocp
- Description     : DIAG AGENT向SOCP投票
- Input           : SOCP_VOTE_TYPE_ENUM_U32 voteType
- Output          : None
- Return          : VOS_VOID
-
- History         :
-    1.w00182550      2012-12-20  Draft Enact
-
-*****************************************************************************/
-VOS_VOID diag_AgentVoteToSocp(SOCP_VOTE_TYPE_ENUM_U32 voteType)
-{
-}
-
 /*****************************************************************************
  Function Name   : diag_ResetCcoreCB
  Description     : 诊断modem单独复位回调函数
@@ -146,7 +117,6 @@ VOS_VOID diag_AgentVoteToSocp(SOCP_VOTE_TYPE_ENUM_U32 voteType)
 VOS_INT diag_ResetCcoreCB(DRV_RESET_CB_MOMENT_E enParam, int userdata)
 {
     VOS_INT ret = ERR_MSP_SUCCESS;
-
     DIAG_CMD_TRANS_IND_STRU stTransInfo = {0};
     DIAG_MSG_REPORT_HEAD_STRU stDiagHead;
 
@@ -165,7 +135,7 @@ VOS_INT diag_ResetCcoreCB(DRV_RESET_CB_MOMENT_E enParam, int userdata)
         stTransInfo.ulMsgId  = DIAG_CMD_MODEM_WILL_RESET;
         stTransInfo.ulNo     = (g_DiagLogPktNum.ulTransNum)++;
 
-        (VOS_VOID)VOS_MemSet_s(&stDiagHead, sizeof(stDiagHead), 0, sizeof(DIAG_MSG_REPORT_HEAD_STRU));
+        (VOS_VOID)VOS_MemSet_s(&stDiagHead, sizeof(stDiagHead), 0, sizeof(stDiagHead));
 
         stDiagHead.u.ulID           = DIAG_CMD_MODEM_WILL_RESET;
         stDiagHead.ulSsid           = DIAG_SSID_CPU;
@@ -204,17 +174,7 @@ VOS_INT diag_ResetCcoreCB(DRV_RESET_CB_MOMENT_E enParam, int userdata)
     return ERR_MSP_SUCCESS;
 }
 
-/***********************************************************************
- Function Name   : diag_AppAgentMsgProcInit
- Description     : DIAG APP AGENT初始化
- Input           :enum VOS_INIT_PHASE_DEFINE ip
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.w00182550      2012-12-7  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_AppAgentMsgProcInit(enum VOS_INIT_PHASE_DEFINE ip)
 {
     VOS_UINT32 ret = ERR_MSP_SUCCESS;
@@ -233,6 +193,7 @@ VOS_UINT32 diag_AppAgentMsgProcInit(enum VOS_INIT_PHASE_DEFINE ip)
         diag_MspMsgInit();
         diag_BspMsgInit();
         diag_DspMsgInit();
+        diag_EasyRfMsgInit();
         diag_BbpMsgInit();
         diag_PsMsgInit();
         diag_HifiMsgInit();
@@ -240,6 +201,7 @@ VOS_UINT32 diag_AppAgentMsgProcInit(enum VOS_INIT_PHASE_DEFINE ip)
         diag_ServiceInit();
         msp_ServiceInit();
         diag_AppLogMsgInit();
+        diag_LRMMsgInit();
 
         VOS_SpinLockInit(&g_DiagLogPktNum.ulPrintLock);
         VOS_SpinLockInit(&g_DiagLogPktNum.ulAirLock);
@@ -248,12 +210,12 @@ VOS_UINT32 diag_AppAgentMsgProcInit(enum VOS_INIT_PHASE_DEFINE ip)
         VOS_SpinLockInit(&g_DiagLogPktNum.ulUserLock);
         VOS_SpinLockInit(&g_DiagLogPktNum.ulEventLock);
         VOS_SpinLockInit(&g_DiagLogPktNum.ulTransLock);
-
-        diag_AgentVoteToSocp(SOCP_VOTE_FOR_SLEEP);
     }
     else if(ip == VOS_IP_RESTART)
     {
         diag_InitAuthVariable();
+
+        diag_ConnReset();
 
         /* 都初始化结束后再设置开关 */
         diag_CfgResetAllSwt();
@@ -262,12 +224,13 @@ VOS_UINT32 diag_AppAgentMsgProcInit(enum VOS_INIT_PHASE_DEFINE ip)
 
         if(VOS_TRUE == diag_IsPowerOnLogOpen())
         {
+            /* 在打开开机log前，推送一个时间戳高位给工具 */
+            diag_PushHighTs();
             g_ulDiagCfgInfo |= DIAG_CFG_POWERONLOG;
         }
-        else
-        {
-            mdrv_scm_reg_ind_coder_dst_send_fuc();
-        }
+
+        mdrv_scm_reg_ind_coder_dst_send_fuc();
+
 
         diag_printf("Diag PowerOnLog is %s.\n", (g_ulDiagCfgInfo&DIAG_CFG_POWERONLOG) ? "open" : "close");
     }
@@ -276,18 +239,7 @@ VOS_UINT32 diag_AppAgentMsgProcInit(enum VOS_INIT_PHASE_DEFINE ip)
 }
 
 
-/*****************************************************************************
- Function Name   : diag_DumpMsgInfo
- Description     : 保存A核最后收到的64条消息
- Input           :
 
- 注意事项:
-    不支持重入，由调用者保证不会重复进入
-
- History         :
-    1.c00326366      2015-12-23  Draft Enact
-
-*****************************************************************************/
 VOS_VOID diag_DumpMsgInfo(VOS_UINT32 ulSenderPid, VOS_UINT32 ulMsgId, VOS_UINT32 ulSize)
 {
     VOS_UINT32 ulPtr = g_stDumpInfo.ulMsgCur;
@@ -313,23 +265,11 @@ VOS_VOID diag_DumpMsgInfo(VOS_UINT32 ulSenderPid, VOS_UINT32 ulMsgId, VOS_UINT32
 /* DUMP存储的消息的最大长度，其中64表示包含0xaa5555aa、帧头、消息内容的总的最大长度 */
 #define DIAG_DUMP_MAX_FRAME_LEN          (80)
 
-/*****************************************************************************
- Function Name   : diag_DumpDFInfo
- Description     : 保存A核最后收到的码流信息，每条码流的保存长度不超过100字节
- Input           :
 
- 注意事项:
-    不支持重入，由调用者保证不会重复进入
-
- History         :
-    1.c00326366      2015-12-23  Draft Enact
-
-*****************************************************************************/
 VOS_VOID diag_DumpDFInfo(DIAG_FRAME_INFO_STRU * pFrame)
 {
     VOS_UINT32 ulPtr;
     VOS_UINT32 ulLen;
-    VOS_UINT32 tempLen;
 
     if(g_stDumpInfo.pcDFAddr)
     {
@@ -353,24 +293,18 @@ VOS_VOID diag_DumpDFInfo(DIAG_FRAME_INFO_STRU * pFrame)
 
         if((ulPtr + ulLen) <= g_stDumpInfo.ulDFLen)
         {
-            tempLen = ulLen;
-
-            (VOS_VOID)VOS_MemCpy_s(&g_stDumpInfo.pcDFAddr[ulPtr], tempLen, (VOS_VOID*)pFrame, ulLen);
+            (VOS_VOID)VOS_MemCpy_s(&g_stDumpInfo.pcDFAddr[ulPtr], g_stDumpInfo.ulDFLen-ulPtr, (VOS_VOID*)pFrame, ulLen);
 
             /* 可能为0，需要取余 */
             g_stDumpInfo.ulDFCur = (g_stDumpInfo.ulDFCur + ulLen) % g_stDumpInfo.ulDFLen;
         }
         else
         {
-            tempLen = g_stDumpInfo.ulDFLen - ulPtr;
-
-            (VOS_VOID)VOS_MemCpy_s(&g_stDumpInfo.pcDFAddr[ulPtr], tempLen, (VOS_VOID*)pFrame, (g_stDumpInfo.ulDFLen - ulPtr));
+            (VOS_VOID)VOS_MemCpy_s(&g_stDumpInfo.pcDFAddr[ulPtr], g_stDumpInfo.ulDFLen-ulPtr, (VOS_VOID*)pFrame, (g_stDumpInfo.ulDFLen - ulPtr));
 
             ulLen = ulLen - (g_stDumpInfo.ulDFLen - ulPtr);     /* 未拷贝的码流长度 */
-            ulPtr = g_stDumpInfo.ulDFLen - ulPtr;               /* 已拷贝的长度 */
 
-            tempLen = ulLen;
-            (VOS_VOID)VOS_MemCpy_s(&g_stDumpInfo.pcDFAddr[0], tempLen,(((VOS_UINT8*)pFrame) + ulPtr), ulLen);
+            (VOS_VOID)VOS_MemCpy_s(&g_stDumpInfo.pcDFAddr[0], ulPtr, (((VOS_UINT8*)pFrame)+(g_stDumpInfo.ulDFLen-ulPtr)), ulLen);
 
             /* ulLen前面已经做了限制，不会回卷 */
             g_stDumpInfo.ulDFCur = ulLen;
@@ -378,22 +312,7 @@ VOS_VOID diag_DumpDFInfo(DIAG_FRAME_INFO_STRU * pFrame)
     }
 }
 
-/*****************************************************************************
- Function Name   : diag_AppAgentMsgProc
- Description     : DIAG APP AGENT接收到的消息处理入口
- Input           : MsgBlock* pMsgBlock
 
- 注意事项:
-    由于errorlog的消息不能识别发送PID，所以需要进入errorlog的处理函数中检查
-    当已知消息被成功处理时，则不需要再进行errorlog的消息检查
-    通过ulErrorLog的值判断是否进行errorlog的消息检查
-    后续函数扩展时需要注意
-
- History         :
-    1.w00182550      2012-11-19  Draft Enact
-    1.c00326366      2015-08-04  增加errorlog的消息处理
-
-*****************************************************************************/
 VOS_VOID diag_AppAgentMsgProc(MsgBlock* pMsgBlock)
 {
     VOS_UINT32  ulErrorLog = ERR_MSP_CONTINUE; /* 见函数头中的注意事项的描述 */
@@ -423,6 +342,10 @@ VOS_VOID diag_AppAgentMsgProc(MsgBlock* pMsgBlock)
             {
                 diag_ReportMntn();
             }
+            else if((DIAG_CONNECT_TIMER_NAME == pTimer->ulName) && (DIAG_CONNECT_TIMER_PARA == pTimer->ulPara))
+            {
+                (VOS_VOID)diag_ConnTimerProc();
+            }
             else
             {
                 diag_TransTimeoutProc(pTimer);
@@ -444,8 +367,13 @@ VOS_VOID diag_AppAgentMsgProc(MsgBlock* pMsgBlock)
             {
                 (VOS_VOID)diag_SetChanDisconn(pMsgBlock);
             }
-            else
+            else if(ID_MSG_DIAG_CMD_CONNECT_REQ == pMsgTmp->ulMsgId)
             {
+                (VOS_VOID)diag_ConnMgrProc(pMsgTmp->pContext);
+            }
+            else if(ID_MSG_DIAG_CMD_DISCONNECT_REQ == pMsgTmp->ulMsgId)
+            {
+                (VOS_VOID)diag_DisConnMgrProc(pMsgTmp->pContext);
             }
 
             ulErrorLog = VOS_OK;
@@ -459,6 +387,10 @@ VOS_VOID diag_AppAgentMsgProc(MsgBlock* pMsgBlock)
             {
                 diag_BspRecvCmdList(pMsgBlock);
                 ulErrorLog = VOS_OK;
+            }
+            else if(ID_MSG_DIAG_CMD_CONNECT_CNF == pMsgTmp->ulMsgId)
+            {
+                diag_LRMConnCnfProc((VOS_UINT8 *)pMsgTmp);
             }
             else
             {
@@ -481,7 +413,6 @@ VOS_VOID diag_AppAgentMsgProc(MsgBlock* pMsgBlock)
             break;
         /*lint -restore +e826*/
         case DSP_PID_APM:
-
             {
                 ulErrorLog = ERR_MSP_CONTINUE;
             }
@@ -510,7 +441,6 @@ DIAG_TRANS_NODE_STRU* diag_AddTransInfoToList(VOS_UINT8 * pstReq, VOS_UINT32 ulR
     DIAG_TRANS_NODE_STRU* pNewNode = NULL;
     VOS_UINT32 ret, ulHigh32, ulLow32;
     VOS_UINT32 ulNodeSize = 0;
-    VOS_UINT32 ulTempLen;
     VOS_UINT_PTR ullAddr;
 
     ulNodeSize = sizeof(DIAG_TRANS_NODE_STRU) + ulRcvlen;
@@ -522,13 +452,9 @@ DIAG_TRANS_NODE_STRU* diag_AddTransInfoToList(VOS_UINT8 * pstReq, VOS_UINT32 ulR
         return NULL;
     }
 
-    ulTempLen = ulNodeSize;
-
-    (VOS_VOID)VOS_MemSet_s(pNewNode, ulTempLen, 0, ulNodeSize);
-
-    ulTempLen = ulRcvlen;
+    (VOS_VOID)VOS_MemSet_s(pNewNode, ulNodeSize, 0, ulNodeSize);
     /*将新来的命令缓存到节点中*/
-    (VOS_VOID)VOS_MemCpy_s(pNewNode->ucRcvData, ulTempLen, pstReq, ulRcvlen);
+    (VOS_VOID)VOS_MemCpy_s(pNewNode->ucRcvData, ulRcvlen, pstReq, ulRcvlen);
 
     ulLow32 = (uintptr_t)pNewNode;
     {
@@ -559,29 +485,25 @@ DIAG_TRANS_NODE_STRU* diag_AddTransInfoToList(VOS_UINT8 * pstReq, VOS_UINT32 ulR
 }
 
 
-/*****************************************************************************
- Function Name   : diag_TransReqProcEntry
- Description     : 该函数用于透传命令的REQ处理
- Input           : VOS_UINT8* pstReq
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.c00326366      2015-06-14  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_TransReqProcEntry(DIAG_FRAME_INFO_STRU *pstReq, DIAG_TRANS_HEADER_STRU *pstHead)
 {
     VOS_UINT32              ret = ERR_MSP_FAILURE;
     VOS_UINT32              ulSize;
     VOS_UINT32              ulCmdParasize;
-    VOS_UINT32              ulTempLen;
     DIAG_TRANS_MSG_STRU     *pstSendReq = NULL;
     DIAG_TRANS_NODE_STRU    *pNode;
     VOS_UINT_PTR            ullAddr;
     DIAG_OSA_MSG_STRU       *pstMsg = NULL;
 
     mdrv_diag_PTR(EN_DIAG_PTR_MSGMSP_TRANS, 1, pstReq->ulCmdId, 0);
+
+    if(pstReq->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(DIAG_TRANS_MSG_STRU) - sizeof(pstSendReq->aucPara))
+    {
+        diag_error("rev datalen error, 0x%x\n", pstReq->ulMsgLen);
+        diag_FailedCmdCnf(pstReq, ERR_MSP_INALID_LEN_ERROR);
+        return ERR_MSP_INALID_LEN_ERROR;
+    }
 
     ulCmdParasize = pstReq->ulMsgLen - sizeof(MSP_DIAG_DATA_REQ_STRU);
 
@@ -592,6 +514,7 @@ VOS_UINT32 diag_TransReqProcEntry(DIAG_FRAME_INFO_STRU *pstReq, DIAG_TRANS_HEADE
 
     if(VOS_PID_AVAILABLE != VOS_CheckPidValidity(pstSendReq->ulReceiverPid))
     {
+        diag_error("rev pid:0x%x invalid\n", pstSendReq->ulReceiverPid);
         diag_FailedCmdCnf(pstReq, ERR_MSP_DIAG_ERRPID_CMD);
         return ERR_MSP_FAILURE;
     }
@@ -627,9 +550,7 @@ VOS_UINT32 diag_TransReqProcEntry(DIAG_FRAME_INFO_STRU *pstReq, DIAG_TRANS_HEADE
     {
         pstMsg->ulReceiverPid   = pstSendReq->ulReceiverPid;
 
-        ulTempLen = ulCmdParasize - VOS_MSG_HEAD_LENGTH;
-
-        (VOS_VOID)VOS_MemCpy_s(&pstMsg->ulMsgId, ulTempLen, &pstSendReq->ulMsgId, (ulCmdParasize - VOS_MSG_HEAD_LENGTH));
+        (VOS_VOID)VOS_MemCpy_s(&pstMsg->ulMsgId, ulCmdParasize-VOS_MSG_HEAD_LENGTH, &pstSendReq->ulMsgId, (ulCmdParasize - VOS_MSG_HEAD_LENGTH));
 
         ret = VOS_SendMsg(MSP_PID_DIAG_APP_AGENT, pstMsg);
         if (ret != VOS_OK)
@@ -652,8 +573,6 @@ VOS_UINT32 diag_TransReqProcEntry(DIAG_FRAME_INFO_STRU *pstReq, DIAG_TRANS_HEADE
 *****************************************************************************/
 VOS_VOID diag_DelTransCmdNode(DIAG_TRANS_NODE_STRU* pTempNode)
 {
-    VOS_UINT32 ulNodeSize = 0;
-
     if(DIAG_TRANS_MAGIC_NUM != pTempNode->ulMagicNum)
     {
         return;
@@ -670,9 +589,7 @@ VOS_VOID diag_DelTransCmdNode(DIAG_TRANS_NODE_STRU* pTempNode)
 
     (VOS_VOID)VOS_SmV((*pTempNode->pSem));
 
-    ulNodeSize = sizeof(DIAG_TRANS_NODE_STRU);
-
-    (VOS_VOID)VOS_MemSet_s(pTempNode, ulNodeSize, 0, sizeof(DIAG_TRANS_NODE_STRU));
+    (VOS_VOID)VOS_MemSet_s(pTempNode, sizeof(*pTempNode), 0, sizeof(*pTempNode));
 
     /*释放内存*/
     VOS_MemFree(MSP_PID_DIAG_APP_AGENT, pTempNode);
@@ -794,22 +711,10 @@ VOS_VOID diag_GetTransInfo(MSP_DIAG_CNF_INFO_STRU *pstInfo,
     return ;
 }
 
-/*****************************************************************************
- Function Name   : diag_TransCnfProc
- Description     : 透传命令的应答处理
- Input           :  VOS_UINT8* pstCnf
-                    VOS_UINT32 ulLen
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.c00326366      2015-06-14  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_TransCnfProc(VOS_UINT8* pstCnf ,VOS_UINT32 ulLen, DIAG_MESSAGE_TYPE_U32 ulGroupId, DIAG_TRANS_HEADER_STRU *pstHead)
 {
     VOS_UINT32              ret = 0;
-    VOS_UINT32              ulTempLen;
     DIAG_TRANS_CNF_STRU     *pstDiagCnf;
     DIAG_TRANS_MSG_STRU     *pstPsCnf;
     MSP_DIAG_CNF_INFO_STRU  stDiagInfo = {0};
@@ -858,9 +763,7 @@ VOS_UINT32 diag_TransCnfProc(VOS_UINT8* pstCnf ,VOS_UINT32 ulLen, DIAG_MESSAGE_T
 
     diag_LNR(EN_DIAG_LNR_PS_TRANS, (stDiagInfo.ulMsgId), VOS_GetSlice());
 
-    ulTempLen = ulLen;
-
-    (VOS_VOID)VOS_MemCpy_s(pstDiagCnf->aucPara, ulTempLen, pstPsCnf, ulLen);
+    (VOS_VOID)VOS_MemCpy_s(pstDiagCnf->aucPara, ulLen, pstPsCnf, ulLen);
 
     ret = DIAG_MsgReport(&stDiagInfo, pstDiagCnf, (ulLen + sizeof(DIAG_TRANS_CNF_STRU)));
 
@@ -871,16 +774,7 @@ VOS_UINT32 diag_TransCnfProc(VOS_UINT8* pstCnf ,VOS_UINT32 ulLen, DIAG_MESSAGE_T
 }
 
 
-/*****************************************************************************
- Function Name   : DIAG_LogShowToFile
- Description     : 给AT命令提供的调用接口，保存DIAG的log到文件中(AT^PULLOMLOG)
- Input           : bIsSendMsg 是否给A核发送消息保存A核log
- Return          : VOS_VOID
 
- History         :
-    1.c00326366      2015-6-20  Draft Enact
-
-*****************************************************************************/
 VOS_VOID DIAG_LogShowToFile(VOS_BOOL bIsSendMsg)
 {
 }
@@ -957,17 +851,7 @@ static const struct file_operations diag_debug_fops = {
 };
 
 
-/*****************************************************************************
- Function Name   : MSP_AppDiagFidInit
- Description     : A核DIAG 任务注册
- Input           :enum VOS_INIT_PHASE_DEFINE ip
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.w00182550      2012-11-19  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 MSP_AppDiagFidInit(enum VOS_INIT_PHASE_DEFINE ip)
 {
     VOS_UINT32 ulRelVal = 0;
@@ -1052,17 +936,7 @@ VOS_VOID DIAG_DebugTransOn(VOS_UINT32 ulOn)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_DisconnectTLPort
- 功能描述  : TL断开OM端口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : BSP_ERROR/BSP_OK
- 修改历史  :
-   1.日    期  : 2014年05月26日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 VOS_UINT32 diag_DisconnectTLPort(void)
 {
     DIAG_DATA_MSG_STRU                 *pstMsg;
@@ -1081,6 +955,7 @@ VOS_UINT32 diag_DisconnectTLPort(void)
 
     return VOS_OK;
 }
+EXPORT_SYMBOL(DIAG_DebugTransOn);
 
 
 

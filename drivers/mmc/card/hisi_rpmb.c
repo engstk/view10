@@ -45,7 +45,8 @@
 #include <linux/delay.h>
 #include <scsi/sg.h>
 #include <linux/bootdevice.h>
-
+#include <linux/kthread.h>
+#include <linux/freezer.h>
 #define UFS_RPMB_BLOCK_DEVICE_NAME "/dev/0:0:0:49476"
 #define EMMC_RPMB_BLOCK_DEVICE_NAME "/dev/block/mmcblk0rpmb"
 //#define RPMB_TIME_DEBUG
@@ -54,16 +55,13 @@
 
 #include <linux/hisi/hisi_tele_mntn.h>
 extern u64 hisi_getcurtime(void);
+struct rpmb_config_info rpmb_device_info = {0};
 /* external function declaration */
-int mmc_blk_ioctl_rpmb_cmd(enum func_id id,
-			   struct block_device *bdev,
-			   struct mmc_blk_ioc_rpmb_data *idata);
+int mmc_blk_ioctl_rpmb_cmd(enum func_id id, struct block_device *bdev, struct mmc_blk_ioc_rpmb_data *idata);
 extern struct mmc_blk_data *mmc_blk_get(struct gendisk *disk);
 extern void mmc_blk_put(struct mmc_blk_data *md);
 extern int mmc_blk_part_switch(struct mmc_card *card, struct mmc_blk_data *md);
-extern int ioctl_rpmb_card_status_poll(struct mmc_card *card,
-				       u32 *status,
-				       u32 retries_max);
+extern int ioctl_rpmb_card_status_poll(struct mmc_card *card,u32 *status, u32 retries_max);
 
 #ifdef CONFIG_HISI_RPMB_TIME_DEBUG
 unsigned short g_time_debug = 0;
@@ -81,14 +79,17 @@ u64 g_os_read_cost_time = 0;
 u64 g_os_write_cost_time = 0;
 u64 g_os_counter_cost_time = 0;
 u64 g_work_queue_start = 0;
+u64 g_rpmb_ufs_start_time = 0;
 #endif
 struct hisi_rpmb {
 	struct rpmb_request *rpmb_request;
 	struct device *dev;
 	struct block_device *blkdev;
-	struct workqueue_struct *rpmb_workqueue;
-	struct work_struct rpmb_work;
+	struct task_struct * rpmb_task;
+	int wake_up_condition;
+	wait_queue_head_t wait;
 	struct wake_lock wake_lock;
+	enum rpmb_version dev_ver;
 };
 extern long
 blk_scsi_kern_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg);
@@ -128,6 +129,21 @@ noinline int atfd_hisi_rpmb_smc(u64 function_id, u64 arg0, u64 arg1,  u64 arg2)
     return (int)function_id;
 }
 /*lint +e715*/
+
+int rpmb_get_dev_ver(enum rpmb_version *ver)
+{
+	enum rpmb_version version = hisi_rpmb.dev_ver;
+
+	if (version <= RPMB_VER_INVALID || version >= RPMB_VER_MAX) {
+		pr_err("Error: invalid rpmb dev ver: 0x%x\n", version);
+		return RPMB_ERR_DEV_VER;
+	}
+
+	*ver = version;
+
+	return RPMB_OK;
+}
+
 static inline void mmc_rpmb_combine_cmd(struct mmc_blk_ioc_data *data,
 					uint32_t is_write,
 					unsigned short blocks,
@@ -136,10 +152,8 @@ static inline void mmc_rpmb_combine_cmd(struct mmc_blk_ioc_data *data,
 {
 	struct mmc_ioc_cmd *ioc;
 	ioc = &data->ic;
-
 	ioc->write_flag = (int)(is_write | ((is_write & reliable) << 31));
-	ioc->opcode =
-		is_write ? MMC_WRITE_MULTIPLE_BLOCK : MMC_READ_MULTIPLE_BLOCK;
+	ioc->opcode = is_write ? MMC_WRITE_MULTIPLE_BLOCK : MMC_READ_MULTIPLE_BLOCK;
 	ioc->flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
 	ioc->arg = 0x0;
 	ioc->blksz = blksz;
@@ -159,75 +173,78 @@ static inline void mmc_rpmb_combine_request(struct mmc_blk_ioc_data *data,
 
 static inline void
 mmc_rpmb_basic_request(uint32_t index,
-		       struct rpmb_request *request,
+		       struct rpmb_frame *frame,
 		       struct mmc_blk_ioc_rpmb_data *rpmb_data,
 		       uint16_t block_count,
 		       uint32_t reliable)
 {
-	mmc_rpmb_combine_request(&rpmb_data->data[index], &request->frame[0], true,
-				 block_count, RPMB_BLK_SZ, reliable);
+	mmc_rpmb_combine_request(&rpmb_data->data[index], frame, true, block_count, RPMB_BLK_SZ, reliable);
 }
 
 static inline void
 mmc_rpmb_status_request(uint32_t index,
-			struct rpmb_request *request,
+			struct rpmb_frame *frame,
 			struct mmc_blk_ioc_rpmb_data *rpmb_data,
 			uint16_t block_count,
 			uint32_t reliable)
 {
-	struct rpmb_frame *status_frame = &request->status_frame;
-	uint16_t status_frame_request_type = (uint16_t)(((be16_to_cpu(request->frame[0].request)) & 0xF000) | RPMB_REQ_STATUS);
-	memset(status_frame, 0, sizeof(*status_frame));
-	/*lint -e778 -e572 -e845*/
-	status_frame->request = cpu_to_be16(status_frame_request_type);
-	/*lint +e778 +e572 +e845*/
-	mmc_rpmb_combine_request(&rpmb_data->data[index], status_frame, true, block_count,
-				 RPMB_BLK_SZ, reliable);
+	mmc_rpmb_combine_request(&rpmb_data->data[index], frame, true, block_count, RPMB_BLK_SZ, reliable);
 }
 
 static inline void
 mmc_rpmb_result_request(uint32_t index,
-			struct rpmb_request *request,
+			struct rpmb_frame *frame,
 			struct mmc_blk_ioc_rpmb_data *rpmb_data,
 			uint16_t block_count,
 			uint32_t reliable)
 {
-	mmc_rpmb_combine_request(&rpmb_data->data[index], &request->frame[0],
-				 false, block_count, RPMB_BLK_SZ, reliable);
+	mmc_rpmb_combine_request(&rpmb_data->data[index], frame, false, block_count, RPMB_BLK_SZ, reliable);
 }
 
-void mmc_rpmb_set_key(struct rpmb_request *request,
+void mmc_rpmb_set_key(struct rpmb_request *shared_rpmb_request,
 		      struct mmc_blk_ioc_rpmb_data *rpmb_data)
 {
-	mmc_rpmb_basic_request(0, request, rpmb_data, 0x1, true);
-	mmc_rpmb_status_request(1, request, rpmb_data, 0x1, false);
-	mmc_rpmb_result_request(2, request, rpmb_data, 0x1, false);
+	/*according to key frame request, caculate the status request*/
+	uint16_t status_frame_request_type = (uint16_t)(((be16_to_cpu(shared_rpmb_request->key_frame.request)) & 0xF000) | RPMB_REQ_STATUS);
+	memset(&shared_rpmb_request->status_frame, 0, sizeof(struct rpmb_frame));
+	/*lint -e778 -e572 -e845*/
+	shared_rpmb_request->status_frame.request = cpu_to_be16(status_frame_request_type);
+	/*lint +e778 +e572 +e845*/
+	mmc_rpmb_basic_request(0, &shared_rpmb_request->key_frame, rpmb_data, 0x1, true);
+	mmc_rpmb_status_request(1, &shared_rpmb_request->status_frame, rpmb_data, 0x1, false);
+	mmc_rpmb_result_request(2, &shared_rpmb_request->key_frame, rpmb_data, 0x1, false);
 }
 
-void mmc_rpmb_get_counter(struct rpmb_request *request,
+void mmc_rpmb_get_counter(struct rpmb_request *shared_rpmb_request,
 			  struct mmc_blk_ioc_rpmb_data *rpmb_data)
 {
-	mmc_rpmb_basic_request(0, request, rpmb_data, 0x1, false);
-	mmc_rpmb_result_request(1, request, rpmb_data, 0x1, false);
+	mmc_rpmb_basic_request(0, &shared_rpmb_request->frame[0], rpmb_data, 0x1, false);
+	mmc_rpmb_result_request(1, &shared_rpmb_request->frame[0], rpmb_data, 0x1, false);
 }
 
-void mmc_rpmb_read_data(struct rpmb_request *request,
+void mmc_rpmb_read_data(struct rpmb_request *shared_rpmb_request,
 			struct mmc_blk_ioc_rpmb_data *rpmb_data)
 {
-	unsigned short blocks_count = (uint16_t)request->info.current_rqst.blks;
-
-	mmc_rpmb_basic_request(0, request, rpmb_data, 0x1, false);
-	mmc_rpmb_result_request(1, request, rpmb_data, blocks_count, false);
+	/*get read total blocks*/
+	unsigned short blocks_count = (uint16_t)shared_rpmb_request->info.current_rqst.blks;
+	mmc_rpmb_basic_request(0, &shared_rpmb_request->frame[0], rpmb_data, 0x1, false);
+	mmc_rpmb_result_request(1, &shared_rpmb_request->frame[0], rpmb_data, blocks_count, false);
 }
 
-void mmc_rpmb_write_data(struct rpmb_request *request,
+void mmc_rpmb_write_data(struct rpmb_request *shared_rpmb_request,
 			 struct mmc_blk_ioc_rpmb_data *rpmb_data)
 {
-	unsigned short blocks_count = (uint16_t)request->info.current_rqst.blks;
-
-	mmc_rpmb_basic_request(0, request, rpmb_data, blocks_count, true);
-	mmc_rpmb_status_request(1, request, rpmb_data, 0x1, false);
-	mmc_rpmb_result_request(2, request, rpmb_data, 0x1, false);
+	/*get write total blocks*/
+	unsigned short blocks_count = (uint16_t)shared_rpmb_request->info.current_rqst.blks;
+	/*according to write frame request, caculate the status request*/
+	uint16_t status_frame_request_type = (uint16_t)(((be16_to_cpu(shared_rpmb_request->frame[0].request)) & 0xF000) | RPMB_REQ_STATUS);
+	memset(&shared_rpmb_request->status_frame, 0, sizeof(struct rpmb_frame));
+	/*lint -e778 -e572 -e845*/
+	shared_rpmb_request->status_frame.request = cpu_to_be16(status_frame_request_type);
+	/*lint +e778 +e572 +e845*/
+	mmc_rpmb_basic_request(0, &shared_rpmb_request->frame[0], rpmb_data, blocks_count, true);
+	mmc_rpmb_status_request(1, &shared_rpmb_request->status_frame, rpmb_data, 0x1, false);
+	mmc_rpmb_result_request(2, &shared_rpmb_request->frame[0], rpmb_data, 0x1, false);
 }
 
 int ufs_bsg_ioctl_rpmb_cmd(enum func_id id, struct ufs_blk_ioc_rpmb_data *rdata)
@@ -288,13 +305,22 @@ out:
 	return ret;
 }
 
-void ufs_get_cdb_rpmb_command(uint32_t opcode, uint32_t size, uint8_t *cmd)
+/*
+ * To distinguish with UFS2.1 and UFS3.0, we must specify one region number in
+ * parameter list, please confirm that region is valid from caller instead of
+ * this function.
+ */
+void ufs_get_cdb_rpmb_command(
+	uint32_t opcode, uint32_t size, uint8_t *cmd, uint8_t region)
 {
 	switch (opcode) {
 	case UFS_OP_SECURITY_PROTOCOL_IN:
 		cmd[0] = UFS_OP_SECURITY_PROTOCOL_IN;
 		cmd[1] = SECURITY_PROTOCOL; /* Manju updated from 0x00 */
-		cmd[2] = 0x00;
+		if (hisi_rpmb.dev_ver >= RPMB_VER_UFS_30)
+			cmd[2] = region;
+		else
+			cmd[2] = 0;
 		cmd[3] = 0x01;
 		cmd[4] = 0x00;
 		cmd[5] = 0x00;
@@ -309,7 +335,10 @@ void ufs_get_cdb_rpmb_command(uint32_t opcode, uint32_t size, uint8_t *cmd)
 	case UFS_OP_SECURITY_PROTOCOL_OUT:
 		cmd[0] = UFS_OP_SECURITY_PROTOCOL_OUT;
 		cmd[1] = SECURITY_PROTOCOL;
-		cmd[2] = 0x00;
+		if (hisi_rpmb.dev_ver >= RPMB_VER_UFS_30)
+			cmd[2] = region;
+		else
+			cmd[2] = 0;
 		cmd[3] = 0x01;
 		cmd[4] = 0x00;
 		cmd[5] = 0x00;
@@ -327,12 +356,9 @@ void ufs_get_cdb_rpmb_command(uint32_t opcode, uint32_t size, uint8_t *cmd)
 }
 
 static inline void ufs_rpmb_combine_cmd(struct ufs_blk_ioc_data *data,
-					int is_write,
-					unsigned short blocks,
-					unsigned short blksz,
-					u8 *sdb_command,
-					u8 *sense_buffer,
-					struct rpmb_frame *transfer_frame)
+	int is_write, unsigned short blocks, unsigned short blksz,
+	u8 *sdb_command, u8 *sense_buffer, struct rpmb_frame *transfer_frame,
+	uint8_t region)
 {
 	/*the scsi SG_IO header*/
 	struct sg_io_v4 *siv;
@@ -347,13 +373,13 @@ static inline void ufs_rpmb_combine_cmd(struct ufs_blk_ioc_data *data,
 	siv->request_len = SCSI_RPMB_COMMAND_LENGTH;
 	if (is_write) {
 		ufs_get_cdb_rpmb_command(UFS_OP_SECURITY_PROTOCOL_OUT,
-					 (uint32_t)data->buf_bytes, sdb_command);
+			(uint32_t)data->buf_bytes, sdb_command, region);
 		siv->dout_xfer_len = (uint32_t)blocks * blksz;
 		siv->dout_xferp = (uint64_t)transfer_frame;
 		siv->request = (__u64)sdb_command;
 	} else {
 		ufs_get_cdb_rpmb_command(UFS_OP_SECURITY_PROTOCOL_IN,
-					(uint32_t) data->buf_bytes, sdb_command);
+			(uint32_t)data->buf_bytes, sdb_command, region);
 		siv->din_xfer_len = (uint32_t)blocks * blksz;
 		siv->din_xferp = (uint64_t)transfer_frame;
 		siv->request = (__u64)sdb_command;
@@ -377,19 +403,23 @@ static inline void ufs_rpmb_combine_request(struct ufs_blk_ioc_data *data,
 		return;
 	}
 	memcpy(transfer_frame, frame, data->buf_bytes); /*[false alarm]: enough reserved memory, 32KB*/
+	/*
+	 * TODO: Pass region number from caller instead of a global variable.
+	 */
 	ufs_rpmb_combine_cmd(data, is_write, blocks, blksz, sdb_command,
-			     sense_buffer, transfer_frame);
+		sense_buffer, transfer_frame,
+		hisi_rpmb.rpmb_request->info.rpmb_region_num);
 }
 
 static inline void
 ufs_rpmb_basic_request(uint32_t index,
-		       struct rpmb_request *request,
+		       struct rpmb_frame *frame,
 		       struct ufs_blk_ioc_rpmb_data *rpmb_data,
 		       uint16_t block_count,
 		       uint8_t *sense_buffer,
 		       struct rpmb_frame *transfer_frame)
 {
-	ufs_rpmb_combine_request(&rpmb_data->data[index], &request->frame[0],
+	ufs_rpmb_combine_request(&rpmb_data->data[index], frame,
 				 true, block_count, RPMB_BLK_SZ,
 				 (u8 *)&rpmb_data->sdb_command[index], sense_buffer,
 				 transfer_frame);
@@ -397,19 +427,13 @@ ufs_rpmb_basic_request(uint32_t index,
 
 static inline void
 ufs_rpmb_status_request(uint32_t index,
-			struct rpmb_request *request,
+			struct rpmb_frame *frame,
 			struct ufs_blk_ioc_rpmb_data *rpmb_data,
 			uint16_t block_count,
 			uint8_t *sense_buffer,
 			struct rpmb_frame *transfer_frame)
 {
-	struct rpmb_frame *status_frame = &request->status_frame;
-	uint16_t status_frame_request_type = (uint16_t)(((be16_to_cpu(request->frame[0].request)) & 0xF000) | RPMB_REQ_STATUS);
-	memset(status_frame, 0, sizeof(*status_frame));
-	/*lint -e778 -e572 -e845*/
-	status_frame->request = cpu_to_be16(status_frame_request_type);
-	/*lint +e778 +e572 +e845*/
-	ufs_rpmb_combine_request(&rpmb_data->data[index], status_frame, true,
+	ufs_rpmb_combine_request(&rpmb_data->data[index], frame, true,
 				 block_count, RPMB_BLK_SZ,
 				 (u8 *)&rpmb_data->sdb_command[index], sense_buffer,
 				 transfer_frame);
@@ -417,68 +441,70 @@ ufs_rpmb_status_request(uint32_t index,
 
 static inline void
 ufs_rpmb_result_request(uint32_t index,
-			struct rpmb_request *request,
+			struct rpmb_frame *frame,
 			struct ufs_blk_ioc_rpmb_data *rpmb_data,
 			uint16_t block_count,
 			uint8_t *sense_buffer,
 			struct rpmb_frame *transfer_frame)
 {
-	ufs_rpmb_combine_request(&rpmb_data->data[index], &request->frame[0],
+	ufs_rpmb_combine_request(&rpmb_data->data[index], frame,
 				 false, block_count, RPMB_BLK_SZ,
 				 (u8 *)&rpmb_data->sdb_command[index], sense_buffer,
 				 transfer_frame);
 }
 
-void ufs_rpmb_set_key(struct rpmb_request *request,
+void ufs_rpmb_set_key(struct rpmb_request *shared_rpmb_request,
 		      struct ufs_blk_ioc_rpmb_data *rpmb_data,
 		      uint8_t *sense_buffer[],
 		      struct rpmb_frame *transfer_frame[])
 {
-	ufs_rpmb_basic_request(0, request, rpmb_data, 0x1, sense_buffer[0],
-			       transfer_frame[0]);
-	ufs_rpmb_status_request(1, request, rpmb_data, 0x1, sense_buffer[1],
-				transfer_frame[1]);
-	ufs_rpmb_result_request(2, request, rpmb_data, 0x1, sense_buffer[2],
-				transfer_frame[2]);
+	/*according to key frame request, caculate the status request*/
+	uint16_t status_frame_request_type = (uint16_t)(((be16_to_cpu(shared_rpmb_request->key_frame.request)) & 0xF000) | RPMB_REQ_STATUS);
+	memset(&shared_rpmb_request->status_frame, 0, sizeof(struct rpmb_frame));
+	/*lint -e778 -e572 -e845*/
+	shared_rpmb_request->status_frame.request = cpu_to_be16(status_frame_request_type);
+	/*lint +e778 +e572 +e845*/
+	ufs_rpmb_basic_request(0, &shared_rpmb_request->key_frame, rpmb_data, 0x1, sense_buffer[0], transfer_frame[0]);
+	ufs_rpmb_status_request(1, &shared_rpmb_request->status_frame, rpmb_data, 0x1, sense_buffer[1], transfer_frame[1]);
+	ufs_rpmb_result_request(2, &shared_rpmb_request->key_frame, rpmb_data, 0x1, sense_buffer[2], transfer_frame[2]);
 }
 
-void ufs_rpmb_read_data(struct rpmb_request *request,
+void ufs_rpmb_read_data(struct rpmb_request *shared_rpmb_request,
 			struct ufs_blk_ioc_rpmb_data *rpmb_data,
 			uint8_t *sense_buffer[],
 			struct rpmb_frame *transfer_frame[])
 {
-	unsigned short blocks_count = (uint16_t)request->info.current_rqst.blks;
-
-	ufs_rpmb_basic_request(0, request, rpmb_data, 0x1, sense_buffer[0],
-			       transfer_frame[0]);
-	ufs_rpmb_result_request(1, request, rpmb_data, blocks_count,
-				sense_buffer[1], transfer_frame[1]);
+	/*get read total blocks*/
+	unsigned short blocks_count = (uint16_t)shared_rpmb_request->info.current_rqst.blks;
+	ufs_rpmb_basic_request(0, &shared_rpmb_request->frame[0], rpmb_data, 0x1, sense_buffer[0], transfer_frame[0]);
+	ufs_rpmb_result_request(1, &shared_rpmb_request->frame[0], rpmb_data, blocks_count, sense_buffer[1], transfer_frame[1]);
 }
 
-void ufs_rpmb_get_counter(struct rpmb_request *request,
+void ufs_rpmb_get_counter(struct rpmb_request *shared_rpmb_request,
 			  struct ufs_blk_ioc_rpmb_data *rpmb_data,
 			  uint8_t *sense_buffer[],
 			  struct rpmb_frame *transfer_frame[])
 {
-	ufs_rpmb_basic_request(0, request, rpmb_data, 0x1, sense_buffer[0],
-			       transfer_frame[0]);
-	ufs_rpmb_result_request(1, request, rpmb_data, 0x1, sense_buffer[1],
-				transfer_frame[1]);
+	ufs_rpmb_basic_request(0, &shared_rpmb_request->frame[0], rpmb_data, 0x1, sense_buffer[0], transfer_frame[0]);
+	ufs_rpmb_result_request(1, &shared_rpmb_request->frame[0], rpmb_data, 0x1, sense_buffer[1], transfer_frame[1]);
 }
 
-void ufs_rpmb_write_data(struct rpmb_request *request,
+void ufs_rpmb_write_data(struct rpmb_request *shared_rpmb_request,
 			 struct ufs_blk_ioc_rpmb_data *rpmb_data,
 			 uint8_t *sense_buffer[],
 			 struct rpmb_frame *transfer_frame[])
 {
-	unsigned short blocks_count = (unsigned short)request->info.current_rqst.blks;
-
-	ufs_rpmb_basic_request(0, request, rpmb_data, blocks_count,
-			       sense_buffer[0], transfer_frame[0]);
-	ufs_rpmb_status_request(1, request, rpmb_data, 0x1, sense_buffer[1],
-				transfer_frame[1]);
-	ufs_rpmb_result_request(2, request, rpmb_data, 0x1, sense_buffer[2],
-				transfer_frame[2]);
+	/*get write total blocks*/
+	unsigned short blocks_count = (unsigned short)shared_rpmb_request->info.current_rqst.blks;
+	/*according to write frame request, caculate the status request*/
+	uint16_t status_frame_request_type = (uint16_t)(((be16_to_cpu(shared_rpmb_request->frame[0].request)) & 0xF000) | RPMB_REQ_STATUS);
+	memset(&shared_rpmb_request->status_frame, 0, sizeof(struct rpmb_frame));
+	/*lint -e778 -e572 -e845*/
+	shared_rpmb_request->status_frame.request = cpu_to_be16(status_frame_request_type);
+	/*lint +e778 +e572 +e845*/
+	ufs_rpmb_basic_request(0, &shared_rpmb_request->frame[0], rpmb_data, blocks_count, sense_buffer[0], transfer_frame[0]);
+	ufs_rpmb_status_request(1, &shared_rpmb_request->status_frame, rpmb_data, 0x1, sense_buffer[1], transfer_frame[1]);
+	ufs_rpmb_result_request(2, &shared_rpmb_request->frame[0], rpmb_data, 0x1, sense_buffer[2], transfer_frame[2]);
 }
 /*
  * we must unlock rpmb_counter_lock for some condition
@@ -491,24 +517,18 @@ void emmc_rpmb_unlock_counterlock(struct rpmb_request *request,
 			 struct rpmb_frame *frame,
 			 int32_t result)
 {
-	if ((request->info.state == RPMB_STATE_WR_CNT &&
-	     (result || (be16_to_cpu(frame->result) != RPMB_OK ||
-			 be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER))) ||
-	    (request->info.state == RPMB_STATE_WR_DATA &&
-	    (0 == request->info.blks - (request->info.current_rqst.offset + request->info.current_rqst.blks)))) {
+	if ((request->info.state == RPMB_STATE_WR_CNT && (result || (be16_to_cpu(frame->result) != RPMB_OK ||be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER))) ||
+	     (request->info.state == RPMB_STATE_WR_DATA && (0 == request->info.blks - (request->info.current_rqst.offset + request->info.current_rqst.blks)))) {
 		mutex_unlock(&rpmb_counter_lock);
 	}
 }
 /*lint -restore*/
 
-/* reserved for ufs */
-/* static void ufs_rpmb_work(struct rpmb_request *request) */
 /*lint -save -e456 -e454*/
 static int32_t mmc_rpmb_work(struct rpmb_request *request)
 {
 	int32_t result;
 	struct rpmb_frame *frame = &request->frame[0];
-
 	hisi_rpmb.blkdev = blkdev_get_by_path(EMMC_RPMB_BLOCK_DEVICE_NAME, O_RDWR | O_NDELAY, hisi_rpmb.dev);
 	if (IS_ERR(hisi_rpmb.blkdev)) {
 		pr_err("[%s]:HISEE open rpmb block failed!\n",__func__);
@@ -527,6 +547,7 @@ static int32_t mmc_rpmb_work(struct rpmb_request *request)
 		pr_err("[%s]:rpmb maybe issue an error\n",__func__);
 		break;
 	case RPMB_STATE_KEY:
+		frame = &request->key_frame;
 		mmc_rpmb_set_key(request, rpmb_data);
 		break;
 	case RPMB_STATE_RD:
@@ -593,40 +614,35 @@ static int ufs_rpmb_work(struct rpmb_request *request)
 		pr_err("[%s]:rpmb maybe issue an error\n",__func__);
 		break;
 	case RPMB_STATE_KEY:
-		ufs_rpmb_set_key(request, rpmb_data, sense_buffer,
-				 transfer_frame);
+		frame = &request->key_frame;
+		ufs_rpmb_set_key(request, rpmb_data, sense_buffer, transfer_frame);
 		break;
 	case RPMB_STATE_RD:
-		ufs_rpmb_read_data(request, rpmb_data, sense_buffer,
-				   transfer_frame);
+		ufs_rpmb_read_data(request, rpmb_data, sense_buffer, transfer_frame);
 		break;
 	case RPMB_STATE_CNT:
-		ufs_rpmb_get_counter(request, rpmb_data, sense_buffer,
-				     transfer_frame);
+		ufs_rpmb_get_counter(request, rpmb_data, sense_buffer, transfer_frame);
 		break;
 	case RPMB_STATE_WR_CNT:
 		/* TODO add a lock here for counter before write data */
 		mutex_lock(&rpmb_counter_lock);
-		ufs_rpmb_get_counter(request, rpmb_data, sense_buffer,
-				     transfer_frame);
+		ufs_rpmb_get_counter(request, rpmb_data, sense_buffer, transfer_frame);
 		break;
 	case RPMB_STATE_WR_DATA:
-		ufs_rpmb_write_data(request, rpmb_data, sense_buffer,
-				    transfer_frame);
+		ufs_rpmb_write_data(request, rpmb_data, sense_buffer, transfer_frame);
 		/* TODO add a unlock for counter after write data */
 		break;
 	}
 	result = ufs_bsg_ioctl_rpmb_cmd(RPMB_FUNC_ID_SE, rpmb_data);
+
 	/*
 	 * we must unlock rpmb_counter_lock for some condition
 	 * 1. RPMB_STATE_WR_CNT and result failed
 	 * 2. RPMB_STATE_WR_CNT and result success but RESPONSE not valid
 	 * 3. RPMB_STATE_WR_DATA we always unlock
 	 */
-	if ((request->info.state == RPMB_STATE_WR_CNT &&
-	     (result || (be16_to_cpu(frame->result) != RPMB_OK ||
-			 be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER))) ||
-	    (request->info.state == RPMB_STATE_WR_DATA)) {
+	if ((request->info.state == RPMB_STATE_WR_CNT && (result || (be16_to_cpu(frame->result) != RPMB_OK || be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER))) ||
+	     (request->info.state == RPMB_STATE_WR_DATA)) {
 		mutex_unlock(&rpmb_counter_lock);
 	}
 
@@ -647,8 +663,8 @@ void hisi_hisee_time_stamp(enum rpmb_state state, unsigned int blks){
 	u64 temp_cost_time;
 	g_hisee_end_time = hisi_getcurtime();
 	temp_cost_time = g_hisee_end_time - g_hisee_start_time;
-	if(temp_cost_time > RPMB_TIMEOUT_TIME_IN_KERNEL)
-		pr_err("[%s]rpmb access cost time is more than 800ms, start[%llu], queue_start[%llu], end[%llu], state[%d]!\n", __func__, g_hisee_start_time, g_work_queue_start, g_hisee_end_time, (int32_t)state);
+	if(temp_cost_time > RPMB_TIMEOUT_TIME_IN_KERNEL || g_time_debug)
+		pr_err("[%s]rpmb access cost time is more than 800ms, start[%llu], workqueue start time[%llu], ufs start time[%llu],end[%llu], state[%d]!\n", __func__, g_hisee_start_time, g_work_queue_start, g_rpmb_ufs_start_time, g_hisee_end_time, (int32_t)state);
 	switch(state){
 		case RPMB_STATE_RD:
 			if(g_hisee_read_cost_time < temp_cost_time){
@@ -727,7 +743,7 @@ int32_t hisee_exception_to_reset_rpmb(void)
 	return 0;
 }
 /*lint -e715*/
-static void rpmb_work_routine(struct work_struct *work)
+static void rpmb_work_routine(void)
 {
 	int32_t result;
 	struct rpmb_request *request = hisi_rpmb.rpmb_request;
@@ -753,6 +769,7 @@ static void rpmb_work_routine(struct work_struct *work)
 	hisi_hisee_time_stamp(request->info.state, request->info.current_rqst.blks);
 	#endif
 	/*lint -e571*/
+	hisi_rpmb.wake_up_condition = 0;
 	if(atfd_hisi_rpmb_smc((u64)RPMB_SVC_REQUEST_DONE, (u64)result, (u64)0, (u64)0))
 		pr_err("[%s]:rpmb request done from bl31 failed\n",__func__);
 	/*lint +e571*/
@@ -771,13 +788,16 @@ void hisi_rpmb_active(void)
 	/*mark hisee rpmb request start time*/
 	g_hisee_start_time = hisi_getcurtime();
 	#endif
-	queue_work(hisi_rpmb.rpmb_workqueue, &hisi_rpmb.rpmb_work);
+	hisi_rpmb.wake_up_condition = 1;
+	wake_up(&hisi_rpmb.wait);
 }
 
 EXPORT_SYMBOL(hisi_rpmb_active);
 
 /*lint -e715 -e64 -e785*/
 #ifdef CONFIG_HISI_DEBUG_FS
+int get_rpmb_key_status(void);
+u32 get_rpmb_support_key_num(void);
 /*
  * debugfs defination start here, debug smc is closed in secure world in user version, so debug can not used in user version
  */
@@ -849,6 +869,26 @@ static int rpmb_config_view_fops_get(void *data, u64 *val)
 
 DEFINE_SIMPLE_ATTRIBUTE(rpmb_config_view_set_fops, rpmb_config_view_fops_get, NULL, "%llu\n");
 
+static int rpmb_get_key_status_fops_get(void *data, u64 *val)
+{
+	int key_status;
+	key_status = get_rpmb_key_status();
+	pr_err("rpmb_key status:%d\n", key_status);
+	return 0;
+}
+
+DEFINE_SIMPLE_ATTRIBUTE(rpmb_get_key_status_fops, rpmb_get_key_status_fops_get, NULL, "%llu\n");
+
+static int rpmb_get_support_key_num_fops_get(void *data, u64 *val)
+{
+	u32 key_num;
+	key_num = get_rpmb_support_key_num();
+	pr_err("rpmb_key num is %d\n", key_num);
+	return 0;
+}
+
+DEFINE_SIMPLE_ATTRIBUTE(rpmb_get_support_key_num_fops, rpmb_get_support_key_num_fops_get, NULL, "%llu\n");
+
 /*lint +e715 +e64 +e785*/
 static int hisi_rpmb_debugfs_init(void)
 {
@@ -877,6 +917,8 @@ static int hisi_rpmb_debugfs_init(void)
 	debugfs_create_file("partition_see", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb, NULL, &rpmb_partiton_fops);
 	debugfs_create_file("multi_key_set", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb, NULL, &rpmb_multi_key_set_fops);
 	debugfs_create_file("rpmb_config_view", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb, NULL, &rpmb_config_view_set_fops);
+	debugfs_create_file("rpmb_key_status", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb, NULL, &rpmb_get_key_status_fops);
+	debugfs_create_file("rpmb_key_num", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb, NULL, &rpmb_get_support_key_num_fops);
 
 	debugfs_create_u64("partition_size", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb,
 			  &request->rpmb_debug.partition_size);
@@ -900,6 +942,8 @@ static int hisi_rpmb_debugfs_init(void)
 			  &request->rpmb_debug.capability_times);
 	debugfs_create_u8("multi_region_num", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb,
 			  &request->rpmb_debug.multi_region_num);
+	debugfs_create_u8("partition_id", S_IRUSR | S_IWUSR, debugfs_hisi_rpmb,
+			  &request->rpmb_debug.partition_id);
 	return 0;
 }
 EXPORT_SYMBOL(hisi_rpmb_debugfs_init);
@@ -918,6 +962,8 @@ static int clear_rpmb_max_time(void *data, u64 *val)
 	g_os_read_cost_time = 0;
 	g_os_write_cost_time = 0;
 	g_os_counter_cost_time = 0;
+	g_work_queue_start = 0;
+	g_rpmb_ufs_start_time = 0;
 	request->rpmb_debug.test_hisee_atf_read_time = 0;
 	request->rpmb_debug.test_hisee_atf_write_time =0;
 	request->rpmb_debug.test_hisee_atf_counter_time = 0;
@@ -962,7 +1008,7 @@ static ssize_t mmc_rpmb_key_store(struct device *dev,
 	int ret = 0;
 	int i;
 	struct rpmb_request *request = hisi_rpmb.rpmb_request;
-	struct rpmb_frame *frame = &request->frame[0];
+	struct rpmb_frame *frame = &request->key_frame;
 	struct mmc_blk_ioc_rpmb_data *rpmb_data =
 		kzalloc(sizeof(*rpmb_data), GFP_KERNEL);
 	if (!rpmb_data) {
@@ -1039,7 +1085,7 @@ static ssize_t ufs_rpmb_key_store(struct device *dev,
 {
 	int i, ret = 0;
 	struct rpmb_request *request = hisi_rpmb.rpmb_request;
-	struct rpmb_frame *frame = &request->frame[0];
+	struct rpmb_frame *frame = &request->key_frame;
 
 	struct rpmb_frame *transfer_frame[UFS_IOC_MAX_RPMB_CMD] = {NULL};
 	uint8_t *sense_buffer[UFS_IOC_MAX_RPMB_CMD] = {NULL};
@@ -1162,9 +1208,12 @@ static int32_t mmc_rpmb_key_status(void){
 		pr_err("[%s]:can not get rpmb key status\n",__func__);
 		goto alloc_free;
 	}
-	if (be16_to_cpu(frame->result) != RPMB_OK ||
-	    be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER) {
+	if(be16_to_cpu(frame->result) == RPMB_ERR_KEY && be16_to_cpu(frame->request) == RPMB_RESP_WCOUNTER){
+		pr_err("[%s]:RPMB KEY is not set\n",__func__);
+		ret = RPMB_ERR_SET_KEY;
+	} else if (be16_to_cpu(frame->result) != RPMB_OK || be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER) {
 		pr_err("[%s]:get write counter failed\n",__func__);
+		print_frame_buf("error frame", (void *)frame, 512, 16);
 		ret = RPMB_ERR_GET_COUNT;
 	}else
 		ret = RPMB_OK;
@@ -1228,9 +1277,12 @@ static int32_t ufs_rpmb_key_status(void){
 		pr_err("[%s]:can not get rpmb key status\n",__func__);
 		goto alloc_free;
 	}
-
-	if (be16_to_cpu(frame->result) != RPMB_OK || be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER) {
+	if(be16_to_cpu(frame->result) == RPMB_ERR_KEY && be16_to_cpu(frame->request) == RPMB_RESP_WCOUNTER){
+		pr_err("[%s]:RPMB KEY is not set\n",__func__);
+		ret = RPMB_ERR_KEY;
+	}else if (be16_to_cpu(frame->result) != RPMB_OK || be16_to_cpu(frame->request) != RPMB_RESP_WCOUNTER) {
 		pr_err("[%s]:get write counter failed\n",__func__);
+		print_frame_buf("error frame", (void *)frame, 512, 16);
 		ret = RPMB_ERR_GET_COUNT;
 	}else
 		ret = RPMB_OK;
@@ -1260,8 +1312,37 @@ static void rpmb_key_status_check(void){
 		rpmb_key_status = KEY_NOT_READY;
 }
 
+u32 get_rpmb_support_key_num(void){
+	u32 key_num = 0;
+	int i;
+	for (i = 0;i < MAX_RPMB_REGION_NUM;i++) {
+		if (((rpmb_device_info.rpmb_region_enable >> i) & 0x1))
+			key_num++;
+	}
+	if (0 == key_num) {
+		pr_err("failed:get_rpmb_support_key_num is zero, rpmb is not support\n");
+	}
+	return key_num;
+}
+
 int get_rpmb_key_status(void){
-	return rpmb_key_status;
+	int result;
+	if (1 == get_rpmb_support_key_num())
+		return rpmb_key_status;
+	else {
+		result = atfd_hisi_rpmb_smc((u64)RPMB_SVC_MULTI_KEY_STATUS, (u64)0x0, (u64)0x0, (u64)0x0);
+		if (KEY_NOT_READY == result || KEY_READY == result)
+			return result;
+		else {
+			pr_err("get_rpmb_key_status failed, result = %d\n", result);
+			return KEY_REQ_FAILED;
+		}
+	}
+}
+
+int get_rpmb_init_status_quick(void)
+{
+	return rpmb_drivers_init_status;
 }
 
 static ssize_t hisi_rpmb_key_store(struct device *dev,
@@ -1295,16 +1376,16 @@ hisi_rpmb_key_show(struct device *dev, struct device_attribute *attr, char *buf)
 int get_rpmb_init_status(void)
 {
 	int i;
-	long ret = 0;
+	int32_t ret = 0;
 	/*lint -e501*/
-	mm_segment_t oldfs = get_fs();
+	mm_segment_t oldfs = get_fs();/*lint !e747*/
 	set_fs(get_ds());
 	/*lint +e501*/
 	for(i = 0;i < WAIT_INIT_TIMES;i++){
 		if(BOOT_DEVICE_EMMC == rpmb_support_device)
-			ret = sys_access(EMMC_RPMB_BLOCK_DEVICE_NAME, 0);
+			ret = (int32_t)sys_access(EMMC_RPMB_BLOCK_DEVICE_NAME, 0);
 		else
-			ret = sys_access(UFS_RPMB_BLOCK_DEVICE_NAME, 0);
+			ret = (int32_t)sys_access(UFS_RPMB_BLOCK_DEVICE_NAME, 0);
 		if(!ret && rpmb_device_init_status)
 			break;
 		usleep_range((unsigned long)3000, (unsigned long)5000);
@@ -1428,19 +1509,47 @@ int hisi_ufs_rpmb_ioctl_cmd(enum func_id id, enum rpmb_op_type operation, struct
 	}
 	/*lint -e826*/
 	switch (operation) {
-		case RPMB_OP_RD:
-			ufs_rpmb_combine_cmd(&rpmb_data->data[0], true, (unsigned short)storage_data->data[0].blocks, RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[0], sense_buffer[0], (struct rpmb_frame *)rpmb_data->data[0].buf);
-			ufs_rpmb_combine_cmd(&rpmb_data->data[1], false, (unsigned short)storage_data->data[1].blocks, RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[1], sense_buffer[1], (struct rpmb_frame *)rpmb_data->data[1].buf);
-			break;
-		case RPMB_OP_WR_CNT:
-			ufs_rpmb_combine_cmd(&rpmb_data->data[0], true, (unsigned short)storage_data->data[0].blocks, RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[0], sense_buffer[0], (struct rpmb_frame *)rpmb_data->data[0].buf);
-			ufs_rpmb_combine_cmd(&rpmb_data->data[1], false, (unsigned short)storage_data->data[1].blocks, RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[1], sense_buffer[1], (struct rpmb_frame *)rpmb_data->data[1].buf);
-		    break;
-		case RPMB_OP_WR_DATA:
-			ufs_rpmb_combine_cmd(&rpmb_data->data[0], true, (unsigned short)storage_data->data[0].blocks, RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[0], sense_buffer[0], (struct rpmb_frame *)rpmb_data->data[0].buf);
-			ufs_rpmb_combine_cmd(&rpmb_data->data[1], true, (unsigned short)storage_data->data[1].blocks, RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[1], sense_buffer[1], (struct rpmb_frame *)rpmb_data->data[1].buf);
-			ufs_rpmb_combine_cmd(&rpmb_data->data[2], false, (unsigned short)storage_data->data[2].blocks, RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[2], sense_buffer[2], (struct rpmb_frame *)rpmb_data->data[2].buf);
-			break;
+	case RPMB_OP_RD:
+		ufs_rpmb_combine_cmd(&rpmb_data->data[0], true,
+			(unsigned short)storage_data->data[0].blocks,
+			RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[0],
+			sense_buffer[0],
+			(struct rpmb_frame *)rpmb_data->data[0].buf, 0);
+		ufs_rpmb_combine_cmd(&rpmb_data->data[1], false,
+			(unsigned short)storage_data->data[1].blocks,
+			RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[1],
+			sense_buffer[1],
+			(struct rpmb_frame *)rpmb_data->data[1].buf, 0);
+		break;
+	case RPMB_OP_WR_CNT:
+		ufs_rpmb_combine_cmd(&rpmb_data->data[0], true,
+			(unsigned short)storage_data->data[0].blocks,
+			RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[0],
+			sense_buffer[0],
+			(struct rpmb_frame *)rpmb_data->data[0].buf, 0);
+		ufs_rpmb_combine_cmd(&rpmb_data->data[1], false,
+			(unsigned short)storage_data->data[1].blocks,
+			RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[1],
+			sense_buffer[1],
+			(struct rpmb_frame *)rpmb_data->data[1].buf, 0);
+		break;
+	case RPMB_OP_WR_DATA:
+		ufs_rpmb_combine_cmd(&rpmb_data->data[0], true,
+			(unsigned short)storage_data->data[0].blocks,
+			RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[0],
+			sense_buffer[0],
+			(struct rpmb_frame *)rpmb_data->data[0].buf, 0);
+		ufs_rpmb_combine_cmd(&rpmb_data->data[1], true,
+			(unsigned short)storage_data->data[1].blocks,
+			RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[1],
+			sense_buffer[1],
+			(struct rpmb_frame *)rpmb_data->data[1].buf, 0);
+		ufs_rpmb_combine_cmd(&rpmb_data->data[2], false,
+			(unsigned short)storage_data->data[2].blocks,
+			RPMB_BLK_SZ, (u8 *)&rpmb_data->sdb_command[2],
+			sense_buffer[2],
+			(struct rpmb_frame *)rpmb_data->data[2].buf, 0);
+		break;
 	}
 	/*lint +e826*/
 	ret = ufs_bsg_ioctl_rpmb_cmd(id, rpmb_data);
@@ -1743,8 +1852,6 @@ cmd_done:
 /*lint -restore */
 #endif
 
-/*output api --*/
-
 /* create a virtual device for dma_alloc */
 #define SECURE_STORAGE_NAME "secure_storage"
 #define RPMB_DEVICE_NAME "hisi_rpmb"
@@ -1753,10 +1860,9 @@ static int hisi_rpmb_device_init(void)
 	struct device *pdevice;
 	struct class *rpmb_class;
 	struct device_node *np = NULL;
+	enum rpmb_version version;
 	dma_addr_t rpmb_request_phy = 0;
 	unsigned long mem_size = 0;
-	struct rpmb_config_info rpmb_config = {0};
-	int i;
 	phys_addr_t bl31_smem_base =
 		HISI_SUB_RESERVED_BL31_SHARE_MEM_PHYMEM_BASE;
 	u32 data[2] = {0};
@@ -1796,27 +1902,6 @@ static int hisi_rpmb_device_init(void)
 	hisi_rpmb.rpmb_request = ioremap_wc(rpmb_request_phy, mem_size);
 	if (!hisi_rpmb.rpmb_request)
 		goto err_node;
-	/*wait for rpmb get config OK*/
-	for(i = 0;i < WAIT_CONFIG_TIME;i++){
-		if(get_rpmb_config_ready_status() == RPMB_DONE)
-			break;
-		/*lint -e516 -e778 -e774*/
-		udelay((unsigned long)1000);
-		/*lint +e516 +e778 +e774*/
-	}
-	if(i == WAIT_CONFIG_TIME){
-		pr_err("get ufs rpmb config timeout failed\n");
-		goto err_ioremap;
-	}
-	/*get rpmb config*/
-	rpmb_config = get_rpmb_config();
-
-	if(sizeof(struct rpmb_config_info) < mem_size){
-		memcpy((void *)hisi_rpmb.rpmb_request, &rpmb_config, sizeof(struct rpmb_config_info));
-	} else{
-		pr_err("copy rpmb config to shared memory address failed\n");
-		goto err_ioremap;
-	}
 
 	/*lint -e571*/
 	if (atfd_hisi_rpmb_smc((u64)RPMB_SVC_REQUEST_ADDR, rpmb_request_phy,
@@ -1825,6 +1910,17 @@ static int hisi_rpmb_device_init(void)
 		goto err_ioremap;
 	}
 	/*lint +e571*/
+	memcpy((void *)&rpmb_device_info, (const void *)hisi_rpmb.rpmb_request, sizeof(struct rpmb_config_info));
+
+	version = (enum rpmb_version)atfd_hisi_rpmb_smc(
+		(u64)RPMB_SVC_GET_DEV_VER, (u64)0, (u64)0, (u64)0);
+	if (version <= RPMB_VER_INVALID || version >= RPMB_VER_MAX) {
+		pr_err("Error: invalid rpmb dev ver: 0x%x\n", version);
+		goto err_ioremap;
+	}
+
+	hisi_rpmb.dev_ver = version;
+
 	return 0;
 
 err_ioremap:
@@ -1839,40 +1935,40 @@ err_class_destroy:
 	class_destroy(rpmb_class);
 	return -1;
 }
+/*lint -e715*/
+static int hisi_rpmb_work_thread(void *arg)
+{
+	set_freezable();
+	while(!kthread_should_stop()){
+		wait_event_freezable(hisi_rpmb.wait, hisi_rpmb.wake_up_condition);
+		rpmb_work_routine();
+	}
+	return 0;
+}
+/*lint +e715*/
 static int __init hisi_rpmb_init(void)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0)
-	hisi_rpmb.rpmb_workqueue = alloc_workqueue(
-		"hisi-rpmb-queue",
-		WQ_MEM_RECLAIM | WQ_NON_REENTRANT | WQ_FREEZABLE, 1);
-#else
-	hisi_rpmb.rpmb_workqueue =
-		alloc_workqueue("hisi-rpmb-queue", WQ_MEM_RECLAIM | WQ_FREEZABLE, 1);
-#endif
-	if (!hisi_rpmb.rpmb_workqueue)
-		return -1;
+	struct sched_param param;
+	hisi_rpmb.wake_up_condition = 0;
+	init_waitqueue_head(&hisi_rpmb.wait);
+	hisi_rpmb.rpmb_task = kthread_create(hisi_rpmb_work_thread, NULL, "rpmb_task");
+	param.sched_priority = 1;
+	sched_setscheduler(hisi_rpmb.rpmb_task, SCHED_FIFO, &param);
+	wake_up_process(hisi_rpmb.rpmb_task);
 	rpmb_support_device = get_bootdevice_type();
-	INIT_WORK(&hisi_rpmb.rpmb_work, rpmb_work_routine);
-
 	if (hisi_rpmb_device_init())
-		goto err_destroy_workqueue;
+		return -1;
 	else
 		rpmb_device_init_status = RPMB_DEVICE_IS_READY;
+	wake_lock_init(&hisi_rpmb.wake_lock, WAKE_LOCK_SUSPEND,"hisi-rpmb-wakelock");
 
-	wake_lock_init(&hisi_rpmb.wake_lock, WAKE_LOCK_SUSPEND,
-		       "hisi-rpmb-wakelock");
 	#ifdef CONFIG_HISI_RPMB_TIME_DEBUG
 	hisi_rpmb_time_stamp_debugfs_init();
 	#endif
 	return 0;
-
-err_destroy_workqueue:
-	destroy_workqueue(hisi_rpmb.rpmb_workqueue);
-
-	return -1;
 }
 late_initcall(hisi_rpmb_init);
-MODULE_AUTHOR("zangleigang@hisilicon.com>");
+MODULE_AUTHOR("qianziye@huawei.com>");
 MODULE_DESCRIPTION("Hisilicon Secure RPMB.");
 MODULE_LICENSE("GPL v2");
 #pragma GCC diagnostic pop

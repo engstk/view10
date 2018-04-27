@@ -3615,6 +3615,7 @@ out:
  *
  * The reference to the input task_struct is released.
  */
+
 static struct task_struct *next_tid(struct task_struct *start)
 {
 	struct task_struct *pos = NULL;

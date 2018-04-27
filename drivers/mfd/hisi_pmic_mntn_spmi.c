@@ -167,7 +167,8 @@ static int hisi_pmic_ocp_special_handler(char *power_name, PMIC_MNTN_DESC *pmic_
 	}
 
 	do {
-		if (!strncmp(cur->power_name, power_name,strlen(power_name))){
+		if (!strncmp(cur->power_name, power_name,
+			((strlen(cur->power_name))>(strlen(power_name))?(strlen(cur->power_name)):(strlen(power_name))))){
 			pr_err("%s ocp special handler.\n", power_name);
 			ret = cur->handler(power_name);
 			if (ret) {

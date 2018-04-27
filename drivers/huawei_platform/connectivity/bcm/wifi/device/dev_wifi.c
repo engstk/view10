@@ -68,6 +68,11 @@ static struct WIFI_VCC_CMD_S vcc_setvol_cmd = {WIFI_REGU_SET_VOLTAGE, &wifi_vcci
 struct wifi_host_s *wifi_host;
 struct dev_wifi_handle dev_handle;
 
+#if defined(HW_WIFI_FACTORY_MODE)
+struct clk *g_pmic_clk = NULL;
+int init_wifi_pmic_clock(struct platform_device *pdev);
+#endif
+
 #ifdef CONFIG_DHD_USE_STATIC_BUF
 void *wlan_static_prot = NULL;
 void *wlan_static_scan_buf0 = NULL;
@@ -703,7 +708,7 @@ static ssize_t restore_wifi_wrong_action_debug(struct device *dev, struct device
         if(value == 1) {
             hwlog_info("%s enter should invoke wrong action handler\n", __func__);
             if(dev_handle.wl_trigger_disable_nmode_handle == NULL) {
-                hwlog_err("%s: handle has not been registered\n");
+                hwlog_err("handle has not been registered\n");
                 return -1;
             }
             dev_handle.wl_trigger_disable_nmode_handle();
@@ -1248,6 +1253,9 @@ int  wifi_power_probe(struct platform_device *pdev)
 	g_abs_enabled = of_property_read_bool(pdev->dev.of_node,"abs_enabled");
 	hwlog_err("%s: abs_enabled: %d\n", __func__, g_abs_enabled);
 #endif
+#if defined(HW_WIFI_FACTORY_MODE)
+	init_wifi_pmic_clock(pdev);
+#endif
 	return 0;
 err_platform_device_register:
 	gpio_free(wifi_host->wifi_wakeup_irq);
@@ -1270,6 +1278,39 @@ err_malloc_wifi_host:
 	return ret;
 }
 
+#if defined(HW_WIFI_FACTORY_MODE)
+int init_wifi_pmic_clock(struct platform_device *pdev) {
+	struct device *dev = &pdev->dev;
+
+	g_pmic_clk = devm_clk_get(dev, "clk_wifi");
+	if (IS_ERR_OR_NULL(g_pmic_clk)) {
+		hwlog_err("devm_clk_get: clk_wifi not found!\n");
+		g_pmic_clk = NULL;
+		return -EFAULT;
+	}
+	return 0;
+}
+
+int hw_enable_pmic_clock(int enable) {
+	int ret = 0;
+
+	if (NULL != g_pmic_clk) {
+		if (enable) {
+			ret = clk_prepare_enable(g_pmic_clk);
+			hwlog_err("hw_enable_pmic_clock: state:%d, ret:%d\n", enable, ret);
+		} else {
+			ret = 0;
+			clk_disable_unprepare(g_pmic_clk);
+			hwlog_err("hw_enable_pmic_clock: state:%d\n", enable);
+		}
+		return ret;
+	}
+	hwlog_err("hw_enable_pmic_clock: g_pmic_clk is NULL\n");
+	return -EFAULT;
+}
+EXPORT_SYMBOL(hw_enable_pmic_clock);
+
+#endif
 
 
 static struct of_device_id wifi_power_match_table[] = {

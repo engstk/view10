@@ -5,7 +5,6 @@
 
 #define	LPM3_CMD_LEN	2
 
-#define AUTO_ACK		1
 #define NO_AUTO_ACK		0
 
 struct clk_mbox_context {

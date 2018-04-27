@@ -92,15 +92,7 @@ typedef struct
     VOS_UINT32  AuthVer;             /*AuthorityVer*/
 }NV_MSP_AUTH_VER_STRU;
 
-/*****************************************************************************
-结构名    : NV_ID_CHR_CONFIG_CTRL_INFO_STRU
-结构说明  :总体控制NV,1个
-对应NVID: 1001 NV_ID_CHR_CONFIG_CTRL_INFO
 
-  1.日    期   : 2017年5月5日
-    作    者   : x00346372
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct _FAULTID_MAP
 {
     VOS_UINT16 usFaultId;
@@ -113,35 +105,19 @@ typedef struct _FAULTID_MAP
 typedef struct _CHR_CONFIG_CTRL
 {
     VOS_UINT32   ulFaultIdNum;
-    FAULTID_MAP  aucFaulIdMap[20];
+    FAULTID_MAP  aucFaulIdMap[24];
     
 }NV_ID_CHR_CONFIG_CTRL_INFO_STRU;
 
-/*****************************************************************************
-结构名    : NV_ID_CHR_C_CONFIG_CTRL_INFO_STRU
-结构说明  :总体控制NV,1个
-对应NVID: 1001 NV_ID_CHR_CONFIG_CTRL_INFO
 
-  1.日    期   : 2017年5月5日
-    作    者   : x00346372
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct _CHR_C_CONFIG_CTRL
 {
     VOS_UINT32   ulFaultIdNum;
-    FAULTID_MAP  aucFaulIdMap[22];
+    FAULTID_MAP  aucFaulIdMap[24];
     
 }NV_ID_CHR_C_CONFIG_CTRL_INFO_STRU;
 
-/*****************************************************************************
-结构名    : NV_ID_CHR_CONFIG_CTRL_INFO_STRU
-结构说明  :GUTLX使用的NV,255个
-对应NVID  : NV_ID_CHR_CONFIG_CTRL_INFO
 
-  1.日    期   : 2017年5月5日
-    作    者   : x00346372
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct _CHR_ALARM
 {
     VOS_UINT32 ulPid;

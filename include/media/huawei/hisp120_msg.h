@@ -24,11 +24,11 @@
 #define HISP120_MSG_H_INCLUDED
 
 #define MAX_INPUT_STREAM_NUM (2)
-#define MAX_STREAM_NUM       (9)
+#define MAX_STREAM_NUM       (10)
 #define ARSR_REQ_OUT_NUM     (2)
 #define NAME_LEN             (32)
 #define PARAS_LEN            (400)
-#define EXT_ACK_PARAS_LEN    (64)
+#define EXT_ACK_PARAS_LEN    (68)
 #define EVENT_PARAMS_LEN     (400)
 #define PIPELINE_COUNT       (2)
 
@@ -66,9 +66,8 @@ typedef enum
     STREAM_ISP_RAW_OUT          = 6,
     STREAM_RAW_OUT              = 7,
     STREAM_UT_OUT               = 8,
-    STREAM_POS_MAX              = 9,
-
     STREAM_ISP_PD               = 9,
+    STREAM_POS_MAX              = 10,
 } stream_pos_e;
 
 typedef enum
@@ -119,10 +118,12 @@ typedef enum
     COMMAND_RELEASE_DEPTHISP,
     COMMAND_GET_API_VERSION,
     COMMAND_STREAM_ON,
+    COMMAND_STREAM_OFF,
     COMMAND_ARSR_REQUEST,
     COMMAND_MOTION_SENSOR_MAP_REQUEST,
     COMMAND_MEM_POOL_INIT_REQUEST,//FIXME:DIFFER, not in isp, for compilation
     COMMAND_MEM_POOL_DEINIT_REQUEST,//FIXME:DIFFER, not in isp, for compilation
+    COMMAND_ISP_CPU_POWER_OFF_REQUEST,
 
     /* Response items. */
     QUERY_CAPABILITY_RESPONSE = 0x2000,
@@ -153,10 +154,12 @@ typedef enum
     RELEASE_DEPTHISP_RESPONSE,
     GET_ISP_VERSION_RESPONSE,
     STREAM_ON_RESPONSE,
+    STREAM_OFF_RESPONSE,
     ARSR_REQUEST_RESPONSE,
     MOTION_SENSOR_MAP_RESPONSE,
     MEM_POOL_INIT_RESPONSE, //FIXME:DIFFER, not in isp, for compilation
     MEM_POOL_DEINIT_RESPONSE,//FIXME:DIFFER, not in isp, for compilation
+    ISP_CPU_POWER_OFF_RESPONSE,
     /* Event items sent to AP. */
     MSG_EVENT_SENT           = 0x3000,
 } api_id_e;
@@ -166,13 +169,13 @@ typedef enum
     PRIMARY_CAMERA = 0,
     FRONT_CAMERA,
     SECONDARY_CAMERA,
+    THIRD_CAMERA,
     IR_CAMERA,
 } camera_id_t;
 typedef enum _map_pool_usage_e{
     MAP_POOL_USAGE_FW = 0,
     MAP_POOL_USAGE_ISP_FW,
     MAP_POOL_USAGE_ISP,
-    MAP_POOL_USAGE_SEC_ISP_FW,
     MAP_POOL_USAGE_MAX,
 } map_pool_usage_e;
 
@@ -235,6 +238,7 @@ typedef struct _msg_req_acquire_camera_t
     unsigned int buffer_size;
     unsigned int info_buffer;
     unsigned int info_count;
+    unsigned int factory_calib_buffer;
 } msg_req_acquire_camera_t;
 
 typedef struct _msg_ack_acquire_camera_t
@@ -344,6 +348,7 @@ typedef struct _stream_config_t
     unsigned int height;
     unsigned int stride;
     unsigned int format;
+    unsigned int secure;
 } stream_config_t;
 
 typedef struct _msg_req_usecase_config_t
@@ -369,11 +374,22 @@ typedef struct _msg_req_stream_on_t
     unsigned int cam_id;
 } msg_req_stream_on_t;
 
+typedef struct _msg_req_stream_off_t
+{
+    unsigned int cam_id;
+} msg_req_stream_off_t;
+
 typedef struct _msg_ack_stream_on_t
 {
     unsigned int cam_id;
     int          status;
 } msg_ack_stream_on_t;
+
+typedef struct _msg_ack_stream_off_t
+{
+    unsigned int cam_id;
+    int          status;
+} msg_ack_stream_off_t;
 
 typedef struct _msg_req_get_otp_t
 {
@@ -578,6 +594,7 @@ typedef struct _msg_ack_test_case_interface_t
 typedef struct _msg_req_flush_t
 {
     unsigned int cam_id;
+    unsigned int is_hotplug;
 } msg_req_flush_t;
 
 typedef struct _msg_ack_flush_t
@@ -803,6 +820,21 @@ typedef enum
     SUBCMD_SET_SWPD_KEY = 159,
     SUBCMD_GET_SWPD_KEY = 160,
     SUBCMD_GET_SENSOR_COORD = 161,
+    SUBCMD_SET_AE_SENSOR_VERIFY_MODE = 162,
+    SUBCMD_STREAM_REF_VALUE = 163,
+    SUBCMD_SET_AF_OTPSTART_MODE = 164,
+    SUBCMD_FOV_SCALE_RATIO_STATUS = 165,
+    SUBCMD_SET_PD_OFFSET_CALIB_MMI_ENABLE = 166,
+    SUBCMD_SET_PD_OFFSET_CALIB_RESULT = 167,
+    SUBCMD_SET_FORCE_CAF = 168,
+    SUBCMD_SET_RAW_READBACK_ADDR = 169,
+    //front camera awb
+    SUBCMD_SET_AP_AWB_GAIN = 170,
+    SUBCMD_SET_AP_AWB_WP = 171,
+    SUBCMD_SET_AP_AWB_COLOR_ZONE = 172,
+    SUBCMD_SET_AP_AWB_INIT_PARAM = 173,
+    SUBCMD_SD_RESULTS = 174,
+    SUBCMD_MANUAL_MAX_EXPO_TIME = 175,
 
     SUBCMD_MAX,
     SUBCMD_SET_HFBC_ALIGMENT, // not support in hisp120, for common code compilation
@@ -980,6 +1012,7 @@ typedef struct _isp_msg_t
         msg_req_release_camera_t        req_release_camera;
         msg_req_usecase_config_t        req_usecase_config;
         msg_req_stream_on_t             req_stream_on;
+        msg_req_stream_off_t            req_stream_off;
         msg_req_get_otp_t               req_get_otp;
         msg_req_request_t               req_request;
         msg_req_arsr_request_t          req_arsr_request;
@@ -1012,6 +1045,7 @@ typedef struct _isp_msg_t
         msg_ack_release_camera_t        ack_release_camera;
         msg_ack_usecase_config_t        ack_usecase_config;
         msg_ack_stream_on_t             ack_stream_on;
+        msg_ack_stream_off_t            ack_stream_off;
         msg_ack_get_otp_t               ack_get_otp;
         msg_ack_request_t               ack_request;
         msg_ack_arsr_request_t          ack_arsr_request;

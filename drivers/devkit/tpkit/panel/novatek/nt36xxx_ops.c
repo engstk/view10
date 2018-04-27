@@ -335,34 +335,6 @@ void nvt_kit_sw_reset_idle(void)
 	novatek_ts_kit_i2c_write(nvt_ts->client, I2C_HW_Address, buf, 2);
 
 	msleep(10);
-
-	nvt_kit_set_i2c_debounce();
-
-	//---for debug---
-	// Initiate Flash Block
-	buf[0] = 0x00;
-	buf[1] = 0x00;
-	buf[2] = I2C_FW_Address;
-	novatek_ts_kit_i2c_write(nvt_ts->client, I2C_HW_Address, buf, 2);
-	msleep(5);
-
-	// Check 0xAA (Initiate Flash Block)
-	buf[0] = 0x00;
-	buf[1] = 0x00;
-	novatek_ts_kit_i2c_read(nvt_ts->client, I2C_HW_Address, buf, 2);
-	TS_LOG_INFO("%s: status=0x%02X\n", __func__, buf[1]);
-
-	//---write i2c cmds to Mode flag---
-	buf[0] = 0xFF;
-	buf[1] = 0x01;
-	buf[2] = 0xF6;
-	novatek_ts_kit_i2c_write(nvt_ts->client, I2C_BLDR_Address, buf, 3);
-
-	//---read Mode flag---
-	buf[0] = 0x18;
-	novatek_ts_kit_i2c_read(nvt_ts->client, I2C_BLDR_Address, buf, 2);
-	TS_LOG_INFO("%s: mode_fg=0x%02X\n", __func__, buf[1]);
-
 }
 
 /*******************************************************
@@ -891,7 +863,7 @@ static int novatek_parse_dts(struct device_node *device,
 {
 	int retval = NO_ERR;
 	int read_val = 0;
-	uint8_t chip_id = 0;
+	uint32_t chip_id = 0;
 
 	TS_LOG_INFO("%s enter\n", __func__);
 
@@ -2131,7 +2103,7 @@ static int novatek_chip_detect( struct ts_kit_platform_data *data)
 check_err:
 	novatek_power_off();
 	if(nvt_ts->pctrl)
-            devm_pinctrl_put(nvt_ts->pctrl);
+	    devm_pinctrl_put(nvt_ts->pctrl);
 	nvt_ts->pctrl = NULL;
 	nvt_ts->pins_default = NULL;
 	nvt_ts->pins_idle= NULL;

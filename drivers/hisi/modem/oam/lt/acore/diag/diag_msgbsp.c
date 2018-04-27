@@ -56,41 +56,24 @@
 #include "nv_stru_sys.h"
 #include "nv_stru_gucnas.h"
 #include "acore_nv_stru_gucnas.h"
+#include "soc_socp_adapter.h"
+#include "diag_connect.h"
 
 #define    THIS_FILE_ID        MSP_FILE_ID_DIAG_MSGBSP_C
+
 static VOS_BOOL g_ulPrivilegeRslt = FALSE;
 VOS_UINT32 g_DiagHdsCmdNumC = 0;
 VOS_UINT32 g_DiagHdsCmdListC[DIAG_HDS_CMD_MAX] = {0};
 VOS_UINT32 g_DiagHdsCmdNumA = 0;
 VOS_UINT32 g_DiagHdsCmdListA[DIAG_HDS_CMD_MAX] = {0};
 DIAG_FRAME_INFO_STRU g_DiagNvAuthHead = {{0}};
-
-VOS_UINT32 g_aulNvAuthIdList[] =
+DIAG_BSP_CTRL   g_DiagBspCtrl =
 {
-    en_NV_Item_IMEI,
-    en_NV_Item_USB_Enum_Status,
-    en_NV_Item_CustomizeSimLockPlmnInfo,
-    en_NV_Item_CardlockStatus,
-    en_NV_Item_CustomizeSimLockMaxTimes,
-    en_NV_Item_CustomizeService,
-    en_NV_Item_PRODUCT_ID,
-    en_NV_Item_PREVENT_TEST_IMSI_REG,
-    en_NV_Item_AT_SHELL_OPEN_FLAG,
+    1,
+    SOCP_CODER_SRC_BSP_ACORE,
 };
 
-/*****************************************************************************
- Function Name   : NvRdProc
- Description     : 该函数用于处理从NvProcEntry传进来的读NV命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-    2.c00326366      2015-06-10  新增多条NV的读取处理
-
-*****************************************************************************/
 /*lint -save -e433*/
 VOS_UINT32 diag_NvRdProc(VOS_UINT8* pstReq)
 {
@@ -109,18 +92,27 @@ VOS_UINT32 diag_NvRdProc(VOS_UINT8* pstReq)
 
     stDiagInfo.ulMsgType = DIAG_MSG_TYPE_BSP;
 
-    pstNVQryReq = (DIAG_CMD_NV_QRY_REQ_STRU*)(pstDiagHead->aucData + sizeof(MSP_DIAG_DATA_REQ_STRU));
-    if(0 == pstNVQryReq->ulCount)
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(DIAG_CMD_NV_QRY_REQ_STRU))
     {
-        diag_printf("[%s]:ulNVId=0x%x,ulNVLen=%d!\n",__FUNCTION__, pstNVQryReq->ulNVId[i], ulNVLen);
-        ret = ERR_MSP_DIAG_NV_NUM_ERR;
+        diag_error("Data error! ulDataLen: 0x%x \n", pstDiagHead->ulMsgLen);
+        ret = ERR_MSP_INVALID_PARAMETER;
         goto DIAG_ERROR;
     }
-    
+
+    pstNVQryReq = (DIAG_CMD_NV_QRY_REQ_STRU*)(pstDiagHead->aucData + sizeof(MSP_DIAG_DATA_REQ_STRU));
+    if((0 == pstNVQryReq->ulCount)
+        || (pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU)
+            + sizeof(DIAG_CMD_NV_QRY_REQ_STRU) + pstNVQryReq->ulCount*sizeof(VOS_UINT32)))
+    {
+        diag_error("Data error!, count: 0x%x ulDataLen: 0x%x \n",pstNVQryReq->ulCount, pstDiagHead->ulMsgLen);
+        ret = ERR_MSP_INVALID_PARAMETER;
+        goto DIAG_ERROR;
+    }
+
     for(i = 0; i < pstNVQryReq->ulCount; i++)
     {
         /*根据请求ID获取NV项长度*/
-        ret = NV_GetLength(pstNVQryReq->ulNVId[i], &ulNVLen);
+        ret = mdrv_nv_get_length(pstNVQryReq->ulNVId[i], &ulNVLen);
         if(ERR_MSP_SUCCESS != ret)
         {
             diag_printf("[%s]:ulNVId=0x%x,ulNVLen=%d!\n",__FUNCTION__, pstNVQryReq->ulNVId[i], ulNVLen);
@@ -133,9 +125,9 @@ VOS_UINT32 diag_NvRdProc(VOS_UINT8* pstReq)
     /* DIAG_CMD_NV_QRY_CNF_STRU的实际长度 */
     ulTotalSize += (sizeof(DIAG_CMD_NV_QRY_CNF_STRU) - sizeof(VOS_UINT32) - sizeof(VOS_UINT32));
 
-    /*lint -save -e423 *//*432为内存泄露，经检视此处无内存泄露*/   
-    pstNVQryCnf = VOS_MemAlloc(MSP_PID_DIAG_APP_AGENT, DYNAMIC_MEM_PT, ulTotalSize);    
-    /*lint -restore  */  
+    /*lint -save -e423 *//*432为内存泄露，经检视此处无内存泄露*/
+    pstNVQryCnf = VOS_MemAlloc(MSP_PID_DIAG_APP_AGENT, DYNAMIC_MEM_PT, ulTotalSize);
+    /*lint -restore  */
     if(NULL  == pstNVQryCnf)
     {
         diag_printf("[%s]:malloc error!\n",__FUNCTION__);
@@ -147,11 +139,11 @@ VOS_UINT32 diag_NvRdProc(VOS_UINT8* pstReq)
 
     pData = (VOS_UINT8*)(&pstNVQryCnf->ulNVId);
     ulOffset = 0;
-    
+
     for(i = 0; i < pstNVQryReq->ulCount; i++)
     {
         /*根据请求ID获取NV项长度*/
-        ret = NV_GetLength(pstNVQryReq->ulNVId[i], &ulNVLen);
+        ret = mdrv_nv_get_length(pstNVQryReq->ulNVId[i], &ulNVLen);
         if(ERR_MSP_SUCCESS != ret)
         {
             diag_printf("[%s]:ulNVId=0x%x,ulNVLen=%d!\n",__FUNCTION__, pstNVQryReq->ulNVId[i], ulNVLen);
@@ -165,13 +157,13 @@ VOS_UINT32 diag_NvRdProc(VOS_UINT8* pstReq)
         *(VOS_UINT32*)(pData + ulOffset) = ulNVLen; /* [false alarm]:屏蔽Fortify */
         ulOffset += sizeof(VOS_UINT32);
 
-        /*lint -save -e662 */   
-        ret = NV_ReadEx(pstNVQryReq->ulModemid, pstNVQryReq->ulNVId[i], (pData + ulOffset), ulNVLen);
-        /*lint -restore  */  
+        /*lint -save -e662 */
+        ret = mdrv_nv_readex(pstNVQryReq->ulModemid, pstNVQryReq->ulNVId[i], (pData + ulOffset), ulNVLen);
+        /*lint -restore  */
         if(ret != ERR_MSP_SUCCESS)
         {
             diag_printf("[%s]:NV READ ERR 0x%x,ulNVId=0x%x\n",__FUNCTION__, ret, pstNVQryReq->ulNVId[i]);
-            ret = ERR_MSP_NV_ERROR_READ;
+            //ret = ERR_MSP_NV_ERROR_READ;
             goto DIAG_ERROR;
         }
 
@@ -208,17 +200,7 @@ DIAG_ERROR:
 }
  /*lint -restore */
 
-/*****************************************************************************
- Function Name   : diag_GetNvListProc
- Description     : HIMS获取NV list命令的处理接口
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.c00326366      2012-11-22  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_GetNvListProc(VOS_UINT8* pstReq)
 {
     VOS_UINT32 ret, ulNvNum, ulTotalLen;
@@ -233,7 +215,7 @@ VOS_UINT32 diag_GetNvListProc(VOS_UINT8* pstReq)
 
     stDiagInfo.ulMsgType = DIAG_MSG_TYPE_BSP;
 
-    ulNvNum = NV_GetNVIdListNum();
+    ulNvNum = mdrv_nv_get_nvid_num();
     if (0 == ulNvNum)
     {
         diag_printf("[%s]: ulNvNum=%d!\n",__FUNCTION__, ulNvNum);
@@ -254,7 +236,7 @@ VOS_UINT32 diag_GetNvListProc(VOS_UINT8* pstReq)
     }
 
     /*获取每个NV项的ID和长度*/
-    ret = NV_GetNVIdList(pstNVCnf->astNvList);
+    ret = mdrv_nv_get_nvid_list(pstNVCnf->astNvList);
     if (NV_OK != ret)
     {
         VOS_MemFree(MSP_PID_DIAG_APP_AGENT, pstNVCnf);
@@ -286,24 +268,14 @@ DIAG_ERROR:
     return ret;
 }
 
-/*****************************************************************************
- Function Name   : diag_InitAuthVariable
- Description     : 初始化鉴权全局变量
- Input           : None
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.c00326366      2012-11-22  Draft Enact
-
-*****************************************************************************/
 VOS_VOID diag_InitAuthVariable(VOS_VOID)
 {
     IMEI_STRU stIMEI;
     VOS_UINT8 aucDefaultIMEI[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
     /*假如IMEI为默认值，则不需要鉴权*/
-    if (NV_OK == NV_Read(en_NV_Item_IMEI, (VOS_VOID*)&stIMEI, sizeof(stIMEI)))
+    if (NV_OK ==  mdrv_nv_read(en_NV_Item_IMEI, (VOS_VOID*)&stIMEI, sizeof(stIMEI)))
     {
         if (0 == VOS_MemCmp((VOS_CHAR*)aucDefaultIMEI, &stIMEI, sizeof(stIMEI)))
         {
@@ -314,24 +286,22 @@ VOS_VOID diag_InitAuthVariable(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- Function Name   : diag_NvAuthProc
- Description     : 判断此NV项是否可以进行修改
- Input           : ulNvId
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.c00326366      2012-11-22  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_IsAuthNv(VOS_UINT32 ulNvId)
 {
     VOS_UINT32 i;
+    VOS_UINT32 aulNvAuthIdNum;
+    VOS_UINT32 * aulNvAuthIdList;
 
-    for (i = 0; i < (sizeof(g_aulNvAuthIdList)/sizeof(VOS_UINT32)); i++)
+    mdrv_nv_get_nvauth_list(&aulNvAuthIdList, &aulNvAuthIdNum);
+    if((aulNvAuthIdList == NULL) || (aulNvAuthIdNum == 0))
     {
-        if (ulNvId == g_aulNvAuthIdList[i])
+        return VOS_NO;
+    }
+
+    for (i = 0; i < aulNvAuthIdNum; i++)
+    {
+        if (ulNvId == aulNvAuthIdList[i])
         {
             if (TRUE == g_ulPrivilegeRslt)
             {
@@ -344,21 +314,7 @@ VOS_UINT32 diag_IsAuthNv(VOS_UINT32 ulNvId)
     return VOS_YES;
 }
 
-/*****************************************************************************
- Function Name   : diag_NvWrProc
- Description     : 该函数用于处理从NvProcEntry传进来的写NV命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-    2.c00326366      2015-06-10  新增多条NV的写处理，并把写操作转到C核处理
-                     转到C核处理的原因: 1. 避免NV写接口阻塞导致其他DIAG命令处理延迟
-                                        2. NV鉴权的操作在C核，鉴权状态在C核记录
-
-*****************************************************************************/
 VOS_UINT32 diag_NvWrProc(VOS_UINT8* pstReq)
 {
     VOS_UINT32 ret;
@@ -369,25 +325,36 @@ VOS_UINT32 diag_NvWrProc(VOS_UINT8* pstReq)
     VOS_UINT32 i = 0;
     VOS_UINT32 ulOffset = 0;
     VOS_UINT32 ulNvid, ulLen;
-    VOS_UINT8 *pData;
+    DIAG_NV_WRITE_TABLE_STRU *pstNvWrTable = NULL;
 
     pstDiagHead = (DIAG_FRAME_INFO_STRU*)(pstReq);
     mdrv_diag_PTR(EN_DIAG_PTR_NV_WR_PROC, 1, pstDiagHead->ulCmdId, 0);
+
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(DIAG_CMD_NV_WR_REQ_STRU))
+    {
+        diag_error("datalen too small ,datalen=0x%x\n", pstDiagHead->ulMsgLen);
+        return ERR_MSP_INVALID_PARAMETER;
+    }
 
     pstNVWRReq = (DIAG_CMD_NV_WR_REQ_STRU*)(pstDiagHead->aucData + sizeof(MSP_DIAG_DATA_REQ_STRU));
 
     stDiagInfo.ulMsgType = DIAG_MSG_TYPE_BSP;
 
-    pData = (VOS_UINT8*)(&pstNVWRReq->ulNVId);
+    ulOffset = sizeof(MSP_DIAG_DATA_REQ_STRU) +  sizeof(DIAG_CMD_NV_WR_REQ_STRU) - sizeof(DIAG_NV_WRITE_TABLE_STRU);
+    pstNvWrTable = (DIAG_NV_WRITE_TABLE_STRU *)(pstDiagHead->aucData + ulOffset);
 
     for(i = 0; i < pstNVWRReq->ulCount; i++)
     {
-        ulNvid    = *(VOS_UINT32*)(pData + ulOffset);
-        ulOffset += sizeof(VOS_UINT32);
+        if(pstDiagHead->ulMsgLen < ulOffset)
+        {
+            diag_error("rev datalen is small,len:0x%x cur offset:0x%x\n", pstDiagHead->ulMsgLen, ulOffset);
+            ret = ERR_MSP_INALID_LEN_ERROR;
+            goto DIAG_ERROR2;
+        }
 
-        ulLen     = *(VOS_UINT32*)(pData + ulOffset);
-        ulOffset += sizeof(VOS_UINT32);
-        
+        ulNvid    = pstNvWrTable->ulNVId;
+        ulLen     = pstNvWrTable->ulDataSize;
+
         if (VOS_YES != diag_IsAuthNv(ulNvid))
         {
             ret = ERR_MSP_DIAG_NOT_AUTH_NV_ERR;
@@ -395,12 +362,12 @@ VOS_UINT32 diag_NvWrProc(VOS_UINT8* pstReq)
             goto DIAG_ERROR2;
         }
 
-        printk(KERN_ERR "NV Write ulNVId=0x%x\n", ulNvid);
-      
+        diag_crit("NV Write ulNVId=0x%x\n", ulNvid);
+
         /*写入NV项*/
         /*lint -save -e662 */
-        ret = NV_WriteEx(pstNVWRReq->ulModemid, ulNvid, (pData + ulOffset), ulLen);
-        /*lint -restore  */  
+        ret = mdrv_nv_writeex(pstNVWRReq->ulModemid, ulNvid, pstNvWrTable->aucData, ulLen);
+        /*lint -restore  */
         if(ret != ERR_MSP_SUCCESS)
         {
             printk(KERN_ERR "[%s]:NV Write ERR 0x%x,ulNVId=0x%x\n",__FUNCTION__, ret, ulNvid);
@@ -415,7 +382,8 @@ VOS_UINT32 diag_NvWrProc(VOS_UINT8* pstReq)
             ret = ERR_MSP_DIAG_FLUSH_NV_ERR;
             goto DIAG_ERROR2;
         }
-        ulOffset += ulLen;
+        ulOffset += sizeof(DIAG_NV_WRITE_TABLE_STRU) + ulLen;
+        pstNvWrTable = (DIAG_NV_WRITE_TABLE_STRU *)(pstDiagHead->aucData + ulOffset);
     }
 
     DIAG_MSG_COMMON_PROC(stDiagInfo, stNVWRCnf, pstDiagHead);
@@ -448,6 +416,12 @@ VOS_VOID diag_AuthNvCfg(MsgBlock* pMsgBlock)
     MTA_DIAG_RSA_VERIFY_CNF_STRU *pstMsg = (MTA_DIAG_RSA_VERIFY_CNF_STRU *)pMsgBlock;
 
     mdrv_diag_PTR(EN_DIAG_PTR_AUTH_NV_CFG, 0, 0, 0);
+
+    if( pMsgBlock->ulLength + VOS_MSG_HEAD_LENGTH < sizeof(MTA_DIAG_RSA_VERIFY_CNF_STRU))
+    {
+        diag_error("len error!:0x%x\n", pMsgBlock->ulLength);
+        return;
+    }
 
     if (TRUE == pstMsg->ulVerifyRslt)
     {
@@ -487,8 +461,21 @@ VOS_UINT32 diag_NvAuthProc(VOS_UINT8* pstReq)
 
     mdrv_diag_PTR(EN_DIAG_PTR_NV_AUTH_PROC, 1, pstNvHead->ulCmdId, 0);
 
+    if(pstNvHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(pstAuthReq->ulLen))
+    {
+        diag_error("data too small datalen:0x%x\n", pstNvHead->ulMsgLen);
+        return ERR_MSP_INALID_LEN_ERROR;
+    }
+
     pstAuthReq = (DIAG_CMD_NV_AUTH_REQ_STRU*)(pstNvHead->aucData + sizeof(MSP_DIAG_DATA_REQ_STRU));
 
+    /* 工具下发的不对 pstNvHead->ulMsgLen == 0xC，暂时注释掉，工具上库后打开
+    if(pstNvHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(pstAuthReq->ulLen) + pstAuthReq->ulLen)
+    {
+        diag_error("data too small datalen:0x%x auth len:0x%x\n", pstNvHead->ulMsgLen, pstAuthReq->ulLen);
+        return ERR_MSP_INALID_LEN_ERROR;
+    }
+    */
     pstNvAuth = (DIAG_MTA_RSA_VERIFY_REQ_STRU *)VOS_AllocMsg(MSP_PID_DIAG_APP_AGENT,(VOS_INT)(sizeof(DIAG_MTA_RSA_VERIFY_REQ_STRU) - VOS_MSG_HEAD_LENGTH));
     if(pstNvAuth == NULL)
     {
@@ -498,7 +485,7 @@ VOS_UINT32 diag_NvAuthProc(VOS_UINT8* pstReq)
 
     pstNvAuth->ulReceiverPid  = I0_UEPS_PID_MTA;
     pstNvAuth->ulMsgId        = ID_DIAG_MTA_RSA_VERIFY_REQ;
-    (VOS_VOID)VOS_MemSet_s(pstNvAuth->aucSecString, MTA_RSA_CIPHERTEXT_LEN, 0, MTA_RSA_CIPHERTEXT_LEN);
+    (VOS_VOID)VOS_MemSet_s(pstNvAuth->aucSecString, sizeof(pstNvAuth->aucSecString), 0, sizeof(pstNvAuth->aucSecString));
     (VOS_VOID)VOS_MemCpy_s(pstNvAuth->aucSecString, sizeof(pstNvAuth->aucSecString),pstAuthReq->aucAuth, pstAuthReq->ulLen);
 
     if(ERR_MSP_SUCCESS != VOS_SendMsg(MSP_PID_DIAG_APP_AGENT, pstNvAuth))
@@ -519,7 +506,7 @@ VOS_UINT32 diag_NvAuthProc(VOS_UINT8* pstReq)
 
     else
     {
-        VOS_MemCpy_s(&g_DiagNvAuthHead, sizeof(g_DiagNvAuthHead), pstNvHead, sizeof(DIAG_FRAME_INFO_STRU));
+        VOS_MemCpy_s(&g_DiagNvAuthHead, sizeof(g_DiagNvAuthHead), pstNvHead, sizeof(*pstNvHead));
         return ERR_MSP_SUCCESS;
     }
 }
@@ -528,8 +515,14 @@ VOS_VOID diag_BspRecvCmdList(MsgBlock* pMsgBlock)
 {
     DIAG_BSP_CMDLIST_STRU *pstMsg = (DIAG_BSP_CMDLIST_STRU *)pMsgBlock;
 
+    if( pstMsg->ulLength  <  sizeof(pstMsg->ulMsgId) + sizeof(pstMsg->ulCmdNum) + pstMsg->ulCmdNum * sizeof(VOS_UINT32))
+    {
+        diag_printf("rec datalen is too small,len:0x%x\n", pstMsg->ulLength);
+        return;
+    }
+
     g_DiagHdsCmdNumC = pstMsg->ulCmdNum;
-    VOS_MemCpy_s(g_DiagHdsCmdListC, DIAG_HDS_CMD_MAX*sizeof(VOS_UINT32),  pstMsg->ulCmdList, g_DiagHdsCmdNumC*sizeof(VOS_UINT32));
+    VOS_MemCpy_s(g_DiagHdsCmdListC, sizeof(g_DiagHdsCmdListC),  pstMsg->ulCmdList, g_DiagHdsCmdNumC*sizeof(VOS_UINT32));
 
     diag_printf("%s Rcv ccore cmd list, num: 0x%x\n",__FUNCTION__, g_DiagHdsCmdNumC);
 
@@ -651,6 +644,41 @@ DIAG_ERROR:
 
 }
 
+VOS_UINT32 diag_BspConnMgr(VOS_UINT8 *pData)
+{
+    DIAG_CONN_MSG_SEND_T *pstRevMsg;
+    VOS_UINT32 ulRet;
+    DIAG_CONNECT_RESULT stCnf;
+
+    pstRevMsg = (DIAG_CONN_MSG_SEND_T *)pData;
+
+    stCnf.ulChannelId = g_DiagBspCtrl.ulChannelId;
+    if(ID_MSG_DIAG_CMD_CONNECT_REQ == pstRevMsg->ulMsgId)
+    {
+        ulRet = (VOS_UINT32)mdrv_hds_printlog_conn();
+        if(ulRet)
+        {
+            stCnf.ulResult = ulRet;
+            return diag_ConnCnf(DIAG_CONN_ID_ACPU_BSP, pstRevMsg->ulSn, g_DiagBspCtrl.ulChannelNum, &stCnf);
+        }
+
+        stCnf.ulResult = (VOS_UINT32)mdrv_hds_translog_conn();
+        return diag_ConnCnf(DIAG_CONN_ID_ACPU_BSP, pstRevMsg->ulSn, g_DiagBspCtrl.ulChannelNum, &stCnf);
+    }
+    else
+    {
+
+        ulRet = (VOS_UINT32)mdrv_hds_printlog_disconn();
+        if(ulRet)
+        {
+            stCnf.ulResult = ulRet;
+            return diag_ConnCnf(DIAG_CONN_ID_ACPU_BSP, pstRevMsg->ulSn, g_DiagBspCtrl.ulChannelNum, &stCnf);
+        }
+
+        stCnf.ulResult = (VOS_UINT32)mdrv_hds_translog_disconn();
+        return diag_ConnCnf(DIAG_CONN_ID_ACPU_BSP, pstRevMsg->ulSn, g_DiagBspCtrl.ulChannelNum, &stCnf);
+    }
+}
 /*****************************************************************************
  Function Name   : diag_BspMsgInit
  Description     : MSP dsp部分初始化
@@ -662,12 +690,20 @@ DIAG_ERROR:
 *****************************************************************************/
 VOS_VOID diag_BspMsgInit(VOS_VOID)
 {
+    VOS_UINT32 ulRet;
+
     /*注册message消息回调*/
     DIAG_MsgProcReg(DIAG_MSG_TYPE_BSP,diag_BspMsgProc);
     mdrv_hds_cnf_register((hds_cnf_func)DIAG_MsgReport);
     diag_nvInit();
     diag_fsInit();
     diag_BspCmdListInit();
+
+    ulRet = diag_ConnMgrSendFuncReg(DIAG_CONN_ID_ACPU_BSP, g_DiagBspCtrl.ulChannelNum, &g_DiagBspCtrl.ulChannelId, diag_BspConnMgr);
+    if(ulRet)
+    {
+        diag_printf("bsp reg connect msg fail, ret:0x%x\n", ulRet);
+    }
 }
 
 VOS_VOID diag_nvInit(VOS_VOID)

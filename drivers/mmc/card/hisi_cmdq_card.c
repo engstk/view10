@@ -1400,6 +1400,31 @@ static void mmc_cmdq_req_work(struct work_struct *work)
 #endif
 
 /**
+ * mmc_blk_cmdq_dump_status
+ * @q: request queue
+ * @dump_type: dump scenario
+ *	BLK_DUMP_WARNING: scenario of io latency warning
+ *	BLK_DUMP_PANIC: scenario of system panic
+ *
+ */
+static void mmc_blk_cmdq_dump_status(struct request_queue *q, enum BLK_DUMP_TYPE dump_type)
+{
+	struct mmc_card *card;
+	struct mmc_host *host;
+	struct mmc_queue *mq = q->queuedata;
+	if (!mq)
+		return;
+	card = mq->card;
+	if (!card)
+		return;
+	host = card->host;
+	if (!host)
+		return;
+	pr_err("active_reqs = 0x%lx, data_active_reqs = 0x%lx, curr_state = 0x%lx\r\n",
+		host->cmdq_ctx.active_reqs, host->cmdq_ctx.data_active_reqs, host->cmdq_ctx.curr_state);
+}
+
+/**
  * mmc_blk_cmdq_setup_queue
  * @mq: mmc queue
  * @card: card to attach to this queue
@@ -1428,6 +1453,7 @@ void mmc_blk_cmdq_setup_queue(struct mmc_queue *mq, struct mmc_card *card)
 	blk_queue_io_latency_check_enable(mq->queue,1);
 	blk_queue_io_latency_statistic_enable(mq->queue,0);
 	blk_queue_io_latency_warning_threshold(mq->queue, 2000);
+	blk_lld_dump_register(mq->queue, mmc_blk_cmdq_dump_status, false);
 }
 
 

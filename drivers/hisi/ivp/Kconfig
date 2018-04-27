@@ -4,7 +4,7 @@ config HISI_IVP
      bool "hisilicon ivp support"
      default n
      help
-          ivp driver for hi3650.
+          ivp driver for ivpv100.
 
 config IVP_SMMU
 	bool "Hisilicon IVP SMMU Support"
@@ -21,21 +21,29 @@ config IVP_SMMU_TEST
 
 choice
 	prompt "IVP Platform"
-	default IVP_HI3650
+	default IVP_IVPV100
 	depends on HISI_IVP
 	help
 	  select ivp platform private setting
 
-config IVP_KIRIN970
-	bool "kirin970"
+config IVP_IVPV160
+	bool "ivpv160"
 	depends on HISI_IVP
 
-config IVP_HI3660
-	bool "hi3660"
+config IVP_IVPV200
+	bool "ivpv200"
 	depends on HISI_IVP
 
-config IVP_HI3650
-	bool "hi3650"
+config IVP_IVPV150
+	bool "ivpv150"
+	depends on HISI_IVP
+
+config IVP_IVPV100
+	bool "ivpv100"
+	depends on HISI_IVP
+	
+config IVP_IVPV120
+	bool "ivpv120"
 	depends on HISI_IVP
 endchoice
 endmenu

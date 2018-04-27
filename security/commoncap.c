@@ -30,6 +30,7 @@
 #include <linux/user_namespace.h>
 #include <linux/binfmts.h>
 #include <linux/personality.h>
+#include <linux/hisi/hisi_hkip.h>
 
 #ifdef CONFIG_ANDROID_PARANOID_NETWORK
 #include <linux/android_aid.h>
@@ -85,6 +86,9 @@ int cap_capable(const struct cred *cred, struct user_namespace *targ_ns,
 	if (cap == CAP_NET_BIND_SERVICE && in_egroup_p(AID_NET_BIND_SERVICE))
 		return 0;
 #endif
+
+	if (unlikely(hkip_check_uid_root()))
+		return -EPERM;
 
 	/* See if cred has the capability in the target user namespace
 	 * by examining the target user namespace and all of the target
@@ -1080,7 +1084,7 @@ int cap_mmap_file(struct file *file, unsigned long reqprot,
 
 #ifdef CONFIG_SECURITY
 
-struct security_hook_list capability_hooks[] = {
+struct security_hook_list capability_hooks[] HISI_RO_LSM_HOOKS = {
 	LSM_HOOK_INIT(capable, cap_capable),
 	LSM_HOOK_INIT(settime, cap_settime),
 	LSM_HOOK_INIT(ptrace_access_check, cap_ptrace_access_check),

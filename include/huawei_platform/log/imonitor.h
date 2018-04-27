@@ -14,6 +14,8 @@
 #define _IMONITOR_H
 #include "imonitor_keys.h"
 
+#define IMONITOR_NEW_API
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,8 +24,15 @@ struct imonitor_eventobj;
 
 struct imonitor_eventobj *imonitor_create_eventobj(unsigned int eventid);
 
+/* deprecated */
 int imonitor_set_param(struct imonitor_eventobj *eventobj,
 		unsigned short paramid, long value);
+
+int imonitor_set_param_integer(struct imonitor_eventobj *eventobj,
+		unsigned short paramid, long value);
+
+int imonitor_set_param_string(struct imonitor_eventobj *eventobj,
+		unsigned short paramid, const char* value);
 
 int imonitor_unset_param(struct imonitor_eventobj *eventobj,
 		unsigned short paramid);

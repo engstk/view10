@@ -113,78 +113,25 @@ extern VOS_VOID* GUNAS_FilterAtToAtMsg(
 /*****************************************************************************
   10 函数实现
 *****************************************************************************/
-/*****************************************************************************
-函 数 名  : AT_InitMntnCtx
-功能描述  : AT模块可维可测信息初始化
-输入参数  : 无
-输出参数  : 无
-返 回 值  : 无
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2014年09月13日
-   作    者   : g00261581
-   修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_InitMntnCtx(VOS_VOID)
 {
     TAF_MEM_SET_S(&g_stAtMsgRecordInfo, sizeof(g_stAtMsgRecordInfo), 0x00, sizeof(g_stAtMsgRecordInfo));
 }
 
-/*****************************************************************************
-函 数 名  : AT_SetPcuiCtrlConcurrentFlag
-功能描述  : 设置PCUI、PCUI2及CTRL口的并发标志位
-输入参数  : VOS_UINT8    ucFlag
-输出参数  : 无
-返 回 值  : 无
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2013年4月18日
-   作    者   : z00220246
-   修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_SetPcuiCtrlConcurrentFlag(VOS_UINT8 ucFlag)
 {
     g_stAtDebugInfo.ucPcuiCtrlConcurrentFlg = ucFlag;
 }
 
-/*****************************************************************************
-函 数 名  : AT_GetPcuiCtrlConcurrentFlag
-功能描述  : 获取PCUI和CTRL口的并发标志位
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT8
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2013年4月18日
-   作    者   : z00220246
-   修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT8 AT_GetPcuiCtrlConcurrentFlag(VOS_VOID)
 {
     return g_stAtDebugInfo.ucPcuiCtrlConcurrentFlg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetPcuiPsCallFlag
- 功能描述  : 设置PCUI口模拟nidsdup拨号的标志位
- 输入参数  : VOS_UINT8         ucFlag
-             VOS_UINT8         ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_SetPcuiPsCallFlag(
     VOS_UINT8                           ucFlag,
     VOS_UINT8                           ucIndex
@@ -194,59 +141,19 @@ VOS_VOID AT_SetPcuiPsCallFlag(
     g_stAtDebugInfo.ucPcuiUserId        = AT_CLIENT_TAB_APP_INDEX;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetPcuiPsCallFlag
- 功能描述  : 获取PCUI口模拟nidsdup拨号的标志位
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT8 AT_GetPcuiPsCallFlag(VOS_VOID)
 {
     return g_stAtDebugInfo.ucPcuiPsCallFlg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetPcuiUsertId
- 功能描述  : 获取PCUI口模拟哪个端口NDISDUP拨号
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年5月7日
-    作    者   : l60609
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT8 AT_GetPcuiUsertId(VOS_VOID)
 {
     return g_stAtDebugInfo.ucPcuiUserId;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCtrlPsCallFlag
- 功能描述  : 设置Ctrl口模拟nidsdup拨号的标志位
- 输入参数  : VOS_UINT8            ucFlag
-             VOS_UINT8            ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年7月8日
-    作    者   : l60609
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_SetCtrlPsCallFlag(
     VOS_UINT8                           ucFlag,
     VOS_UINT8                           ucIndex
@@ -256,60 +163,19 @@ VOS_VOID AT_SetCtrlPsCallFlag(
     g_stAtDebugInfo.ucCtrlUserId        = AT_CLIENT_TAB_APP5_INDEX;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetCtrlPsCallFlag
- 功能描述  : 获取CTRL口模拟nidsdup拨号的标志位
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年7月8日
-    作    者   : l60609
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT8 AT_GetCtrlPsCallFlag(VOS_VOID)
 {
     return g_stAtDebugInfo.ucCtrlPsCallFlg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetCtrlUserId
- 功能描述  : 获取CTRL口模拟哪个端口NDISDUP拨号
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年7月8日
-    作    者   : l60609
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT8 AT_GetCtrlUserId(VOS_VOID)
 {
     return g_stAtDebugInfo.ucCtrlUserId;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetPcui2PsCallFlag
- 功能描述  : 设置PCUI2口模拟^NDISDUP拨号的标志位
- 输入参数  : VOS_UINT8        ucFlag
-             VOS_UINT8        ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年5月27日
-    作    者   : l00198894
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_SetPcui2PsCallFlag(
     VOS_UINT8                           ucFlag,
     VOS_UINT8                           ucIndex
@@ -320,61 +186,20 @@ VOS_VOID AT_SetPcui2PsCallFlag(
 
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetPcui2PsCallFlag
- 功能描述  : 获取PCUI2口模拟^NDISDUP拨号的标志位
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年5月27日
-    作    者   : l00198894
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT8 AT_GetPcui2PsCallFlag(VOS_VOID)
 {
     return g_stAtDebugInfo.ucPcui2PsCallFlg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetPcui2UserId
- 功能描述  : 获取PCUI2口模拟哪个端口NDISDUP拨号
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年5月27日
-    作    者   : l00198894
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT8 AT_GetPcui2UserId(VOS_VOID)
 {
     return g_stAtDebugInfo.ucPcui2UserId;
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_SetUnCheckApPortFlg
- 功能描述  : 设置 不检查ApPort标志
- 输入参数  : VOS_UINT8                            ucFlag
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年8月1日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_SetUnCheckApPortFlg(
     VOS_UINT8                           ucFlag
 )
@@ -385,39 +210,13 @@ VOS_VOID AT_SetUnCheckApPortFlg(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetUnCheckApPortFlg
- 功能描述  : 获取 不检查ApPort标志
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : g_stAtDebugInfo.ucUnCheckApPortFlg
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年8月1日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT8 AT_GetUnCheckApPortFlg(VOS_VOID)
 {
     return g_stAtDebugInfo.ucUnCheckApPortFlg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceEvent
- 功能描述  : 输出可维可测
- 输入参数  : pMsg - 可维可测消息(调用者保证非空)
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceEvent(VOS_VOID *pMsg)
 {
     VOS_VOID                           *pLogPrivacyMsg  = VOS_NULL_PTR;
@@ -451,21 +250,7 @@ VOS_VOID AT_MNTN_TraceEvent(VOS_VOID *pMsg)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceInputMsc
- 功能描述  : 管脚信号输入可维可测
- 输入参数  : ucIndex   - 端口索引
-             pstDceMsc - 管脚信号信息(调用者保证非空)
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceInputMsc(
     VOS_UINT8                           ucIndex,
     AT_DCE_MSC_STRU                    *pstDceMsc
@@ -486,21 +271,7 @@ VOS_VOID AT_MNTN_TraceInputMsc(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceOutputMsc
- 功能描述  : 管脚信号输出可维可测
- 输入参数  : ucIndex   - 端口索引
-             pstDceMsc - 管脚信号信息(调用者保证非空)
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceOutputMsc(
     VOS_UINT8                           ucIndex,
     AT_DCE_MSC_STRU                    *pstDceMsc
@@ -521,21 +292,7 @@ VOS_VOID AT_MNTN_TraceOutputMsc(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceStartFlowCtrl
- 功能描述  : 启动流控可维可测
- 输入参数  : ucIndex    - 端口索引
-             enFcDevive - 流控设备
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceStartFlowCtrl(
     VOS_UINT8                           ucIndex,
     AT_FC_DEVICE_TYPE_ENUM_UINT32       enFcDevive
@@ -556,21 +313,7 @@ VOS_VOID AT_MNTN_TraceStartFlowCtrl(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceStopFlowCtrl
- 功能描述  : 停止流控可维可测
- 输入参数  : ucIndex    - 端口索引
-             enFcDevive - 流控设备
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceStopFlowCtrl(
     VOS_UINT8                           ucIndex,
     AT_FC_DEVICE_TYPE_ENUM_UINT32       enFcDevive
@@ -591,21 +334,7 @@ VOS_VOID AT_MNTN_TraceStopFlowCtrl(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceRegFcPoint
- 功能描述  : 注册流控点可维可测
- 输入参数  : ucIndex   - 端口索引
-             enFcPoint - 流控点
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceRegFcPoint(
     VOS_UINT8                           ucIndex,
     AT_FC_POINT_TYPE_ENUM_UINT32        enFcPoint
@@ -626,21 +355,7 @@ VOS_VOID AT_MNTN_TraceRegFcPoint(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceDeregFcPoint
- 功能描述  : 去注册流控点可维可测
- 输入参数  : ucIndex   - 端口索引
-             enFcPoint - 流控点
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceDeregFcPoint(
     VOS_UINT8                           ucIndex,
     AT_FC_POINT_TYPE_ENUM_UINT32        enFcPoint
@@ -661,22 +376,7 @@ VOS_VOID AT_MNTN_TraceDeregFcPoint(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceCmdResult
- 功能描述  : AT命令回复可维可测
- 输入参数  : ucIndex   - 端口索引
-             pucData   - 数据内容
-             usDataLen - 数据长度
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月06日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceCmdResult(
     VOS_UINT8                           ucIndex,
     VOS_UINT8                          *pucData,
@@ -732,22 +432,7 @@ VOS_VOID AT_MNTN_TraceCmdResult(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceCmdBuffer
- 功能描述  : 缓存命令可维可测
- 输入参数  : ucIndex   - 端口索引
-             pucData   - 数据内容
-             usDataLen - 数据长度
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年3月24日
-    作    者   : s46746
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceCmdBuffer(
     VOS_UINT8                           ucIndex,
     VOS_UINT8                          *pucData,
@@ -801,25 +486,7 @@ VOS_VOID AT_MNTN_TraceCmdBuffer(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceContextData
- 功能描述  : 把AT外部上下文作为SDT消息发送出去，以便在回放时通过桩函数还原
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
- 修改历史      :
-  1.日    期   : 2010年02月12日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-  2.日    期   : 2010年7月16日
-    作    者   : 傅映君/f62575
-    修改内容   : 问题单号：DTS2010071402189，支持AT模块多CLIENT ID的回放
-  3.日    期   : 2013年03月07日
-    作    者   : f00179208
-    修改内容   : DSDA PHASE III
-*****************************************************************************/
+
 VOS_VOID AT_MNTN_TraceContextData(VOS_VOID)
 {
     NAS_AT_SDT_AT_PART_ST                  *pstSndMsgCB     = VOS_NULL_PTR;
@@ -889,20 +556,7 @@ VOS_VOID AT_MNTN_TraceContextData(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceClientData
- 功能描述  : 发送AT模块的客户端口数据
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年7月17日
-    作    者   : 傅映君/f62575
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceClientData(VOS_VOID)
 {
     NAS_AT_SDT_AT_CLIENT_TABLE_STRU         *pstSndMsgCB;
@@ -945,20 +599,7 @@ VOS_VOID AT_MNTN_TraceClientData(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MNTN_TraceRPTPORT
- 功能描述  : 发送AT模块的客户端口数据
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年8月1日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_MNTN_TraceRPTPORT(VOS_VOID)
 {
     AT_MNTN_RPTPORT_STRU                   *pstSndMsgCB;
@@ -994,63 +635,21 @@ VOS_VOID AT_MNTN_TraceRPTPORT(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_InitHsUartStats
- 功能描述  : 初始化UART可维可测信息
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月21日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_InitHsUartStats(VOS_VOID)
 {
     TAF_MEM_SET_S(&g_stAtStatsInfo.stHsUartStats, sizeof(g_stAtStatsInfo.stHsUartStats), 0x00, sizeof(AT_MNTN_HSUART_STATS_STRU));
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_MODEM_Help
- 功能描述  : 初始化UART可维可测信息
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_InitModemStats(VOS_VOID)
 {
     TAF_MEM_SET_S(&g_stAtStatsInfo.stModemStats, sizeof(g_stAtStatsInfo.stModemStats), 0x00, sizeof(AT_MNTN_MODEM_STATS_STRU));
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RecordAtMsgInfo
- 功能描述  : 记录进入At_MsgProc函数的消息属性
- 输入参数  : VOS_UINT32                          ulSendPid,
-             VOS_UINT32                          ulMsgName,
-             VOS_UINT32                          ulSliceStart,
-             VOS_UINT32                          ulSliceEnd
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年09月04日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_RecordAtMsgInfo(
     VOS_UINT32                          ulSendPid,
     VOS_UINT32                          ulMsgName,
@@ -1078,56 +677,30 @@ VOS_VOID AT_RecordAtMsgInfo(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_ShowModemDataStats
- 功能描述  : MODEM的数据统计可维可测
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月18日
-    作    者   : sunshaohua
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ShowModemDataStats(VOS_VOID)
 {
-    (VOS_VOID)vos_printf("====================================\r\n");
-    (VOS_VOID)vos_printf("MODEM UL DATA STATS                 \r\n");
-    (VOS_VOID)vos_printf("====================================\r\n");
-    (VOS_VOID)vos_printf("UL Read CB NUM:             %d\r\n", g_stAtStatsInfo.stModemStats.ulUlDataReadCBNum);
-    (VOS_VOID)vos_printf("UL RD SUCC NUM:             %d\r\n", g_stAtStatsInfo.stModemStats.ulUlGetRDSuccNum);
-    (VOS_VOID)vos_printf("UL RD Fail NUM:             %d\r\n", g_stAtStatsInfo.stModemStats.ulUlGetRDFailNum);
-    (VOS_VOID)vos_printf("UL Invalid RD NUM:          %d\r\n", g_stAtStatsInfo.stModemStats.ulUlInvalidRDNum);
-    (VOS_VOID)vos_printf("UL Retrun BUFF SUCC NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulUlReturnBuffSuccNum);
-    (VOS_VOID)vos_printf("UL Retrun BUFF FAIL NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulUlReturnBuffFailNum);
-    (VOS_VOID)vos_printf("====================================\r\n");
-    (VOS_VOID)vos_printf("MODEM DL DATA STATS                 \r\n");
-    (VOS_VOID)vos_printf("====================================\r\n");
-    (VOS_VOID)vos_printf("DL Write Async SUCC NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulDlWriteAsyncSuccNum);
-    (VOS_VOID)vos_printf("DL Write Async FAIL NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulDlWriteAsyncFailNum);
-    (VOS_VOID)vos_printf("DL Free BUFF NUM:           %d\r\n", g_stAtStatsInfo.stModemStats.ulDlFreeBuffNum);
+    PS_PRINTF("====================================\r\n");
+    PS_PRINTF("MODEM UL DATA STATS                 \r\n");
+    PS_PRINTF("====================================\r\n");
+    PS_PRINTF("UL Read CB NUM:             %d\r\n", g_stAtStatsInfo.stModemStats.ulUlDataReadCBNum);
+    PS_PRINTF("UL RD SUCC NUM:             %d\r\n", g_stAtStatsInfo.stModemStats.ulUlGetRDSuccNum);
+    PS_PRINTF("UL RD Fail NUM:             %d\r\n", g_stAtStatsInfo.stModemStats.ulUlGetRDFailNum);
+    PS_PRINTF("UL Invalid RD NUM:          %d\r\n", g_stAtStatsInfo.stModemStats.ulUlInvalidRDNum);
+    PS_PRINTF("UL Retrun BUFF SUCC NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulUlReturnBuffSuccNum);
+    PS_PRINTF("UL Retrun BUFF FAIL NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulUlReturnBuffFailNum);
+    PS_PRINTF("====================================\r\n");
+    PS_PRINTF("MODEM DL DATA STATS                 \r\n");
+    PS_PRINTF("====================================\r\n");
+    PS_PRINTF("DL Write Async SUCC NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulDlWriteAsyncSuccNum);
+    PS_PRINTF("DL Write Async FAIL NUM:    %d\r\n", g_stAtStatsInfo.stModemStats.ulDlWriteAsyncFailNum);
+    PS_PRINTF("DL Free BUFF NUM:           %d\r\n", g_stAtStatsInfo.stModemStats.ulDlFreeBuffNum);
 
 
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ShowPsEntityInfo
- 功能描述  : PS域实体信息
- 输入参数  : ucCallId - 呼叫实体索引
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月31日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ShowPsEntityInfo(VOS_UINT8 ucCallId)
 {
     AT_PS_CALL_ENTITY_STRU             *pstCallEntity = VOS_NULL_PTR;
@@ -1138,27 +711,27 @@ VOS_VOID AT_ShowPsEntityInfo(VOS_UINT8 ucCallId)
 
     for (enModemId = 0; enModemId < MODEM_ID_BUTT; enModemId++)
     {
-        (VOS_VOID)vos_printf("################MODEM ID is %d################\n", enModemId);
+        PS_PRINTF("################MODEM ID is %d################\n", enModemId);
         pstCallEntity = &(AT_GetModemPsCtxAddrFromModemId(enModemId)->astCallEntity[ucCallId]);
 
-        (VOS_VOID)vos_printf("********************PS拨号实体信息***********************\n");
-        (VOS_VOID)vos_printf("Active Flag                             %d\n", pstCallEntity->ulUsedFlg);
-        (VOS_VOID)vos_printf("Current Call Type                       %d\n", pstCallEntity->enCurrPdpType);
-        (VOS_VOID)vos_printf("********************用户拨号信息*************************\n");
-        (VOS_VOID)vos_printf("User Actual Index                       %d\n", pstCallEntity->stUserInfo.enPortIndex);
-        (VOS_VOID)vos_printf("User Expect Index                       %d\n", pstCallEntity->stUserInfo.enUserIndex);
-        (VOS_VOID)vos_printf("User Type                               %d\n", pstCallEntity->stUserInfo.ucUsrType);
-        (VOS_VOID)vos_printf("User CID                                %d\n", pstCallEntity->stUserInfo.ucUsrCid);
-        (VOS_VOID)vos_printf("********************IPv4连接信息*************************\n");
-        (VOS_VOID)vos_printf("IPv4 Bearer CID                         %d\n", pstCallEntity->ucIpv4Cid);
-        (VOS_VOID)vos_printf("IPv4 Bearer State                       %d\n", pstCallEntity->enIpv4State);
-        (VOS_VOID)vos_printf("IPv4 Bearer ID (RAB ID)                 %d\n", pstCallEntity->stIpv4DhcpInfo.ucRabId);
-        (VOS_VOID)vos_printf("IPv4 Bearer Address                     0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4Addr);
-        (VOS_VOID)vos_printf("IPv4 Bearer Primary DNS                 0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4PrimDNS);
-        (VOS_VOID)vos_printf("IPv4 Bearer Secondary DNS               0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4SecDNS);
-        (VOS_VOID)vos_printf("IPv4 Bearer Gate Way                    0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4GateWay);
-        (VOS_VOID)vos_printf("IPv4 Bearer NET Mask                    0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4NetMask);
-        (VOS_VOID)vos_printf("***********************************************************\n");
+        PS_PRINTF("********************PS拨号实体信息***********************\n");
+        PS_PRINTF("Active Flag                             %d\n", pstCallEntity->ulUsedFlg);
+        PS_PRINTF("Current Call Type                       %d\n", pstCallEntity->enCurrPdpType);
+        PS_PRINTF("********************用户拨号信息*************************\n");
+        PS_PRINTF("User Actual Index                       %d\n", pstCallEntity->stUserInfo.enPortIndex);
+        PS_PRINTF("User Expect Index                       %d\n", pstCallEntity->stUserInfo.enUserIndex);
+        PS_PRINTF("User Type                               %d\n", pstCallEntity->stUserInfo.ucUsrType);
+        PS_PRINTF("User CID                                %d\n", pstCallEntity->stUserInfo.ucUsrCid);
+        PS_PRINTF("********************IPv4连接信息*************************\n");
+        PS_PRINTF("IPv4 Bearer CID                         %d\n", pstCallEntity->ucIpv4Cid);
+        PS_PRINTF("IPv4 Bearer State                       %d\n", pstCallEntity->enIpv4State);
+        PS_PRINTF("IPv4 Bearer ID (RAB ID)                 %d\n", pstCallEntity->stIpv4DhcpInfo.ucRabId);
+        PS_PRINTF("IPv4 Bearer Address                     0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4Addr);
+        PS_PRINTF("IPv4 Bearer Primary DNS                 0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4PrimDNS);
+        PS_PRINTF("IPv4 Bearer Secondary DNS               0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4SecDNS);
+        PS_PRINTF("IPv4 Bearer Gate Way                    0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4GateWay);
+        PS_PRINTF("IPv4 Bearer NET Mask                    0x%x\n", pstCallEntity->stIpv4DhcpInfo.ulIpv4NetMask);
+        PS_PRINTF("***********************************************************\n");
 
         TAF_MEM_SET_S(aucIpv6AddrStr, sizeof(aucIpv6AddrStr), 0x00, sizeof(aucIpv6AddrStr));
         TAF_MEM_SET_S(aucIpv6PrimDnsStr, sizeof(aucIpv6PrimDnsStr), 0x00, sizeof(aucIpv6PrimDnsStr));
@@ -1176,130 +749,75 @@ VOS_VOID AT_ShowPsEntityInfo(VOS_UINT8 ucCallId)
                                           pstCallEntity->stIpv6DhcpInfo.aucIpv6SecDNS,
                                           TAF_IPV6_STR_RFC2373_TOKENS);
 
-        (VOS_VOID)vos_printf("********************IPv6连接信息*************************\n");
-        (VOS_VOID)vos_printf("IPv6 Bearer CID                         %d\n", pstCallEntity->ucIpv6Cid);
-        (VOS_VOID)vos_printf("IPv6 Bearer State                       %d\n", pstCallEntity->enIpv6State);
-        (VOS_VOID)vos_printf("***********************************************************\n");
-        (VOS_VOID)vos_printf("IPv6 Bearer ID (RAB ID)                 %d\n", pstCallEntity->stIpv6DhcpInfo.ucRabId);
-        (VOS_VOID)vos_printf("IPv6 Bearer Global Address              %s\n", aucIpv6AddrStr);
-        (VOS_VOID)vos_printf("IPv6 Bearer Primary DNS                 %s\n", aucIpv6PrimDnsStr);
-        (VOS_VOID)vos_printf("IPv6 Bearer Secondary DNS               %s\n", aucIpv6SecDnsStr);
-        (VOS_VOID)vos_printf("***********************************************************\n");
+        PS_PRINTF("********************IPv6连接信息*************************\n");
+        PS_PRINTF("IPv6 Bearer CID                         %d\n", pstCallEntity->ucIpv6Cid);
+        PS_PRINTF("IPv6 Bearer State                       %d\n", pstCallEntity->enIpv6State);
+        PS_PRINTF("***********************************************************\n");
+        PS_PRINTF("IPv6 Bearer ID (RAB ID)                 %d\n", pstCallEntity->stIpv6DhcpInfo.ucRabId);
+        PS_PRINTF("IPv6 Bearer Global Address              %s\n", aucIpv6AddrStr);
+        PS_PRINTF("IPv6 Bearer Primary DNS                 %s\n", aucIpv6PrimDnsStr);
+        PS_PRINTF("IPv6 Bearer Secondary DNS               %s\n", aucIpv6SecDnsStr);
+        PS_PRINTF("***********************************************************\n");
     }
 
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ShowPsFcIdState
- 功能描述  : 显示AT流控点注册信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
 
- 调用函数  :
- 被调函数  :
-
- 修改历史  :
-    1.日    期   : 2013年04月15日
-      作    者   : f00179208
-      修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ShowPsFcIdState(VOS_UINT32 ulFcid)
 {
     if (ulFcid >= FC_ID_BUTT)
     {
-        (VOS_VOID)vos_printf("AT_ShowFcStatsInfo: Fcid overtop, ulFcid = %d\n", ulFcid);
+        PS_PRINTF("AT_ShowFcStatsInfo: Fcid overtop, ulFcid = %d\n", ulFcid);
         return;
     }
 
-    (VOS_VOID)vos_printf("指定FCID对应的结点是否有效                  %d\n", g_stFcIdMaptoFcPri[ulFcid].ulUsed);
-    (VOS_VOID)vos_printf("指定FCID对应的结点的优先级                  %d\n", g_stFcIdMaptoFcPri[ulFcid].enFcPri);
-    (VOS_VOID)vos_printf("指定FCID对应的结点的RABID掩码               %d\n", g_stFcIdMaptoFcPri[ulFcid].ulRabIdMask);
-    (VOS_VOID)vos_printf("指定FCID对应的结点的ModemId                 %d\n", g_stFcIdMaptoFcPri[ulFcid].enModemId);
-    (VOS_VOID)vos_printf("\r\n");
+    PS_PRINTF("指定FCID对应的结点是否有效                  %d\n", g_stFcIdMaptoFcPri[ulFcid].ulUsed);
+    PS_PRINTF("指定FCID对应的结点的优先级                  %d\n", g_stFcIdMaptoFcPri[ulFcid].enFcPri);
+    PS_PRINTF("指定FCID对应的结点的RABID掩码               %d\n", g_stFcIdMaptoFcPri[ulFcid].ulRabIdMask);
+    PS_PRINTF("指定FCID对应的结点的ModemId                 %d\n", g_stFcIdMaptoFcPri[ulFcid].enModemId);
+    PS_PRINTF("\r\n");
 
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ShowResetStats
- 功能描述  : 显示AT信号量初始化信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
 
- 调用函数  :
- 被调函数  :
-
- 修改历史  :
-    1.日    期   : 2013年04月15日
-      作    者   : f00179208
-      修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ShowResetStatsInfo(VOS_VOID)
 {
-    (VOS_VOID)vos_printf("模块初始化标识                              %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulSemInitFlg);
-    (VOS_VOID)vos_printf("当前的二进制信号量                          %u\n", AT_GetResetSem()); /*lint !e559 */
-    (VOS_VOID)vos_printf("创建的二进制信号量                          %u\n", g_stAtStatsInfo.stCCpuResetStatsInfo.hBinarySemId); /*lint !e559 */
-    (VOS_VOID)vos_printf("创建二进制信号量失败次数                    %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulCreateBinarySemFailNum);
-    (VOS_VOID)vos_printf("锁二进制信号量失败次数                      %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulLockBinarySemFailNum);
-    (VOS_VOID)vos_printf("最后一次锁二进制信号量失败原因              %x\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulLastBinarySemErrRslt);
-    (VOS_VOID)vos_printf("C核复位前的次数                             %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulResetBeforeNum);
-    (VOS_VOID)vos_printf("C核复位后的次数                             %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulResetAfterNum);
-    (VOS_VOID)vos_printf("HIFI复位成功的次数                          %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulHifiResetNum);
-    (VOS_VOID)vos_printf("AT复位状态                                  %d\n", AT_GetResetFlag());
-    (VOS_VOID)vos_printf("\r\n");
+    PS_PRINTF("模块初始化标识                              %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulSemInitFlg);
+    PS_PRINTF("当前的二进制信号量                          %u\n", AT_GetResetSem()); /*lint !e559 */
+    PS_PRINTF("创建的二进制信号量                          %u\n", g_stAtStatsInfo.stCCpuResetStatsInfo.hBinarySemId); /*lint !e559 */
+    PS_PRINTF("创建二进制信号量失败次数                    %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulCreateBinarySemFailNum);
+    PS_PRINTF("锁二进制信号量失败次数                      %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulLockBinarySemFailNum);
+    PS_PRINTF("最后一次锁二进制信号量失败原因              %x\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulLastBinarySemErrRslt);
+    PS_PRINTF("C核复位前的次数                             %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulResetBeforeNum);
+    PS_PRINTF("C核复位后的次数                             %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulResetAfterNum);
+    PS_PRINTF("HIFI复位成功的次数                          %d\n", g_stAtStatsInfo.stCCpuResetStatsInfo.ulHifiResetNum);
+    PS_PRINTF("AT复位状态                                  %d\n", AT_GetResetFlag());
+    PS_PRINTF("\r\n");
 
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ShowAllClientState
- 功能描述  : 端口状态查询
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年01月15日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ShowAllClientState(VOS_VOID)
 {
     VOS_UINT8                           i;
     VOS_CHAR                            acStateStr[][20] = {"READY", "PEND"};
     VOS_CHAR                            acModeStr[][20] = {"CMD", "DATA", "ONLINE_CMD"};
 
-    (VOS_VOID)vos_printf("\r\n The All Client State: \r\n");
+    PS_PRINTF("\r\n The All Client State: \r\n");
 
     for (i = 0; i < AT_MAX_CLIENT_NUM; i++)
     {
-        (VOS_VOID)vos_printf("Client[%d] State: %s    Mode: %s\r\n", i,
+        PS_PRINTF("Client[%d] State: %s    Mode: %s\r\n", i,
             acStateStr[g_stParseContext[i].ucClientStatus], acModeStr[gastAtClientTab[i].Mode]);
     }
 
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetClientState
- 功能描述  : 设置端口状态
- 输入参数  : ucIndex -- clientID
-             ulState -- 端口状态(Pend/Ready)
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年01月15日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_SetClientState(VOS_UINT8 ucIndex, VOS_UINT8 ucState)
 {
     if ((ucIndex >= AT_MAX_CLIENT_NUM)||(ucState > AT_FW_CLIENT_STATUS_PEND))
@@ -1312,21 +830,7 @@ VOS_VOID AT_SetClientState(VOS_UINT8 ucIndex, VOS_UINT8 ucState)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetClientMode
- 功能描述  : 设置端口模式
- 输入参数  : ucIndex -- clientID
-             ucMode -- 端口模式
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年01月15日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_SetClientMode(VOS_UINT8 ucIndex, VOS_UINT8 ucMode)
 {
     if ((ucIndex >= AT_MAX_CLIENT_NUM)||(ucMode > AT_ONLINE_CMD_MODE))
@@ -1339,21 +843,7 @@ VOS_VOID AT_SetClientMode(VOS_UINT8 ucIndex, VOS_UINT8 ucMode)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ShowUsedClient
- 功能描述  : 打印当前使用端口状态
- 输入参数  : ucIndex -- clientID
-             ucMode -- 端口模式
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年01月15日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ShowUsedClient(VOS_VOID)
 {
     AT_PORT_BUFF_CFG_STRU              *pstPortCfg;
@@ -1364,11 +854,11 @@ VOS_VOID AT_ShowUsedClient(VOS_VOID)
 
     pstPortCfg = AT_GetPortBuffCfgInfo();
 
-    (VOS_VOID)vos_printf("\r\n The All Used Client State: \r\n");
+    PS_PRINTF("\r\n The All Used Client State: \r\n");
     for (i = 0; i < pstPortCfg->ucNum; i++)
     {
         ulIndex = pstPortCfg->ulUsedClientID[i];
-        (VOS_VOID)vos_printf("Client[%d] State: %s    Mode: %s\r\n", ulIndex,
+        PS_PRINTF("Client[%d] State: %s    Mode: %s\r\n", ulIndex,
             acStateStr[g_stParseContext[ulIndex].ucClientStatus], acModeStr[gastAtClientTab[ulIndex].Mode]);
     }
 
@@ -1376,77 +866,90 @@ VOS_VOID AT_ShowUsedClient(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_ShowClientCtxInfo
- 功能描述  : 打印Client配置的上下文信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年04月25日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ShowClientCtxInfo(VOS_VOID)
 {
     VOS_UINT8                           i;
     AT_CLIENT_CFG_MAP_TAB_STRU         *pstCfgMapTbl;
     AT_CLIENT_CONFIGURATION_STRU       *pstClientCfg;
 
-    (VOS_VOID)vos_printf("\r\n The All Used Client Config: \r\n");
+    PS_PRINTF("\r\n The All Used Client Config: \r\n");
     for (i = 0; i < AT_GET_CLIENT_CFG_TAB_LEN(); i++)
     {
         pstCfgMapTbl = AT_GetClientCfgMapTbl(i);
         pstClientCfg = AT_GetClientConfig(pstCfgMapTbl->enClientId);
-        (VOS_VOID)vos_printf("Client[%s] modem:%d, reportFlag:%d\r\n",
+        PS_PRINTF("Client[%s] modem:%d, reportFlag:%d\r\n",
                    pstCfgMapTbl->aucPortName,
                    pstClientCfg->enModemId,
                    pstClientCfg->ucReportFlg);
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_Help
- 功能描述  : AT可维可测入口
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月12日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
+VOS_VOID AT_ShowIPv6IIDMgrInfo(VOS_VOID)
+{
+
+    AT_PS_IPV6_IID_MGR_INFO_STRU       *pstMgrInfo = VOS_NULL_PTR;
+    AT_PS_IPV6_IID_ENTRY_STRU          *pstEntry   = VOS_NULL_PTR;
+    HI_LIST_S                          *pstMe      = VOS_NULL_PTR;
+    VOS_UINT8                           aucIpv6AddrStr[TAF_MAX_IPV6_ADDR_COLON_STR_LEN];
+    VOS_UINT32                          i;
+
+
+    PS_PRINTF("=============================================\n");
+    PS_PRINTF("IPv6 IID MANGER INFO                         \n");
+    PS_PRINTF("=============================================\n");
+
+    for (i = 0; i < MODEM_ID_BUTT; i++)
+    {
+        pstMgrInfo = AT_GetPsIPv6IIDMgrInfoByModemId((VOS_UINT16)i);
+
+        msp_list_for_each(pstMe, &(pstMgrInfo->stListHead))
+        {
+            pstEntry = msp_list_entry(pstMe, AT_PS_IPV6_IID_ENTRY_STRU, stList);
+
+            TAF_MEM_SET_S(aucIpv6AddrStr, sizeof(aucIpv6AddrStr),
+                          0x00, (TAF_MAX_IPV6_ADDR_COLON_STR_LEN));
+            AT_ConvertIpv6AddrToCompressedStr(aucIpv6AddrStr,
+                                              pstEntry->aucPrefix,
+                                              TAF_IPV6_STR_RFC2373_TOKENS);
+
+            PS_PRINTF("[MODEM%d] APN            %s\n", i, pstEntry->aucApn);
+            PS_PRINTF("[MODEM%d] IPv6 Prefix    %s\n", i, aucIpv6AddrStr);
+            PS_PRINTF("[MODEM%d] IPv6 IID       0x%llx\n", i, pstEntry->ullIID);
+        }
+    }
+
+    return;
+}
+
+
 VOS_VOID AT_Help(VOS_VOID)
 {
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("PS软调信息                                              \n");
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("AT_ShowPsEntityInfo         显示拨号实体信息            \n");
-    (VOS_VOID)vos_printf("AT_ShowPsFcIdState(ulFcid)  显示流控点状态信息          \n");
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("UART软调信息                                            \n");
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("AT_ShowHsUartConfigInfo     显示HSUART的配置信息        \n");
-    (VOS_VOID)vos_printf("AT_ShowHsUartNvStats        显示HSUART的NV读写统计信息  \n");
-    (VOS_VOID)vos_printf("AT_ShowHsUartIoctlStats     显示HSUART的IOCTL统计信息   \n");
-    (VOS_VOID)vos_printf("AT_ShowHsUartDataStats      显示HSUART的数据统计信息    \n");
-    (VOS_VOID)vos_printf("AT_ShowHsUartFcState        显示HSUART的流控状态信息    \n");
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("MODEM软调信息                                           \n");
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("AT_ShowModemDataStats       显示MODEM的数据统计信息     \n");
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("其他软调信息                                            \n");
-    (VOS_VOID)vos_printf("********************************************************\n");
-    (VOS_VOID)vos_printf("AT_ShowResetStatsInfo       显示AT复位状态信息          \n");
-    (VOS_VOID)vos_printf("AT_ShowAllClientState       查看端口状态信息            \n");
-    (VOS_VOID)vos_printf("AT_ShowClientCtxInfo        查看Client配置的上下文信息  \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("PS软调信息                                              \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("AT_ShowPsEntityInfo         显示拨号实体信息            \n");
+    PS_PRINTF("AT_ShowPsFcIdState(ulFcid)  显示流控点状态信息          \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("UART软调信息                                            \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("AT_ShowHsUartConfigInfo     显示HSUART的配置信息        \n");
+    PS_PRINTF("AT_ShowHsUartNvStats        显示HSUART的NV读写统计信息  \n");
+    PS_PRINTF("AT_ShowHsUartIoctlStats     显示HSUART的IOCTL统计信息   \n");
+    PS_PRINTF("AT_ShowHsUartDataStats      显示HSUART的数据统计信息    \n");
+    PS_PRINTF("AT_ShowHsUartFcState        显示HSUART的流控状态信息    \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("MODEM软调信息                                           \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("AT_ShowModemDataStats       显示MODEM的数据统计信息     \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("其他软调信息                                            \n");
+    PS_PRINTF("********************************************************\n");
+    PS_PRINTF("AT_ShowResetStatsInfo       显示AT复位状态信息          \n");
+    PS_PRINTF("AT_ShowAllClientState       查看端口状态信息            \n");
+    PS_PRINTF("AT_ShowClientCtxInfo        查看Client配置的上下文信息  \n");
+    PS_PRINTF("AT_ShowIPv6IIDMgrInfo       查看IPv6接口ID管理信息      \n");
 
     return;
 }

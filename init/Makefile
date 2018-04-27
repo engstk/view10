@@ -12,7 +12,7 @@ obj-y                          += init_task.o
 endif
 
 ifeq ($(TARGET_BUILD_VARIANT),eng)
-EXTRA_CFLAGS += -DHISI_SN_CMDLINE
+EXTRA_CFLAGS += -DCMDLINE_INFO_FILTER
 endif
 
 mounts-y			:= do_mounts.o

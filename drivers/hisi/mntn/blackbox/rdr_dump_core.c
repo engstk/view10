@@ -33,6 +33,7 @@
 #include <hisi_partition.h>
 #include <linux/hisi/kirin_partition.h>
 #include <linux/mfd/hisi_pmic.h>
+#include <linux/hisi/rdr_hisi_platform.h>
 
 /*
  * func name: rdr_save_history_log
@@ -55,6 +56,7 @@ int rdr_save_history_log(struct rdr_exception_info_s *p, char *date,
 	struct kstat historylog_stat;
 	char local_path[PATH_MAXLEN];
 	char *reboot_from_ap;
+	char * subtype_name;
 
 	if (!check_himntn(HIMNTN_GOBAL_RESETLOG)) {
 		return 0;
@@ -70,16 +72,49 @@ int rdr_save_history_log(struct rdr_exception_info_s *p, char *date,
 	else
 		reboot_from_ap = "false";
 	/*如果此次复位是走简易流程的，则正常记录，否则需要增加last_save_not_done字符串 */
+	subtype_name = rdr_get_subtype_name(p->e_exce_type, p->e_exce_subtype);
+
 	if (is_save_done) {
-		snprintf(buf, HISTORY_LOG_SIZE,
-			 "system exception core [%s], reason [%s], time [%s], sysreboot[%s], bootup_keypoint [%d]\n",
-			 rdr_get_exception_core(p->e_from_core),
-			 rdr_get_exception_type(p->e_exce_type), date, reboot_from_ap, bootup_keypoint);
+		if (subtype_name) {
+			snprintf(buf, HISTORY_LOG_SIZE,
+				 "system exception core [%s], reason [%s:%s], time [%s], sysreboot [%s], bootup_keypoint [%d], category [%s]\n",
+			 	rdr_get_exception_core(p->e_from_core),
+			 	rdr_get_exception_type(p->e_exce_type),
+			 	subtype_name,
+				date, 
+				reboot_from_ap,
+				bootup_keypoint,
+				rdr_get_category_name(p->e_exce_type, p->e_exce_subtype));
+		}
+		else {
+			snprintf(buf, HISTORY_LOG_SIZE,
+				 "system exception core [%s], reason [%s], time [%s], sysreboot [%s], bootup_keypoint [%d], category [%s]\n",
+			 	rdr_get_exception_core(p->e_from_core),
+			 	rdr_get_exception_type(p->e_exce_type),
+				date,
+				reboot_from_ap,
+				bootup_keypoint,
+				rdr_get_category_name(p->e_exce_type, p->e_exce_subtype));
+		}
 	} else {
-		snprintf(buf, HISTORY_LOG_SIZE,
-			 "system exception core [%s], reason [%s], time [%s][last_save_not_done], sysreboot[%s]\n",
-			 rdr_get_exception_core(p->e_from_core),
-			 rdr_get_exception_type(p->e_exce_type), date, reboot_from_ap);
+		if (subtype_name) {
+			snprintf(buf, HISTORY_LOG_SIZE,
+			 	"system exception core [%s], reason [%s:%s], time [%s][last_save_not_done], sysreboot [%s], category [%s]\n",
+				 rdr_get_exception_core(p->e_from_core),
+			 	 rdr_get_exception_type(p->e_exce_type),
+			 	 subtype_name,
+			 	 date,
+			 	 reboot_from_ap,
+			 	 rdr_get_category_name(p->e_exce_type, p->e_exce_subtype));
+		} else {
+			snprintf(buf, HISTORY_LOG_SIZE,
+			 	"system exception core [%s], reason [%s], time [%s][last_save_not_done], sysreboot [%s], category [%s]\n",
+				 rdr_get_exception_core(p->e_from_core),
+			 	rdr_get_exception_type(p->e_exce_type),
+			 	date,
+			 	reboot_from_ap,
+			 	rdr_get_category_name(p->e_exce_type, p->e_exce_subtype));
+		}
 	}
 
 	memset(local_path, 0, PATH_MAXLEN);
@@ -164,7 +199,7 @@ int rdr_savebuf2fs(char *logpath, char *filename,
 	flags = O_CREAT | O_RDWR | (is_append ? O_APPEND : O_TRUNC);
 	fp = filp_open(path, flags, FILE_LIMIT);
 	if (IS_ERR(fp)) {
-		BB_PRINT_ERR("%s():create file %s err.\n", __func__, path);
+		BB_PRINT_ERR("%s():create file %s err. fp=0x%pK\n", __func__, path, fp);
 		ret = -1;
 		goto out2;
 	}
@@ -209,28 +244,8 @@ void bbox_save_every_core_data(char *logpath, char *base_addr)
 	char *bbox_area_names = NULL;
 	char tmp_logpath[PATH_MAXLEN] = {0};
 
-	np = of_find_compatible_node(NULL, NULL, "hisilicon,rdr");
-	if (!np) {
-		BB_PRINT_ERR("[%s], find rdr_memory node fail!\n", __func__);
-		return;
-	}
-
-	ret = of_property_read_u32(np, "rdr_area_num", &value);
-	if (ret) {
-		BB_PRINT_ERR("[%s], cannot find rdr_area_num in dts!\n",
-			     __func__);
-		return;
-	}
-	BB_PRINT_DBG("[%s], get rdr_area_num [0x%x] in dts!\n", __func__,
-		     value);
-
-	if (value != RDR_CORE_MAX) {
-		BB_PRINT_ERR("[%s], invaild core num in dts!\n", __func__);
-		return;
-	}
-	ret = of_property_read_u32_array(np, "rdr_area_sizes", &data[0], (unsigned long)value);
-	if (ret) {
-		BB_PRINT_ERR("[%s], cannot find rdr_area_sizes in dts!\n",
+	if (bbox_get_every_core_area_info(&value, data, &np)) {
+		BB_PRINT_ERR("[%s], bbox_get_every_core_area_info fail!\n",
 			     __func__);
 		return;
 	}
@@ -265,7 +280,7 @@ void bbox_save_every_core_data(char *logpath, char *base_addr)
 
 	/*save AP data info*/
 	addr = base_addr + RDR_BASEINFO_SIZE;
-	size = (u32)rdr_get_pbb_size() - (size - RDR_BASEINFO_SIZE);
+	size = (u32)rdr_get_pbb_size() - (size + RDR_BASEINFO_SIZE);
 	ret = of_property_read_string_index(np, "bbox_area_names", 0, (const char **)&bbox_area_names);
 	if (ret) {
 		BB_PRINT_ERR("[%s][%d], of_property_read_string_index fail\n",
@@ -298,6 +313,7 @@ void rdr_save_last_baseinfo(char *logpath)
 		       rdr_get_tmppbb(), rdr_get_pbb_size(), 0);
 	bbox_save_every_core_data(logpath, (char *)rdr_get_tmppbb());
 
+	bbox_cleartext_proc(logpath, (char *)rdr_get_tmppbb());
 	BB_PRINT_END();
 	return;
 }
@@ -397,7 +413,7 @@ Return:         true:need save; false:not need save
 ********************************************************************************/
 bool need_save_dfxbuffer2file(u64 reboot_type, u64 bootup_keypoint)
 {
-	if (BFM_S_BOOT_NATIVE_DATA_FAIL == reboot_type) {
+	if (BFM_S_NATIVE_BOOT_FAIL == reboot_type) {
 		BB_PRINT_ERR("%s():%d:reboot_type is [0x%llx]\n",
 			__func__, __LINE__, reboot_type);
 		return true;
@@ -411,24 +427,8 @@ bool need_save_dfxbuffer2file(u64 reboot_type, u64 bootup_keypoint)
 		return false;
 	}
 
-	if ((REBOOT_REASON_LABEL1 <= reboot_type
-	    && REBOOT_REASON_LABEL3 > reboot_type)
-	    || MMC_S_EXCEPTION == reboot_type
-	    || LPM3_S_EXCEPTION == reboot_type) {
-		BB_PRINT_ERR("%s():%d:reboot_type is [0x%llx]\n",
-			__func__, __LINE__, reboot_type);
-		return false;
-	}
-
-	if (REBOOT_REASON_LABEL5 <= reboot_type
-	    && REBOOT_REASON_LABEL6 > reboot_type) {
-		BB_PRINT_ERR("%s():%d:reboot_type is [0x%llx]\n",
-			__func__, __LINE__, reboot_type);
-		return false;
-	}
-
-	if (REBOOT_REASON_LABEL8 <= reboot_type
-	    && REBOOT_REASON_LABEL9 > reboot_type) {
+	if (REBOOT_REASON_LABEL1 <= reboot_type
+	    && REBOOT_REASON_LABEL3 > reboot_type) {
 		BB_PRINT_ERR("%s():%d:reboot_type is [0x%llx]\n",
 			__func__, __LINE__, reboot_type);
 		return false;
@@ -476,6 +476,7 @@ static int save_dfxbuffer_to_file(struct dfx_head_info *dfx_head_info)
 		temp.e_from_core = RDR_AP;
 		temp.e_reset_core_mask = RDR_AP;
 		temp.e_exce_type = every_number_info->reboot_type;
+		temp.e_exce_subtype = 0;
 
 		memset(path, 0, sizeof(path));
 		memset(date, 0, sizeof(date));
@@ -733,7 +734,9 @@ static void save_buffer_to_dfx_loopbuffer(struct every_number_info *every_number
 	kfree(buf2);
 
 close:
-	sys_fsync(fd_dfx);
+	ret = (int)sys_fsync(fd_dfx);
+	if (ret < 0)
+		pr_err("[%s]sys_fsync failed, ret is %d\n", __func__, ret);
 	sys_close(fd_dfx);
 open_fail:
 	kfree(buf1);

@@ -74,7 +74,8 @@ static int sourcesink_bulk_tx_open(struct inode *inode, struct file *file)
 	return single_open(file, sourcesink_bulk_tx_show, inode->i_private);
 }
 
-static void reinit_write_data(int pattern, char *buf, int len)
+static void reinit_write_data(int pattern, char *buf, int len,
+		int max_packet_size)
 {
 	int i;
 
@@ -84,14 +85,15 @@ static void reinit_write_data(int pattern, char *buf, int len)
 		break;
 	case 1:
 		for (i = 0; i < len; i++)
-			*buf++ = (u8) (i % 63);
+			*buf++ = (u8) ((i % max_packet_size) % 63);
 		break;
 	default:
 		break;
 	}
 }
 
-static int check_read_data(int pattern, char *buf, int actual_len)
+static int check_read_data(int pattern, char *buf, int actual_len,
+		int max_packet_size)
 {
 	int		i;
 
@@ -115,7 +117,7 @@ static int check_read_data(int pattern, char *buf, int actual_len)
 		 * stutter for any reason, including buffer duplication...)
 		 */
 		case 1:
-			if (*buf == (u8)(i % 63))
+			if (*buf == (u8)((i % max_packet_size) % 63))
 				continue;
 			break;
 		default:
@@ -189,6 +191,7 @@ static int submit_bulk_test(struct usb_device *udev,
 	int ret, pipe, actual_len;
 	char *buf;
 	int is_out = usb_endpoint_dir_out(&ep->desc);
+	int max_packet_size = le16_to_cpu(ep->desc.wMaxPacketSize);
 
 	buf = kzalloc(xfer_len, GFP_KERNEL);
 	if (!buf)
@@ -196,7 +199,7 @@ static int submit_bulk_test(struct usb_device *udev,
 
 	/* set out data */
 	if (is_out)
-		reinit_write_data(pattern, buf, xfer_len);
+		reinit_write_data(pattern, buf, xfer_len, max_packet_size);
 
 	if (is_out)
 		pipe = usb_sndbulkpipe(udev, ep->desc.bEndpointAddress); /*lint !e648 */
@@ -216,7 +219,7 @@ static int submit_bulk_test(struct usb_device *udev,
 
 	/* check in data */
 	if (!is_out) {
-		ret = check_read_data(pattern, buf, actual_len);
+		ret = check_read_data(pattern, buf, actual_len, max_packet_size);
 		if (ret < 0) {
 			D("usb_bulk_msg rx data error!\n");
 		}

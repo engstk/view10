@@ -12,6 +12,7 @@
  */
 #include "pcie-kirin.h"
 #include "pcie-kirin-common.h"
+#include <hitest_slt.h>
 /*lint -e438 -e550 -e713 -e732 -e737 -e774 -e838  -esym(438,*) -esym(550,*) -esym(713,*) -esym(732,*) -esym(737,*) -esym(774,*) -esym(838,*) */
 unsigned int g_rc_num;
 
@@ -41,33 +42,6 @@ struct kirin_pcie g_kirin_pcie[] = {
 		.is_power_on = ATOMIC_INIT(0),
 		.usr_suspend = ATOMIC_INIT(0),
 	},
-#ifdef CONFIG_KIRIN_PCIE_KIRIN970
-	{
-		.irq = {
-				{
-					.name = "kirin-pcie1-inta",
-				},
-				{
-					.name = "kirin-pcie1-msi",
-				},
-				{
-					.name = "kirin-pcie1-intc",
-				},
-				{
-					.name = "kirin-pcie1-intd",
-				},
-				{
-					.name = "kirin-pcie1-linkdown",
-				}
-			},
-		.rc_dev = NULL,
-		.ep_dev = NULL,
-		.is_ready = ATOMIC_INIT(0),
-		.is_enumerated = ATOMIC_INIT(0),
-		.is_power_on = ATOMIC_INIT(0),
-		.usr_suspend = ATOMIC_INIT(0),
-	},
-#endif
 };
 
 static int kirin_pcie_link_up(struct pcie_port *pp);
@@ -84,46 +58,43 @@ u32 kirin_elb_readl(struct kirin_pcie *pcie, u32 reg)
 
 void kirin_apb_phy_writel(struct kirin_pcie *pcie, u32 val, u32 reg)
 {
-	if (pcie->dtsinfo.board_type != BOARD_FPGA)
-		writel(val, pcie->phy_base + pcie->apb_phy_offset + reg);
+	writel(val, pcie->phy_base + pcie->apb_phy_offset + reg);
 }
 
 u32 kirin_apb_phy_readl(struct kirin_pcie *pcie, u32 reg)
 {
-	if (pcie->dtsinfo.board_type != BOARD_FPGA)
-		return readl(pcie->phy_base + pcie->apb_phy_offset + reg);
-	return 0;
+	return readl(pcie->phy_base + pcie->apb_phy_offset + reg);
 }
 
 void kirin_natural_phy_writel(struct kirin_pcie *pcie, u32 val, u32 reg)
 {
-	writel(val, pcie->phy_base + pcie->natural_phy_offset + reg * 4);
+	if (pcie->dtsinfo.board_type != BOARD_FPGA)
+		writel(val, pcie->phy_base + pcie->natural_phy_offset + reg * 4);
 }
 
 u32 kirin_natural_phy_readl(struct kirin_pcie *pcie, u32 reg)
 {
-	return readl(pcie->phy_base + pcie->natural_phy_offset + reg * 4);
+	if (pcie->dtsinfo.board_type != BOARD_FPGA)
+		return readl(pcie->phy_base + pcie->natural_phy_offset + reg * 4);
+	return 0;
 }
 
-#ifndef CONFIG_KIRIN_PCIE_HI3660
 void kirin_sram_phy_writel(struct kirin_pcie *pcie, u32 val, u32 reg)
 {
-	writel(val, pcie->phy_base + pcie->sram_phy_offset + reg * 4);
+	if (pcie->dtsinfo.board_type != BOARD_FPGA)
+		writel(val, pcie->phy_base + pcie->sram_phy_offset + reg * 4);
 }
 
 u32 kirin_sram_phy_readl(struct kirin_pcie *pcie, u32 reg)
 {
-	return readl(pcie->phy_base + pcie->sram_phy_offset + reg * 4);
+	if (pcie->dtsinfo.board_type != BOARD_FPGA)
+		return readl(pcie->phy_base + pcie->sram_phy_offset + reg * 4);
+	return 0;
 }
-#endif
+
+
 static int32_t kirin_pcie_get_clk(struct kirin_pcie *pcie, struct platform_device *pdev)
 {
-	pcie->phy_ref_clk = devm_clk_get(&pdev->dev, "pcie_phy_ref");
-	if (IS_ERR(pcie->phy_ref_clk)) {
-		PCIE_PR_ERR("Failed to get pcie_phy_ref clock");
-		return PTR_ERR(pcie->phy_ref_clk);
-	}
-
 	pcie->pcie_aux_clk = devm_clk_get(&pdev->dev, "pcie_aux");
 	if (IS_ERR(pcie->pcie_aux_clk)) {
 		PCIE_PR_ERR("Failed to get pcie_aux clock");
@@ -208,15 +179,7 @@ static int32_t kirin_pcie_get_baseaddr(struct pcie_port *pp,
 
 	if (get_phy_layout(pcie, np))
 		return -1;
-#if defined(CONFIG_KIRIN_PCIE_KIRIN970) || defined(CONFIG_KIRIN_PCIE_HI3660)
-	np = of_find_compatible_node(NULL, NULL, "hisilicon,crgctrl");
-#else
-	np = of_find_compatible_node(NULL, NULL, "hisilicon,mmc1_sysctrl");
-#endif
-	if (!np) {
-		PCIE_PR_ERR("Failed to get crgctrl node ");
-		return -1;
-	}
+
 	pcie->crg_base = of_iomap(np, 0);
 	if (!pcie->crg_base) {
 		PCIE_PR_ERR("Failed to iomap crg_base iomap");
@@ -417,21 +380,47 @@ static void kirin_pcie_get_eco(struct kirin_pcie *pcie,
 }
 
 static void pcie_get_time_params(struct kirin_pcie *pcie,
-					struct device_node *np)
+					struct platform_device *pdev)
 {
 	size_t array_num = 2;
+	struct device_node *np = pdev->dev.of_node;
 
 	if (of_property_read_u32_array(np, "t_ref2perst",
-		pcie->dtsinfo.t_ref2perst, array_num))
-		memset(&pcie->dtsinfo.t_ref2perst, 0, array_num);
+		pcie->dtsinfo.t_ref2perst, array_num)) {
+		PCIE_PR_ERR("Fail: ref2perst time");
+		pcie->dtsinfo.t_ref2perst[0] = 20000;
+		pcie->dtsinfo.t_ref2perst[1] = 21000;
+	}
 
 	if (of_property_read_u32_array(np, "t_perst2access",
-		pcie->dtsinfo.t_perst2access, array_num))
-		memset(&pcie->dtsinfo.t_perst2access, 0, array_num);
+		pcie->dtsinfo.t_perst2access, array_num)){
+		PCIE_PR_ERR("Fail: perst2access time");
+		pcie->dtsinfo.t_perst2access[0] = 7000;
+		pcie->dtsinfo.t_perst2access[1] = 8000;
+	}
 
 	if (of_property_read_u32_array(np, "t_perst2rst",
-		pcie->dtsinfo.t_perst2rst, array_num))
-		memset(&pcie->dtsinfo.t_perst2rst, 0, array_num);
+		pcie->dtsinfo.t_perst2rst, array_num)) {
+		PCIE_PR_ERR("Fail: perst2rst time");
+		pcie->dtsinfo.t_perst2rst[0] = 10000;
+		pcie->dtsinfo.t_perst2rst[1] = 11000;
+	}
+}
+
+static int get_rc_num(void)
+{
+	struct device_node *np = of_find_node_by_name(NULL, "kirin_pcie");
+	if (!np) {
+		PCIE_PR_ERR("Failed to get kirin_pcie info");
+		return -1;
+	}
+
+	if (of_property_read_u32(np, "rc_num", &g_rc_num)) {
+		PCIE_PR_ERR("Failed to get rc_num info");
+		return -1;
+	}
+
+	return 0;
 }
 
 int32_t kirin_pcie_get_dtsinfo(u32 *rc_id,
@@ -439,7 +428,6 @@ int32_t kirin_pcie_get_dtsinfo(u32 *rc_id,
 {
 	struct pcie_port *pp;
 	struct kirin_pcie *pcie;
-	struct device_node *np;
 
 	if (!pdev->dev.of_node) {
 		PCIE_PR_ERR("Of_node is null");
@@ -451,15 +439,9 @@ int32_t kirin_pcie_get_dtsinfo(u32 *rc_id,
 		return -EINVAL;
 	}
 
-	np = of_find_node_by_name(NULL, "kirin_pcie");
-	if (!np) {
-		PCIE_PR_ERR("Failed to get kirin_pcie info");
-		return -1;
-	}
-
-	if (of_property_read_u32(np, "rc_num", &g_rc_num)) {
-		PCIE_PR_ERR("Failed to get rc_num info");
-		return -1;
+	if (get_rc_num()) {
+		dev_err(&pdev->dev, "Failed to get rc_num\n");
+		return -EINVAL;
 	}
 
 	if (*rc_id >= g_rc_num) {
@@ -473,13 +455,11 @@ int32_t kirin_pcie_get_dtsinfo(u32 *rc_id,
 
 	kirin_pcie_get_boardtype(pcie, pdev);
 
-	kirin_pcie_get_eyeparam(pcie, pdev);
-
 	kirin_pcie_get_linkstate(pcie, pdev);
 
 	kirin_pcie_get_eco(pcie, pdev);
 
-	pcie_get_time_params(pcie, pdev->dev.of_node);
+	pcie_get_time_params(pcie, pdev);
 
 	if (kirin_pcie_get_isoinfo(pcie, pdev))
 		return -ENODEV;
@@ -665,162 +645,6 @@ int kirin_pcie_deregister_event(struct kirin_pcie_register_event *reg)
 }
 EXPORT_SYMBOL_GPL(kirin_pcie_deregister_event);
 
-static void dump_apb_register(struct kirin_pcie *pcie)
-{
-	u32 j;
-
-	PCIE_PR_INFO("####DUMP APB CORE Register : ");
-	for (j = 0; j < 0x4; j++) {
-		printk(KERN_INFO "0x%-8x: %8x %8x %8x %8x \n",
-			0x10 * j,
-			kirin_elb_readl(pcie, 0x10 * j + 0x0),
-			kirin_elb_readl(pcie, 0x10 * j + 0x4),
-			kirin_elb_readl(pcie, 0x10 * j + 0x8),
-			kirin_elb_readl(pcie, 0x10 * j + 0xC));
-	}
-
-	for (j = 0; j < 0x2; j++) {
-		printk(KERN_INFO "0x%-8x: %8x %8x %8x %8x \n",
-			0x10 * j + 0x400,
-			kirin_elb_readl(pcie, 0x10 * j + 0x0 + 0x400),
-			kirin_elb_readl(pcie, 0x10 * j + 0x4 + 0x400),
-			kirin_elb_readl(pcie, 0x10 * j + 0x8 + 0x400),
-			kirin_elb_readl(pcie, 0x10 * j + 0xC + 0x400));
-	}
-
-	PCIE_PR_INFO("####DUMP APB PHY Register : ");
-	printk(KERN_INFO "0x%-8x: %8x %8x %8x %8x %8x ",
-		0x0,
-		kirin_apb_phy_readl(pcie, 0x0),
-		kirin_apb_phy_readl(pcie, 0x4),
-		kirin_apb_phy_readl(pcie, 0x8),
-		kirin_apb_phy_readl(pcie, 0xc),
-		kirin_apb_phy_readl(pcie, 0x400));
-	printk("\n");
-}
-
-/*print apb and cfg-register of RC*/
-static void dump_link_register(struct kirin_pcie *pcie)
-{
-	struct pcie_port *pp = &pcie->pp;
-	int i;
-	u32 val0, val1, val2, val3;
-
-	if (!atomic_read(&(pcie->is_power_on)))
-		return;
-
-	dump_apb_register(pcie);
-
-	PCIE_PR_INFO("####DUMP RC CFG Register ");
-	for (i = 0; i < 0x18; i++) {
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x0, 4, &val0);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x4, 4, &val1);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x8, 4, &val2);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0xC, 4, &val3);
-		printk(KERN_INFO "0x%-8x: %8x %8x %8x %8x \n",
-			0x10 * i, val0, val1, val2, val3);
-	}
-	for (i = 0; i < 6; i++) {
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x0 + 0x700, 4, &val0);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x4 + 0x700, 4, &val1);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x8 + 0x700, 4, &val2);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0xC + 0x700, 4, &val3);
-		printk(KERN_INFO "0x%-8x: %8x %8x %8x %8x \n",
-			0x10 * i + 0x700, val0, val1, val2, val3);
-	}
-	for (i = 0; i < 0x9; i++) {
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x0 + 0x8A0, 4, &val0);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x4 + 0x8A0, 4, &val1);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0x8 + 0x8A0, 4, &val2);
-		kirin_pcie_rd_own_conf(pp, 0x10 * i + 0xC + 0x8A0, 4, &val3);
-		printk(KERN_INFO "0x%-8x: %8x %8x %8x %8x \n",
-			0x10 * i + 0x8A0, val0, val1, val2, val3);
-	}
-
-	return;
-}
-
-typedef void (* WIFI_DUMP_FUNC) (void);
-#ifdef CONFIG_KIRIN_PCIE_NOC_DBG
-bool g_pcie_dump_flag = false;
-typedef void (* WIFI_DUMP_FUNC) (void);
-WIFI_DUMP_FUNC g_wifi_dump = NULL;
-void set_pcie_dump_flag(void)
-{
-	g_pcie_dump_flag = true;
-}
-
-void clear_pcie_dump_flag(void)
-{
-	g_pcie_dump_flag = false;
-}
-
-bool get_pcie_dump_flag(void)
-{
-	return g_pcie_dump_flag;
-}
-
-void dump_pcie_apb_info(u32 rc_id)
-{
-	struct kirin_pcie *pcie;
-
-	if (rc_id >= g_rc_num) {
-		PCIE_PR_ERR("There is no rc_id = %d", rc_id);
-		return;
-	}
-
-	pcie = &g_kirin_pcie[rc_id];
-
-	if (!atomic_read(&pcie->is_power_on)) {
-		PCIE_PR_ERR("PCIe is Poweroff");
-		return;
-	}
-
-	dump_apb_register(pcie);
-
-	if (g_wifi_dump) {
-		PCIE_PR_ERR("Dump wifi info");
-		g_wifi_dump();
-	}
-
-	clear_pcie_dump_flag();
-}
-
-void register_wifi_dump_func(WIFI_DUMP_FUNC func)
-{
-	g_wifi_dump = func;
-}
-#else
-void set_pcie_dump_flag(void)
-{
-	return;
-}
-
-void clear_pcie_dump_flag(void)
-{
-	return;
-}
-
-bool get_pcie_dump_flag(void)
-{
-	return false;
-}
-
-void dump_pcie_apb_info(u32 rc_id)
-{
-	return;
-}
-
-void register_wifi_dump_func(WIFI_DUMP_FUNC func)
-{
-	return;
-}
-#endif
-EXPORT_SYMBOL_GPL(set_pcie_dump_flag);
-EXPORT_SYMBOL_GPL(get_pcie_dump_flag);
-EXPORT_SYMBOL_GPL(dump_pcie_apb_info);
-EXPORT_SYMBOL_GPL(register_wifi_dump_func);
-
 /*notify EP about link-down event*/
 static void kirin_pcie_notify_callback(struct kirin_pcie *pcie,
 				enum kirin_pcie_event event)
@@ -845,9 +669,16 @@ static void kirin_handle_work(struct work_struct *work)
 
 	dsm_pcie_dump_info(pcie, DSM_ERR_LINK_DOWN);
 
-	dump_link_register(pcie);
+	dump_apb_register(pcie);
 
 	kirin_pcie_notify_callback(pcie, KIRIN_PCIE_EVENT_LINKDOWN);
+
+#ifdef CONFIG_PCIE_CHIP_BUG_MNTN
+	if (pcie->ep_venid == 0x14e4) {
+		PCIE_PR_ERR("Intend to panic");
+		BUG_ON(1);
+	}
+#endif
 }
 
 static irqreturn_t kirin_pcie_linkdown_irq_handler(int irq, void *arg)
@@ -865,7 +696,6 @@ static irqreturn_t kirin_pcie_msi_irq_handler(int irq, void *arg)
 {
 	struct pcie_port *pp = arg;
 
-	PCIE_PR_ERR("Triggle msi irq[%d]", irq);
 	return dw_handle_msi_irq(pp);
 }
 
@@ -1043,6 +873,18 @@ static int __init kirin_add_pcie_port(struct pcie_port *pp,
 	return 0;
 }
 
+static int kirin_pcie_pwron_default(void *data)
+{
+	struct kirin_pcie *pcie = (struct kirin_pcie *)data;
+	return kirin_pcie_perst_cfg(pcie, ENABLE);
+}
+
+static int kirin_pcie_pwroff_default(void *data)
+{
+	struct kirin_pcie *pcie = (struct kirin_pcie *)data;
+	return kirin_pcie_perst_cfg(pcie, DISABLE);
+}
+
 static int kirin_pcie_probe(struct platform_device *pdev)
 {
 	struct kirin_pcie *pcie;
@@ -1057,7 +899,6 @@ static int kirin_pcie_probe(struct platform_device *pdev)
 		PCIE_PR_ERR("Failed to get dts info");
 		return -EINVAL;
 	}
-
 	PCIE_PR_INFO("PCIe No.%d probe", rc_id);
 
 	pcie = &g_kirin_pcie[rc_id];
@@ -1065,14 +906,26 @@ static int kirin_pcie_probe(struct platform_device *pdev)
 	pp->dev = &(pdev->dev);
 	dtsinfo = &pcie->dtsinfo;
 
+	ret = kirin_pcie_power_notifiy_register(rc_id, kirin_pcie_pwron_default,
+					kirin_pcie_pwroff_default, (void *)pcie);
+	if (ret)
+		PCIE_PR_ERR("Failed to register default pwr_callback_funcs");
+
 	if (gpio_request((unsigned int)pcie->gpio_id_reset, "pcie_reset")) {
 		PCIE_PR_ERR("Failed to request gpio-%d", pcie->gpio_id_reset);
 		return -1;
 	}
+
 	pp->ops = &kirin_pcie_host_ops;
+
 	INIT_WORK(&pcie->handle_work, kirin_handle_work);
 
 	platform_set_drvdata(pdev, pcie);
+
+	if (pcie_plat_init(pdev, pcie)) {
+		PCIE_PR_ERR("Failed to get platform info");
+		return -EINVAL;
+	}
 
 	ret = kirin_add_pcie_port(pp, pdev);
 	if (ret < 0) {
@@ -1084,12 +937,16 @@ static int kirin_pcie_probe(struct platform_device *pdev)
 	pcie_debug_init(pcie);
 #endif
 
-#if defined(CONFIG_PCIE_KIRIN_SLT) && defined(__SLT_FEATURE__)
-	pcie_slt_wlan_on(pcie, ENABLE);
+#ifdef CONFIG_HISI_DEBUG_FS
+	if(is_running_kernel_slt()) {
+		PCIE_PR_ERR("[slt]run pcie_slt_wlan_on\n");
+		pcie_slt_wlan_on(pcie, ENABLE);
+	}
 #endif
 
 	atomic_set(&(pcie->is_ready), 1);
 	spin_lock_init(&pcie->ep_ltssm_lock);
+	mutex_init(&pcie->power_lock);
 
 	PCIE_PR_INFO("--");
 	return 0;
@@ -1168,7 +1025,7 @@ static void send_pme_turn_off_msg(struct kirin_pcie *pcie)
 {
 	u32 val;
 
-#if defined(CONFIG_KIRIN_PCIE_HI3660)
+#if defined(CONFIG_KIRIN_PCIE_JAN)
 	val = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL7_ADDR);
 	val |= PME_TURN_OFF_BIT;
 	kirin_elb_writel(pcie, val, SOC_PCIECTRL_CTRL7_ADDR);
@@ -1251,7 +1108,7 @@ static void kirin_pcie_shutdown(struct platform_device *pdev)
 	}
 
 	if (atomic_read(&(pcie->is_power_on))) {
-		if (kirin_pcie_power_on((&pcie->pp), RC_POWER_OFF)) {
+		if (kirin_pcie_power_ctrl((&pcie->pp), RC_POWER_OFF)) {
 			PCIE_PR_ERR("Failed to power off");
 			return;
 		}
@@ -1278,7 +1135,7 @@ static int kirin_pcie_resume_noirq(struct device *dev)
 	rc_dev = pcie->rc_dev;
 
 	if (atomic_read(&(pcie->is_enumerated)) && (!atomic_read(&(pcie->usr_suspend)))) {
-		if (kirin_pcie_power_on(pp, RC_POWER_RESUME)) {
+		if (kirin_pcie_power_ctrl(pp, RC_POWER_RESUME)) {
 			PCIE_PR_ERR("Failed to power on ");
 			goto FAIL;
 		}
@@ -1323,7 +1180,7 @@ static int kirin_pcie_suspend_noirq(struct device *dev)
 			kirin_pcie_lp_ctrl(pcie->rc_id, DISABLE);
 			kirin_pcie_shutdown_prepare(rc_dev);
 		}
-		if (kirin_pcie_power_on(pp, RC_POWER_SUSPEND)) {
+		if (kirin_pcie_power_ctrl(pp, RC_POWER_SUSPEND)) {
 			PCIE_PR_ERR("Failed to power off ");
 			return -EINVAL;
 		}
@@ -1394,14 +1251,14 @@ static int kirin_pcie_usr_suspend(u32 rc_idx, int power_off_ops)
 		kirin_pcie_lp_ctrl(rc_idx, DISABLE);
 		ret = kirin_pcie_shutdown_prepare(rc_dev);
 		if (ret)
-			return -EINVAL;
+			PCIE_PR_ERR("device do not reply ACK");
 	}
 	/*phy rst from sys to pipe */
 	val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_CTRL1_ADDR);
 	val |= 0x1 << 17;
 	kirin_apb_phy_writel(pcie, val, SOC_PCIEPHY_CTRL1_ADDR);
 
-	ret = kirin_pcie_power_on(pp, RC_POWER_OFF);
+	ret = kirin_pcie_power_ctrl(pp, RC_POWER_OFF);
 	if (ret) {
 		PCIE_PR_ERR("Failed to power off ");
 		return -EINVAL;
@@ -1427,7 +1284,7 @@ static int kirin_pcie_usr_resume(u32 rc_idx)
 
 	atomic_set(&(pcie->usr_suspend), 0);
 
-	ret = kirin_pcie_power_on(pp, RC_POWER_ON);
+	ret = kirin_pcie_power_ctrl(pp, RC_POWER_ON);
 	if (ret) {
 		PCIE_PR_ERR("Failed to power on");
 
@@ -1437,7 +1294,7 @@ static int kirin_pcie_usr_resume(u32 rc_idx)
 
 	ret = kirin_pcie_establish_link(&pcie->pp);
 	if (ret) {
-		if (kirin_pcie_power_on(pp, RC_POWER_OFF))
+		if (kirin_pcie_power_ctrl(pp, RC_POWER_OFF))
 			PCIE_PR_ERR("Failed to power off");
 
 		atomic_set(&(pcie->usr_suspend), 1);
@@ -1475,7 +1332,7 @@ int kirin_pcie_pm_control(int power_ops, u32 rc_idx)
 	if (power_ops == POWERON ) {
 		dsm_pcie_clear_info();
 		return kirin_pcie_usr_resume(rc_idx);
-	} else if (power_ops == POWEROFF_BUSON|| power_ops == POWEROFF_BUSDOWN){
+	} else if (power_ops == POWEROFF_BUSON || power_ops == POWEROFF_BUSDOWN){
 		return kirin_pcie_usr_suspend(rc_idx, power_ops);
 	} else {
 		PCIE_PR_ERR("Invalid power_ops[%d]", power_ops);
@@ -1579,7 +1436,7 @@ int kirin_pcie_enumerate(u32 rc_idx)
 	}
 
 	/*clk on*/
-	ret = kirin_pcie_power_on(pp, RC_POWER_ON);
+	ret = kirin_pcie_power_ctrl(pp, RC_POWER_ON);
 	if (ret) {
 		PCIE_PR_ERR("Failed to power RC");
 		dsm_pcie_dump_info(pcie, DSM_ERR_POWER_ON);
@@ -1646,7 +1503,7 @@ int kirin_pcie_enumerate(u32 rc_idx)
 	return 0;
 
 FAIL_TO_POWEROFF:
-	if (kirin_pcie_power_on(pp, RC_POWER_OFF)) {
+	if (kirin_pcie_power_ctrl(pp, RC_POWER_OFF)) {
 			PCIE_PR_ERR("Failed to power off.");
 	}
 	return -1;
@@ -1681,6 +1538,24 @@ int pcie_ep_link_ltssm_notify(u32 rc_id, u32 link_status)
 	return 0;
 }
 EXPORT_SYMBOL(pcie_ep_link_ltssm_notify);
+
+int kirin_pcie_power_notifiy_register(u32 rc_id, int (*poweron)(void* data),
+				int (*poweroff)(void* data), void* data)
+{
+	struct kirin_pcie *pcie;
+
+	if (rc_id >= g_rc_num) {
+		PCIE_PR_ERR("There is no rc_id = %d", rc_id);
+		return -EINVAL;
+	}
+
+	pcie = &g_kirin_pcie[rc_id];
+	pcie->callback_poweron  = poweron;
+	pcie->callback_poweroff = poweroff;
+	pcie->callback_data = data;
+	return 0;
+}
+EXPORT_SYMBOL_GPL(kirin_pcie_power_notifiy_register);
 
 /*lint -e438 -e550 -e713 -e732 -e737 -e774 -e838 +esym(438,*) +esym(713,*) +esym(732,*) +esym(737,*) +esym(774,*) +esym(550,*) +esym(838,*) */
 

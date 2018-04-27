@@ -48,6 +48,7 @@
 
 
 #include "diag_common.h"
+#include "msp_diag_comm.h"
 #include "diag_msgmsp.h"
 #include "diag_msgbbp.h"
 #include "diag_msgps.h"
@@ -55,7 +56,7 @@
 #include "msp_errno.h"
 #include "diag_debug.h"
 #include "diag_api.h"
-
+#include "diag_connect.h"
 
 
 #define    THIS_FILE_ID        MSP_FILE_ID_DIAG_MSGMSP_C
@@ -86,6 +87,7 @@ const DIAG_MSGMSP_PROC_STRU g_astMsgMsp[] =
     {DIAG_CMD_GET_MODEM_NUM,        diag_GetModemNum},
     {DIAG_CMD_PID_TABLE_MSG,        diag_GetPidTable},
 
+    {DIAG_CMD_DEBUG_MSG,            DIAG_ApiTest},
 };
 
 VOS_UINT32 diag_MspMsgProc(DIAG_FRAME_INFO_STRU *pData);
@@ -109,15 +111,7 @@ void diag_MspMsgInit(void)
     }
 }
 
-/*****************************************************************************
- Function Name   : diag_GetModemNum
- Description     : 获取modem num
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
-    1.c00326366      2012-11-22  Draft Enact
-*****************************************************************************/
 VOS_UINT32 diag_GetModemNum(VOS_UINT8* pstReq)
 {
     VOS_UINT ret = ERR_MSP_SUCCESS;
@@ -132,7 +126,7 @@ VOS_UINT32 diag_GetModemNum(VOS_UINT8* pstReq)
 
     stDiagInfo.ulMsgType = DIAG_MSG_TYPE_MSP;
 
-    stModemNum.ulNum = 3;
+    stModemNum.ulNum = mdrv_nv_get_modem_num();
 
     stModemNum.ulRc  = ERR_MSP_SUCCESS;
 
@@ -144,15 +138,7 @@ VOS_UINT32 diag_GetModemNum(VOS_UINT8* pstReq)
 }
 
 
-/*****************************************************************************
- Function Name   : diag_GetPidTable
- Description     : 获取PID列表
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
-    1.c00326366      2016-02-14  Draft Enact
-*****************************************************************************/
 VOS_UINT32 diag_GetPidTable(VOS_UINT8* pstReq)
 {
     VOS_UINT32 i, num, ulRc, len, ret;
@@ -223,19 +209,7 @@ VOS_UINT32 diag_GetPidTable(VOS_UINT8* pstReq)
     return (VOS_UINT32)ret;
 }
 
-/*****************************************************************************
- Function Name   : diag_GuGtrProcEntry
- Description     : GU的RTT测试命令处理，只需要透传，不需要回复
-                    1. 原值透传，不改变senderpid
-                    2. 由于是GU协议栈的任务，需要在C核去申请消息发送消息
-                       (senderpid不能是A核的PID，否则申请消息会失败)
-                    3. 不需要回复，GTR通过层间消息的勾包码流判断成功失败
-                    4. GU的RTT测试不分正常版本和RTT版本(版本归一)
 
- History         :
-    1.c00326366      2015-9-6  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_GuGtrProcEntry(VOS_UINT8* pstReq)
 {
     VOS_UINT32 ulRet                    = ERR_MSP_SUCCESS;
@@ -246,6 +220,12 @@ VOS_UINT32 diag_GuGtrProcEntry(VOS_UINT8* pstReq)
     pstDiagHead = (DIAG_FRAME_INFO_STRU*)(pstReq);
     mdrv_diag_PTR(EN_DIAG_PTR_GUGTR_CFG_PROC, 1, pstDiagHead->ulCmdId, 0);
 
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU))
+    {
+        diag_printf("rec data len error, u32DataLen:0x%x\n", pstDiagHead->ulMsgLen);
+        return ERR_MSP_INVALID_PARAMETER;
+    }
+
     DIAG_MSG_ACORE_CFG_PROC(ulLen, pstDiagHead, pstInfo, ulRet);
     return ulRet;
 
@@ -255,21 +235,7 @@ DIAG_ERROR:
 }
 
 
-/*****************************************************************************
- Function Name   : diag_GtrProcEntry
- Description     : GTR命令处理接口入口
-                    此功能只在回片前RTT联调时使用，会单独编译RTT联调版本
-                    由PS的打桩接口注册到MSP，MSP在从工具侧接收到GTR命令时回调PS
-                    的打桩接口，PS通过邮箱把消息转发给DSP
-                    PS接收到DSP的回复后，调用(DIAG_TransReport)接口把应答结果上
-                    报到工具侧
-                    GTR测试软件-->HIDS-->MSP-->PS-->DSP-->PS-->MSP-->HIDS-->GTR
 
- History         :
-    1.w00182550      2012-12-26  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_UINT32 diag_GtrProcEntry(VOS_UINT8* pstReq)
 {
     DIAG_CMD_GTR_SET_CNF_STRU stGtrCnf = {0};
@@ -282,9 +248,15 @@ VOS_UINT32 diag_GtrProcEntry(VOS_UINT8* pstReq)
     pstDiagHead = (DIAG_FRAME_INFO_STRU*)(pstReq);
     mdrv_diag_PTR(EN_DIAG_PTR_GTR_CFG_PROC, 1, pstDiagHead->ulCmdId, 0);
 
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU))
+    {
+        diag_printf("rec data len error, u32DataLen:0x%x\n", pstDiagHead->ulMsgLen);
+        return ERR_MSP_INVALID_PARAMETER;
+    }
+
     DIAG_MSG_ACORE_CFG_PROC(ulLen, pstDiagHead, pstInfo, ret);
     return ret;
-    
+
 DIAG_ERROR:
 
     DIAG_MSG_COMMON_PROC(stDiagInfo, stGtrCnf, pstDiagHead);
@@ -314,6 +286,7 @@ VOS_UINT32 diag_MspMsgProc(DIAG_FRAME_INFO_STRU *pData)
 {
     VOS_UINT32 ret = ERR_MSP_FAILURE;
     VOS_UINT32 i;
+    VOS_UINT32 ulCmdId;
 
     if(NULL == pData)
     {
@@ -322,14 +295,24 @@ VOS_UINT32 diag_MspMsgProc(DIAG_FRAME_INFO_STRU *pData)
 
     mdrv_diag_PTR(EN_DIAG_PTR_MSGMSP_IN, 1, pData->ulCmdId, 0);
 
-    if(DIAG_MSG_TYPE_MSP != pData->stID.pri4b)
+    /* 此处不再做判断，因为如果不是MSP的消息不会进入该接口, 外部可以保证 */
+    /*if(DIAG_MSG_TYPE_MSP != pData->stID.pri4b)
     {
         return ret;
+    }*/
+
+    if(DIAG_SERVICE_HEAD_VER(pData))
+    {
+        ulCmdId = pData->ulCmdId;
+    }
+    else
+    {
+        ulCmdId = *(VOS_UINT32 *)((VOS_UINT8*)pData + DIAG_4G_FRAME_HEAD_LEN);
     }
 
     for(i = 0; i < sizeof(g_astMsgMsp)/sizeof(DIAG_MSGMSP_PROC_STRU); i++)
     {
-        if(pData->ulCmdId == g_astMsgMsp[i].ulCmdId)
+        if(ulCmdId == g_astMsgMsp[i].ulCmdId)
         {
             return g_astMsgMsp[i].pfnProc((VOS_UINT8*)pData);
         }

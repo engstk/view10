@@ -9,21 +9,13 @@
 		status = "ok";
 	};
 
-	smmu_tester{
-		compatible = "hisi,hisi-smmu-tester";
-		iommu_info{
-			start-addr = <0x8000>;
-			size = <0xbfff8000>;
-		};
-	};
-
 	memory@0 {
 		device_type = "memory";
 		reg = <0x0 0x00400000 0x0 0xBFE00000>;
 	};
 
 	/* static-region */
-	reserved-memory {
+	rsvmem:reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
@@ -32,10 +24,12 @@
 			reg = <0x0 0xDC00000 0x0 0x3000000>;
 			status = "disabled";
 		};
-
-		modem-phy-ex {
-			reg = <0x0 0x12780000 0x0 0x880000>;
+		/* for supersonic */
+		supersonic {
+			reg = <0x0 0x13600000 0x0 0xA00000>;
+			compatible = "hisi-supersonic";
 			no-map;
+			status = "disabled";
 		};
 
 		hhee {
@@ -122,7 +116,12 @@
 		};
 
 		modem-s {
-			reg = <0x0 0x80000000 0x0 0xD500000>;
+			reg = <0x0 0x80000000 0x0 0xA380000>;
+			no-map;
+		};
+
+		sec_camera {
+			reg = <0x0 0x8CA00000 0x0 0xB00000>;
 			no-map;
 		};
 
@@ -152,7 +151,7 @@
 		};
 
 		modem-share-mem {
-			reg = <0x0 0x8E800000 0x0 0xC00000>;
+			reg = <0x0 0x8E800000 0x0 0xB00000>;
 			no-map;
 		};
 
@@ -215,14 +214,7 @@
 			fama_offset = <0x0 0x0>;
 			status = "disable";
 		};
-		tui_cma: tui-mem{
-			size  = <0x0 0x400000>;
-			alignment = <0x0 0x2000000>;
-			alloc-ranges = <0x0 0x0 0x1 0x0>;
-			compatible = "shared-dma-pool";
-			reusable;
-			status = "ok";
-		};
+
 
 	};
 };

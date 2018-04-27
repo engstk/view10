@@ -183,11 +183,11 @@ extern "C" {
 
 
 
-#define IP_MEM_CPY_S(pDestBuffer,  pSrcBuffer, ulCount) VOS_MemCpy_s( pDestBuffer, (VOS_UINT32)(ulCount),  pSrcBuffer, (VOS_UINT32)(ulCount))
+#define IP_MEM_CPY_S(pDestBuffer, ulDestSize, pSrcBuffer, ulCount) VOS_MemCpy_s( pDestBuffer, (VOS_UINT32)(ulDestSize),  pSrcBuffer, (VOS_UINT32)(ulCount))
 
-#define IP_MEM_SET_S(pDestBuffer,  ucData, ulCount) VOS_MemSet_s( pDestBuffer, (VOS_UINT32)(ulCount), (VOS_CHAR)(ucData), (VOS_UINT32)(ulCount) )
+#define IP_MEM_SET_S(pDestBuffer, ulDestSize, ucData, ulCount) VOS_MemSet_s( pDestBuffer, (VOS_UINT32)(ulDestSize), (VOS_CHAR)(ucData), (VOS_UINT32)(ulCount) )
 
-#define IP_MEM_MOVE_S(pDestBuffer,  pucSrcBuffer, ulCount) VOS_MemMove_s( pDestBuffer, (VOS_UINT32)(ulCount), pucSrcBuffer, (VOS_UINT32)(ulCount) )
+#define IP_MEM_MOVE_S(pDestBuffer, ulDestSize, pucSrcBuffer, ulCount) VOS_MemMove_s( pDestBuffer, (VOS_UINT32)(ulDestSize), pucSrcBuffer, (VOS_UINT32)(ulCount) )
 
 
 
@@ -293,7 +293,7 @@ extern "C" {
                 (*((pucFirstByte) + 2)) = ((ulUint32Data) >> IP_BITMOVE_8) & 0xff;\
                 (*((pucFirstByte) + 3)) = (ulUint32Data) & 0xff;\
             }
-
+ 
 /*封装写IP消息头的宏*/
 #define ND_IP_WRITE_MSG_HEAD(pstMsg, ulRabmMsgID, ulSendPid, ulReceivePid)\
                     (pstMsg)->ulMsgId   = (ulRabmMsgID);\

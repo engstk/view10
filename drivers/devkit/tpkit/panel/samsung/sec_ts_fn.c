@@ -978,6 +978,7 @@ int sec_ts_run_self_test(struct sec_ts_data *ts, struct ts_rawdata_info *info)
 	int raw_count = ts->tx_count * ts->rx_count;
 	int sf_raw_count = ts->tx_count + ts->rx_count;
 	int sf_offset;
+	int ibuff_offset = 0;
 	u8 img_ver[4] = {0,};
 
 	if (ts->power_status == SEC_TS_STATE_POWER_OFF) {
@@ -1075,11 +1076,11 @@ err_exit:
 		TS_LOG_ERR("%s:self test fail panel_reason: %s\n",
 				__func__, result_buff);
 	}
-
-	snprintf(result_buff + strlen(result_buff), SEC_CMD_STR_LEN, "%s-%s%s-%x.%x.%x.%x",
+	ibuff_offset = strlen(result_buff);
+	snprintf(result_buff + ibuff_offset, SEC_CMD_STR_LEN - ibuff_offset, "%s-%s%s-%x.%x.%x.%x",
 			ts->module_name, SEC_TS_VENDOR_NAME, SEC_TS_HW_PROJECTID,
 			img_ver[0], img_ver[1], img_ver[2], img_ver[3]);
-	strncat(info->result, result_buff, SEC_CMD_STR_LEN);
+	strncat(info->result, result_buff, TS_RAWDATA_RESULT_MAX-1);
 
 	return ret;
 }

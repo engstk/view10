@@ -26,7 +26,7 @@ typedef enum tag_efuse_mem_attribution {
     efuse_mem_attr_authkey_rd_disable,
     efuse_mem_attr_dbg_class_ctrl,
     efuse_mem_attr_dieid,
-#ifdef __SLT_FEATURE__
+#ifdef CONFIG_HISI_DEBUG_FS
     efuse_mem_attr_sltfinishflag,
 #endif
     efuse_mem_attr_max
@@ -75,7 +75,7 @@ typedef struct tag_efusec_data{
 #define HISI_EFUSE_TEST_WRITE_KCE    0xa005
 #endif
 
-#ifdef __SLT_FEATURE__
+#ifdef CONFIG_HISI_DEBUG_FS
 #define HISI_EFUSE_WRITE_SLTFINISHFLAG          0xb000
 #define HISI_EFUSE_READ_SLTFINISHFLAG           0xb001
 #define EFUSE_SLTFINISHFLAG_LENGTH_BYTES        (4)
@@ -98,11 +98,6 @@ typedef struct tag_efusec_data{
 #ifdef CONFIG_HI3XXX_EFUSE
 extern int get_efuse_dieid_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout);
 extern int get_efuse_chipid_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout);
-extern int set_efuse_chipid_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout);
-extern int get_efuse_authkey_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout);
-extern int set_efuse_authkey_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout);
-extern int get_efuse_securitydebug_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout);
-extern int set_efuse_securitydebug_value(unsigned char *pu8Buffer, unsigned int timeout);
 extern int get_efuse_thermal_value(unsigned char *pu8Buffer, unsigned int u32Length, unsigned int timeout);
 extern int get_efuse_hisee_value(unsigned char *pu8Buffer, unsigned int u32Length, unsigned int timeout);
 extern int set_efuse_hisee_value(unsigned char *pu8Buffer, unsigned int u32Length, unsigned int timeout);
@@ -116,31 +111,6 @@ static inline int get_efuse_dieid_value(unsigned char *pu8Buffer, unsigned int u
 }
 
 static inline int get_efuse_chipid_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout)
-{
-	return OK;
-}
-
-static inline int set_efuse_chipid_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout)
-{
-	return OK;
-}
-
-static inline int get_efuse_authkey_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout)
-{
-	return OK;
-}
-
-static inline int set_efuse_authkey_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout)
-{
-	return OK;
-}
-
-static inline int get_efuse_securitydebug_value(unsigned char *pu8Buffer, unsigned int u32Lenght, unsigned int timeout)
-{
-	return OK;
-}
-
-static inline int set_efuse_securitydebug_value(unsigned char *pu8Buffer, unsigned int timeout)
 {
 	return OK;
 }
@@ -183,38 +153,6 @@ static inline int set_efuse_kce_value(unsigned char *pu8Buffer, unsigned int u32
 #define  EFUSE_CHIPID_GROUP_WIDTH  2
 #define  EFUSE_KCE_GROUP_START  28
 #define  EFUSE_KCE_GROUP_WIDTH  4
-/*****************************************************************************
-* 函 数 名  : bsp_efuse_read
-*
-* 功能描述  : 按组读取EFUSE中的数据
-*
-* 输入参数  : group  起始group
-*                   num  数组长度(word数,不超过16)
-* 输出参数  : pBuf ：EFUSE中的数据
-*
-* 返 回 值  : 
-*
-* 其它说明  : 
-*
-*****************************************************************************/
-int bsp_efuse_read(unsigned int * pBuf, const unsigned int group, const unsigned int num);
-
-/*****************************************************************************
-* 函 数 名  : bsp_efuse_write
-*
-* 功能描述  : 烧写Efsue
-*
-* 输入参数  : pBuf:待烧写的EFUSE值
-*                 group,Efuse地址偏移
-*                 len,烧写长度
-* 输出参数  :
-*
-* 返 回 值  :
-*
-* 其它说明  :
-*
-*****************************************************************************/
-int bsp_efuse_write(unsigned int *pBuf, const unsigned int group, const unsigned int num);
 #endif
 
 #endif

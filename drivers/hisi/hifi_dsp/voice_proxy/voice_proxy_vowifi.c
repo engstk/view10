@@ -491,7 +491,12 @@ static int vowifi_remove(struct platform_device *pdev)
 
 	UNUSED_PARAMETER(pdev);
 
+	mutex_destroy(&priv.ioctl_mutex);
 	misc_deregister(&vowifi_misc_device);
+
+	voice_proxy_deregister_msg_callback(ID_VOICE_PROXY_RCTP_OM_INFO_NTF);
+	voice_proxy_deregister_msg_callback(ID_VOICE_PROXY_AJB_OM_INFO_NTF);
+
 	voice_proxy_deregister_msg_callback(ID_VOICE_PROXY_WIFI_TX_NTF);
 	voice_proxy_deregister_msg_callback(ID_VOICE_PROXY_WIFI_RX_CNF);
 

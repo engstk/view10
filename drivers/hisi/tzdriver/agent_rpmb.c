@@ -134,6 +134,7 @@ static int process_rpmb_lock(struct tee_agent_kernel_ops *agent_instance)
 		tlogd("rpmb counter lock context: dev_id=%d\n",
 		      lock_info.dev_id);
 	}
+	put_agent_event(event_data);
 	return 0; /*lint !e454 */
 }
 

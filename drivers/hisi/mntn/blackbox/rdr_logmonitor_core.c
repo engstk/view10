@@ -24,6 +24,7 @@
 #include <linux/proc_fs.h>
 #include <linux/seq_file.h>
 #include <linux/delay.h>
+#include <libhwsecurec/securec.h>
 
 #include <linux/hisi/rdr_pub.h>
 #include <linux/hisi/util.h>
@@ -214,11 +215,17 @@ int rdr_create_exception_path(struct rdr_exception_info_s *e,
 		return ret = -1;
 	}
 	memset(date, 0, DATATIME_MAXLEN);
-	snprintf(date, DATATIME_MAXLEN, "%s-%08lld",
+	ret = snprintf_s(date, DATATIME_MAXLEN, DATATIME_MAXLEN - 1, "%s-%08lld",
 		 rdr_get_timestamp(), rdr_get_tick());
+	if(unlikely(ret < 0)){
+		BB_PRINT_ERR("[%s], snprintf_s ret %d!\n", __func__, ret);
+	}
 
 	memset(path, 0, PATH_MAXLEN);
-	snprintf(path, PATH_MAXLEN, "%s%s/", PATH_ROOT, date);
+	ret = snprintf_s(path, PATH_MAXLEN, PATH_MAXLEN - 1, "%s%s/", PATH_ROOT, date);
+	if(unlikely(ret < 0)){
+		BB_PRINT_ERR("[%s], snprintf_s ret %d!\n", __func__, ret);
+	}
 
 	ret = rdr_create_dir(path);
 	BB_PRINT_END();
@@ -648,10 +655,39 @@ out:
 	return ret;
 }
 
+static inline int rdr_dir_size_for_directory(struct linux_dirent *d, 
+	bool recursion, u32 *size, struct kstat *stat, char *fullname)
+{
+	int ret;
+
+	ret = rdr_check_logpath_legality(d->d_name);
+	if (ret == -1) {
+		/*BB_PRINT_DBG("check legality: ignore.\n");*/
+		return -1;
+	}
+	if (!recursion && ret == 0) {
+		BB_PRINT_DBG("check legality: invalid\n");
+		if (!recursion)
+			rdr_rm_dir(fullname);
+		return -1;
+	}
+
+	if (recursion) {
+		/* cppcheck-suppress * */
+		(*size) += rdr_dir_size(fullname, recursion);
+	} else {
+		/*size += stat.size; */
+		rdr_add_logpath_list(d->d_name,
+				     &(stat->ctime));
+	}
+	/*BB_PRINT_DBG("DIR\n");*/
+	return 0;
+}
+
 int rdr_dir_size(char *path, bool recursion)
 {
 	/*DT_DIR, DT_REG */
-	int fd = -1, bpos, ret = 0;
+	int fd = -1, bpos;
 	char buf[1024];
 	int bufsize;
 	struct linux_dirent *d;
@@ -672,7 +708,7 @@ int rdr_dir_size(char *path, bool recursion)
 
 	memset(&stat, 0, sizeof(struct kstat));
 	if (0 != vfs_stat(path, &stat)) {
-		BB_PRINT_ERR("stat failed :[%s]\n", fullname);
+		BB_PRINT_ERR("stat failed :\n");
 	}
 	size += stat.size;
 
@@ -701,27 +737,8 @@ int rdr_dir_size(char *path, bool recursion)
 			}
 			/*BB_PRINT_DBG("fullname:%s\n", fullname);*/
 			if (d_type == DT_DIR) {
-				ret = rdr_check_logpath_legality(d->d_name);
-				if (ret == -1) {
-					/*BB_PRINT_DBG("check legality: ignore.\n");*/
+				if (rdr_dir_size_for_directory(d, recursion, &size, &stat, fullname))
 					continue;
-				}
-				if (!recursion && ret == 0) {
-					BB_PRINT_DBG("check legality: invalid\n");
-					if (!recursion)
-						rdr_rm_dir(fullname);
-					continue;
-				}
-
-				if (recursion) {
-					/* cppcheck-suppress * */
-					size += rdr_dir_size(fullname, recursion);
-				} else {
-					/*size += stat.size; */
-					rdr_add_logpath_list(d->d_name,
-							     &stat.ctime);
-				}
-				/*BB_PRINT_DBG("DIR\n");*/
 			} else if (d_type == DT_REG) {
 				/*BB_PRINT_DBG("stat.size:   [%lld]\n", stat.size);*/
 				/*BB_PRINT_DBG("stat.atime:  [0x%x]\n", stat.atime.tv_sec);*/

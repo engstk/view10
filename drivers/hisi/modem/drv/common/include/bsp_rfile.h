@@ -106,7 +106,7 @@ struct rfile_stat_stru
 void adp_rfile_init(void);
 s32 bsp_rfile_init(void);
 s32 bsp_fs_ok(void);
-#if defined(__OS_RTOSCK_SMP__) && defined(CONFIG_RFILE_STUB)
+#if defined(__OS_RTOSCK_SMP__) && (defined(CONFIG_RFILE_STUB)|| defined(CONFIG_SMART_SYSTEM_MODEM))
 static inline s32 bsp_stat(s8 *name, void *pStat){return 0;}
 static inline s32 bsp_close(u32 fp){return 0;}
 static inline s32 bsp_open(const s8 *path, s32 flags, s32 mode){return 0;}

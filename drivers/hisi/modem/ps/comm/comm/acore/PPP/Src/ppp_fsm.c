@@ -146,18 +146,13 @@ fsm_Init(struct fsm *fp, const VOS_CHAR *name, VOS_UINT16 proto, VOS_INT32 minco
 void
 NewState(struct fsm *fp, VOS_INT32 newState)
 {
-  static const VOS_CHAR * const NewStateNames[] = {
-    "NewState:Initial", "NewState:Starting", "NewState:Closed", "NewState:Stopped", "NewState:Closing", "NewState:Stopping\r\n",
-    "NewState:Req-Sent", "NewState:Ack-Rcvd", "NewState:Ack-Sent", "NewState:Opened",
-  };
-
   if (ST_OPENED < newState)
   {
     PPP_MNTN_LOG1(PS_PID_APP_PPP, 0, PS_PRINT_WARNING, "NewState Err!", newState);
     return;
   }
 
-  PPP_MNTN_LOG(PS_PID_APP_PPP, 0, PS_PRINT_NORMAL, NewStateNames[newState]);
+  PPP_MNTN_LOG1(PS_PID_APP_PPP, 0, PS_PRINT_NORMAL, "newState.", newState);
 
   fp->state = newState;
 
@@ -1303,7 +1298,9 @@ fsm_opt(VOS_CHAR *opt, VOS_INT32 optlen, const struct fsm_opt *o)
                   cplen, optlen);
     cplen = optlen;
   }
+  /*lint -e613 */
   PSACORE_MEM_CPY(opt, cplen, o, cplen);
+  /*lint +e613 */
   if (cplen)
     opt[1] = (VOS_CHAR)cplen;
 

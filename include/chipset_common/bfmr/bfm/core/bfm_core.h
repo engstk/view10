@@ -47,7 +47,7 @@ struct bfmr_boot_fail_info
 {
     int boot_fail_no;
     int suggested_recovery_method;
-    char log_path[BFMR_SIZE_1K];
+    bfmr_bootfail_addl_info_t addl_info;
 };
 
 
@@ -66,6 +66,7 @@ struct bfmr_boot_fail_info
 #define BFMR_ENABLE_CTRL _IOW(BFMR_IOCTL_BASE, 10, int)
 #define BFMR_ACTION_TIMER_CTL _IOW(BFMR_IOCTL_BASE, 11, struct action_ioctl_data)
 
+
 /*----global variables----------------------------------------------------------------*/
 
 
@@ -74,12 +75,12 @@ struct bfmr_boot_fail_info
 /**
     @function: int boot_fail_err(bfmr_bootfail_errno_e bootfail_errno,
         bfr_suggested_recovery_method_e suggested_recovery_method,
-        char *log_path)
+        bfmr_bootfail_addl_info_t *paddl_info)
     @brief: save the log and do proper recovery actions when meet with error during system booting process.
 
     @param: bootfail_errno [in], boot fail error no.
     @param: suggested_recovery_method [in], suggested recovery method, if you don't know, please transfer NO_SUGGESTION for it
-    @param: log_path [in], path of log file, if an additional log file existed and need to be saved.
+    @param: paddl_info [in], saving additional info such as log path and so on.
 
     @return: 0 - succeeded; -1 - failed.
 
@@ -87,7 +88,7 @@ struct bfmr_boot_fail_info
 */
 int boot_fail_err(bfmr_bootfail_errno_e bootfail_errno,
     bfr_suggested_recovery_method_e suggested_recovery_method,
-    char *log_path);
+    bfmr_bootfail_addl_info_t *paddl_info);
 
 /**
     @function: int bfmr_get_boot_stage(bfmr_detail_boot_stage_e *pboot_stage)

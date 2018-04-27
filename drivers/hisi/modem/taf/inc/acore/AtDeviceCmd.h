@@ -118,16 +118,7 @@ extern "C" {
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : AT_TBAT_OPERATION_TYPE_ENUM
- 结构说明  : ^TBAT的测试项目
-             AT_TBAT_BATTERY_ANALOG_VOLTAGE         电池模拟电压
-             AT_TBAT_BATTERY_DIGITAL_VOLTAGE        电池数字电压
-             AT_TBAT_BATTERY_VOLUME                 电池电量
-  1.日    期   : 2012年01月02日
-    作    者   : f62575
-    修改内容   : 创建
-*****************************************************************************/
+
 enum AT_TBAT_OPERATION_TYPE_ENUM
 {
     AT_TBAT_BATTERY_ANALOG_VOLTAGE      = 0,
@@ -137,15 +128,7 @@ enum AT_TBAT_OPERATION_TYPE_ENUM
 };
 typedef VOS_UINT32  AT_TBAT_OPERATION_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : AT_TBAT_OPERATION_DIRECTION_ENUM
- 结构说明  : ^TBAT的测试方向
-            AT_TBAT_READ_FROM_UUT   从单板侧(UUT)读取
-            AT_TBAT_SET_TO_UUT      设置到单板侧(UUT)
-  1.日    期   : 2012年01月02日
-    作    者   : f62575
-    修改内容   : 创建
-*****************************************************************************/
+
 enum AT_TBAT_OPERATION_DIRECTION_ENUM
 {
     AT_TBAT_READ_FROM_UUT,
@@ -154,17 +137,7 @@ enum AT_TBAT_OPERATION_DIRECTION_ENUM
 };
 typedef VOS_UINT32  AT_TBAT_OPERATION_DIRECTION_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : AT_TSELRF_PATH_ENUM
- 结构说明  : ^TSELRF的射频通路编号
-             AT_TSELRF_PATH_GSM       GSM通路（包括EDGE/GPRS/EGSM等的全集）
-             AT_TSELRF_PATH_WCDMA_PRI WCDMA主集
-             AT_TSELRF_PATH_WCDMA_DIV WCDMA分集
-             AT_TSELRF_PATH_WIFI      WiFi通路
-  1.日    期   : 2012年01月02日
-    作    者   : f62575
-    修改内容   : 创建
-*****************************************************************************/
+
 enum AT_TSELRF_PATH_ENUM
 {
     AT_TSELRF_PATH_GSM                  = 1,
@@ -177,17 +150,7 @@ enum AT_TSELRF_PATH_ENUM
 typedef VOS_UINT32  AT_TSELRF_PATH_ENUM_UINT32;
 
 
-/*****************************************************************************
- 枚举名    : AT_KEY_TYPE_ENUM
- 结构说明  : ^SETKEY,^GETKEYINFO的枚举类型
-             AT_KEY_TYPE_DIEID      天际通产品dieid，保留枚举
-             AT_KEY_TYPE_TBOX_SMS   T-BOX产品短信加解密，保留枚举
-             AT_KEY_TYPE_SOCID      芯片SOC ID，256bit
-             AT_KEY_TYPE_AUTHKEY    芯片DFT密码，64bit，产线写入efuse
-  1.日    期   : 2016年04月14日
-    作    者   : w00249971
-    修改内容   : 创建
-*****************************************************************************/
+
 enum AT_KEY_TYPE_ENUM
 {
     AT_KEY_TYPE_DIEID      = 1,
@@ -258,14 +221,7 @@ extern VOS_INT8                         g_acATOpwordPwd[AT_OPWORD_PWD_LEN+1];
   7 STRUCT定义
 *****************************************************************************/
 
-/*****************************************************************************
- 结构名    : AT_WIFISEC_WIWEP_INFO_STRU
- 结构说明  : WIWEP命令操作对象: WIFI KEY的数据结构
-             ucwlKeys的内容为字符类型，以字符串结束符'\0'作为数据结束
-  1.日    期   : 2012年01月02日
-    作    者   : f62575
-    修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucwlKeys[AT_NV_WLKEY_LEN];
@@ -408,9 +364,9 @@ VOS_UINT16 AT_TasTestOut(
     MTA_AT_TAS_TEST_QRY_CNF_STRU       *pstMtaAtTasTestReqCnf
 );
 VOS_UINT32 AT_RcvMtaTasTestQryCnf( VOS_VOID *pMsg );
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_UINT32 AT_SetCdmaAttDiversitySwitch(VOS_UINT8 ucIndex);
-
+#endif
 VOS_UINT32 AT_RcvMtaPowerDetQryCnf(VOS_VOID *pMsg);
 
 VOS_UINT32 AT_SetMipiReadPara(VOS_UINT8 ucIndex);

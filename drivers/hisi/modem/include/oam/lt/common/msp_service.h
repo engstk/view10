@@ -80,22 +80,8 @@ extern "C" {
    5 STRUCT
 *****************************************************************************/
 
-/* √Ë ˆ : serviceÕ∑ */
-typedef struct
-{
-    VOS_UINT32    sid8b       :8;
-    VOS_UINT32    mdmid3b     :3;
-    VOS_UINT32    rsv1b       :1;
-    VOS_UINT32    ssid4b      :4;
-    VOS_UINT32    sessionid8b :8;
-    VOS_UINT32    mt2b        :2;
-    VOS_UINT32    index4b     :4;
-    VOS_UINT32    eof1b       :1;
-    VOS_UINT32    ff1b        :1;
 
-    VOS_UINT32    ulMsgTransId;
-    VOS_UINT8     aucTimeStamp[8];
-}MSP_SERVICE_HEAD_STRU;
+typedef DIAG_SERVICE_HEAD_STRU MSP_SERVICE_HEAD_STRU;
 
 /*****************************************************************************
   6 UNION
@@ -112,9 +98,9 @@ typedef struct
 
 extern VOS_VOID msp_ServiceInit(VOS_VOID);
 
-typedef VOS_UINT32 (*MSP_SERVICE_FUNC)(MSP_SERVICE_HEAD_STRU *pData);
+typedef VOS_UINT32 (*MSP_SERVICE_FUNC)(MSP_SERVICE_HEAD_STRU *pData, VOS_UINT32 ulDataLen);
 
-extern VOS_VOID msp_ServiceProcReg(MSP_SID_TYPE_U32 ulType, MSP_SERVICE_FUNC pServiceFn);
+VOS_VOID msp_ServiceProcReg(MSP_SID_TYPE_U32 ulType, MSP_SERVICE_FUNC pServiceFn);
 
 /*****************************************************************************
   9 OTHERS

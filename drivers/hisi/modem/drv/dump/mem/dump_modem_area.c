@@ -46,7 +46,7 @@
  *
  */
 
-
+#include "securec.h"
 #include <product_config.h>
 #include <bsp_ddr.h>
 #include "bsp_dump_mem.h"
@@ -78,7 +78,7 @@ s32 dump_get_load_info(dump_load_info_t* load_info)
     dump_load = (dump_load_info_t *)((u8*)g_st_dump_area_ctrl.virt_addr+(MNTN_AREA_RESERVE_ADDR-MNTN_BASE_ADDR));
 
     /* coverity[secure_coding] */
-    (void)memcpy(load_info,dump_load,sizeof(dump_load_info_t));
+    (void)memcpy_s(load_info,sizeof(*load_info),dump_load,sizeof(*dump_load));
     
     return BSP_OK;
 }
@@ -188,7 +188,7 @@ void dump_clear_cpboot_area(void)
     base = (unsigned long)g_st_dump_area_ctrl.virt_addr;
     
     /* coverity[secure_coding] */
-    (void)memset( (void*)(base+offset), 0, MNTN_AREA_CBOOT_SIZE);
+    (void)memset_s( (void*)(base+offset), MNTN_AREA_CBOOT_SIZE,0, MNTN_AREA_CBOOT_SIZE);
 }
 /*****************************************************************************
 * º¯ Êý Ãû  : dump_area_init
@@ -223,7 +223,8 @@ s32 dump_area_init(void)
         return BSP_ERROR;
     }
 
-    memset(g_st_dump_area_ctrl.virt_addr,0,g_st_dump_area_ctrl.length);
+    memset_s(g_st_dump_area_ctrl.virt_addr,sizeof(*g_st_dump_area_ctrl.virt_addr),0,sizeof(*g_st_dump_area_ctrl.virt_addr));
+
     g_st_dump_area_ctrl.virt_addr->top_head.area_number     = DUMP_AREA_BUTT;
     g_st_dump_area_ctrl.virt_addr->top_head.magic           = DUMP_GLOBALE_TOP_HEAD_MAGIC;
     /*coverity[secure_coding]*/

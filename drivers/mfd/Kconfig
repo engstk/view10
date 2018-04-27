@@ -1542,6 +1542,18 @@ config HISI_PMIC_PMU_SPMI
 	  mapped I/O ports are the way of communication with it. and use spmi
 	  passageway read pmu address.
 
+config HISI_6423_PMIC_PMU_SPMI
+	tristate "HiSilicon 6423 PMU/Codec IC and use spmi passageway"
+	depends on OF
+	depends on HISI_SPMI
+	help
+
+config HISI_HI6421V700_PMU
+	tristate "HiSilicon 6421v700 IC"
+	depends on OF
+	help
+	  discriminate pmu ic for pmussi passageway.
+
 config HISI_HI6555V200_PMU
 	tristate "HiSilicon 6555v200 IC"
 	depends on OF

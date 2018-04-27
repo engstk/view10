@@ -18,6 +18,12 @@ static int __sdcardfs_do_remove_begin(
 	int err;
 	struct dentry *real;
 
+	/* some forbidden filenames should be checked before removing */
+	if (permission_denied_to_remove(dir, dentry->d_name.name)) {
+		errln("permission denied to remove %s", dentry->d_name.name);
+		return -EACCES;
+	}
+
 	this(real_dentry) = sdcardfs_get_real_dentry(dentry);
 	BUG_ON(this(real_dentry) == NULL);
 

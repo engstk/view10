@@ -89,13 +89,7 @@ extern "C" {
   6 消息定义
 *****************************************************************************/
 
-/*****************************************************************************
- 枚举名    : RNIC_CDS_MSG_ID_ENUM
- 枚举说明  : RNIC与CDS的消息定义
- 1.日    期   : 2015年10月07日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum RNIC_CDS_MSG_ID_ENUM
 {
     /* RNIC发给CDS的消息枚举 */
@@ -110,39 +104,45 @@ enum RNIC_CDS_MSG_ID_ENUM
 };
 typedef VOS_UINT32 RNIC_CDS_MSG_ID_ENUM_UINT32;
 
+
+enum RNIC_CDS_WIFI_PDN_TYPE_ENUM
+{
+    RNIC_CDS_WIFI_PDN_TYPE_NORMAL       = 0x00,
+    RNIC_CDS_WIFI_PDN_TYPE_EMC          = 0x01,
+
+    RNIC_CDS_WIFI_PDN_TYPE_BUTT         = 0xFF
+};
+typedef VOS_UINT8 RNIC_CDS_WIFI_PDN_TYPE_ENUM_UINT8;
+
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
 
-/*****************************************************************************
- 结构名    : RNIC_CDS_IMS_DATA_REQ_STRU
- 结构说明  : RNIC给CDS发送数据结构
- 1.日    期   : 2015年10月07日
-   作    者   : f00179208
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                  /* 消息头 */    /* _H2ASN_Skip */
     VOS_UINT32                          ulMsgId;                    /* 消息类型 */  /* _H2ASN_Skip */
+
     VOS_UINT16                          usModemId;
+    RNIC_CDS_WIFI_PDN_TYPE_ENUM_UINT8   enDataType;
+    VOS_UINT8                           aucReserv[3];
     VOS_UINT16                          usDataLen;
+
     VOS_UINT8                           aucData[4];
 }RNIC_CDS_IMS_DATA_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : CDS_RNIC_IMS_DATA_IND_STRU
- 结构说明  : CDS给RNIC发送数据结构
- 1.日    期   : 2015年10月07日
-   作    者   : f00179208
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                  /* 消息头 */    /* _H2ASN_Skip */
     VOS_UINT32                          ulMsgId;                    /* 消息类型 */  /* _H2ASN_Skip */
+
     VOS_UINT16                          usModemId;
+    RNIC_CDS_WIFI_PDN_TYPE_ENUM_UINT8   enDataType;
+    VOS_UINT8                           aucReserv[3];
     VOS_UINT16                          usDataLen;
+
     VOS_UINT8                           aucData[4];
 }CDS_RNIC_IMS_DATA_IND_STRU;
 

@@ -77,6 +77,7 @@ typedef struct _tag_hjpeg_base
     struct clk *                                jpegclk[JPEG_CLK_MAX];
     unsigned int                                jpegclk_value[JPEG_CLK_MAX];
     unsigned int                                jpegclk_low_frequency;
+    unsigned int                                power_off_frequency;
     atomic_t                                    jpeg_on;
     struct iommu_domain *                       domain;
     phy_pgd_t                                   phy_pgd;
@@ -84,6 +85,9 @@ typedef struct _tag_hjpeg_base
     struct mutex                                wake_lock_mutex;
 } hjpeg_base_t;
 
+int is_hjpeg_qos_update(void);
+int is_hjpeg_iova_update(void);
+int is_hjpeg_wr_port_addr_update(void);
 
 static void hjpeg_isr_do_tasklet(unsigned long data);
 DECLARE_TASKLET(hjpeg_isr_tasklet, hjpeg_isr_do_tasklet, (unsigned long)0);
@@ -138,6 +142,9 @@ MODULE_DEVICE_TABLE(of, s_hjpeg_dt_match);
 
 static struct timeval s_timeval_start;
 static struct timeval s_timeval_end;
+static int is_qos_update = 0;
+static int is_iova_update = 0;
+static int is_wr_port_addr_update = 0;
 
 extern int memset_s(void *dest, size_t destMax, int c, size_t count);
 
@@ -158,6 +165,10 @@ static irqreturn_t hjpeg_irq_handler(int irq, void *dev_id)
         tasklet_schedule(&hjpeg_isr_tasklet);
     } else {
         cam_err("err irq status 0x%x ", value);
+
+        #if defined( HISP120_CAMERA )
+            hjpeg_120_dump_reg();
+        #endif
     }
 
     /*clr jpeg irq*/
@@ -536,9 +547,16 @@ static void hjpeg_config_jpeg(jpgenc_config_t* config)
     set_picture_quality(base_addr, config->buffer.quality);
 
     //set input buffer address
-    SET_FIELD_TO_REG((void __iomem*)((char*)base_addr + JPGENC_ADDRESS_Y_REG),JPGENC_ADDRESS_Y,config->buffer.input_buffer_y >> 4);
-    if (JPGENC_FORMAT_YUV420 == (config->buffer.format & JPGENC_FORMAT_BIT)) {
-        SET_FIELD_TO_REG((void __iomem*)((char*)base_addr + JPGENC_ADDRESS_UV_REG),JPGENC_ADDRESS_UV,config->buffer.input_buffer_uv >> 4);
+    if (is_hjpeg_iova_update()) {
+        SET_FIELD_TO_REG((void __iomem*)((char*)base_addr + JPGENC_ADDRESS_Y_REG),JPGENC_ADDRESS_Y,config->buffer.input_buffer_y >> 6);
+        if (JPGENC_FORMAT_YUV420 == (config->buffer.format & JPGENC_FORMAT_BIT)) {
+            SET_FIELD_TO_REG((void __iomem*)((char*)base_addr + JPGENC_ADDRESS_UV_REG),JPGENC_ADDRESS_UV,config->buffer.input_buffer_uv >> 6);
+        }
+    } else {
+        SET_FIELD_TO_REG((void __iomem*)((char*)base_addr + JPGENC_ADDRESS_Y_REG),JPGENC_ADDRESS_Y,config->buffer.input_buffer_y >> 4);
+        if (JPGENC_FORMAT_YUV420 == (config->buffer.format & JPGENC_FORMAT_BIT)) {
+            SET_FIELD_TO_REG((void __iomem*)((char*)base_addr + JPGENC_ADDRESS_UV_REG),JPGENC_ADDRESS_UV,config->buffer.input_buffer_uv >> 4);
+        }
     }
 
     //set preread
@@ -639,7 +657,6 @@ static int hjpeg_encode_process(hjpeg_intf_t *i, void *cfg)
     hjpeg_enable_irq();
 
     hjpeg_config_jpeg(pcfg);
-
 #ifdef SOFT_RESET
     if (nOp == 0) {
         cam_info("%s: op=0, reset when encode!", __func__);
@@ -657,6 +674,11 @@ static int hjpeg_encode_process(hjpeg_intf_t *i, void *cfg)
     if (down_timeout(&s_hjpeg.buff_done, jiff)) {
         cam_err("time out wait for jpeg encode");
         ret = -1;
+
+        #if defined( HISP120_CAMERA )
+            hjpeg_120_dump_reg();
+        #endif
+
     }
 
     calculate_encoding_time();
@@ -739,7 +761,7 @@ static int hjpeg_power_on(hjpeg_intf_t *i)
     ret = power_control(phjpeg, true);
     if (0 != ret) {
         cam_err("%s(%d) jpeg power up fail",__func__, __LINE__);
-        goto POWERUP_ERROR;
+        return ret;
     }
 
     // config smmu
@@ -766,14 +788,27 @@ static int hjpeg_power_on(hjpeg_intf_t *i)
         goto POWERUP_ERROR;
     }
 
+    if (phjpeg->irq_no)
+    {
+        /*request irq*/
+        ret = request_irq(phjpeg->irq_no, hjpeg_irq_handler, 0, "hjpeg_irq", 0);
+        if (ret != 0) {
+            cam_err("fail to request irq [%d], error: %d", phjpeg->irq_no, ret);
+            goto POWERUP_ERROR;
+        }
+    }
     cam_info("%s jpeg power on success",__func__);
 
     return ret;
 
 POWERUP_ERROR:
 
-    ret = power_control(phjpeg, false);
-    if ( 0 != ret )
+    if (phjpeg->ion_client) {
+        ion_client_destroy(phjpeg->ion_client);
+        phjpeg->ion_client = NULL;
+    }
+
+    if ( 0 != power_control(phjpeg, false) )
         cam_err("%s(%d) jpeg power down fail",__func__, __LINE__);
 
     return ret;
@@ -789,6 +824,10 @@ static int hjpeg_power_off(hjpeg_intf_t *i)
     phjpeg = I2hjpegenc(i);/*lint !e826*/
 
     cam_info("%s enter\n",__func__);
+
+    if (phjpeg->irq_no) {
+        free_irq(phjpeg->irq_no, 0);
+    }
 
     swap(phjpeg->ion_client, ion);
     if (ion) {
@@ -1147,13 +1186,6 @@ static int hjpeg_map_baseaddr(void)
         goto fail;
     }
     cam_debug("%s irq [%d].", __func__, phjpeg->irq_no);
-    /*request irq*/
-    ret = request_irq(phjpeg->irq_no, hjpeg_irq_handler, 0, "hjpeg_irq", 0);
-    if (ret != 0) {
-        cam_err("fail to request irq [%d], error: %d", phjpeg->irq_no, ret);
-        ret = -ENXIO;
-        goto fail;
-    }
 
     // debug
 #if (POWER_CTRL_INTERFACE==POWER_CTRL_CFG_REGS)
@@ -1220,6 +1252,13 @@ static int get_dts_power_prop(struct device *pdev)
                 cam_err("[%s] Failed: of_property_read_u32.%d\n", __func__, ret);
                 goto error;
             }
+
+            if ((ret = of_property_read_u32(np, "power-off-frequency", &(s_hjpeg.power_off_frequency))) < 0) {
+                cam_err("[%s] Failed: of_property_read_u32.%d\n", __func__, ret);
+                goto error;
+            }
+
+
         }
 
 
@@ -1370,6 +1409,27 @@ static int hjpeg_get_dts(struct platform_device* pDev)
     s_hjpeg.hw_ctl.chip_type = chip_type;
     cam_info("%s: chip_type=%d", __func__, chip_type);
 
+    //is_qos_update
+    ret = of_property_read_u32(np, "huawei,qos_update", &is_qos_update);
+    if (ret < 0) {
+        cam_err("%s: get qos_update flag failed.", __func__);
+        return -1;
+    }
+
+    //is_iova_update
+    ret = of_property_read_u32(np, "huawei,iova_update", &is_iova_update);
+    if (ret < 0) {
+        cam_err("%s: get iova_update flag failed.", __func__);
+        return -1;
+    }
+
+    //is_wr_port_addr_update
+    ret = of_property_read_u32(np, "huawei,wr_port_addr_update", &is_wr_port_addr_update);
+    if (ret < 0) {
+        cam_err("%s: get wr_port_addr_update flag failed.", __func__);
+        return -1;
+    }
+
     ret = get_dts_cvdr_prop(pdev);
     if (ret < 0) {
         cam_err("%s: get cvdr property failed.", __func__);
@@ -1425,6 +1485,17 @@ static int hjpeg_setclk_enable(hjpeg_base_t* pJpegDev, int idx)
 
     cam_debug("%s enter (idx=%d) \n",__func__, idx);
 
+#if defined( CONFIG_ES_LOW_FREQ  )
+    if ((ret = jpeg_enc_set_rate(pJpegDev->jpegclk[idx], 415000000)) != 0) {
+        cam_err("[%s] Failed: jpeg_enc_set_rate(%d - %d).%d\n",
+                __func__, idx, pJpegDev->jpegclk_value[idx], ret);
+        // try to set low freq
+        if (0 != jpeg_enc_set_rate(pJpegDev->jpegclk[idx], pJpegDev->jpegclk_low_frequency)) {
+            cam_err("[%s] Failed to set low frequency 1: jpeg_enc_set_rate(%d - %d).\n",
+                __func__, idx, pJpegDev->jpegclk_low_frequency);
+        }
+    }
+#else
     if ((ret = jpeg_enc_set_rate(pJpegDev->jpegclk[idx], pJpegDev->jpegclk_value[idx])) != 0) {
         cam_err("[%s] Failed: jpeg_enc_set_rate(%d - %d).%d\n",
                 __func__, idx, pJpegDev->jpegclk_value[idx], ret);
@@ -1434,6 +1505,8 @@ static int hjpeg_setclk_enable(hjpeg_base_t* pJpegDev, int idx)
                 __func__, idx, pJpegDev->jpegclk_low_frequency);
         }
     }
+#endif
+
     if ((ret = jpeg_enc_clk_prepare_enable(pJpegDev->jpegclk[idx])) != 0) {
         cam_err("[%s] Failed: jpeg_enc_clk_prepare_enable.%d\n", __func__, ret);
         // try to set low freq
@@ -1461,7 +1534,7 @@ static void hjpeg_setclk_disable(hjpeg_base_t* pJpegDev, int idx)
 
     // === this is new constraint for cs begin===
     if (pJpegDev->hw_ctl.chip_type == CT_CS) {
-        if ((ret = jpeg_enc_set_rate(pJpegDev->jpegclk[idx], pJpegDev->jpegclk_low_frequency)) != 0) {
+        if ((ret = jpeg_enc_set_rate(pJpegDev->jpegclk[idx], pJpegDev->power_off_frequency)) != 0) {
             cam_err("[%s] Failed: jpeg_enc_set_rate.%d\n", __func__, ret);
         }
     }
@@ -1537,7 +1610,31 @@ static int32_t hjpeg_platform_probe(
     }
 #endif
 
+#if defined( HISP120_CAMERA )
+    if(hjpeg_120_map_reg()) {
+        cam_err("hjpeg_120_map_reg failed");
+    }
+#endif
+
     return ret;
+}
+
+int is_hjpeg_qos_update(void)
+{
+    cam_debug("%s is_qos_update=%d.", __func__, is_qos_update);
+    return is_qos_update;
+}
+
+int is_hjpeg_iova_update(void)
+{
+    cam_debug("%s is_iova_update=%d.", __func__, is_iova_update);
+    return is_iova_update;
+}
+
+int is_hjpeg_wr_port_addr_update(void)
+{
+    cam_debug("%s is_wr_port_addr_update=%d.", __func__, is_wr_port_addr_update);
+    return is_wr_port_addr_update;
 }
 
 static int __init
@@ -1560,6 +1657,11 @@ hjpeg_exit_module(void)
         s_hjpeg.hw_ctl.jpg_smmu_rwerraddr_virt = NULL;
     }
 #endif
+
+#if defined( HISP120_CAMERA )
+    hjpeg_120_unmap_reg();
+#endif
+
     hjpeg_unmap_baseaddr();
     hjpeg_unregister(&(s_hjpeg.intf));
     platform_driver_unregister(&s_hjpeg_driver);

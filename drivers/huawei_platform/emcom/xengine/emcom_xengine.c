@@ -25,6 +25,7 @@
 #endif
 #include <huawei_platform/emcom/emcom_xengine.h>
 #include <linux/version.h>
+#include <asm/uaccess.h>
 
 
 #undef HWLOG_TAG
@@ -61,9 +62,10 @@ struct Emcom_Xengine_netem_skb_cb {
 };
 
 struct mutex g_Mpip_mutex;
-uid_t   g_MpipUids[EMCOM_MAX_MPIP_APP];/* The uid of bind to Mpip Application */
+struct  Emcom_Xengine_mpip_config g_MpipUids[EMCOM_MAX_MPIP_APP];/* The uid of bind to Mpip Application */
 bool    g_MpipStart               = false;/* The uid of bind to Mpip Application */
 char    g_Ifacename[IFNAMSIZ]     = {0};/* The uid of bind to Mpip Application */
+static uint8_t g_SocketIndex      = 0;
 
 
 void Emcom_Xengine_Mpip_Init(void);
@@ -83,19 +85,7 @@ static inline bool invalid_SpeedCtrlSize(uint32_t grade)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_netem_skb_cb
- 功能描述  :获取SKB的时间控制块
- 输入参数  : struct sk_buff *skb
- 输出参数  : struct Emcom_Xengine_netem_skb_cb *
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月9日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 static inline struct Emcom_Xengine_netem_skb_cb *Emcom_Xengine_netem_skb_cb(struct sk_buff *skb)
 {
 	/* we assume we can use skb next/prev/tstamp as storage for rb_node */
@@ -103,19 +93,7 @@ static inline struct Emcom_Xengine_netem_skb_cb *Emcom_Xengine_netem_skb_cb(stru
 	return (struct Emcom_Xengine_netem_skb_cb *)qdisc_skb_cb(skb)->data;
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_setUdpTimerCb
- 功能描述  :设置skb的用于定时控制的控制块
- 输入参数  : struct sk_buff *skb
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月9日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 static void Emcom_Xengine_setUdpTimerCb(struct sk_buff *skb)
 {
 	struct Emcom_Xengine_netem_skb_cb *cb;
@@ -126,19 +104,7 @@ static void Emcom_Xengine_setUdpTimerCb(struct sk_buff *skb)
 	cb->time_to_send = now + UDPTIMER_DELAY*HZ/MSEC_PER_SEC;
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_udpretran_clear
- 功能描述  :清理UDP重传队列和定时器
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月9日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 int Emcom_Xengine_udpretran_clear(void)
 {
 	g_UdpRetranUid = UID_INVALID_APP;
@@ -151,19 +117,7 @@ int Emcom_Xengine_udpretran_clear(void)
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_UdpTimer_handler
- 功能描述  :UDP重传定时器处理函数
- 输入参数  : unsigned long pac
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月7日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 static void Emcom_Xengine_UdpTimer_handler(unsigned long pac)
 {
 	struct sk_buff *skb;
@@ -219,19 +173,7 @@ timer_off:
 	g_Emcom_udptimerOn = false;
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_Init
- 功能描述  : 初始化快抢技术相关结构体
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2017年03月13日
-	  作	者   : z00371705
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 void Emcom_Xengine_Init(void)
 {
 	uint8_t  index;
@@ -252,44 +194,20 @@ void Emcom_Xengine_Init(void)
 	Emcom_Xengine_Mpip_Init();
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_Mpip_Init
- 功能描述  : 初始化使用Mpip的APP列表
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2017年09月05日
-	  作	者   : z00196795
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 void Emcom_Xengine_Mpip_Init(void)
 {
 	uint8_t  uIndex;
 	mutex_lock(&g_Mpip_mutex);
 	for( uIndex = 0; uIndex < EMCOM_MAX_MPIP_APP; uIndex ++)
 	{
-		g_MpipUids[uIndex] = UID_INVALID_APP;
+		g_MpipUids[uIndex].lUid = UID_INVALID_APP;
+		g_MpipUids[uIndex].ulType = EMCOM_XENGINE_MPIP_TYPE_BIND_NEW;
 	}
 	mutex_unlock(&g_Mpip_mutex);
 }
 
-/*****************************************************************************
- 函 数 名  : emcom_process_clear
- 功能描述  : 处理上层下发的清除消息
- 输入参数  :无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2016年12月07日
-       作    者   : z00371705
-       修改内容   : 新生成函数
 
-*****************************************************************************/
 bool Emcom_Xengine_IsAccUid(uid_t lUid)
 {
 	uint8_t  index;
@@ -305,20 +223,7 @@ bool Emcom_Xengine_IsAccUid(uid_t lUid)
 }
 
 #if defined(CONFIG_PPPOLAC) || defined(CONFIG_PPPOPNS)
-/*****************************************************************************
- 函 数 名  : BST_FG_Hook_Ul_Stub
- 功能描述  : 勾取上行数据包
- 输入参数  : struct sock *pstSock  socket对象
-                           struct msghdr *msg   发送的消息结构体
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2015年12月13日
-      作    者   : z00371705
-      修改内容   : 新生成函数
-*****************************************************************************/
+
 
 bool Emcom_Xengine_Hook_Ul_Stub(struct sock *pstSock)
 {
@@ -352,20 +257,7 @@ bool Emcom_Xengine_Hook_Ul_Stub(struct sock *pstSock)
 #endif
 
 
-/*****************************************************************************
- 函 数 名  : emcom_process_clear
- 功能描述  : 处理上层下发的清除消息
- 输入参数  :无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2016年12月07日
-       作    者   : z00371705
-       修改内容   : 新生成函数
 
-*****************************************************************************/
 int Emcom_Xengine_clear(void)
 {
 	uint8_t  index;
@@ -377,7 +269,8 @@ int Emcom_Xengine_clear(void)
 	mutex_lock(&g_Mpip_mutex);
 	for( index = 0; index < EMCOM_MAX_MPIP_APP; index ++)
 	{
-		g_MpipUids[index] = UID_INVALID_APP;
+		g_MpipUids[index].lUid = UID_INVALID_APP;
+		g_MpipUids[index].ulType = EMCOM_XENGINE_MPIP_TYPE_BIND_NEW;
 	}
 	memset(g_Ifacename, 0, sizeof(char)*IFNAMSIZ);
 	g_MpipStart = false;
@@ -386,20 +279,7 @@ int Emcom_Xengine_clear(void)
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_StartAccUid
- 功能描述  : 启动app加速
- 输入参数  : uint8_t *pdata  加速的app信息
-                           uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2016年11月18日
-           作    者   : z00371705
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 int Emcom_Xengine_StartAccUid(uint8_t *pdata, uint16_t len)
 {
@@ -502,20 +382,7 @@ int Emcom_Xengine_StartAccUid(uint8_t *pdata, uint16_t len)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_StopAccUid
- 功能描述  : 停止APP加速
- 输入参数  : uint8_t *pdata  停止加速的app信息
-                           uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2016年11月18日
-           作    者   : z00371705
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 int Emcom_Xengine_StopAccUid(uint8_t *pdata, uint16_t len)
 {
@@ -557,20 +424,7 @@ int Emcom_Xengine_StopAccUid(uint8_t *pdata, uint16_t len)
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_SetSpeedCtrlInfo
- 功能描述  : 设置不控速应用的uid
- 输入参数  : uint8_t *pdata  前台不控速应用的uid
-             uint16_t len    数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月07日
-           作    者   : y00368747
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 int Emcom_Xengine_SetSpeedCtrlInfo(uint8_t *pdata, uint16_t len)
 {
 	struct Emcom_Xengine_speed_ctrl_data* pSpeedCtrlInfo;
@@ -623,20 +477,7 @@ int Emcom_Xengine_SetSpeedCtrlInfo(uint8_t *pdata, uint16_t len)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_SpeedCtrl_WinSize
- 功能描述  : 返回TCP接收窗口大小
- 输入参数  : sock *pstSock  sk指针
-            uint32_t*       win 原始窗口大小
- 输出参数  : 无
- 返 回 值  : 窗口大小
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月07日
-           作    者   : y00368747
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 void Emcom_Xengine_SpeedCtrl_WinSize(struct sock *pstSock, uint32_t *pstSize)
 {
 	uid_t lSockUid = 0;
@@ -687,20 +528,7 @@ void Emcom_Xengine_SpeedCtrl_WinSize(struct sock *pstSock, uint32_t *pstSize)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_Config_MPIP
- 功能描述  : 启动app加速
- 输入参数  : uint8_t *pdata  绑定的app UID列表信息
-             uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月05日
-           作    者   : z00196795
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 int Emcom_Xengine_Config_MPIP(uint8_t *pdata, uint16_t len)
 {
@@ -708,23 +536,24 @@ int Emcom_Xengine_Config_MPIP(uint8_t *pdata, uint16_t len)
 	uint8_t            *ptemp;
 	uint8_t            ulength;
 	/*The empty updated list means clear the Mpip App Uid list*/
-
 	EMCOM_LOGD("The Mpip list will be update to empty.");
 
 	/*Clear the Mpip App Uid list*/
 	mutex_lock(&g_Mpip_mutex);
 	for( uIndex = 0; uIndex < EMCOM_MAX_MPIP_APP; uIndex ++)
 	{
-		g_MpipUids[uIndex] = UID_INVALID_APP;
+		g_MpipUids[uIndex].lUid = UID_INVALID_APP;
+		g_MpipUids[uIndex].ulType = EMCOM_XENGINE_MPIP_TYPE_BIND_NEW;
 	}
 	mutex_unlock(&g_Mpip_mutex);
-
 	if((NULL == pdata) || (0 == len))
 	{
+		/*pdata == NULL or len == 0 is ok, just return*/
 		return 0;
 	}
+
 	ptemp = pdata;
-	ulength = len/sizeof(uid_t);
+	ulength = len/sizeof(struct Emcom_Xengine_mpip_config);
 	if(EMCOM_MAX_MPIP_APP < ulength )
 	{
 		EMCOM_LOGE("The length of received MPIP APP uid list is error.");
@@ -733,8 +562,10 @@ int Emcom_Xengine_Config_MPIP(uint8_t *pdata, uint16_t len)
 	mutex_lock(&g_Mpip_mutex);
 	for(uIndex = 0; uIndex < ulength; uIndex++)
 	{
-		g_MpipUids[uIndex] = *(uid_t *)ptemp;
-		ptemp += sizeof(uid_t);
+		g_MpipUids[uIndex].lUid = *(uid_t *)ptemp;
+		g_MpipUids[uIndex].ulType = *(uint32_t*)(ptemp + sizeof(uid_t));
+		EMCOM_LOGD("The Mpip config [%d] is: lUid %d and type %d.",uIndex, g_MpipUids[uIndex].lUid, g_MpipUids[uIndex].ulType);
+		ptemp += sizeof(struct Emcom_Xengine_mpip_config);
 	}
 	mutex_unlock(&g_Mpip_mutex);
 
@@ -742,25 +573,12 @@ int Emcom_Xengine_Config_MPIP(uint8_t *pdata, uint16_t len)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_StartMPIP
- 功能描述  : 启动APP绑定第二个PDN
- 输入参数  : char *pdata 第二个PDN的网卡名称
-             uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月05日
-           作    者   : z00196795
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 int Emcom_Xengine_StartMPIP(char *pdata, uint16_t len)
 {
 	/*input param check*/
-	if( (NULL == pdata) || (0 == len) || (IFNAMSIZ < (len/sizeof(uint16_t))) )
+	if( (NULL == pdata) || (0 == len) || (IFNAMSIZ < len) )
 	{
 	    EMCOM_LOGE("MPIP interface name or length %d is error", len);
 		return -EINVAL;
@@ -774,20 +592,7 @@ int Emcom_Xengine_StartMPIP(char *pdata, uint16_t len)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_StopMPIP
- 功能描述  : 停止APP加速
- 输入参数  : uint8_t *pdata  保持格式，为空
-            uint16_t len 数据长度，为空
- 输出参数  : 无
- 返 回 值  : 整形
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月05日
-           作    者   : z00196795
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 int Emcom_Xengine_StopMPIP(uint8_t *pdata, uint16_t len)
 {
@@ -799,54 +604,30 @@ int Emcom_Xengine_StopMPIP(uint8_t *pdata, uint16_t len)
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_IsMpipBindUid
- 功能描述  : 判断是否为允许绑定的Uid
- 输入参数  : uid_t lUid
- 输出参数  : 无
- 返 回 值  : true/false
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2017年09月07日
-       作    者   : y00369524
-       修改内容   : 新生成函数
 
-*****************************************************************************/
-bool Emcom_Xengine_IsMpipBindUid(uid_t lUid)
+int Emcom_Xengine_IsMpipBindUid(uid_t lUid)
 {
+	int ret = -1;
 	uint8_t  uIndex;
 	mutex_lock(&g_Mpip_mutex);
 	for( uIndex = 0; uIndex < EMCOM_MAX_MPIP_APP; uIndex ++)
 	{
-		if( lUid == g_MpipUids[uIndex] )
+		if( lUid == g_MpipUids[uIndex].lUid )
 		{
 			mutex_unlock(&g_Mpip_mutex);
-			return true;
+			ret = uIndex;
+			return ret;
 		}
 	}
 	mutex_unlock(&g_Mpip_mutex);
 
-	return false;
+	return ret;
 }
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_Mpip_Bind2Device
- 功能描述  : 勾取上行数据包
- 输入参数  : struct sock *pstSock  socket对象
-             struct msghdr *msg   发送的消息结构体
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2017年09月07日
-       作    者   : y00369524
-       修改内容   : 新生成函数
-*****************************************************************************/
+
 
 void Emcom_Xengine_Mpip_Bind2Device(struct sock *pstSock)
 {
-	bool  bFound           = false;
+	int iFound             = -1;
 	uint8_t  uIndex        = 0;
 	uid_t lSockUid         = 0;
 	struct net *net        = NULL;
@@ -877,8 +658,8 @@ void Emcom_Xengine_Mpip_Bind2Device(struct sock *pstSock)
 	}
 
 	net = sock_net(pstSock);
-	bFound = Emcom_Xengine_IsMpipBindUid( lSockUid );
-	if(bFound)
+	iFound = Emcom_Xengine_IsMpipBindUid( lSockUid );
+	if(iFound != -1)
 	{
 		rcu_read_lock();
 		dev = dev_get_by_name_rcu(net, g_Ifacename);
@@ -895,27 +676,29 @@ void Emcom_Xengine_Mpip_Bind2Device(struct sock *pstSock)
 			return;
 		}
 
-		lock_sock(pstSock);
-		pstSock->sk_bound_dev_if = uIndex;
-		sk_dst_reset(pstSock);
-		release_sock(pstSock);
+		if(g_MpipUids[iFound].ulType == EMCOM_XENGINE_MPIP_TYPE_BIND_RANDOM)
+		{
+			if(g_SocketIndex % 2 == 0)
+			{
+				lock_sock(pstSock);
+				pstSock->sk_bound_dev_if = uIndex;
+				sk_dst_reset(pstSock);
+				release_sock(pstSock);
+			}
+			g_SocketIndex++;
+			g_SocketIndex = g_SocketIndex % 2;
 		}
+		else
+		{
+			lock_sock(pstSock);
+			pstSock->sk_bound_dev_if = uIndex;
+			sk_dst_reset(pstSock);
+			release_sock(pstSock);
+		}
+	}
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_RrcKeep
- 功能描述  : 通知bastet做 RRC加速
- 输入参数  : uint8_t *pdata  停止加速的app信息
-                           uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2016年11月18日
-           作    者   : z00371705
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 int Emcom_Xengine_RrcKeep( void )
 {
@@ -926,20 +709,7 @@ int Emcom_Xengine_RrcKeep( void )
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Send_KeyPsInfo
- 功能描述  : emcom xengine 收到damone消息的参数传递给bastet
- 输入参数  : uint8_t *pdata  消息的参数
-             uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年06月30日
-           作    者   : l00416134
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 int Emcom_Send_KeyPsInfo(uint8_t *pdata, uint16_t len)
 {
@@ -974,19 +744,7 @@ int Emcom_Send_KeyPsInfo(uint8_t *pdata, uint16_t len)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_isWlan
- 功能描述  :判断是否是wlan传输
- 输入参数  : struct sk_buff *skb
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月7日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 static inline bool Emcom_Xengine_isWlan(struct sk_buff *skb)
 {
 	const char *delim = "wlan0";
@@ -1009,19 +767,7 @@ static inline bool Emcom_Xengine_isWlan(struct sk_buff *skb)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_UdpEnqueue
- 功能描述  :将skb插入队列
- 输入参数  : struct sk_buff *skb
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月7日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 void Emcom_Xengine_UdpEnqueue(struct sk_buff *skb)
 {
 	struct sock *sk;
@@ -1103,20 +849,7 @@ void Emcom_Xengine_UdpEnqueue(struct sk_buff *skb)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_StartUdpReTran
- 功能描述  :开始UDP重传
- 输入参数  : uint8_t *pdata  消息的参数
-             uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月7日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 int Emcom_Xengine_StartUdpReTran(uint8_t *pdata, uint16_t len)
 {
 	uid_t              uid;
@@ -1147,20 +880,7 @@ int Emcom_Xengine_StartUdpReTran(uint8_t *pdata, uint16_t len)
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_StopUdpReTran
- 功能描述  :停止UDP重传
- 输入参数  : uint8_t *pdata  消息的参数
-             uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年09月7日
-           作    者   : l00301519
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 int Emcom_Xengine_StopUdpReTran(uint8_t *pdata, uint16_t len)
 {
 	Emcom_Xengine_udpretran_clear();
@@ -1168,21 +888,7 @@ int Emcom_Xengine_StopUdpReTran(uint8_t *pdata, uint16_t len)
 }
 
 
-/*****************************************************************************
- 函 数 名  : Emcom_Xengine_EvtProc
- 功能描述  :emcom xengine 收到deamon的消息处理入口
- 输入参数  : int32_t event   处理事件
-                           uint8_t *pdata  事件的参数
-                           uint16_t len 数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-        1.日    期   : 2017年03月18日
-           作    者   : z00371705
-           修改内容   : 新生成函数
-*****************************************************************************/
+
 
 void Emcom_Xengine_EvtProc(int32_t event, uint8_t *pdata, uint16_t len)
 {
@@ -1239,4 +945,90 @@ void Emcom_Xengine_EvtProc(int32_t event, uint8_t *pdata, uint16_t len)
 }
 
 
+int Emcom_Xengine_SetProxyUid(struct sock *sk, char __user *optval, int optlen)
+{
+    uid_t uid = 0;
+    int ret = 0;
+
+    ret = -EINVAL;
+    if (optlen < 0)
+        goto out;
+
+    ret = -EFAULT;
+    if (copy_from_user(&uid, optval, optlen))
+        goto out;
+
+    lock_sock(sk);
+    sk->sk_uid.val = uid;
+    release_sock(sk);
+    EMCOM_LOGD("hicom set proxy uid, uid: %u", sk->sk_uid.val);
+
+    ret = 0;
+
+out:
+
+    return ret;
+}
+
+int Emcom_Xengine_GetProxyUid(struct sock *sk, char __user *optval, int __user *optlen, int len)
+{
+    uid_t uid = 0;
+    int ret = 0;
+
+    uid = sk->sk_uid.val;
+
+    ret = -EFAULT;
+    if (copy_to_user(optval, uid, len))
+        goto out;
+
+    ret = -EFAULT;
+    if (put_user(len, optlen))
+        goto out;
+
+    EMCOM_LOGD(" hicom get proxy uid, uid: %u", uid);
+
+    ret = 0;
+
+out:
+
+    return ret;
+}
+
+
+int Emcom_Xengine_SetSockFlag(struct sock *sk, char __user *optval, int optlen)
+{
+    int ret = 0;
+    int hicom_flag = 0;
+
+    ret = -EINVAL;
+    if (optlen < 0)
+        goto out;
+
+    ret = -EFAULT;
+    if (copy_from_user(&hicom_flag, optval, optlen))
+        goto out;
+
+    lock_sock(sk);
+    sk->hicom_flag = hicom_flag;
+    release_sock(sk);
+
+    EMCOM_LOGD(" hicom set proxy flag, uid: %u, flag: %x", sk->sk_uid.val, sk->hicom_flag);
+
+    ret = 0;
+
+out:
+
+    return ret;
+}
+
+void Emcom_Xengine_NotifySockError(struct sock *sk)
+{
+    if (sk->hicom_flag == HICOM_SOCK_FLAG_FINTORST) {
+        EMCOM_LOGD(" hicom change fin to rst, uid: %u, flag: %x", sk->sk_uid.val, sk->hicom_flag);
+        sk->sk_err = ECONNRESET;
+        sk->sk_error_report(sk);
+    }
+
+    return;
+}
 

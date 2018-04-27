@@ -57,7 +57,7 @@
 #include "power_com.h"
 
 #include "mdrv_sysboot.h"
-void drv_shut_down(DRV_SHUTDOWN_REASON_E enReason);
+void drv_shut_down( DRV_SHUTDOWN_REASON_E enReason, unsigned int  delay_in_ms );
 
 #define EXCH_ONOFF_LOG_MAX      (0x400*16)
 #define pr_dbg printk

@@ -235,6 +235,8 @@ extern "C" {
 #define SHM_SIZE_TEMPERATURE_PROTECT_MARK         (0x4)
 #define SHM_OFFSET_TEMPERATURE_PROTECT_MARK       (SHM_OFFSET_CSHELL_OPEN_FLAG + SHM_SIZE_CSHELL_OPEN_FLAG)
 
+#define SHM_SIZE_IQI_BRIDGE_MARK            (0x4)
+#define SHM_OFFSET_IQI_BRIDGE_MARK          (SHM_OFFSET_TEMPERATURE_PROTECT_MARK + SHM_SIZE_TEMPERATURE_PROTECT_MARK)
 
 #ifndef CONFIG_MODULE_BUSSTRESS
 #define SHM_SIZE_BUSSTRESS_TEST         (70*1024)
@@ -242,7 +244,7 @@ extern "C" {
 #define SHM_SIZE_BUSSTRESS_TEST         (0)
 #endif
 
-#define SHM_OFFSET_BUSSTRESS_TEST       (SHM_OFFSET_TEMPERATURE_PROTECT_MARK + SHM_SIZE_TEMPERATURE_PROTECT_MARK)
+#define SHM_OFFSET_BUSSTRESS_TEST       (SHM_OFFSET_IQI_BRIDGE_MARK + SHM_SIZE_IQI_BRIDGE_MARK)
 
 /*deflate*/
 #ifndef  CONFIG_DEFLATE
@@ -256,19 +258,20 @@ extern "C" {
 ******************************************************************************************************************************/
 #if (defined(__FASTBOOT__) || defined(__OS_RTOSCK__) ||defined(__OS_RTOSCK_SMP__)) && defined(DDR_SEC_SHARED_ADDR)
 #define SHM_SEC_BASE_ADDR          MDDR_FAMA(DDR_SEC_SHARED_ADDR)
-#define SHM_SEC_SIZE               (DDR_SEC_SHARED_SIZE)
 
-#define SHM_SIZE_PROTECT_BARRIER   (0x1000)     /* 预留(4K)防止被踩，初始化为全F */
+/* 预留(4K)防止被踩，初始化为全F */
 #define SHM_OFFSET_PROTECT_BARRIER (0x0)
 
-#define SHM_SIZE_PARAM_CFG         (0x4000)     /* 传入安全OS的配置参数预留(16K)大小 */
+/* 传入安全OS的配置参数预留(16K)大小 */
 #define SHM_OFFSET_PARAM_CFG       (SHM_OFFSET_PROTECT_BARRIER + SHM_SIZE_PROTECT_BARRIER)
 
-#define SHM_SIZE_SEC_ICC           (0x20000)     /* 安全ICC使用(128K)大小 */
+ /* 安全ICC使用(128K)大小 */
 #define SHM_OFFSET_SEC_ICC         (SHM_OFFSET_PARAM_CFG + SHM_SIZE_PARAM_CFG)
-#define SHM_SIZE_SEC_RESERVED           (0xb000)     /* 预留大小，保证MDMA9 64K 对齐 */
+
+ /* 预留大小，保证MDMA9 64K 对齐 */
 #define SHM_OFFSET_SEC_RESERVED         (SHM_OFFSET_SEC_ICC + SHM_SIZE_SEC_ICC)
-#define SHM_SIZE_SEC_MDMA9_PM_BOOT           (0x2000)     /* MDMA9_PM_BOOT 使用，8K */
+
+ /* MDMA9_PM_BOOT 使用，8K */
 #define SHM_OFFSET_SEC_MDMA9_PM_BOOT         (SHM_OFFSET_SEC_RESERVED + SHM_SIZE_SEC_RESERVED)
 #endif
 

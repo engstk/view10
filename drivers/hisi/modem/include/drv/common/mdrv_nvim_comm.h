@@ -65,6 +65,8 @@ extern "C"
 #define NV_WRITE_SECURE_FAIL            18
 #define NV_RESTORE_RUNNING              0x5A5A55AA
 
+#define NV_AUTH_YES                     3
+#define NV_AUTH_NO                      2
 
 /******************************** NV恢复表类型 *********************************/
 enum NV_RESUME_ITEM
@@ -86,7 +88,7 @@ typedef struct tag_NV_LIST_INFO_STRU
 {
 	unsigned short usNvId;                  /*NVID值*/
 	unsigned char  ucNvModemNum;            /*NV是否存在多份*/
-	unsigned char  ucRsv;
+	unsigned char  ucNvAuthFlag;
 }NV_LIST_INFO_STRU;  /*back*/
 
 
@@ -120,35 +122,6 @@ unsigned int mdrv_nv_writepart(unsigned int itemid, unsigned int ulOffset, void 
 
 /* 将内存中的nv数据刷到flash 文件系统中*/
 unsigned int mdrv_nv_flush(void);
-
-/* 获取校准NV项的接口 */
-unsigned int mdrv_nv_get_revert_num(unsigned int enNvItem);
-unsigned int mdrv_nv_get_revert_list(unsigned int enNvItem, void *pusNvList, unsigned int ulNvNum);
-
-#if defined (INSTANCE_1)
-#define MDRV_MODEM_ID     MODEM_ID_1
-#elif defined (INSTANCE_2)
-#define MDRV_MODEM_ID     MODEM_ID_2
-#else
-#define MDRV_MODEM_ID     MODEM_ID_0
-#endif
-
-#define NV_GetLength(id, len)                        mdrv_nv_get_length(id, len)
-#define NV_Read(id, item, len)                       mdrv_nv_readex(MDRV_MODEM_ID, id, item, len)
-#define NV_Write(id, item, len)                      mdrv_nv_writeex(MDRV_MODEM_ID, id, item, len)
-#define NV_ReadPart(id, off, item, len)              mdrv_nv_read_partex(MDRV_MODEM_ID, id, off, item, len)
-#define NV_WritePart(id, off, item, len)             mdrv_nv_write_partex(MDRV_MODEM_ID, id, off, item, len)
-#define NVM_Read(id, item, len)                      mdrv_nv_readex(MDRV_MODEM_ID, id, item, len)
-#define NVM_Write(id, item, len)                     mdrv_nv_writeex(MDRV_MODEM_ID, id, item, len)
-#define NV_ReadEx(modemid, id, item, len)	         mdrv_nv_readex(modemid, id, item, len)
-#define NV_WriteEx(modemid, id, item, len) 	         mdrv_nv_writeex(modemid, id, item, len)
-#define NV_ReadPartEx(modemid, id, off, item, len)   mdrv_nv_read_partex(modemid, id, off, item, len)
-#define NV_WritePartEx(modemid, id, off, item, len)  mdrv_nv_write_partex(modemid, id, off, item, len)
-#define NVM_Flush()                                  mdrv_nv_flush()
-#define NV_Flush()	                                 mdrv_nv_flush()
-
-#define NV_GetResumeNvIdNum(enNvItem)                           mdrv_nv_get_revert_num(enNvItem)
-#define NV_GetResumeNvIdList(enNvItem, pusNvList, ulNvNum)    mdrv_nv_get_revert_list(enNvItem, pusNvList, ulNvNum)
 
 #ifdef __cplusplus
 }

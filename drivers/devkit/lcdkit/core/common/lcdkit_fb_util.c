@@ -1324,7 +1324,19 @@ static ssize_t lcdkit_lcd_func_switch_store(struct device* dev,
     ret = lcd_func_switch_store(dev, attr, buf, count);
     return count;
 }
+static ssize_t lcdkit_lcd_dynamic_porch_show(struct device* dev,
+        struct device_attribute* attr, char* buf)
+{
+    return lcd_dynamic_porch_show(dev, attr, buf);
+}
 
+static ssize_t lcdkit_lcd_dynamic_porch_store(struct device* dev,
+        struct device_attribute* attr, const char* buf, size_t count)
+{
+    ssize_t ret = 0;
+    ret = lcd_dynamic_porch_store(dev, attr, buf, count);
+    return count;
+}
 static ssize_t lcdkit_test_config_show(struct device* dev,
                                        struct device_attribute* attr, char* buf)
 {
@@ -1651,6 +1663,32 @@ static ssize_t lcdkit_ldo_check_show(struct device* dev,struct device_attribute*
     ret = lcd_ldo_check_show(dev, buf);
     return ret;
 }
+static ssize_t lcdkit_mipi_config_store(struct device* dev, struct device_attribute* attr, const char* buf, size_t count)
+{
+    ssize_t ret = -EINVAL;
+    struct lcdkit_panel_data* lcdkit_info= lcdkit_get_panel_info();
+
+    if (NULL == dev || NULL == attr || NULL == buf || NULL == lcdkit_info)
+    {
+        LCDKIT_ERR("%s: NULL Pointer!\n",__func__);
+        return ret;
+    }
+
+    if(!lcdkit_info->panel_infos.mipi_clk_config_support)
+    {
+        LCDKIT_ERR("mipi_clk config not support\n");
+        return ret;
+    }
+
+    ret = lcd_mipi_config_store(dev, lcdkit_info, buf);
+    if (ret)
+    {
+        LCDKIT_ERR("lcd_mipi_config_store return fail\n");
+        return ret;
+    }
+
+    return count;
+}
 
 static DEVICE_ATTR(lcd_model, 0644, lcdkit_lcd_model_show, NULL);
 static DEVICE_ATTR(lcd_display_type, 0644, lcdkit_lcd_display_type_show, NULL);
@@ -1699,6 +1737,7 @@ static DEVICE_ATTR(lcd_fps_scence, (S_IRUGO | S_IWUSR), lcdkit_lcd_fps_scence_sh
 static DEVICE_ATTR(alpm_function, 0644, lcdkit_alpm_function_show, lcdkit_alpm_function_store);
 static DEVICE_ATTR(alpm_setting, 0644, NULL, lcdkit_alpm_setting_store);
 static DEVICE_ATTR(lcd_func_switch, S_IRUGO | S_IWUSR, lcdkit_lcd_func_switch_show, lcdkit_lcd_func_switch_store);
+static DEVICE_ATTR(lcd_dynamic_porch, S_IRUGO | S_IWUSR, lcdkit_lcd_dynamic_porch_show, lcdkit_lcd_dynamic_porch_store);
 static DEVICE_ATTR(lcd_test_config, 0640, lcdkit_test_config_show, lcdkit_test_config_store);
 static DEVICE_ATTR(lv_detect, 0640, lcdkit_lv_detect_show, NULL);
 static DEVICE_ATTR(current_detect, 0640, lcdkit_current_detect_show, NULL);
@@ -1708,6 +1747,7 @@ static DEVICE_ATTR(lcd_bl_mode, S_IRUGO | S_IWUSR, lcdkit_bl_mode_show, lcdkit_b
 static DEVICE_ATTR(lcd_se_mode, S_IRUGO | S_IWUSR, lcdkit_se_mode_show, lcdkit_se_mode_store);
 static DEVICE_ATTR(lcd_bl_support_mode, S_IRUGO | S_IWUSR, lcdkit_support_bl_mode_show, lcdkit_support_bl_mode_store);
 static DEVICE_ATTR(lcd_ldo_check, S_IRUGO, lcdkit_ldo_check_show, NULL);
+static DEVICE_ATTR(lcd_mipi_config, 0644, NULL, lcdkit_mipi_config_store);
 
 static struct attribute* lcdkit_fb_attrs[] =
 {
@@ -1759,6 +1799,7 @@ static struct attribute* lcdkit_fb_attrs[] =
     &dev_attr_alpm_function.attr,
     &dev_attr_alpm_setting.attr,
     &dev_attr_lcd_func_switch.attr,
+    &dev_attr_lcd_dynamic_porch.attr,
     &dev_attr_lcd_test_config.attr,
     &dev_attr_lv_detect.attr,
     &dev_attr_current_detect.attr,
@@ -1767,6 +1808,7 @@ static struct attribute* lcdkit_fb_attrs[] =
     &dev_attr_lcd_bl_mode.attr,
     &dev_attr_lcd_bl_support_mode.attr,
     &dev_attr_lcd_ldo_check.attr,
+    &dev_attr_lcd_mipi_config.attr,
     NULL,
 };
 

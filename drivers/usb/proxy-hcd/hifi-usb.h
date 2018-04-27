@@ -20,6 +20,13 @@ struct hifi_usb_msg_wrap {
 	struct hifi_usb_op_msg msg;
 };
 
+struct hifi_usb_phy_ldo_cfg {
+	u32 addr;
+	u32 bit;
+	u32 always_on;
+	u32 accessable; /* 0: not accessable, non-zero: accessable */
+};
+
 struct hifi_usb_proxy {
 	struct proxy_hcd_client 	*client;
 	struct dentry 			*debugfs_root;
@@ -59,7 +66,9 @@ struct hifi_usb_proxy {
 	bool				hifiusb_suspended;
 	bool				hifiusb_hibernating;
 	bool				hid_key_pressed;
-	bool				hifi_reset_flag;
+
+	struct hifi_usb_phy_ldo_cfg	hifi_usb_phy_ldo_33v;
+	struct hifi_usb_phy_ldo_cfg	hifi_usb_phy_ldo_18v;
 };
 
 void hifi_usb_msg_receiver(struct hifi_usb_op_msg *__msg);

@@ -69,7 +69,6 @@
 #include <bsp_reset.h>
 #include "ipc_balong.h"
 #include <bsp_pm_om.h>
-#include <bsp_version.h>
 
 
 spinlock_t ipcm_lock[IPC_SEM_BUTTOM];
@@ -227,13 +226,6 @@ OSL_IRQ_FUNC(irqreturn_t,ipc_int_handler,irq,dev_id)
 s32 bsp_ipc_int_send(IPC_INT_CORE_E enDstCore, IPC_INT_LEV_E ulLvl)
 {
 	unsigned long flags = 0;
-	const BSP_VERSION_INFO_S *version=bsp_get_version_info();
-	if(!version)
-	{
-		bsp_trace(BSP_LOG_LEVEL_ERROR,BSP_MODU_IPC,"read version failed\n");
-		return MDRV_ERROR;
-	}
-	
 	 if (ulLvl >= INTSRC_NUM)
 	{
 		bsp_trace(BSP_LOG_LEVEL_ERROR,BSP_MODU_IPC,"[%s]Wrong para , line:%d,para = %d\n",__FUNCTION__, __LINE__,ulLvl);
@@ -245,14 +237,6 @@ s32 bsp_ipc_int_send(IPC_INT_CORE_E enDstCore, IPC_INT_LEV_E ulLvl)
 		return MDRV_ERROR; 
 	 } 
 	
-	if(enDstCore == IPC_CORE_NXDSP)
-	{
-	if ((version->chip_type == CHIP_K970) && (version->cses_type == TYPE_CS))
-		{
-		enDstCore = IPC_CORE_LDSP;
-		}
-	}
-
  	if(modem_reset_flag && (IPC_INT_LEV_E)IPC_CCPU_INT_SRC_ACPU_RESET != ulLvl) /* 核间信息不可以交互 */
 	{
 		return IPC_ERR_MODEM_RESETING;

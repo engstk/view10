@@ -156,7 +156,7 @@ static bool del_sock_info(struct sock *sk,
 					post_indicate_packet(BST_IND_SOCK_STATE_CHANGED,
 						&uid, sizeof(uid_t));
 
-				BASTET_LOGI("kfree struct bastet_partner_sock, sk=%p, uid=%d",
+				BASTET_LOGI("kfree struct bastet_partner_sock, sk=%p, uid=%u",
 					sk, uid);
 				kfree(sock_node);
 				break;
@@ -242,7 +242,8 @@ static bool check_sock_valid(int fd, pid_t pid,
 
 	if (sk->sk_state != TCP_ESTABLISHED)
 		goto out_put;
-
+	if (sk->sk_socket == NULL)
+		goto out_put;
 	if (sk->sk_socket->type != SOCK_STREAM)
 		goto out_put;
 
@@ -389,7 +390,7 @@ static int add_uid(uid_t uid)
 	list_for_each_safe(p, n, &partner_uids_head) {
 		uid_node = list_entry(p, struct bastet_partner_uid, list);
 		if (uid_node->uid == uid) {
-			BASTET_LOGI("uid=%d is already in the list", uid);
+			BASTET_LOGI("uid=%u is already in the list", uid);
 			spin_unlock_bh(&partner_uids_lock);
 			return 0;
 		}
@@ -448,7 +449,7 @@ static int del_uid(uid_t uid)
 				del_socks(&uid_node->socks_head);
 				list_del(&uid_node->list);
 				kfree(uid_node);
-				BASTET_LOGI("kfree struct bastet_partner_uid uid=%d",
+				BASTET_LOGI("kfree struct bastet_partner_uid uid=%u",
 					uid);
 				break;
 			}

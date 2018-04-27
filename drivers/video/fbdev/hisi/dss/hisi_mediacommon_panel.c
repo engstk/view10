@@ -171,12 +171,10 @@ static int __init hisi_mediacommon_panel_init(void)
 {
 	int ret = 0;
 
-	if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-		ret = platform_driver_register(&this_driver);
-		if (ret) {
-			HISI_FB_ERR("platform_driver_register failed, error=%d!\n", ret);
-			return ret;
-		}
+	ret = platform_driver_register(&this_driver);
+	if (ret) {
+		HISI_FB_ERR("platform_driver_register failed, error=%d!\n", ret);
+		return ret;
 	}
 
 	return ret;

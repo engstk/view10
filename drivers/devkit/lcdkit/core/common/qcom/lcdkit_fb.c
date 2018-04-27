@@ -68,7 +68,7 @@ void mdss_fb_update_backlight_wq_handler(struct work_struct *work)
 	 mfd = lcdkit_get_mfd_pdata();
 	 if (charger_mode)
 	 {
-		 mfd->unset_bl_level = MDSS_MAX_BL_BRIGHTNESS / 2;
+		 mfd->unset_bl_level = lcdkit_info.panel_infos.bl_level_max / 2;
 	 }
 	 mdss_fb_update_backlight(mfd);
 }

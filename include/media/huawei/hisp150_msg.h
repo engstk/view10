@@ -208,6 +208,7 @@ typedef enum
     PRIMARY_CAMERA = 0,
     FRONT_CAMERA,
     SECONDARY_CAMERA,
+    THIRD_CAMERA,
     IR_CAMERA,
 } camera_id_t;
 typedef struct _isp_crop_region_info_t
@@ -385,6 +386,7 @@ typedef struct _stream_config_t
     unsigned int height;
     unsigned int stride;
     unsigned int format;
+    unsigned int secure;
 } stream_config_t;
 
 typedef struct _msg_req_usecase_config_t
@@ -1059,6 +1061,7 @@ typedef struct _msg_ack_test_case_interface_t
 typedef struct _msg_req_flush_t
 {
     unsigned int cam_id;
+    unsigned int is_hotplug;
 } msg_req_flush_t;
 
 typedef struct _msg_ack_flush_t
@@ -1315,8 +1318,9 @@ typedef enum
     SUBCMD_SET_SWPD_KEY = 169,
     SUBCMD_GET_SWPD_KEY = 170,
     SUBCMD_GET_SENSOR_COORD = 171,
+    SUBCMD_SET_AE_SENSOR_VERIFY_MODE = 172,
     SUBCMD_SHARPNESS_ENHANCE_ENABLE = 173,
-
+    SUBCMD_BAS_BYPASS_ENABLE = 174,
     SUBCMD_MAX,
 } extendset_info_e;
 

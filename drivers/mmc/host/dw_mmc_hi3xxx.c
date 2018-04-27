@@ -47,9 +47,14 @@
 
 static int hs_timing_config_kirin970_cs_sd_ppll3[TUNING_INIT_CONFIG_NUM] = {1200000000, 6, 4, 3, 13, 0, 171000000};
 static int hs_timing_config_kirin970_cs_sdio_ppll3[TUNING_INIT_CONFIG_NUM] = {1200000000, 6, 4, 3, 13, 0, 171000000};
+static int hs_timing_config_cancer_sd_ppll2[TUNING_INIT_CONFIG_NUM] = {960000000, 4, 1, 2, 9, 0, 192000000};
+static int hs_timing_config_cancer_sdio_ppll2[TUNING_INIT_CONFIG_NUM] = {960000000, 4, 3, 2, 9, 0, 192000000};
+static int hs_timing_config_libra_sd_ppll2[TUNING_INIT_CONFIG_NUM] = {960000000, 4, 3, 2, 9, 0, 192000000};
+static int hs_timing_config_libra_sdio_ppll2[TUNING_INIT_CONFIG_NUM] = {960000000, 4, 3, 2, 9, 0, 192000000};
 
 #endif
 
+#define ENABLE_CLK 0x10000
 #define IS_CS_TIMING_CONFIG 0x1
 static struct dsm_dev dsm_dw_mmc = {
 	.name = "dsm_sdio",
@@ -66,10 +71,6 @@ static struct dsm_client *dclient = NULL;
 void __iomem *pericrg_base = NULL;
 static void __iomem *sys_base = NULL;
 static void __iomem *mmc1_sys_ctrl_base = NULL;
-
-static int scperctrls = 0;
-static unsigned int bit_sdcard_o_sel18 = 0;
-static int sdio_rst = 0;
 
 static unsigned long hs_dwmmc_caps[];/*lint !e85*/
 
@@ -303,7 +304,7 @@ static int hs_timing_config_kirin970_cs[][TUNING_INIT_TIMING_MODE][TUNING_INIT_C
         }
 };
 
-static int hs_timing_config_kirin_middle[][TUNING_INIT_TIMING_MODE][TUNING_INIT_CONFIG_NUM] = {
+static int hs_timing_config_libra[][TUNING_INIT_TIMING_MODE][TUNING_INIT_CONFIG_NUM] = {
         /* bus_clk,    div, drv_phase, sam_dly, sam_phase_max, sam_phase_min, input_clk */
 	{ /*MMC*/
                 {3200000, 7, 7, 0, 15, 15, 400000},             /* 0: LEGACY 400k */
@@ -344,11 +345,11 @@ static int hs_timing_config_kirin_middle[][TUNING_INIT_TIMING_MODE][TUNING_INIT_
 };
 
 
-static int hs_timing_config_kirin_high[][TUNING_INIT_TIMING_MODE][TUNING_INIT_CONFIG_NUM] = {
+static int hs_timing_config_cancer[][TUNING_INIT_TIMING_MODE][TUNING_INIT_CONFIG_NUM] = {
         /* bus_clk,    div, drv_phase, sam_dly, sam_phase_max, sam_phase_min, input_clk */
         { /*MMC*/
                 {3200000, 7, 7, 0, 15, 15, 400000},             /* 0: LEGACY 400k */
-                {480000000, 9, 6, 0, 1, 1, 48000000},   /* 1: MMC_HS */ /* ES 400M, 8div 50M */
+                {480000000, 9, 7, 0, 19, 19, 48000000},   /* 1: MMC_HS */ /* ES 400M, 8div 50M */
                 {200000000, 7, 6, 0, 15, 15, 25000000}, /* 2: SD_HS */
                 {200000000, 7, 6, 0, 15, 15, 25000000}, /* 3: SDR12 */
                 {400000000, 7, 6, 0, 15, 15, 50000000}, /* 4: SDR25 */
@@ -356,28 +357,28 @@ static int hs_timing_config_kirin_high[][TUNING_INIT_TIMING_MODE][TUNING_INIT_CO
                 {1600000000, 7, 5, 4, 15, 0, 200000000},        /* 6: SDR104 */
                 {800000000, 7, 6, 0, 7, 0, 100000000},  /* 7: DDR50 */
                 {800000000, 7, 6, 0, 7, 0, 100000000},  /* 8: DDR52 */
-                {1920000000, 9, 5, 4, 15, 0, 192000000},        /* 9: HS200 */ /* ES 960M, 8div 120M */
+                {1920000000, 9, 7, 4, 19, 0, 192000000},        /* 9: HS200 */ /* ES 960M, 8div 120M */
         },
         { /*SD*/
-                {3200000, 7, 7, 0, 19, 19, 400000},             /* 0: LEGACY 400k */
+                {3200000, 7, 7, 0, 15, 15, 400000},             /* 0: LEGACY 400k */
                 {240000000, 9, 8, 0, 3, 3, 24000000},           /* 1: MMC_HS */
                 {480000000, 9, 7, 0, 4, 4, 48000000},           /* 2: SD_HS */
                 {240000000, 9, 8, 0, 19, 19, 24000000}, /* 3: SDR12 */
-                {480000000, 9, 7, 0, 3, 3, 48000000},           /* 4: SDR25 */
-                {960000000, 9, 4, 0, 16, 0, 96000000}, /* 5: SDR50 */
-                {1920000000, 9, 6, 4, 19, 0, 192000000},        /* 6: SDR104 */
+                {480000000, 9, 7, 0, 2, 2, 48000000},           /* 4: SDR25 */
+                {960000000, 9, 4, 0, 11, 0, 96000000}, /* 5: SDR50 */
+                {1920000000, 9, 3, 7, 19, 0, 192000000},        /* 6: SDR104 */
                 {0},                                    /* 7: DDR50 */
                 {0},                                    /* 8: DDR52 */
                 {0},                                    /* 9: HS200 */
         },
         { /*SDIO*/
-                {3200000, 7, 7, 0, 19, 19, 400000},             /* 0: LEGACY 400k */
+                {3200000, 7, 7, 0, 15, 15, 400000},             /* 0: LEGACY 400k */
                 {0},                                    /* 1: MMC_HS */
                 {480000000, 9, 7, 0, 19, 19, 48000000}, /* 2: SD_HS */
                 {240000000, 9, 8, 0, 19, 19, 24000000}, /* 3: SDR12 */
                 {480000000, 9, 7, 0, 19, 19, 48000000},           /* 4: SDR25 */
-                {960000000, 9, 4, 0, 16, 0,  96000000}, /* 5: SDR50 */
-                {1920000000, 9, 5, 4, 19, 0, 192000000},        /* 6: SDR104 */
+                {960000000, 9, 4, 0, 12, 0,  96000000}, /* 5: SDR50 */
+                {1920000000, 9, 7, 7, 19, 0, 192000000},        /* 6: SDR104 */
                 {0},                                    /* 7: DDR50 */
                 {0},                                    /* 8: DDR52 */
                 {0},                                    /* 9: HS200 */
@@ -387,30 +388,71 @@ static int hs_timing_config_kirin_high[][TUNING_INIT_TIMING_MODE][TUNING_INIT_CO
 /* only for SD voltage switch on hi3650 FPGA */
 extern int gpio_direction_output(unsigned gpio, int value);
 
+#ifdef CONFIG_SD_SDIO_CRC_RETUNING
+void dw_mci_sd_crc_retuning_set(struct dw_mci *host, int sam_phase_val, int *use_sam_dly, int *enable_shift)
+{
+	/*used for libra,cancer. but not for kirin970*/
+	if (host->use_samdly_flag) {
+		if (host->use_samdly_range[0] <= sam_phase_val && sam_phase_val <= host->use_samdly_range[1])
+			*use_sam_dly = 1;
+		if (host->enable_shift_range[0] <= sam_phase_val && sam_phase_val <= host->enable_shift_range[1])
+			*enable_shift = 1;
+		dev_info(host->dev, "%s:use_samdly_range_min:%d,use_samdly_range_max:%d!\n",__func__,host->use_samdly_range[0],host->use_samdly_range[1]);
+		return;
+	}
+
+	/*used for kirin970 only*/
+	if ((true == host->clk_change)) {
+		if (8 <= sam_phase_val && sam_phase_val <= 12)
+			*use_sam_dly = 1;
+		if (2 <= sam_phase_val && sam_phase_val <= 8)
+			*enable_shift = 1;
+		dev_info(host->dev, "%s:sd data crc, need retune!\n",__func__);
+		return;
+	}
+
+	if (4 <= sam_phase_val && sam_phase_val <= 8)
+		*use_sam_dly = 1;
+	if (2 <= sam_phase_val && sam_phase_val <= 8)
+		*enable_shift = 1;
+	dev_info(host->dev, "%s:no data crc occur in kirin970, no need retune!\n",__func__);
+}
+#endif
+
+#ifdef CONFIG_SD_SDIO_CRC_RETUNING
+void dw_mci_sdio_crc_retuning_set(struct dw_mci *host, int sam_phase_val, int *use_sam_dly, int *enable_shift)
+{
+	/*used for libra,cancer. but not for kirin970*/
+	if (host->use_samdly_flag) {
+		if (host->use_samdly_range[0] <= sam_phase_val && sam_phase_val <= host->use_samdly_range[1])
+			*use_sam_dly = 1;
+		if (host->enable_shift_range[0] <= sam_phase_val && sam_phase_val <= host->enable_shift_range[1])
+			*enable_shift = 1;
+		return;
+	}
+
+	/*used for kirin970 only*/
+	if ((true == host->clk_change)) {
+		if (8 <= sam_phase_val && sam_phase_val <= 12)
+			*use_sam_dly = 1;
+		if (2 <= sam_phase_val && sam_phase_val <= 8)
+			*enable_shift = 1;
+		return;
+	}
+
+	if (8 <= sam_phase_val && sam_phase_val <= 12)
+		*use_sam_dly = 1;
+	if (2 <= sam_phase_val && sam_phase_val <= 8)
+		*enable_shift = 1;
+}
+#endif
+
 void dw_mci_shift_set(struct dw_mci *host,int sam_phase_val,int d_value,int * use_sam_dly,int *enable_shift)
 {
 	*use_sam_dly = 0;
 	*enable_shift = 0;
 #ifdef CONFIG_SD_SDIO_CRC_RETUNING
-	if ((true == host->clk_change)) {
-		/*sd clk to ppll3*/
-		if (8 <= sam_phase_val && sam_phase_val <= 12)
-			*use_sam_dly = 1;
-	} else if (IS_CS_TIMING_CONFIG == host->is_cs_timing_config) {
-		/*sd clk to ppll2*/
-		if (4 <= sam_phase_val && sam_phase_val <= 8)
-			*use_sam_dly = 1;
-	}
-
-	if ((true == host->clk_change)) {
-		/*sd clk to ppll3*/
-		if (2 <= sam_phase_val && sam_phase_val <= 8)
-			*enable_shift = 1;
-	} else {
-		/*sd clk to ppll2*/
-		if (2 <= sam_phase_val && sam_phase_val <= 6)
-			*enable_shift = 1;
-	}
+	dw_mci_sd_crc_retuning_set(host,sam_phase_val,use_sam_dly,enable_shift);
 #else
 	/*only used in boston_cs platform*/
 	if (IS_CS_TIMING_CONFIG == host->is_cs_timing_config) {
@@ -421,7 +463,7 @@ void dw_mci_shift_set(struct dw_mci *host,int sam_phase_val,int d_value,int * us
 		return;
 	}
 
-	/*setting enable_shift range. adapt and later chipsets*/
+	/*setting enable_shift range. adapt for libra,cancer and later chipsets*/
 	if (host->enable_shift_flag) {
 		if (host->enable_shift_range[0] <= sam_phase_val && sam_phase_val <= host->enable_shift_range[1])
 			*enable_shift = 1;
@@ -430,7 +472,7 @@ void dw_mci_shift_set(struct dw_mci *host,int sam_phase_val,int d_value,int * us
 			*enable_shift = 1;
 	}
 
-	/*setting use_sample_dly range. adapt and later chipsets*/
+	/*setting use_sample_dly range. adapt for libra,cancer and later chipsets*/
 	if (host->use_samdly_flag) {
 		if (host->use_samdly_range[0] <= sam_phase_val && sam_phase_val <= host->use_samdly_range[1])
 			*use_sam_dly = 1;
@@ -446,22 +488,7 @@ void dw_mci_shift_sdio_set(struct dw_mci *host,int sam_phase_val,int d_value,int
 	*use_sam_dly = 0;
 	*enable_shift = 0;
 #ifdef CONFIG_SD_SDIO_CRC_RETUNING
-	if ((true == host->clk_change)) {
-		/*sdio clk to ppll3*/
-		if (8 <= sam_phase_val && sam_phase_val <= 12)
-			*use_sam_dly = 1;
-
-		if (2 <= sam_phase_val && sam_phase_val <= 8)
-			*enable_shift = 1;
-	} else {
-		dev_info(host->dev, "dw_mci_shift_sdio_set set sdio sam\n");
-		/*sdio clk to ppll3*/
-		if (8 <= sam_phase_val && sam_phase_val <= 12)
-			*use_sam_dly = 1;
-
-		if (2 <= sam_phase_val && sam_phase_val <= 8)
-			*enable_shift = 1;
-	}
+	dw_mci_sdio_crc_retuning_set(host,sam_phase_val,use_sam_dly,enable_shift);
 #else
 	/*only used in boston_cs platform*/
 	if (IS_CS_TIMING_CONFIG == host->is_cs_timing_config) {
@@ -473,7 +500,7 @@ void dw_mci_shift_sdio_set(struct dw_mci *host,int sam_phase_val,int d_value,int
 		return;
 	}
 
-	/*setting enable_shift range. adapt and later chipsets*/
+	/*setting enable_shift range. adapt for libra,cancer and later chipsets*/
 	if (host->enable_shift_flag) {
 		if (host->enable_shift_range[0] <= sam_phase_val && sam_phase_val <= host->enable_shift_range[1])
 			*enable_shift = 1;
@@ -494,7 +521,7 @@ void dw_mci_shift_sdio_set(struct dw_mci *host,int sam_phase_val,int d_value,int
 		return;
 	}
 
-	/*setting use_sample_dly range. adapt and later chipsets*/
+	/*setting use_sample_dly range. adapt for libra,cancer and later chipsets*/
 	if (host->use_samdly_flag) {
 		if (host->use_samdly_range[0] <= sam_phase_val && sam_phase_val <= host->use_samdly_range[1])
 			*use_sam_dly = 1;
@@ -688,7 +715,7 @@ EXPORT_SYMBOL(dw_mci_dsm_dump);
 #define	SD_HWLOCK_ID	11
 #define	SD_LOCK_TIMEOUT	1000
 static struct hwspinlock	*sd_hwlock;
-static int dw_mci_set_sel18(bool set)
+static int dw_mci_set_sel18(struct dw_mci *host, bool set)
 {
 	u32 reg;
 	unsigned long flag = 0;
@@ -701,202 +728,230 @@ static int dw_mci_set_sel18(bool set)
 		return 0;
 	}
 
-	reg = readl(sys_base + scperctrls);
+	reg = readl(sys_base + host->scperctrls);
 	if (set)
-		reg |= bit_sdcard_o_sel18;
+		reg |= host->bit_sdcard_o_sel18;
 	else
-		reg &= ~bit_sdcard_o_sel18;
+		reg &= ~(host->bit_sdcard_o_sel18);
 
+	/*set mask bit when the reg needs mask to protect*/
+	reg |= host->odio_sd_mask_bit;
 
-	writel(reg, sys_base + scperctrls);
+	writel(reg, sys_base + host->scperctrls);
 
 	hwspin_unlock_irqrestore(sd_hwlock, &flag);
 	printk(" dw_mci_set_sel18 reg = 0x%x\n", reg);
 	return 0;
 }
 
-static void dw_mci_hs_set_ios(struct dw_mci *host, struct mmc_ios *ios)
+static inline void dw_mci_hs_check_result(struct dw_mci *host, int ret, char* log)
+{
+	if (ret)
+		dev_warn(host->dev, "%s", log);
+}
+
+static void dw_mci_hs_power_off(struct dw_mci *host, struct mmc_ios *ios)
+{
+	int ret;
+
+	/* set pin to idle, skip emmc for vccq keeping power always on */
+	if ((host->hw_mmc_id == DWMMC_SD_ID) && !(check_himntn(HIMNTN_SD2JTAG) || check_himntn(HIMNTN_SD2DJTAG))) {
+		if ((host->pinctrl) && (host->pins_idle)) {
+			ret = pinctrl_select_state(host->pinctrl, host->pins_idle);
+			dw_mci_hs_check_result(host, ret, "could not set sd idle pins\n");
+		}
+	} else if ((host->hw_mmc_id != DWMMC_EMMC_ID) && (host->hw_mmc_id != DWMMC_SD_ID)) {
+		if ((host->pinctrl) && (host->pins_idle)) {
+			ret = pinctrl_select_state(host->pinctrl, host->pins_idle);
+			dw_mci_hs_check_result(host, ret, "could not set idle pins\n");
+		}
+	}
+
+	if (host->hw_mmc_id == DWMMC_SDIO_ID) {
+		dev_err(host->dev, "POWER_OFF SDIO !\n");
+		return;
+	}
+
+	if (host->vqmmc) {
+		ret = regulator_disable(host->vqmmc);
+		dw_mci_hs_check_result(host, ret, "egulator_disable vqmmc failed\n");
+	}
+
+	if (host->vmmc) {
+		ret = regulator_disable(host->vmmc);
+		dw_mci_hs_check_result(host, ret, "egulator_disable vmmc failed\n");
+	}
+}
+
+static void dw_mci_hs_power_up(struct dw_mci *host, struct mmc_ios *ios)
+{
+	struct dw_mci_hs_priv_data *priv = host->priv;
+	int ret;
+	u32 reg;
+
+	if (HI3660_FPGA == priv->hi3660_fpga_sd_ioset) {
+		/*set GPIO15[0] and GPIO15[1] to outpot */
+		/*set GPIO15[0] to High */
+		/*set GPIO15[1] to Low */
+		(void)gpio_request(priv->hi3660_sd_ioset_jtag_sd_sel, "jtag_sd_sel");
+		(void)gpio_request(priv->hi3660_sd_ioset_sd_sel, "sd_sel");
+		gpio_direction_output(priv->hi3660_sd_ioset_jtag_sd_sel, 0);
+		gpio_direction_output(priv->hi3660_sd_ioset_sd_sel, 1);
+		dev_info(host->dev, "set Hi3660 FPGA sd io\n");
+		gpio_free(priv->hi3660_sd_ioset_jtag_sd_sel);
+		gpio_free(priv->hi3660_sd_ioset_sd_sel);
+	}
+
+	if (host->hw_mmc_id == DWMMC_SD_ID) {
+		ret = dw_mci_set_sel18(host, 0);
+		dw_mci_hs_check_result(host, ret, "ios dw_mci_set_sel18 error!\n");
+		/* Wait for 5ms */
+		usleep_range(5000, 5500);
+
+		if (host->vqmmc) {
+			ret = regulator_set_voltage(host->vqmmc, 2950000, 2950000);
+			dw_mci_hs_check_result(host, ret, "regulator_set_voltage vqmmc failed!\n");
+
+			ret = regulator_enable(host->vqmmc);
+			dw_mci_hs_check_result(host, ret, "regulator_enable vqmmc failed!\n");
+			usleep_range(1000, 1500);
+		}
+
+		if (host->vmmc) {
+			ret = regulator_set_voltage(host->vmmc, 2950000, 2950000);
+			dw_mci_hs_check_result(host, ret, "regulator_set_voltage vmmc failed!\n");
+
+			ret = regulator_enable(host->vmmc);
+			dw_mci_hs_check_result(host, ret, "regulator_enable vmmc failed!\n");
+			usleep_range(1000, 1500);
+		}
+
+		/*Before enable GPIO,disable clk*/
+		reg = mci_readl(host, GPIO);
+		reg &= ~ENABLE_CLK;
+		mci_writel(host, GPIO,reg);
+		udelay(20);
+
+		if (!(check_himntn(HIMNTN_SD2JTAG) || check_himntn(HIMNTN_SD2DJTAG))) {
+			if ((host->pinctrl) && (host->pins_default)) {
+				ret = pinctrl_select_state(host->pinctrl, host->pins_default);
+				dw_mci_hs_check_result(host, ret, "could not set default pins\n");
+			}
+		}
+
+		/*After enable GPIO,enable clk*/
+		reg = mci_readl(host, GPIO);
+		reg |= ENABLE_CLK;
+		mci_writel(host, GPIO,reg);
+		udelay(20);
+	} else {
+		if ((host->pinctrl) && (host->pins_default)) {
+			ret = pinctrl_select_state(host->pinctrl, host->pins_default);
+			dw_mci_hs_check_result(host, ret, "could not set pins\n");
+		}
+
+		if (host->hw_mmc_id == DWMMC_SDIO_ID) {
+			dev_err(host->dev, "POWER_UP SDIO !\n");
+			return;
+		}
+
+		if (host->vmmc) {
+			ret = regulator_set_voltage(host->vmmc, 2950000, 2950000);
+			dw_mci_hs_check_result(host, ret, "set voltage vmmc failed!\n");
+
+			ret = regulator_enable(host->vmmc);
+			dw_mci_hs_check_result(host, ret, "enable regulator vmmc failed!\n");
+		}
+
+		if (host->vqmmc) {
+			ret = regulator_set_voltage(host->vqmmc, 2950000, 2950000);
+			dw_mci_hs_check_result(host, ret, "set voltage vqmmc failed!\n");
+
+			ret = regulator_enable(host->vqmmc);
+			dw_mci_hs_check_result(host, ret, "enable regulator vqmmc failed!\n");
+		}
+	}
+
+}
+
+static void dw_mci_hs_set_power(struct dw_mci *host, struct mmc_ios *ios)
+{
+	struct dw_mci_hs_priv_data *priv = host->priv;
+
+	if (priv->old_power_mode == ios->power_mode) /* no need change power */
+		return;
+
+	switch (ios->power_mode) {
+	case MMC_POWER_OFF:
+		dev_info(host->dev, "set io to lowpower\n");
+		dw_mci_hs_power_off(host, ios);
+		break;
+	case MMC_POWER_UP:
+		dev_info(host->dev, "set io to normal\n");
+		dw_mci_hs_power_up(host, ios);
+		break;
+	case MMC_POWER_ON:
+		break;
+	default:
+		dev_info(host->dev, "unknown power supply mode\n");
+		break;
+	}
+	priv->old_power_mode = ios->power_mode;
+}
+
+static void dw_mci_hs_set_clk(struct dw_mci *host, struct mmc_ios *ios)
 {
 	struct dw_mci_hs_priv_data *priv = host->priv;
 	int id = priv->id;
 	int ret;
 
-	if (priv->old_power_mode != ios->power_mode) {
-		switch (ios->power_mode) {
-		case MMC_POWER_OFF:
-			dev_info(host->dev, "set io to lowpower\n");
+	if (priv->old_timing == ios->timing) /* no need change clock */
+		return;
 
-			/* set pin to idle, skip emmc for vccq keeping power always on */
-			if ((host->hw_mmc_id == DWMMC_SD_ID) && !(check_himntn(HIMNTN_SD2JTAG) || check_himntn(HIMNTN_SD2DJTAG))) {
-				if ((host->pinctrl) && (host->pins_idle)) {
-					ret = pinctrl_select_state(host->pinctrl, host->pins_idle);
-					if (ret)
-						dev_warn(host->dev, "could not set idle pins\n");
-				}
-			} else if ((host->hw_mmc_id != DWMMC_EMMC_ID) && (host->hw_mmc_id != DWMMC_SD_ID)) {
-				if ((host->pinctrl) && (host->pins_idle)) {
-					ret = pinctrl_select_state(host->pinctrl, host->pins_idle);
-					if (ret)
-						dev_warn(host->dev, "could not set idle pins\n");
-				}
-			}
+	dw_mci_hs_set_parent(host, ios->timing);
 
-			if(host->hw_mmc_id == DWMMC_SDIO_ID)
-			{
-				dev_err(host->dev, "POWER_OFF SDIO !\n");
-				break;
-			}
+	if (!IS_ERR(host->ciu_clk))
+		clk_disable_unprepare(host->ciu_clk);
 
-			if (host->vqmmc) {
-				ret = regulator_disable(host->vqmmc);
-				if (ret)
-					dev_warn(host->dev, "regulator_disable vqmmc failed\n");
-			}
+	ret = clk_set_rate(host->ciu_clk, hs_timing_config[id][ios->timing][0]);
+	if (ret)
+		dev_err(host->dev, "clk_set_rate failed\n");
 
-			if (host->vmmc) {
-				ret = regulator_disable(host->vmmc);
-				if (ret)
-					dev_warn(host->dev, "regulator_disable vmmc failed\n");
-			}
-
-			break;
-		case MMC_POWER_UP:
-			dev_info(host->dev, "set io to normal\n");
-
-			if (HI3660_FPGA == priv->hi3660_fpga_sd_ioset) {
-				/*set GPIO15[0] and GPIO15[1] to outpot */
-				/*set GPIO15[0] to High */
-				/*set GPIO15[1] to Low */
-				(void)gpio_request(priv->hi3660_sd_ioset_jtag_sd_sel, "jtag_sd_sel");
-				(void)gpio_request(priv->hi3660_sd_ioset_sd_sel, "sd_sel");
-				gpio_direction_output(priv->hi3660_sd_ioset_jtag_sd_sel, 0);
-				gpio_direction_output(priv->hi3660_sd_ioset_sd_sel, 1);
-				dev_info(host->dev, "set Hi3660 FPGA sd io\n");
-				gpio_free(priv->hi3660_sd_ioset_jtag_sd_sel);
-				gpio_free(priv->hi3660_sd_ioset_sd_sel);
-			}
-
-			if (host->hw_mmc_id == DWMMC_SD_ID) {
-				ret = dw_mci_set_sel18(0);
-				if (ret)
-					dev_err(host->dev, " ios dw_mci_set_sel18 error!\n");
-				/* Wait for 5ms */
-				usleep_range(5000, 5500);
-
-				if (host->vqmmc) {
-					ret = regulator_set_voltage(host->vqmmc, 2950000, 2950000);
-					if (ret)
-						dev_err(host->dev, "regulator_set_voltage failed !\n");
-
-					ret = regulator_enable(host->vqmmc);
-					if (ret)
-						dev_err(host->dev, "regulator_enable failed !\n");
-					usleep_range(1000, 1500);
-				}
-
-				if (host->vmmc) {
-					ret = regulator_set_voltage(host->vmmc, 2950000, 2950000);
-					if (ret)
-						dev_err(host->dev, "regulator_set_voltage failed !\n");
-
-					ret = regulator_enable(host->vmmc);
-					if (ret)
-						dev_err(host->dev, "regulator_enable failed !\n");
-					usleep_range(1000, 1500);
-				}
-
-				if (!(check_himntn(HIMNTN_SD2JTAG) || check_himntn(HIMNTN_SD2DJTAG))) {
-					if ((host->pinctrl) && (host->pins_default)) {
-						ret = pinctrl_select_state(host->pinctrl, host->pins_default);
-						if (ret)
-							dev_warn(host->dev, "could not set default pins\n");
-					}
-				}
-			} else {
-				if ((host->pinctrl) && (host->pins_default)) {
-					ret = pinctrl_select_state(host->pinctrl, host->pins_default);
-					if (ret)
-						dev_warn(host->dev, "could not set default pins\n");
-				}
-
-				if(host->hw_mmc_id == DWMMC_SDIO_ID)
-				{
-					dev_err(host->dev, "POWER_UP SDIO !\n");
-					break;
-				}
-
-				if (host->vmmc) {
-					ret = regulator_set_voltage(host->vmmc, 2950000, 2950000);
-					if (ret)
-						dev_err(host->dev, "regulator_set_voltage failed !\n");
-
-					ret = regulator_enable(host->vmmc);
-					if (ret)
-						dev_err(host->dev, "regulator_enable failed !\n");
-				}
-
-				if (host->vqmmc) {
-					ret = regulator_set_voltage(host->vqmmc, 2950000, 2950000);
-					if (ret)
-						dev_err(host->dev, "regulator_set_voltage failed !\n");
-
-					ret = regulator_enable(host->vqmmc);
-					if (ret)
-						dev_err(host->dev, "regulator_enable failed !\n");
-				}
-			}
-
-			break;
-		case MMC_POWER_ON:
-			break;
-		default:
-			dev_info(host->dev, "unknown power supply mode\n");
-			break;
-		}
-		priv->old_power_mode = ios->power_mode;
+	if (!IS_ERR(host->ciu_clk)) {
+		if (clk_prepare_enable(host->ciu_clk))
+			dev_err(host->dev, "ciu_clk clk_prepare_enable failed\n");
 	}
 
-	if (priv->old_timing != ios->timing) {
+	if (priv->in_resume != STATE_KEEP_PWR)
+		host->tuning_init_sample = (hs_timing_config[id][ios->timing][4] + hs_timing_config[id][ios->timing][5]) / 2;
 
-		dw_mci_hs_set_parent(host, ios->timing);
+	if (host->sd_reinit == 0)
+		host->current_div = hs_timing_config[id][ios->timing][1];
 
-		if (!IS_ERR(host->ciu_clk))
-			clk_disable_unprepare(host->ciu_clk);
+	dw_mci_hs_set_timing(host, id, ios->timing, host->tuning_init_sample, host->current_div);
 
-		ret = clk_set_rate(host->ciu_clk, hs_timing_config[id][ios->timing][0]);
-		if (ret)
-			dev_err(host->dev, "clk_set_rate failed\n");
+	if (priv->priv_bus_hz == 0)
+		host->bus_hz = hs_timing_config[id][ios->timing][6];
+	else
+		host->bus_hz = 2 * hs_timing_config[id][ios->timing][6];
 
-		if (!IS_ERR(host->ciu_clk)) {
-			if (clk_prepare_enable(host->ciu_clk))
-				dev_err(host->dev, "ciu_clk clk_prepare_enable failed\n");
-		}
-
-		if (priv->in_resume != STATE_KEEP_PWR)
-			host->tuning_init_sample = (hs_timing_config[id][ios->timing][4] + hs_timing_config[id][ios->timing][5]) / 2;
-
-		if (host->sd_reinit == 0)
-			host->current_div = hs_timing_config[id][ios->timing][1];
-
-		dw_mci_hs_set_timing(host, id, ios->timing, host->tuning_init_sample, host->current_div);
-
-		if (priv->priv_bus_hz == 0)
-			host->bus_hz = hs_timing_config[id][ios->timing][6];
-		else
-			host->bus_hz = 2 * hs_timing_config[id][ios->timing][6];
-
-		if (priv->dw_mmc_bus_clk) {
-			/*if FPGA, the clk for SD should be 20M */
-			/*if ((id == MMC_SD) || (id ==MMC_EMMC)) {*/
-			host->bus_hz = priv->dw_mmc_bus_clk;
-			/*}*/
-			/*if FPGA, the clk for wifi should div 10 */
-			/*else if (id == MMC_SDIO)*/
-			/*  host->bus_hz = (host->bus_hz)/10;*/
-		}
-
-		priv->old_timing = ios->timing;
+	if (priv->dw_mmc_bus_clk) {
+		/*if FPGA, the clk for SD should be 20M */
+		/*if ((id == MMC_SD) || (id ==MMC_EMMC)) {*/
+		host->bus_hz = priv->dw_mmc_bus_clk;
+		/*}*/
+		/*if FPGA, the clk for wifi should div 10 */
+		/*else if (id == MMC_SDIO)*/
+		/*  host->bus_hz = (host->bus_hz)/10;*/
 	}
+
+	priv->old_timing = ios->timing;
+}
+
+static void dw_mci_hs_set_ios(struct dw_mci *host, struct mmc_ios *ios)
+{
+	dw_mci_hs_set_power(host, ios);
+	dw_mci_hs_set_clk(host, ios);
 }
 
 static void dw_mci_hs_prepare_command(struct dw_mci *host, u32 *cmdr)
@@ -905,20 +960,22 @@ static void dw_mci_hs_prepare_command(struct dw_mci *host, u32 *cmdr)
 }
 
 /*lint -save -e578*/
-static int dw_mci_hs_get_dt_pltfm_resource(struct device_node  *of_node) /*lint !e578*/
+static int dw_mci_hs_get_dt_pltfm_resource(struct dw_mci *host, struct device_node  *of_node) /*lint !e578*/
 {
 	struct device_node *np = NULL;
 /*lint -restore*/
-	if (of_device_is_compatible(of_node, "hisilicon,kirin-middle-dw-mshc")) {
-		scperctrls         |= BIT_VOLT_OFFSET;
-		bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
-		sdio_rst |= BIT_RST_SDIO_MIDDLE;
-		memcpy(hs_timing_config, hs_timing_config_kirin_middle, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
-	} else if (of_device_is_compatible(of_node, "hisilicon,kirin-high-dw-mshc")) {
-		scperctrls         |= BIT_VOLT_OFFSET;
-		bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
-		sdio_rst |= BIT_HRST_SDIO_HIGH;
-		memcpy(hs_timing_config, hs_timing_config_kirin_high, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
+	if (of_device_is_compatible(of_node, "hisilicon,libra-dw-mshc")) {
+		host->scperctrls         |= BIT_VOLT_OFFSET;
+		host->bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
+		host->sdio_rst |= BIT_RST_SDIO_LIBRA;
+		memcpy(hs_timing_config, hs_timing_config_libra, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
+	} else if (of_device_is_compatible(of_node, "hisilicon,cancer-dw-mshc")) {
+		host->scperctrls         |= BIT_VOLT_OFFSET_CANCER;
+		host->bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18_CANCER;
+		host->sdio_rst |= BIT_HRST_SDIO_CANCER;
+		host->odio_sd_mask_bit = BIT_VOLT_VALUE_18_MASK_CANCER;
+
+		memcpy(hs_timing_config, hs_timing_config_cancer, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
 
 		if (!mmc1_sys_ctrl_base) {
 			np = of_find_compatible_node(NULL, NULL, "Hisilicon,mmc1_sysctrl");
@@ -934,9 +991,9 @@ static int dw_mci_hs_get_dt_pltfm_resource(struct device_node  *of_node) /*lint 
 			}
 		}
 	}else if (of_device_is_compatible(of_node, "hisilicon,kirin970-dw-mshc")) {
-		scperctrls         |= BIT_VOLT_OFFSET;
-		bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
-		sdio_rst |= BIT_RST_SDIO_BOSTON;
+		host->scperctrls         |= BIT_VOLT_OFFSET;
+		host->bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
+		host->sdio_rst |= BIT_RST_SDIO_BOSTON;
 		if(of_find_property(of_node, "cs_sd_timing_config", (int *)NULL)){
 			memcpy(hs_timing_config, hs_timing_config_kirin970_cs, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
 		}
@@ -944,19 +1001,19 @@ static int dw_mci_hs_get_dt_pltfm_resource(struct device_node  *of_node) /*lint 
 			memcpy(hs_timing_config, hs_timing_config_kirin970, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
 		}
 	} else if (of_device_is_compatible(of_node, "hisilicon,hi3660-dw-mshc")) {
-		scperctrls         |= BIT_VOLT_OFFSET;
-		bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
-		sdio_rst |= BIT_RST_SDIO_CHICAGO;
+		host->scperctrls         |= BIT_VOLT_OFFSET;
+		host->bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
+		host->sdio_rst |= BIT_RST_SDIO_CHICAGO;
 		memcpy(hs_timing_config, hs_timing_config_hi3660, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
 	} else if (of_device_is_compatible(of_node, "hisilicon,hi6250-dw-mshc")){
-		scperctrls         |= BIT_VOLT_OFFSET;
-		bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
-		sdio_rst |= BIT_RST_SDIO;
+		host->scperctrls         |= BIT_VOLT_OFFSET;
+		host->bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
+		host->sdio_rst |= BIT_RST_SDIO;
 		memcpy(hs_timing_config, hs_timing_config_hi6250, sizeof(hs_timing_config));/* unsafe_function_ignore: memcpy */
 	} else if (of_device_is_compatible(of_node, "hisilicon,hi3650-dw-mshc")) {
-		scperctrls         |= BIT_VOLT_OFFSET_AUSTIN;
-		bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
-		sdio_rst |= BIT_RST_SDIO;
+		host->scperctrls         |= BIT_VOLT_OFFSET_AUSTIN;
+		host->bit_sdcard_o_sel18 |= BIT_VOLT_VALUE_18;
+		host->sdio_rst |= BIT_RST_SDIO;
 	} else {
 		return -1;
 	}
@@ -1038,6 +1095,46 @@ static void dw_mci_hs_set_rst_m(struct dw_mci *host, bool set)
 	}
 }
 
+void dw_mci_hs_reset(struct dw_mci *host, int id)
+{
+	if (0 == id) {
+		if (mmc1_sys_ctrl_base)
+			writel(BIT_HRST_SDIO_CANCER, mmc1_sys_ctrl_base + MMC1_SYSCTRL_PERRSTEN0);
+		else
+			writel(BIT_RST_EMMC, pericrg_base + PERI_CRG_RSTEN4);
+		dev_info(host->dev, "rest emmc \n");
+	} else if (1 == id) {
+		writel(BIT_RST_SD, pericrg_base + PERI_CRG_RSTEN4);
+		dev_info(host->dev, "rest sd \n");
+	} else if (2 == id) {
+		if (mmc1_sys_ctrl_base)
+			writel(host->sdio_rst, mmc1_sys_ctrl_base + MMC1_SYSCTRL_PERRSTEN0);
+		else
+			writel(host->sdio_rst, pericrg_base + PERI_CRG_RSTEN4);
+		dev_info(host->dev, "rest sdio \n");
+	}
+}
+
+void dw_mci_hs_unreset(struct dw_mci *host, int id)
+{
+	if (0 == id) {
+		if (mmc1_sys_ctrl_base)
+			writel(BIT_HRST_SDIO_CANCER, mmc1_sys_ctrl_base + MMC1_SYSCTRL_PERRSTDIS0);
+		else
+			writel(BIT_RST_EMMC, pericrg_base + PERI_CRG_RSTDIS4);
+		dev_info(host->dev, "unrest emmc \n");
+	} else if (1 == id) {
+		writel(BIT_RST_SD, pericrg_base + PERI_CRG_RSTDIS4);
+		dev_info(host->dev, "unrest sd \n");
+	} else if (2 == id) {
+		if (mmc1_sys_ctrl_base)
+			writel(host->sdio_rst, mmc1_sys_ctrl_base + MMC1_SYSCTRL_PERRSTDIS0);
+		else
+			writel(host->sdio_rst, pericrg_base + PERI_CRG_RSTDIS4);
+		dev_info(host->dev, "unrest sdio \n");
+	}
+}
+
 static int dw_mci_hs_set_controller(struct dw_mci *host, bool set)
 {
 	struct dw_mci_hs_priv_data *priv = host->priv;
@@ -1049,40 +1146,11 @@ static int dw_mci_hs_set_controller(struct dw_mci *host, bool set)
 	}
 
 	if (set) {
-		if (0 == id) {
-			if (mmc1_sys_ctrl_base)
-				writel(BIT_HRST_SDIO_HIGH, mmc1_sys_ctrl_base + MMC1_SYSCTRL_PERRSTEN0);
-			else
-				writel(BIT_RST_EMMC, pericrg_base + PERI_CRG_RSTEN4);
-			dev_info(host->dev, "rest emmc \n");
-			goto out;
-		} else if (1 == id) {
-			writel(BIT_RST_SD, pericrg_base + PERI_CRG_RSTEN4);
-			dev_info(host->dev, "rest sd \n");
-			goto out;
-		} else if (2 == id) {
-			writel(sdio_rst, pericrg_base + PERI_CRG_RSTEN4);
-			dev_info(host->dev, "rest sdio \n");
-			goto out;
-		}
+		dw_mci_hs_reset(host, id);
+		goto out;
 	} else {
-		if (0 == id) {
-			if (mmc1_sys_ctrl_base)
-				writel(BIT_HRST_SDIO_HIGH, mmc1_sys_ctrl_base + MMC1_SYSCTRL_PERRSTDIS0);
-			else
-				writel(BIT_RST_EMMC, pericrg_base + PERI_CRG_RSTDIS4);
-			dev_info(host->dev, "unrest emmc \n");
-			goto out;
-		} else if (1 == id) {
-			writel(BIT_RST_SD, pericrg_base + PERI_CRG_RSTDIS4);
-			dev_info(host->dev, "unrest sd \n");
-			goto out;
-		} else if (2 == id) {
-			writel(sdio_rst, pericrg_base + PERI_CRG_RSTDIS4);
-			dev_info(host->dev, "unrest sdio \n");
-			goto out;
-		}
-
+		dw_mci_hs_unreset(host, id);
+		goto out;
 	}
 out:
 	return 0;
@@ -1254,22 +1322,42 @@ static int dw_mci_hs_setup_clock(struct dw_mci *host)
 
 	return 0;
 }
+#ifdef CONFIG_SD_SDIO_CRC_RETUNING
+static void dw_mci_hs_get_retuning_config(struct dw_mci *host)
+{
+	struct device_node *np = host->dev->of_node;
+	if (DWMMC_SD_ID == host->hw_mmc_id) {
+		if (of_find_property(np, "cs_sd_timing_config", (int *)NULL)) {
+			host->retuning_flag = SD_RETUNING_ON;
+			dev_info(host->dev, "%s:SD card retuning on!\n", __func__);
+		} else {
+			host->retuning_flag =SD_RETUNING_OFF;
+			dev_info(host->dev, "%s:SD card retuning off!\n", __func__);
+		}
+	} else if (DWMMC_SDIO_ID == host->hw_mmc_id) {
+
+		if (of_find_property(np, "cs_sdio_timing_config", (int *)NULL)) {
+			host->retuning_flag = SD_RETUNING_ON;
+			dev_info(host->dev, "%s:SDIO retuning on!\n", __func__);
+		} else {
+			host->retuning_flag =SD_RETUNING_OFF;
+			dev_info(host->dev, "%s:SDIO retuning off!\n", __func__);
+		}
+	} else {
+		return;
+	}
+	return;
+}
+#endif
+
 
 void dw_mci_hs_get_timing_config(struct dw_mci *host)
 {
 	struct device_node *np = host->dev->of_node;
 	int ret;
-
-#ifdef CONFIG_SD_SDIO_CRC_RETUNING
-	if (of_find_property(np, "cs_sd_timing_config", (int *)NULL)) {
-		host->retuning_flag = SD_RETUNING_ON;
-	}
-
-	if (of_find_property(np, "cs_sdio_timing_config", (int *)NULL)) {
-		host->retuning_flag = SD_RETUNING_ON;
-	}
-#endif
-
+	#ifdef CONFIG_SD_SDIO_CRC_RETUNING
+	dw_mci_hs_get_retuning_config(host);
+	#endif
 	if (of_find_property(np, "cs_sd_timing_config", (int *)NULL)) {
 		host->is_cs_timing_config = IS_CS_TIMING_CONFIG;
 	}
@@ -1294,6 +1382,23 @@ void dw_mci_hs_get_timing_config(struct dw_mci *host)
 	}
 }
 
+/* this function only add the config for
+* sdio sdr104 speedmode,it's for fix Complexity.
+*/
+static void config_sdr104_192m(struct device_node *np)
+{
+	if (of_find_property(np, "wifi_sdio_sdr104_192M", (int *)NULL)) {
+		hs_dwmmc_caps[DW_MCI_SDIO_ID] |= (MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 | MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_SDR104);
+		hs_timing_config[2][6][0] = 960000000;
+		hs_timing_config[2][6][1] = 4;
+		hs_timing_config[2][6][2] = 3;
+		hs_timing_config[2][6][3] = 2;
+		hs_timing_config[2][6][4] = 9;
+		hs_timing_config[2][6][6] = 192000000;
+		printk(KERN_ERR "set sdio sdr104 192M.\n");
+	}
+}
+
 static int dw_mci_hs_parse_dt(struct dw_mci *host)
 {
 	struct dw_mci_hs_priv_data *priv = host->priv;
@@ -1310,7 +1415,7 @@ static int dw_mci_hs_parse_dt(struct dw_mci *host)
 	if(CRG_PRINT == value)
 		priv->crg_print = CRG_PRINT;
 
-	error = dw_mci_hs_get_dt_pltfm_resource(np);
+	error = dw_mci_hs_get_dt_pltfm_resource(host, np);
 	if(error)
 		return error;
 
@@ -1347,6 +1452,8 @@ static int dw_mci_hs_parse_dt(struct dw_mci *host)
 		host->wifi_sdio_sdr104_160M = 0xaaaa;
 		printk(KERN_ERR "set berlin sdio sdr104 156M.\n");
 	}
+
+	config_sdr104_192m(np);
 
 	if (of_find_property(np, "wifi_sdio_sdr104_177M", (int *)NULL)) {
 		hs_dwmmc_caps[DW_MCI_SDIO_ID] |= (MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 | MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_SDR104);
@@ -1487,7 +1594,7 @@ static int dw_mci_3_3v_signal_voltage_switch(struct dw_mci_slot *slot)
 	u32 reg;
 	int ret = 0;
 
-	ret = dw_mci_set_sel18(0);
+	ret = dw_mci_set_sel18(host, 0);
 	if (ret) {
 		dev_err(host->dev, " dw_mci_set_sel18 error!\n");
 		return ret;
@@ -1566,7 +1673,7 @@ static int dw_mci_1_8v_signal_voltage_switch(struct dw_mci_slot *slot)
 	/* Wait for 5ms */
 	usleep_range(10000, 10500);
 
-	ret = dw_mci_set_sel18(1);
+	ret = dw_mci_set_sel18(host, 1);
 	if (ret) {
 		dev_err(host->dev, " dw_mci_set_sel18 error!\n");
 		return ret;
@@ -2020,10 +2127,44 @@ EXPORT_SYMBOL(dw_mci_sdio_wakelog_switch);
 #ifdef CONFIG_SD_SDIO_CRC_RETUNING
 void dw_mci_hs_change_timing_config(struct dw_mci *host)
 {
-	if (DWMMC_SD_ID == host->hw_mmc_id)
-		memcpy(hs_timing_config[DWMMC_SD_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_kirin970_cs_sd_ppll3, sizeof(hs_timing_config_kirin970_cs_sd_ppll3));/* unsafe_function_ignore: memcpy */
-	else if (DWMMC_SDIO_ID == host->hw_mmc_id)
-		memcpy(hs_timing_config[DWMMC_SDIO_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_kirin970_cs_sdio_ppll3, sizeof(hs_timing_config_kirin970_cs_sdio_ppll3));/* unsafe_function_ignore: memcpy */
+	struct device_node *np = host->dev->of_node;
+
+	if (of_device_is_compatible(np, "hisilicon,cancer-dw-mshc")) {
+		if (DWMMC_SD_ID == host->hw_mmc_id) {
+			memcpy(hs_timing_config[DWMMC_SD_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_cancer_sd_ppll2, sizeof(hs_timing_config_cancer_sd_ppll2));/* unsafe_function_ignore: memcpy */
+			host->use_samdly_range[0] = 5;
+			host->use_samdly_range[1] = 8;
+			host->enable_shift_range[0] = 3;
+			host->enable_shift_range[1] = 8;
+		}else if (DWMMC_SDIO_ID == host->hw_mmc_id) {
+			memcpy(hs_timing_config[DWMMC_SDIO_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_cancer_sdio_ppll2, sizeof(
+hs_timing_config_cancer_sdio_ppll2));/* unsafe_function_ignore: memcpy */
+			host->use_samdly_range[0] = 5;
+			host->use_samdly_range[1] = 8;
+			host->enable_shift_range[0] = 3;
+			host->enable_shift_range[1] = 8;
+		}
+	} else if (of_device_is_compatible(np, "hisilicon,libra-dw-mshc")) {
+		if (DWMMC_SD_ID == host->hw_mmc_id) {
+			memcpy(hs_timing_config[DWMMC_SD_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_libra_sd_ppll2, sizeof(hs_timing_config_libra_sd_ppll2));/* unsafe_function_ignore: memcpy */
+			host->use_samdly_range[0] = 5;
+                        host->use_samdly_range[1] = 8;
+                        host->enable_shift_range[0] = 3;
+                        host->enable_shift_range[1] = 8;
+		} else if (DWMMC_SDIO_ID == host->hw_mmc_id) {
+			memcpy(hs_timing_config[DWMMC_SDIO_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_libra_sdio_ppll2, sizeof(hs_timing_config_libra_sdio_ppll2));/* unsafe_function_ignore: memcpy */
+			host->use_samdly_range[0] = 5;
+			host->use_samdly_range[1] = 8;
+			host->enable_shift_range[0] = 3;
+			host->enable_shift_range[1] = 8;
+		}
+	} else {
+		 if (DWMMC_SD_ID == host->hw_mmc_id) {
+			memcpy(hs_timing_config[DWMMC_SD_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_kirin970_cs_sd_ppll3, sizeof(hs_timing_config_kirin970_cs_sd_ppll3));/* unsafe_function_ignore: memcpy */
+		} else if (DWMMC_SDIO_ID == host->hw_mmc_id) {
+			memcpy(hs_timing_config[DWMMC_SDIO_ID][MMC_TIMING_UHS_SDR104], hs_timing_config_kirin970_cs_sdio_ppll3, sizeof(hs_timing_config_kirin970_cs_sdio_ppll3));/* unsafe_function_ignore: memcpy */
+		}
+	}
 }
 #endif
 static int dw_mci_hs_tuning_move(struct dw_mci *host, int timing, int start)
@@ -2113,7 +2254,7 @@ int dw_mci_priv_execute_tuning(struct dw_mci_slot *slot, u32 opcode, struct dw_m
 		return -EINVAL;
 	}
 
-	tuning_blk = kmalloc(blksz, GFP_KERNEL);
+	tuning_blk = kzalloc(blksz, GFP_KERNEL);
 	if (!tuning_blk)
 		return -ENOMEM;
 
@@ -2243,11 +2384,11 @@ static const struct of_device_id dw_mci_hs_match[] = {
 	 .data = &hs_drv_data,
 	},
 	{
-	 .compatible = "hisilicon,kirin-high-dw-mshc",
+	 .compatible = "hisilicon,cancer-dw-mshc",
 	 .data = &hs_drv_data,
 	},
 	{
-	.compatible = "hisilicon,kirin-middle-dw-mshc",
+	.compatible = "hisilicon,libra-dw-mshc",
 	.data = &hs_drv_data,
 	},
 	{},

@@ -259,6 +259,7 @@ void nvt_kit_change_mode(uint8_t mode)
 		buf[0] = 0x51;
 		buf[1] = 0xBB;
 		novatek_ts_kit_i2c_write(nvt_ts->client, I2C_FW_Address, buf, 2);
+		msleep(20);
 	}
 }
 

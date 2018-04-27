@@ -296,7 +296,14 @@ int fscrypt_has_permitted_context(struct inode *parent, struct inode *child)
 	/* Encrypted directories must not contain unencrypted files */
 	if (!cops->is_encrypted(child))
 		return 0;
-
+	
+	if (cops->is_permitted_context) {
+		res = cops->is_permitted_context(parent, child);
+		if (res == 1)
+			return 1;
+		else if (res)
+			return 0;
+	}
 	/*
 	 * Both parent and child are encrypted, so verify they use the same
 	 * encryption policy.  Compare the fscrypt_info structs if the keys are

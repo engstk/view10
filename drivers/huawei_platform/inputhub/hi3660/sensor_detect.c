@@ -70,6 +70,7 @@ static struct work_struct redetect_work;
 static const char *str_soft_para = "softiron_parameter";
 
 int akm_cal_algo;
+int mag_threshold_for_als_calibrate = 0;
 
 static int _device_detect(struct device_node *dn, int index, struct sensor_combo_cfg *p_succ_ret);
 
@@ -299,6 +300,10 @@ struct magn_bracket_platform_data magn_bracket_data = {
 	.mag_z_change_lower = 0,
 	.mag_z_change_upper = 0,
 };
+struct motion_platform_data motion_data = {
+	.angle_gap = 67.5,
+};
+
 struct rpc_platform_data rpc_data={
         .table = {0,},
         .mask = {0,},
@@ -323,6 +328,7 @@ struct sensor_detect_manager s_detect_manager[SENSOR_MAX] = {
     {"hw_magn_bracket", 15,MAGN_BRACKET, DET_INIT,TAG_MAGN_BRACKET,&magn_bracket_data,sizeof(magn_bracket_data)},
     {"vr_pseudo_sar",13, PSEUDO_SAR,DET_INIT,TAG_CAP_PROX, &pseudo_sar_pdata, sizeof(pseudo_sar_pdata)},
     {"rpc", 3, RPC, DET_INIT,TAG_RPC, &rpc_data, sizeof(rpc_data)},
+    {"motion", 6, MOTION, DET_INIT,TAG_MOTION, &motion_data, sizeof(motion_data)},
 };
 
 SENSOR_DETECT_LIST get_id_by_sensor_tag(int tag)
@@ -685,6 +691,11 @@ static void read_mag_data_from_dts(struct device_node *dn)
 					__func__, mag_data.charger_trigger);
 	else
 		mag_data.charger_trigger = (uint8_t)temp;
+
+	if (of_property_read_u32(dn, "threshold_for_als_calibrate", &temp))
+		hwlog_err("%s:read mag threshold_for_als_calibrate fail\n", __func__);
+	else
+		mag_threshold_for_als_calibrate =  temp;
 
 	if (of_property_read_u32(dn, "akm_cal_algo", &temp)) {
 		hwlog_err("%s:read mag akm_cal_algo fail\n", __func__);
@@ -1265,6 +1276,36 @@ static void read_magn_bracket_data_from_dts(struct device_node *dn)
 		sensorlist[++sensorlist[0]] = (uint16_t) temp;
 
 	read_sensorlist_info(dn, MAGN_BRACKET);
+}
+
+static void read_motion_data_from_dts(struct device_node *dn)
+{
+	int temp = 0;
+	u32 wia[6]={ 0, };
+	struct property *prop = NULL;
+	unsigned int len = 0;
+
+	read_chip_info(dn, MOTION);
+
+	prop = of_find_property(dn, "angle_gap", NULL);
+	if (!prop) {
+		hwlog_err("%s! prop is NULL!\n", __func__);
+		return;
+	}
+	if (!prop->value) {
+		hwlog_err("%s! prop->value is NULL!\n", __func__);
+		return;
+	}
+	len = prop->length / 4;
+	if (of_property_read_u32_array(dn, "angle_gap", wia, len)) {
+		hwlog_err("%s:read angle_gap from dts fail!\n",  __func__);
+		return;
+	}
+
+	motion_data.angle_gap = (int)wia[0];
+
+	hwlog_info("read_motion_data_from_dts angle_gap %d\n", motion_data.angle_gap);
+
 }
 
 static void read_pseudo_sar_data_from_dts(struct device_node *dn)
@@ -2011,6 +2052,10 @@ static int key_sensor_detect(struct device_node *dn,
 	}
 	if (chip_type) {
 		ret = of_property_read_u32(dn, "reg_bootloader", &bootloader_reg);
+		if (ret < 0) {
+			hwlog_err("read reg_bootloader err. ret:%d\n", ret);
+			return ret;
+		}
 		hwlog_info("[%s] debug key reg:%d, btld reg:%d\n", __func__, reg, bootloader_reg);
 		msleep(50);
 		ret = mcu_i2c_rw(0, (uint8_t)bootloader_reg, NULL, 0,
@@ -2066,6 +2111,10 @@ static int fingerprint_sensor_detect(struct device_node *dn, int index, struct s
 	union SPI_CTRL ctrl;
 	GPIO_NUM_TYPE gpio_reset = 0;
 	GPIO_NUM_TYPE gpio_cs = 0;
+	GPIO_NUM_TYPE gpio_irq = 0;
+
+	int irq_value = 0;
+	int reset_value = 0;
 
 	if (of_property_read_u32(dn, "gpio_reset", &temp))
 		hwlog_err("%s:read gpio_reset fail\n", __func__);
@@ -2075,6 +2124,17 @@ static int fingerprint_sensor_detect(struct device_node *dn, int index, struct s
 		hwlog_err("%s:read gpio_cs fail\n", __func__);
 	else
 		gpio_cs = (GPIO_NUM_TYPE)temp;
+
+	if (of_property_read_u32(dn, "gpio_irq", &temp))
+	{ hwlog_err("%s:read gpio_irq fail\n", __func__); }
+	else
+	{ gpio_irq = (GPIO_NUM_TYPE)temp; }
+
+	if (s_detect_manager[index].detect_result == DET_FAIL)
+	{
+		reset_value = gpio_get_value(gpio_reset);
+		irq_value   = gpio_get_value(gpio_irq);
+	}
 
 	ret = of_property_read_string(dn, "compatible", (const char **)&sensor_vendor);
 	if (!ret) {
@@ -2125,6 +2185,17 @@ static int fingerprint_sensor_detect(struct device_node *dn, int index, struct s
 		}
 	} else {
 		hwlog_err("%s: get sensor_vendor err!\n", __func__);
+	}
+
+	if (s_detect_manager[index].detect_result == DET_FAIL)
+	{
+		if (1 == irq_value)
+		{
+			gpio_direction_output(gpio_reset, reset_value);
+			gpio_direction_output(gpio_irq, irq_value);
+		}
+
+		hwlog_info("%s: fingerprint device after irq_value = %d, reset_value = %d\n", __func__, irq_value, reset_value);
 	}
 
 	return ret;
@@ -2352,6 +2423,9 @@ static int device_detect(struct device_node *dn, int index)
 	}else if(RPC == s_detect_manager[index].sensor_id){
 	        hwlog_info("%s:rpc detect always ok\n",
 			   __func__);
+	}else if(MOTION == s_detect_manager[index].sensor_id){
+	        hwlog_info("%s:motion detect always ok\n",
+			   __func__);
 	}	else {
 		ret = _device_detect(dn, index, &cfg);
 		if (!ret) {
@@ -2425,6 +2499,7 @@ static void __set_hw_dev_flag(SENSOR_DETECT_LIST s_id)
 		case KEY:
 		case MAGN_BRACKET:
 		case RPC:
+		case MOTION:
 			break;
 		case GPS_4774_I2C:
 			/*set_hw_dev_flag(DEV_I2C_GPS_4774);*/
@@ -2541,6 +2616,9 @@ static void extend_config_after_sensor_detect(struct device_node *dn, int index)
 			break;
 		case RPC:
 			read_rpc_data_from_dts(dn);
+			break;
+		case MOTION:
+			read_motion_data_from_dts(dn);
 			break;
 		default:
 			hwlog_err("%s:err id =%d\n",__func__, s_id);
@@ -2900,6 +2978,12 @@ int sensor_set_fw_load(void)
 	hwlog_info("write fw dload.\n");
 
 	return 0;
+}
+int motion_set_cfg_data(void)
+{
+	uint8_t app_config[16] = {MOTION_TYPE_ROTATION, CMD_MOTION_SET_PARA_REQ, };
+	memcpy(&app_config[2], &motion_data, min(sizeof(motion_data), sizeof(app_config) - 2));
+	write_customize_cmd_noresp(TAG_MOTION, CMD_CMN_CONFIG_REQ, app_config, sizeof(app_config));
 }
 
 static void redetect_sensor_work_handler(void)

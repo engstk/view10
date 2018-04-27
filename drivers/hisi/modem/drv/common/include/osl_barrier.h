@@ -54,33 +54,27 @@
 #define cpu_relax() __asm__ __volatile__("": : :"memory")
 
 #ifdef __OS_RTOSCK_SMP__
-/* Optimization barrier */
-/* The "volatile" is due to gcc bugs */
+
 #define smp_mb()	 __asm__ __volatile__("dmb": : :"memory")
 
 #elif defined(__OS_RTOSCK__)
  #define smp_mb()	 __asm__ __volatile__("": : :"memory")
  
 #endif/*__OS_RTOSCK_SMP__*/
-#ifndef __maybe_unused
-#define __maybe_unused  __attribute__((unused))
-#endif
-
-#ifndef __force
-#define __force 
-#endif
-
 #ifndef ACCESS_ONCE
 #define ACCESS_ONCE(x)  (*(volatile typeof(x) *)&(x))
 #endif
 
-/*   (*p) should be atomic_type */
-#define smp_load_acquire(p)						\
+#define smp_load_acquire(_p)						\
 ({									\
-	typeof(*(p)) ___p1 = ACCESS_ONCE(*(p));				\
+	typeof(*(_p)) __p1 = ACCESS_ONCE(*(_p));				\
 	smp_mb();							\
-	___p1;								\
+	__p1;								\
 })
+    
+#ifndef __maybe_unused
+#define __maybe_unused  __attribute__((unused))
+#endif
 
 #endif/*__KERNEL__*/
 #endif /* !__ASSEMBLY__ */

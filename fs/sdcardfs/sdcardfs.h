@@ -54,6 +54,8 @@
 #define errln(fmt, ...)     pr_err(fmt "\n", ##__VA_ARGS__)
 #define critln(fmt, ...)    pr_crit(fmt "\n", ##__VA_ARGS__)
 
+#define errln_warn(cond, fmt, ...) WARN(cond, KERN_ERR fmt "\n", ##__VA_ARGS__)
+
 #define infoln_ratelimited(fmt, ...)	pr_info_ratelimited(fmt "\n", ##__VA_ARGS__)
 
 #include "android_filesystem_config.h"
@@ -114,6 +116,8 @@ typedef enum {
     PERM_ANDROID_OBB,
     /* This node is "/Android/media" */
     PERM_ANDROID_MEDIA,
+    /* nodes which have security issues */
+    PERM_JAILHOUSE,
 } perm_t;
 
 struct sdcardfs_sb_info;
@@ -134,9 +138,8 @@ extern const struct address_space_operations sdcardfs_aops;
 extern const struct vm_operations_struct sdcardfs_vm_ops;
 
 /* lookup_ci.c */
-extern char *sdcardfs_do_lookup_ci_begin(struct vfsmount *,
-	struct dentry *, struct qstr *, bool);
-extern void sdcardfs_do_lookup_ci_end(char *);
+extern struct sdcardfs_dir_ci_ops *
+sdcardfs_lowerfs_ci_ops(struct super_block *);
 
 /* namei.c */
 extern struct dentry *sdcardfs_lookup(struct inode *dir,
@@ -187,6 +190,13 @@ struct sdcardfs_mount_options {
 	unsigned int reserved_mb;
 };
 
+#ifdef SDCARDFS_CASE_INSENSITIVE
+struct sdcardfs_dir_ci_ops {
+	struct dentry *(*lookup)(struct path *, struct qstr *, bool);
+	int (*may_create)(struct path *, struct qstr *);
+};
+#endif
+
 /* sdcardfs super-block data in memory */
 struct sdcardfs_sb_info {
 	struct vfsmount *lower_mnt;
@@ -211,6 +221,9 @@ struct sdcardfs_sb_info {
 #endif
 
 	unsigned next_revision;
+#ifdef SDCARDFS_CASE_INSENSITIVE
+	struct sdcardfs_dir_ci_ops *ci;
+#endif
 };
 
 /* superblock to private data */
@@ -536,11 +549,30 @@ extern int sdcardfs_sysfs_register_sb(struct super_block *);
 #endif
 
 /* derived_perm.c */
-extern int check_caller_access_to_name(struct dentry *, const char *);
-
 extern void get_derived_permission4(struct dentry *,
 	struct dentry *, const char *, bool);
 extern void get_derived_permission(struct dentry *, struct dentry *);
+
+static inline bool
+permission_denied_to_create(struct inode *dir, const char *name)
+{
+	struct sdcardfs_tree_entry *te = dir->i_private;
+
+	if (te != NULL && te->perm == PERM_ROOT)
+		return !strcasecmp(name, "autorun.inf");
+	return false;
+}
+
+static inline bool
+permission_denied_to_remove(struct inode *dir, const char *name)
+{
+	struct sdcardfs_tree_entry *te = dir->i_private;
+
+	if (te != NULL && te->perm == PERM_ROOT)
+		return !strcasecmp(name, ".android_secure") ||
+			!strcasecmp(name, "android_secure");
+	return false;
+}
 
 #ifdef SDCARDFS_SUPPORT_RESERVED_SPACE
 /* Return 1, if a disk has enough free space, otherwise 0.

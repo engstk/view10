@@ -3,7 +3,6 @@
 #include <linux/hisi/hi64xx/hi64xx_utils.h>
 #include <linux/proc_fs.h>
 #include <linux/vmalloc.h>
-
 /*lint -e750 -e679*/
 
 #define SIZE_MAX_HI64xxDUMP            0x6000

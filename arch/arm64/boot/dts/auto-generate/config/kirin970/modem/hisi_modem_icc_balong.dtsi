@@ -131,6 +131,12 @@
                 cfg = <21 0x3 0x200 31 6 20 1>;
                 status = "ok";					
 			};
+			icc_channel_iqi  
+			{
+				ch_name = "IQI";
+                cfg = <22 0x3 0x1000 31 6 20 1>;
+                status = "ok";
+			};	
 		};
 	};
  };

@@ -27,11 +27,10 @@
 #include <linux/mfd/hisi_pmic.h>
 #include "hisi_lpregs.h"
 
-#include <huawei_platform/power/dubai/dubai.h>
+#include <chipset_common/dubai/dubai.h>
 
 
 #include <soc_gpio_interface.h>
-#include <soc_gic_ns_interface.h>
 
 #define POWER_STATE_TYPE_SYS_SUSPEND	3
 #define BUFFER_LEN  40
@@ -68,6 +67,25 @@ unsigned int g_ap_irq_num;
 const char **g_ap_irq_name;
 unsigned int g_pm_fpga_flag;
 
+#include <log/log_usertype/log-usertype.h>
+unsigned long g_latt_wakeuptime = 0;
+const char *g_latt_sourcename = NULL;
+int  g_latt_gpio = 0;
+unsigned long get_wakeuptime(void)
+{
+     return g_latt_wakeuptime;
+}
+const char *get_sourcename(void)
+{
+     return g_latt_sourcename;
+}
+int get_gpio(void)
+{
+     return g_latt_gpio;
+}
+EXPORT_SYMBOL(get_wakeuptime);
+EXPORT_SYMBOL(get_sourcename);
+EXPORT_SYMBOL(get_gpio);
 
 typedef struct {
     void __iomem *ao_gpio_base;
@@ -146,6 +164,11 @@ void pm_gic_pending_dump(void)
                 }
 				/* notify dubai module to update wakeup information */
 				dubai_update_wakeup_info(g_ap_irq_name[irq], gpio);
+                                if (BETA_USER == get_logusertype_flag()) {
+                                          g_latt_wakeuptime = hisi_getcurtime() / 1000000;
+                                          g_latt_sourcename = g_ap_irq_name[irq];
+                                          g_latt_gpio = gpio;
+                                }
 				printk("\n");
 			}
 		}

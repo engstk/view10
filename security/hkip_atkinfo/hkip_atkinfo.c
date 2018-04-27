@@ -37,11 +37,8 @@ unsigned int disable_upload = 0;
 #define HKIP_ATKINFO_ENABLE		1
 #define HKIP_ATKINFO_DISABLE	0
 
-static int msg_channel_callback(unsigned short handle, int len, char *buf)
+static int msg_channel_callback(unsigned int len, void *buf)
 {
-	if (handle != g_atkinfo->msg_handle)
-		return -EINVAL;
-
 	if (!disable_upload)
 		queue_delayed_work(g_atkinfo->wq_atkinfo, &g_atkinfo->atkinfo_work, 0);
 
@@ -173,17 +170,22 @@ static void upload_atkinfo_worker(struct work_struct *work)
 /*
  * This function will reset hkip counter each 24hours.
  */
+static inline void clear_hkip_monitorlog_reset_counters(void)
+{
+	struct arm_smccc_res res;
+	arm_smccc_hvc((unsigned long)HHEE_MONITORLOG_RESET_COUNTERS,
+			0ul, 0ul, 0ul, 0ul, 0ul, 0ul, 0ul, &res);
+}
+
 static void clear_hkip_counter_timer(unsigned long data)
 {
 	struct hkip_atkinfo *atkinfo = (struct hkip_atkinfo *)data;
-	struct arm_smccc_res res;
 
 	if (!data)
 		return;
 
 	pr_info("%s: reset hkip counter.\n", MODULE_NAME);
-	arm_smccc_hvc((unsigned long)HHEE_MONITORLOG_RESET_COUNTERS,
-			0ul, 0ul, 0ul, 0ul, 0ul, 0ul, 0ul, &res);
+	clear_hkip_monitorlog_reset_counters();
 
 	mod_timer(&atkinfo->timer, jiffies + msecs_to_jiffies((const unsigned int)atkinfo->cycle_time));
 }
@@ -237,6 +239,12 @@ int hkip_atkinfo_check_enable(void)
 	return HKIP_ATKINFO_ENABLE;
 }
 
+static inline void hkip_hhee_monitorlog_info(struct arm_smccc_res* res)
+{
+	arm_smccc_hvc((unsigned long)HHEE_MONITORLOG_INFO,
+			0ul, 0ul, 0ul, 0ul, 0ul, 0ul, 0ul, res);
+}
+
 static int hkip_atkinfo_probe(struct platform_device *pdev)
 {
 	int ret = 0;
@@ -254,9 +262,7 @@ static int hkip_atkinfo_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	arm_smccc_hvc((unsigned long)HHEE_MONITORLOG_INFO,
-			0ul, 0ul, 0ul, 0ul, 0ul, 0ul, 0ul, &res);
-
+	hkip_hhee_monitorlog_info(&res);
 	if (!res.a0 || !res.a1 || (res.a1 & (PAGE_SIZE - 1))) {
 		pr_err("%s: get a wrong event buffer parameter!\n", MODULE_NAME);
 		ret = -EINVAL;
@@ -288,11 +294,9 @@ static int hkip_atkinfo_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&atkinfo->atkinfo_work, upload_atkinfo_worker);
 	mutex_init(&atkinfo->atkinfo_mtx);
 
-	atkinfo->msg_handle = hhee_open_msg("HKIP", msg_channel_callback);
-	if (!atkinfo->msg_handle) {
+	ret = hhee_msg_register_handler(HHEE_MSG_ID_HKIP, msg_channel_callback);
+	if (ret) {
 		pr_err("%s: open HKIP message channel error\n", MODULE_NAME);
-		ret = -EINVAL;
-
 		goto err;
 	}
 

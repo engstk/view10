@@ -209,9 +209,9 @@ static int fusb_dual_role_prop_is_writeable(
 	switch (prop) {
 		case DUAL_ROLE_PROP_PR:
 		case DUAL_ROLE_PROP_DR:
-			return 1;
+			return 0;
 	}
-	return 0;
+	return 1;
 }
 static int fusb_dual_role_set_prop(struct dual_role_phy_instance *dual_role,
 			enum dual_role_property prop, const unsigned int *val)
@@ -232,14 +232,8 @@ static int fusb_dual_role_set_prop(struct dual_role_phy_instance *dual_role,
 			}
 			break;
 		case DUAL_ROLE_PROP_PR:
-			if((*val == DUAL_ROLE_PROP_PR_SRC) && (mode == DUAL_ROLE_PROP_MODE_UFP))
-			{
-				fusb_force_source(dual_role);
-			}
-			else if((*val == DUAL_ROLE_PROP_PR_SNK) && (mode == DUAL_ROLE_PROP_MODE_DFP))
-			{
-				fusb_force_sink(dual_role);
-			}
+			FSC_PRINT("%s DUAL_ROLE_PROP_PR\n", __func__);
+
 			break;
 		case DUAL_ROLE_PROP_DR:
 			FSC_PRINT("%s DUAL_ROLE_PROP_DR\n", __func__);

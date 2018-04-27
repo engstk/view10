@@ -75,30 +75,19 @@ static const struct file_operations g_stNmCtrlCdevFops =
 /*****************************************************************************
   3 函数实现
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : NM_CTRL_SendMsg
- 功能描述  : 消息码流发送函数
- 输入参数  : u32 len
-             void* pDataBuffer
- 输出参数  : 无
- 返 回 值  : static int
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void NM_CTRL_SendMsg(void* pDataBuffer, unsigned int len)
 {
     /*lint --e{429}*/
     /* 屏蔽error 429(警告pstListEntry内存没有释放，此处pstListEntry内存在read函数中释放，所以该告警屏蔽) */
     NM_CTRL_CDEV_DATA_STRU             *pstListEntry    = VOS_NULL_PTR;
+    NM_CTRL_CDEV_DATA_STRU             *pstCurEntry     = VOS_NULL_PTR;
+    NM_MSG_STRU                        *pstRnicNmMsg    = VOS_NULL_PTR;
     unsigned long                       flags           = 0;
 
-    NM_CTRL_PRINT_INFO("Enter NM_CTRL_SendMsg len(%d).\n", len);
+    pstRnicNmMsg = (NM_MSG_STRU *)pDataBuffer;
+
+    NM_CTRL_PRINT_INFO("Enter NM_CTRL_SendMsg MsgId(%d), len(%d).\n", pstRnicNmMsg->enMsgId, len);
 
     if (len > NM_MSG_BUFFER_SIZE)
     {
@@ -124,8 +113,28 @@ void NM_CTRL_SendMsg(void* pDataBuffer, unsigned int len)
     /* 获取信号量 */
     spin_lock_irqsave(&(g_stNmCtrlCtx.stListLock), flags);
 
-    /* 挂接到链表末尾 */
-    list_add_tail(&(pstListEntry->stMsgList), &(g_stNmCtrlCtx.stListHead));/*lint !e64 */
+    if ( ID_NM_BIND_PID_CONFIG_IND != pstRnicNmMsg->enMsgId)
+    {
+        /* 挂接到链表末尾 */
+        list_add_tail(&(pstListEntry->stMsgList), &(g_stNmCtrlCtx.stListHead));/*lint !e64 */
+    }
+    else
+    {
+        /* HIFI Agent Pid信息挂接到低优先级链表末尾，只存一个节点 */
+        if (list_empty(&(g_stNmCtrlCtx.stLowPriListHead)))
+        {
+            list_add_tail(&(pstListEntry->stMsgList), &(g_stNmCtrlCtx.stLowPriListHead));/*lint !e64 */
+        }
+        else
+        {
+            /* stLowPriListHead先删除一个节点，然后在链尾添加一个节点 */
+            pstCurEntry = list_first_entry(&(g_stNmCtrlCtx.stLowPriListHead), NM_CTRL_CDEV_DATA_STRU, stMsgList);
+            list_del((LIST_HEAD_STRU *)pstCurEntry);/*lint !e64 */
+            kfree(pstCurEntry);
+
+            list_add_tail(&(pstListEntry->stMsgList), &(g_stNmCtrlCtx.stLowPriListHead));/*lint !e64 */
+        }
+    }
 
     g_stNmCtrlCtx.ulDataFlg = true;
 
@@ -137,22 +146,7 @@ void NM_CTRL_SendMsg(void* pDataBuffer, unsigned int len)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : NM_CTRL_Open
- 功能描述  : nmvcom设备打开函数
- 输入参数  : struct inode *node
-             struct file *filp
- 输出参数  : 无
- 返 回 值  : static int
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int NM_CTRL_Open(struct inode *node, struct file *filp)
 {
     int                                 ret = 0;
@@ -164,22 +158,7 @@ int NM_CTRL_Open(struct inode *node, struct file *filp)
     return ret;
 }
 
-/*****************************************************************************
- 函 数 名  : NM_CTRL_Release
- 功能描述  : nmvcom关闭时调用函数
- 输入参数  : struct inode *node
-             struct file *filp
- 输出参数  : 无
- 返 回 值  : static int
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int NM_CTRL_Release(struct inode *node, struct file *filp)
 {
     LIST_HEAD_STRU                     *pstNextPtr  = VOS_NULL_PTR;
@@ -198,6 +177,13 @@ int NM_CTRL_Release(struct inode *node, struct file *filp)
         kfree(pstCurEntry);
     }
 
+    list_for_each_safe(pstCurPtr, pstNextPtr, &(g_stNmCtrlCtx.stLowPriListHead))
+    {
+        pstCurEntry = list_entry(pstCurPtr, NM_CTRL_CDEV_DATA_STRU, stMsgList);
+        list_del(&(pstCurEntry->stMsgList));/*lint !e64 */
+        kfree(pstCurEntry);
+    }
+
     g_stNmCtrlCtx.ulDataFlg = false;
 
     /* 释放信号量 */
@@ -208,27 +194,48 @@ int NM_CTRL_Release(struct inode *node, struct file *filp)
     return ret;
 }
 
-/*****************************************************************************
- 函 数 名  : NM_CTRL_Read
- 功能描述  : nmvcom读接口
- 输入参数  : struct file *filp
-             char __user *buf
-             size_t size
-             loff_t *ppos
- 输出参数  : 无
- 返 回 值  : static size_t
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-ssize_t NM_CTRL_Read(struct file *filp, char __user *buf, size_t size, loff_t *ppos)
+int NM_CTRL_Read_List_Entry(LIST_HEAD_STRU *pstCurPtr, char __user *buf, size_t size)
 {
     NM_CTRL_CDEV_DATA_STRU             *pstCurEntry = VOS_NULL_PTR;
+    int                                 ret         = 0;
+
+    pstCurEntry = list_first_entry(pstCurPtr, NM_CTRL_CDEV_DATA_STRU, stMsgList);
+
+    if (size < pstCurEntry->ulLen)
+    {
+        NM_CTRL_PRINT_ERR("NM_CTRL_Read_List_Entry size is less than the send len\n");
+    }
+
+    if (size > pstCurEntry->ulLen)
+    {
+        NM_CTRL_PRINT_WARN("NM_CTRL_Read_List_Entry size is more than the send len\n");
+        size = pstCurEntry->ulLen;
+    }
+
+    NM_CTRL_PRINT_INFO("NM_CTRL_Read_List_Entry: list addr %pK data addr %pK", pstCurEntry, pstCurEntry->aucData);
+
+    /* read data to user space */
+    if (copy_to_user(buf, (void*)(pstCurEntry->aucData), (unsigned long)size))
+    {
+        ret = -EFAULT;
+        NM_CTRL_PRINT_ERR("NM_CTRL_Read_List_Entry copy_to_user err\n");
+    }
+    else
+    {
+       ret = (int)pstCurEntry->ulLen;
+       list_del((LIST_HEAD_STRU *)pstCurEntry);/*lint !e64 */
+       kfree(pstCurEntry);
+       NM_CTRL_PRINT_INFO("NM_CTRL_Read_List_Entry has read %d bytes.\n", ret);
+    }
+
+    return ret;
+
+}
+
+
+ssize_t NM_CTRL_Read(struct file *filp, char __user *buf, size_t size, loff_t *ppos)
+{
     unsigned long                       flags       = 0;
     int                                 ret         = 0;
 
@@ -249,44 +256,28 @@ ssize_t NM_CTRL_Read(struct file *filp, char __user *buf, size_t size, loff_t *p
     /* 获取信号量 */
     spin_lock_irqsave(&(g_stNmCtrlCtx.stListLock), flags);
 
-    /* 读取数据链表 */
+    /* 读取数据链表，读空stListHead之后，再读stLowPriListHead */
     if (!list_empty(&(g_stNmCtrlCtx.stListHead)))/*lint !e64 */
     {
-        pstCurEntry = list_first_entry(&(g_stNmCtrlCtx.stListHead), NM_CTRL_CDEV_DATA_STRU, stMsgList);
-
-        if (size < pstCurEntry->ulLen)
+        ret = NM_CTRL_Read_List_Entry(&(g_stNmCtrlCtx.stListHead), buf, size);
+    }
+    else
+    {
+        if(!list_empty(&(g_stNmCtrlCtx.stLowPriListHead)))/*lint !e64 */
         {
-            NM_CTRL_PRINT_ERR("NM_CTRL_read size is less than the send len\n");
-        }
-
-        if (size > pstCurEntry->ulLen)
-        {
-            NM_CTRL_PRINT_WARN("NM_CTRL_read size is more than the send len\n");
-            size = pstCurEntry->ulLen;
-        }
-
-        NM_CTRL_PRINT_INFO("NM_CTRL_Read: list addr %pK data addr %pK", pstCurEntry, pstCurEntry->aucData);
-
-        /* read data to user space */
-        if (copy_to_user(buf, (void*)(pstCurEntry->aucData), (unsigned long)size))
-        {
-            ret = -EFAULT;
-            NM_CTRL_PRINT_ERR("NM_CTRL_read copy_to_user err\n");
-        }
-        else
-        {
-           ret = (int)pstCurEntry->ulLen;
-           list_del((LIST_HEAD_STRU *)pstCurEntry);/*lint !e64 */
-           kfree(pstCurEntry);
-           NM_CTRL_PRINT_INFO("NM_CTRL_read has read %d bytes.\n", ret);
+            ret = NM_CTRL_Read_List_Entry(&(g_stNmCtrlCtx.stLowPriListHead), buf, size);
         }
     }
 
     /* 判断链表是否为空 list_empty(g_stNmCtrlCdevp->data)；如果是空，false；如果非空，true; */
-    if (list_empty(&(g_stNmCtrlCtx.stListHead)))/*lint !e64 */
+    if (list_empty(&(g_stNmCtrlCtx.stListHead)) && list_empty(&(g_stNmCtrlCtx.stLowPriListHead)))/*lint !e64 */
+    {
         g_stNmCtrlCtx.ulDataFlg = false;
+    }
     else
+    {
         g_stNmCtrlCtx.ulDataFlg = true;
+    }
 
     /* 释放信号量 */
     spin_unlock_irqrestore(&(g_stNmCtrlCtx.stListLock), flags);
@@ -294,22 +285,7 @@ ssize_t NM_CTRL_Read(struct file *filp, char __user *buf, size_t size, loff_t *p
     return ret;
 }
 
-/*****************************************************************************
- 函 数 名  : NM_CTRL_Poll
- 功能描述  : nmvcom轮询接口
- 输入参数  : struct file* filp
-             poll_table *wait
- 输出参数  : 无
- 返 回 值  : static unsigned int
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 unsigned int NM_CTRL_Poll(struct file* filp, poll_table *wait)
 {
     unsigned int                        mask = 0;
@@ -328,22 +304,7 @@ unsigned int NM_CTRL_Poll(struct file* filp, poll_table *wait)
     return mask;
 }
 
-/*****************************************************************************
- 函 数 名  : NM_CTRL_Setup
- 功能描述  : 字符设备操作函数 字符设备 字符设备号映射关系初始化
- 输入参数  : struct NM_CTRL_CDEV *dev
-             int index
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void NM_CTRL_Setup(struct cdev * dev)
 {
     int                                 err = 0;
@@ -368,21 +329,7 @@ void NM_CTRL_Setup(struct cdev * dev)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : NM_CTRL_Init
- 功能描述  : nmvcom初始化函数
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : static int __init
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月10日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int __init NM_CTRL_Init(VOS_VOID)
 {
     int                                 ret = 0;
@@ -432,6 +379,7 @@ int __init NM_CTRL_Init(VOS_VOID)
 
     /* 初始化 */
     INIT_LIST_HEAD(&(g_stNmCtrlCtx.stListHead));/*lint !e64 */
+    INIT_LIST_HEAD(&(g_stNmCtrlCtx.stLowPriListHead));/*lint !e64 */
 
     spin_lock_init(&(g_stNmCtrlCtx.stListLock));
 

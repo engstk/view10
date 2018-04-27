@@ -156,7 +156,7 @@ void hisi_cmdlist_set_reg(struct hisi_fb_data_type *hisifd, char __iomem *addr,
 	}
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
-	uint64_t mask = ((uint64_t)1 << bw) - 1;
+	uint64_t mask = ((uint64_t)1 << bw) - 1;//lint !e647
 #pragma GCC diagnostic pop
 	dss_cmdlist_node_t *node = NULL;
 	int cmdlist_idx = -1;
@@ -210,7 +210,7 @@ void hisi_cmdlist_set_reg(struct hisi_fb_data_type *hisifd, char __iomem *addr,
 
 		node->list_item[index].reg_addr.bits.add0 = new_addr;
 		node->list_item[index].data0 = value;
-		node->list_item[index].data1 = (uint32_t) ((~(mask << bs)) & 0xFFFFFFFF );
+		node->list_item[index].data1 = (uint32_t) ((~(mask << bs)) & 0xFFFFFFFF);
 		node->list_item[index].data2 = (uint32_t) (((mask & value) << bs) & 0xFFFFFFFF);
 		node->list_item[index].reg_addr.bits.cnt = 3;
 		node->item_flag = 3;
@@ -962,6 +962,7 @@ void hisifb_mctl_sw_clr(struct hisi_fb_data_type *hisifd,
 	dss_overlay_t *pov_req, uint32_t cmdlist_idxs)
 {
 	char __iomem *mctl_base = NULL;
+	char __iomem *ldi_base = NULL;
 	char __iomem *cmdlist_base;
 	int mctl_idx;
 	uint32_t tmp = 0;
@@ -1005,12 +1006,13 @@ void hisifb_mctl_sw_clr(struct hisi_fb_data_type *hisifd,
 		outp32(hisifd->dss_base + DSS_LDI0_OFFSET + LDI_CPU_ITF_INT_MSK, tmp);
 	} else if (hisifd->index == EXTERNAL_PANEL_IDX) {
 		isr_s1 = inp32(hisifd->dss_base + GLB_CPU_SDP_INTS);
-		isr_s2 = inp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INTS);
-		outp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INTS, isr_s2);
+		ldi_base = hisifd->dss_base + DSS_LDI1_OFFSET;
+		isr_s2 = inp32(ldi_base + LDI_CPU_ITF_INTS);
+		outp32(ldi_base + LDI_CPU_ITF_INTS, isr_s2);
 		outp32(hisifd->dss_base + GLB_CPU_SDP_INTS, isr_s1);
 
-		tmp = inp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INT_MSK);
-		outp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INT_MSK, tmp);
+		tmp = inp32(ldi_base + LDI_CPU_ITF_INT_MSK);
+		outp32(ldi_base + LDI_CPU_ITF_INT_MSK, tmp);
 	}
 }
 
@@ -1072,7 +1074,6 @@ void hisi_cmdlist_config_reset(struct hisi_fb_data_type *hisifd,
 	if (cmdlist_idxs == 0) {
 		return;
 	}
-
 	mctl_idx = ovl_idx;
 
 
@@ -1224,11 +1225,17 @@ int hisi_cmdlist_config_stop(struct hisi_fb_data_type *hisifd, uint32_t cmdlist_
 		tmp = (0x1 << i);
 		hisifd->cmdlist_idx = i;
 
-		if ((cmdlist_pre_idxs & tmp) == tmp){
+		if ((cmdlist_pre_idxs & tmp) == tmp) {
 			hisifd->set_reg(hisifd, hisifd->dss_module.mctl_base[pov_req->ovl_idx] +
 				MCTL_CTL_MUTEX_RCH0 + i * 0x4, 0, 32, 0);
 			hisifd->set_reg(hisifd, cmdlist_base + CMDLIST_CH0_CTRL + i * offset, 0x6, 3, 2);
 		}
+	}
+
+	if ((cmdlist_pre_idxs & (0x1 << DSS_CMDLIST_V2)) == (0x1 << DSS_CMDLIST_V2)) {
+		hisifd->cmdlist_idx = DSS_CMDLIST_V2;
+		hisifd->set_reg(hisifd, hisifd->dss_module.mctl_base[pov_req->ovl_idx] +
+			MCTL_CTL_MUTEX_RCH8, 0, 32, 0);
 	}
 
 	return 0;
@@ -1504,30 +1511,6 @@ static dss_cmdlist_info_t* hisi_cmdlist_info_alloc(struct hisi_fb_data_type *his
 	return cmdlist_info;
 }
 
-static dss_copybit_info_t* hisi_copybit_info_alloc(struct hisi_fb_data_type *hisifd)
-{
-	dss_copybit_info_t *copybit_info = NULL;
-
-	if (NULL == hisifd) {
-		HISI_FB_ERR("hisifd is NULL");
-		return NULL;
-	}
-
-	copybit_info = (dss_copybit_info_t *)kmalloc(sizeof(dss_copybit_info_t), GFP_ATOMIC);
-	if (copybit_info) {
-		memset(copybit_info, 0, sizeof(dss_copybit_info_t));
-	} else {
-		HISI_FB_ERR("failed to kmalloc copybit_info!\n");
-		return NULL;
-	}
-
-	sema_init(&(copybit_info->copybit_sem), 1);
-
-	init_waitqueue_head(&(copybit_info->copybit_wq));
-	copybit_info->copybit_done = 0;
-
-	return copybit_info;
-}
 
 static dss_media_common_info_t* hisi_media_common_info_alloc(struct hisi_fb_data_type *hisifd)
 {
@@ -1618,6 +1601,7 @@ static int hisi_cmdlist_pool_init(struct hisi_fb_data_type *hisifd)
 			for (i = 0; i < HISI_DSS_CMDLIST_DATA_MAX; i++) {
 				hisifd->sum_cmdlist_pool_size += one_cmdlist_pool_size;
 			}
+
 		}
 	}
 
@@ -1736,9 +1720,6 @@ int hisi_cmdlist_init(struct hisi_fb_data_type *hisifd)
 		hisifd->cmdlist_data_tmp[0] = hisi_cmdlist_data_alloc(hisifd);
 		hisifd->cmdlist_data_tmp[1] = hisi_cmdlist_data_alloc(hisifd);
 		hisifd->cmdlist_info = hisi_cmdlist_info_alloc(hisifd);
-		if (g_dss_version_tag == FB_ACCEL_HI366x) {
-			hisifd->copybit_info = hisi_copybit_info_alloc(hisifd);
-		}
 	} else if (hisifd->index == MEDIACOMMON_PANEL_IDX) {
 		hisifd->media_common_cmdlist_data = hisi_cmdlist_data_alloc(hisifd);
 		hisifd->media_common_info = hisi_media_common_info_alloc(hisifd);

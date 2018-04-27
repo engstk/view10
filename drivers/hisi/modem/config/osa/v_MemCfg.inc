@@ -169,6 +169,68 @@ VOS_MEM_BLOCK_INFO MemBlockInfo[VOS_SIMPLE_MEM_CTRL_BLOCK_NUMBER] =
 };
 #endif
 
+#if (OSA_CPU_NRCPU == VOS_OSA_CPU)
+
+/* modify this to config memmory */
+/* defination of message buffer */
+VOS_MEM_BLOCK_INFO MsgBlockInfo[VOS_MEM_CTRL_BLOCK_NUMBER] =
+{
+    { 32,     40  },
+    { 96,     500 },
+    { 224,    240 },
+    { 480,    300 },
+    { 992,    20  },
+    { 2016,   70  },
+    { 4160,   10  },
+    { 8160,   2   },
+    { 16352,  4   },
+    { 24992,  2   },
+    { 80000,  1   },
+    { 100000, 1   },
+    { 64,     VOS_TIMER_MESSAGE_NUM },/* only for Timer */
+};
+
+
+/* defination of memory buffer */
+#if (FEATURE_ON == FEATURE_VOS_REDUCE_MEM_CFG)
+VOS_MEM_BLOCK_INFO MemBlockInfo[VOS_SIMPLE_MEM_CTRL_BLOCK_NUMBER] =
+{
+    { 32,     1500},
+    { 92,     4000},
+    { 116,    500 },
+    { 256,    300 },
+    { 532,    200 },
+    { 1600,   200 },
+    { 2080,   100 },
+    { 4480,   30  },
+    { 8212,   12  },
+    { 16404,  12  },
+    { 35848,  16  },
+    { 64000,  8   },
+};
+#else
+VOS_MEM_BLOCK_INFO MemBlockInfo[VOS_SIMPLE_MEM_CTRL_BLOCK_NUMBER] =
+{
+    { 32,     1500},
+    { 92,     4000},
+    { 116,    500 },
+    { 256,    300 },
+    { 532,    200 },
+    { 1600,   200 },
+    { 2080,   100 },
+    { 4480,   30  },
+    { 8212,   12  },
+    { 16404,  12  },
+    { 35848,  16  },
+    { 64000,  4   },
+    { 65536,  7   },
+    { 80000,  3   },
+};
+#endif
+
+#endif
+
+
 
 #endif /* _V_MEMCFG_INC */
 

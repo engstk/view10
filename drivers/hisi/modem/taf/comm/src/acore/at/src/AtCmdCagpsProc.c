@@ -104,20 +104,7 @@ AT_CAGPS_CMD_OPT_TLB_STRU  g_astAtCagpsCmdOptTbl[] =
 *****************************************************************************/
 
 
-/*****************************************************************************
- 函 数 名  : At_SetAgpsDataCallStatus
- 功能描述  : ^CAGPSDATACALLSTATUS
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年07月11日
-    作    者   : zhuli
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 At_SetAgpsDataCallStatus(VOS_UINT8 ucIndex)
 {
     AT_XPDS_AP_DATA_CALL_STATUS_IND_STRU                   *pstDataCallInd;
@@ -172,20 +159,7 @@ VOS_UINT32 At_SetAgpsDataCallStatus(VOS_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetAgpsUpBindStatus
- 功能描述  : ^CUPBINDSTATUS
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年07月11日
-    作    者   : zhuli
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 At_SetAgpsUpBindStatus(
     VOS_UINT8                               ucIndex
 )
@@ -244,20 +218,7 @@ VOS_UINT32 At_SetAgpsUpBindStatus(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetAgpsForwardData
- 功能描述  : ^CAGPSFORWARDDATA
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年07月11日
-    作    者   : zhuli
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 At_SetAgpsForwardData(
     VOS_UINT8                               ucIndex
 )
@@ -321,7 +282,7 @@ VOS_UINT32 At_SetAgpsForwardData(
                                                 gastAtParaList[4].aucPara,
                                                 (VOS_UINT16)gastAtParaList[3].ulParaValue))
     {
-        PS_FREE_MSG(WUEPS_PID_AT, pstMsgFwdDataInd);
+        PS_FREE_MSG(WUEPS_PID_AT, pstMsgFwdDataInd);    //lint !e516
 
         return AT_CME_OPERATION_NOT_ALLOWED;
     }
@@ -342,20 +303,7 @@ VOS_UINT32 At_SetAgpsForwardData(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvXpdsAgpsDataCallReq
- 功能描述  : ID_XPDS_AT_AP_DATA_CALL_REQ 消息处理 ^CAGPSDATACALLREQ
- 输入参数  : 消息内容
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年07月11日
-    作    者   : zhuli
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvXpdsAgpsDataCallReq(
     VOS_VOID                           *pstMsg
 )
@@ -387,20 +335,7 @@ VOS_UINT32 AT_RcvXpdsAgpsDataCallReq(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvXpdsAgpsServerBindReq
- 功能描述  : ID_MTA_AT_AGPS_BINDUPREQ_IND 消息处理 ^CBINDUPREQ
- 输入参数  : 消息内容
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年07月11日
-    作    者   : zhuli
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvXpdsAgpsServerBindReq(
     VOS_VOID                            *pstMsg
 )
@@ -435,20 +370,7 @@ VOS_UINT32 AT_RcvXpdsAgpsServerBindReq(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvXpdsAgpsReverseDataInd
- 功能描述  : ID_MTA_AT_AGPS_UPDATA_IND 消息处理 ^CAGPSREVERSEDATA
- 输入参数  : 消息内容
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年07月11日
-    作    者   : zhuli
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvXpdsAgpsReverseDataInd(
     VOS_VOID                           *pstMsg
 )
@@ -539,20 +461,7 @@ VOS_UINT32 AT_RcvXpdsAgpsReverseDataInd(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_CagpsSndXpdsReq
- 功能描述  : AT发送数据给MTA的借口
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_CagpsSndXpdsReq(
     VOS_UINT8                           ucIndex,
     AT_XPDS_MSG_TYPE_ENUM_UINT32        enMsgType,
@@ -632,21 +541,7 @@ VOS_UINT32 AT_CagpsSndXpdsReq(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCapsCfgPosMode
- 功能描述  : ^CAGPSCFGPOSMODE用于GPS Module向Modem请求设置AGPS工作模式
-             ^CAGPSCFGPOSMODE=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsCfgPosMode(
     VOS_UINT8                           ucIndex
 )
@@ -667,21 +562,7 @@ VOS_UINT32 AT_SetCagpsCfgPosMode(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsStart
- 功能描述  : ^CAGPSSTART用于GPS Module 发送给modem，触发AGPS流程
-             ^CAGPSSTART
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsStart(
     VOS_UINT8                           ucIndex
 )
@@ -702,21 +583,7 @@ VOS_UINT32 AT_SetCagpsStart(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsStop
- 功能描述  : ^CAGPSSTOP用于GPS Module通知Modem停止AGPS流程
-             ^CAGPSSTOP
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsStop(
     VOS_UINT8                           ucIndex
 )
@@ -762,21 +629,7 @@ VOS_UINT32 AT_SetCagpsStop(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsCfgMpcAddr
- 功能描述  : ^CAGPSCFGMPCADDR用于GPS 请求设置MPC server地址
-             ^CAGPSCFGMPCADDR=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsCfgMpcAddr(
     VOS_UINT8                           ucIndex
 )
@@ -797,21 +650,7 @@ VOS_UINT32 AT_SetCagpsCfgMpcAddr(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsCfgPdeAddr
- 功能描述  : ^CAGPSCFGPDEADDR用于GPS 请求设置PDE server地址
-             ^CAGPSCFGPDEADDR=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsCfgPdeAddr(
     VOS_UINT8                           ucIndex
 )
@@ -832,21 +671,7 @@ VOS_UINT32 AT_SetCagpsCfgPdeAddr(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsQryRefloc
- 功能描述  : ^CAGPSQRYREFLOC用于请求基于CDMA网络的位置信息
-             ^CAGPSQRYREFLOC
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsQryRefloc(
     VOS_UINT8                           ucIndex
 )
@@ -890,21 +715,7 @@ VOS_UINT32 AT_SetCagpsQryRefloc(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsQryTime
- 功能描述  : ^CAGPSQRYTIME用于GPS Module向Modem请求Modem的同步时间
-             ^CAGPSQRYTIME=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月17日
-    作    者   : d00212987
-    修改内容   : AGPS项目新增
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsQryTime(
     VOS_UINT8                           ucIndex
 )
@@ -977,21 +788,7 @@ VOS_UINT32 AT_SetCagpsQryTime(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsPrmInfo
- 功能描述  : ^CAGPSPRMINFO用于GPS Module将计算出来的伪距信息发送给Modem
-             ^CAGPSPRMINFO=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsPrmInfo(
     VOS_UINT8                           ucIndex
 )
@@ -1001,21 +798,7 @@ VOS_UINT32 AT_SetCagpsPrmInfo(
                              sizeof(AT_XPDS_GPS_PRM_INFO_RSP_STRU));
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCagpsReplyNiReq
- 功能描述  : ^CAGPSREPLYNIREQ用于NI定位中，GPS Module答复Modem是否接受定位请求
-             ^CAGPSREPLYNIREQ=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetCagpsReplyNiReq(
     VOS_UINT8                           ucIndex
 )
@@ -1025,20 +808,7 @@ VOS_UINT32 AT_SetCagpsReplyNiReq(
                              sizeof(AT_XPDS_GPS_REPLY_NI_RSP_STRU));
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SearchCagpsATCmd
- 功能描述  : 查找回复AT命令名
- 输入参数  : enMsgType
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_CHAR* AT_SearchCagpsATCmd(
     AT_XPDS_MSG_TYPE_ENUM_UINT32        enMsgType
 )
@@ -1056,21 +826,7 @@ VOS_CHAR* AT_SearchCagpsATCmd(
     return "UNKOWN-MSG";
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetCagpsPosInfo
- 功能描述  : ^CAGPSPOSINFO 用于GPS 给moderm发送pos info
-             ^CAGPSPOSINFO=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : AT_OK 成功；AT_ERROR 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : x00314862
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 At_SetCagpsPosInfo(
     VOS_UINT8                           ucIndex
 )
@@ -1086,20 +842,7 @@ VOS_UINT32 At_SetCagpsPosInfo(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvXpdsCagpsCnf
- 功能描述  : 回复消息处理
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvXpdsCagpsCnf(
     VOS_VOID                           *pMsg
 )
@@ -1143,20 +886,7 @@ VOS_UINT32 AT_RcvXpdsCagpsCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SearchCagpsATCmdOpt
- 功能描述  : 查找回复AT命令名操作
- 输入参数  : enMsgType
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 AT_CMD_CURRENT_OPT_ENUM AT_SearchCagpsATCmdOpt(
     AT_XPDS_MSG_TYPE_ENUM_UINT32        enMsgType
 )
@@ -1174,20 +904,7 @@ AT_CMD_CURRENT_OPT_ENUM AT_SearchCagpsATCmdOpt(
     return AT_CMD_CURRENT_OPT_BUTT;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvXpdsCagpsRlstCnf
- 功能描述  : 回复消息处理
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvXpdsCagpsRlstCnf(
     VOS_VOID                           *pMsg
 )
@@ -1237,30 +954,7 @@ VOS_UINT32 AT_RcvXpdsCagpsRlstCnf(
 
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvXpdsEphInfoInd
- 功能描述  : ID_XPDS_AT_GPS_EPH_INFO_IND 消息处理 ^CAGPSEPHINFO
-             XPDS_AT_GPS_EPH_INFO_IND_STRU结构体大小为1924字节
-             AT中的数据字符串总长度为1924 * 2 = 3848
-             XPDS_AT_GPS_EPH_INFO_IND_STRU结构体的大小为60字节，字符串的长度为120
-             字符串分为5包数据: 8 + 960 * 4 = 3848
-             分包规则:
-             第1包: ucSvNum + aucReserved[3]，字节长度4，字符串长度8
-             第2包: astEphData[0:7]，  字节长度480，字符串长度960
-             第3包: astEphData[8:15]， 字节长度480，字符串长度960
-             第4包: astEphData[16:23]，字节长度480，字符串长度960
-             第5包: astEphData[24:31]，字节长度480，字符串长度960
- 输入参数  : 消息内容
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月22日
-    作    者   : y00174758
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvXpdsEphInfoInd(
     VOS_VOID                           *pstMsg
 )
@@ -1356,28 +1050,7 @@ VOS_UINT32 AT_RcvXpdsEphInfoInd(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvXpdsAlmInfoInd
- 功能描述  : ID_XPDS_AT_GPS_ALM_INFO_IND 消息处理 ^CAGPSEPHINFO
-             XPDS_AT_GPS_ALM_INFO_IND_STRU结构体大小为900字节
-             AT命令中的字符串总长度为900 * 2 = 1800
-             XPDS_AT_GPS_ALM_INFO_IND_STRU结构体的大小为28字节，字符串的长度为56
-             字符串分为3包数据: 8 + 896 * 2 = 1800
-             分包规则:
-             第1包: ucSvNum + ucWeekNum + ucToa + ucReserved，字节长度4，字符串长度8
-             第2包: astAlmData[0:15]，  字节长度448，字符串长度896
-             第3包: astEphData[16:31]， 字节长度448，字符串长度896
- 输入参数  : 消息内容
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月22日
-    作    者   : y00174758
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvXpdsAlmInfoInd(
     VOS_VOID                           *pstMsg
 )
@@ -1473,21 +1146,7 @@ VOS_UINT32 AT_RcvXpdsAlmInfoInd(
 }
 
 
-/*****************************************************************************
- 函 数 名  : At_SetCgpsControlStart
- 功能描述  : ^CGPSControlStart用于CGPS仪器测试通知GPS开始启动定位
-             ^CGPSControlStart=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月17日
-    作    者   : d00212987
-    修改内容   : AGPS项目新增
-*****************************************************************************/
 VOS_UINT32 At_SetCgpsControlStart(
     VOS_UINT8                           ucIndex
 )
@@ -1560,21 +1219,7 @@ VOS_UINT32 At_SetCgpsControlStart(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetCgpsControlStop
- 功能描述  : ^CGPSControlStop用于CGPS仪器测试通知GPS停止定位
-             ^CGPSControlStop=<data_length>,<data>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月17日
-    作    者   : d00212987
-    修改内容   : AGPS项目新增
-*****************************************************************************/
 VOS_UINT32 At_SetCgpsControlStop(
     VOS_UINT8                           ucIndex
 )

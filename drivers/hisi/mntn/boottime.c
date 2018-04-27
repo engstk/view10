@@ -31,6 +31,20 @@
 #include <linux/uaccess.h>
 #include <linux/hisi/hisi_bootup_keypoint.h>
 
+/* record kernle boot is completed */
+#define COMPLETED_MASK 0xABCDEF00
+static unsigned int bootanim_complete;
+
+/*
+ *check kernel boot is completed
+ *Return: 1,  kernel boot is completed
+ *	        0,  no completed
+ */
+int is_bootanim_completed(void)
+{
+	return (bootanim_complete == COMPLETED_MASK);
+}
+
 static ssize_t boot_time_proc_read(struct file *file, char __user *userbuf,
 				   size_t bytes, loff_t *off)
 {
@@ -45,6 +59,7 @@ static ssize_t boot_time_proc_write(struct file *file, const char __user *buf,
 	pr_err("bootanim has been complete, turn to Lancher!\n");
 	/*set_boot_keypoint(STAGE_KERNEL_BOOTANIM_COMPLETE);*/
 
+	bootanim_complete = COMPLETED_MASK;
 	return nr;
 }
 

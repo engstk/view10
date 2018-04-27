@@ -729,7 +729,7 @@ static int hi6555v100_coul_check_version(void)
     do {
         HI6555V100_REGS_READ(HI6555V100_COUL_VERSION_ADDR, &version_reg, 1);
         HI6555V100_COUL_INF("do a dummy read, version is 0x%x\n", version_reg);
-        udelay(500);
+        usleep_range(500,510);
         if ((tryloop++) > 5){
             HI6555V100_COUL_ERR("version is not correct!\n");
             return -1;
@@ -1181,13 +1181,13 @@ static const struct attribute_group hi6555v100_coul_attr_group = {
 };
 #endif
 
+
 struct coul_device_ops hi6555v100_coul_ops =
 {
     .calculate_cc_uah             = hi6555v100_coul_calculate_cc_uah,
     .save_cc_uah                  = hi6555v100_coul_save_cc_uah,
-    .convert_regval2ua            = hi6555v100_coul_convert_regval2ua,
-    .convert_regval2uv            = hi6555v100_coul_convert_regval2uv,
-    .convert_uv2regval            = hi6555v100_coul_convert_uv2regval,
+    .convert_ocv_regval2ua            = hi6555v100_coul_convert_regval2ua,
+    .convert_ocv_regval2uv            = hi6555v100_coul_convert_regval2uv,
     .is_battery_moved             = hi6555v100_coul_is_battery_moved,
     .set_battery_moved_magic_num  = hi6555v100_coul_set_battery_move_magic,
     .get_fifo_depth               = hi6555v100_coul_get_fifo_depth,
@@ -1230,9 +1230,9 @@ struct coul_device_ops hi6555v100_coul_ops =
     .save_last_soc                = hi6555v100_coul_save_last_soc,
     .get_last_soc_flag            = hi6555v100_coul_get_last_soc_flag,
     .clear_last_soc_flag          = hi6555v100_coul_clear_last_soc_flag,
-    .cali_auto_off              = hi6555v100_coul_auto_cali,
-	.save_ocv_level				  = hi6555v100_coul_save_ocv_level,
-    .get_ocv_level				  = hi6555v100_coul_get_ocv_level,
+    .cali_auto_off                = hi6555v100_coul_auto_cali,
+    .save_ocv_level               = hi6555v100_coul_save_ocv_level,
+    .get_ocv_level                = hi6555v100_coul_get_ocv_level,
 };
 
 

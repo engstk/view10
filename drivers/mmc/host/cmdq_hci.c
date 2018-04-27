@@ -165,14 +165,24 @@ static inline u8 *get_link_desc(struct cmdq_host *cq_host, u8 tag)
 /*lint -save -e647*/
 static inline dma_addr_t get_trans_desc_dma(struct cmdq_host *cq_host, u8 tag)
 {
+#ifdef CONFIG_MMC_SDHCI_DWC_MSHC
+	return cq_host->trans_desc_dma_base +
+		(u32)(cq_host->mmc->max_segs * 2 * tag *cq_host->trans_desc_len);
+#else
 	return cq_host->trans_desc_dma_base +
 		(u32)(cq_host->mmc->max_segs * tag *cq_host->trans_desc_len);
+#endif
 }
 
 static inline u8 *get_trans_desc(struct cmdq_host *cq_host, u8 tag)
 {
+#ifdef CONFIG_MMC_SDHCI_DWC_MSHC
+	return cq_host->trans_desc_base +
+		(u32)(cq_host->trans_desc_len * cq_host->mmc->max_segs * 2 * tag);
+#else
 	return cq_host->trans_desc_base +
 		(u32)(cq_host->trans_desc_len * cq_host->mmc->max_segs * tag);
+#endif
 }
 /*lint -restore*/
 
@@ -290,8 +300,12 @@ static int cmdq_host_alloc_tdl(struct cmdq_host *cq_host, int noalloc)
 	desc_size = (size_t)(cq_host->slot_sz * cq_host->num_slots);//lint !e647
 
 	/* FIXME: consider allocating smaller chunks iteratively */
+#ifdef CONFIG_MMC_SDHCI_DWC_MSHC
+	/* synopsys controller has dma 128M limit, may result the descriptors > max_segs(128)*/
+	data_size = (size_t)(cq_host->trans_desc_len * (cq_host->mmc->max_segs * 2) * (cq_host->num_slots - 1));//lint !e647
+#else
 	data_size = (size_t)(cq_host->trans_desc_len * cq_host->mmc->max_segs * (cq_host->num_slots - 1));//lint !e647
-
+#endif
 	/*
 	 * allocate a dma-mapped chunk of memory for the descriptors
 	 * allocate a dma-mapped chunk of memory for link descriptors
@@ -420,7 +434,7 @@ static int cmdq_disable(struct mmc_host *mmc, bool soft)
 	struct cmdq_host *cq_host = (struct cmdq_host *)mmc_cmdq_private(mmc);
 	u32 reg = 0;
 	u32 i = 0;
-	unsigned long timeout = (8 * 1000);
+	unsigned long timeout = (8 * 1000 * 1000);
 
 	cmdq_runtime_pm_get(mmc);
 
@@ -439,7 +453,7 @@ static int cmdq_disable(struct mmc_host *mmc, bool soft)
 			return -ETIMEDOUT;
 		}
 		timeout--;
-		mdelay(1);
+		udelay(1);
 	} while (reg);
 
 	if (soft) {

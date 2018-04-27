@@ -13,6 +13,7 @@
 
 #include <linux/types.h>
 #include <linux/list.h>
+#include <linux/of.h>
 
 #include <linux/hisi/rdr_pub.h>
 #include <mntn_public_interface.h>
@@ -39,6 +40,7 @@
 #define RDR_PROC_EXEC_START 0xff115501
 #define RDR_PROC_EXEC_DONE  0xff123059
 #define RDR_REBOOT_DONE     0xff1230ff
+#define RDR_CLEARTEXT_LOG_DONE 0x1
 
 #define RDR_PRODUCT_VERSION "PRODUCT_VERSION_STR"
 #define RDR_PRODUCT "PRODUCT_NAME"	/* "hi3630_udp" */
@@ -54,6 +56,8 @@
 struct cmdword {
 	unsigned char name[24];
 	unsigned int num;
+	unsigned char category_name[24];
+	unsigned int category_num;
 };
 
 struct rdr_syserr_param_s {
@@ -69,11 +73,22 @@ struct rdr_module_ops_s {
 	struct rdr_module_ops_pub s_ops;
 };
 
+struct rdr_cleartext_ops_s {
+	struct list_head s_list;
+	u64 s_core_id;
+	pfn_cleartext_ops ops_cleartext;
+};
+
 struct blackbox_modid_list {
 	unsigned int modid_span_little;
 	unsigned int modid_span_big;
 	char *modid_str;
 };
+
+/* variable extern */
+extern u32 g_cleartext_test;
+extern struct semaphore rdr_cleartext_sem;
+
 
 void rdr_callback(struct rdr_exception_info_s *p_exce_info, u32 mod_id,
 		  char *logpath);
@@ -159,7 +174,6 @@ bool rdr_syserr_list_empty(void);
 
 int rdr_wait_partition(char *path, int timeouts);
 void rdr_get_builddatetime(u8 *out);
-char *rdr_get_timestamp(void);
 u64 rdr_get_tick(void);
 int rdr_get_suspend_state(void);
 int rdr_get_reboot_state(void);
@@ -170,12 +184,13 @@ int rdr_common_init(void);
 u64 rdr_reserved_phymem_addr(void);
 u64 rdr_reserved_phymem_size(void);
 int rdr_get_dumplog_timeout(void);
-u64 rdr_get_logsize(void);
 RDR_NVE rdr_get_nve(void);
 
 void rdr_save_last_baseinfo(char *logpath);
 void rdr_save_cur_baseinfo(char *logpath);
 
+char *rdr_field_get_datetime(void);
+void rdr_cleartext_dumplog_done(void);
 void rdr_field_dumplog_done(void);
 void rdr_field_reboot_done(void);
 void rdr_field_procexec_done(void);
@@ -199,7 +214,13 @@ int rdr_record_reboot_times2file(void);
 u32 rdr_get_reboot_times(void);
 void save_dfxpartition_to_file(void);
 bool is_need_save_dfx2file(void);
-void *bbox_vmap(phys_addr_t paddr, size_t size);
 bool need_save_mntndump_log(u32 reboot_type_s);
 int rdr_create_dir(const char *path);
+void bbox_cleartext_proc(const char *path, const char *base_addr);
+void rdr_exceptionboot_save_cleartext(void);
+int rdr_cleartext_body(void *arg);
+int bbox_get_every_core_area_info(u32 *value, u32 *data, struct device_node **npp);
+void rdr_cleartext_print_ops(void);
+void rdr_hisiap_dump_root_head(u32 modid, u32 etype, u64 coreid);
+
 #endif /* End #define __BB_INNER_H__ */

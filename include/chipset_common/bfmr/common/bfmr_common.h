@@ -40,6 +40,7 @@ typedef enum
     LOG_TYPE_BFMR_TEMP_BUF,
     LOG_TYPE_KMSG,
     LOG_TYPE_ANDROID_KMSG = LOG_TYPE_KMSG,
+    LOG_TYPE_TEXT_KMSG,
     LOG_TYPE_RAMOOPS,
     LOG_TYPE_BETA_APP_LOGCAT,
     LOG_TYPE_CRITICAL_PROCESS_CRASH,
@@ -50,7 +51,6 @@ typedef enum
     LOG_TYPE_FIXED_FRAMEWORK_BOOTFAIL_LOG,
     LOG_TYPE_BFM_BFI_LOG,
     LOG_TYPE_BFM_RECOVERY_LOG,
-    LOG_TYPE_TEXT_KMSG,
     LOG_TYPE_MAX_COUNT
 } bfmr_log_type_e;
 
@@ -90,12 +90,51 @@ typedef struct
 } bfmr_log_src_t;
 
 #if BITS_PER_LONG == 32
-            typedef   struct stat64   bfm_stat_t;
-            #define   bfm_sys_lstat sys_lstat64
+typedef   struct stat64   bfm_stat_t;
+#define   bfm_sys_lstat sys_lstat64
 #else
-            typedef   struct stat bfm_stat_t;
-            #define   bfm_sys_lstat sys_newlstat
+typedef   struct stat bfm_stat_t;
+#define   bfm_sys_lstat sys_newlstat
 #endif
+
+/* bootfail additional info */
+typedef struct bfmr_bootfail_addl_info
+{
+    char log_path[1024];
+    char detail_info[512];
+    char reserved[2560];
+} bfmr_bootfail_addl_info_t;
+
+typedef struct bfmr_rrecord_misc_msg_param
+{
+    /* "boot-erecovery" */
+    char command[32];
+
+    /* main reason*/
+    int enter_erecovery_reason;
+
+    /* sub reason need for BI */
+    int enter_erecovery_reason_number;
+
+    /* boot stage when boot fail occurs */
+    int boot_fail_stage_for_erecovery;
+
+    /* boot fail no */
+    unsigned int boot_fail_no;
+
+    /* recovery method */
+    unsigned int recovery_method;
+
+    /* mark if the misc write success,yes:0xAA55AA55 */
+    unsigned int sync_misc_flag;
+
+    /* abnormal shutdown flag */
+    unsigned int abns_flag;
+
+    /* reserved for future usage */
+    char reserved[964];
+} bfmr_rrecord_misc_msg_param_t;
+
 
 /*----export macroes-----------------------------------------------------------------*/
 
@@ -168,11 +207,15 @@ do\
 
 #define BFMR_BOOTLOCK_FIELD_NAME "bootlock"
 #define BFMR_ENABLE_FIELD_NAME "hw_bfm_enable"
+#define BFR_ENABLE_FIELD_NAME "hw_bfr_enable"
 #define BFR_RRECORD_PART_NAME "rrecord"
+#define BFR_MISC_PART_OFFSET ((unsigned int)0x0)
 #define BFR_RRECORD_PART_MAX_COUNT (2)
 #define BFMR_DEV_NAME "hw_bfm"
 #define BFMR_DEV_PATH "/dev/hw_bfm"
 #define BFM_LOG_MAX_COUNT (10)
+#define BFM_LOG_MAX_COUNT_PER_DIR (10)
+#define BFM_MAX_INT_NUMBER_LEN (21)
 
 
 /*----global variables----------------------------------------------------------------*/
@@ -222,6 +265,7 @@ int bfmr_create_log_path(char *path);
 char* bfmr_convert_rtc_time_to_asctime(unsigned long long rtc_time);
 char* bfm_get_bootlock_value_from_cmdline(void);
 bool bfmr_has_been_enabled(void);
+bool bfr_has_been_enabled(void);
 void bfmr_enable_ctl(int enable_flag);
 char* bfmr_reverse_find_string(const char *psrc, const char *pstr_to_be_found);
 bool bfm_get_symbol_link_path(char *file_path, char *psrc_path, size_t src_path_size);
@@ -231,6 +275,8 @@ long bfmr_full_read_with_file_path(const char *pfile_path, char *buf, size_t buf
 long bfmr_full_write_with_file_path(const char *pfile_path, char *buf, size_t buf_size);
 void bfmr_unlink_file(char *pfile_path);
 int bfmr_get_uid_gid(uid_t *puid, gid_t *pgid);
+int bfmr_read_rrecord_misc_msg(bfmr_rrecord_misc_msg_param_t *pparam);
+int bfmr_write_rrecord_misc_msg(bfmr_rrecord_misc_msg_param_t *pparam);
 unsigned int bfmr_get_bootup_time(void);
 int bfmr_common_init(void);
 

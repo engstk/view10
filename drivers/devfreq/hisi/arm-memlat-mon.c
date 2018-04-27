@@ -55,6 +55,8 @@ struct memlat_hwmon_data {
 };
 static DEFINE_PER_CPU(struct memlat_hwmon_data, pm_data);
 
+cpumask_t initilized_cpumask;
+
 struct cpu_grp_info {
 	cpumask_t cpus;
 	struct memlat_hwmon hw;
@@ -187,6 +189,7 @@ static struct perf_event_attr *alloc_attr(void)
 	attr->type = PERF_TYPE_RAW;
 	attr->size = sizeof(struct perf_event_attr);
 	attr->pinned = 1;
+	attr->exclude_idle = 1;
 
 	return attr;
 }
@@ -238,6 +241,8 @@ static int arm_memlat_cpu_callback(struct notifier_block *nb,
 {
 	unsigned long cpu = (unsigned long)hcpu;
 	struct memlat_hwmon_data *hw_data = &per_cpu(pm_data, cpu);
+	if (!cpumask_test_cpu(cpu, &initilized_cpumask))
+		return NOTIFY_OK;
 
 	switch (action & ~CPU_TASKS_FROZEN) {
 		case CPU_DOWN_PREPARE:
@@ -352,6 +357,7 @@ static int arm_memlat_mon_driver_probe(struct platform_device *pdev)
 	}
 
 	cpumask_copy(&hw->cpus, &cpu_grp->cpus);
+	cpumask_or(&initilized_cpumask, &initilized_cpumask, &cpu_grp->cpus);
 	hw->num_cores = cpumask_weight(&cpu_grp->cpus);
 	hw->core_stats = devm_kzalloc(dev, hw->num_cores *
 				sizeof(*(hw->core_stats)), GFP_KERNEL);

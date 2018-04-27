@@ -122,7 +122,7 @@ static inline long __trace_sched_switch_state(bool preempt, struct task_struct *
 /*
  * Tracepoint for sched vip
  */
-DECLARE_EVENT_CLASS(sched_vip_template,
+DECLARE_EVENT_CLASS(sched_vip_template, /*[false alarm]:trace信息属于调试功能，该代码copy自内核原生代码，fortify对内核原生代码也报同样警告，不修改*/
 
 	TP_PROTO(struct task_struct *p, char *msg),
 
@@ -142,7 +142,7 @@ DECLARE_EVENT_CLASS(sched_vip_template,
 		memcpy(__entry->comm, p->comm, TASK_COMM_LEN);
 		__entry->pid		= p->pid;
 		__entry->prio		= p->prio;
-		memcpy(__entry->msg, msg, VIP_MSG_LEN);
+		memcpy(__entry->msg, msg, min(VIP_MSG_LEN, strlen(msg)+1));
 		__entry->target_cpu	= task_cpu(p);
 		__entry->dynamic_vip   = atomic64_read(&p->dynamic_vip);
 		__entry->vip_depth     = p->vip_depth;

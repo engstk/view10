@@ -364,6 +364,11 @@ static int sdcardfs_read_super(struct super_block *sb,
 		goto out_putname;
 #endif
 
+#ifdef SDCARDFS_CASE_INSENSITIVE
+	/* prepare ci ops for lowerfs */
+	sbi->ci = sdcardfs_lowerfs_ci_ops(lower_sb);
+#endif
+
 	/* prepare fs_struct */
 	sbi->override_fs = prepare_fs_struct(&lower_path, 0);
 	if (sbi->override_fs == NULL) {
@@ -528,7 +533,7 @@ static void __exit exit_sdcardfs_fs(void)
 #endif
 	sdcardfs_configfs_exit();
 	sdcardfs_destroy_tree_cache();
-	infoln("finalize sdcardfs module successfully\n");
+	infoln("finalize sdcardfs module successfully");
 }
 
 MODULE_AUTHOR("Gao Xiang <gaoxiang25@huawei.com>, CUSTOMER BG, HUAWEI inc.");

@@ -36,6 +36,9 @@
 #define PLATFORM_ID_BIT_HI3660       (2U)
 #define PLATFORM_ID_BIT_KIRIN970_ES  (3U)
 #define PLATFORM_ID_BIT_KIRIN970     (4U)
+#define PLATFORM_ID_BIT_MIA          (5U)
+#define PLATFORM_ID_BIT_ATLA_ES      (6U)
+#define PLATFORM_ID_BIT_ATLA         (7U)
 
 /*hisi platform noc bus info struct.*/
 struct noc_platform_info {
@@ -107,6 +110,39 @@ static struct noc_platform_info g_noc_platform_info[] = {
 	       .pfun_get_size = hisi_noc_get_array_size_kirin970,
 	       .pfun_clock_enable = hisi_noc_clock_enable_kirin970,
 	       },
+
+	/*hisi platform: MIA */
+	[5] = {
+	       .name = "MIA",
+	       .platform_id = 1 << PLATFORM_ID_BIT_MIA,	/* must be same as the value defined in DTS. */
+	       .p_noc_info_bus = noc_buses_info_MIA,
+	       .p_noc_info_dump = noc_dump_reg_list_MIA,
+	       .p_noc_info_filter_initflow = hisi_filter_initflow_MIA,
+	       .pfun_get_size = hisi_noc_get_array_size_MIA,
+	       .pfun_clock_enable = hisi_noc_clock_enable_MIA,
+	       },
+
+	/*hisi platform: ATLA_es */
+	[6] = {
+	       .name = "ATLA_es",
+	       .platform_id = 1 << PLATFORM_ID_BIT_ATLA_ES,	/* must be same as the value defined in DTS. */
+	       .p_noc_info_bus = noc_buses_info_ATLA_es,
+	       .p_noc_info_dump = noc_dump_reg_list_ATLA_es,
+	       .p_noc_info_filter_initflow = hisi_filter_initflow_ATLA_es,
+	       .pfun_get_size = hisi_noc_get_array_size_ATLA_es,
+	       .pfun_clock_enable = hisi_noc_clock_enable_ATLA_es,
+	       },
+
+	/*hisi platform: ATLA */
+	[7] = {
+	       .name = "ATLA",
+	       .platform_id = 1 << PLATFORM_ID_BIT_ATLA,	/* must be same as the value defined in DTS. */
+	       .p_noc_info_bus = noc_buses_info_ATLA,
+	       .p_noc_info_dump = noc_dump_reg_list_ATLA,
+	       .p_noc_info_filter_initflow = hisi_filter_initflow_ATLA,
+	       .pfun_get_size = hisi_noc_get_array_size_ATLA,
+	       .pfun_clock_enable = hisi_noc_clock_enable_ATLA,
+	       }
 };
 
 static unsigned int g_info_index = 0;

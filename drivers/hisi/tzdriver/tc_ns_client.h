@@ -18,6 +18,10 @@
 #define TIMESTAMP_SAVE_INDEX    16
 #endif
 
+#ifndef ZERO_SIZE_PTR
+#define ZERO_SIZE_PTR ((void *)16)
+#define ZERO_OR_NULL_PTR(x) ((unsigned long)(x) <= (unsigned long)ZERO_SIZE_PTR)
+#endif
 
 typedef struct {
 	__u32 method;

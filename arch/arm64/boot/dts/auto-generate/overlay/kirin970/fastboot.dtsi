@@ -6,6 +6,7 @@
 	slimbusmisc@0xe8050000 {};   /*11*/
 	codecssi@0xe82b9000 {};		/*11*/
 	ddr_devfreq@fffc0000 {};	/*20*/
+	huawei_lcd_panel: huawei,lcd_panel {};
 	panel_lcd_lg_S6E3HF4_5P5 {};	/*20*/
 	panel_lcd_samsung_S6E3HF4_5P5 {};	/*20*/
 	panel_lcd_lg_TD4322_6P0 {};	/*20*/

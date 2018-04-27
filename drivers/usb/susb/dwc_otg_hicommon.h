@@ -2,8 +2,8 @@
 #define _DWC_OTG_HICOMMON_
 
 /* include platform head-file */
-#if defined(CONFIG_HI6250_USB)
-#include "dwc_otg_hi6250.h"
+#if defined(CONFIG_DEC_USB)
+#include "dwc_otg_dec.h"
 #else
 #error "Passable some error, It should be set a platform"
 #endif

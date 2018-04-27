@@ -16,8 +16,8 @@
 #include <linux/syscalls.h>
 #include <linux/syscore_ops.h>
 #include <linux/uaccess.h>
-#ifdef CONFIG_HUAWEI_ABNS
-#include <chipset_common/abns/abns_shutdown.h>
+#ifdef CONFIG_HUAWEI_BFM
+#include <chipset_common/bfmr/abns/abns_shutdown.h>
 #endif
 
 /*
@@ -315,8 +315,8 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 		cmd = LINUX_REBOOT_CMD_HALT;
 
 	mutex_lock(&reboot_mutex);
-#ifdef CONFIG_HUAWEI_ABNS
-    set_unclean_shutdown_flag(BOOT_FLAG_MANUAL_SHUTDOWN);
+#ifdef CONFIG_HUAWEI_BFM
+    bfmr_clean_abns_flag(BOOT_FLAG_OK);
 #endif
 	switch (cmd) {
 	case LINUX_REBOOT_CMD_RESTART:

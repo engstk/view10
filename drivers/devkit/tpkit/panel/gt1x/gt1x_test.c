@@ -20,6 +20,7 @@
 #include <linux/delay.h>
 #include <linux/firmware.h>
 #include "gt1x.h"
+#include "../../huawei_ts_kit.h"
 
 #define SHORT_TO_GND_RESISTER(sig)  (div_s64(5266285, (sig) & (~0x8000)) - 40 * 100)	/* 52662.85/code-40 */
 #define SHORT_TO_VDD_RESISTER(sig,value) (div_s64(36864 * ((value) - 9) *100, (((sig) & (~0x8000)) * 7)) - 40 * 100)
@@ -711,6 +712,7 @@ exit_finish:
 	if(gts_test)
 		kfree(gts_test);
 	gts_test = NULL;
+	gt1x_ts->open_threshold_status = true;
 	return ret;
 }
 
@@ -767,6 +769,136 @@ static void gt1x_data_statistics(u16 *data, size_t data_size, char *result, size
 	return;
 }
 
+static void gt1x_put_test_result_newformat(
+		struct ts_rawdata_info_new *info,
+		struct gt1x_ts_test *ts_test)
+{
+	int i = 0;
+	int have_bus_error = 0;
+	int have_panel_error = 0;
+	char statistics_data[STATISTICS_DATA_LEN] = {0};
+	struct ts_rawdata_newnodeinfo * pts_node = NULL;
+	char testresut[]={' ','P','F','F'};
+	
+	TS_LOG_INFO("%s :\n",__func__);
+	info->tx = ts_test->test_params.sen_num;
+	info->rx = ts_test->test_params.drv_num;
+
+	/* i2c info */  
+	for (i = 0; i < MAX_TEST_ITEMS; i++) {
+		if (ts_test->test_result[i] == SYS_SOFTWARE_REASON)
+			have_bus_error = 1;
+		else if (ts_test->test_result[i] == GTP_PANEL_REASON)
+			have_panel_error = 1;
+	}
+
+	if (have_bus_error) 
+		gt1x_strncat(info->i2cinfo, "0F", sizeof(info->i2cinfo));	
+	else
+		gt1x_strncat(info->i2cinfo, "0P", sizeof(info->i2cinfo));	
+	
+	/********************************************************************/
+	/*                                enum ts_raw_data_type
+	/*   							  {
+	/*   								 RAW_DATA_TYPE_IC = 0,
+	/*   #define GTP_CAP_TEST	1        RAW_DATA_TYPE_CAPRAWDATA,    
+	/*   #define GTP_DELTA_TEST	2        RAW_DATA_TYPE_TrxDelta,
+	/*   #define GTP_NOISE_TEST	3        RAW_DATA_TYPE_Noise,
+	/*                                   RAW_DATA_TYPE_FreShift,
+	/*   #define GTP_SHORT_TEST	5        RAW_DATA_TYPE_OpenShort,
+	/*								     RAW_DATA_TYPE_SelfCap,
+	/*									 RAW_DATA_TYPE_CbCctest,
+	/*									 RAW_DATA_TYPE_highResistance,
+	/*									 RAW_DATA_TYPE_SelfNoisetest,
+	/*									 RAW_DATA_END,
+	/*								  };
+	/*  value is same 
+	**********************************************************************/
+	/* CAP data info */ 
+		
+	pts_node = (struct ts_rawdata_newnodeinfo *)kzalloc(sizeof(struct ts_rawdata_newnodeinfo), GFP_KERNEL);
+	if (!pts_node) {
+		TS_LOG_ERR("malloc failed\n");
+		return;
+	}
+	if (ts_test->rawdata.size) {
+		pts_node->values = kzalloc(ts_test->rawdata.size*sizeof(int), GFP_KERNEL);
+		if (!pts_node->values) {
+			TS_LOG_ERR("malloc failed  for values\n");
+			kfree(pts_node);
+			pts_node = NULL;
+			return;
+		}
+		for (i = 0; i < ts_test->rawdata.size; i++)
+			pts_node->values[i] = ts_test->rawdata.data[i];
+		/* calculate rawdata min avg max vale*/
+		gt1x_data_statistics(&ts_test->rawdata.data[0],ts_test->rawdata.size,statistics_data,STATISTICS_DATA_LEN-1);
+		strncpy(pts_node->statistics_data,statistics_data,sizeof(pts_node->statistics_data)-1);
+	}
+	pts_node->size = ts_test->rawdata.size;
+	pts_node->testresult = testresut[ts_test->test_result[GTP_CAP_TEST]];
+	pts_node->typeindex = GTP_CAP_TEST;		
+	strncpy(pts_node->test_name,"Cap_Rawdata",sizeof(pts_node->test_name)-1);	
+	list_add_tail(&pts_node->node, &info->rawdata_head);		
+	
+	/* DELTA */
+	pts_node = (struct ts_rawdata_newnodeinfo *)kzalloc(sizeof(struct ts_rawdata_newnodeinfo), GFP_KERNEL);
+	if (!pts_node) {
+		TS_LOG_ERR("malloc failed\n");
+		return;
+	}
+	pts_node->size = 0;
+	pts_node->testresult = testresut[ts_test->test_result[GTP_DELTA_TEST]];
+	pts_node->typeindex = GTP_DELTA_TEST;		
+	strncpy(pts_node->test_name,"Trx_delta",sizeof(pts_node->test_name)-1);
+	list_add_tail(&pts_node->node, &info->rawdata_head);	
+
+	/* save noise data to info->buff */
+	pts_node = (struct ts_rawdata_newnodeinfo *)kzalloc(sizeof(struct ts_rawdata_newnodeinfo), GFP_KERNEL);
+	if (!pts_node) {
+		TS_LOG_ERR("malloc failed\n");
+		return;
+	}
+	if (ts_test->noisedata.size) {
+		pts_node->values = kzalloc(ts_test->noisedata.size*sizeof(int), GFP_KERNEL);
+		if (!pts_node->values) {
+			TS_LOG_ERR("malloc failed  for values\n");
+			kfree(pts_node);
+			pts_node = NULL;
+			return;
+		}
+		for (i = 0; i < ts_test->noisedata.size; i++)
+			pts_node->values[i] = ts_test->noisedata.data[i];
+		/* calculate rawdata min avg max vale*/
+		gt1x_data_statistics(&ts_test->noisedata.data[0],ts_test->noisedata.size,statistics_data,STATISTICS_DATA_LEN-1);
+		strncpy(pts_node->statistics_data,statistics_data,sizeof(pts_node->statistics_data)-1);
+	}
+	pts_node->size = ts_test->noisedata.size;
+	pts_node->testresult = testresut[ts_test->test_result[GTP_NOISE_TEST]];
+	pts_node->typeindex = GTP_NOISE_TEST;		
+	strncpy(pts_node->test_name,"noise_delta",sizeof(pts_node->test_name)-1);	
+	list_add_tail(&pts_node->node, &info->rawdata_head);	
+	
+	/* shortcircut */
+	pts_node = (struct ts_rawdata_newnodeinfo *)kzalloc(sizeof(struct ts_rawdata_newnodeinfo), GFP_KERNEL);
+	if (!pts_node) {
+		TS_LOG_ERR("malloc failed\n");
+		return;
+	}
+	pts_node->size = 0;
+	pts_node->testresult = testresut[ts_test->test_result[GTP_SHORT_TEST]];
+	pts_node->typeindex = GTP_SHORT_TEST;		
+	strncpy(pts_node->test_name,"open_test",sizeof(pts_node->test_name)-1);
+	list_add_tail(&pts_node->node, &info->rawdata_head);
+		
+	/* dev info */	
+	gt1x_strncat(info->deviceinfo, "-GT", sizeof(info->deviceinfo));
+	gt1x_strncat(info->deviceinfo, ts_test->ts->hw_info.product_id, sizeof(info->deviceinfo)-strlen(info->deviceinfo));
+	gt1x_strncat(info->deviceinfo, "-", sizeof(info->deviceinfo)-strlen(info->deviceinfo));
+	gt1x_strncatint(info->deviceinfo, ts_test->ts->dev_data->ts_platform_data->panel_id,"%d;",sizeof(info->deviceinfo)-strlen(info->deviceinfo));
+
+	return;	
+}
 static void gt1x_put_test_result(
 		struct ts_rawdata_info *info,
 		struct gt1x_ts_test *ts_test)
@@ -775,6 +907,11 @@ static void gt1x_put_test_result(
 	int have_bus_error = 0;
 	int have_panel_error = 0;
 	char statistics_data[STATISTICS_DATA_LEN] = {0};
+
+	if (gt1x_ts->dev_data->ts_platform_data->chip_data->rawdata_newformatflag == TS_RAWDATA_NEWFORMAT){
+		gt1x_put_test_result_newformat(info,ts_test);
+		return;
+	}
 	
 	/* save rawdata to info->buff */
 	info->used_size = 0;

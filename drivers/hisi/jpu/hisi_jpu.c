@@ -139,6 +139,33 @@ static const struct file_operations hisi_jpu_fops = {
 };
 /*lint -restore*/
 
+static int hisi_jpu_set_platform(struct hisi_jpu_data_type *hisijd, struct device_node *np)
+{
+	int ret = 0;
+	if (!hisijd) {
+		HISI_JPU_ERR("hisijd is NULL!\n");
+		return -EINVAL;
+	}
+
+	ret = of_property_read_string_index(np, "platform-names", 0, &(hisijd->jpg_platform_name));
+	if (ret != 0) {
+		HISI_JPU_ERR("failed to get jpg_platform_name resource! ret=%d.\n", ret);
+		ret = -EINVAL;
+	}
+
+	if (strncmp(hisijd->jpg_platform_name, "kirin_970", 9) == 0) {
+		hisijd->jpu_support_platform = HISI_KIRIN_970;
+		return ret;
+	}else if (strncmp(hisijd->jpg_platform_name, "dss_v501", 8) == 0) {
+		hisijd->jpu_support_platform = HISI_DSS_V501;
+		return ret;
+	}else {
+		hisijd->jpu_support_platform = UNSUPPORT_PLATFORM;
+		HISI_JPU_ERR("hisijd jpg platform is not support!\n");
+		return -EINVAL;
+	}
+}
+
 static int hisi_jpu_chrdev_setup(struct hisi_jpu_data_type *hisijd)
 {
 	int ret = 0;
@@ -470,6 +497,13 @@ static int hisi_jpu_probe(struct platform_device *pdev)
 	ret = of_property_read_string_index(np, "clock-names", 0, &(hisijd->jpg_func_clk_name));
 	if (ret != 0) {
 		HISI_JPU_ERR("failed to get jpg_func_clk_name resource! ret=%d.\n", ret);
+		ret = -ENXIO;
+		goto err_device_put;
+	}
+
+	/* get jpg platfrom name resource */
+	if (hisi_jpu_set_platform(hisijd, np)) {
+		HISI_JPU_ERR("failed to set platform info.\n");
 		ret = -ENXIO;
 		goto err_device_put;
 	}

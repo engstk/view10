@@ -87,14 +87,7 @@ extern OM_VCOM_DEBUG_INFO g_stVComDebugInfo[3];
 
 extern VOS_UINT32 g_ulDiagCfgInfo;
 
-/*****************************************************************************
- Function Name   : DIAG_DebugCommon
- Description     : DIAG通用的可维可测信息
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 VOS_VOID DIAG_DebugCommon(VOS_VOID)
 {
     void *pFile;
@@ -148,8 +141,8 @@ VOS_VOID DIAG_DebugCommon(VOS_VOID)
         return ;
     }
 
-    (VOS_VOID)VOS_MemSet_s(aucInfo, sizeof(aucInfo), 0, DIAG_DEBUG_INFO_LEN);
-    (VOS_VOID)VOS_MemCpy_s(aucInfo, (DIAG_DEBUG_INFO_LEN-1), "DIAG common info", VOS_StrLen("DIAG common info"));
+    (VOS_VOID)VOS_MemSet_s(aucInfo, sizeof(aucInfo), 0, sizeof(aucInfo));
+    (VOS_VOID)VOS_MemCpy_s(aucInfo, sizeof(aucInfo), "DIAG common info", VOS_StrNLen("DIAG common info", sizeof(aucInfo)-1));
 
     /* 通用信息 */
     ret = mdrv_file_write(aucInfo, 1, DIAG_DEBUG_INFO_LEN, pFile);
@@ -199,14 +192,7 @@ VOS_VOID DIAG_DebugCommon(VOS_VOID)
     return ;
 }
 
-/*****************************************************************************
- Function Name   : DIAG_DebugFileHeader
- Description     : 给debug文件写上文件头
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 DIAG_DebugFileHeader(void *pFile)
 {
     VOS_UINT32 ret;
@@ -263,14 +249,7 @@ VOS_UINT32 DIAG_DebugFileHeader(void *pFile)
 }
 
 
-/*****************************************************************************
- Function Name   : DIAG_DebugFileTail
- Description     : 给debug文件写上文件尾
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 VOS_VOID DIAG_DebugFileTail(void *pFile, VOS_CHAR *FilePath)
 {
     VOS_UINT32 ret;
@@ -292,14 +271,7 @@ extern VOS_UINT8 g_EventModuleCfg[DIAG_CFG_PID_NUM];
 extern DIAG_CBT_INFO_TBL_STRU g_astCBTInfoTbl[EN_DIAG_DEBUG_INFO_MAX];
 
 
-/*****************************************************************************
- Function Name   : diag_numberinfo
- Description     : 保存DIAG统计次数信息
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 VOS_VOID diag_numberinfo(void *pFile)
 {
     VOS_UINT32 ret;
@@ -307,7 +279,7 @@ VOS_VOID diag_numberinfo(void *pFile)
     VOS_CHAR   aucInfo[DIAG_DEBUG_INFO_LEN];
 
     (VOS_VOID)VOS_MemSet_s(aucInfo, sizeof(aucInfo),0, DIAG_DEBUG_INFO_LEN);
-    (VOS_VOID)VOS_MemCpy_s(aucInfo, (DIAG_DEBUG_INFO_LEN-1), "DIAG number info", VOS_StrLen("DIAG number info"));
+    (VOS_VOID)VOS_MemCpy_s(aucInfo, sizeof(aucInfo), "DIAG number info", VOS_StrNLen("DIAG number info",sizeof(aucInfo)-1));
 
     /* 上报次数信息 */
     ret = (VOS_UINT32)mdrv_file_write(aucInfo, 1, DIAG_DEBUG_INFO_LEN, pFile);
@@ -340,14 +312,7 @@ VOS_VOID diag_numberinfo(void *pFile)
     }
 }
 
-/*****************************************************************************
- Function Name   : DIAG_DebugNoIndLog
- Description     : LOG不上报的可维可测信息
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 VOS_VOID DIAG_DebugNoIndLog(VOS_VOID)
 {
     void *pFile;
@@ -407,8 +372,8 @@ VOS_VOID DIAG_DebugNoIndLog(VOS_VOID)
         return ;
     }
 
-    (VOS_VOID)VOS_MemSet_s(aucInfo, sizeof(aucInfo), 0, DIAG_DEBUG_INFO_LEN);
-    (VOS_VOID)VOS_MemCpy_s(aucInfo, (DIAG_DEBUG_INFO_LEN-1), "DIAG config info", VOS_StrLen("DIAG config info"));
+    (VOS_VOID)VOS_MemSet_s(aucInfo, sizeof(aucInfo), 0, sizeof(aucInfo));
+    (VOS_VOID)VOS_MemCpy_s(aucInfo, sizeof(aucInfo), "DIAG config info", VOS_StrNLen("DIAG config info", sizeof(aucInfo)-1));
 
     /* 配置开关信息 */
     ret = (VOS_UINT32)mdrv_file_write(aucInfo, 1, DIAG_DEBUG_INFO_LEN, pFile);

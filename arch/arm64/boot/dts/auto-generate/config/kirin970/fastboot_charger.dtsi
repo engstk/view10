@@ -5,4 +5,8 @@
 		ichrg_pre_limit = <200>;
 		status = "disabled";
 	};
+	fastboot_charge_vibrate: fastboot_charge_vibrate {
+		compatible = "huawei,charge_vibrate";
+		vibrator_delay = <0>;
+	};
 };

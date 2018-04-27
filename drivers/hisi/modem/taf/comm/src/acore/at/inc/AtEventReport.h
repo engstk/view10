@@ -82,10 +82,8 @@ extern "C" {
 #define AT_GET_CURC_RPT_CTRL_STATUS_MAP_TBL_PTR()    (&g_aenAtCurcRptCmdTable[0])
 #define AT_GET_CURC_RPT_CTRL_STATUS_MAP_TBL_SIZE()   (sizeof(g_aenAtCurcRptCmdTable)/sizeof(AT_RPT_CMD_INDEX_ENUM_UINT8))
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, begin */
 #define AT_GET_UNSOLICITED_RPT_CTRL_STATUS_MAP_TBL_PTR()    (&g_aenAtUnsolicitedRptCmdTable[0])
 #define AT_GET_UNSOLICITED_RPT_CTRL_STATUS_MAP_TBL_SIZE()   (sizeof(g_aenAtUnsolicitedRptCmdTable)/sizeof(AT_RPT_CMD_INDEX_ENUM_UINT8))
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, end */
 
 #define AT_GET_CME_CALL_ERR_CODE_MAP_TBL_PTR()  (g_astAtCmeCallErrCodeMapTbl)
 #define AT_GET_CME_CALL_ERR_CODE_MAP_TBL_SIZE() (sizeof(g_astAtCmeCallErrCodeMapTbl)/sizeof(AT_CME_CALL_ERR_CODE_MAP_STRU))
@@ -125,15 +123,7 @@ extern "C" {
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : AT_CS_CALL_STATE_ENUM
- 结构说明  : CS域呼叫状态枚举
 
-  1.日    期   : 2012年09月18日
-    作    者   : l00198894
-    修改内容   : STK补充特性及DCM需求开发项目新增枚举
-
-*****************************************************************************/
 enum AT_CS_CALL_STATE_ENUM
 {
     AT_CS_CALL_STATE_ORIG               = 0,                                    /* originate a MO Call */
@@ -150,7 +140,6 @@ enum AT_CS_CALL_STATE_ENUM
 };
 typedef VOS_UINT8 AT_CS_CALL_STATE_ENUM_UINT8;
 
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, begin */
 enum AT_ECALL_TYPE_ENUM
 {
     AT_ECALL_TYPE_TEST                  = 0,                                    /* test ecall */
@@ -161,7 +150,6 @@ enum AT_ECALL_TYPE_ENUM
     AT_ECALL_TYPE_BUTT
 };
 typedef VOS_UINT8  AT_ECALL_TYPE_ENUM_U8;
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, end */
 
 /*****************************************************************************
   4 全局变量声明
@@ -202,15 +190,7 @@ typedef struct
 /*lint +e958 +e959 修改人:l60609;原因:64bit*/
 
 /* Added by f62575 for V9R1 STK升级, 2013-6-26, begin */
-/*****************************************************************************
- 结构名  : AT_SMS_ERROR_CODE_MAP_STRU
- 结构说明: 短信接收发送结果正式响应错误码与AT模块错误码映射结构
 
- 修改历史      :
-  1.日    期   : 2012年9月25日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     TAF_MSG_ERROR_ENUM_UINT32           enMsgErrorCode;
@@ -218,15 +198,7 @@ typedef struct
 }AT_SMS_ERROR_CODE_MAP_STRU;
 /* Added by f62575 for V9R1 STK升级, 2013-6-26, end */
 
-/*****************************************************************************
- 结构名  : AT_CME_CALL_ERR_CODE_MAP_STRU
- 结构说明: CS域错误码与CME错误码映射结构
 
- 修改历史      :
-  1.日    期   : 2012年9月25日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulCmeCode;
@@ -234,15 +206,7 @@ typedef struct
 
 } AT_CME_CALL_ERR_CODE_MAP_STRU;
 
-/*****************************************************************************
- 结构名  : AT_CMS_SMS_ERR_CODE_MAP_STRU
- 结构说明: SMS域错误码与CMS错误码映射结构
 
- 修改历史      :
-  1.日    期   : 2013年5月17日
-    作    者   : w00176964
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulCmsCode;
@@ -252,15 +216,7 @@ typedef struct
 
 
 #if ((FEATURE_ON == FEATURE_UE_MODE_CDMA)&&(FEATURE_ON == FEATURE_CHINA_TELECOM_VOICE_ENCRYPT))
-/*****************************************************************************
- 结构名  : AT_ENCRYPT_VOICE_ERR_CODE_MAP_STRU
- 结构说明: 密话错误码映射结构
 
- 修改历史      :
-  1.日    期   : 2013年5月17日
-    作    者   : w00176964
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     AT_ENCRYPT_VOICE_ERROR_ENUM_UINT32                      enAtEncErr;
@@ -268,6 +224,25 @@ typedef struct
 
 } AT_ENCRYPT_VOICE_ERR_CODE_MAP_STRU;
 #endif
+
+
+typedef struct
+{
+    TAF_ERROR_CODE_ENUM_UINT32                              enTafErrCode;
+    AT_RRETURN_CODE_ENUM_UINT32                             enAtReturnCode;
+
+} AT_CHG_TAF_ERR_CODE_TBL_STRU;
+
+
+typedef VOS_UINT32 (*AT_PIH_RSP_PROC_FUNC)(TAF_UINT8                ucIndex,
+                                           SI_PIH_EVENT_INFO_STRU  *pstEvent,
+                                           VOS_UINT16              *pusLength);
+
+typedef struct
+{
+    SI_PIH_EVENT                        ulEventType;
+    AT_PIH_RSP_PROC_FUNC                pAtPihRspProcFunc; //lint !e958
+}AT_PIH_RSP_PROC_FUNC_STRU;
 
 /*****************************************************************************
   8 UNION定义
@@ -300,21 +275,7 @@ VOS_VOID AT_CsUus1InfoEvtIndProc(
 VOS_VOID AT_LogPrintMsgProc(TAF_MNTN_LOG_PRINT_STRU *pstMsg);
 
 
-/*****************************************************************************
- 函 数 名  : AT_CsClccInfoEvtIndProc
- 功能描述  : 收到CALL上报的CLCC消息的处理
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月08日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID At_CsAllCallInfoEvtCnfProc(
     MN_AT_IND_EVT_STRU *pstData,
     TAF_UINT16 usLen
@@ -474,8 +435,6 @@ VOS_UINT32 AT_RcvTafPsCallEvtPdpDeactivatedInd(
     VOS_VOID                           *pEvtInfo
 );
 
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, begin */
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, end */
 
 /*****************************************************************************
  函 数 名  : AT_RcvTafPsCallEvtCallOrigCnf
@@ -1084,10 +1043,6 @@ VOS_UINT32 At_RcvTafPsEvtSetDialModeCnf(
     VOS_VOID                           *pEvtInfo
 );
 
-VOS_UINT32 AT_RcvTafPsEvtGetCgmtuValueCnf(
-    VOS_UINT8                           ucIndex,
-    VOS_VOID                           *pEvtInfo
-);
 
 VOS_UINT32 AT_RcvTafPsEvtCgmtuValueChgInd(
     VOS_UINT8                           ucIndex,
@@ -1107,6 +1062,7 @@ VOS_UINT32 AT_RcvTafPsEvtReportRaInfo(
     VOS_UINT8                           ucIndex,
     VOS_VOID                           *pEvtInfo
 );
+
 #endif
 
 /* Added by l60609 for PS Project,2012-12-21,Begin */
@@ -1128,11 +1084,9 @@ VOS_UINT32 AT_RcvTafPsEvtGetDynamicDnsInfoCnf(
 );
 
 
-/* Deleted by l00198894 for V9R1 STK升级, 2013/07/11 */
 
 TAF_VOID  At_StkCsinIndPrint(TAF_UINT8 ucIndex,SI_STK_EVENT_INFO_STRU *pEvent);
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 #if (FEATURE_ON==FEATURE_LTE)
 VOS_UINT32 atReadLtecsCnfProc(VOS_UINT8   ucIndex,VOS_VOID    *pEvtInfo);
 
@@ -1144,7 +1098,6 @@ VOS_UINT32 AT_RcvTafPsEvtSetPdprofInfoCnf(
 );
 #endif
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 VOS_VOID At_RcvMnCallEccNumIndProc(
     MN_AT_IND_EVT_STRU                 *pstData,
@@ -1181,7 +1134,6 @@ VOS_VOID AT_ReportCCallstateResult(
     TAF_CALL_VOICE_DOMAIN_ENUM_UINT8    enVoiceDomain
 );
 
-/* Modified by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-17, begin */
 VOS_VOID AT_ReportCCallstateHoldList(
     MN_CALL_EVT_HOLD_STRU              *pstHoldEvt,
     AT_CS_CALL_STATE_ENUM_UINT8         enCallState
@@ -1190,7 +1142,6 @@ VOS_VOID AT_ReportCCallstateRetrieveList(
     MN_CALL_EVT_RETRIEVE_STRU          *pstRetrieveEvt,
     AT_CS_CALL_STATE_ENUM_UINT8         enCallState
 );
-/* Modified by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-17, end */
 
 
 VOS_VOID AT_ReportCendResult(
@@ -1212,9 +1163,7 @@ VOS_VOID AT_RcvMmaRssiChangeInd(
     TAF_MMA_RSSI_INFO_IND_STRU         *pstRssiInfoInd
 );
 
-/* Deleted by l00198894 for V9R1 STK升级, 2013/07/11 */
 
-/* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-11, begin */
 
 /* Added by k902809 for Iteration 11, 2015-3-26, begin */
 VOS_VOID AT_PhNetScanReportSuccess(
@@ -1228,11 +1177,9 @@ VOS_VOID AT_PhNetScanReportFailure(
 
 TAF_UINT32 AT_ProcOperModeWhenLteOn(VOS_UINT8 ucIndex);
 
-/* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, begin */
 
 VOS_VOID AT_RcvMnCallChannelInfoInd(VOS_VOID *pEvtInfo);
 
-/* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, end */
 
 /* Deleted by k902809 for Iteration 11, 2015-3-30, begin */
 
@@ -1291,7 +1238,6 @@ VOS_UINT32 AT_RcvMmaQryCampCsgIdInfoCnfProc(
 
 extern TAF_UINT8 At_GetClckClassFromBsCode(TAF_SS_BASIC_SERVICE_STRU *pstBs);
 
-/* Added by l00198894 for V9R1 STK升级, 2013/07/11, begin */
 VOS_VOID AT_RcvTafCallStartDtmfCnf(
     MN_AT_IND_EVT_STRU                 *pstData
 );
@@ -1307,7 +1253,6 @@ VOS_VOID AT_RcvTafCallStartDtmfRslt(
 VOS_VOID AT_RcvTafCallStopDtmfRslt(
     MN_AT_IND_EVT_STRU                 *pstData
 );
-/* Added by l00198894 for V9R1 STK升级, 2013/07/11, end */
 
 /* Added by x65241 for ACC&SPLMN, 2013-10-15 Begin */
 VOS_VOID AT_PhEOPlmnQueryCnfProc(TAF_UINT8 *pData);
@@ -1322,7 +1267,6 @@ VOS_VOID AT_FlushSmsIndication(VOS_VOID);
 VOS_UINT32  AT_IsClientBlock(VOS_VOID);
 
 
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-09, begin */
 VOS_VOID At_RcvTafCallOrigCnf(
     MN_AT_IND_EVT_STRU                 *pstData,
     TAF_UINT16                          usLen
@@ -1332,9 +1276,7 @@ VOS_VOID At_RcvTafCallSupsCmdCnf(
     TAF_UINT16                          usLen
 );
 
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-09, end */
 
-/* Added by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, begin */
 /*****************************************************************************
  函 数 名  : AT_RcvTafPsEvtGetCidSdfInfoCnf
  功能描述  : ID_MSG_TAF_GET_CID_SDF_CNF事件处理函数
@@ -1348,11 +1290,8 @@ VOS_UINT32 AT_RcvTafPsEvtGetCidSdfInfoCnf(
     VOS_UINT8                           ucIndex,
     VOS_VOID                           *pEvtInfo
 );
-/* Added by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, end */
 
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-16, begin */
 VOS_UINT32 AT_ConvertCallError(TAF_CS_CAUSE_ENUM_UINT32 enCause);
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-16, end */
 
 #if ((FEATURE_ON == FEATURE_UE_MODE_CDMA)&&(FEATURE_ON == FEATURE_CHINA_TELECOM_VOICE_ENCRYPT))
 AT_ENCRYPT_VOICE_ERROR_ENUM_UINT32  AT_MapEncVoiceErr(
@@ -1404,7 +1343,6 @@ VOS_VOID AT_RcvTafCallCcwaiSetCnf(
 #endif
 
 #if (FEATURE_ON == FEATURE_ECALL)
-/* Added by j00174725 for V3R3C60_eCall项目, 2014-3-29, begin */
 VOS_UINT32 At_ProcVcReportEcallStateEvent(
     VOS_UINT8                           ucIndex,
     APP_VC_EVENT_INFO_STRU             *pstVcEvtInfo
@@ -1414,14 +1352,10 @@ VOS_UINT32 At_ProcVcSetEcallCfgEvent(
     VOS_UINT8                           ucIndex,
     APP_VC_EVENT_INFO_STRU             *pstVcEvtInfo
 );
-/* Added by j00174725 for V3R3C60_eCall项目, 2014-3-29, end */
 
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, begin */
 VOS_UINT32 At_RcvTafCallQryEcallInfoCnf(MN_AT_IND_EVT_STRU *pEvtInfo);
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, end */
 #endif
 
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, begin */
 VOS_VOID At_ChangeEcallTypeToCallType(
     MN_CALL_TYPE_ENUM_U8                enEcallType,
     MN_CALL_TYPE_ENUM_U8               *enCallType
@@ -1442,23 +1376,8 @@ PS_BOOL_ENUM_UINT8 At_CheckReportConfCallType(
 PS_BOOL_ENUM_UINT8 At_CheckUartRingTeCallType(
     MN_CALL_TYPE_ENUM_U8                enCallType
 );
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, end */
 
-/*****************************************************************************
- 函 数 名  : AT_ReportSmMeFull
- 功能描述  : 协议栈短信存储域满事件上报的处理
- 输入参数  : ucIndex - 用户索引
-             enMemStore  - 存储介质类型
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月14日
-    作    者   : xuechao
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReportSmMeFull(
     VOS_UINT8                           ucIndex,
     MN_MSG_MEM_STORE_ENUM_U8            enMemStore
@@ -1497,14 +1416,12 @@ VOS_UINT32 AT_RcvTafPsEvtGetPktCdataInactivityTimeLenCnf(
 
 VOS_VOID AT_ReportSysCfgQryCmdResult(
     TAF_MMA_SYS_CFG_PARA_STRU          *pstSysCfg,
-    VOS_UINT8                           ucIndex,
-    VOS_UINT16                         *pusLength
+    VOS_UINT8                           ucIndex
 );
 
 VOS_VOID AT_ReportSysCfgExQryCmdResult(
     TAF_MMA_SYS_CFG_PARA_STRU          *pstSysCfg,
-    VOS_UINT8                           ucIndex,
-    VOS_UINT16                         *pusLength
+    VOS_UINT8                           ucIndex
 );
 
 VOS_VOID AT_ProcRegStatusInfoInd(
@@ -1533,6 +1450,12 @@ VOS_UINT32 AT_RcvTafPsCallEvtPdpRabidChanged(
 );
 
 
+VOS_UINT32 At_PrintSilentPinInfo(
+    TAF_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
 VOS_UINT32 AT_RcvTafPsCallEvtLimitPdpActInd(
     VOS_UINT8                           ucIndex,
     VOS_VOID                           *pEvtInfo
@@ -1551,7 +1474,6 @@ VOS_VOID AT_ConvertNasMncToBcdType(
     VOS_UINT32                         *pulMnc
 );
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
 VOS_UINT32 AT_RcvTafPsEvtSetMipModeCnf(
     VOS_UINT8                           ucIndex,
     VOS_VOID                           *pEvtInfo
@@ -1562,8 +1484,55 @@ VOS_UINT32 AT_RcvTafPsEvtGetMipModeCnf(
     VOS_VOID                           *pEvtInfo
 );
 
+VOS_UINT32 AT_RcvTafPsEvtSetVzwApneCnf(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+VOS_UINT32 AT_RcvTafPsEvtGetVzwApneCnf(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+VOS_UINT32 AT_RcvTafPsRegStatusInd(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+VOS_UINT32 AT_RcvTafPdpTypeChgPolicyInd(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
+VOS_UINT32 AT_RcvTafPsReportPcoInfoInd(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+
+VOS_UINT32 AT_RcvTafPsEvtSetDataSwitchCnf(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+VOS_UINT32 AT_RcvTafPsEvtGetDataSwitchCnf(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+VOS_UINT32 AT_RcvTafPsEvtSetDataRoamSwitchCnf(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+
+VOS_UINT32 AT_RcvTafPsEvtGetDataRoamSwitchCnf(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+
+VOS_UINT32 AT_RcvTafPsEvtSetApnThrotInfoCnf(
+    VOS_UINT8                           ucIndex,
+    VOS_VOID                           *pEvtInfo
+);
+
+VOS_UINT32 AT_ReportWs46QryCmdResult(
+    TAF_MMA_SYS_CFG_PARA_STRU          *pstSysCfg,
+    VOS_UINT8                           ucIndex
+);
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()
 #else

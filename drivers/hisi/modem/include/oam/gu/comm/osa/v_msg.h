@@ -121,6 +121,11 @@ extern "C" {
 #define VOS_ERRNO_MSG_DRV_READ_MAIL_FAIL                    0x20050065
 #define VOS_ERRNO_MSG_ICC_WRITEMSGFULL                      0x20050066
 #define VOS_ERRNO_MSG_ICC_WRITEHIFIMSGFULL                  0x20050067
+#define VOS_ERRNO_MSG_EICC_DATALENISNULL                    0x20050068
+#define VOS_ERRNO_MSG_EICC_READDATAFAIL                     0x20050069
+#define VOS_ERRNO_MSG_EICC_PIDTERROR                        0x20050070
+#define VOS_ERRNO_MSG_EICC_WRITEMSGFULL                     0x20050071
+#define VOS_ERRNO_MSG_EICC_WRITEMSGERROR                    0x20040072
 
 /* The message block (packege) head for each message package    */
 typedef struct tagMsgBlockHead_S

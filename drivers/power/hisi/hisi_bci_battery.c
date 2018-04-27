@@ -59,6 +59,9 @@
 #ifdef  CONFIG_HUAWEI_USB_SHORT_CIRCUIT_PROTECT
 #include <huawei_platform/power/usb_short_circuit_protect.h>
 #endif
+#ifdef CONFIG_WIRELESS_CHARGER
+#include <huawei_platform/power/wireless_charger.h>
+#endif
 
 #ifdef CONFIG_HUAWEI_PLATFORM
 #include <huawei_platform/log/hw_log.h>
@@ -116,6 +119,11 @@ struct dsm_client *get_battery_dclient(void)
 {
 	return battery_dclient;
 }
+
+struct dsm_client *get_chargemonitor_dclient(void)
+{
+	return charge_monitor_dclient;
+}
 #endif
 struct hisi_bci_device_info {
 	int bat_voltage;
@@ -129,6 +137,7 @@ struct hisi_bci_device_info {
 	int bat_design_fcc;
 	int bat_rm;
 	int bat_fcc;
+	int bci_soc_at_term;
 	int bat_current;
 	unsigned int bat_err;
 	int charge_status;
@@ -177,6 +186,7 @@ static enum power_supply_property hisi_bci_battery_props[] = {
 	POWER_SUPPLY_PROP_ONLINE,
 	POWER_SUPPLY_PROP_TECHNOLOGY,
 	POWER_SUPPLY_PROP_CYCLE_COUNT,
+	POWER_SUPPLY_PROP_LIMIT_FCC,
 	POWER_SUPPLY_PROP_VOLTAGE_NOW,
 	POWER_SUPPLY_PROP_CURRENT_NOW,
 	POWER_SUPPLY_PROP_CAPACITY,
@@ -325,6 +335,7 @@ static void hisi_reset_capacity_fifo(int curr_capacity)
 	}
 }
 
+#ifdef CONFIG_DIRECT_CHARGER
 /* enter scp (example : 87% to 87.5%) */
 static void hisi_reset_capacity_dec_fifo(void)
 {
@@ -345,6 +356,7 @@ static void hisi_reset_capacity_dec_fifo(void)
 	capacity_dec_init_value = curr_capacity;
 	capacity_dec_cnt = 0;
 }
+#endif
 
 void bci_set_work_interval(int capacity, struct hisi_bci_device_info *di)
 {
@@ -382,7 +394,10 @@ static int capacity_changed(struct hisi_bci_device_info *di)
 	    (strstr(saved_command_line, "androidboot.swtype=factory") && (COUL_BQ27510 == hisi_coulometer_type()))) {
 		curr_capacity = calc_capacity_from_voltage();
 	} else {
-		curr_capacity = hisi_battery_capacity();
+		curr_capacity = DIV_ROUND_CLOSEST(hisi_battery_capacity()*100,di->bci_soc_at_term);
+		if (curr_capacity > CAPACITY_FULL ) {
+			curr_capacity = CAPACITY_FULL;
+		}
 	}
 	if ((!di->bat_exist) && strstr(saved_command_line, "androidboot.swtype=factory")) {
 		/* when in facotry mode and battery is not exist ,
@@ -546,6 +561,7 @@ static int get_capacity_decimal(struct hisi_bci_device_info *di)
 	return rep_capacity;
 }
 
+#ifdef CONFIG_DIRECT_CHARGER
 static int get_capacity_dec(struct hisi_bci_device_info *di)
 {
 	if( NULL == di) {
@@ -556,6 +572,7 @@ static int get_capacity_dec(struct hisi_bci_device_info *di)
 		return di->capacity_dec;
 	}
 }
+#endif
 
 static void capacity_dec_timer_start(struct hisi_bci_device_info *di)
 {
@@ -595,7 +612,43 @@ static enum hrtimer_restart capacity_dec_timer_func(struct hrtimer *timer)
 
 	return HRTIMER_NORESTART;
 }
+static void update_charging_status(struct hisi_bci_device_info *di, unsigned long event)
+{
+	if ((di->usb_online || di->ac_online) && di->capacity == CAPACITY_FULL)
+		di->charge_status = POWER_SUPPLY_STATUS_FULL;
+	/*in case charger can not get the report of charger removed, so
+	 * update the status of charger.*/
+#ifdef CONFIG_DIRECT_CHARGER
+	if (0 == get_direct_charge_flag()) {
+#endif
 
+#ifdef CONFIG_TCPC_CLASS
+		if (!pd_dpm_get_pd_finish_flag()) {
+#endif
+#ifdef CONFIG_WIRELESS_CHARGER
+			if (WIRELESS_CHANNEL_OFF == wireless_charge_get_wireless_channel_state()) {
+#endif
+				/*if (hisi_get_charger_type() == CHARGER_TYPE_NONE) {
+					di->usb_online = 0;
+					di->ac_online = 0;
+					di->charge_status = POWER_SUPPLY_STATUS_DISCHARGING;
+					di->power_supply_status = POWER_SUPPLY_HEALTH_UNKNOWN;
+					di->charge_full_count = 0;
+				}*/
+#ifdef CONFIG_WIRELESS_CHARGER
+			}
+#endif
+#ifdef CONFIG_TCPC_CLASS
+		}
+#endif
+#ifdef CONFIG_DIRECT_CHARGER
+	}
+#endif
+	if (event == VCHRG_CHARGE_DONE_EVENT)
+		di->chargedone_stat = 1;
+	else
+		di->chargedone_stat = 0;
+}
 static int hisi_charger_event(struct notifier_block *nb, unsigned long event,
 			      void *_data)
 {
@@ -677,35 +730,8 @@ static int hisi_charger_event(struct notifier_block *nb, unsigned long event,
 		break;/*lint !e456*/
 	}
 
-	if ((di->usb_online || di->ac_online) && di->capacity == CAPACITY_FULL)
-		di->charge_status = POWER_SUPPLY_STATUS_FULL;
-	/*in case charger can not get the report of charger removed, so
-	 * update the status of charger.*/
-#ifdef CONFIG_DIRECT_CHARGER
-	if (0 == get_direct_charge_flag()) {
-#endif
+	update_charging_status(di, event);
 
-#ifdef CONFIG_TCPC_CLASS
-		if (!pd_dpm_get_pd_finish_flag()) {
-#endif
-			if (hisi_get_charger_type() == CHARGER_TYPE_NONE) {
-				di->usb_online = 0;
-				di->ac_online = 0;
-				di->charge_status = POWER_SUPPLY_STATUS_DISCHARGING;
-				di->power_supply_status = POWER_SUPPLY_HEALTH_UNKNOWN;
-				di->charge_full_count = 0;
-			}
-#ifdef CONFIG_TCPC_CLASS
-		}
-#endif
-
-#ifdef CONFIG_DIRECT_CHARGER
-	}
-#endif
-	if (event == VCHRG_CHARGE_DONE_EVENT)
-		di->chargedone_stat = 1;
-	else
-		di->chargedone_stat = 0;
 	if (VCHRG_START_CHARGING_EVENT != event)
 		hwlog_info("received event = %lx, charge_status = %d\n", event, di->charge_status);
 	#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 13, 0))
@@ -1397,10 +1423,16 @@ static int hisi_bci_battery_get_fcp_status(struct hisi_bci_device_info *di)
 			intval = 1;
 #endif
 #ifdef CONFIG_TCPC_CLASS
-		else if (true == pd_dpm_get_high_power_charging_status() && di->ac_online)
+		else if (true == pd_dpm_get_optional_max_power_status() && di->ac_online)
 		{
 			intval = 1;
-			hwlog_info("pd_dpm_get_high_power_charging_status intval 1 [%s]\n", __func__);
+			hwlog_info("pd_dpm_get_optional_max_power_status intval 1 [%s]\n", __func__);
+		}
+#endif
+#ifdef CONFIG_WIRELESS_CHARGER
+		else if (wireless_charge_get_fast_charge_flag() && di->ac_online) {
+		intval = 1;
+		hwlog_info("%s wireless fast charging\n", __func__);
 		}
 #endif
 		else
@@ -1408,7 +1440,6 @@ static int hisi_bci_battery_get_fcp_status(struct hisi_bci_device_info *di)
 			intval = 0;
 			hwlog_info("intval 0 [%s]\n", __func__);
 		}
-
 		return intval;
 }
 
@@ -1429,7 +1460,9 @@ static int hisi_bci_battery_get_property(struct power_supply *psy,
 					 union power_supply_propval *val)
 {
     struct hisi_bci_device_info *di = g_hisi_bci_dev;
+#ifdef CONFIG_DIRECT_CHARGER
     static int scp_status = 0;
+#endif
 
 	if( NULL == di )
 	{
@@ -1497,6 +1530,9 @@ static int hisi_bci_battery_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CYCLE_COUNT:
 		val->intval = hisi_battery_cycle_count();
 		break;
+	case POWER_SUPPLY_PROP_LIMIT_FCC:
+		val->intval = hisi_battery_get_limit_fcc();
+		break;
 	case POWER_SUPPLY_PROP_FCP_STATUS:
 		val->intval = 0;
 		#if (defined (CONFIG_HUAWEI_CHARGER) || defined (CONFIG_HISI_CHARGER_ARCH))
@@ -1522,7 +1558,8 @@ static int hisi_bci_battery_get_property(struct power_supply *psy,
 #endif
 		break;
 	case POWER_SUPPLY_PROP_CHARGE_COUNTER:
-		val->intval = abs(hisi_battery_cc());
+		val->intval = hisi_battery_cc();
+		val->intval = abs(val->intval);
 		break;
 	case POWER_SUPPLY_PROP_CAPACITY_DEC:
 		val->intval = (di->capacity * BASE_DECIMAL);
@@ -1608,14 +1645,16 @@ static ssize_t hisi_bci_get_capacity_dec_start_event(struct device *dev,
 						struct device_attribute *attr,
 						char *buf)
 {
-	return sprintf(buf, "%d\n", capacity_dec_start_event_flag);
+	return sprintf(buf, "%d\n", capacity_dec_start_event_flag);/*lint !e421*/
 }
 
 static ssize_t hisi_bci_set_capacity_dec_start_event(struct device *dev,
 					 struct device_attribute *attr,
 					 const char *buf, size_t count)
 {
+#ifdef CONFIG_DIRECT_CHARGER
 	long val = 0;
+#endif
 	struct hisi_bci_device_info *di = g_hisi_bci_dev;
 
 	if (NULL == di) {
@@ -1736,6 +1775,13 @@ static int hisi_bci_parse_dts(struct device_node *np, struct hisi_bci_device_inf
 		di->bat_design_fcc = hisi_battery_fcc_design();
 		hwlog_err("error:get battery_design_fcc value failed, used default value from batt_parm!\n");
 	}
+
+	if (of_property_read_u32(np, "bci_soc_at_term", (u32 *)&di->bci_soc_at_term)) {
+		di->bci_soc_at_term = 100;
+		hwlog_err("error:get bci_soc_at_term value failed, no early term in bci !\n");
+	}
+	hwlog_info("bci_soc_at_term =%d",di->bci_soc_at_term);
+
 	if (of_property_read_u32(np, "battery_is_removable", (u32 *)&removable_batt_flag)) {
 		removable_batt_flag = 0;
 		hwlog_err("error:get removable_batt_flag value failed!\n");

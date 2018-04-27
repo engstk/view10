@@ -10,7 +10,7 @@ EXTRA_CFLAGS += -Isound/usb/hifi/
 ccflags-y += -I$(srctree)/drivers/hisi/tzdriver
 
 EXTRA_CFLAGS += -DSECOS_RELOAD_HIFI
-
-EXTRA_CFLAGS += -DRDR_CODECDSP
 EXTRA_CFLAGS += -DRDR_SOCHIFI
+EXTRA_CFLAGS += -DRDR_CODECDSP
+
 ccflags-y += -Idrivers/devkit/audiokit/

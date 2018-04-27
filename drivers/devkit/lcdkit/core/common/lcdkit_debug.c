@@ -2,6 +2,10 @@
 #include "lcdkit_dbg.h"
 #include "lcdkit_parse.h"
 
+#define LCDKIT_READ_REG_WAIT_RESPONSE_TIME 10
+#define INT_COUNT 4
+#define REG_BIT_COUNT 8
+
 struct lcdkit_debug lcdkit_dbg;
 int lcdkit_msg_level = 7;
 atomic_t mipi_path_status = ATOMIC_INIT(1);
@@ -634,6 +638,22 @@ static ssize_t lcdkit_dbg_read(struct file* file,  char __user* buff, size_t cou
    buf_len -= len;
    cur += len;
 
+   len = snprintf(cur, buf_len, "\tRead reg value more than one, please use Gen to write offset first then\n");
+   buf_len -= len;
+   cur += len;
+
+   len = snprintf(cur, buf_len, "\tthe other byte like following to read 0xB8\n");
+   buf_len -= len;
+   cur += len;
+
+   len = snprintf(cur, buf_len, "\teg. echo \"Gen_read_1A_7P(0xB8)_0\" > reg_dbg_mipi\n");
+   buf_len -= len;
+   cur += len;
+
+   len = snprintf(cur, buf_len, "\tthen cat reg_dbg_mipi.\n");
+   buf_len -= len;
+   cur += len;
+
     ret_len = sizeof(lcdkit_debug_buf) - buf_len;
 
    //error happened!
@@ -981,7 +1001,7 @@ static const struct file_operations lcdkit_debug_fops =
 /* get reg, param and delay */
 /* return: 0 - success, negative - fail */
 static int lcdkit_dbg_mipi_get_params(char *buf, int param_num,
-                                int *reg, char *param_buf, int *delay_ms)
+                                int *reg, char *param_buf, int *delay_ms, int cmd_type)
 {
    char *cur = buf;
    char *temp = NULL;
@@ -1005,46 +1025,47 @@ static int lcdkit_dbg_mipi_get_params(char *buf, int param_num,
    }
    else
    {
-      /* when param_num != 0, get ',' position */
-      if (param_num != 0)
+
+      if ((param_num != 0) && (LCDKIT_OPER_WRITE == cmd_type))
       {
+        /* when param_num != 0, get ',' position */
          temp = strchr(cur, ',');
          if (NULL == temp)
          {
             goto err_handle;
          }
          cur = temp;
-      }
-   }
 
-   /* loop to get param */
-   for (i = 0; i < param_num; i++)
-   {
-      /* get a param */
-      cnt = sscanf(cur, ",%x", &param);
-      if (cnt != 1)
-      {
-         goto err_handle;
-      }
-      else
-      {
-         /* save param to param_buf */
-         *write_pos = param;
-         write_pos++;
-
-         /* if current is not the last param */
-         if (i != param_num - 1)
-         {
-            cur++;  // ignore ',' which already handled
-            temp = strchr(cur, ',');
-            if (NULL == temp)
+        /* loop to get param */
+        for (i = 0; i < param_num; i++)
+        {
+            /* get a param */
+            cnt = sscanf(cur, ",%x", &param);
+            if (cnt != 1)
             {
-               goto err_handle;
+                goto err_handle;
             }
-            cur = temp;  // move to next param
-         }
-      }
-   }
+            else
+            {
+                /* save param to param_buf */
+                *write_pos = param;
+                write_pos++;
+
+                /* if current is not the last param */
+                if (i != param_num - 1)
+                {
+                    cur++;  // ignore ',' which already handled
+                    temp = strchr(cur, ',');
+                    if (NULL == temp)
+                    {
+                        goto err_handle;
+                    }
+                    cur = temp;  // move to next param
+                }
+            }
+        }
+    }
+}
 
    /* get delay */
    temp = strchr(cur, ')');
@@ -1103,6 +1124,48 @@ static int lcdkit_is_mipi_input_legal(int op_type,int ic_reg,
    return ret;
 }
 
+void lcdkit_dump_reg_buf(const u32* buf, int cnt)
+{
+    if (NULL == buf){
+        LCDKIT_ERR("input illegal.\n");
+        return;
+    }
+    int i = 0;
+    for (i = 0; i < cnt; i++) {
+        switch (i % INT_COUNT) {
+        case 0:
+            if (i == cnt - 1) {
+                LCDKIT_DEBUG( "0x%02x", buf[i / INT_COUNT] & 0xFF);
+            } else {
+                LCDKIT_DEBUG( "0x%02x,", buf[i / INT_COUNT] & 0xFF);
+            }
+            break;
+        case 1:
+            if (i == cnt - 1) {
+                LCDKIT_DEBUG( "0x%02x", (buf[i / INT_COUNT] >> REG_BIT_COUNT) & 0xFF);
+            } else {
+                LCDKIT_DEBUG( "0x%02x,", (buf[i / INT_COUNT] >> REG_BIT_COUNT) & 0xFF);
+            }
+            break;
+        case 2:
+            if (i == cnt - 1) {
+                LCDKIT_DEBUG( "0x%02x", (buf[i / INT_COUNT] >> (2 * REG_BIT_COUNT)) & 0xFF);
+            } else {
+                LCDKIT_DEBUG( "0x%02x,", (buf[i / INT_COUNT] >> (2 * REG_BIT_COUNT)) & 0xFF);
+            }
+            break;
+        case 3:
+            if (i == cnt - 1) {
+                LCDKIT_DEBUG( "0x%02x", (buf[i / INT_COUNT] >> (3 * REG_BIT_COUNT)) & 0xFF);
+            } else {
+                LCDKIT_DEBUG( "0x%02x,", (buf[i / INT_COUNT] >> (3 * REG_BIT_COUNT)) & 0xFF);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
 
 /**********************************************************************************
 *function:process read and write commands  for lcd reg debug
@@ -1118,10 +1181,12 @@ static int lcdkit_is_mipi_input_legal(int op_type,int ic_reg,
 int lcdkit_mipi_prcess_ic_reg(int op_type,int reg, int cmd_type,
             int param_num, char *param_buf,int *read_value, int delay_ms)
 {
-   uint32_t regvalue = 0;
+   uint32_t regvalue[LCDKIT_MAX_PARAM_BUF] = {0};
+   int i = 0;
    void *ctrl;
    struct lcdkit_dsi_cmd_desc cmds_desc;
    static struct lcdkit_dsi_panel_cmds reg_cmds; // dsi cmd struct
+   struct lcdkit_dsi_cmd_desc lcd_lreg_cmd;
 
    /* check if input legal */
    if (lcdkit_is_mipi_input_legal(op_type, reg,
@@ -1264,6 +1329,16 @@ int lcdkit_mipi_prcess_ic_reg(int op_type,int reg, int cmd_type,
     reg_cmds.link_state = LCDKIT_DSI_LP_MODE;
     reg_cmds.cmds = &cmds_desc;
 
+/*Cmd package for Gen read long reg */
+    lcd_lreg_cmd.dtype = DTYPE_GEN_READ1;
+    lcd_lreg_cmd.last = 0;
+    lcd_lreg_cmd.vc = 0;
+    lcd_lreg_cmd.ack = 0;
+    lcd_lreg_cmd.wait = LCDKIT_READ_REG_WAIT_RESPONSE_TIME;
+    lcd_lreg_cmd.waittype = LCDKIT_WAIT_TYPE_US;
+    lcd_lreg_cmd.dlen = sizeof(reg);
+    lcd_lreg_cmd.payload = &reg;
+
    switch(op_type)
    {
       case LCDKIT_OPER_READ:
@@ -1272,12 +1347,16 @@ int lcdkit_mipi_prcess_ic_reg(int op_type,int reg, int cmd_type,
          cmds_desc.wait = 5;//5 ms
             reg_cmds.flags = LCDKIT_CMD_REQ_RX | LCDKIT_CMD_REQ_COMMIT;
 
-            lcdkit_dsi_rx(ctrl, &regvalue, 1, &reg_cmds);
-
-            LCDKIT_INFO("read value is 0x%02x\n", regvalue);
-
-            *read_value = regvalue;
-
+            if(DTYPE_DCS_READ == cmd_type){
+                lcdkit_dsi_rx(ctrl, regvalue, 1, &reg_cmds);
+                param_num++;
+            } else {
+                lcdkit_lread_reg(ctrl, regvalue, &lcd_lreg_cmd, param_num - 1);
+            }
+            for (i = 0; i < param_num - 1; i++){
+                read_value[i] = regvalue[i];
+            }
+            lcdkit_dump_reg_buf(read_value, param_num);
          break;
 
       case LCDKIT_OPER_WRITE:
@@ -1303,7 +1382,9 @@ static ssize_t lcdkit_mipi_reg_read(struct file *file,
    void *ctrl = NULL;
    int ret = 0;
    int ret_len = 0;
-   char lcd_debug_buf[256];
+   char lcd_debug_buf[LCDKIT_MAX_PARAM_BUF] = {0};
+   char tmp[LCDKIT_MAX_PARAM_BUF] = {0};
+   int i = 0;
 
    if (*ppos)
       return 0;
@@ -1333,17 +1414,53 @@ static ssize_t lcdkit_mipi_reg_read(struct file *file,
         }
         else
         {
-            ret_len = snprintf(lcd_debug_buf, sizeof(lcd_debug_buf),
-                            "0x%02x = 0x%02x\n", lcdkit_dbg.lcdkit_ic_mipi_reg,
-                            lcdkit_dbg.lcdkit_ic_mipi_value);
-
+            if (0 == lcdkit_dbg.lcdkit_g_param_num) {
+                lcdkit_dbg.lcdkit_g_param_num = 1;  /*for Dcs_read*/
+            }
+            for (i = 0; i < lcdkit_dbg.lcdkit_g_param_num; i++) {
+                switch (i % INT_COUNT) {
+                case 0:
+                    if (i == lcdkit_dbg.lcdkit_g_param_num - 1) {
+                        snprintf( tmp, sizeof(tmp), "0x%02x", lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] & 0xFF);
+                    } else {
+                        snprintf( tmp, sizeof(tmp), "0x%02x,", lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] & 0xFF);
+                    }
+                    break;
+                case 1:
+                    if (i == lcdkit_dbg.lcdkit_g_param_num - 1) {
+                        snprintf( tmp, sizeof(tmp), "0x%02x", (lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] >> REG_BIT_COUNT) & 0xFF);
+                    } else {
+                        snprintf( tmp, sizeof(tmp), "0x%02x,", (lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] >> REG_BIT_COUNT) & 0xFF);
+                    }
+                    break;
+                case 2:
+                    if (i == lcdkit_dbg.lcdkit_g_param_num - 1) {
+                        snprintf( tmp, sizeof(tmp), "0x%02x", (lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] >> (2 * REG_BIT_COUNT)) & 0xFF);
+                    } else {
+                        snprintf( tmp, sizeof(tmp), "0x%02x,", (lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] >> (2 * REG_BIT_COUNT)) & 0xFF);
+                    }
+                    break;
+                case 3:
+                    if (i == lcdkit_dbg.lcdkit_g_param_num - 1) {
+                        snprintf( tmp, sizeof(tmp), "0x%02x", (lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] >> (3 * REG_BIT_COUNT)) & 0xFF);
+                    } else {
+                        snprintf( tmp, sizeof(tmp), "0x%02x,", (lcdkit_dbg.lcdkit_ic_mipi_value[i / INT_COUNT] >> (3 * REG_BIT_COUNT)) & 0xFF);
+                    }
+                    break;
+                default:
+                    break;
+                }
+                strncat(lcd_debug_buf, tmp, strlen(tmp));
+            }
+            ret_len = snprintf(tmp, sizeof(tmp),
+                            "0x%02x = %s\n", lcdkit_dbg.lcdkit_ic_mipi_reg, lcd_debug_buf);
             lcdkit_release(ctrl);
         }
 
    }
 
    /* copy to user */
-   if (copy_to_user(buff, lcd_debug_buf, ret_len))
+   if (copy_to_user(buff, tmp, ret_len))
       return -EFAULT;
 
    *ppos += ret_len;   // increase offset
@@ -1461,7 +1578,7 @@ static ssize_t lcdkit_mipi_reg_write(struct file *file,
 
    /* get reg, param and delay */
    /* input format like: 1a_1p(0x51,0x00)_0 or 1a_0p(0x11)_0x78 */
-   ret = lcdkit_dbg_mipi_get_params(cur, param_num, &reg, lcd_param_buf, &delay_ms);
+   ret = lcdkit_dbg_mipi_get_params(cur, param_num, &reg, lcd_param_buf, &delay_ms, op_type);
    if (ret)
    {
       LCDKIT_ERR("lcd_dbg_mipi_get_reg_param_delay fail! ret = %d\n", ret);
@@ -1474,13 +1591,14 @@ static ssize_t lcdkit_mipi_reg_write(struct file *file,
       /* read ic */
       case LCDKIT_OPER_READ:
       {
+         memset(lcdkit_dbg.lcdkit_ic_mipi_value, 0, LCDKIT_MAX_PARAM_BUF);
          ret = lcdkit_mipi_prcess_ic_reg(LCDKIT_OPER_READ, reg, cmd_type,
-                param_num, lcd_param_buf, &lcdkit_dbg.lcdkit_ic_mipi_value, 0);
+                param_num, lcd_param_buf, lcdkit_dbg.lcdkit_ic_mipi_value, 0);
 
          if (0 == ret)
          {
             lcdkit_dbg.lcdkit_ic_mipi_reg = reg;    // save read reg to global
-            lcdkit_dbg.lcdkit_ic_mipi_value &= 0xff; //mask hight byte; only need 1 byte
+            lcdkit_dbg.lcdkit_g_param_num = param_num;
          }
          else
          {

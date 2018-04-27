@@ -35,6 +35,7 @@
 
 static char s_boot_lock_info[32] = {0};
 static int s_is_bfmr_enabled = 0;
+static int s_is_bfr_enabled = 0;
 static DEFINE_SEMAPHORE(s_bfmr_enable_ctl_sem);
 
 
@@ -80,6 +81,26 @@ static int __init early_parse_bfmr_enable_flag(char *p)
 }
 early_param(BFMR_ENABLE_FIELD_NAME, early_parse_bfmr_enable_flag);
 
+static int __init early_parse_bfr_enable_flag(char *p)
+{
+    if (NULL != p)
+    {
+        if (0 == strncmp(p, "1", strlen("1")))
+        {
+            s_is_bfr_enabled = 1;
+        }
+        else
+        {
+            s_is_bfr_enabled = 0;
+        }
+
+        BFMR_PRINT_KEY_INFO(BFR_ENABLE_FIELD_NAME "=%s\n", p);
+    }
+
+    return 0;
+}
+early_param(BFR_ENABLE_FIELD_NAME, early_parse_bfr_enable_flag);
+
 
 bool bfmr_has_been_enabled(void)
 {
@@ -89,6 +110,14 @@ bool bfmr_has_been_enabled(void)
     up(&s_bfmr_enable_ctl_sem);
     return (0 == bfmr_enable_flag) ? (false) : (true);
 }
+
+
+bool bfr_has_been_enabled(void)
+{
+    return (0 == s_is_bfr_enabled) ? (false) : (true);
+}
+
+
 void bfmr_enable_ctl(int enable_flag)
 {
     down(&s_bfmr_enable_ctl_sem);

@@ -145,16 +145,24 @@ typedef struct
 }NV_DEBUG_CFG_STRU;
 
 /*NV ID = 0xd157 DVS使能控制及hpm读值配置*/
+//[NV elf编译项目] 结构定义重复 xuziheng/306651 20171209
+#ifndef NV_DEFINE
 typedef struct {
     u32 dvs_en;
     u32 hpm_delay;
 }ST_DVS_CONFIG_STRU;
+#endif
 
 typedef struct
 {
     u32 enable;         /*mbb ap侧noc err probe解析使能标志, 0, 去使能;  1, 使能*/
     u32 reset_enable;   /*mbb ap侧复位使能标志, 0, 去使能; 1, 使能*/
 }DRV_NOC_AP_CFG_STRU;
+typedef struct
+{
+    u32 enable;        /*mbb ap侧dmss解析使能标志, 0, 去使能;  1, 使能*/
+    u32 reset_enable;  /*mbb ap侧dmss复位使能标志, 0, 不使能;  1, 使能*/
+}DRV_DMSS_CFG_STRU;
 
 #ifdef __cplusplus
 #if __cplusplus

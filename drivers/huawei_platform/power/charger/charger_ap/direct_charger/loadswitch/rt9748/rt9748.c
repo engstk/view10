@@ -328,6 +328,7 @@ static int rt9748_reg_init(void)
 			ret |= rt9748_write_byte(BQ25870_ADC_CTRL,BQ25870_ADC_CTRL_INIT);
 			ret |= rt9748_write_byte(BQ25870_SAMPLE_EN,BQ25870_SAMPLE_EN_INIT);
 			ret |= rt9748_write_mask(BQ25870_PROT_DLY_OCP,BQ25870_REG_INIT_MASK,BQ25870_REG_INIT_SHIFT,BQ25870_PROT_DLY_OCP_INIT);
+			ret |= rt9748_write_mask(BQ25870_PROT_DLY_OCP,BQ25870_RES_OCP_INIT_MASK,BQ25870_RES_OCP_INIT_SHIFT,BQ25870_PROT_RES_OCP_INIT);
 			if (ret)
 			{
 				hwlog_err("%s: ba25870_reg_init fail\n", __func__);
@@ -461,9 +462,9 @@ static int rt9748_config_ioc_ocp_threshold_ma(int ocp_threshold)
 			{
 				ocp_threshold = RT9748_IOC_OCP_MIN_0_MA;
 			}
-			if (RT9748_IOC_OCP_MAX_6500_MA < ocp_threshold)
+			if (RT9748_IOC_OCP_MAX_7500_MA < ocp_threshold)
 			{
-				ocp_threshold = RT9748_IOC_OCP_MAX_6500_MA;
+				ocp_threshold = RT9748_IOC_OCP_MAX_7500_MA;
 			}
 			value = (u8) ((ocp_threshold - RT9748_IOC_OCP_OFFSET_0_MA) / RT9748_IOC_OCP_STEP );
 			hwlog_info("rt9748 ocp_threshold = %d, value = 0x%x\n", ocp_threshold, value);
@@ -497,9 +498,9 @@ static int rt9748_config_ioc_ocp_threshold_ma(int ocp_threshold)
 			{
 				ocp_threshold = FAN54161_IOC_OCP_MIN_0_MA;
 			}
-			if (FAN54161_IOC_OCP_MAX_6500_MA < ocp_threshold)
+			if (FAN54161_IOC_OCP_MAX_7500_MA < ocp_threshold)
 			{
-				ocp_threshold = FAN54161_IOC_OCP_MAX_6500_MA;
+				ocp_threshold = FAN54161_IOC_OCP_MAX_7500_MA;
 			}
 			value = (u8) ((ocp_threshold - FAN54161_IOC_OCP_OFFSET_0_MA) / FAN54161_IOC_OCP_STEP );
 			hwlog_info("fan54161 ocp_threshold = %d, value = 0x%x\n", ocp_threshold, value);
@@ -515,9 +516,9 @@ static int rt9748_config_ioc_ocp_threshold_ma(int ocp_threshold)
 			{
 				ocp_threshold = PCA9498UK_IOC_OCP_MIN_0_MA;
 			}
-			if (PCA9498UK_IOC_OCP_MAX_6500_MA < ocp_threshold)
+			if (PCA9498UK_IOC_OCP_MAX_7500_MA < ocp_threshold)
 			{
-				ocp_threshold = PCA9498UK_IOC_OCP_MAX_6500_MA;
+				ocp_threshold = PCA9498UK_IOC_OCP_MAX_7500_MA;
 			}
 			value = (u8) ((ocp_threshold - PCA9498UK_IOC_OCP_OFFSET_0_MA) / PCA9498UK_IOC_OCP_STEP );
 			hwlog_info("rt9748 ocp_threshold = %d, value = 0x%x\n", ocp_threshold, value);
@@ -1535,7 +1536,7 @@ static int rt9748_charge_init(void )
 	}
 	hwlog_info("%s:loadswitch device id is %d\n",__func__,di->device_id);
 	ret |= rt9748_reg_init( );
-	ret |= rt9748_config_ioc_ocp_threshold_ma(7000);
+	ret |= rt9748_config_ioc_ocp_threshold_ma(7500);
 	ret |= rt9748_config_vbus_ovp_threshold_mv(5800);
 	ret |= rt9748_config_vout_reg_threshold_mv(4740);
 	ret |= rt9748_config_vdrop_alm_reg_threshold_mv(1000);

@@ -111,8 +111,8 @@ struct device_node {
 	struct device_node *parent;
 	struct device_node *child;
 	struct device_node *sibling;
-	struct device_node *next;      /* next device of same type */
-	struct device_node *allnext;   /* next in list of all nodes */
+	struct device_node *next;  
+	struct device_node *allnext;
 	void               *data;
 };
 
@@ -130,46 +130,41 @@ static inline struct device_node *of_node_get(struct device_node *node)
 }
 
 #ifdef CONFIG_OF
-struct device_node *dts_find_node_by_name(struct device_node *from, const char *name);
-struct device_node *dts_find_node_by_type(struct device_node *from, const char *type);
-struct device_node *dts_find_compatible_node(struct device_node *from, const char *type, const char *compat);
-struct device_node *dts_find_matching_node_and_match(struct device_node *from,
-	const struct of_device_id *matches,
-	const struct of_device_id **match);
-struct device_node *dts_find_node_by_path(const char *path);
-struct device_node *dts_find_node_by_phandle(phandle handle);
-struct device_node *dts_get_parent(const struct device_node *node);
-struct device_node *dts_get_next_child(const struct device_node *node, struct device_node *prev);
-struct device_node *dts_get_next_available_child(const struct device_node *node, struct device_node *prev);
-struct device_node *dts_get_child_by_name(const struct device_node *node, const char *name);
-struct device_node *dts_find_node_with_property(struct device_node *from, const char *prop_name);
-struct property *dts_find_property(const struct device_node *np, const char *name, int *lenp);
-int dts_property_read_u32_index(const struct device_node *np, const char *propname, u32 index, u32 *out_value);
-int dts_property_read_u8_array(const struct device_node *np, const char *propname, u8 *out_values, size_t sz);
-int dts_property_read_u16_array(const struct device_node *np, const char *propname, u16 *out_values, size_t sz);
-int dts_property_read_u32_array(const struct device_node *np, const char *propname, u32 *out_values, size_t sz);
-int dts_property_read_u64(const struct device_node *np, const char *propname, u64 *out_value);
-int dts_property_read_string(struct device_node *np, const char *propname, const char **out_string);
-int dts_property_read_string_index(struct device_node *np, const char *propname, int index, const char **output);
-int dts_property_match_string(struct device_node *np, const char *propname, const char *string);
-int dts_property_count_strings(struct device_node *np, const char *propname);
-int dts_device_is_compatible(const struct device_node *device, const char *);
-int dts_device_is_available(const struct device_node *device);
-const void *dts_get_property(const struct device_node *node, const char *name, int *lenp);
 int dts_n_addr_cells(struct device_node *np);
-int dts_n_size_cells(struct device_node *np);
-const struct of_device_id *of_match_node(const struct of_device_id *matches, const struct device_node *node);
-int dts_modalias_node(struct device_node *node, char *modalias, int len);
-struct device_node *of_parse_phandle(const struct device_node *np, const char *phandle_name, int index);
-int dts_parse_phandle_with_args(const struct device_node *np,
-	const char *list_name, const char *cells_name, int index,
-	struct of_phandle_args *out_args);
+struct device_node *dts_find_node_by_name(struct device_node *from, const char *name);
+int dts_property_read_u32_index(const struct device_node *np, const char *propname, u32 index, u32 *out_value);
+struct device_node *dts_find_node_by_type(struct device_node *from, const char *type);
+int dts_property_read_u64(const struct device_node *np, const char *propname, u64 *out_value);
+struct device_node *dts_find_compatible_node(struct device_node *from, const char *type, const char *compat);
+struct device_node *dts_find_node_by_path(const char *path);
+struct device_node *dts_get_child_by_name(const struct device_node *node, const char *name);
+struct device_node *dts_find_node_by_phandle(phandle handle);
+struct device_node *dts_find_matching_node_and_match(struct device_node *from,const struct of_device_id *matches,const struct of_device_id **match);
+struct device_node *dts_get_parent(const struct device_node *node);
+int dts_parse_phandle_with_args(const struct device_node *np, const char *list_name, const char *cells_name, int index, struct of_phandle_args *out_args);
+struct device_node *dts_get_next_child(const struct device_node *node, struct device_node *prev);
+int dts_property_read_u32_array(const struct device_node *np, const char *propname, u32 *out_values, size_t sz);
+struct device_node *dts_get_next_available_child(const struct device_node *node, struct device_node *prev);
 int dts_count_phandle_with_args(const struct device_node *np, const char *list_name, const char *cells_name);
+struct property *dts_find_property(const struct device_node *np, const char *name, int *lenp);
+int dts_property_read_u16_array(const struct device_node *np, const char *propname, u16 *out_values, size_t sz);
+struct device_node *dts_find_node_with_property(struct device_node *from, const char *prop_name);
+int dts_property_read_string_index(struct device_node *np, const char *propname, int index, const char **output);
+int dts_property_read_string(struct device_node *np, const char *propname, const char **out_string);
+int dts_property_count_strings(struct device_node *np, const char *propname);
+int dts_device_is_available(const struct device_node *device);
+int dts_device_is_compatible(const struct device_node *device, const char *);
+int dts_property_read_u8_array(const struct device_node *np, const char *propname, u8 *out_values, size_t sz);
+
+const void *dts_get_property(const struct device_node *node, const char *name, int *lenp);
+int dts_n_size_cells(struct device_node *np);
+const struct of_device_id *dts_match_node(const struct of_device_id *matches, const struct device_node *node);
+int dts_modalias_node(struct device_node *node, char *modalias, int len);
 int dts_machine_is_compatible(const char *compat);
 const __be32 *dts_prop_next_u32(struct property *prop, const __be32 *cur,u32 *pu);
 const char *dts_prop_next_string(struct property *prop, const char *cur);
 struct device_node *dts_parse_phandle(const struct device_node *np, const char *phandle_name, int index);
-const struct of_device_id *dts_match_node(const struct of_device_id *matches, const struct device_node *node);
+int dts_property_match_string(struct device_node *np, const char *propname, const char *string);
 
 #define of_find_node_by_name(from, name)            dts_find_node_by_name(from,  name)
 #define of_find_node_by_type(from, type)            dts_find_node_by_type(from,  type)
@@ -207,71 +202,54 @@ const struct of_device_id *dts_match_node(const struct of_device_id *matches, co
 #define of_parse_phandle_with_args(np, list_name, cells_name,index, out_args) \
 	dts_parse_phandle_with_args(np, list_name, cells_name,index, out_args)
 
-#define for_each_node_by_name(dn, name) \
-	for (dn = of_find_node_by_name(NULL, name); dn; \
-	     dn = of_find_node_by_name(dn, name))
-#define for_each_node_by_type(dn, type) \
-	for (dn = of_find_node_by_type(NULL, type); dn; \
-	     dn = of_find_node_by_type(dn, type))
-#define for_each_compatible_node(dn, type, compatible) \
-	for (dn = of_find_compatible_node(NULL, type, compatible); dn; \
-	     dn = of_find_compatible_node(dn, type, compatible))
-#define for_each_matching_node(dn, matches) \
-	for (dn = of_find_matching_node(NULL, matches); dn; \
-	     dn = of_find_matching_node(dn, matches))
-#define for_each_matching_node_and_match(dn, matches, match) \
-	for (dn = of_find_matching_node_and_match(NULL, matches, match); \
-	     dn; dn = of_find_matching_node_and_match(dn, matches, match))
+#define for_each_matching_node(d_n, matches) \
+	for (d_n = of_find_matching_node(NULL, matches); d_n; \
+	     d_n = of_find_matching_node(d_n, matches))
+
+#define for_each_node_by_type(d_n, type_n) \
+        for (d_n = of_find_node_by_type(NULL, type_n); d_n; \
+             d_n = of_find_node_by_type(d_n, type_n))
+
 #define for_each_child_of_node(parent, child) \
 	for (child = of_get_next_child(parent, NULL); child != NULL; \
 	     child = of_get_next_child(parent, child))
+
+#define for_each_node_by_name(d_n, name_n) \
+        for (d_n = of_find_node_by_name(NULL, name_n); d_n; \
+             d_n = of_find_node_by_name(d_n, name_n))
 
 #define for_each_available_child_of_node(parent, child) \
 	for (child = of_get_next_available_child(parent, NULL); child != NULL; \
 	     child = of_get_next_available_child(parent, child))
 
-#define for_each_node_with_property(dn, prop_name) \
-	for (dn = of_find_node_with_property(NULL, prop_name); dn; \
-		 dn = of_find_node_with_property(dn, prop_name))
-#define for_each_property_of_node(dn, pp) \
-	for (pp = dn->properties; pp != NULL; pp = pp->next)
+#define for_each_property_of_node(d_n, pp) \
+            for (pp = d_n->properties; pp != NULL; pp = pp->next)
+
+#define for_each_compatible_node(d_n, type_n, compatible) \
+        for (d_n = of_find_compatible_node(NULL, type_n, compatible); d_n; \
+             d_n = of_find_compatible_node(d_n, type_n, compatible))
+
+#define for_each_node_with_property(d_n, prop_name) \
+	for (d_n = of_find_node_with_property(NULL, prop_name); d_n; \
+		 d_n = of_find_node_with_property(d_n, prop_name))
+
+#define for_each_matching_node_and_match(d_n, matches, match) \
+	for (d_n = of_find_matching_node_and_match(NULL, matches, match); \
+	     d_n; d_n = of_find_matching_node_and_match(d_n, matches, match))
+        
+#define of_property_for_each_string(np, propname, prop, s)	\
+            for (prop = of_find_property(np, propname, NULL),   \
+                s = of_prop_next_string(prop, NULL);        \
+                s;                      \
+                s = of_prop_next_string(prop, s))
+
 #define of_property_for_each_u32(np, propname, prop, p, u)	\
 	for (prop = of_find_property(np, propname, NULL),	\
 		p = of_prop_next_u32(prop, NULL, &u);		\
 		p;						\
 		p = of_prop_next_u32(prop, p, &u))
-#define of_property_for_each_string(np, propname, prop, s)	\
-	for (prop = of_find_property(np, propname, NULL),	\
-		s = of_prop_next_string(prop, NULL);		\
-		s;						\
-		s = of_prop_next_string(prop, s))
+		
 
-static inline u64 of_read_number(const __be32 *cell, int size)
-{
-	u64 r = 0;
-	while (size--)
-	{
-		r = (r << 32) | be32_to_cpu(*(cell));
-		cell++;
-	}
-	return r;
-}
-
-static inline unsigned long of_read_ulong(const __be32 *cell, int size)
-{
-	return of_read_number(cell, size);
-}
-
-static inline int of_get_child_count(const struct device_node *np)
-{
-	struct device_node *child;
-	int num = 0;
-
-	for_each_child_of_node(np, child)
-		num++;
-
-	return num;
-}
 
 static inline struct device_node *of_find_matching_node(
 	struct device_node *from,
@@ -279,6 +257,33 @@ static inline struct device_node *of_find_matching_node(
 {
 	return of_find_matching_node_and_match(from, matches, NULL);
 }
+    
+    static inline u64 of_read_number(const __be32 *cell, int size)
+    {
+        u64 ret = 0;
+        while (size--)
+        {
+            ret = (ret << 32) | be32_to_cpu(*(cell));
+            cell++;
+        }
+        return ret;
+    }
+    
+    static inline unsigned long of_read_ulong(const __be32 *cell, int size)
+    {
+        return of_read_number(cell, size);
+    }
+    
+    static inline int of_get_child_count(const struct device_node *np)
+    {
+        int no = 0;
+        struct device_node *child;
+        
+        for_each_child_of_node(np, child)
+            no++;
+    
+        return no;
+    }
 
 int of_reg_info_get(struct device_node *np, int index, u64 *start, u64 *size);
 void *of_iomap(struct device_node *np, int index);
@@ -289,6 +294,18 @@ int of_selftest(void);
 static inline void bsp_dts_init(void)
 {
 	bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_OF, "<%s> is stub\n", __FUNCTION__);
+}
+
+static inline int dt_device_is_compatible(const struct device_node *device, const char *name)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return 0;
+}
+
+static inline struct device_node *of_get_parent(const struct device_node *node)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return NULL;
 }
 
 static inline int of_selftest(void)
@@ -302,6 +319,13 @@ static inline int of_reg_info_get(struct device_node *np, int index, u64 *start,
 	bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_OF, "<%s> is stub\n", __FUNCTION__);
 	return 0;
 }
+
+static inline const char* of_node_full_name(struct device_node *np)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return "<no-node>";
+}
+
 static inline void *of_iomap(struct device_node *np, int index)
 {
 	bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_OF, "<%s> is stub\n", __FUNCTION__);
@@ -314,180 +338,177 @@ static inline unsigned int irq_of_parse_and_map(struct device_node *dev, int ind
 	return 0;
 }
 
-static inline const char* of_node_full_name(struct device_node *np)
-{
-	return "<no-node>";
-}
-
-static inline struct device_node *of_find_node_by_name(struct device_node *from,
-	const char *name)
-{
-	return NULL;
-}
-
-static inline struct device_node *of_get_parent(const struct device_node *node)
-{
-	return NULL;
-}
+#define for_each_matching_node(dn, matches) \
+	while (0)
 
 static inline bool of_have_populated_dt(void)
 {
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	return false;
 }
 
 #define for_each_child_of_node(parent, child) \
 	while (0)
 
-#define for_each_matching_node(dn, matches) \
-	while (0)
-
-static inline struct device_node *of_get_child_by_name(
-					const struct device_node *node,
-					const char *name)
-{
-	return NULL;
-}
 
 static inline int of_get_child_count(const struct device_node *np)
 {
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	return 0;
 }
 
-static inline int of_device_is_compatible(const struct device_node *device,
-					  const char *name)
+static inline int dt_strings_count(struct device_node *np,const char *propname)
 {
-	return 0;
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
 }
 
-static inline int of_device_is_available(const struct device_node *device)
+static inline struct device_node *dt_child_by_name_get(const struct device_node *node,const char *name)
 {
-	return 0;
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return NULL;
 }
-
-static inline struct property *of_find_property(const struct device_node *np,
-						const char *name,
-						int *lenp)
+static inline struct device_node *of_find_node_by_name(struct device_node *from, const char *name)
 {
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	return NULL;
 }
 
-static inline struct device_node *of_find_compatible_node(
-						struct device_node *from,
-						const char *type,
-						const char *compat)
+static inline int dt_u32_array_read(const struct device_node *np, const char *propname, u32 *out_values, size_t sz)
 {
-	return NULL;
-}
-
-static inline int of_property_read_u32_index(const struct device_node *np,
-			const char *propname, u32 index, u32 *out_value)
-{
-	return -ENOSYS;
-}
-
-static inline int of_property_read_u8_array(const struct device_node *np,
-			const char *propname, u8 *out_values, size_t sz)
-{
-	return -ENOSYS;
-}
-
-static inline int of_property_read_u16_array(const struct device_node *np,
-			const char *propname, u16 *out_values, size_t sz)
-{
-	return -ENOSYS;
-}
-
-static inline int of_property_read_u32_array(const struct device_node *np,
-					     const char *propname,
-					     u32 *out_values, size_t sz)
-{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	*out_values = 0;
-	return -ENOSYS;
+	return -1;
 }
 
-static inline int of_property_read_string(struct device_node *np,
-					  const char *propname,
-					  const char **out_string)
+static inline struct device_node *dt_compatible_node_find(struct device_node *from,const char *type,const char *compat)
 {
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return NULL;
+}
+
+static inline int dt_u8_array_read(const struct device_node *np, const char *propname, u8 *out_values, size_t sz)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
+}
+
+static inline int dt_device_is_available(const struct device_node *device)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return 0;
+}
+
+ static inline int dt_u32_index_read(const struct device_node *np, const char *propname, u32 index, u32 *out_value)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
+}
+
+static inline int dt_phandle_with_args_count(struct device_node *np,const char *list_name, const char *cells_name)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
+}
+
+static inline int dt_string_read(struct device_node *np,const char *propname, const char **out_string)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	*out_string = NULL;
-	return -ENOSYS;
+	return -1;
 }
 
-static inline int of_property_read_string_index(struct device_node *np,
-						const char *propname, int index,
-						const char **out_string)
+static inline const void *dt_property_get(const struct device_node *node,const char *name,int *lenp)
 {
-	*out_string = NULL;
-	return -ENOSYS;
-}
-
-static inline int of_property_count_strings(struct device_node *np,
-					    const char *propname)
-{
-	return -ENOSYS;
-}
-
-static inline const void *of_get_property(const struct device_node *node,
-				const char *name,
-				int *lenp)
-{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	*lenp = 0;
 	return NULL;
 }
 
-static inline int of_property_read_u64(const struct device_node *np,
-				       const char *propname, u64 *out_value)
+static inline int dt_u16_array_read(const struct device_node *np, const char *propname, u16 *out_values, size_t sz)
 {
-	*out_value = 0;
-	return -ENOSYS;
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
 }
 
-static inline int of_property_match_string(struct device_node *np,
-					   const char *propname,
-					   const char *string)
+static inline int dt_phandle_with_args_parse(struct device_node *np,const char *list_name,const char *cells_name,int index,struct of_phandle_args *out_args)
 {
-	return -ENOSYS;
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
 }
 
-static inline struct device_node *of_parse_phandle(const struct device_node *np,
-						   const char *phandle_name,
-						   int index)
+static inline int dt_string_index_read(struct device_node *np,const char *propname, int index, const char **out_string)
 {
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	*out_string = NULL;
+	return -1;
+}
+
+static inline struct property *dt_property_find(const struct device_node *np,const char *name,int *lenp)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	return NULL;
 }
 
-static inline int of_parse_phandle_with_args(struct device_node *np,
-					     const char *list_name,
-					     const char *cells_name,
-					     int index,
-					     struct of_phandle_args *out_args)
+static inline struct device_node *dt_prop_handle_parse(const struct device_node *np,const char *phandle_name,int index)
 {
-	return -ENOSYS;
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return NULL;
 }
 
-static inline int of_count_phandle_with_args(struct device_node *np,
-					     const char *list_name,
-					     const char *cells_name)
+static inline int dt_u64_read(const struct device_node *np,const char *propname, u64 *out_value)
 {
-	return -ENOSYS;
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	*out_value = 1;
+	return -1;
 }
 
-static inline int of_alias_get_id(struct device_node *np, const char *stem)
+static inline int dt_property_string_match(struct device_node *np,const char *propname,const char *string)
 {
-	return -ENOSYS;
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
 }
 
-static inline int of_machine_is_compatible(const char *compat)
+static inline int dt_machine_is_compatible(const char *compat)
 {
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
 	return 0;
 }
 
-#define of_match_ptr(_ptr)	NULL
-#define of_match_node(_matches, _node)	NULL
-#define of_property_for_each_u32(np, propname, prop, p, u) \
-	while (0)
 #define of_property_for_each_string(np, propname, prop, s) \
 	while (0)
+
+static inline int dt_alias_id_get(struct device_node *np, const char *stem)
+{
+	bsp_trace(BSP_LOG_LEVEL_INFO, BSP_MODU_OF, "dts is close\n");
+	return -1;
+}
+
+#define of_device_is_compatible(np, compt)      dt_device_is_compatible(np, compt)
+#define of_property_read_string_index(np, propname, index, output) dt_string_index_read(np, propname, index, output)
+#define of_property_count_strings(np, propname)                    dt_strings_count(np, propname)
+#define of_device_is_available(np)                  dt_device_is_available(np)
+#define of_find_property(np, name, lenp)            dt_property_find(np, name, lenp)
+#define of_property_read_u32_array(np, propname, out_values, sz)   dt_u32_array_read(np, propname, out_values, sz)
+#define of_property_read_string(np, propname, index, output) dt_string_read(np, propname, index, output)
+#define of_get_property(node, name, lenp)           dt_property_get(node, name, lenp)
+#define of_property_read_u8_array(np, propname, out_values, sz)    dt_u8_array_read(np, propname, out_values, sz)
+#define of_property_read_u16_array(np, propname, out_values, sz)   dt_u16_array_read(np, propname, out_values, sz)
+#define of_property_read_u64(np, propname, out_values)             dt_u64_read(np, propname, out_values)
+#define of_find_compatible_node(from, type, compat) dt_compatible_node_find(from, type, compat)
+#define of_property_read_u32_index(np, propname, index, out_value) dt_u32_index_read(np, propname, index, out_value)
+#define of_property_match_string(np, propname, out_string)         dt_property_string_match(np, propname, out_string)
+#define of_get_child_by_name(node, name)        of_get_child_by_name(node, name)
+#define of_parse_phandle_with_args(np, list_name, cells_name,index, out_args) \
+	dt_prop_handle_parse(np, list_name, cells_name,index, out_args)
+#define of_count_phandle_with_args(np, list_name, cells_name)      dt_phandle_with_args_count(np, list_name, cells_name)
+#define of_property_for_each_u32(np, propname, prop, p, u) \
+	while (0)
+#define of_alias_get_id(np, stem)       dt_alias_id_get(np, stem)
+#define of_match_node(_matches, _node)	NULL
+#define of_machine_is_compatible(compat)            dt_machine_is_compatible(compat)
+#define of_match_ptr(_ptr)	NULL
+
 #endif /* CONFIG_OF */
 
 static inline bool of_property_read_bool(const struct device_node *np,

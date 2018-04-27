@@ -52,6 +52,7 @@
 **************************************************************************** */
 #include <product_config.h>
 #include <mdrv_diag_system.h>
+#include <securec.h>
 #include "diag_system_debug.h"
 #include "diag_port_manager.h"
 #include "dms.h"
@@ -75,35 +76,9 @@ OM_VCOM_DEBUG_INFO                      g_stVComDebugInfo[3];
   4 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  :
- 功能描述  :
- 输入参数  :
- 输出参数  :
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年5月31日
-    作    者   : XXXXXXXX
-    修改内容   : V8R1 OM_Optimize项目新增
 
-*****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : PPM_VComCfgSendData
- 功能描述  : 从VCOM端口发送配置数据
- 输入参数  : pucVirAddr:   数据虚地址
-             pucPhyAddr:   数据实地址
-             ulDataLen: 数据长度
- 输出参数  : 无
- 返 回 值  : CPM_SEND_ERR/CPM_SEND_OK
- 修改历史  :
-   1.日    期  : 2014年5月26日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
 u32 PPM_VComCfgSendData(u8 *pucVirAddr, u8 *pucPhyAddr, u32 ulDataLen)
 {
     g_stVComDebugInfo[OM_LOGIC_CHANNEL_CNF].ulVCOMSendNum++;
@@ -131,18 +106,7 @@ u32 PPM_VComCfgSendData(u8 *pucVirAddr, u8 *pucPhyAddr, u32 ulDataLen)
     return CPM_SEND_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_VComCfgEvtCB
- 功能描述  : 用于VCOM通道打开关闭回调
- 输入参数  : ulChan :通道号
-             ulEvent:   打开或者关闭
- 输出参数  : 无
- 返 回 值  : CPM_SEND_ERR/CPM_SEND_OK
- 修改历史  :
-   1.日    期  : 2014年5月26日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 void PPM_VComEvtCB(u32 ulChan, u32 ulEvent)
 {
     OM_LOGIC_CHANNEL_ENUM_UINT32        enChannel;
@@ -195,19 +159,7 @@ void PPM_VComEvtCB(u32 ulChan, u32 ulEvent)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : GU_OamVComCfgReadData
- 功能描述  : NAS把收到数据调用OM 接口发走
- 输入参数  :  ucDevIndex: 物理端口
-              pData    : 收到数据
-              uslength : 数据长度
- 输出参数  : 无
- 返 回 值  : BSP_ERROR/BSP_OK
- 修改历史  :
-  1.日    期   : 2014年5月25日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 u32 PPM_VComCfgReadData(u32 ulDevIndex, u8 *pData, u32 uslength)
 {
     u32 ret = 0xFFFFFFF;
@@ -244,21 +196,7 @@ u32 PPM_VComCfgReadData(u32 ulDevIndex, u8 *pData, u32 uslength)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_VComIndSendData
- 功能描述  : Vcom口承载的OM IND端口收到数据，调NAS接收
- 输入参数  : pucVirAddr:   数据虚地址
-             pucPhyAddr:   数据实地址
-             ulDataLen:    数据长度
- 输出参数  : 无
- 返 回 值  : BSP_ERROR/BSP_OK
- 调用函数  :
- 被调函数  :
- 修改历史  :
-  1.日    期   : 2014年5月25日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
+
 u32 PPM_VComIndSendData(u8 *pucVirAddr, u8 *pucPhyAddr, u32 ulDataLen)
 {
     u32          ulInSlice;
@@ -310,18 +248,7 @@ OM_VCOM_DEBUG_INFO *PPM_VComGetIndInfo(void)
 }
 
 
-/*****************************************************************************
- 函 数 名  : PPM_VComCfgPortInit
- 功能描述  : 用于 Vcom 口OM CFG通道的初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史  :
-  1.日    期   : 2014年5月25日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 void PPM_VComCfgPortInit(void)
 {
     struct diag_vcom_cb_ops_s ops;
@@ -336,18 +263,7 @@ void PPM_VComCfgPortInit(void)
 }
 
 
-/*****************************************************************************
- 函 数 名  : PPM_VComIndPortInit
- 功能描述  : 用于 Vcom 口OM IND通道的初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史  :
-  1.日    期   : 2014年5月25日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 void PPM_VComIndPortInit(void)
 {
     struct diag_vcom_cb_ops_s ops;
@@ -362,22 +278,10 @@ void PPM_VComIndPortInit(void)
 }
 
 
-/*****************************************************************************
- 函 数 名  : PPM_VComPortInit
- 功能描述  : 用于 Vcom 口各通道的初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史  :
-  1.日    期   : 2014年5月25日
-    作    者   : L00256032
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 void PPM_VComPortInit(void)
 {
-    /* coverity[secure_coding] */
-    (void)memset(&g_stVComDebugInfo[0], 0, 3*sizeof(OM_VCOM_DEBUG_INFO));
+    (void)memset_s(g_stVComDebugInfo, sizeof(g_stVComDebugInfo), 0, sizeof(g_stVComDebugInfo));
 
     /* Vcom 口OM IND通道的初始化 */
     PPM_VComIndPortInit();
@@ -389,18 +293,7 @@ void PPM_VComPortInit(void)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : PPM_VComInfoShow
- 功能描述  : 用于打印 Vcom 口通道发送信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史  :
-  1.日    期   : 2014年5月25日
-    作    者   : L00256032
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 void PPM_VComInfoShow(void)
 {
     (void)ppm_printf(" VCom30 Send num is           %d.\n", g_stVComDebugInfo[OM_LOGIC_CHANNEL_CBT].ulVCOMSendNum);
@@ -443,6 +336,7 @@ void PPM_VComInfoShow(void)
 
     return;
 }
+EXPORT_SYMBOL(PPM_VComInfoShow);
 
 
 

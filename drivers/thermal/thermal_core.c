@@ -70,6 +70,18 @@ static struct thermal_governor *def_governor;
 #define SOC_THERMAL_NAME "soc_thermal"
 #define USER_SPACE_GOVERNOR       "user_space"
 int g_ipa_freq_limit_debug = 0;
+
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+unsigned int g_ipa_freq_limit[IPA_ACTOR_MAX] = {
+	IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX
+};
+unsigned int g_ipa_soc_freq_limit[IPA_ACTOR_MAX] = {
+	IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX
+};
+unsigned int g_ipa_board_freq_limit[IPA_ACTOR_MAX] = {
+	IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX
+};
+#else
 unsigned int g_ipa_freq_limit[IPA_ACTOR_MAX] = {
 	IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX
 };
@@ -79,17 +91,17 @@ unsigned int g_ipa_soc_freq_limit[IPA_ACTOR_MAX] = {
 unsigned int g_ipa_board_freq_limit[IPA_ACTOR_MAX] = {
 	              IPA_FREQ_MAX, IPA_FREQ_MAX, IPA_FREQ_MAX
 };
-unsigned int g_ipa_soc_state[IPA_ACTOR_MAX] = {
-	               0, 0, 0
-};
-unsigned int g_ipa_board_state[IPA_ACTOR_MAX] = {
-	               0, 0, 0
-};
+#endif
+unsigned int g_ipa_soc_state[IPA_ACTOR_MAX] = {0};
+unsigned int g_ipa_board_state[IPA_ACTOR_MAX] = {0};
 
 #define IPA_CLUSTER0_WEIGHT_NAME       "cdev1_weight"  //default name value
 #define IPA_CLUSTER1_WEIGHT_NAME       "cdev2_weight"
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+#define IPA_CLUSTER2_WEIGHT_NAME       "cdev3_weight"
+#endif
 #define IPA_GPU_WEIGHT_NAME            "cdev0_weight"
-unsigned int g_ipa_act_weights[IPA_ACTOR_MAX] = {0};
+
 unsigned int g_ipa_gpu_boost_weights[IPA_ACTOR_MAX] = {0};
 unsigned int g_ipa_normal_weights[IPA_ACTOR_MAX] = {0};
 
@@ -166,10 +178,17 @@ unsigned int ipa_freq_limit(enum ipa_actor actor, unsigned int target_freq)
 		return target_freq;
 
 	if (g_ipa_freq_limit_debug)
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+		pr_err("actor[%d]target_freq[%u]IPA:[%u][%u][%u][%u]min[%u]\n",
+			actor,target_freq, g_ipa_freq_limit[IPA_CLUSTER0],
+			g_ipa_freq_limit[IPA_CLUSTER1], g_ipa_freq_limit[IPA_CLUSTER2],
+			g_ipa_freq_limit[IPA_GPU], min(target_freq, g_ipa_freq_limit[actor]));
+#else
 		pr_err("actor[%d]target_freq[%u]IPA:[%u][%u][%u]min[%u]\n",
 			  actor,target_freq, g_ipa_freq_limit[IPA_CLUSTER0],
 			  g_ipa_freq_limit[IPA_CLUSTER1], g_ipa_freq_limit[IPA_GPU],
 			  min(target_freq, g_ipa_freq_limit[actor]));
+#endif
 
 #ifdef CONFIG_HISI_THERMAL_SPM
 	if (is_spm_mode_enabled()) {
@@ -697,19 +716,38 @@ static void thermal_zone_device_reset(struct thermal_zone_device *tz)
 		pos->initialized = false;
 }
 
-#if defined(CONFIG_HISI_IPA_THERMAL) || defined(CONFIG_HISI_THERMAL_SPM)
+#ifdef CONFIG_HISI_IPA_THERMAL
+int nametoactor(char* weight_attr_name)
+{
+	int actor_id = -1;
+
+	if (!strncmp(weight_attr_name, IPA_GPU_WEIGHT_NAME, sizeof(IPA_GPU_WEIGHT_NAME) - 1))
+			actor_id = IPA_GPU;
+	else if (!strncmp(weight_attr_name, IPA_CLUSTER0_WEIGHT_NAME, sizeof(IPA_CLUSTER0_WEIGHT_NAME) - 1))
+			actor_id = IPA_CLUSTER0;
+	else if (!strncmp(weight_attr_name, IPA_CLUSTER1_WEIGHT_NAME, sizeof(IPA_CLUSTER1_WEIGHT_NAME) - 1))
+			actor_id = IPA_CLUSTER1;
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+	else if (!strncmp(weight_attr_name, IPA_CLUSTER2_WEIGHT_NAME, sizeof(IPA_CLUSTER2_WEIGHT_NAME) - 1))
+			actor_id = IPA_CLUSTER2;
+#endif
+	else
+		actor_id = -1;
+
+	return actor_id;
+}
+#endif
+
+#ifdef CONFIG_HISI_IPA_THERMAL
 void restore_actor_weights(struct thermal_zone_device *tz)
 {
 	struct thermal_instance *pos;
+	int actor_id = -1;
 
 	list_for_each_entry(pos, &tz->thermal_instances, tz_node) {
-		if (!strncmp(pos->weight_attr_name, IPA_GPU_WEIGHT_NAME, sizeof(IPA_GPU_WEIGHT_NAME) - 1))
-			pos->weight = g_ipa_normal_weights[IPA_GPU];
-		else if (!strncmp(pos->weight_attr_name, IPA_CLUSTER0_WEIGHT_NAME, sizeof(IPA_CLUSTER0_WEIGHT_NAME) - 1))
-			pos->weight = g_ipa_normal_weights[IPA_CLUSTER0];
-		else if(!strncmp(pos->weight_attr_name, IPA_CLUSTER1_WEIGHT_NAME, sizeof(IPA_CLUSTER1_WEIGHT_NAME) - 1)) {
-			pos->weight = g_ipa_normal_weights[IPA_CLUSTER1];
-		}
+		actor_id = nametoactor(pos->weight_attr_name);
+		if(actor_id != -1)
+			pos->weight = g_ipa_normal_weights[actor_id];
 	}
 }
 
@@ -718,7 +756,8 @@ void update_actor_weights(struct thermal_zone_device *tz)
 	struct thermal_instance *pos;
 	bool bGPUBounded = false;
 	struct thermal_cooling_device *cdev;
-	dynipa_get_weights_cfg(g_ipa_act_weights,g_ipa_gpu_boost_weights);
+	int actor_id = -1;
+
 	list_for_each_entry(pos, &tz->thermal_instances, tz_node) {
 		cdev = pos->cdev;
 		if (!strncmp(pos->weight_attr_name, IPA_GPU_WEIGHT_NAME,sizeof(IPA_GPU_WEIGHT_NAME) - 1) && cdev->bound_event) {
@@ -728,20 +767,14 @@ void update_actor_weights(struct thermal_zone_device *tz)
 	}
 
 	list_for_each_entry(pos, &tz->thermal_instances, tz_node) {
+		actor_id = nametoactor(pos->weight_attr_name);
+
 		if (bGPUBounded) {
-			if (!strncmp(pos->weight_attr_name, IPA_GPU_WEIGHT_NAME, sizeof(IPA_GPU_WEIGHT_NAME) - 1))
-				pos->weight = g_ipa_gpu_boost_weights[IPA_GPU];
-			else if (!strncmp(pos->weight_attr_name, IPA_CLUSTER0_WEIGHT_NAME, sizeof(IPA_CLUSTER0_WEIGHT_NAME) - 1))
-				pos->weight = g_ipa_gpu_boost_weights[IPA_CLUSTER0];
-			else if (!strncmp(pos->weight_attr_name, IPA_CLUSTER1_WEIGHT_NAME, sizeof(IPA_CLUSTER1_WEIGHT_NAME) - 1))
-				pos->weight = g_ipa_gpu_boost_weights[IPA_CLUSTER1];
+			if (actor_id != -1)
+				pos->weight = g_ipa_gpu_boost_weights[actor_id];
 		} else {
-			if (!strncmp(pos->weight_attr_name, IPA_GPU_WEIGHT_NAME, sizeof(IPA_GPU_WEIGHT_NAME) - 1))
-				pos->weight = g_ipa_act_weights[IPA_GPU];
-			else if (!strncmp(pos->weight_attr_name, IPA_CLUSTER0_WEIGHT_NAME, sizeof(IPA_CLUSTER0_WEIGHT_NAME) - 1))
-				pos->weight = g_ipa_act_weights[IPA_CLUSTER0];
-			else if (!strncmp(pos->weight_attr_name, IPA_CLUSTER1_WEIGHT_NAME, sizeof(IPA_CLUSTER1_WEIGHT_NAME) - 1))
-				pos->weight = g_ipa_act_weights[IPA_CLUSTER1];
+			if (actor_id != -1)
+				pos->weight = g_ipa_normal_weights[actor_id];
 		}
 	}
 }
@@ -759,7 +792,7 @@ void thermal_zone_device_update(struct thermal_zone_device *tz)
 
 	update_temperature(tz);
 
-#if defined(CONFIG_HISI_IPA_THERMAL) || defined(CONFIG_HISI_THERMAL_SPM)
+#ifdef CONFIG_HISI_IPA_THERMAL
 	update_actor_weights(tz);
 #endif
 
@@ -838,27 +871,26 @@ mode_store(struct device *dev, struct device_attribute *attr,
 	   const char *buf, size_t count)
 {
 	struct thermal_zone_device *tz = to_thermal_zone(dev);
-
-#if defined(CONFIG_HISI_IPA_THERMAL) || defined(CONFIG_HISI_THERMAL_SPM)
 	int result;
-#endif
 
 	if (!tz->ops->set_mode)
 		return -EPERM;
 
-#if defined(CONFIG_HISI_IPA_THERMAL) || defined(CONFIG_HISI_THERMAL_SPM)
 	if (!strncmp(buf, "enabled", sizeof("enabled") - 1)) {
+#ifdef CONFIG_HISI_IPA_THERMAL
 		restore_actor_weights(tz);
+#endif
 		result = tz->ops->set_mode(tz, THERMAL_DEVICE_ENABLED);
 	} else if (!strncmp(buf, "disabled", sizeof("disabled") - 1)) {
+#ifdef CONFIG_HISI_IPA_THERMAL
 		restore_actor_weights(tz);
+#endif
 		result = tz->ops->set_mode(tz, THERMAL_DEVICE_DISABLED);
 	} else
 		result = -EINVAL;
 
 	if (result)
 		return result;
-#endif
 
 #ifdef CONFIG_HISI_IPA_THERMAL
 	if(strncmp(tz->governor->name, USER_SPACE_GOVERNOR, THERMAL_NAME_LENGTH)) {/*[false alarm]*/
@@ -1260,7 +1292,7 @@ sustainable_power_show(struct device *dev, struct device_attribute *devattr,
 	struct thermal_zone_device *tz = to_thermal_zone(dev);
 
 	if (tz->tzp)
-		return sprintf(buf, "%u\n", tz->tzp->sustainable_power);
+		return sprintf(buf, "%u\n", tz->tzp->sustainable_power);/*lint !e421*/
 	else
 		return -EIO;
 }
@@ -1297,7 +1329,7 @@ boost_timeout_show(struct device *dev, struct device_attribute *devattr,
 	struct thermal_zone_device *tz = to_thermal_zone(dev);
 
 	if (tz->tzp)
-		return sprintf(buf, "%u\n", tz->tzp->boost_timeout);
+		return snprintf(buf, PAGE_SIZE, "%u\n", tz->tzp->boost_timeout);
 	else
 		return -EIO;
 }
@@ -1610,6 +1642,7 @@ thermal_cooling_device_weight_store(struct device *dev,
 	struct thermal_zone_device *tz = to_thermal_zone(dev);
 	enum thermal_device_mode mode;
 	int result;
+	int actor_id = -1;
 #endif
 
 	struct thermal_instance *instance;
@@ -1632,12 +1665,9 @@ thermal_cooling_device_weight_store(struct device *dev,
 	instance->weight = weight;
 
 #ifdef CONFIG_HISI_IPA_THERMAL
-	if (!strncmp(instance->weight_attr_name, IPA_GPU_WEIGHT_NAME, sizeof(IPA_GPU_WEIGHT_NAME) - 1))
-		g_ipa_normal_weights[IPA_GPU] = weight;
-	else if (!strncmp(instance->weight_attr_name, IPA_CLUSTER0_WEIGHT_NAME, sizeof(IPA_CLUSTER0_WEIGHT_NAME) - 1))
-		g_ipa_normal_weights[IPA_CLUSTER0] = weight;
-	else if (!strncmp(instance->weight_attr_name, IPA_CLUSTER1_WEIGHT_NAME, sizeof(IPA_CLUSTER1_WEIGHT_NAME) - 1))
-		g_ipa_normal_weights[IPA_CLUSTER1] = weight;
+	actor_id = nametoactor(instance->weight_attr_name);
+	if(actor_id != -1)
+		g_ipa_normal_weights[actor_id] = weight;
 #endif
 
 	return count;
@@ -1745,15 +1775,6 @@ int thermal_zone_bind_cooling_device(struct thermal_zone_device *tz,
 	dev->weight_attr.attr.mode = S_IWUSR | S_IRUGO;
 	dev->weight_attr.show = thermal_cooling_device_weight_show;
 	dev->weight_attr.store = thermal_cooling_device_weight_store;
-
-#ifdef CONFIG_HISI_IPA_THERMAL
-	if (!strncmp(dev->weight_attr_name, IPA_GPU_WEIGHT_NAME, sizeof(IPA_GPU_WEIGHT_NAME) - 1))
-		g_ipa_normal_weights[IPA_GPU] = weight;
-	else if (!strncmp(dev->weight_attr_name, IPA_CLUSTER0_WEIGHT_NAME, sizeof(IPA_CLUSTER0_WEIGHT_NAME) - 1))
-		g_ipa_normal_weights[IPA_CLUSTER0] = weight;
-	else if (!strncmp(dev->weight_attr_name, IPA_CLUSTER1_WEIGHT_NAME, sizeof(IPA_CLUSTER1_WEIGHT_NAME) - 1))
-		g_ipa_normal_weights[IPA_CLUSTER1] = weight;
-#endif
 
 	result = device_create_file(&tz->device, &dev->weight_attr);
 	if (result)

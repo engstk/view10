@@ -192,8 +192,8 @@ config PCIE_KIRIN_SLT
 	help
 	  Say Y here if you want to use SLT Func for PCIe on Hisilicon Kirin SoC
 
-config PCIE_KIRIN_DMD
-	tristate "Hisilicon kirin PCIe dmd log"
+config PCIE_KIRIN_MNTN
+	tristate "Hisilicon kirin PCIe mntn log"
 	depends on PCIE_KIRIN
 	help
 	  Say Y here if you want PCIe controller support on Hisilicon Kirin SoC
@@ -204,22 +204,28 @@ config KIRIN_PCIE_EYEPARAM
 	help
 	  Say Y here if you want PCIe controller support on Hisilicon Kirin SoC
 
-config KIRIN_PCIE_HI3660
-	tristate "Hisilicon kirin PCIe Hi3660, 1 RC"
+config KIRIN_PCIE_JAN
+	tristate "Hisilicon kirin PCIe RC-Jan"
 	select PCIE_KIRIN
-	help
-	  Say Y here if you are in Hi3660
 
-config KIRIN_PCIE_KIRIN970
-	tristate "Hisilicon kirin PCIe kirin970, ES -- 2 RC, CS -- 1 RC"
+config KIRIN_PCIE_FEB
+	tristate "Hisilicon kirin PCIe RC-Feb"
 	select PCIE_KIRIN
-	help
-	  Say Y here if you are in kirin970
+
+config KIRIN_PCIE_MAR
+	tristate "Hisilicon kirin PCIe RC-Mar"
+	select PCIE_KIRIN
 
 config KIRIN_PCIE_NOC_DBG
 	tristate "Hisilicon kirin NOC DEBUG"
 	select PCIE_KIRIN
 	help
 	  Say Y here if you want dump pcie host info when PCIe NOC happen
+
+config PCIE_CHIP_BUG_MNTN
+	tristate "Hisilicon PCIE CHIP LINKDOWN DEBUG"
+	select PCIE_KIRIN
+	help
+	  Say Y here if you want to panic directly when PCIe linkdown
 
 endmenu

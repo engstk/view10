@@ -46,7 +46,7 @@ enum NV_ITEM_ID_ENUM
     EN_NV_ID_SWITCH_PARA                            = 0xD275,
     EN_NV_ID_BANDNon1_BAND_INFO                     = 0xD2ED,/* 非标频段的频段信息begin */
     EN_NV_ID_BANDNon16_BAND_INFO                    = 0xD2FC,/* 非标频段的频段信息end */
-    EN_NV_ID_POWER_ON_LOG_SWITCH                    = 0xD33b,/* Added by x00300294 for 开机log功能 */
+    EN_NV_ID_POWER_ON_LOG_SWITCH                    = 0xD33b,
 };
 typedef unsigned long NV_ITEM_ID_ENUM_UINT32;
 

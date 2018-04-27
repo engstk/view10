@@ -46,24 +46,7 @@
  *
  */
 
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : omprivate.h
-  版 本 号   : 初稿
-  作    者           : 甘兰47350
-  生成日期   : 2008年5月3日
-  最近修改   :
-  功能描述   : 该头文件为OM的头文件，主要提供给OM模块内部使用
-  函数列表   :
-  修改历史   :
-  1.日    期 : 2008年5月3日
-    作    者 : 甘兰47350
-    修改内容 : 创建文件
-
-******************************************************************************/
 #ifndef _OM_PRIVATE_H_
 #define _OM_PRIVATE_H_
 
@@ -189,6 +172,7 @@ enum
     DRX_SLAVE_WAKE_IPC_ERROR        = 0x20000016,
     DRX_CLEAR_BBP_INT_ERROR         = 0x20000017,
     DRX_BBP_WAKE_TIMEOUT            = 0x20000018,
+    DRX_BBP_CLK_SW_TIMEOUT          = 0x20000019,
 
     SPY_FLOWCTRL_POWEROFF           = 0x20002000,
     CBT_CSDR_DDR_BASE_ADDR_INVALID  = 0x20002001,
@@ -201,6 +185,8 @@ enum
 
     HPA_2GFRAME_ISR_NOT_INTERRUPT_CALL  = 0x20000090,
     HPA_3GFRAME_ISR_NOT_INTERRUPT_CALL  = 0x20000092,
+
+    PAM_USIMM_SLOT_MODEM_ERR            = 0x200000A0,
 
     PAM_REBOOT_MEMCPY_MEM               = 0x21000000,
     PAM_REBOOT_MEMSET_MEM               = 0x22000000,
@@ -324,6 +310,22 @@ typedef struct
     VOS_UINT16           usLen;
     VOS_UINT8            aucValue[4];
 }PAM_VOS_QUEREY_PID_INFO_CNF_STRU;
+
+typedef struct
+{
+   VOS_UINT16                       usSendPid;
+   VOS_UINT16                       usRcvPid;
+   VOS_UINT32                       ulMsgName;
+   VOS_UINT32                       ulSliceStart;
+   VOS_UINT32                       ulSliceEnd;
+}OM_RECORD_INFO_STRU;
+
+typedef struct
+{
+   VOS_UINT8                       *pucBuf;
+   VOS_UINT32                       ulLen;
+   VOS_UINT8                        aucRsv[4];
+}OM_RECORD_BUF_STRU;
 
 /*****************************************************************************
   8 UNION定义

@@ -125,11 +125,11 @@ static int partition_enable_opps(struct devfreq_cooling_device *dfc,
 	int i;
 	struct device *dev = dfc->devfreq->dev.parent;
 
-	for (i = 0; i < dfc->freq_table_size; i++) {
+	for (i = 0; i < dfc->freq_table_size; i++) {/*lint !e574*/
 		struct dev_pm_opp *opp;
 		int ret = 0;
 		unsigned int freq = dfc->freq_table[i];
-		bool want_enable = i >= cdev_state ? true : false;
+		bool want_enable = i >= cdev_state ? true : false;/*lint !e574*/
 
 		rcu_read_lock();
 		opp = dev_pm_opp_find_freq_exact(dev, freq, !want_enable);

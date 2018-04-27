@@ -54,15 +54,22 @@
 #include "diag_msgapplog.h"
 #include "diag_debug.h"
 #include "msp_diag_comm.h"
-
+#include "diag_connect.h"
+#include "soc_socp_adapter.h"
 
 #define    THIS_FILE_ID        MSP_FILE_ID_DIAG_MSGAPPLOG_C
 
 DIAG_APPLOG_PROC_FUN_STRU g_DiagAppLogFunc[] = {
   {diag_AppLogDataConfig       ,DIAG_CMD_APPLOG_CONFIG   ,0}};
 
- VOS_UINT32 diag_MspMsgProc(DIAG_FRAME_INFO_STRU *pData);
-  
+DIAG_APPLOG_CTRL g_DiagApplogCtrl =
+{
+    .ulChannelNum = 1,
+    .ulChannelID = SOCP_CODER_SRC_AP_APP,
+};
+
+VOS_UINT32 diag_MspMsgProc(DIAG_FRAME_INFO_STRU *pData);
+
 /*****************************************************************************
  Function Name   : diag_AppLogMsgProc
  Description     : APPLOG  消息处理
@@ -79,21 +86,30 @@ VOS_UINT32 diag_AppLogDataConfig(VOS_UINT8* pstReq)
     DIAG_APPLOG_CFG_REQ  *plogcfg;
     MSP_DIAG_CNF_INFO_STRU stDiagInfo = {0};
     DIAG_APPLOG_CFG_CNF stAppLog = {0};
-   
+
     pData = (DIAG_FRAME_INFO_STRU *)pstReq;
-    plogcfg=(DIAG_APPLOG_CFG_REQ *)(pData->aucData+APPLOG_DATA_OFFSET);
-   
+
+    if(pData->ulMsgLen < APPLOG_DATA_OFFSET + sizeof(DIAG_APPLOG_CFG_REQ))
+    {
+        diag_error("rev data len too small, datalen:0x%x\n", pData->ulMsgLen);
+        stAppLog.ulRc = ERR_MSP_INVALID_PARAMETER;
+        goto APP_OUT;
+    }
+
+    plogcfg = (DIAG_APPLOG_CFG_REQ *)(pData->aucData + APPLOG_DATA_OFFSET);
+
     DIAG_MSG_COMMON_PROC(stDiagInfo, stAppLog, pData);
 
     stDiagInfo.ulMsgType = DIAG_MSG_TYPE_APP;
 
-    stAppLog.ulRc  =( VOS_UINT32) mdrv_applog_cfg(plogcfg->enable,plogcfg->level);
+    stAppLog.ulRc  = (VOS_UINT32) mdrv_applog_cfg(plogcfg->enable, plogcfg->level);
 
-    /*组包给FW回复*/
+APP_OUT:
+    /*组包回复*/
     ulRet = DIAG_MsgReport(&stDiagInfo, &stAppLog, sizeof(stAppLog));
     if(ulRet)
     {
-       diag_printf("Rcv  Msg Id fail!\n");          
+       diag_printf("Rcv  Msg Id fail!\n");
     }
     return ulRet;
 }
@@ -110,6 +126,7 @@ VOS_UINT32 diag_AppLogMsgProc(DIAG_FRAME_INFO_STRU *pData)
 {
     VOS_UINT32 ulRet = ERR_MSP_INVALID_PARAMETER ;
     VOS_UINT32 i = 0;
+
     if(DIAG_MSG_TYPE_APP != pData->stID.pri4b)
     {
         diag_printf("%s Rcv Error Msg Id 0x%x\n",__FUNCTION__,pData->ulCmdId);
@@ -140,10 +157,44 @@ VOS_UINT32 diag_AppLogMsgProc(DIAG_FRAME_INFO_STRU *pData)
 *****************************************************************************/
 VOS_VOID diag_AppLogMsgInit(VOS_VOID)
 {
+    VOS_UINT32 ulRet;
+
     /*注册message消息回调*/
     DIAG_MsgProcReg(DIAG_MSG_TYPE_APP,diag_AppLogMsgProc);
+    ulRet = diag_ConnMgrSendFuncReg(DIAG_CONN_ID_ACPU_APP, g_DiagApplogCtrl.ulChannelNum, &g_DiagApplogCtrl.ulChannelID, diag_AppConnect);
+    if(ulRet)
+    {
+        diag_printf("reg connect msg fail, ret:0x%x\n", ulRet);
+    }
 }
 
+VOS_UINT32 diag_AppConnect(VOS_UINT8 * pData)
+{
+    VOS_UINT32 ulRet;
+    DIAG_CONNECT_RESULT stCnf;
+    DIAG_CONN_MSG_SEND_T *pstRevMsg;
+
+    pstRevMsg = (DIAG_CONN_MSG_SEND_T *)pData;
+
+    if(ID_MSG_DIAG_CMD_CONNECT_REQ == pstRevMsg->ulMsgId)
+    {
+        ulRet = (VOS_UINT32)mdrv_applog_conn();
+        if(ulRet)
+        {
+            diag_printf("app log conn fail, ret:0x%x\n", ulRet);
+        }
+    }
+    else
+    {
+        ulRet = ERR_MSP_SUCCESS;
+        /* do nothing */
+    }
+
+    stCnf.ulChannelId   = g_DiagApplogCtrl.ulChannelID;
+    stCnf.ulResult      = ulRet;
+
+    return diag_ConnCnf(DIAG_CONN_ID_ACPU_APP, pstRevMsg->ulSn, g_DiagApplogCtrl.ulChannelNum, &stCnf);
+}
 
 
 

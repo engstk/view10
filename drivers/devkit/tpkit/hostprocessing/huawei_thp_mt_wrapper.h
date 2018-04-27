@@ -51,6 +51,8 @@ struct thp_input_dev_config {
 struct thp_mt_wrapper_data {
 	struct input_dev *input_dev;
 	struct thp_input_dev_config input_dev_config;
+	wait_queue_head_t wait;
+	atomic_t status_updated;
 };
 
 struct input_mt_wrapper_touch_data {
@@ -79,8 +81,12 @@ struct thp_mt_wrapper_ioctl_touch_data {
 #define INPUT_MT_WRAPPER_IOCTL_CMD_SET_COORDINATES \
 	_IOWR(INPUT_MT_WRAPPER_IO_TYPE, 0x01, \
 		struct thp_mt_wrapper_ioctl_touch_data)
+#define INPUT_MT_WRAPPER_IOCTL_READ_STATUS \
+	_IOR(INPUT_MT_WRAPPER_IO_TYPE, 0x02, u32)
 
 int thp_mt_wrapper_init(void);
 void thp_mt_wrapper_exit(void);
+int thp_mt_wrapper_wakeup_poll(void);
+void thp_clean_fingers(void);
 
 #endif /* _INPUT_MT_WRAPPER_H_ */

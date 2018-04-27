@@ -161,7 +161,8 @@ out_refwalk:
 	   it will remain hashed iff d_seq isnt changed. */
 	if (__read_seqcount_retry(&real_dentry->d_seq,
 		te->real.d_seq)) {
-		/* we cannot confirm the following case, add a WARN_ON to notice that */
+		/* we cannot confirm the following case,
+		   add a WARN_ON to notice that (outdated) */
 		WARN_ON(IS_ROOT(dentry));
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 0))
@@ -176,7 +177,7 @@ out_refwalk:
 	}
 
 	if (need_fixup_permission(
-		d_inode_rcu(ACCESS_ONCE(dentry->d_parent)),	te)) {
+		d_inode_rcu(ACCESS_ONCE(dentry->d_parent)), te)) {
 		/* XXX: it's not suitble for us
 		   to get_derived_permission in RCU lookup now :-( */
 		goto out_refwalk;
@@ -210,11 +211,8 @@ static int __sdcardfs_d_revalidate_slow(
 
 	trace_sdcardfs_d_revalidate_slow_enter(dentry, flags);
 
-	/* root should always walk into __sdcardfs_d_revalidate_fast */
-	BUG_ON(IS_ROOT(dentry));
-
 	/* ref-walk takes a refcount so nothing to worry about */
-	if (d_really_is_negative(dentry))
+	if (unlikely(d_really_is_negative(dentry)))
 		goto out;
 
 	real_dentry = sdcardfs_get_real_dentry_with_seq(dentry, &seq);
@@ -241,7 +239,8 @@ retry:
 
 	/* check if the hierarchy of this dentry was changed */
 	if (unlikely(__read_seqcount_retry(&real_dentry->d_seq, seq))) {
-		/* we cannot confirm the following case, add a WARN_ON to notice that */
+		/* we cannot confirm the following case,
+		   add a WARN_ON to notice that (outdated) */
 		WARN_ON(IS_ROOT(dentry));
 		ret = 0;
 	}
@@ -260,9 +259,22 @@ static int sdcardfs_d_revalidate(
 	struct dentry *dentry,
 	unsigned int flags
 ) {
+	/* d_revalidate should not be called on root dentry.
+           and we dont have disconnected dentry now */
+	if (unlikely(READ_ONCE(dentry->d_parent) == dentry)) {
+		errln_warn(1, "unexpected revalidate root dentry (%p): %s",
+			dentry, dentry->d_name.name);
+		return 1;
+	}
+
 	if (flags & LOOKUP_RCU)
 		return __sdcardfs_d_revalidate_fast(dentry, flags);
 	return __sdcardfs_d_revalidate_slow(dentry, flags);
+}
+
+static void sdcardfs_canonical_path(const struct path *path,
+	struct path *actual_path) {
+	sdcardfs_get_lower_path(path->dentry, actual_path);
 }
 
 /* __sdcardfs_d_release is an alias of sdcardfs_free_tree_entry */
@@ -271,6 +283,7 @@ static int sdcardfs_d_revalidate(
 const struct dentry_operations sdcardfs_ci_dops = {
 	.d_delete	= sdcardfs_d_delete,
 	.d_revalidate	= sdcardfs_d_revalidate,
-	.d_release	= sdcardfs_d_release
-};
+	.d_release	= sdcardfs_d_release,
 
+	.d_canonical_path = sdcardfs_canonical_path,
+};

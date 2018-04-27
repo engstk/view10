@@ -99,19 +99,7 @@ VOS_UINT8     g_aucMagicCookie[] = {0x63,0x82,0x53,0x63};
   3 Function
 *****************************************************************************/
 extern VOS_UINT32 Ndis_SendMacFrm(const VOS_UINT8  *pucBuf, VOS_UINT32 ulLen, VOS_UINT8 ucRabId);
-/*****************************************************************************
- Function Name   : IP_CalcCRC16
- Description     : 计算CRC 16校验和
- Input           : VOS_UINT8 *pucData : crc src buf
-                   VOS_UINT16 usLen : src buf len
- Output          :
- Return          : the crc16 result of Src buf
-                   (PS: the result is network byte order)
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_UINT16  IP_CalcCRC16(VOS_UINT8 *pucData, VOS_UINT16 usLen)
 {
     VOS_UINT32    ulCheckSum  = 0;
@@ -145,17 +133,7 @@ VOS_UINT16  IP_CalcCRC16(VOS_UINT8 *pucData, VOS_UINT16 usLen)
 
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_SendDhcpToEth
- Description     : 将DHCP包封装成Ethnet帧发送到Ethnet上
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_SendDhcpToEth(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
                                            const NDIS_IPV4_INFO_STRU           *pstIpV4Entity,
                                            VOS_UINT16                           usDhcpLen,
@@ -190,7 +168,7 @@ VOS_VOID IPV4_DHCP_SendDhcpToEth(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAna
     /*UDPIP Fake Hdr Offset, Same to IP Hdr Offset*/
     pstUdpIpFakeHdr = (IPV4_UDPIPFAKEHDR_STRU *)(IPV4_DHCP_GET_BUFFER() + ETH_MAC_HEADER_LEN );
     /*Fill Fake Hdr*/
-    IP_MEM_SET_S(pstUdpIpFakeHdr->aucRec0,0,sizeof(pstUdpIpFakeHdr->aucRec0));
+    IP_MEM_SET_S(pstUdpIpFakeHdr->aucRec0, sizeof(pstUdpIpFakeHdr->aucRec0), 0, sizeof(pstUdpIpFakeHdr->aucRec0));
     pstUdpIpFakeHdr->unSrcIP.ulIpAddr = pstIpV4Entity->unGwIpInfo.ulIpAddr;
     pstUdpIpFakeHdr->unDstIP.ulIpAddr = ulDstIp;
     pstUdpIpFakeHdr->ucProtocol = IP_PROTOCOL_UDP;
@@ -235,15 +213,15 @@ VOS_VOID IPV4_DHCP_SendDhcpToEth(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAna
     usCurTotalLen = usCurTotalLen + IPV4_FIX_HDR_LEN;
 
     /*MAC*/
-    IP_MEM_CPY_S(IPV4_DHCP_GET_BUFFER(),pstIpV4Entity->aucMacFrmHdr,ETH_MAC_HEADER_LEN);
+    IP_MEM_CPY_S(IPV4_DHCP_GET_BUFFER(), ETH_MAC_HEADER_LEN, pstIpV4Entity->aucMacFrmHdr, ETH_MAC_HEADER_LEN);
     /*Update Dst Mac Addr */
     if (IP_CAST_TYPE_UNICAST == pstDhcpAnalyse->usCastFlg)
     {
-        IP_MEM_CPY_S(IPV4_DHCP_GET_BUFFER(),pstIpV4Entity->aucUeMacAddr,ETH_MAC_ADDR_LEN);
+        IP_MEM_CPY_S(IPV4_DHCP_GET_BUFFER(), ETH_MAC_ADDR_LEN, pstIpV4Entity->aucUeMacAddr, ETH_MAC_ADDR_LEN);
     }
     else
     {
-        IP_MEM_CPY_S(IPV4_DHCP_GET_BUFFER(),g_aucBroadCastAddr,ETH_MAC_ADDR_LEN);
+        IP_MEM_CPY_S(IPV4_DHCP_GET_BUFFER(), ETH_MAC_ADDR_LEN, g_aucBroadCastAddr, ETH_MAC_ADDR_LEN);
     }
 
     usCurTotalLen += ETH_MAC_HEADER_LEN;
@@ -262,17 +240,7 @@ VOS_VOID IPV4_DHCP_SendDhcpToEth(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAna
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_FormDhcpHdrStru
- Description     : form dhcp packet fix header
- Input           : VOS_UINT8 *pucDhcpData : 调用者保证长度大于DHCP固定头长度
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_FormDhcpHdrStru(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,VOS_UINT8 *pucDhcpData)
 {
     IPV4_DHCP_PROTOCL_STRU    *pstDhcpHdr;
@@ -295,26 +263,16 @@ VOS_VOID IPV4_DHCP_FormDhcpHdrStru(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpA
     pstDhcpHdr->unClientIPAddr.ulIpAddr = 0;
     pstDhcpHdr->unRelayIPAddr.ulIpAddr  = 0;
     pstDhcpHdr->unNextServerIPAddr.ulIpAddr = 0;
-    IP_MEM_CPY_S(pstDhcpHdr->aucClientHardwardAddr,pstDhcpAnalyse->aucHardwareAddr,ETH_MAC_ADDR_LEN);
+    IP_MEM_CPY_S(pstDhcpHdr->aucClientHardwardAddr, ETH_MAC_ADDR_LEN, pstDhcpAnalyse->aucHardwareAddr, ETH_MAC_ADDR_LEN);
 
     /*Magic Cookie*/
-    IP_MEM_CPY_S(pstDhcpHdr->aucMagicCookie,g_aucMagicCookie,sizeof(g_aucMagicCookie));
+    IP_MEM_CPY_S(pstDhcpHdr->aucMagicCookie, IPV4_DHCP_HEAD_COOKIE_LEN, g_aucMagicCookie, sizeof(g_aucMagicCookie));
 
     return;
 }
 
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_FormOption
- Description     : 生成Option选项
- Input           :
- Output          : pusOptionLen : formed option len
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
                                       VOS_UINT8               *pucOption,
                                       VOS_UINT8                ucDhcpType,
@@ -347,7 +305,7 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     pstOptionItem = (IPV4_DHCP_OPTION_ITEM_STRU *)((VOS_VOID*)pucOptionAddr);
     pstOptionItem->ucOptionType = IPV4_DHCP_OPTION_SUBNET_MASK;
     pstOptionItem->ucOptionLen  = IPV4_ADDR_LEN;
-    IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&(pstIpV4Entity->unNmIpInfo),IPV4_ADDR_LEN);
+    IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_ADDR_LEN, &(pstIpV4Entity->unNmIpInfo), IPV4_ADDR_LEN);
     *pusOptionLen += IPV4_ADDR_LEN + 2;
     pucOptionAddr += IPV4_ADDR_LEN + 2;
 
@@ -355,7 +313,7 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     pstOptionItem = (IPV4_DHCP_OPTION_ITEM_STRU *)((VOS_VOID*)pucOptionAddr);
     pstOptionItem->ucOptionType = IPV4_DHCP_OPTION_ROUTER_IP;
     pstOptionItem->ucOptionLen  = IPV4_ADDR_LEN;
-    IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&(pstIpV4Entity->unGwIpInfo),IPV4_ADDR_LEN);
+    IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_ADDR_LEN, &(pstIpV4Entity->unGwIpInfo), IPV4_ADDR_LEN);
     *pusOptionLen += IPV4_ADDR_LEN + 2;
     pucOptionAddr += IPV4_ADDR_LEN + 2;
 
@@ -365,13 +323,13 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     pstOptionItem->ucOptionType = IPV4_DHCP_OPTION_DOMAIN_NAME_SERVER;
     if (0 != pstIpV4Entity->unPrimDnsAddr.ulIpAddr)
     {
-        IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&(pstIpV4Entity->unPrimDnsAddr),IPV4_ADDR_LEN);
+        IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_ADDR_LEN, &(pstIpV4Entity->unPrimDnsAddr), IPV4_ADDR_LEN);
         ucDnsLen += IPV4_ADDR_LEN;
     }
 
     if (0 != pstIpV4Entity->unSecDnsAddr.ulIpAddr)
     {
-        IP_MEM_CPY_S(pstOptionItem->aucOptionValue + ucDnsLen,&(pstIpV4Entity->unSecDnsAddr),IPV4_ADDR_LEN);
+        IP_MEM_CPY_S(pstOptionItem->aucOptionValue + ucDnsLen, IPV4_ADDR_LEN, &(pstIpV4Entity->unSecDnsAddr), IPV4_ADDR_LEN);
         ucDnsLen += IPV4_ADDR_LEN;
     }
 
@@ -386,7 +344,7 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     pstOptionItem = (IPV4_DHCP_OPTION_ITEM_STRU *)((VOS_VOID*)pucOptionAddr);
     pstOptionItem->ucOptionType = IPV4_DHCP_OPTION_SERVER_IP;
     pstOptionItem->ucOptionLen  = IPV4_ADDR_LEN;
-    IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&(pstIpV4Entity->unGwIpInfo),IPV4_ADDR_LEN);
+    IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_ADDR_LEN, &(pstIpV4Entity->unGwIpInfo), IPV4_ADDR_LEN);
     *pusOptionLen += IPV4_ADDR_LEN + 2;
     pucOptionAddr += IPV4_ADDR_LEN + 2;
 
@@ -397,7 +355,7 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     /* 转换为网络字节序 */
     ulTimeLen = IPV4_DHCP_LEASE_TIME;
     ulTimeLen = IP_HTONL(ulTimeLen);
-    IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&ulTimeLen,IPV4_DHCP_OPTION_LEASE_TIME_LEN);
+    IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_DHCP_OPTION_LEASE_TIME_LEN, &ulTimeLen, IPV4_DHCP_OPTION_LEASE_TIME_LEN);
     *pusOptionLen += IPV4_DHCP_OPTION_LEASE_TIME_LEN + 2;
     pucOptionAddr += IPV4_DHCP_OPTION_LEASE_TIME_LEN + 2;
 
@@ -407,7 +365,7 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     pstOptionItem->ucOptionLen  = IPV4_DHCP_OPTION_LEASE_TIME_LEN;
     ulTimeLen = (VOS_UINT32)IPV4_DHCP_T1;
     ulTimeLen = IP_HTONL(ulTimeLen);
-    IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&ulTimeLen,IPV4_DHCP_OPTION_LEASE_TIME_LEN);
+    IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_DHCP_OPTION_LEASE_TIME_LEN, &ulTimeLen, IPV4_DHCP_OPTION_LEASE_TIME_LEN);
     *pusOptionLen += IPV4_DHCP_OPTION_LEASE_TIME_LEN + 2;
     pucOptionAddr += IPV4_DHCP_OPTION_LEASE_TIME_LEN + 2;
 
@@ -417,7 +375,7 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     pstOptionItem->ucOptionLen  = IPV4_DHCP_OPTION_LEASE_TIME_LEN;
     ulTimeLen = (VOS_UINT32)IPV4_DHCP_T2;
     ulTimeLen = IP_HTONL(ulTimeLen);
-    IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&ulTimeLen,IPV4_DHCP_OPTION_LEASE_TIME_LEN);
+    IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_DHCP_OPTION_LEASE_TIME_LEN, &ulTimeLen, IPV4_DHCP_OPTION_LEASE_TIME_LEN);
     *pusOptionLen += IPV4_DHCP_OPTION_LEASE_TIME_LEN + 2;
     pucOptionAddr += IPV4_DHCP_OPTION_LEASE_TIME_LEN + 2;
 
@@ -427,13 +385,13 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
     pstOptionItem->ucOptionType = IPV4_DHCP_OPTION_NETBIOS_NAME_SERVER;
     if (0 != pstIpV4Entity->unPrimWinsAddr.ulIpAddr)
     {
-        IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&(pstIpV4Entity->unPrimWinsAddr),IPV4_ADDR_LEN);
+        IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_ADDR_LEN, &(pstIpV4Entity->unPrimWinsAddr), IPV4_ADDR_LEN);
         ucWinsLen += IPV4_ADDR_LEN;
     }
 
     if (0 != pstIpV4Entity->unSecWinsAddr.ulIpAddr)
     {
-        IP_MEM_CPY_S(pstOptionItem->aucOptionValue + ucWinsLen,&(pstIpV4Entity->unSecWinsAddr),IPV4_ADDR_LEN);
+        IP_MEM_CPY_S(pstOptionItem->aucOptionValue + ucWinsLen, IPV4_ADDR_LEN, &(pstIpV4Entity->unSecWinsAddr), IPV4_ADDR_LEN);
         ucWinsLen += IPV4_ADDR_LEN;
     }
 
@@ -452,17 +410,7 @@ VOS_VOID IPV4_DHCP_FormOption(const NDIS_IPV4_INFO_STRU *pstIpV4Entity,
 
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_FormOfferMsg
- Description     : 生成DHCP OFFER消息，
- Input           :
- Output          :
- Return          : 成功返回PS_SUCC;失败返回PS_FAIL
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IPV4_DHCP_FormOfferMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
                                          const NDIS_IPV4_INFO_STRU     *pstIpV4Entity,
                                          VOS_UINT16                    *pusLen)
@@ -478,7 +426,7 @@ VOS_UINT32 IPV4_DHCP_FormOfferMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAn
     }
 
     /*将BUF 清 零*/
-    IP_MEM_SET_S(IPV4_DHCP_GET_BUFFER(),0,ETH_MAX_FRAME_SIZE);
+    IP_MEM_SET_S(IPV4_DHCP_GET_BUFFER(), ETH_MAX_FRAME_SIZE, 0, ETH_MAX_FRAME_SIZE);
 
     ulDhcpOffset = ETH_MAC_HEADER_LEN + IPV4_FIX_HDR_LEN + IP_UDP_HDR_LEN;
     pucDhcpPktBuf = IPV4_DHCP_GET_BUFFER() + ulDhcpOffset;
@@ -486,7 +434,7 @@ VOS_UINT32 IPV4_DHCP_FormOfferMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAn
     IPV4_DHCP_FormDhcpHdrStru(pstDhcpAnalyse,pucDhcpPktBuf);
 
     /* 设置your ip address */
-    IP_MEM_CPY_S(pucDhcpPktBuf + IPV4_DHCP_HEAD_YIADDR_OFFSET, \
+    IP_MEM_CPY_S(pucDhcpPktBuf + IPV4_DHCP_HEAD_YIADDR_OFFSET, IPV4_ADDR_LEN, \
                pstIpV4Entity->unUeIpInfo.aucIPAddr, IPV4_ADDR_LEN);
 
     /* dhcp option 设置 */
@@ -500,17 +448,7 @@ VOS_UINT32 IPV4_DHCP_FormOfferMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAn
     return PS_SUCC;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_FormAckMsg
- Description     : 生成DHCP ACK消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_FormAckMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
                                         const NDIS_IPV4_INFO_STRU           *pstIpV4Entity,
                                         VOS_UINT16                          *pusLen)
@@ -525,7 +463,7 @@ VOS_VOID IPV4_DHCP_FormAckMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalys
     IP_NDIS_ASSERT(VOS_NULL_PTR != pusLen);
 
     /*将BUF 清 零*/
-    IP_MEM_SET_S(IPV4_DHCP_GET_BUFFER(),0,ETH_MAX_FRAME_SIZE);
+    IP_MEM_SET_S(IPV4_DHCP_GET_BUFFER(), ETH_MAX_FRAME_SIZE, 0, ETH_MAX_FRAME_SIZE);
     ulDhcpOffset = ETH_MAC_HEADER_LEN + IPV4_FIX_HDR_LEN + IP_UDP_HDR_LEN;
     pucDhcpPktBuf = IPV4_DHCP_GET_BUFFER() + ulDhcpOffset;
 
@@ -533,7 +471,7 @@ VOS_VOID IPV4_DHCP_FormAckMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalys
     IPV4_DHCP_FormDhcpHdrStru(pstDhcpAnalyse,pucDhcpPktBuf);
 
     /* 设置your ip address */
-    IP_MEM_CPY_S(pucDhcpPktBuf + IPV4_DHCP_HEAD_YIADDR_OFFSET, \
+    IP_MEM_CPY_S(pucDhcpPktBuf + IPV4_DHCP_HEAD_YIADDR_OFFSET, IPV4_ADDR_LEN, \
                pstIpV4Entity->unUeIpInfo.aucIPAddr, IPV4_ADDR_LEN);
 
     /*Form Option */
@@ -547,17 +485,7 @@ VOS_VOID IPV4_DHCP_FormAckMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalys
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_FormNakMsg
- Description     : 生成DHCP NACK消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_FormNackMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
                                         const NDIS_IPV4_INFO_STRU       *pstIpV4Entity,
                                         VOS_UINT16                      *pusLen)
@@ -574,7 +502,7 @@ VOS_VOID IPV4_DHCP_FormNackMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnaly
     }
 
     /*将BUF 清 零*/
-    IP_MEM_SET_S(IPV4_DHCP_GET_BUFFER(),0,ETH_MAX_FRAME_SIZE);
+    IP_MEM_SET_S(IPV4_DHCP_GET_BUFFER(), ETH_MAX_FRAME_SIZE, 0, ETH_MAX_FRAME_SIZE);
     ulDhcpOffset = ETH_MAC_HEADER_LEN + IPV4_FIX_HDR_LEN + IP_UDP_HDR_LEN;
     pucDhcpPktBuf = IPV4_DHCP_GET_BUFFER() + ulDhcpOffset;
 
@@ -597,7 +525,7 @@ VOS_VOID IPV4_DHCP_FormNackMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnaly
     pstOptionItem = (IPV4_DHCP_OPTION_ITEM_STRU *)pucDhcpPktBuf;
     pstOptionItem->ucOptionType = IPV4_DHCP_OPTION_SERVER_IP;
     pstOptionItem->ucOptionLen  = IPV4_ADDR_LEN;
-    IP_MEM_CPY_S(pstOptionItem->aucOptionValue,&(pstIpV4Entity->unGwIpInfo),IPV4_ADDR_LEN);
+    IP_MEM_CPY_S(pstOptionItem->aucOptionValue, IPV4_ADDR_LEN, &(pstIpV4Entity->unGwIpInfo), IPV4_ADDR_LEN);
     usDhcpOptionLen   += IPV4_ADDR_LEN + 2;
     pucDhcpPktBuf     += IPV4_ADDR_LEN + 2;
 
@@ -612,19 +540,7 @@ VOS_VOID IPV4_DHCP_FormNackMsg(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnaly
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_FindIPV4Entity
- Description     : 根据DHCP Client MAC Addr查找相应的IPV4实体;
-                   由调用者保证入参ExRabId对应一个NDIS实体
- Input           : VOS_UINT8 ucRabId
- Output          :
- Return          : NDIS_IPV4_INFO_STRU
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-    2.h00159435      2011-12-9
-    3.h00218138      2013-1-16  DSDA
-*****************************************************************************/
 NDIS_IPV4_INFO_STRU * IPV4_DHCP_FindIPV4Entity(VOS_UINT8 ucExRabId)
 {
     NDIS_ENTITY_STRU         *pstNdisEntity;
@@ -641,17 +557,7 @@ NDIS_IPV4_INFO_STRU * IPV4_DHCP_FindIPV4Entity(VOS_UINT8 ucExRabId)
     return pstIpv4Info;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_DiscoverMsgProc
- Description     : 处理DHCP DISCOVER消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_DiscoverMsgProc(IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse, VOS_UINT8 ucRabId)
 {
 
@@ -690,17 +596,7 @@ VOS_VOID IPV4_DHCP_DiscoverMsgProc(IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse
 
     return;
 }
-/*****************************************************************************
- Function Name   : IPV4_DHCP_SelectingRequestMsgProc
- Description     : 处理Selecting状态下的请求消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_SelectingRequestMsgProc(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
                                                        NDIS_IPV4_INFO_STRU       *pstIpV4Entity,
                                                        VOS_UINT8  ucRabId)
@@ -737,17 +633,7 @@ VOS_VOID IPV4_DHCP_SelectingRequestMsgProc(const IPV4_DHCP_ANALYSE_RESULT_STRU *
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_OtherRequestMsgProc
- Description     : 处理非Selecting状态下的请求消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_OtherRequestMsgProc( const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
                                                    const NDIS_IPV4_INFO_STRU    *pstIpV4Entity,
                                                    VOS_UINT8  ucRabId)
@@ -781,17 +667,7 @@ VOS_VOID IPV4_DHCP_OtherRequestMsgProc( const IPV4_DHCP_ANALYSE_RESULT_STRU *pst
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_InitRebootRequestProc
- Description     : 处理Client 在Init-Reboot状态下的请求消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_InitRebootRequestProc( const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
                                                     NDIS_IPV4_INFO_STRU    *pstIpV4Entity,
                                                     VOS_UINT8  ucRabId)
@@ -825,17 +701,7 @@ VOS_VOID IPV4_DHCP_InitRebootRequestProc( const IPV4_DHCP_ANALYSE_RESULT_STRU *p
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_RequestMsgProc
- Description     : 处理DHCP REQUEST消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_RequestMsgProc(IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse, VOS_UINT8 ucRabId)
 {
     NDIS_IPV4_INFO_STRU      *pstIpV4Entity;
@@ -889,17 +755,7 @@ VOS_VOID IPV4_DHCP_RequestMsgProc(IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse,
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_ReleaseMsgProc
- Description     : 处理DHCP RELEASE消息
- Input           :
- Output          :
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_ReleaseMsgProc(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse, VOS_UINT8 ucRabId)
 {
     NDIS_IPV4_INFO_STRU      *pstIpV4Entity;
@@ -925,17 +781,7 @@ VOS_VOID IPV4_DHCP_ReleaseMsgProc(const IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAn
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_ProcDhcpMsg
- Description     : 处理DHCP数据报
- Input           :
- Output          :
- Return          : VOS_VOID
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_ProcDhcpMsg(IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse, VOS_UINT8 ucRabId)
 {
     NDIS_IPV4_INFO_STRU             *pstIpV4Entity;
@@ -956,8 +802,8 @@ VOS_VOID IPV4_DHCP_ProcDhcpMsg(IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse, VO
     }
 
     /* save the ue mac addr,and update the mac hdr*/
-    IP_MEM_CPY_S(pstIpV4Entity->aucUeMacAddr,pstDhcpAnalyse->aucHardwareAddr,ETH_MAC_ADDR_LEN);
-    IP_MEM_CPY_S(pstIpV4Entity->aucMacFrmHdr,pstDhcpAnalyse->aucHardwareAddr,ETH_MAC_ADDR_LEN);
+    IP_MEM_CPY_S(pstIpV4Entity->aucUeMacAddr, ETH_MAC_ADDR_LEN, pstDhcpAnalyse->aucHardwareAddr, ETH_MAC_ADDR_LEN);
+    IP_MEM_CPY_S(pstIpV4Entity->aucMacFrmHdr, ETH_MAC_ADDR_LEN, pstDhcpAnalyse->aucHardwareAddr, ETH_MAC_ADDR_LEN);
     pstIpV4Entity->ulArpInitFlg = PS_TRUE;
 
     switch (pstDhcpAnalyse->enMsgType)
@@ -998,17 +844,7 @@ VOS_VOID IPV4_DHCP_ProcDhcpMsg(IPV4_DHCP_ANALYSE_RESULT_STRU *pstDhcpAnalyse, VO
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_AnalyseDhcpPkt
- Description     : 解析DHCP报文
- Input           :
- Output          : IPV4_DHCP_ANALYSE_RESULT_STRU *pstAnalyseRst : DHCP报文解析结果
- Return          :
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_AnalyseDhcpPkt( VOS_UINT8                     *pucDhcp,
                                             VOS_UINT32                     ulDhcpLen,
                                             IPV4_DHCP_ANALYSE_RESULT_STRU *pstAnalyseRst)
@@ -1036,7 +872,7 @@ VOS_VOID IPV4_DHCP_AnalyseDhcpPkt( VOS_UINT8                     *pucDhcp,
     pstAnalyseRst->unClientIPAddr.ulIpAddr = pstDhcpFixHdr->unClientIPAddr.ulIpAddr;
     pstAnalyseRst->unYourIPAddr.ulIpAddr   = pstDhcpFixHdr->unYourIPAddr.ulIpAddr;
     pstAnalyseRst->ucHardwareLen = ETH_MAC_ADDR_LEN;
-    IP_MEM_CPY_S(pstAnalyseRst->aucHardwareAddr,pstDhcpFixHdr->aucClientHardwardAddr,ETH_MAC_ADDR_LEN);
+    IP_MEM_CPY_S(pstAnalyseRst->aucHardwareAddr, ETH_MAC_ADDR_LEN, pstDhcpFixHdr->aucClientHardwardAddr, ETH_MAC_ADDR_LEN);
 
     /*Option Start and End Address,not include Magic Code*/
     pucOptionStart = pucDhcp + IPV4_DHCP_OPTION_OFFSET;
@@ -1049,15 +885,15 @@ VOS_VOID IPV4_DHCP_AnalyseDhcpPkt( VOS_UINT8                     *pucDhcp,
 
         if (IPV4_DHCP_OPTION_MSG_TYPE == pstOptionStru->ucOptionType)
         {
-            IP_MEM_CPY_S(&(pstAnalyseRst->enMsgType),pstOptionStru->aucOptionValue,IPV4_DHCP_OPTION_MSG_TYPE_LEN);
+            IP_MEM_CPY_S(&(pstAnalyseRst->enMsgType), IPV4_DHCP_OPTION_MSG_TYPE_LEN, pstOptionStru->aucOptionValue, IPV4_DHCP_OPTION_MSG_TYPE_LEN);
         }
         else if (IPV4_DHCP_OPTION_REQUEST_IP_ADDR == pstOptionStru->ucOptionType)
         {
-            IP_MEM_CPY_S(&(pstAnalyseRst->unRequestIPAddr),pstOptionStru->aucOptionValue,IPV4_ADDR_LEN);
+            IP_MEM_CPY_S(&(pstAnalyseRst->unRequestIPAddr), IPV4_ADDR_LEN, pstOptionStru->aucOptionValue, IPV4_ADDR_LEN);
         }
         else if (IPV4_DHCP_OPTION_SERVER_IP == pstOptionStru->ucOptionType)
         {
-            IP_MEM_CPY_S(&(pstAnalyseRst->unServerIPAddr),pstOptionStru->aucOptionValue,IPV4_ADDR_LEN);
+            IP_MEM_CPY_S(&(pstAnalyseRst->unServerIPAddr), IPV4_ADDR_LEN, pstOptionStru->aucOptionValue, IPV4_ADDR_LEN);
         }
         else if (IPV4_DHCP_OPTION_PAD_OPTIOIN == pstOptionStru->ucOptionType)
         {
@@ -1080,16 +916,7 @@ VOS_VOID IPV4_DHCP_AnalyseDhcpPkt( VOS_UINT8                     *pucDhcp,
     return ;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_DhcpPktIPInfoCheck
- Description     : DHCP报文IP层信息检查
- Input           : VOS_UINT8  *pucIpPkt 指向IP头开始的位置
- Output          :
- Return          : VOS_VOID
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-*****************************************************************************/
 VOS_UINT32 IPV4_DHCP_DhcpPktIPInfoCheck(VOS_UINT8  *pucIpPkt, VOS_UINT32  ulIpMemLen)
 {
     ETH_IPFIXHDR_STRU       *pstIpHdr;
@@ -1133,16 +960,7 @@ VOS_UINT32 IPV4_DHCP_DhcpPktIPInfoCheck(VOS_UINT8  *pucIpPkt, VOS_UINT32  ulIpMe
     return PS_TRUE;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_DhcpPktUdpInfoCheck
- Description     : DHCP报文UDP信息检查
- Input           : VOS_UINT8  *pucIpPkt 指向UDP头开始的位置
- Output          :
- Return          : VOS_VOID
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-*****************************************************************************/
 VOS_UINT32 IPV4_DHCP_DhcpPktUdpInfoCheck(VOS_UINT8  *pucUdp, VOS_UINT32  ulUdpMemLen)
 {
     ETH_UDPHDR_STRU         *pstUdpHdr;
@@ -1171,16 +989,7 @@ VOS_UINT32 IPV4_DHCP_DhcpPktUdpInfoCheck(VOS_UINT8  *pucUdp, VOS_UINT32  ulUdpMe
     return PS_TRUE;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_DhcpPktDhcpInfoCheck
- Description     : DHCP报文UDP信息检查
- Input           : VOS_UINT8  *pucIpPkt 指向UDP头开始的位置
- Output          :
- Return          : VOS_VOID
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-*****************************************************************************/
 VOS_UINT32 IPV4_DHCP_DhcpPktDhcpInfoCheck(VOS_UINT8  *pucDhcp, VOS_UINT32  ulDhcpMemLen)
 {
     IPV4_DHCP_PROTOCL_STRU      *pstDhcpFixHdr;
@@ -1237,16 +1046,7 @@ VOS_UINT32 IPV4_DHCP_DhcpPktDhcpInfoCheck(VOS_UINT8  *pucDhcp, VOS_UINT32  ulDhc
 }
 
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_IsDhcpPacket
- Description     : 判断是否是DHCP报文
- Input           : VOS_UINT8  *pucIpPkt 指向IP头开始的位置
- Output          :
- Return          : VOS_VOID
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-*****************************************************************************/
 VOS_UINT32 IPV4_DHCP_IsDhcpPacket(VOS_UINT8  *pucIpPkt, VOS_UINT32  ulPktMemLen)
 {
     ETH_IPFIXHDR_STRU       *pstIpHdr;
@@ -1290,17 +1090,7 @@ VOS_UINT32 IPV4_DHCP_IsDhcpPacket(VOS_UINT8  *pucIpPkt, VOS_UINT32  ulPktMemLen)
 
 
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_ProcDhcpPkt
- Description     : 处理DHCP报文
- Input           : VOS_UINT8  *pucIpPkt 指向IP头开始的位置
- Output          :
- Return          : VOS_VOID
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_ProcDhcpPkt(VOS_UINT8  *pucIpPkt, VOS_UINT8 ucRabId, VOS_UINT32 ulPktMemLen)
 {
     IPV4_DHCP_ANALYSE_RESULT_STRU    stDhcpRst;
@@ -1321,7 +1111,7 @@ VOS_VOID IPV4_DHCP_ProcDhcpPkt(VOS_UINT8  *pucIpPkt, VOS_UINT8 ucRabId, VOS_UINT
     }
 
     /*record src ip and dst ip in the ip hdr */
-    IP_MEM_SET_S(&stDhcpRst,0,sizeof(IPV4_DHCP_ANALYSE_RESULT_STRU));
+    IP_MEM_SET_S(&stDhcpRst, sizeof(IPV4_DHCP_ANALYSE_RESULT_STRU), 0, sizeof(IPV4_DHCP_ANALYSE_RESULT_STRU));
     pstIpFixHdr = (ETH_IPFIXHDR_STRU *)((VOS_VOID*)pucIpPkt);
     stDhcpRst.unSrcIPAddr.ulIpAddr = pstIpFixHdr->ulSrcAddr;
     stDhcpRst.unDstIpAddr.ulIpAddr = pstIpFixHdr->ulDestAddr;
@@ -1346,17 +1136,7 @@ VOS_VOID IPV4_DHCP_ProcDhcpPkt(VOS_UINT8  *pucIpPkt, VOS_UINT8 ucRabId, VOS_UINT
     return;
 }
 
-/*****************************************************************************
- Function Name   : IPV4_DHCP_ShowDebugInfo
- Description     : 打印DHCP Server调试信息
- Input           :
- Output          :
- Return          : VOS_VOID
 
- History         :
-    1.y00151394      2011-3-7  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IPV4_DHCP_ShowDebugInfo(VOS_VOID)
 {
     PS_PRINTF("Recv Dhcp Packet              :    %d \r\n",g_stDhcpStatStru.ulRecvDhcpPkt);

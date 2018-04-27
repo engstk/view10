@@ -1232,21 +1232,7 @@ STATIC ssize_t store_wifi_mem_dump(struct device *dev, struct kobj_attribute *at
     return count;
 }
 
-/*****************************************************************************
- 函 数 名  : show_bfgx_dump
- 功能描述  : 显示SDIO上报BFGX的reg
- 输入参数  :
- 输出参数  :
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年12月2日
-    作    者   : c00351912
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC ssize_t show_bfgx_dump(struct device *dev, struct kobj_attribute *attr, int8 *buf)
 {
     PS_PRINT_INFO("%s\n", __func__);
@@ -1263,22 +1249,7 @@ STATIC ssize_t show_bfgx_dump(struct device *dev, struct kobj_attribute *attr, i
                         " 3    sdio read bcpu mem      \n"
                         " 4    equal cmd 1+2+3         \n");
 }
-/*****************************************************************************
- 函 数 名  : store_bfgx_reg_and_reg_dump
- 功能描述  : SDIO上报BFGX的reg
- 输入参数  :
 
- 输出参数  :
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年12月2日
-    作    者   : c00351912
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC ssize_t store_bfgx_reg_and_reg_dump(struct device *dev, struct kobj_attribute *attr, const char *buf, size_t count)
 {
     int32 cmd;

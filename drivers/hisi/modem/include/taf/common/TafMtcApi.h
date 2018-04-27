@@ -89,15 +89,7 @@ extern "C" {
   3 枚举定义
 *****************************************************************************/
 
-/*****************************************************************************
- 枚举名称: TAF_MTC_MSG_ID_ENUM
- 枚举说明: MTC内部消息ID
 
- 修改历史      :
-  1.日    期   : 2014年06月16日
-    作    者   : j00174725
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum TAF_MTC_MSG_ID_ENUM
 {
     /* 外挂CDMA连接状态 */
@@ -117,14 +109,7 @@ enum TAF_MTC_MSG_ID_ENUM
 };
 typedef VOS_UINT32 TAF_MTC_MSG_ID_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : TAF_MTC_SRV_CONN_STATE_ENUM
-结构说明  : 业务连接状态枚举定义
 
-  1.日    期   : 2014年06月16日
-    作    者   : j00174725
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum TAF_MTC_SRV_CONN_STATE_ENUM
 {
     TAF_MTC_SRV_NO_EXIST                = 0,                                    /* 无连接 */
@@ -134,14 +119,7 @@ enum TAF_MTC_SRV_CONN_STATE_ENUM
 };
 typedef VOS_UINT8 TAF_MTC_SRV_CONN_STATE_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : TAF_MTC_POWER_STATE_ENUM
-结构说明  : 开机状态枚举定义
 
-  1.日    期   : 2014年06月16日
-    作    者   : j00174725
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum TAF_MTC_POWER_STATE_ENUM
 {
     TAF_MTC_POWER_OFF                  = 0,                                     /* 关机 */
@@ -151,14 +129,7 @@ enum TAF_MTC_POWER_STATE_ENUM
 };
 typedef VOS_UINT8 TAF_MTC_POWER_STATE_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : TAF_MTC_USIMM_CARD_SERVIC_ENUM
-结构说明  : 卡状态
 
-  1.日    期   : 2014年06月16日
-    作    者   : 蒋德彬/j00174725
-    修改内容   : 新增枚举
-*****************************************************************************/
 
 enum TAF_MTC_USIMM_CARD_SERVIC_ENUM
 {
@@ -174,14 +145,7 @@ enum TAF_MTC_USIMM_CARD_SERVIC_ENUM
 };
 typedef VOS_UINT16      TAF_MTC_USIMM_CARD_SERVIC_ENUM_UINT16;
 
-/*****************************************************************************
-枚举名    : TAF_MTC_CDMA_USIMM_CARD_ENUM
-结构说明  : 卡状态
 
-  1.日    期   : 2014年06月16日
-    作    者   : 蒋德彬/j00174725
-    修改内容   : 新增枚举
-*****************************************************************************/
 
 enum TAF_MTC_CDMA_USIMM_CARD_ENUM
 {
@@ -192,15 +156,7 @@ enum TAF_MTC_CDMA_USIMM_CARD_ENUM
 };
 typedef VOS_UINT8  TAF_MTC_CDMA_USIMM_CARD_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : MTC_SESSION_TYPE_ENUM_UINT8
- 枚举说明  : SESSION类型
- 1.日    期   : 2015年09月04日
-   作    者   : j00174725
-   修改内容   : 新建
 
-   说明:这个枚举在增加时，注意不要超过32个，否则记录会越界
-*****************************************************************************/
 enum MTC_SESSION_TYPE_ENUM
 {
     MTC_SESSION_TYPE_CS_MO_NORMAL_CALL                      = 0,
@@ -243,14 +199,7 @@ enum MTC_SESSION_TYPE_ENUM
 };
 typedef VOS_UINT8 MTC_SESSION_TYPE_ENUM_UINT8;                                  /* 这个枚举在增加时，注意不要超过32个，否则记录会越界 */
 
-/*****************************************************************************
-枚举名    : MTC_CS_TYPE_ENUM
-结构说明  : CS业务类型枚举定义
 
-  1.日    期   : 2015年09月19日
-    作    者   : j00174725
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum MTC_CS_TYPE_ENUM
 {
     MTC_CS_TYPE_GU                      = 0x00,                                 /* GU电话 */
@@ -261,18 +210,7 @@ enum MTC_CS_TYPE_ENUM
 };
 typedef VOS_UINT8 MTC_CS_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : MTC_PS_TYPE_ENUM
-结构说明  : PS业务类型枚举定义
 
-  1.日    期   : 2015年10月10日
-    作    者   : j00174725
-    修改内容   : 新增枚举
-
-  2.日    期   : 2015年11月23日
-    作    者   : h00313353
-    修改内容   : Iteration 19
-*****************************************************************************/
 enum MTC_PS_TYPE_ENUM
 {
     MTC_PS_TYPE_GU                      = 0x00,                                /* PS */
@@ -283,14 +221,7 @@ enum MTC_PS_TYPE_ENUM
 };
 typedef VOS_UINT8 MTC_PS_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : TAF_MTC_POWER_SAVE_ENUM
-结构说明  : Power Save状态枚举定义
 
-  1.日    期   : 2016年03月30日
-    作    者   : j00174725
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum TAF_MTC_POWER_SAVE_ENUM
 {
     TAF_MTC_POWER_SAVE                  = 0,                                    /* 进入power save */
@@ -300,17 +231,7 @@ enum TAF_MTC_POWER_SAVE_ENUM
 };
 typedef VOS_UINT8 TAF_MTC_POWER_SAVE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : MTC_RATMODE_ENUM
- 枚举说明  : MTC模块的接入模式定义
 
-  1.日    期   : 2013年08月12日
-    作    者   : l00198894
-    修改内容   : V9R1 干扰控制项目
-  2.日    期   : 2016年11月24日
-    作    者   : j00174725
-    修改内容   : 从MtcMmaInterface.h移到这个头文件中
-*****************************************************************************/
 enum MTC_RATMODE_ENUM
 {
     MTC_RATMODE_GSM                     = 0x00,
@@ -341,14 +262,7 @@ typedef VOS_UINT8 MTC_RATMODE_ENUM_UINT8;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*******************************************************************************
- 结构名    : TAF_MTC_CDMA_STATE_INFO_STRU
- 结构说明  : CDMS状态结构体
 
- 1.日    期   : 2014年06月16日
-   作    者   : j00174725
-   修改内容   : K3V3 多模多天线特性
-*******************************************************************************/
 typedef struct
 {
     TAF_MTC_SRV_CONN_STATE_ENUM_UINT8       enCsConnSt;                         /* CS连接状态 */
@@ -359,28 +273,14 @@ typedef struct
     VOS_UINT8                               aucReserved2[2];
 }TAF_MTC_CDMA_STATE_INFO_STRU;
 
-/*******************************************************************************
- 结构名    : TAF_MTC_CDMA_STATE_IND_STRU
- 结构说明  : ID_MSG_MTC_CDMA_CONN_STATUS的消息结构
 
- 1.日    期   : 2014年06月16日
-   作    者   : j00174725
-   修改内容   : K3V3 多模多天线特性
-*******************************************************************************/
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
     TAF_MTC_CDMA_STATE_INFO_STRU        stCdmaState;
 }TAF_MTC_CDMA_STATE_IND_STRU;
 
-/*******************************************************************************
- 结构名    : TAF_MTC_SRV_CONN_STATE_INFO_STRU
- 结构说明  : ID_MMA_MTC_CONN_STATUS_INFO_IND的消息信息单元结构
 
- 1.日    期   : 2014年06月16日
-   作    者   : j00174725
-   修改内容   : K3V3 多模多天线特性
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT32                          bitOpPsSrv      : 1;
@@ -393,28 +293,14 @@ typedef struct
     VOS_UINT8                           aucReserved[1];
 }TAF_MTC_SRV_CONN_STATE_INFO_STRU;
 
-/*******************************************************************************
- 结构名    : TAF_MTC_MODEM_CONN_STATUS_IND_STRU
- 结构说明  : ID_MMA_MTC_CONN_STATUS_INFO_IND的消息结构
 
- 1.日    期   : 2014年06月16日
-   作    者   : j00174725
-   修改内容   : K3V3 多模多天线特性
-*******************************************************************************/
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
     TAF_MTC_SRV_CONN_STATE_INFO_STRU    stModemConnStateInfo;
 }TAF_MTC_MODEM_CONN_STATUS_IND_STRU;
 
-/*******************************************************************************
- 结构名    : TAF_MTC_USIMM_STATUS_IND_STRU
- 结构说明  : ID_MMA_MTC_CONN_STATUS_INFO_IND的消息结构
 
- 1.日    期   : 2014年06月16日
-   作    者   : j00174725
-   修改内容   : K3V3 多模多天线特性
-*******************************************************************************/
 typedef struct
 {
     TAF_CTRL_STRU                           stCtrl;
@@ -422,13 +308,7 @@ typedef struct
     TAF_MTC_USIMM_CARD_SERVIC_ENUM_UINT16   enCsimState;       /* Csim卡状态 */
 }TAF_MTC_USIMM_STATUS_IND_STRU;
 
-/*****************************************************************************
- 结构名    : MTC_RAT_MODE_IND_STRU
- 结构说明  : 上报RAT MODE信息
- 1.日    期   : 2016年11月24日
-   作    者   : j00174725
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
@@ -436,13 +316,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }MTC_RAT_MODE_IND_STRU;
 
-/*****************************************************************************
- 结构名    : MTC_1X_ACTIVE_FLG_IND_STRU
- 结构说明  : 上报1X激活状态
- 1.日    期   : 2017年7月15日
-   作    者   : h00360002
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
@@ -452,13 +326,7 @@ typedef struct
 }MTC_1X_ACTIVE_FLG_IND_STRU;
 
 
-/*****************************************************************************
- 结构名    : MTC_BEGIN_SESSION_IND_STRU
- 结构说明  : SESSION开始指示
- 1.日    期   : 2015年9月4日
-   作    者   : j00174725
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
@@ -466,13 +334,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }MTC_BEGIN_SESSION_IND_STRU;
 
-/*****************************************************************************
- 结构名    : MTC_END_SESSION_IND_STRU
- 结构说明  : SESSION终止指示
- 1.日    期   : 2015年09月04日
-   作    者   : j00174725
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
@@ -482,13 +344,7 @@ typedef struct
     VOS_UINT8                           ucReserved;
 }MTC_END_SESSION_IND_STRU;
 
-/*****************************************************************************
- 结构名    : MTC_POWER_SAVE_IND_STRU
- 结构说明  : POWER SAVE指示
- 1.日    期   : 2016年3月30日
-   作    者   : j00174725
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
@@ -532,90 +388,28 @@ typedef struct
 /*****************************************************************************
   10 函数声明
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : MTC_SndMsg
- 功能描述  : 发送MTC消息
- 输入参数  : VOS_UINT32                          ulTaskId
-             VOS_UINT32                          ulMsgId
-             VOS_VOID                           *pData
-             VOS_UINT32                          ulLen
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
+#if (OSA_CPU_CCPU == VOS_OSA_CPU)
 
- 修改历史      :
-  1.日    期   : 2014年06月16日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 MTC_SndMsg(
     VOS_UINT32                          ulTaskId,
     VOS_UINT32                          ulMsgId,
     VOS_VOID                           *pData,
     VOS_UINT32                          ulLength
 );
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 
-/*****************************************************************************
- 函 数 名  : MTC_SetCdmaServiceConnStateInfo
- 功能描述  : 设置外部CDMA Modem的连接状态(PS&CS)
- 输入参数  : pstCtrl                    - 控制头
-             pstCdmsStatus              - 状态信息指针
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2014年06月16日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 MTC_SetCdmaServiceConnStateInfo(
     TAF_CTRL_STRU                      *pstCtrl,
     TAF_MTC_CDMA_STATE_INFO_STRU       *pstCdmsState
 );
+#endif
 
-/*****************************************************************************
- 函 数 名  : MTC_SetModemServiceConnState
- 功能描述  : 设置modem状态信息
- 输入参数  : ulModuleId      模块ID
-             pstModemConnSt  状态消息指针
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2014年06月16日
-    作    者   : j00174725
-    修改内容   : K3V3 多模多天线特性
-*****************************************************************************/
 VOS_UINT32 MTC_SetModemServiceConnState(
     TAF_CTRL_STRU                      *pstCtrl,
     TAF_MTC_SRV_CONN_STATE_INFO_STRU   *pstModemConnSt
 );
 
-/*****************************************************************************
- 函 数 名  : MTC_SetModemUsimmState
- 功能描述  : 设置卡状态信息
- 输入参数  : pstCtrl         消息控制头
-             pstModemConnSt  状态消息指针
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年06月16日
-    作    者   : j00174725
-    修改内容   : K3V3 多模多天线特性
-
-  2.日    期   : 2015年10月21日
-    作    者   : h00313353
-    修改内容   : Iteration 19 TAS
-*****************************************************************************/
 VOS_UINT32 MTC_SetModemUsimmState(
     TAF_CTRL_STRU                           *pstCtrl,
     TAF_MTC_USIMM_CARD_SERVIC_ENUM_UINT16    enUsimState,
@@ -642,11 +436,14 @@ VOS_VOID MTC_SetRatModeInfo(
     MTC_RATMODE_ENUM_UINT8              enRatMode
 );
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_VOID MTC_Set1xActiveFlg(
     VOS_UINT8                  uc1xActiveFlg,
     VOS_UINT8                  ucIsSwitchOnScene
 );
 
+#endif
+#endif
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

@@ -26,7 +26,7 @@ unsigned long backlight_duration = (3 * HZ / 60);
 
 extern unsigned int get_boot_into_recovery_flag(void);
 
-void hisifb_set_backlight(struct hisi_fb_data_type *hisifd, uint32_t bkl_lvl)
+void hisifb_set_backlight(struct hisi_fb_data_type *hisifd, uint32_t bkl_lvl, bool enforce)
 {
 	struct hisi_fb_panel_data *pdata = NULL;
 	uint32_t temp = bkl_lvl;
@@ -43,23 +43,28 @@ void hisifb_set_backlight(struct hisi_fb_data_type *hisifd, uint32_t bkl_lvl)
 
 	if (!hisifd->panel_power_on || !hisifd->backlight.bl_updated) {
 		hisifd->bl_level = bkl_lvl;
+		HISI_FB_INFO("set_bl return: panel_power_on = %d, backlight.bl_updated = %d! bkl_lvl = %d\n",hisifd->panel_power_on,hisifd->backlight.bl_updated, bkl_lvl);
 		return;
 	}
 
 	if (pdata->set_backlight) {
-		if (hisifd->backlight.bl_level_old == temp) {
+		if (hisifd->backlight.bl_level_old == temp && !enforce) {
 			hisifd->bl_level = bkl_lvl;
+			HISI_FB_INFO("set_bl return: bl_level_old = %d, current_bl_level = %d, enforce = %d!\n",hisifd->backlight.bl_level_old,temp,enforce);
 			return;
 		}
+
 		hung_wp_screen_setbl(temp);
 		if (hisifd->backlight.bl_level_old == 0) {
-			HISI_FB_INFO("backlight level = %d", bkl_lvl);
+			HISI_FB_INFO("backlight level = %d \n", bkl_lvl);
 		}
 		hisifd->bl_level = bkl_lvl;
+
 		if (hisifd->panel_info.bl_set_type & BL_SET_BY_MIPI) {
 			hisifb_set_vsync_activate_state(hisifd, true);
 			hisifb_activate_vsync(hisifd);
 		}
+
 		pdata->set_backlight(hisifd->pdev, bkl_lvl);
 		if (hisifd->panel_info.bl_set_type & BL_SET_BY_MIPI) {
 			hisifb_set_vsync_activate_state(hisifd, false);
@@ -70,6 +75,7 @@ void hisifb_set_backlight(struct hisi_fb_data_type *hisifd, uint32_t bkl_lvl)
 				hisifd->secure_ctrl.have_set_backlight = false;
 			}
 		}
+		hisifd->backlight.bl_timestamp = ktime_get();
 		hisifd->backlight.bl_level_old = temp;
 	}
 }
@@ -98,6 +104,10 @@ static void hisifb_bl_workqueue_handler(struct work_struct *work)
 		return;
 	}
 
+	if (hisifd->online_play_count < ONLINE_PLAY_LOG_PRINTF) {
+		HISI_FB_INFO("[online_play_count = %d] begin bl_updated = %d, frame_updated = %d. \n", hisifd->online_play_count, hisifd->backlight.bl_updated, hisifd->backlight.frame_updated);
+	}
+
 	if (!hisifd->backlight.bl_updated) {
 		down(&hisifd->blank_sem);
 
@@ -107,7 +117,12 @@ static void hisifb_bl_workqueue_handler(struct work_struct *work)
 		}
 
 		hisifd->backlight.frame_updated = 0;
+		down(&hisifd->brightness_esd_sem);
+
 		hisifd->backlight.bl_updated = 1;
+		if (hisifd->online_play_count < ONLINE_PLAY_LOG_PRINTF) {
+			HISI_FB_INFO("[online_play_count = %d] set bl_updated = 1.\n", hisifd->online_play_count);
+		}
 		if (is_recovery_mode) {
 			hisifd->bl_level = hisifd->panel_info.bl_default;
 		} else {
@@ -117,8 +132,12 @@ static void hisifb_bl_workqueue_handler(struct work_struct *work)
 			}
 		}
 
-		hisifb_set_backlight(hisifd, hisifd->bl_level);
+		hisifb_set_backlight(hisifd, hisifd->bl_level, false);
+		up(&hisifd->brightness_esd_sem);
 		up(&hisifd->blank_sem);
+	}
+	if (hisifd->online_play_count < ONLINE_PLAY_LOG_PRINTF) {
+		HISI_FB_INFO("[online_play_count = %d] end bl_updated = %d, frame_updated = %d.\n", hisifd->online_play_count, hisifd->backlight.bl_updated, hisifd->backlight.frame_updated);
 	}
 }
 
@@ -135,8 +154,10 @@ void hisifb_backlight_update(struct hisi_fb_data_type *hisifd)
 		HISI_FB_ERR("pdata is NULL");
 		return;
 	}
-
-	if (!hisifd->backlight.bl_updated) {
+	if (hisifd->online_play_count < ONLINE_PLAY_LOG_PRINTF) {
+		HISI_FB_INFO("[online_play_count = %d] panel_power_on = %d, bl_updated = %d.\n", hisifd->online_play_count, hisifd->panel_power_on, hisifd->backlight.bl_updated);
+	}
+	if (!hisifd->backlight.bl_updated && hisifd->panel_power_on) {
 		hisifd->backlight.frame_updated = 1;
 		schedule_delayed_work(&hisifd->backlight.bl_worker,
 			backlight_duration);
@@ -161,6 +182,10 @@ void hisifb_backlight_cancel(struct hisi_fb_data_type *hisifd)
 	hisifd->backlight.bl_updated = 0;
 	hisifd->backlight.bl_level_old = 0;
 	hisifd->backlight.frame_updated = 0;
+	hisifd->online_play_count = 0;
+	if (hisifd->online_play_count < ONLINE_PLAY_LOG_PRINTF) {
+		HISI_FB_INFO("[online_play_count = %d] set bl_updated = 0.\n", hisifd->online_play_count);
+	}
 
 	if (pdata->set_backlight) {
 		hisifd->bl_level = 0;
@@ -202,7 +227,7 @@ static void hisi_fb_set_bl_brightness(struct led_classdev *led_cdev,
 	if (!bl_lvl && value)
 		bl_lvl = 1;
 	down(&hisifd->brightness_esd_sem);
-	hisifb_set_backlight(hisifd, bl_lvl);
+	hisifb_set_backlight(hisifd, bl_lvl, false);
 	up(&hisifd->brightness_esd_sem);
 }
 

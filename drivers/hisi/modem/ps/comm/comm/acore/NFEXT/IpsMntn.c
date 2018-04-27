@@ -104,23 +104,7 @@ IPS_MNTN_TRACE_CONFIG_REQ_STRU          g_stIpsTraceMsgCfg;     /*TCP/IP协议栈可
   8 函数声明
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_SndCfgCnf2Om
- 功能描述  : 向OM发送配置确认消息
- 输入参数  : usPrimId               消息ID
-             usTransMsgContentLen   透传消息长度
-             pTransMsgContent       透传消息内容指针
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年8月3日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID IPS_MNTN_SndCfgCnf2Om
 (
     VOS_UINT32      ulPrimId,
@@ -139,7 +123,7 @@ VOS_VOID IPS_MNTN_SndCfgCnf2Om
         return;
     }
 
-    mdrv_memcpy(pSendMsg, pTransMsgContent, (VOS_ULONG)ulTransMsgContentLen);
+    PSACORE_MEM_CPY(pSendMsg, ulTransMsgContentLen, pTransMsgContent, (VOS_ULONG)ulTransMsgContentLen);
 
     if ( VOS_OK != VOS_SendMsg(ACPU_PID_NFEXT, pSendMsg) )
     {
@@ -150,24 +134,7 @@ VOS_VOID IPS_MNTN_SndCfgCnf2Om
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_GetPktLenByTraceCfg
- 功能描述  : 根据消息配置信息，获取捕获报文长度
- 输入参数  : pstTraceCfg        消息配置信息
-             usDataLen          报文长度
 
- 输出参数  : pulTraceCfgLen     捕获报文长度
- 返 回 值  : PS_TRUE        -   捕获报文
-             PS_FALSE       -   不捕获报文
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2011年8月3日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 IPS_MNTN_GetPktLenByTraceCfg
 (
     IPS_MNTN_TRACE_CONFIG_STRU     *pstTraceCfg,
@@ -207,25 +174,7 @@ VOS_UINT32 IPS_MNTN_GetPktLenByTraceCfg
 }
 
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_PktInfoCB
- 功能描述  : 捕获TCP/IP协议栈接收和发送报文回调函数
- 输入参数  : aucNetIfName   虚拟网卡信息
-             aucPktData     线性数据指针,内容为报文信息
-             usLen          报文数据长度
-             usType         可维可测消息类型
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2011年8月3日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 /*lint -esym( 593, pucTraceData ) */
 VOS_VOID IPS_MNTN_PktInfoCB
 (
@@ -304,7 +253,7 @@ VOS_VOID IPS_MNTN_PktInfoCB
     pstTraceMsg             = (IPS_MNTN_PKT_INFO_STRU *)(pucTraceData + sizeof(DIAG_TRANS_IND_STRU));
     pstTraceMsg->usLen      = skb->len + MAC_HEADER_LENGTH;
     pstTraceMsg->usPrimId   = enType;
-    mdrv_memcpy(pstTraceMsg->aucNetIfName, pucNetIfName, (VOS_ULONG)IPS_IFNAMSIZ);
+    PSACORE_MEM_CPY(pstTraceMsg->aucNetIfName, IPS_IFNAMSIZ, pucNetIfName, (VOS_ULONG)IPS_IFNAMSIZ);
 
     /* 在某些情况下(如配置 pstTraceCfg->ulTraceDataLen 为0)，ulDataLen为0的情况，存在异常，这里进行判断，保护这种情况。*/
     /*lint -e{416,426,669} */
@@ -329,26 +278,7 @@ VOS_VOID IPS_MNTN_PktInfoCB
 }
 /*lint +esym( 593, pucTraceData ) */
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_BridgePktInfoCB
- 功能描述  : 捕获网桥中转报文回调函数
- 输入参数  : aucSrcPort     发送虚拟网卡信息
-             aucDestPort    接受虚拟网卡信息
-             aucPktData     线性数据指针,内容为报文信息,指向14字节MAC头部
-             usPktLen       报文数据长度,包含14字节MAC头
-             usType         可维可测消息类型
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2011年8月3日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 /*lint -esym( 593, pucTraceData ) */
 VOS_VOID IPS_MNTN_BridgePktInfoCB
 (
@@ -429,15 +359,15 @@ VOS_VOID IPS_MNTN_BridgePktInfoCB
 
     if (VOS_NULL_PTR != pucSrcPort)
     {
-        mdrv_memcpy(pstTraceMsg->aucSrcPort, pucSrcPort, (VOS_ULONG)IPS_END_NAME);
+        PSACORE_MEM_CPY(pstTraceMsg->aucSrcPort, IPS_END_NAME, pucSrcPort, (VOS_ULONG)IPS_END_NAME);
     }
     if (VOS_NULL_PTR != pucDestPort)
     {
-        mdrv_memcpy(pstTraceMsg->aucDestPort, pucDestPort, (VOS_ULONG)IPS_END_NAME);
+        PSACORE_MEM_CPY(pstTraceMsg->aucDestPort, IPS_END_NAME, pucDestPort, (VOS_ULONG)IPS_END_NAME);
     }
 
     /*lint -e669 -e426 */
-    mdrv_memcpy(pstTraceMsg->aucData, pucPktData, (VOS_ULONG)ulDataLen);
+    PSACORE_MEM_CPY(pstTraceMsg->aucData, ulDataLen, pucPktData, (VOS_ULONG)ulDataLen);
     /*lint +e669 +e426 */
 
     if (VOS_OK != IPS_MNTN_TransMsg(pucTraceData, ulTransDataLen, enType))
@@ -450,25 +380,7 @@ VOS_VOID IPS_MNTN_BridgePktInfoCB
 }
 /*lint +esym( 593, pucTraceData ) */
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_CtrlPktInfoCB
- 功能描述  : 捕获TCP/IP协议栈控制报文回调函数
- 输入参数  : aucNetIfName   虚拟网卡信息
-             aucPktData     线性数据指针,内容为报文信息
-             usLen          报文数据长度
-             usType         可维可测消息类型
 
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2011年8月3日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 /*lint -esym( 593, pucTraceData ) */
 VOS_VOID IPS_MNTN_CtrlPktInfoCB
 (
@@ -522,9 +434,9 @@ VOS_VOID IPS_MNTN_CtrlPktInfoCB
     pstTraceMsg             = (IPS_MNTN_PKT_INFO_STRU *)(pucTraceData + sizeof(DIAG_TRANS_IND_STRU));
     pstTraceMsg->usLen      = usPktLen;
     pstTraceMsg->usPrimId   = enType;
-    mdrv_memcpy(pstTraceMsg->aucNetIfName, pucNetIfName, (VOS_ULONG)IPS_IFNAMSIZ);
+    PSACORE_MEM_CPY(pstTraceMsg->aucNetIfName, IPS_IFNAMSIZ, pucNetIfName, (VOS_ULONG)IPS_IFNAMSIZ);
     /*lint -e669 -e426 */
-    mdrv_memcpy(pstTraceMsg->aucData, pucPktData, (VOS_ULONG)ulDataLen);
+    PSACORE_MEM_CPY(pstTraceMsg->aucData, ulDataLen, pucPktData, (VOS_ULONG)ulDataLen);
     /*lint +e669 +e426 */
 
     if (VOS_OK != IPS_MNTN_TransMsg(pucTraceData, ulTransDataLen, enType))
@@ -537,22 +449,7 @@ VOS_VOID IPS_MNTN_CtrlPktInfoCB
 }
 /*lint +esym( 593, pucTraceData ) */
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_FlowCtrl
- 功能描述  : 协议栈流控可维可测上报
- 输入参数  : ulFcType 流控类型，当前只有网桥forward流控
-             usType   启流控或者解流控
- 输出参数  : 无
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年01月12日
-    作    者   : t00148005
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID IPS_MNTN_FlowCtrl(VOS_UINT32 ulFcType, TTF_MNTN_MSG_TYPE_ENUM_UINT16  enType)
 {
     DIAG_TRANS_IND_STRU                 stTransData;
@@ -580,21 +477,7 @@ VOS_VOID IPS_MNTN_FlowCtrl(VOS_UINT32 ulFcType, TTF_MNTN_MSG_TYPE_ENUM_UINT16  e
 }
 
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_SndTransInd2Om
- 功能描述  : 向OM发送透传消息
- 输入参数  : pTransMsgContent       透传消息内容指针
- 输出参数  : 无
- 返 回 值  : VOS_UINT32 成功或者失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月30日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 IPS_MNTN_TransMsg
 (
     VOS_UINT8                              *pucTransMsg,
@@ -641,21 +524,7 @@ VOS_UINT32 IPS_MNTN_TransMsg
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_BridgeTraceCfgChkParam
- 功能描述  : 网桥中转钩包配置参数检查
- 输入参数  : pRcvMsg
- 输出参数  : 无
- 返 回 值  : VOS_TRUE/VOS_FALSE
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月30日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 PS_BOOL_ENUM_UINT8  IPS_MNTN_BridgeTraceCfgChkParam(IPS_MNTN_TRACE_CONFIG_REQ_STRU *pRcvMsg)
 {
     if ( (IPS_MNTN_TRACE_NULL_CHOSEN != pRcvMsg->stBridgeArpTraceCfg.ulChoice)
@@ -669,21 +538,7 @@ PS_BOOL_ENUM_UINT8  IPS_MNTN_BridgeTraceCfgChkParam(IPS_MNTN_TRACE_CONFIG_REQ_ST
     return PS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_WanTraceCfgChkParam
- 功能描述  : TCP/IP协议栈报文钩包配置参数检查
- 输入参数  : pRcvMsg
- 输出参数  : 无
- 返 回 值  : VOS_TRUE/VOS_FALSE
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月30日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 PS_BOOL_ENUM_UINT8  IPS_MNTN_TraceCfgChkParam(IPS_MNTN_TRACE_CONFIG_REQ_STRU *pRcvMsg)
 {
     if (IPS_MNTN_TRACE_WHOLE_DATA_LEN_CHOSEN < pRcvMsg->stPreRoutingTraceCfg.ulChoice)
@@ -714,21 +569,7 @@ PS_BOOL_ENUM_UINT8  IPS_MNTN_TraceCfgChkParam(IPS_MNTN_TRACE_CONFIG_REQ_STRU *pR
     return PS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_TraceAdvancedCfgChkParam
- 功能描述  : 钩包配置参数检查
- 输入参数  : pRcvMsg
- 输出参数  : 无
- 返 回 值  : VOS_TRUE/VOS_FALSE
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月30日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 PS_BOOL_ENUM_UINT8  IPS_MNTN_TraceAdvancedCfgChkParam(IPS_MNTN_TRACE_CONFIG_REQ_STRU *pRcvMsg)
 {
     /*TCP/IP协议栈报文钩包配置参数检查*/
@@ -751,21 +592,7 @@ PS_BOOL_ENUM_UINT8  IPS_MNTN_TraceAdvancedCfgChkParam(IPS_MNTN_TRACE_CONFIG_REQ_
     return PS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_TraceAdvancedCfgReq
- 功能描述  : 保存钩包配置
- 输入参数  : pMsg
- 输出参数  : 无
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月30日
-    作    者   : f00166181
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID IPS_MNTN_TraceAdvancedCfgReq(VOS_VOID *pMsg)
 {
     PS_BOOL_ENUM_UINT8                       enResult;
@@ -835,21 +662,7 @@ VOS_VOID IPS_MNTN_TraceAdvancedCfgReq(VOS_VOID *pMsg)
 
 }
 
-/*****************************************************************************
- 函 数 名  :IPS_MNTN_Ipv4DataParse
- 功能描述  :解析IP包信息
- 输入参数  :IPS_MNTN_IP_INFO_STRU *pstTraceMsg
-            VOS_UINT8 *pData
- 输出参数  :
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   :  2012年10月29日
-    作    者   :  00199705
-    修改内容   :  创建函数
-*****************************************************************************/
 VOS_VOID IPS_MNTN_Ipv4DataParse(IPS_MNTN_IP_INFO_STRU *pstIpInfo,VOS_UINT8 *pData)
 {
     switch (pstIpInfo->ucL4Proto)
@@ -882,21 +695,7 @@ VOS_VOID IPS_MNTN_Ipv4DataParse(IPS_MNTN_IP_INFO_STRU *pstIpInfo,VOS_UINT8 *pDat
     return;
 }
 
-/*****************************************************************************
- 函 数 名  :IPS_MNTN_Ipv6DataParse
- 功能描述  :解析IP包信息
- 输入参数  :IPS_MNTN_IP_INFO_STRU *pstTraceMsg
-            VOS_UINT8 *pData
- 输出参数  :
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   :  2012年10月29日
-    作    者   :  00199705
-    修改内容   :  创建函数
-*****************************************************************************/
 VOS_VOID IPS_MNTN_Ipv6DataParse(IPS_MNTN_IP_INFO_STRU *pstIpInfo,VOS_UINT8 *pData)
 {
     switch (pstIpInfo->ucL4Proto)
@@ -930,20 +729,7 @@ VOS_VOID IPS_MNTN_Ipv6DataParse(IPS_MNTN_IP_INFO_STRU *pstIpInfo,VOS_UINT8 *pDat
 }
 
 
-/*****************************************************************************
- 函 数 名  :IPS_MNTN_GetIPInfoCfg
- 功能描述  :IP包抓包配置信息
- 输入参数  :VOS_UINT16 usType
- 输出参数  :
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   :  2012年10月29日
-    作    者   :  00199705
-    修改内容   :  创建函数
-*****************************************************************************/
 VOS_UINT32 IPS_MNTN_GetIPInfoCfg(TTF_MNTN_MSG_TYPE_ENUM_UINT16 enType)
 {
     if ((ID_IPS_TRACE_ADS_UL == enType)||(ID_IPS_TRACE_ADS_DL == enType))
@@ -957,22 +743,7 @@ VOS_UINT32 IPS_MNTN_GetIPInfoCfg(TTF_MNTN_MSG_TYPE_ENUM_UINT16 enType)
     return PS_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_CheckNeedTraceIpInfo
- 功能描述  : 判断是否需要勾包
- 输入参数  : skb_buff  IP数据包
-             usType    消息ID
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年08月14日
-    作    者   : w00351380
-    修改内容   : 新生成函数 降全复杂度，从IPS_MNTN_TraceIpInfo拆出
-
-*****************************************************************************/
 VOS_UINT32 IPS_MNTN_CheckNeedTraceIpInfo(const struct sk_buff *skb, TTF_MNTN_MSG_TYPE_ENUM_UINT16 enType)
 {
     VOS_UINT32       ulRst;
@@ -1002,22 +773,7 @@ VOS_UINT32 IPS_MNTN_CheckNeedTraceIpInfo(const struct sk_buff *skb, TTF_MNTN_MSG
 }
 
 
-/*****************************************************************************
- 函 数 名  : IPS_MNTN_TraceIpInfo
- 功能描述  : 向OM发送透传消息
- 输入参数  : skb_buff  IP数据包
-             usType    消息ID
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年10月15日
-    作    者   : 00199705
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 /*lint -esym( 593, pucTraceData ) */
 VOS_VOID IPS_MNTN_TraceIpInfo(
     const struct sk_buff           *skb,

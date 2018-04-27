@@ -18,9 +18,10 @@
 #include <linux/iommu.h>
 #include <linux/gpio.h>
 
-/* BOTSON CS */
-#define MEM_MDC_DA                  (0xC0900000) /*  the mdc iova addr */
-#define MEM_MDC_SIZE                (0x00100000) /*  the mdc iova size */
+#define ISPCPU_COREDUMP_ADDR        (0xC4000000)
+#define ISPCPU_COREDUMP_SIZE        (0x01300000)
+#define MEM_RAW2YUV_DA              (0xC6000000) /*  the mdc iova addr */
+#define MEM_RAW2YUV_SIZE            (0x02000000) /*  the mdc iova size */
 
 struct rproc_ops;
 struct platform_device;
@@ -29,6 +30,18 @@ struct scatterlist;
 struct virtio_device;
 struct virtqueue;
 struct dentry;
+
+/**
+ * ISP LOGIC TYPE
+ */
+
+enum hisi_isplogic_type_info_e {
+    ISP_FPGA_EXCLUDE    = 0x0,
+    ISP_FPGA,
+    ISP_UDP,
+    ISP_FPGA_EXC,
+    ISP_MAXTYPE
+};
 
 /**
  * struct fw_rsc_trace - print version information
@@ -149,7 +162,8 @@ enum a7mappint_type {
     A7BOOT = 0,
     A7TEXT,
     A7DATA,
-    A7PGM,
+    A7PGD,
+    A7PMD,
     A7PTE,
     A7RDR,
     A7SHARED,
@@ -285,19 +299,28 @@ struct hisi_isp_fstcma_mdc_s {
 #define CORE_DUMP_EXCEPTION      (1 << 5)
 
 #define DUMP_ISPCPU_PC_TIMES (3)
+#define MAX_RESULT_LENGTH (8)
 
 struct hisi_nsec_cpu_dump_s {
-    unsigned int media_clken;
-    unsigned int media_rsten;
-    unsigned int media_rstdis;
-    unsigned int media_rststat;
-    unsigned int media_rststat0;
-    unsigned int media_rststat1;
-    unsigned int media_ctrl0_sec;
-    unsigned int media_isp_sec;
-    unsigned int pmc_idleack;
-    unsigned int pmc_idle;
+    unsigned int reg_addr;
+    unsigned int actual_value;
+    unsigned int expected_value;
+    unsigned int care_bits;
+    unsigned int compare_result;
+    char result[MAX_RESULT_LENGTH];
+};
+
+struct hisi_isp_clk_dump_s {
+    unsigned int enable;
+    unsigned int ispcpu_stat;
     unsigned int ispcpu_pc[DUMP_ISPCPU_PC_TIMES];
+    unsigned long freq_ispcpu;
+    unsigned long freq_ispfunc;
+};
+enum hisi_isp_clk_info_e {
+    ISPCPU          = 0x0,
+    ISPFUNC,
+    INFO_MAX,
 };
 
 extern int rpmsg_client_debug;
@@ -316,10 +339,11 @@ void *hisi_fstcma_alloc(dma_addr_t *dma_handle, size_t size, gfp_t flag);
 void hisi_fstcma_free(void *va, dma_addr_t dma_handle, size_t size);
 
 void atfisp_set_nonsec(void);
-void atfisp_ispfe_powerup(void);
-void atfisp_disreset_a7(u64);
+int atfisp_isptop_power_up(void);
+int atfisp_isptop_power_down(void);
+void atfisp_disreset_ispcpu(void);
 int use_nonsec_isp(void);
-int isp_a7_qos_cfg(void);
+int ispcpu_qos_cfg(void);
 int use_sec_isp(void);
 u64 get_a7sharedmem_addr(void);
 u64 get_a7remap_addr(void);
@@ -337,9 +361,6 @@ int nonsec_isp_device_enable(void);
 int nonsec_isp_device_disable(void);
 int hisp_nsec_jpeg_powerup(void);
 int hisp_nsec_jpeg_powerdn(void);
-int sync_isplogcat(void);
-int start_isplogcat(void);
-void stop_isplogcat(void);
 void set_rpmsg_status(int status);
 int is_ispcpu_powerup(void);
 void hisp_sendin(void);
@@ -366,6 +387,7 @@ extern size_t print_time(u64 ts, char *buf);
 extern unsigned int get_slice_time(void);
 unsigned int a7_mmu_map(struct scatterlist *sgl, unsigned int size, unsigned int prot, unsigned int flag);
 void a7_mmu_unmap(unsigned int va, unsigned int size);
+#ifdef CONFIG_HISI_ISP_RDR
 extern u64 get_isprdr_addr(void);
 void ispperfctrl_update(void);
 void isploglevel_update(void);
@@ -373,7 +395,23 @@ void ispperf_stop_record(void);
 void wait_firmware_coredump(void);
 void ispcoresight_update(void);
 void ispmonitor_update(void);
-
+int sync_isplogcat(void);
+int start_isplogcat(void);
+void stop_isplogcat(void);
+extern void ap_send_fiq2ispcpu(void);
+#else
+static inline u64 get_isprdr_addr(void){return 0;}
+static inline void ispperfctrl_update(void){return;}
+static inline void isploglevel_update(void){return;}
+static inline void ispperf_stop_record(void){return;}
+static inline void wait_firmware_coredump(void){return;}
+static inline void ispcoresight_update(void){return;}
+static inline void ispmonitor_update(void){return;}
+static inline int sync_isplogcat(void){return -1;}
+static inline int start_isplogcat(void){return -1;}
+static inline void stop_isplogcat(void){return;}
+static inline void ap_send_fiq2ispcpu(void){return;}
+#endif
 void virtqueue_sg_init(struct scatterlist *sg, void *va, dma_addr_t dma, int size);
 int rpmsg_vdev_map_resource(struct virtio_device *vdev, dma_addr_t dma, int total_space);
 extern int rproc_add_virtio_devices(struct rproc *rproc);
@@ -424,34 +462,43 @@ extern int hisi_rproc_select_def(void);
 extern int hisi_rproc_select_idle(void);
 extern int hisi_isp_dependent_clock_enable(void);
 extern int hisi_isp_dependent_clock_disable(void);
-
+extern int get_rproc_enable_status(void);
 extern int hisi_isp_rproc_enable(void);
 extern int hisi_isp_rproc_disable(void);
 extern void rproc_set_sync_flag(bool);
+extern int set_isp_remap_addr(u64 remap_addr);
 extern int hisp_jpeg_powerup(void);
 extern int hisp_jpeg_powerdn(void);
 extern int hisp_apisp_map(unsigned int *a7addr, unsigned int *ispaddr, unsigned int size);
 
 unsigned int hisp_mem_pool_alloc_carveout(size_t size, unsigned int type);
 int hisp_mem_pool_free_carveout(unsigned int  iova, size_t size);
-extern int hisp_secmem_init(void);
-extern int set_share_pararms(void);
-extern int hisp_secmem_pa_init(void);
-extern int set_isp_remap_addr(u64 remap_addr);
 extern struct hisi_isp_ion_s *get_nesc_addr_ion(size_t size, \
         size_t align, unsigned int heap_id_mask, unsigned int flags);
 extern void free_nesc_addr_ion(struct hisi_isp_ion_s *hisi_nescaddr_ion);
 extern int get_isp_mdc_flag(void);
 extern int get_ispcpu_cfg_info(void);
 u32 get_share_exc_flag(void);
-extern void ap_send_fiq2ispcpu(void);
 extern struct hisi_isp_fstcma_mdc_s *get_fstcma_mdc(unsigned int size);
+void *get_mdc_addr_va(void);
+void hisp_mdc_dev_init(void);
+int mdc_addr_pa_init(void);
+void free_mdc_ion(unsigned int size);
 extern int set_ispcpu_reset(void);
 extern u64 get_mdc_addr_pa(void);
 extern void set_shared_mdc_pa_addr(u64 mdc_pa_addr);
+extern unsigned int dynamic_memory_map(struct scatterlist *sgl,size_t addr,size_t size,unsigned int prot);
+extern int dynamic_memory_unmap(size_t addr, size_t size);
 
 #ifdef CONFIG_HISI_REMOTEPROC_DMAALLOC_DEBUG
 void *get_vring_dma_addr(u64 *dma_handle, size_t size, unsigned int index);
 #endif
+extern unsigned int get_debug_isp_clk_enable(void);
+extern int set_debug_isp_clk_enable(int state);
+extern int set_debug_isp_clk_freq(unsigned int type, unsigned long value);
+extern unsigned long get_debug_isp_clk_freq(unsigned int type);
+extern struct hisi_nsec_cpu_dump_s* get_debug_ispcpu_param(void);
+extern int last_boot_state;
+
 #endif /* _PLAT_REMOTEPROC_HISI_ISP_H */
 

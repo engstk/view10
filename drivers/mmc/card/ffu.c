@@ -407,7 +407,7 @@ static int mmc_ffu_area_init(struct mmc_ffu_area *area, struct mmc_card *card,
 		length += copy_length;
 	}
 
-	area->sg = kmalloc(sizeof(struct scatterlist) * area->max_segs,
+	area->sg = kzalloc(sizeof(struct scatterlist) * area->max_segs,
 		GFP_KERNEL);
 	if (!area->sg) {
 		ret = -ENOMEM;

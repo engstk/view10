@@ -467,6 +467,7 @@ const struct noc_busid_initflow hisi_filter_initflow_kirin970[] = {
 	{0, 19, RDR_CP},	/*socp*/
 	{0,5,RDR_IOM3},
 	{0,6,RDR_IOM3},
+	{0, 0, RDR_HIFI},
 	{ARRAY_END_FLAG, 0, RDR_AP},	/*end*/
 };
 

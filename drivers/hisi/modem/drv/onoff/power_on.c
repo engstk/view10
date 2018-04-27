@@ -56,6 +56,8 @@
 #include <linux/fs.h>
 #include <linux/rtc.h>
 
+#include <asm/system_misc.h>
+
 #include <product_config.h>
 #include <mdrv_sysboot.h>
 #include <mdrv_chg.h>
@@ -63,19 +65,9 @@
 #include <bsp_onoff.h>
 #include "power_exchange.h"
 #include "mdrv_chg.h"
+#include <securec.h>
 
-
-
-int his_boot_is_modem_crash(void)
-{
-    c_power_st_e status = power_on_c_status_get();
-
-    if (status < POWER_MSP_OK )
-        return 1;
-    else
-        return 0;
-}
-EXPORT_SYMBOL_GPL(his_boot_is_modem_crash);
+#include "power_off_mbb.h"
 
 
 /*****************************************************************************
@@ -91,7 +83,6 @@ int bsp_start_mode_get(void)
 {
     return DRV_START_MODE_NORMAL;
 }
-
 
 /*****************************************************************************
  º¯ Êý Ãû  : bsp_power_icc_send_state
@@ -148,10 +139,19 @@ static s32 bsp_power_ctrl_read_cb(void)
         bsp_power_icc_send_state();
         break;
     case E_POWER_SHUT_DOWN:
-        drv_shut_down(msg.reason);
+        /*Here is to judge whether to shut down or restart */
+        if ( DRV_SHUTDOWN_RESET == msg.reason )
+        {
+            bsp_drv_power_reboot();
+        }
+        else
+        {
+            drv_shut_down( msg.reason, POWER_OFF_MONITOR_TIMEROUT );
+        }
         break;
     case E_POWER_POWER_OFF:
-        bsp_drv_power_off();
+        /*To shut down right now */
+        drv_shut_down( DRV_SHUTDOWN_POWER_KEY, 0 );
         break;
     case E_POWER_POWER_REBOOT:
         bsp_drv_power_reboot();

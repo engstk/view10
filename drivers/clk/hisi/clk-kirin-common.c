@@ -295,6 +295,7 @@ struct hs_clk {
 	void __iomem	*iomcucrg;
 	void __iomem	*media1crg;
 	void __iomem	*media2crg;
+	void __iomem	*mmc1crg;
 	spinlock_t	lock;
 };
 static struct hwspinlock	*clk_hwlock_9;
@@ -937,7 +938,7 @@ static int hi3xxx_multicore_abb_clkgate_prepare(struct clk_hw *hw)
 			val |= pclk->ebits;
 			hisi_pmic_reg_write(pclk->pmu_clk_enable, val);
 		}
-		/* write 0x344 register */
+		/* write 0x43C register */
 		val = readl(pclk->sctrl);
 		val |= BIT(AP_ABB_EN);
 		writel(val, pclk->sctrl);
@@ -971,7 +972,7 @@ static void hi3xxx_multicore_abb_clkgate_unprepare(struct clk_hw *hw)
 				hisi_pmic_reg_write(pclk->pmu_clk_enable, val);
 			}
 		}
-		/* write 0x344 register */
+		/* write 0x43C register */
 		val = readl(pclk->sctrl);
 		val &= (~BIT(AP_ABB_EN));
 		writel(val, pclk->sctrl);
@@ -1635,7 +1636,6 @@ static struct clk_ops kirin_ppll_ops = {
 	.enable		= kirin_multicore_ppll_enable,
 	.disable		= kirin_multicore_ppll_disable,
 };
-
 
 static void __init kirin_ppll_setup(struct device_node *np)
 {
@@ -2696,7 +2696,7 @@ static int hi3xxx_mclk_prepare(struct clk_hw *hw)
 {
 	struct hi3xxx_mclk *mclk;
 #ifdef CONFIG_HISI_CLK_MAILBOX_SUPPORT
-	s32 ret;
+	s32 ret = 0;
 #endif
 	mclk = container_of(hw, struct hi3xxx_mclk, hw);
 	mclk->ref_cnt++;
@@ -2722,7 +2722,7 @@ static int hi3xxx_mclk_prepare(struct clk_hw *hw)
 	}
 #endif
 
-	return 0;
+	return ret;
 }
 
 static void hi3xxx_mclk_unprepare(struct clk_hw *hw)
@@ -2874,6 +2874,7 @@ static const struct of_device_id hs_of_match[] = {
 	{ .compatible = "hisilicon,iomcu-crg",	.data = (void *)HS_IOMCUCRG, },
 	{ .compatible = "hisilicon,media1-crg",	.data = (void *)HS_MEDIA1CRG, },
 	{ .compatible = "hisilicon,media2-crg",	.data = (void *)HS_MEDIA2CRG, },
+	{ .compatible = "hisilicon,mmc1-crg",	.data = (void *)HS_MMC1CRG, },
 	{},/*lint !e785 */
 };
 
@@ -2900,6 +2901,9 @@ void __iomem __init *hs_clk_base(u32 ctrl)
 		break;
 	case HS_MEDIA2CRG:
 		np = of_find_compatible_node(NULL, NULL, "hisilicon,media2ctrl");
+		break;
+	case HS_MMC1CRG:
+		np = of_find_compatible_node(NULL, NULL, "hisilicon,mmc1_sysctrl");
 		break;
 	default:
 		pr_err("[%s] ctrl err!\n", __func__);
@@ -3012,6 +3016,15 @@ static void __iomem __init *hs_clk_get_base(struct device_node *np)
 			hs_clk.media2crg = ret;
 		}else{
 			ret = hs_clk.media2crg;
+		}
+		break;
+	case HS_MMC1CRG:
+		if(!hs_clk.mmc1crg) {
+			ret = of_iomap(parent, 0);
+			WARN_ON(!ret);/*lint !e730 */
+			hs_clk.mmc1crg = ret;
+		}else{
+			ret = hs_clk.mmc1crg;
 		}
 		break;
 

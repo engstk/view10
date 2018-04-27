@@ -197,7 +197,7 @@ int block_fix_scf_constraint(dss_overlay_t *pov_req, dss_overlay_block_t *pov_h_
 		}
 
 		if ((g_dss_version_tag == FB_ACCEL_HI366x) ||
-			((g_dss_version_tag & FB_ACCEL_KIRIN970)
+			((g_dss_version_tag & (FB_ACCEL_KIRIN970 | FB_ACCEL_DSSV501))
 			&& (layer->need_cap & CAP_2D_SHARPNESS))) {
 			if (scf_layer_num >= MAX_OFFLINE_LAYER_NUMBER) {
 				HISI_FB_ERR("layer number in offline [%d] is more than scf moudle [%d]\n",
@@ -612,7 +612,7 @@ static int create_h_v_block_layer(dss_layer_t *h_layer, dss_layer_t *h_v_layer,
 			scf_read_start= scf_in_start - SCF_INPUT_OV;
 			if (scf_read_start < 0)
 				scf_read_start = 0;
-			acc_hscl = output_startpos * h_ratio - scf_read_start * SCF_INC_FACTOR;
+			acc_hscl = (int)(output_startpos * h_ratio - scf_read_start * SCF_INC_FACTOR);
 
 			if (last_block == 1) { //last block of this layer
 				scf_read_end = DSS_WIDTH(h_layer->src_rect.w);

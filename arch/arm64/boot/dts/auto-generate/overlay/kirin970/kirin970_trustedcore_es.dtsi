@@ -11,12 +11,6 @@
 	trusted_core {
 		compatible = "trusted_core";
 		interrupts = <0 344 4>;
-		sec-s-buring-supply = <&sec_s>;
-		sec-s-regulator-enable;
-		sec-s-power-ctrl-en;
-		sec-s-power-atfd-proc;
-		tui-enable;
-		memory-region = <&tui_cma>;
 		reg = <0x0 0x0 0x0 0x0>;
 	};
 };

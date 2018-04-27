@@ -55,6 +55,7 @@ static int s_crc32_table_created = 0;
 
 static long bfmr_full_rw_file(int fd, char *buf, size_t buf_size, bool read_file);
 static long bfmr_full_rw_file_with_file_path(const char *pfile_path, char *buf, size_t buf_size, bool read_file);
+static int bfmr_rw_rrecord_misc_msg(bfmr_rrecord_misc_msg_param_t *pparam, bool read_misc);
 
 
 /*----function definitions--------------------------------------------------------------*/
@@ -929,9 +930,10 @@ static long bfmr_full_rw_file(int fd, char *buf, size_t buf_size, bool read_file
     while (bytes_total_to_rw > 0)
     {
         bytes_this_time = read_file ? sys_read(fd, ptemp, bytes_total_to_rw) : sys_write(fd, ptemp, bytes_total_to_rw);
-        if (bytes_this_time < 0)
+        if (read_file ? (bytes_this_time <= 0) : (bytes_this_time < 0))
         {
-            BFMR_PRINT_ERR("Failed to read file!\n");
+            BFMR_PRINT_ERR("%s\n", read_file ? ((0 == bytes_this_time) ? ("End of file!\n")
+                : ("Failed to read file!")) : ("Failed to write file!"));
             break;
         }
         ptemp += bytes_this_time;
@@ -1040,6 +1042,65 @@ int bfmr_get_uid_gid(uid_t *puid, gid_t *pgid)
 
     return 0;
 }
+
+
+static int bfmr_rw_rrecord_misc_msg(bfmr_rrecord_misc_msg_param_t *pparam, bool read_misc)
+{
+    int ret = -1;
+    char *dev_path = NULL;
+
+    if (NULL == pparam)
+    {
+        BFMR_PRINT_INVALID_PARAMS("reason_param:%p!\n", pparam);
+        return -1;
+    }
+
+    dev_path = (char *)bfmr_malloc(BFMR_DEV_FULL_PATH_MAX_LEN + 1);
+    if (NULL == dev_path)
+    {
+        BFMR_PRINT_ERR("bfmr_malloc failed!\n");
+        return -1;
+    }
+    memset((void *)dev_path, 0, BFMR_DEV_FULL_PATH_MAX_LEN + 1);
+
+    ret = bfmr_get_device_full_path(BFR_RRECORD_PART_NAME, dev_path, BFMR_DEV_FULL_PATH_MAX_LEN);
+    if (0 != ret)
+    {
+        BFMR_PRINT_ERR("get full path of device [%s] failed!\n", BFR_RRECORD_PART_NAME);
+        goto __out;
+    }
+
+    ret = read_misc ? bfmr_read_emmc_raw_part(dev_path, BFR_MISC_PART_OFFSET,
+        (char *)pparam, (unsigned long long)sizeof(bfmr_rrecord_misc_msg_param_t))
+        : bfmr_write_emmc_raw_part(dev_path, BFR_MISC_PART_OFFSET,
+        (char *)pparam, (unsigned long long)sizeof(bfmr_rrecord_misc_msg_param_t));
+    if (0 != ret)
+    {
+        BFMR_PRINT_ERR("%s [%s] failed!\n", dev_path, (read_misc) ? ("read") : ("write"));
+        goto __out;
+    }
+
+__out:
+    if (NULL != dev_path)
+    {
+        bfmr_free(dev_path);
+    }
+
+    return ret;
+}
+
+
+int bfmr_read_rrecord_misc_msg(bfmr_rrecord_misc_msg_param_t *pparam)
+{
+    return bfmr_rw_rrecord_misc_msg(pparam, true);
+}
+
+
+int bfmr_write_rrecord_misc_msg(bfmr_rrecord_misc_msg_param_t *pparam)
+{
+    return bfmr_rw_rrecord_misc_msg(pparam, false);
+}
+
 
 int bfmr_common_init(void)
 {

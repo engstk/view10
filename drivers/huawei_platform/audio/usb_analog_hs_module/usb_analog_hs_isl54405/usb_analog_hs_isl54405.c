@@ -282,7 +282,7 @@ MODULE_DEVICE_TABLE(of, usb_ana_hs_isl54405_of_match);
 /* load dts config for board difference */
 static void load_gpio_type_config(struct device_node *node)
 {
-    unsigned int temp;
+    unsigned int temp = USB_ANALOG_HS_GPIO_SOC;
 
     if (!of_property_read_u32(node, "gpio_type", &temp)) {
         g_pdata_isl54405->gpio_type = temp;
@@ -434,7 +434,7 @@ static ssize_t usb_ana_hs_isl54405_mic_switch_store(struct device *dev,
         return count;
     }
 
-    if(ret)
+    if(val)
         usb_analog_hs_gpio_set_value(g_pdata_isl54405->gpio_mic_switch, 1);
     else
         usb_analog_hs_gpio_set_value(g_pdata_isl54405->gpio_mic_switch, 0);

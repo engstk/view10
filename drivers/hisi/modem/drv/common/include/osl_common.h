@@ -105,25 +105,17 @@ do {                           \
 #define DDR_WIN_ADDR(offset)	(0x10000000 + (offset))
 #endif
 
-/*begin:list*/
 #undef offsetof
 #ifdef __compiler_offsetof
 #define offsetof(TYPE,MEMBER) __compiler_offsetof(TYPE,MEMBER)
 #else
 #define offsetof(TYPE, MEMBER) ((u32) &((TYPE *)0)->MEMBER)
 #endif
-/**
- * container_of - cast a member of a structure out to the containing structure
- * @ptr:	the pointer to the member.
- * @type:	the type of the container struct this is embedded in.
- * @member:	the name of the member within the struct.
- *
- */
-#define container_of(ptr, type, member) 			\
-	 ((type *)((char *)(ptr) - offsetof(type,member)))
+
+#define container_of(pointer, str_type, member) 			\
+	 ((str_type *)((char *)(pointer) - offsetof(str_type,member)))
 
 
-/*end:list*/
 #else  /* !OS_K3V3_USE_LPM3_API */
 #include <osl_types.h>
 #include <osl_bio.h>

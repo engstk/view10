@@ -33,6 +33,7 @@ typedef enum _HISEE_POWER_OPERATION {
 	HISEE_POWER_ON_UPGRADE = 0x01000102,
 	HISEE_POWER_ON_UPGRADE_SM = 0x01000103,
 	HISEE_POWER_ON_BOOTING_MISC = 0x01000104,
+	HISEE_POWER_MAX_OP,
 } hisee_power_operation;
 
 /* the powerctrl command */

@@ -1,7 +1,6 @@
 #include <libhwsecurec/securec.h>
 #include "inputhub_api.h"
 
-#define CONTEXTHUB_HEADER_SIZE (sizeof(pkt_header_t) + sizeof(unsigned int))
 #ifdef CONFIG_INPUTHUB_20
 /*lint -e655*/
 int send_cmd_format(unsigned char cmd_tag, unsigned char cmd_type,

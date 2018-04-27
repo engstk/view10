@@ -1,4 +1,4 @@
-/* MD5: 6432ed69825b916b1052c97300aa3d65*/
+/* MD5: 848fafd1ea694f0dc38b8f50abfdc5ff*/
 #if !defined(__PRODUCT_CONFIG_TLPS_H__)
 #define __PRODUCT_CONFIG_TLPS_H__
 
@@ -30,10 +30,17 @@
 #define FEATURE_PTM FEATURE_ON 
 #endif 
 
+#ifdef cdma 
+#ifndef FEATURE_BALONG_CL
+#define FEATURE_BALONG_CL FEATURE_OFF 
+#endif 
+
+#else
 #ifndef FEATURE_BALONG_CL
 #define FEATURE_BALONG_CL FEATURE_ON 
 #endif 
 
+#endif
 #ifndef FEATURE_LTE_CAT_PART_R11
 #define FEATURE_LTE_CAT_PART_R11 
 #endif 
@@ -124,24 +131,16 @@
 #define FEATURE_LTE_JAM_DET FEATURE_OFF 
 #endif 
 
-#ifndef FEATURE_LTE_ASN_V722_VALID
-#define FEATURE_LTE_ASN_V722_VALID FEATURE_ON 
-#endif 
-
-#ifndef FEATURE_LTE_ASN_ALL_VERSION_VALID
-#define FEATURE_LTE_ASN_ALL_VERSION_VALID FEATURE_OFF 
+#ifndef FEATURE_LTE_ASN_CUT
+#define FEATURE_LTE_ASN_CUT FEATURE_ON 
 #endif 
 
 #ifndef FEATURE_LL2_SPECIAL_VERSION
 #define FEATURE_LL2_SPECIAL_VERSION FEATURE_OFF 
 #endif 
 
-#ifndef FEATURE_IQI
-#define FEATURE_IQI FEATURE_OFF 
-#endif 
-
 #ifndef FEATURE_LL2_SUPPORT_DSDSV3
-#define FEATURE_LL2_SUPPORT_DSDSV3 FEATURE_OFF 
+#define FEATURE_LL2_SUPPORT_DSDSV3 FEATURE_ON 
 #endif 
 
 #ifndef FEATURE_LMAC_LPHY_EPDCCH_CR
@@ -150,6 +149,18 @@
 
 #ifndef FEATURE_UL_HCODE                 			
 #define FEATURE_UL_HCODE                 			 FEATURE_OFF 
+#endif 
+
+#ifndef FEATURE_LTE_R12
+#define FEATURE_LTE_R12 FEATURE_ON 
+#endif 
+
+#ifndef FEATURE_LTE_DC
+#define FEATURE_LTE_DC FEATURE_ON 
+#endif 
+
+#ifndef FEATURE_LTE_LAA                 			
+#define FEATURE_LTE_LAA                 			 FEATURE_ON 
 #endif 
 
 #endif /*__PRODUCT_CONFIG_H__*/ 

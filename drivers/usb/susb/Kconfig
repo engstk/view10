@@ -15,10 +15,10 @@ config USB_SUSB_HDRC
 	  Say Y here if your system has a dual role high speed USB
 	  controller based on the Synopsis USB2.0 OTG silicon IP.
 
-config HI6250_USB
+config DEC_USB
 	depends on USB_SUSB_HDRC
-	bool 'USB for hi6250'
+	bool 'USB for dec'
 	default n
 
 config USB_DEBUG_NODE
-	bool 'SUSB DEBUG NODE for hi6250'
+	bool 'SUSB DEBUG NODE for dec'

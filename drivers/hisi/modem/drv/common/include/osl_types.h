@@ -76,7 +76,7 @@ typedef unsigned int        BSP_U32;
 #define __inline__ inline
 #endif
 
-#elif defined(_WRS_KERNEL) || defined(__OS_VXWORKS__) ||  defined(__OS_RTOSCK__)||defined(__OS_RTOSCK_SMP__) || defined(__FASTBOOT__)
+#elif defined(_WRS_KERNEL) || defined(__OS_VXWORKS__) ||  defined(__OS_RTOSCK__)||defined(__OS_RTOSCK_SMP__) || defined(__FASTBOOT__) || defined(__NR_LL1C_)
 
 #ifndef __ASSEMBLY__
 #ifdef __OS_VXWORKS__
@@ -89,12 +89,12 @@ typedef unsigned int        BSP_U32;
 
 #ifndef __u8_defined
 #define __u8_defined
+typedef signed int s32;
+typedef unsigned int u32;
 typedef signed char s8;
 typedef unsigned char u8;
 typedef signed short s16;
 typedef unsigned short u16;
-typedef signed int s32;
-typedef unsigned int u32;
 typedef signed long long s64;
 typedef unsigned long long u64;
 #endif
@@ -115,44 +115,18 @@ typedef unsigned int size_t;
 #endif
 #endif
 
-#define S8_C(x)  x
-#define U8_C(x)  x ## U
-#define S16_C(x) x
-#define U16_C(x) x ## U
-#define S32_C(x) x
-#define U32_C(x) x ## U
-#define S64_C(x) x ## LL
-#define U64_C(x) x ## ULL
 #define UNUSED(a) (a=a)
 
 
 #else /* __ASSEMBLY__ */
 
-#define S8_C(x)  x
-#define U8_C(x)  x
-#define S16_C(x) x
-#define U16_C(x) x
-#define S32_C(x) x
-#define U32_C(x) x
-#define S64_C(x) x
-#define U64_C(x) x
 
 #endif /* __ASSEMBLY__ */
 
 #ifndef __ASSEMBLY__
 
-/* compiler.h */
-/*
- * This is used to ensure the compiler did actually allocate the register we
- * asked it for some inline assembly sequences.  Apparently we can't trust
- * the compiler from one version to another so a bit of paranoia won't hurt.
- * This string is meant to be concatenated with the inline asm string and
- * will cause compilation to stop on mismatch.
- * (for details, see gcc PR 15089)
- */
 #define __asmeq(x, y)  ".ifnc " x "," y " ; .err ; .endif\n\t"
 
-/* stddef.h */
 #undef NULL
 #define NULL ((void *)0)
 
@@ -165,25 +139,18 @@ typedef unsigned int size_t;
 
 #endif /* __ASSEMBLY__ */
 
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof(a)/(sizeof((a)[0])))
-
-/**
- * container_of - cast a member of a structure out to the containing structure
- * @ptr:	the pointer to the member.
- * @type:	the type of the container struct this is embedded in.
- * @member:	the name of the member within the struct.
- *
- */
+#endif
 /*lint -esym(666,container_of)*/
-#define container_of(ptr, type, member) 			\
-	 ((type *)((char *)(ptr) - offsetof(type,member)))
+#define container_of(pointer, str_type, member)  ((str_type *)((char *)(pointer) - offsetof(str_type,member)))
 
 
 #ifndef printk
 #define printk  printf
 #endif
 
-#elif defined(__CMSIS_RTOS) || defined(__FASTBOOT__)
+#elif defined(__CMSIS_RTOS) || defined(__FASTBOOT__) || defined(__NR_LL1C_)
 
 #ifndef __ASSEMBLY__
 
@@ -193,34 +160,28 @@ typedef unsigned int size_t;
 #else
 #define offsetof(TYPE, MEMBER) ((u32) &((TYPE *)0)->MEMBER)
 #endif
-/**
- * container_of - cast a member of a structure out to the containing structure
- * @ptr:	the pointer to the member.
- * @type:	the type of the container struct this is embedded in.
- * @member:	the name of the member within the struct.
- *
- */
-#define container_of(ptr, type, member) 			\
-	 ((type *)((char *)(ptr) - offsetof(type,member)))
+
+#define container_of(pointer, str_type, member)  ((str_type *)((char *)(pointer) - offsetof(str_type,member)))
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(a) (sizeof(a)/(sizeof((a)[0])))
+#endif
 
 #ifndef __u8_defined
 #define __u8_defined
+typedef signed int s32;
+typedef unsigned int u32;
 typedef signed char s8;
 typedef unsigned char u8;
 typedef signed short s16;
 typedef unsigned short u16;
-typedef signed int s32;
-typedef unsigned int u32;
 typedef signed long long s64;
 typedef unsigned long long u64;
 #endif
 
-/* stddef.h */
 #undef NULL
 #define NULL ((void *)0)
 
-#define UNUSED(a) (a=a)
+#define UNUSED(a) ((a) = (a))
 
 #endif
 
@@ -230,12 +191,12 @@ typedef unsigned long long u64;
 
 #ifndef __u8_defined
 #define __u8_defined
+typedef signed int s32;
+typedef unsigned int u32;
 typedef signed char s8;
 typedef unsigned char u8;
 typedef signed short s16;
 typedef unsigned short u16;
-typedef signed int s32;
-typedef unsigned int u32;
 typedef signed long long s64;
 typedef unsigned long long u64;
 #endif

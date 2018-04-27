@@ -51,11 +51,50 @@
 
 #ifdef DRV_BUILD_LLT
 int is_in_llt(void);
+void enable_llt(void);
+void disable_llt(void);
 #else
-static int is_in_llt(void)
+static inline int is_in_llt(void)
 {
     return 0; 
 }
+static inline void enable_llt(void)
+{
+}
+static inline void disable_llt(void)
+{
+}
+#endif /* end of DRV_BUILD_LLT */
+#define FUC_NAME_LEN  (64)
+enum control_flag_seq {
+    CONTROL_FLAG_CCORE = 0,
+    CONTROL_FLAG_ASYNC ,
+    CONTROL_FLAG_PARAMS,
+    CONTROL_FLAG_LLTMODE,
+};
+
+/*lshell para len*/
+#define   LSHELL_PARA_LEN            5
+#define LLT_SHELL_OPID 0x123456
+
+#pragma pack(push,4)
+struct lltshell_arg {
+    unsigned int control_flag;
+    char func_name[FUC_NAME_LEN];
+    long long para[LSHELL_PARA_LEN];
+};
+#pragma pack(pop)
+
+#ifdef CONFIG_CCORE_BALONG_PM
+extern void debug_pm_wake_unlock(void);
+extern void debug_pm_wake_lock(void);
+#else
+static inline void debug_pm_wake_unlock(void){;}
+static inline void debug_pm_wake_lock(void){;}
 #endif
+
+
+#define mdrv_ccore_sleep_forbit() debug_pm_wake_lock()
+#define mdrv_ccore_sleep_permit() debug_pm_wake_unlock()
 
 #endif

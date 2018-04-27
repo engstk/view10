@@ -1,21 +1,4 @@
-/******************************************************************************
 
-                  版权所有 (C), 2003-2015, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : gunas_errno.h
-  版 本 号   : 初稿
-  作    者   : 钟水洪/wx247453
-  生成日期   : 2015年8月25日
-  最近修改   :
-  功能描述   : gunas组件错误码接口的头文件
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2015年08月25日
-    作    者   : 钟水洪/wx247453
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 #ifndef __GUNAS_ERRNO_H__
 #define __GUNAS_ERRNO_H__
@@ -39,16 +22,7 @@ extern "C" {
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : NAS_REBOOT_MOD_ID_ENUM
- 枚举说明  : 当前重启的ID类型
- 1.日    期   : 2011年12月13日
-   作    者   : w00167002
-   修改内容   : 新建
- 2.日    期   : 2011年12月04日
-   作    者   : z00359541
-   修改内容   : DTS2015112803743: 将第24 Bit置位以保存其他FID的任务栈信息
-*****************************************************************************/
+
 enum NAS_REBOOT_MOD_ID_ENUM
 {
     NAS_REBOOT_MOD_ID_MML     = 0X61000000,
@@ -71,17 +45,13 @@ enum NAS_REBOOT_MOD_ID_ENUM
 
     NAS_REBOOT_MOD_ID_MTA     = 0x6B000000, /* CDMA Modem Switch失败, 进行Modem复位 */
 
+    NAS_REBOOT_MOD_ID_MULTI   = 0x6C000000, /* multi触发的复位 */
+
     NAS_REBOOT_MOD_ID_BUTT    = 0X6FFFFFFF
 };
 typedef unsigned int NAS_REBOOT_MOD_ID_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : NAS_MML_REBOOT_SCEAN_ENUM
- 枚举说明  : MM复位场景
- 1.日    期   : 2015年1月27日
-   作    者   : wx270776
-   修改内容   : 新建
-*****************************************************************************/
+
 enum NAS_MML_REBOOT_SCEAN_ENUM
 {
     NAS_MML_OTHER_REBOOT_SCENE                                                  = 0X00,
@@ -142,6 +112,8 @@ enum NAS_MML_REBOOT_SCEAN_ENUM
     NAS_MML_REBOOT_SCENE_MTA_MODEM_CAP_UPDATE_FAILED                            = 0x30,
 
     NAS_MML_REBOOT_SCENE_MMA_WAIT_RRM_START_CNF_EXPIRED                         = 0x31,
+
+    NAS_MML_REBOOT_SCENE_MMC_DUAL_IMSI_UPDATE_SYS_INFO_PTR_NULL                 = 0x32,
 };
 typedef unsigned char NAS_MML_REBOOT_SCENE_ENUM_UINT8;
 

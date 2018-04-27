@@ -1,21 +1,4 @@
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : wal_linux_cfg80211.c
-  版 本 号   : 初稿
-  作    者   : zhangheng
-  生成日期   : 2012年11月8日
-  最近修改   :
-  功能描述   : Linux cfg80211接口
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2012年11月8日
-    作    者   : zhangheng
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 
 #ifdef __cplusplus
@@ -339,22 +322,7 @@ cookie_arry_stru        g_cookie_array[WAL_COOKIE_ARRAY_SIZE];
   3 函数实现
 *****************************************************************************/
 #ifdef _PRE_WLAN_FEATURE_UAPSD
-/*****************************************************************************
- 函 数 名  : wal_find_wmm_uapsd
- 功能描述  : 查找内核下发的beacon_info中的wmm ie中wmm uapsd是否使能
- 输入参数  : oal_uint8 *puc_frame_body, oal_int32 l_len
 
- 输出参数  : 无
- 返 回 值  : uapsd使能，返回OAL_TRUE，否则，返回OAL_FALSE
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年8月24日
-    作    者   : lixiaochuan
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_find_wmm_uapsd(oal_uint8 *puc_frame_body, oal_int32 l_len)
 {
     oal_int32    l_index = 0;
@@ -379,21 +347,7 @@ oal_uint32 wal_find_wmm_uapsd(oal_uint8 *puc_frame_body, oal_int32 l_len)
 }
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_open_wmm
- 功能描述  : 在内核下发的信息字段中解析到是否含有wmm字段，即打开或者关闭wmm
- 输入参数  : mac_vap_stru *pst_mac_vap, oal_uint16 us_len, oal_uint8 *puc_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : lixiaochuan
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_cfg80211_open_wmm(mac_vap_stru *pst_mac_vap, oal_uint16 us_len, oal_uint8 *puc_param)
 {
     if (OAL_UNLIKELY(OAL_PTR_NULL == pst_mac_vap || OAL_PTR_NULL == puc_param))
@@ -412,22 +366,7 @@ oal_uint32 wal_cfg80211_open_wmm(mac_vap_stru *pst_mac_vap, oal_uint16 us_len, o
     return hmac_config_sync_cmd_common(pst_mac_vap, WLAN_CFGID_WMM_SWITCH, us_len, puc_param);
 }
 
-/*****************************************************************************
- 函 数 名  : wal_parse_rsn_ie
- 功能描述  : 解析beacon帧中的 RSN 信息元素
- 输入参数  : puc_ie
-             pst_beacon_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月12日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_parse_rsn_ie(const oal_uint8 *puc_ie, mac_beacon_param_stru *pst_beacon_param)
 {
     oal_uint8                    uc_index               = 0;
@@ -551,22 +490,7 @@ oal_uint32 wal_parse_rsn_ie(const oal_uint8 *puc_ie, mac_beacon_param_stru *pst_
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_parse_wpa_ie
- 功能描述  : 解析beacon帧中的 WPA 信息元素
- 输入参数  : puc_ie
-             pst_beacon_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月12日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_parse_wpa_ie(oal_uint8 *puc_ie, mac_beacon_param_stru *pst_beacon_param)
 {
     oal_uint8                    uc_index               = 0;
@@ -676,22 +600,7 @@ oal_uint32 wal_parse_wpa_ie(oal_uint8 *puc_ie, mac_beacon_param_stru *pst_beacon
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_parse_wpa_wpa2_ie
- 功能描述  : 解析内核传递过来的beacon信息中的WPA/WPA2 信息元素
- 输入参数  : oal_beacon_parameters *pst_beacon_info
-             mac_beacon_param_stru *pst_beacon_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年12月11日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_parse_wpa_wpa2_ie(oal_beacon_parameters *pst_beacon_info,
                                  mac_beacon_param_stru *pst_beacon_param)
 {
@@ -741,22 +650,7 @@ oal_uint32 wal_parse_wpa_wpa2_ie(oal_beacon_parameters *pst_beacon_info,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_parse_wmm_ie
- 功能描述  : 解析内核传递过来beacon信息中的Wmm信息元素
- 输入参数  : oal_beacon_parameters *pst_beacon_info
 
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年7月16日
-    作    者   : lixiaochuan
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_parse_wmm_ie(oal_net_device_stru *pst_dev,
                                    mac_vap_stru *pst_mac_vap, oal_beacon_parameters *pst_beacon_info)
 {
@@ -783,7 +677,6 @@ oal_uint32 wal_parse_wmm_ie(oal_net_device_stru *pst_dev,
     /*  找到wmm ie，顺便判断下uapsd是否使能 */
     else
     {
-        /* DTS2015080707662:判断WMM信息元素后偏移8字节 的bit7位是否为1,1表示uapsd使能 */
         if(OAL_FALSE == wal_find_wmm_uapsd(pst_beacon_info->tail, pst_beacon_info->tail_len))
         {
         /* 对应UAPSD 关*/
@@ -829,25 +722,10 @@ oal_uint32 wal_parse_wmm_ie(oal_net_device_stru *pst_dev,
 
 #if (_PRE_OS_VERSION_LINUX == _PRE_OS_VERSION)
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_add_vap
- 功能描述  : CFG80211 接口添加网络设备
- 输入参数  : mac_cfg_add_vap_param_stru *pst_add_vap_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月3日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_cfg80211_add_vap(mac_cfg_add_vap_param_stru *pst_add_vap_param)
 {
-    /* DTS2015022603795 : P2P change interface时不需要重新初始化和注册netdev.
-     * nl80211 netlink pre diot 中会获取rntl_lock互斥锁， 注册net_device 会获取rntl_lock互斥锁，造成了死锁 */
+    
     oal_int32                   l_ret;
     oal_net_device_stru        *pst_net_dev;
     oal_net_device_stru        *pst_cfg_net_dev;
@@ -969,21 +847,7 @@ oal_uint32 wal_cfg80211_add_vap(mac_cfg_add_vap_param_stru *pst_add_vap_param)
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_del_vap
- 功能描述  : CFG80211 接口删除网络设备
- 输入参数  : mac_cfg_del_vap_param_stru *pst_del_vap_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月3日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_cfg80211_del_vap(mac_cfg_del_vap_param_stru *pst_del_vap_param)
 {
     wal_msg_write_stru           st_write_msg;
@@ -1037,61 +901,19 @@ oal_uint32 wal_cfg80211_del_vap(mac_cfg_del_vap_param_stru *pst_del_vap_param)
     return OAL_SUCC;
 }
 #else
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_add_vap
- 功能描述  : CFG80211 接口添加网络设备
- 输入参数  : mac_cfg_add_vap_param_stru *pst_add_vap_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月3日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_cfg80211_add_vap(mac_cfg_add_vap_param_stru *pst_add_vap_param)
 {
     return OAL_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_del_vap
- 功能描述  : CFG80211 接口删除网络设备
- 输入参数  : mac_cfg_del_vap_param_stru *pst_del_vap_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月3日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_cfg80211_del_vap(mac_cfg_del_vap_param_stru *pst_del_vap_param)
 {
     return OAL_SUCC;
 }
 #endif
 #ifdef _PRE_WLAN_FEATURE_VOWIFI
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_vowifi_report
- 功能描述  : 触发上报vowifi状态切换请求
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年4月19日
-    作    者   : z00273164
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_cfg80211_vowifi_report(frw_event_mem_stru *pst_event_mem)
 {
 #if (_PRE_OS_VERSION_LINUX == _PRE_OS_VERSION) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
@@ -1122,25 +944,7 @@ oal_uint32 wal_cfg80211_vowifi_report(frw_event_mem_stru *pst_event_mem)
 #endif /* _PRE_WLAN_FEATURE_VOWIFI */
 
 //#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 44))
-/*****************************************************************************
- 函 数 名  : wal_check_support_basic_rate_6M
- 功能描述  : 判断指数速率集和扩展速率集中是否包含6M速率作为基本速率
- 输入参数  : oal_uint8   *puc_supported_rates_ie
-             oal_uint8    uc_supported_rates_num
-             oal_uint8   *puc_extended_supported_rates_ie
-             oal_uint8    uc_extended_supported_rates_num
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_bool_enum : OAL_TRUE    支持
-                                        OAL_FALSE   不支持
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年4月23日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_bool_enum wal_check_support_basic_rate_6M(oal_uint8   *puc_supported_rates_ie,
                                                             oal_uint8    uc_supported_rates_num,
                                                             oal_uint8   *puc_extended_supported_rates_ie,
@@ -1175,21 +979,7 @@ OAL_STATIC oal_bool_enum wal_check_support_basic_rate_6M(oal_uint8   *puc_suppor
     return en_support;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_parse_protocol_mode
- 功能描述  : 解析协议模式
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年6月12日
-    作    者   : zhangheng
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32  wal_parse_protocol_mode(
                 wlan_channel_band_enum_uint8 en_band,
                 oal_beacon_parameters       *pst_beacon_info,
@@ -1271,22 +1061,7 @@ OAL_STATIC oal_uint32  wal_parse_protocol_mode(
     return OAL_FAIL;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_parse_ht_vht_ie
- 功能描述  : 解析内核传递过来的beacon信息中的ht_vht 信息元素
- 输入参数  : oal_beacon_parameters *pst_beacon_info
-             mac_beacon_param_stru *pst_beacon_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年4月4日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_parse_ht_vht_ie(
                 mac_vap_stru           *pst_mac_vap,
                 oal_beacon_parameters  *pst_beacon_info,
@@ -1375,22 +1150,7 @@ OAL_STATIC oal_uint32 wal_parse_ht_vht_ie(
 
 //#endif
 #if 0
-/*****************************************************************************
- 函 数 名  : wal_parse_beacon_wps_ie
- 功能描述  : 解析内核传递过来的beacon信息中的wps 信息元素
- 输入参数  : oal_beacon_parameters *pst_beacon_info
-             mac_beacon_param_stru *pst_beacon_param
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年4月18日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_parse_beacon_wps_ie(mac_vap_stru *pst_mac_vap, oal_beacon_parameters *pst_beacon_info)
 {
     oal_app_ie_stru  st_wps_ie;
@@ -1427,21 +1187,7 @@ OAL_STATIC oal_int32 wal_cfg80211_sched_scan_stop(oal_wiphy_stru          *pst_w
                                                            oal_net_device_stru     *pst_netdev);
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_scan
- 功能描述  : 内核调用启动扫描的接口函数
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年8月27日
-    作    者   : y00184180
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 /*lint -e801*/
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,44))//TBD:确认正确的 Linux 版本号
 OAL_STATIC oal_int32  wal_cfg80211_scan(
@@ -1553,24 +1299,7 @@ fail:
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
 #if 0
-/*****************************************************************************
- 函 数 名  : wal_set_auth_type
- 功能描述  : 配置认证类型
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年10月23日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-  1.日    期   : 2014年1月24日
-    作    者   : duankaiyong 00194999
-    修改内容   : 修改函数，
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_set_auth_type(mac_cfg80211_connect_param_stru     *pst_connect_param,
                                        oal_cfg80211_connect_params_stru    *pst_sme)
 {
@@ -1593,21 +1322,7 @@ OAL_STATIC oal_int32 wal_set_auth_type(mac_cfg80211_connect_param_stru     *pst_
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_set_akm_suites
- 功能描述  :配置各认证模式相应bit值
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年10月23日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_set_akm_suites(mac_cfg80211_connect_param_stru     *pst_connect_param,
                                                 oal_cfg80211_connect_params_stru    *pst_sme)
 {
@@ -1629,21 +1344,7 @@ OAL_STATIC oal_int32 wal_set_akm_suites(mac_cfg80211_connect_param_stru     *pst
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_set_wpa_wpa2
- 功能描述  :
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年10月23日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32  wal_set_wpa_wpa2(mac_cfg80211_connect_param_stru     *pst_connect_param,
                                                 oal_cfg80211_connect_params_stru    *pst_sme)
 {
@@ -1667,21 +1368,7 @@ OAL_STATIC oal_int32  wal_set_wpa_wpa2(mac_cfg80211_connect_param_stru     *pst_
 #endif
 
 #if 0
-/*****************************************************************************
- 函 数 名  : wal_set_cipher_suite
- 功能描述  :
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年10月23日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_set_cipher_suite(oal_uint32 ul_cipher_suite, oal_uint8 *puc_crypto)
 {
     switch(ul_cipher_suite)
@@ -1708,21 +1395,7 @@ OAL_STATIC oal_int32 wal_set_cipher_suite(oal_uint32 ul_cipher_suite, oal_uint8 
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_set_cipher_info
- 功能描述  :配置加密信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月22日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_set_cipher_info(mac_cfg80211_connect_param_stru     *pst_connect_param,
                                        oal_cfg80211_connect_params_stru    *pst_sme)
 {
@@ -1762,24 +1435,7 @@ OAL_STATIC oal_int32 wal_set_cipher_info(mac_cfg80211_connect_param_stru     *ps
 }
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_set_wep_key
- 功能描述  : 配置wep加密信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月22日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-  1.日    期   : 2014年01月24日
-    作    者   : duankaiyong 00194999
-    修改内容   : 修改函数， 从内核拷贝wep 加密信息到驱动
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_set_wep_key(mac_cfg80211_connect_param_stru      *pst_connect_param,
                                             oal_cfg80211_connect_params_stru   *pst_sme)
 {
@@ -1791,22 +1447,7 @@ OAL_STATIC oal_uint32 wal_set_wep_key(mac_cfg80211_connect_param_stru      *pst_
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_set_crypto_info
- 功能描述  : 设置STA connect 加密信息
- 输入参数  : mac_cfg80211_connect_param_stru   *pst_connect_param
-             oal_cfg80211_connect_params_stru    *pst_sme
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年1月24日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_set_crypto_info(mac_cfg80211_connect_param_stru   *pst_connect_param,
                                             oal_cfg80211_connect_params_stru    *pst_sme)
 {
@@ -1899,7 +1540,6 @@ OAL_STATIC oal_uint32 wal_set_crypto_info(mac_cfg80211_connect_param_stru   *pst
     //else if (mac_get_wps_ie(pst_sme->ie, (oal_uint16)(pst_sme->ie_len), 0))
     else if (mac_find_vendor_ie(MAC_WLAN_OUI_MICROSOFT, MAC_WLAN_OUI_TYPE_MICROSOFT_WPS, (oal_uint8 *)pst_sme->ie, (oal_int32)(pst_sme->ie_len)))
     {
-        /* DTS2015022604379 如果使能了WPS，则返回成功 */
         OAM_WARNING_LOG0(0, OAM_SF_CFG, "{wal_set_crypto_info:connect use wps method!}");
         ul_ret = OAL_SUCC;
     }
@@ -1913,21 +1553,7 @@ OAL_STATIC oal_uint32 wal_set_crypto_info(mac_cfg80211_connect_param_stru   *pst
 
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)) */
 #if 0
-/*****************************************************************************
- 函 数 名  : wal_add_beacon_wep
- 功能描述  :
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月27日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32  wal_add_beacon_wep(mac_vap_stru *pst_mac_vap,mac_beacon_param_stru *pst_beacon_param,
                                                 oal_beacon_parameters *pst_beacon_info)
 {
@@ -1980,21 +1606,7 @@ OAL_STATIC oal_uint32  wal_add_beacon_wep(mac_vap_stru *pst_mac_vap,mac_beacon_p
 
     return OAL_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : wal_add_beacon_auth_info
- 功能描述  :
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月27日
-    作    者   : l00218984
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32  wal_add_beacon_auth_info(mac_vap_stru *pst_mac_vap,mac_beacon_param_stru *pst_beacon_param)
 {
     if (WLAN_WITP_AUTH_SHARED_KEY == pst_mac_vap->en_auth_mode)
@@ -2016,22 +1628,7 @@ OAL_STATIC oal_uint32  wal_add_beacon_auth_info(mac_vap_stru *pst_mac_vap,mac_be
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
 
-/*****************************************************************************
- 函 数 名  : wal_is_p2p_device
- 功能描述  : 判断是否为P2P DEVICE .如果是P2P device，则不允许关联。
- 输入参数  : oal_net_device_stru *pst_net_device
- 输出参数  : 无
- 返 回 值  : oal_bool_enum_uint8 OAL_TRUE:P2P DEVICE 设备，
-                                 OAL_FALSE:非P2P DEVICE 设备
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年5月5日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_bool_enum_uint8 wal_is_p2p_device(oal_net_device_stru *pst_net_device)
 {
 #ifdef _PRE_WLAN_FEATURE_P2P
@@ -2060,24 +1657,7 @@ OAL_STATIC oal_bool_enum_uint8 wal_is_p2p_device(oal_net_device_stru *pst_net_de
 #endif /* _PRE_WLAN_FEATURE_P2P */
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_connect
- 功能描述  : 解析内核下发的关联命令，sta启动关联
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年8月27日
-    作    者   : y00184180
-    修改内容   : 新生成函数
-  2.日    期   : 2013年10月24日
-    作    者   : l00218984
-    修改内容   : 增加加密认证相关的处理
-
-*****************************************************************************/
 OAL_STATIC oal_int32  wal_cfg80211_connect(
                     oal_wiphy_stru                        *pst_wiphy,
                     oal_net_device_stru                   *pst_net_device,
@@ -2103,13 +1683,11 @@ OAL_STATIC oal_int32  wal_cfg80211_connect(
     }
 
 #endif //#ifdef _PRE_WLAN_FEATURE_DFR
-    /* begin:DTS2015040702497 禁止采用p2p device设备启动关联 */
     if (wal_is_p2p_device(pst_net_device))
     {
         OAM_WARNING_LOG0(0, OAM_SF_ANY, "wal_cfg80211_connect:connect stop, p2p device should not connect.");
         return -OAL_EINVAL;
     }
-    /* end:DTS2015040702497 禁止采用p2p device设备启动关联 */
 
     /* 初始化驱动连接参数 */
     oal_memset(&st_mac_cfg80211_connect_param, 0, OAL_SIZEOF(mac_cfg80211_connect_param_stru));
@@ -2185,11 +1763,9 @@ OAL_STATIC oal_int32  wal_cfg80211_connect(
     wlan_pm_set_timeout(WLAN_SLEEP_LONG_CHECK_CNT);
 #endif
 
-    /* BEGIN:DTS2017072509887, 关联前需要取消正在进行的扫描，
-     * 避免关联命令下发时vap 处在扫描状态，驱动不执行关联命令，导致关联失败 */
+    
     wal_force_scan_complete(pst_net_device, OAL_TRUE);
-    /* END:DTS2017072509887, 关联前需要取消正在进行的扫描，
-     * 避免关联命令下发时vap 处在扫描状态，驱动不执行关联命令，导致关联失败 */
+    
 
     /* 抛事件给驱动，启动关联 */
     l_ret = wal_cfg80211_start_connect(pst_net_device, &st_mac_cfg80211_connect_param);
@@ -2203,21 +1779,7 @@ OAL_STATIC oal_int32  wal_cfg80211_connect(
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_disconnect
- 功能描述  :
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年8月27日
-    作    者   : y00184180
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32  wal_cfg80211_disconnect(
                     oal_wiphy_stru                   *pst_wiphy,
                     oal_net_device_stru              *pst_net_device,
@@ -2253,13 +1815,11 @@ OAL_STATIC oal_int32  wal_cfg80211_disconnect(
 
     /* 填写和sta关联的ap mac 地址*/
     pst_mac_vap = OAL_NET_DEV_PRIV(pst_net_device);
-    /* Begin：DTS2017052301136 防止删除p2p组时清空了netdev下的vap，这时disconnect，出现netdev存在，vap被清空，从而使用空指针问题*/
     if(OAL_PTR_NULL == pst_mac_vap)
     {
         OAM_WARNING_LOG0(0, OAM_SF_ANY, "{wal_cfg80211_disconnect::pst_mac_vap is null!}\r\n");
         return -OAL_EFAIL;
     }
-    /* End；DTS2017052301136*/
     pst_mac_user = mac_res_get_mac_user(pst_mac_vap->uc_assoc_vap_id);
     if (OAL_PTR_NULL == pst_mac_user)
     {
@@ -2279,29 +1839,7 @@ OAL_STATIC oal_int32  wal_cfg80211_disconnect(
 }
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_add_key
- 功能描述  : 配置ptk,gtk等密钥到物理层
- 输入参数  : *wiphy
-             *netdev
-             key_index
-             pairwise
-             *mac_addr
-             *params
- 输出参数  : oal_uint32
- 返 回 值  : 0:成功,其他:失败
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2013年8月19日
-    作    者   :
-    修改内容   : 新生成函数
-  2.日    期   : 2013年12月28日
-    作    者   : g00260350
-    修改内容   : 使用局部变量替代malloc，以减少释放内存的复杂度
-
-*****************************************************************************/
 #if (_PRE_OS_VERSION_LINUX == _PRE_OS_VERSION)
 OAL_STATIC oal_int32 wal_cfg80211_add_key(oal_wiphy_stru          *pst_wiphy,
                                           oal_net_device_stru     *pst_netdev,
@@ -2409,30 +1947,7 @@ OAL_STATIC oal_int32 wal_cfg80211_add_key(oal_wiphy_stru          *pst_wiphy,
     return OAL_SUCC;
 }
 
- /*****************************************************************************
- 函 数 名  : wal_cfg80211_get_key
- 功能描述  : 从已保存信息里获取ptk,gtk等密钥
- 输入参数  : *wiphy
-             *netdev
-             key_index
-             pairwise
-             *mac_addr
-             *cookie
-             *callback
- 输出参数  : oal_uint32
- 返 回 值  : 0:成功,其他:失败
- 调用函数  : 无
- 被调函数  : 无
-
- 修改历史      :
-  1.日    期   : 2013年8月19日
-    作    者   :
-    修改内容   : 新生成函数
-  2.日    期   : 2014年1月4日
-    作    者   : g00260350
-    修改内容   : 使用局部变量替代malloc，以减少释放内存的复杂度
-
-*****************************************************************************/
+ 
 #if (_PRE_OS_VERSION_LINUX == _PRE_OS_VERSION)
  OAL_STATIC oal_int32 wal_cfg80211_get_key(oal_wiphy_stru          *pst_wiphy,
                                            oal_net_device_stru     *pst_netdev,
@@ -2548,28 +2063,7 @@ OAL_STATIC oal_int32 wal_cfg80211_get_key(oal_wiphy_stru *pst_wiphy,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_remove_key
- 功能描述  : 把ptk,gtk等密钥从物理层删除
- 输入参数  : *wiphy
-             *netdev
-              key_index
-              pairwise
-             *mac_addr
- 输出参数  : oal_uint32
- 返 回 值  : 0:成功,其他:失败
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2013年8月19日
-    作    者   :
-    修改内容   : 新生成函数
-  2.日    期   : 2014年1月4日
-    作    者   : g00260350
-    修改内容   : 使用局部变量替代malloc，以减少释放内存的复杂度
-
-*****************************************************************************/
 #if (_PRE_OS_VERSION_LINUX == _PRE_OS_VERSION)
 OAL_STATIC oal_int32 wal_cfg80211_remove_key(oal_wiphy_stru         *pst_wiphy,
                                              oal_net_device_stru    *pst_netdev,
@@ -2674,28 +2168,7 @@ OAL_STATIC oal_int32 wal_cfg80211_remove_key(oal_wiphy_stru *pst_wiphy,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_default_key
- 功能描述  : 使配置的密钥生效
- 输入参数  : *wiphy
-             *netdev
-              key_index
-              unicast
-              multicast
- 输出参数  : oal_uint32
- 返 回 值  : 0:成功,其他:失败
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2013年8月15日
-    作    者   :
-    修改内容   : 新生成函数
-  2.日    期   : 2014年07月31日
-    作    者   : duankaiyong 00194999
-    修改内容   : 合并设置数据帧默认密钥和设置管理帧默认密钥函数
-
-*****************************************************************************/
 #if (_PRE_OS_VERSION_LINUX == _PRE_OS_VERSION)
 OAL_STATIC oal_int32 wal_cfg80211_set_default_key(oal_wiphy_stru *pst_wiphy,
                                                     oal_net_device_stru     *pst_netdev,
@@ -2773,23 +2246,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_default_key(oal_wiphy_stru *pst_wiphy,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_default_mgmt_key
- 功能描述  : 使配置的密钥生效.PMF 特性使用，配置管理密钥
- 输入参数  : *wiphy
-             *netdev
-              key_index
- 输出参数  : oal_uint32
- 返 回 值  : 0:成功,其他:失败
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2014年11月21日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32 wal_cfg80211_set_default_mgmt_key(oal_wiphy_stru          *pst_wiphy,
                                             oal_net_device_stru     *pst_netdev,
                                             oal_uint8                uc_key_index)
@@ -2801,25 +2258,7 @@ oal_int32 wal_cfg80211_set_default_mgmt_key(oal_wiphy_stru          *pst_wiphy,
 
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_channel
- 功能描述  : 设置设备工作的频段，信道和带宽
- 输入参数  : struct oal_wiphy_stru *wiphy
-             struct oal_ieee80211_channel *chan
-             oal_nl80211_channel_type channel_type
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年10月26日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-  1.日    期   : 2013年10月26日
-    作    者   : l00311403
-    修改内容   : 将< KERNEL_VERSION(3, 6, 0)改成<= KERNEL_VERSION(2, 6, 34)
-*****************************************************************************/
 /*lint -e40*/
 #if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)) || ((_PRE_OS_VERSION_WIN32_RAW == _PRE_OS_VERSION) ||(_PRE_OS_VERSION_WIN32 == _PRE_OS_VERSION) )
 OAL_STATIC oal_int32 wal_cfg80211_set_channel(oal_wiphy_stru           *pst_wiphy,
@@ -2893,22 +2332,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_channel(oal_wiphy_stru           *pst_wiph
 #endif
 /*lint +e40*/
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_wiphy_params
- 功能描述  : 设置wiphy设备的 参数，RTS 门限阈值，分片门限阈值
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_uint32 ul_changed
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年10月28日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
 OAL_STATIC oal_int32 wal_cfg80211_set_wiphy_params(oal_wiphy_stru *pst_wiphy, oal_uint32 ul_changed)
 {
@@ -2997,23 +2421,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_wiphy_params(oal_wiphy_stru *pst_wiphy, oa
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 44))
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_beacon
- 功能描述  : 设置AP参数.包括设置beacon interval, dtim_period 等参数
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             oal_beacon_parameters *pst_info
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月24日
-    作    者   : zwx287476
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_set_beacon(
                 oal_wiphy_stru        *pst_wiphy,
                 oal_net_device_stru   *pst_dev,
@@ -3176,23 +2584,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_beacon(
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_add_beacon
- 功能描述  : 设置AP参数.包括设置beacon interval, dtim_period 等参数
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             oal_beacon_parameters *pst_info
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月11日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_add_beacon(
                 oal_wiphy_stru        *pst_wiphy,
                 oal_net_device_stru   *pst_dev,
@@ -3365,21 +2757,7 @@ OAL_STATIC oal_int32 wal_cfg80211_add_beacon(
 
 #if ((LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 44)) || (_PRE_OS_VERSION_WIN32 == _PRE_OS_VERSION))
 #if 0
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_bringup_ap
- 功能描述  : 启动ap
- 输入参数  : oal_net_device_stru   *pst_netdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_bringup_ap(oal_net_device_stru *pst_netdev)
 {
     wal_msg_write_stru st_write_msg;
@@ -3407,21 +2785,7 @@ OAL_STATIC oal_int32 wal_cfg80211_bringup_ap(oal_net_device_stru *pst_netdev)
 }
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_ssid
- 功能描述  : 启动ap
- 输入参数  : oal_net_device_stru   *pst_netdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_set_ssid(oal_net_device_stru *pst_netdev,
                                                 oal_uint8           *puc_ssid_ie,
                                                 oal_uint8            uc_ssid_len)
@@ -3454,23 +2818,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_ssid(oal_net_device_stru *pst_netdev,
 
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_fill_beacon_param
- 功能描述  : 将要下发的修改的beacon帧参数填入到入参结构体中
- 输入参数  : mac_vap_stru                *pst_mac_vap,
-             struct cfg80211_beacon_data *pst_beacon_info,
-             mac_beacon_param_stru       *pst_beacon_param
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_fill_beacon_param(mac_vap_stru               *pst_mac_vap,
                                                            oal_beacon_data_stru        *pst_beacon_info,
                                                            mac_beacon_param_stru       *pst_beacon_param)
@@ -3581,23 +2929,7 @@ OAL_STATIC oal_int32 wal_cfg80211_fill_beacon_param(mac_vap_stru               *
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_change_beacon
- 功能描述  : 修改ap beacon帧配置参数
- 输入参数  : oal_wiphy_stru          *pst_wiphy
-             oal_net_device_stru     *pst_netdev
-             struct cfg80211_beacon_data *info
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_change_beacon(oal_wiphy_stru         *pst_wiphy,
                                                         oal_net_device_stru     *pst_netdev,
                                                         oal_beacon_data_stru    *pst_beacon_info)
@@ -3669,21 +3001,7 @@ OAL_STATIC oal_int32 wal_cfg80211_change_beacon(oal_wiphy_stru         *pst_wiph
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_convert_width_to_value
- 功能描述  : 将内核下发的带宽枚举转换成真实的带宽宽度值
- 输入参数  : oal_int32 l_channel_width
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月29日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_convert_width_to_value(oal_int32 l_channel_width)
 {
     oal_int32 l_channel_width_value = 0;
@@ -3711,22 +3029,7 @@ OAL_STATIC oal_int32 wal_cfg80211_convert_width_to_value(oal_int32 l_channel_wid
     return l_channel_width_value;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_channel_info
- 功能描述  : 设置信道
- 输入参数  : oal_wiphy_stru           *pst_wiphy
-             oal_net_device_stru      *pst_netdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月30日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_set_channel_info(oal_wiphy_stru      *pst_wiphy,
                                                           oal_net_device_stru *pst_netdev)
 {
@@ -3852,23 +3155,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_channel_info(oal_wiphy_stru      *pst_wiph
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_start_ap
- 功能描述  : 启动AP,配置AP 参数。
- 输入参数  : oal_wiphy_stru              *pst_wiphy
-             oal_net_device_stru         *pst_netdev
-             struct cfg80211_ap_settings *settings
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月30日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_start_ap(oal_wiphy_stru           *pst_wiphy,
                                                 oal_net_device_stru      *pst_netdev,
                                                 oal_ap_settings_stru     *pst_ap_settings)
@@ -4002,22 +3289,7 @@ OAL_STATIC oal_int32 wal_cfg80211_start_ap(oal_wiphy_stru           *pst_wiphy,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_stop_ap
- 功能描述  : 停止AP
- 输入参数  : oal_wiphy_stru        *pst_wiphy
-             oal_net_device_stru *pst_netdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_stop_ap(oal_wiphy_stru        *pst_wiphy,
                                                 oal_net_device_stru *pst_netdev)
 {
@@ -4112,22 +3384,7 @@ OAL_STATIC oal_int32 wal_cfg80211_stop_ap(oal_wiphy_stru        *pst_wiphy,
 }
 
 #if 0
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_get_mode
- 功能描述  : 获取当前协议模式
- 输入参数  : oal_net_device_stru   *pst_netdev
-             oal_bss_parameters    *pst_bss_params
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_get_mode(oal_net_device_stru      *pst_netdev,
                                                   wlan_protocol_enum_uint8 *puc_protocol_mode)
 {
@@ -4214,22 +3471,7 @@ OAL_STATIC oal_int32 wal_cfg80211_get_mode(oal_net_device_stru      *pst_netdev,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_mode
- 功能描述  : 获取当前协议模式
- 输入参数  : oal_net_device_stru   *pst_netdev
-             oal_bss_parameters    *pst_bss_params
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_set_mode(oal_net_device_stru      *pst_netdev,
                                                   wlan_protocol_enum_uint8 *puc_protocol_mode)
 {
@@ -4291,23 +3533,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_mode(oal_net_device_stru      *pst_netdev,
 }
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_change_bss
- 功能描述  : 修改bss参数信息
- 输入参数  : oal_wiphy_stru        *pst_wiphy
-             oal_net_device_stru   *pst_netdev
-             oal_bss_parameters    *pst_bss_params
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月31日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_change_bss(oal_wiphy_stru        *pst_wiphy,
                                                     oal_net_device_stru   *pst_netdev,
                                                     oal_bss_parameters    *pst_bss_params)
@@ -4438,21 +3664,7 @@ OAL_STATIC oal_int32 wal_cfg80211_change_bss(oal_wiphy_stru        *pst_wiphy,
 #endif
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_print_sched_scan_req_info
- 功能描述  : 打印上层下发的调度扫描请求信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月19日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_void  wal_cfg80211_print_sched_scan_req_info(oal_cfg80211_sched_scan_request_stru  *pst_request)
 {
     oal_int8      ac_tmp_buff[200];
@@ -4500,23 +3712,7 @@ OAL_STATIC oal_void  wal_cfg80211_print_sched_scan_req_info(oal_cfg80211_sched_s
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_pno_scan_ssid_enabled
- 功能描述  : 检查pst_ssid是否在pst_ssid_list列表里面
- 输入参数  : struct oal_cfg80211_ssid_stru *pst_ssid,
-             struct oal_cfg80211_ssid_stru *pst_ssid_list
-             oal_int32 l_count
- 输出参数  : 无
- 返 回 值  : oal_bool_enum_uint8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月2日
-    作    者   : d00223710
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_bool_enum_uint8 wal_pno_scan_with_assigned_ssid(oal_cfg80211_ssid_stru *pst_ssid,
                                                                         oal_cfg80211_ssid_stru *pst_ssid_list,
                                                                         oal_int32 l_count)
@@ -4539,23 +3735,7 @@ OAL_STATIC oal_bool_enum_uint8 wal_pno_scan_with_assigned_ssid(oal_cfg80211_ssid
     return OAL_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_sched_scan_start
- 功能描述  : 调度扫描启动
- 输入参数  : oal_wiphy_stru                         *pst_wiphy
-             oal_net_device_stru                    *pst_netdev
-             oal_cfg80211_sched_scan_request_stru   *pst_request
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月9日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_sched_scan_start(oal_wiphy_stru                        *pst_wiphy,
                                                            oal_net_device_stru                   *pst_netdev,
                                                            oal_cfg80211_sched_scan_request_stru  *pst_request)
@@ -4669,22 +3849,7 @@ OAL_STATIC oal_int32 wal_cfg80211_sched_scan_start(oal_wiphy_stru               
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_sched_scan_stop
- 功能描述  : 调度扫描关闭
- 输入参数  : oal_wiphy_stru                       *pst_wiphy
-             oal_net_device_stru                  *pst_netdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月9日
-    作    者   : l00279018
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_sched_scan_stop(oal_wiphy_stru          *pst_wiphy,
                                                   oal_net_device_stru     *pst_netdev)
 {
@@ -4710,25 +3875,7 @@ OAL_STATIC oal_int32 wal_cfg80211_sched_scan_stop(oal_wiphy_stru          *pst_w
 
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_change_virtual_intf
- 功能描述  : 转换AP，STA 状态
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             enum nl80211_iftype en_type        下一个状态
-             oal_uint32 *pul_flags
-             oal_vif_params_stru *pst_params
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月13日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
 oal_int32 wal_cfg80211_change_virtual_intf(oal_wiphy_stru        *pst_wiphy,
                                            oal_net_device_stru   *pst_net_dev,
@@ -4915,24 +4062,7 @@ oal_int32 wal_cfg80211_change_virtual_intf(oal_wiphy_stru        *pst_wiphy,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_add_station
- 功能描述  : 增加用户
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             oal_uint8 *puc_mac         用户mac 地址
-             oal_station_parameters_stru *pst_sta_parms 用户参数
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月13日
-    作    者   : g00260350
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_add_station(oal_wiphy_stru            *pst_wiphy,
                                                 oal_net_device_stru     *pst_dev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0))
@@ -4944,23 +4074,7 @@ OAL_STATIC oal_int32 wal_cfg80211_add_station(oal_wiphy_stru            *pst_wip
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_del_station
- 功能描述  : 删除用户
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             oal_uint8 *puc_mac         用户mac 地址。如果mac = NULL,删除所有用户
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月13日
-    作    者   : g00260350
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_del_station(oal_wiphy_stru        *pst_wiphy,
                                                 oal_net_device_stru *pst_dev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
@@ -5050,24 +4164,7 @@ OAL_STATIC oal_int32 wal_cfg80211_del_station(oal_wiphy_stru        *pst_wiphy,
 
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_change_station
- 功能描述  : 删除用户
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             oal_uint8 *puc_mac         用户mac 地址
-             oal_station_parameters_stru *pst_sta_parms 用户参数
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月13日
-    作    者   : g00260350
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_change_station(oal_wiphy_stru                 *pst_wiphy,
                                                     oal_net_device_stru         *pst_dev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0))
@@ -5078,40 +4175,9 @@ OAL_STATIC oal_int32 wal_cfg80211_change_station(oal_wiphy_stru                 
 {
     return OAL_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_get_station
- 功能描述  : 获取用户
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             oal_uint8 *puc_mac         用户mac 地址
- 输出参数  : oal_station_info_stru *pst_sta_info
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月13日
-    作    者   : g00260350
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 #define QUERY_STATION_INFO_TIME  (5 * OAL_TIME_HZ)
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_fill_station_info
- 功能描述  : station_info结构赋值
- 输入参数  : oal_station_info_stru  *pst_sta_info,
-             oal_station_info_stru *pst_stats
- 输出参数  : 无
- 返 回 值  : OAL_STATIC void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月4日
-    作    者   : z00185449
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_void wal_cfg80211_fill_station_info(oal_station_info_stru  *pst_sta_info,
                                                        oal_station_info_stru  *pst_stats)
 {
@@ -5185,21 +4251,7 @@ OAL_STATIC oal_void wal_cfg80211_fill_station_info(oal_station_info_stru  *pst_s
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0)) */
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_get_station_filter
- 功能描述  : update rssi once a second
- 输入参数  :
- 输出参数  : oal_uint8
- 返 回 值  :
- 调用函数  : wal_cfg80211_get_station
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年8月20日
-    作    者   : s00304087
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint8 wal_cfg80211_get_station_filter(mac_vap_stru *pst_mac_vap, oal_uint8 *puc_mac)
 {
     hmac_user_stru *pst_hmac_user;
@@ -5224,24 +4276,7 @@ oal_uint8 wal_cfg80211_get_station_filter(mac_vap_stru *pst_mac_vap, oal_uint8 *
     return OAL_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_get_station
- 功能描述  : 获取station信息
- 输入参数  : oal_wiphy_stru        *pst_wiphy,
-             oal_net_device_stru   *pst_dev,
-             oal_uint8             *puc_mac,
-             oal_station_info_stru *pst_sta_info
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月4日
-    作    者   : z00185449
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_get_station(oal_wiphy_stru        *pst_wiphy,
                                                    oal_net_device_stru   *pst_dev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0))
@@ -5348,24 +4383,7 @@ OAL_STATIC oal_int32 wal_cfg80211_get_station(oal_wiphy_stru        *pst_wiphy,
     }
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_dump_station
- 功能描述  : 删除用户
- 输入参数  : oal_wiphy_stru *pst_wiphy
-             oal_net_device *pst_dev
-             oal_uint8 *puc_mac         用户mac 地址
-             oal_station_parameters_stru *pst_sta_parms 用户参数
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年11月13日
-    作    者   : g00260350
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_dump_station(oal_wiphy_stru           *pst_wiphy,
                                                 oal_net_device_stru     *pst_dev,
                                                 oal_int32                int_index,
@@ -5378,22 +4396,7 @@ OAL_STATIC oal_int32 wal_cfg80211_dump_station(oal_wiphy_stru           *pst_wip
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 44)) //TBD:1102 需要，暂时用内核版本号区分
 #if (_PRE_CONFIG_TARGET_PRODUCT != _PRE_TARGET_PRODUCT_TYPE_E5)
 
-/*****************************************************************************
- 函 数 名  : wal_is_p2p_group_exist
- 功能描述  : 检查是否存在P2P group
- 输入参数  : mac_device_stru *pst_mac_device
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_uint32 OAL_TRUE    存在P2P group
-                                   OAL_FALSE 不存在P2P group
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年9月28日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_is_p2p_group_exist(mac_device_stru *pst_mac_device)
 {
     if (OAL_SUCC != hmac_check_p2p_vap_num(pst_mac_device, WLAN_P2P_GO_MODE)
@@ -5407,21 +4410,7 @@ OAL_STATIC oal_uint32 wal_is_p2p_group_exist(mac_device_stru *pst_mac_device)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : wal_del_p2p_group
- 功能描述  : 删除P2P group
- 输入参数  : mac_device_stru *pst_mac_device
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年9月28日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_del_p2p_group(mac_device_stru *pst_mac_device)
 {
     oal_uint8                    uc_vap_idx;
@@ -5478,28 +4467,12 @@ oal_uint32 wal_del_p2p_group(mac_device_stru *pst_mac_device)
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_register_netdev
- 功能描述  : 内核注册指定类型的net_device,用于需要解mutex lock的应用
- 输入参数  : mac_device_stru *pst_hmac_device
-             oal_net_device_stru *pst_net_dev
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月24日
-    作    者   : lingxuemeng  l00324381
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_cfg80211_register_netdev(oal_net_device_stru *pst_net_dev)
 {
     oal_uint8    uc_rollback_lock = OAL_FALSE;
     oal_uint32   ul_ret = 0;
 
-    /* DTS2015022603795 nl80211 netlink pre diot 中会获取rntl_lock互斥锁， 注册net_device 会获取rntl_lock互斥锁，造成了死锁 */
     if (rtnl_is_locked())
     {
         rtnl_unlock();
@@ -5517,22 +4490,7 @@ oal_uint32 wal_cfg80211_register_netdev(oal_net_device_stru *pst_net_dev)
     return ul_ret;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_unregister_netdev
- 功能描述  : 内核去注册指定类型的net_device,用于需要解mutex lock的应用
- 输入参数  : mac_device_stru *pst_hmac_device
-             oal_net_device_stru *pst_net_dev
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月24日
-    作    者   : lingxuemeng  l00324381
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void wal_cfg80211_unregister_netdev(oal_net_device_stru *pst_net_dev)
 {
     oal_uint8    uc_rollback_lock = OAL_FALSE;
@@ -5552,25 +4510,7 @@ oal_void wal_cfg80211_unregister_netdev(oal_net_device_stru *pst_net_dev)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_add_virtual_intf
- 功能描述  : 添加指定类型的net_device
- 输入参数  : oal_wiphy_stru      *pst_wiphy
-             OAL_CONST oal_uint8 *puc_name
-             enum nl80211_iftype  en_type
-             oal_uint32          *pul_flags
-             oal_vif_params_stru *pst_params
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_wireless_dev_stru *
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月21日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_wireless_dev_stru * wal_cfg80211_add_virtual_intf(oal_wiphy_stru     *pst_wiphy,
                                                                 const char          *puc_name,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
@@ -5804,7 +4744,6 @@ OAL_STATIC oal_wireless_dev_stru * wal_cfg80211_add_virtual_intf(oal_wiphy_stru 
     OAL_NETDEVICE_WDEV(pst_net_dev)            = pst_wdev;
     OAL_NETDEVICE_QDISC(pst_net_dev, OAL_PTR_NULL);
 #ifdef _PRE_WLAN_FEATURE_SMP_SUPPORT
-    /* DTS2014122300735，不能将netdevice tx queue设置为0 */
 //    OAL_NETDEVICE_TX_QUEUE_LEN(pst_net_dev) = 0;
 #endif
 
@@ -5906,23 +4845,7 @@ ERR_STEP:
     return ERR_PTR(-EAGAIN);
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_del_virtual_intf
- 功能描述  : 删除对应VAP
- 输入参数  : oal_wiphy_stru            *pst_wiphy
-             oal_wireless_dev_stru     *pst_wdev
-             oal_int32                  l_ifindex
- 输出参数  : 无
- 返 回 值  : oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月21日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_del_virtual_intf(oal_wiphy_stru           *pst_wiphy,
                                                    oal_wireless_dev_stru    *pst_wdev)
 {
@@ -6040,21 +4963,7 @@ OAL_STATIC oal_int32 wal_cfg80211_del_virtual_intf(oal_wiphy_stru           *pst
 #endif  /* _PRE_CONFIG_TARGET_PRODUCT != _PRE_TARGET_PRODUCT_TYPE_E5 */
 
 #else  /* LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 44) */
-/*****************************************************************************
- 函 数 名  : wal_del_p2p_group
- 功能描述  : 用于LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 44)
- 输入参数  : mac_device_stru *pst_mac_device
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月21日
-    作    者   : lingxuemeng
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_del_p2p_group(mac_device_stru *pst_mac_device)
 {
     return OAL_SUCC;
@@ -6064,23 +4973,7 @@ oal_uint32 wal_del_p2p_group(mac_device_stru *pst_mac_device)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 44))
 #if (_PRE_CONFIG_TARGET_PRODUCT != _PRE_TARGET_PRODUCT_TYPE_E5)
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_mgmt_tx_cancel_wait
- 功能描述  : 取消发送管理帧等待
- 输入参数  : oal_wiphy_stru        *pst_wiphy
-             oal_wireless_dev_stru   *pst_wdev
-             oal_uint64               ull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月22日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_mgmt_tx_cancel_wait(oal_wiphy_stru        *pst_wiphy,
                                                     oal_wireless_dev_stru   *pst_wdev,
                                                     oal_uint64               ull_cookie)
@@ -6094,24 +4987,7 @@ OAL_STATIC oal_int32 wal_cfg80211_mgmt_tx_cancel_wait(oal_wiphy_stru        *pst
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 44))//TBD:确认正确的 Linux 版本号
 #if (_PRE_CONFIG_TARGET_PRODUCT != _PRE_TARGET_PRODUCT_TYPE_E5)
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_pmksa
- 功能描述  : 增加一个pmk缓存
- 输入参数  : oal_wiphy_stru           *pst_wiphy
-             oal_wireless_dev_stru    *pst_wdev
-             struct ieee80211_channel *pst_chan
-             oal_uint32                ul_duration
-             oal_uint64               *pull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
- 修改历史      :
-  1.日    期   : 2016年4月8日
-    作    者   : g00260350
-    修改内容   : 新生成函数
 
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_set_pmksa(oal_wiphy_stru           *pst_wiphy,
                                                       oal_net_device_stru      *pst_net_device,
                                                       oal_cfg80211_pmksa_stru  *pmksa)
@@ -6159,25 +5035,7 @@ OAL_STATIC oal_int32 wal_cfg80211_set_pmksa(oal_wiphy_stru           *pst_wiphy,
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_del_pmksa
- 功能描述  : 删除一个pmk缓存
- 输入参数  : oal_wiphy_stru           *pst_wiphy
-             oal_wireless_dev_stru    *pst_wdev
-             struct ieee80211_channel *pst_chan
-             oal_uint32                ul_duration
-             oal_uint64               *pull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
- 修改历史      :
-  1.日    期   : 2016年4月8日
-    作    者   : g00260350
-    修改内容   : 新生成函数
 
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_del_pmksa(oal_wiphy_stru           *pst_wiphy,
                                                       oal_net_device_stru      *pst_net_device,
                                                       oal_cfg80211_pmksa_stru  *pmksa)
@@ -6226,24 +5084,7 @@ OAL_STATIC oal_int32 wal_cfg80211_del_pmksa(oal_wiphy_stru           *pst_wiphy,
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_flush_pmksa
- 功能描述  : 清除所有pmk缓存
- 输入参数  : oal_wiphy_stru           *pst_wiphy
-             oal_wireless_dev_stru    *pst_wdev
-             struct ieee80211_channel *pst_chan
-             oal_uint32                ul_duration
-             oal_uint64               *pull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
- 修改历史      :
-  1.日    期   : 2016年4月8日
-    作    者   : g00260350
-    修改内容   : 新生成函数
 
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_flush_pmksa(oal_wiphy_stru *pst_wiphy, oal_net_device_stru *pst_net_device)
 {
     wal_msg_write_stru                       st_write_msg           = {0};
@@ -6279,25 +5120,7 @@ OAL_STATIC oal_int32 wal_cfg80211_flush_pmksa(oal_wiphy_stru *pst_wiphy, oal_net
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_remain_on_channel
- 功能描述  : 保持在指定信道
- 输入参数  : oal_wiphy_stru           *pst_wiphy
-             oal_wireless_dev_stru    *pst_wdev
-             struct ieee80211_channel *pst_chan
-             oal_uint32                ul_duration
-             oal_uint64               *pull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月21日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_remain_on_channel(oal_wiphy_stru           *pst_wiphy,
                                                     oal_wireless_dev_stru    *pst_wdev,
                                                     struct ieee80211_channel *pst_chan,
@@ -6378,7 +5201,6 @@ OAL_STATIC oal_int32 wal_cfg80211_remain_on_channel(oal_wiphy_stru           *ps
         OAM_WARNING_LOG1(0, OAM_SF_P2P, "{wal_cfg80211_remain_on_channel::wrong band type[%d]!}\r\n", pst_chan->band);
         return -OAL_EINVAL;
     }
-    /* DTS2015120401781将cookie+1值提前，保证驱动侧扫描的cookie值一致避免两次扫描cookie值弄混的现象 */
     /* 设置cookie 值 */
     *pull_cookie = ++pst_mac_device->st_p2p_info.ull_last_roc_id;   /* cookie值上层调用需要判断是否是这次的发送导致的callback */
     if (*pull_cookie == 0)
@@ -6431,23 +5253,7 @@ OAL_STATIC oal_int32 wal_cfg80211_remain_on_channel(oal_wiphy_stru           *ps
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_cancel_remain_on_channel
- 功能描述  : 停止保持在指定信道
- 输入参数  : oal_wiphy_stru           *pst_wiphy
-             oal_wireless_dev_stru   *pst_wdev
-             oal_uint64               ull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月21日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_cancel_remain_on_channel(oal_wiphy_stru           *pst_wiphy,
                                                             oal_wireless_dev_stru   *pst_wdev,
                                                             oal_uint64               ull_cookie)
@@ -6514,22 +5320,7 @@ OAL_STATIC oal_int32 wal_cfg80211_cancel_remain_on_channel(oal_wiphy_stru       
 
 
 
-/*****************************************************************************
- 函 数 名  : wal_check_cookie_timeout
- 功能描述  : 删除cookie 列表中超时的cookie
- 输入参数  : cookie_arry_stru *pst_cookie_array
-             oal_uint32 ul_current_time
- 输出参数  : 无
- 返 回 值  : oal_void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月6日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_void wal_check_cookie_timeout(cookie_arry_stru  *pst_cookie_array,
                                     oal_uint8       *puc_cookie_bitmap,
                                     oal_uint32       ul_current_time)
@@ -6553,23 +5344,7 @@ OAL_STATIC oal_void wal_check_cookie_timeout(cookie_arry_stru  *pst_cookie_array
     }
 }
 
-/*****************************************************************************
- 函 数 名  : wal_del_cookie_from_array
- 功能描述  : 删除指定idx 的cookie
- 输入参数  : cookie_arry_stru   *pst_cookie_array
-             oal_uint8       *puc_cookie_bitmap
-             oal_uint8        uc_cookie_idx
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月6日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_del_cookie_from_array(cookie_arry_stru   *pst_cookie_array,
                                         oal_uint8       *puc_cookie_bitmap,
                                         oal_uint8        uc_cookie_idx)
@@ -6587,23 +5362,7 @@ OAL_STATIC oal_uint32 wal_del_cookie_from_array(cookie_arry_stru   *pst_cookie_a
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_add_cookie_to_array
- 功能描述  : 添加cookie 到cookie array 中
- 输入参数  : cookie_arry_stru *pst_cookie_array
-             oal_uint8 *puc_cookie_bitmap
-             oal_uint64 *pull_cookie
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月6日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_add_cookie_to_array(cookie_arry_stru *pst_cookie_array,
                                     oal_uint8       *puc_cookie_bitmap,
                                     oal_uint64      *pull_cookie,
@@ -6631,22 +5390,7 @@ OAL_STATIC oal_uint32 wal_add_cookie_to_array(cookie_arry_stru *pst_cookie_array
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_check_cookie_from_array
- 功能描述  : 从cookie array 中查找相应cookie index
- 输入参数  : oal_uint8 *puc_cookie_bitmap
-             oal_uint8 *puc_cookie_idx
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月31日
-    作    者   : lingxuemeng 00324381
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_check_cookie_from_array(oal_uint8 *puc_cookie_bitmap,oal_uint8 uc_cookie_idx)
 {
     /* 从cookie bitmap中查找相应的cookie index，如果位图为0，表示已经被del */
@@ -6658,23 +5402,7 @@ OAL_STATIC oal_uint32 wal_check_cookie_from_array(oal_uint8 *puc_cookie_bitmap,o
     return OAL_FAIL;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_mgmt_do_tx
- 功能描述  : WAL 层发送从wpa_supplicant  接收到的管理帧
- 输入参数  : oal_net_device_stru    *pst_netdev        发送管理帧设备
-             mac_mgmt_frame_stru    *pst_mgmt_tx_param 发送管理帧参数
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_uint32 OAL_SUCC 发送成功
-                                   OAL_FAIL 发送失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年8月29日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_uint32 wal_mgmt_do_tx(oal_net_device_stru    *pst_netdev,
                                                 mac_mgmt_frame_stru *pst_mgmt_tx_param)
 {
@@ -6726,7 +5454,6 @@ OAL_STATIC oal_uint32 wal_mgmt_do_tx(oal_net_device_stru    *pst_netdev,
     pst_mgmt_tx->mgmt_tx_status  = OAL_FAIL;
     /*lint -e730*/
     i_leftime = OAL_WAIT_EVENT_INTERRUPTIBLE_TIMEOUT(pst_mgmt_tx->st_wait_queue, OAL_TRUE== pst_mgmt_tx->mgmt_tx_complete,  (oal_uint32)OAL_MSECS_TO_JIFFIES(WAL_MGMT_TX_TIMEOUT_MSEC));
-    /*lint +e730*//* 规避WIN32版本下的PC LINT错误 */
 
     if ( 0 == i_leftime)
     {
@@ -6744,36 +5471,12 @@ OAL_STATIC oal_uint32 wal_mgmt_do_tx(oal_net_device_stru    *pst_netdev,
     {
         /* 正常结束  */
         OAM_INFO_LOG0(0, OAM_SF_ANY, "{wal_mgmt_do_tx::mgmt tx commpleted!}\r\n");
-        /* DTS2015122906020. 正常发送结束，返回发送完成状态 */
         return (OAL_SUCC != pst_mgmt_tx->mgmt_tx_status)?OAL_FAIL:OAL_SUCC;/* [false alarm]:返回值为布尔值0或者1，不影响*/
     }
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_mgmt_tx
- 功能描述  : 发送管理帧
- 输入参数  : oal_wiphy_stru              *pst_wiphy
-             oal_wireless_dev_stru       *pst_wdev
-             struct ieee80211_channel    *pst_chan
-             bool                         en_offchan
-             oal_uint32                   ul_wait
-             OAL_CONST oal_uint8         *puc_buf
-             size_t                       ul_len
-             bool                         en_no_cck
-             bool                         en_dont_wait_for_ack
-             oal_uint64                  *pull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月21日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_mgmt_tx(oal_wiphy_stru                *pst_wiphy,
                                             oal_wireless_dev_stru       *pst_wdev,
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 1, 0))
@@ -6922,21 +5625,7 @@ OAL_STATIC oal_int32 wal_cfg80211_mgmt_tx(oal_wiphy_stru                *pst_wip
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_mgmt_tx_status
- 功能描述  : HMAC抛mgmt tx status到WAL, 唤醒wait queue
- 输入参数  : frw_event_mem_stru *pst_event_mem
- 输出参数  : 无
- 返 回 值  : oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年1月6日
-    作    者   : xiaoyuren
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32  wal_cfg80211_mgmt_tx_status(frw_event_mem_stru *pst_event_mem)
 {
     frw_event_stru                  *pst_event;
@@ -7001,22 +5690,7 @@ oal_int32 wal_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
 #endif  /* _PRE_CONFIG_TARGET_PRODUCT != _PRE_TARGET_PRODUCT_TYPE_E5 */
 
 #else
-/*****************************************************************************
- 函 数 名  : wal_check_cookie_timeout
- 功能描述  : 删除cookie 列表中超时的cookie
- 输入参数  : cookie_arry_stru *pst_cookie_array
-             oal_uint32 ul_current_time
- 输出参数  : 无
- 返 回 值  : oal_void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月6日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void wal_check_cookie_timeout(cookie_arry_stru  *pst_cookie_array,
                                     oal_uint8       *puc_cookie_bitmap,
                                     oal_uint32       ul_current_time)
@@ -7040,23 +5714,7 @@ oal_void wal_check_cookie_timeout(cookie_arry_stru  *pst_cookie_array,
     }
 }
 
-/*****************************************************************************
- 函 数 名  : wal_del_cookie_from_array
- 功能描述  : 删除指定idx 的cookie
- 输入参数  : cookie_arry_stru   *pst_cookie_array
-             oal_uint8       *puc_cookie_bitmap
-             oal_uint8        uc_cookie_idx
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月6日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_del_cookie_from_array(cookie_arry_stru   *pst_cookie_array,
                                         oal_uint8       *puc_cookie_bitmap,
                                         oal_uint8        uc_cookie_idx)
@@ -7074,23 +5732,7 @@ oal_uint32 wal_del_cookie_from_array(cookie_arry_stru   *pst_cookie_array,
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_add_cookie_to_array
- 功能描述  : 添加cookie 到cookie array 中
- 输入参数  : cookie_arry_stru *pst_cookie_array
-             oal_uint8 *puc_cookie_bitmap
-             oal_uint64 *pull_cookie
- 输出参数  : 无
- 返 回 值  : oal_uint32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年1月6日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32 wal_add_cookie_to_array(cookie_arry_stru *pst_cookie_array,
                                     oal_uint8       *puc_cookie_bitmap,
                                     oal_uint64      *pull_cookie,
@@ -7119,30 +5761,7 @@ oal_uint32 wal_add_cookie_to_array(cookie_arry_stru *pst_cookie_array,
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_mgmt_tx
- 功能描述  : 发送管理帧
- 输入参数  : oal_wiphy_stru              *pst_wiphy
-             oal_wireless_dev_stru       *pst_wdev
-             struct ieee80211_channel    *pst_chan
-             bool                         en_offchan
-             oal_uint32                   ul_wait
-             OAL_CONST oal_uint8         *puc_buf
-             size_t                       ul_len
-             bool                         en_no_cck
-             bool                         en_dont_wait_for_ack
-             oal_uint64                  *pull_cookie
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月21日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32 wal_cfg80211_mgmt_tx(oal_wiphy_stru                *pst_wiphy,
                                             oal_wireless_dev_stru       *pst_wdev,
                                             oal_ieee80211_channel       *pst_chan,
@@ -7307,21 +5926,7 @@ oal_int32 wal_cfg80211_mgmt_tx(oal_wiphy_stru                *pst_wiphy,
 /*lint +e774*/
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_mgmt_tx_status
- 功能描述  : HMAC抛mgmt tx status到WAL, 唤醒wait queue
- 输入参数  : frw_event_mem_stru *pst_event_mem
- 输出参数  : 无
- 返 回 值  : oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年1月6日
-    作    者   : xiaoyuren
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32  wal_cfg80211_mgmt_tx_status(frw_event_mem_stru *pst_event_mem)
 {
     frw_event_stru                  *pst_event;
@@ -7360,22 +5965,7 @@ oal_uint32  wal_cfg80211_mgmt_tx_status(frw_event_mem_stru *pst_event_mem)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 44))
 #if (_PRE_CONFIG_TARGET_PRODUCT != _PRE_TARGET_PRODUCT_TYPE_E5)
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_start_p2p_device
- 功能描述  : 启动P2P_DEV
- 输入参数  : oal_wiphy_stru       *pst_wiphy
-             oal_wireless_dev_stru   *pst_wdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月22日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_start_p2p_device(oal_wiphy_stru       *pst_wiphy,
                                                 oal_wireless_dev_stru   *pst_wdev)
 {
@@ -7384,44 +5974,14 @@ OAL_STATIC oal_int32 wal_cfg80211_start_p2p_device(oal_wiphy_stru       *pst_wip
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_stop_p2p_device
- 功能描述  : 停止P2P_DEV
- 输入参数  : oal_wiphy_stru       *pst_wiphy
-             oal_wireless_dev_stru   *pst_wdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年11月22日
-    作    者   : duankaiyong 00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC void wal_cfg80211_stop_p2p_device(oal_wiphy_stru       *pst_wiphy,
                                                 oal_wireless_dev_stru   *pst_wdev)
 {
     /* TBD */
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_set_power_mgmt
- 功能描述  : 开关低功耗
- 输入参数  : oal_wiphy_stru       *pst_wiphy
-             oal_wireless_dev_stru   *pst_wdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年07月22日
-    作    者   : l00280485
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 static oal_int32 wal_cfg80211_set_power_mgmt(oal_wiphy_stru  *pst_wiphy,
 				oal_net_device_stru *pst_netdev,
 				bool enabled, oal_int32 timeout)
@@ -7488,22 +6048,7 @@ static oal_int32 wal_cfg80211_set_power_mgmt(oal_wiphy_stru  *pst_wiphy,
 }
 #ifdef _PRE_WLAN_FEATURE_11R
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_update_ft_ies
- 功能描述  : 停止P2P_DEV
- 输入参数  : oal_wiphy_stru       *pst_wiphy
-             oal_wireless_dev_stru   *pst_wdev
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年8月13日
-    作    者   : g00260350
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_int32 wal_cfg80211_update_ft_ies(oal_wiphy_stru                  *pst_wiphy,
                                                          oal_net_device_stru             *pst_netdev,
                                                          oal_cfg80211_update_ft_ies_stru *pst_fties)
@@ -7562,24 +6107,7 @@ OAL_STATIC oal_int32 wal_cfg80211_update_ft_ies(oal_wiphy_stru                  
 #endif
 
 #if (_PRE_OS_VERSION_LINUX == _PRE_OS_VERSION) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_dump_survey
- 功能描述  : report channel stat to kernel
- 输入参数  : oal_wiphy_stru       *pst_wiphy
-             oal_wireless_dev_stru   *pst_wdev
-             oal_int32 l_idx
-             oal_survey_info_stru *pst_info
- 输出参数  : 无
- 返 回 值  : OAL_STATIC oal_int32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月1日
-    作    者   : gaolin
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_int32   wal_cfg80211_dump_survey(oal_wiphy_stru *pst_wiphy, oal_net_device_stru *pst_netdev,
                             oal_int32 l_idx, oal_survey_info_stru *pst_info)
 {
@@ -7639,15 +6167,15 @@ OAL_STATIC oal_cfg80211_ops_stru  g_wal_cfg80211_ops =
 #else
     .set_default_mgmt_key     = wal_cfg80211_set_default_key,
 #endif
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,34)) /* l00311403于1/25将< KERNEL_VERSION(3, 6, 0)改成了<= KERNEL_VERSION(2,6,34)*/
+#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,34))
     .set_channel              = wal_cfg80211_set_channel,
 #endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34)
     .set_wiphy_params         = wal_cfg80211_set_wiphy_params,
 #endif
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,34)) /* l00311403于1/25将< KERNEL_VERSION(3, 4, 0)改成了<= KERNEL_VERSION(2,6,34)*/
+#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,34))
     .add_beacon               = wal_cfg80211_add_beacon,
-    .set_beacon               = wal_cfg80211_set_beacon,/*zwx287476于2015/6/24修改了此接口*/
+    .set_beacon               = wal_cfg80211_set_beacon,
 #else/* Hi1102 修改AP 配置接口 */
     .change_beacon            = wal_cfg80211_change_beacon,
     .start_ap                 = wal_cfg80211_start_ap,
@@ -7724,21 +6252,7 @@ OAL_STATIC oal_cfg80211_ops_stru  g_wal_cfg80211_ops =
 
 #endif
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_reset_bands
- 功能描述  : 重新初始化wifi wiphy的bands
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年12月25日
-    作    者   : d00223710
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void wal_cfg80211_reset_bands(oal_void)
 {
     int i;
@@ -7758,21 +6272,7 @@ oal_void wal_cfg80211_reset_bands(oal_void)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_save_bands
- 功能描述  : 保存wifi wiphy的bands
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年12月06日
-    作    者   : d00194999
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void wal_cfg80211_save_bands(oal_void)
 {
     int i;
@@ -7796,21 +6296,7 @@ oal_void wal_cfg80211_save_bands(oal_void)
 }
 
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_init
- 功能描述  : wal_linux_cfg80211加载初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年8月28日
-    作    者   : y00184180
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32  wal_cfg80211_init(oal_void)
 {
     oal_uint32           ul_chip;
@@ -7871,7 +6357,6 @@ oal_uint32  wal_cfg80211_init(oal_void)
             pst_wiphy->max_remain_on_channel_duration = 5000;
             /* 使能驱动监听 */
             pst_wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-            /* DTS2015022605169 解决GO Beacon register失败问题*/
             pst_wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME; /* 设置GO 能力位 */
 
 #if defined(_PRE_PRODUCT_ID_HI110X_HOST)
@@ -7970,21 +6455,7 @@ oal_uint32  wal_cfg80211_init(oal_void)
     return OAL_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_exit
- 功能描述  : 卸载wihpy
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年9月5日
-    作    者   : y00184180
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void  wal_cfg80211_exit(oal_void)
 {
     oal_uint32          ul_chip;
@@ -8027,21 +6498,7 @@ oal_void  wal_cfg80211_exit(oal_void)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : wal_cfg80211_init_evt_handle
- 功能描述  : host初始化完dev信息之后，抛给wal来处理
- 输入参数  : pst_event: 事件
- 输出参数  : 无
- 返 回 值  : OAL_SUCC或其它错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年11月6日
-    作    者   : zhangheng
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_uint32  wal_cfg80211_init_evt_handle(frw_event_mem_stru *pst_event_mem)
 {
 

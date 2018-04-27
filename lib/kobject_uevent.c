@@ -27,7 +27,7 @@
 #include <net/net_namespace.h>
 
 #ifdef CONFIG_HUAWEI_DUBAI
-#include <huawei_platform/power/dubai/dubai.h>
+#include <chipset_common/dubai/dubai.h>
 #endif
 
 u64 uevent_seqnum;

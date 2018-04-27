@@ -82,26 +82,7 @@ VOS_UINT8 g_aucNdAllRoutersMacAddr[IP_MAC_ADDR_LEN] = {0x33, 0x33, 0x00, 0x00, 0
 /*****************************************************************************
   3 Function
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : ND_CheckEpsIdValid
- 功能描述  : 构造link-local地址
- 输入参数  : VOS_UINT8 *pucLinkLocalAddr
-             VOS_UINT8 *pucIfId
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-  2.日    期   : 2013年1月10日
-    作    者   : y00151394
-    修改内容   : DSDA输入参数修改。EpsId为高2bit为ModemID，低6bit为EpsbId。
-
-*****************************************************************************/
 VOS_UINT32 ND_CheckEpsIdValid(VOS_UINT8 ucExEpsId)
 {
     VOS_UINT8       ucEpsId;
@@ -123,22 +104,7 @@ VOS_UINT32 ND_CheckEpsIdValid(VOS_UINT8 ucExEpsId)
     return IP_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : IP_BuildLinkLocalAddr
- 功能描述  : 构造link-local地址
- 输入参数  : VOS_UINT8 *pucLinkLocalAddr
-             VOS_UINT8 *pucIfId
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID IP_BuildLinkLocalAddr
 (
     VOS_UINT8 *pucLinkLocalAddr,
@@ -147,28 +113,10 @@ VOS_VOID IP_BuildLinkLocalAddr
 {
     /* 构造link-local address */
     IP_SetUint16Data(pucLinkLocalAddr, IP_IPV6_LINK_LOCAL_PREFIX);
-    IP_MEM_CPY_S(&pucLinkLocalAddr[ND_IPV6_IF_OFFSET], pucIfId, ND_IPV6_IF_LEN);
+    IP_MEM_CPY_S(&pucLinkLocalAddr[ND_IPV6_IF_OFFSET], ND_IPV6_IF_LEN, pucIfId, ND_IPV6_IF_LEN);
 }
 
-/*****************************************************************************
- 函 数 名  : IP_BuildIPv6Header
- 功能描述  : 为ICMPv6消息构造IP header，不支持扩展头
- 输入参数  :
-             VOS_UINT8                  *pucIpv6
-             IPV6_PSEDUOHEADER_STRU     *pstPseduoHeader
-             VOS_UINT8                  *pucInterfaceId
-             VOS_UINT32                 ulUpperLength
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID IP_BuildIPv6Header
 (
     VOS_UINT8               *pucIpv6,
@@ -194,30 +142,18 @@ VOS_VOID IP_BuildIPv6Header
     /* Hop Limit 255 */
     *(pucIpv6 + IP_IPV6_BASIC_HOP_LIMIT_OFFSET) = IP_IPV6_ND_HOP_LIMIT;
 
-    IP_MEM_CPY_S(pucIpv6 + IP_IPV6_SRC_ADDR_OFFSET, aucLinkLocalAddr, IP_IPV6_ADDR_LEN);
-    IP_MEM_CPY_S(pucIpv6 + IP_IPV6_DST_ADDR_OFFSET, g_aucNdAllRoutersMulticaseAddr, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pucIpv6 + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN, aucLinkLocalAddr, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pucIpv6 + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN, g_aucNdAllRoutersMulticaseAddr, IP_IPV6_ADDR_LEN);
 
     /* 为计算checksum构造pseudo-header */
-    IP_MEM_CPY_S(pstPseduoHeader->aucIPSrc, aucLinkLocalAddr, IP_IPV6_ADDR_LEN);
-    IP_MEM_CPY_S(pstPseduoHeader->aucIPDes, g_aucNdAllRoutersMulticaseAddr, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstPseduoHeader->aucIPSrc, IP_IPV6_ADDR_LEN, aucLinkLocalAddr, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstPseduoHeader->aucIPDes, IP_IPV6_ADDR_LEN, g_aucNdAllRoutersMulticaseAddr, IP_IPV6_ADDR_LEN);
     IP_SetUint32Data((VOS_UINT8*)&pstPseduoHeader->ulUpperLength, ulUpperLength);
     pstPseduoHeader->ucNextHead = IP_HEAD_PROTOCOL_ICMPV6;
 
 }
 
-/*****************************************************************************
- Function Name   : IP_ND_FormIPv6HeaderMsg
- Description     : IPv6报头设置
- Input           : aucSrcIPAddr --- 源IP地址
-                   aucDstIPAddr --- 目的IP地址
-                   ulPduLen     --- 有效负载长度
- Output          : pucData --- 报文缓冲指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 /*lint -e830*/
 /*lint -e438*/
 VOS_VOID IP_ND_FormIPv6HeaderMsg
@@ -250,34 +186,21 @@ VOS_VOID IP_ND_FormIPv6HeaderMsg
 
     /* 源地址 */
     IP_MEM_CPY_S( pucData,
+                IP_IPV6_ADDR_LEN,
                 aucSrcIPAddr,
                 IP_IPV6_ADDR_LEN);
     pucData += IP_IPV6_ADDR_LEN;
 
     /* 目的地址 */
     IP_MEM_CPY_S( pucData,
+                IP_IPV6_ADDR_LEN,
                 aucDstIPAddr,
                 IP_IPV6_ADDR_LEN);
     pucData += IP_IPV6_ADDR_LEN;
 }
 /*lint +e830*/
 /*lint +e438*/
-/*****************************************************************************
- 函 数 名  : IP_IsValidRAPacket
- 功能描述  : RA合法性检查
- 输入参数  : const VOS_UINT8                    *pucIpMsg
-             VOS_UINT32                         ulTypeOffset
- 输出参数  : 无
- 返 回 值  : PS_BOOL_ENUM_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 IP_BOOL_ENUM_UINT8 IP_IsValidRAPacket
 (
     const VOS_UINT8                    *pucIpMsg,
@@ -315,19 +238,7 @@ IP_BOOL_ENUM_UINT8 IP_IsValidRAPacket
     return IP_TRUE;
 }
 
-/*****************************************************************************
- Function Name   : IP_GetIpv6UpLayerProtocol
- Description     : 获取IPv6上层协议
- Input           : pucIpMsg---------------------IPv6数据包首地址
-                   usPayLoad--------------------IPv6数据包payload长度
- Output          : pucNextHeader----------------下一头类型指针
-                   pulDecodedLen----------------已译码长度指针
- Return          : IP_ERR_ENUM_UINT32
 
- History         :
-    1.lihong00150010      2011-03-25  Draft Enact
-
-*****************************************************************************/
 IP_ERR_ENUM_UINT32 IP_GetIpv6UpLayerProtocol
 (
     const VOS_UINT8                    *pucIpMsg,
@@ -391,18 +302,7 @@ IP_ERR_ENUM_UINT32 IP_GetIpv6UpLayerProtocol
     return IP_FAIL;
 }
 
-/*****************************************************************************
- Function Name   : IP_AffirmNdParam
- Description     : 确认ND报文参数的有效性
- Input           : pucIpMsg ----------------  报文数据区指针
-                   ulTypeOffset ------------  ICMPv6报头偏移量
- Output          : None
- Return          : IP_ERR_ENUM_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-12  Draft Enact
-
-*****************************************************************************/
 IP_ERR_ENUM_UINT32 IP_AffirmNdParam
 (
     const VOS_UINT8                    *pucIpMsg,
@@ -433,18 +333,7 @@ IP_ERR_ENUM_UINT32 IP_AffirmNdParam
 }
 
 
-/*****************************************************************************
- Function Name   : IP_IsIcmpv6Packet
- Description     : 判定是否为ICMPv6包
- Input           : pucIpMsg---------------------IP数据包首地址
-                   ulIpMsgLen-------------------IP数据包长度
- Output          : pulDecodedLen----------------已译码长度指针
- Return          : IP_BOOL_ENUM_UINT8
 
- History         :
-    1.lihong00150010      2011-03-25  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32                          g_ulCnNd = 0;
 
 IP_BOOL_ENUM_UINT8 IP_IsIcmpv6Packet
@@ -481,22 +370,8 @@ IP_BOOL_ENUM_UINT8 IP_IsIcmpv6Packet
     {
         if(1 == g_ulCnNd)
         {
-            VOS_UINT32 i=0;
             PS_PRINTF("\n***********IP_IsIcmpv6Packet: %d %d***********\n", usPayLoad + IP_IPV6_HEAD_LEN, ulIpMsgLen);
-            for(i=0; (i + 8) <= 1500; i = i+8)
-            {
-                /*lint -e679 -esym(679,*)*/
-                PS_PRINTF(" %02x %02x %02x %02x %02x %02x %02x %02x\n ",
-                            pucIpMsg[i], pucIpMsg[i+1],
-                            pucIpMsg[i+2], pucIpMsg[i+3],
-                            pucIpMsg[i+4], pucIpMsg[i+5],
-                            pucIpMsg[i+6], pucIpMsg[i+7]);
-                /*lint -e679 +esym(679,*)*/
-            }
-            while(i < 1500)
-            {
-                PS_PRINTF(" %02x", pucIpMsg[i++]);
-            }
+
             PS_PRINTF("\n**********************\n\n");
 
         }
@@ -510,22 +385,8 @@ IP_BOOL_ENUM_UINT8 IP_IsIcmpv6Packet
     {
         if(1 == g_ulCnNd)
         {
-            VOS_UINT32 i=0;
             PS_PRINTF("\n***********IP_IsIcmpv6Packet: %d %d***********\n", usPayLoad + IP_IPV6_HEAD_LEN, ulIpMsgLen);
-            for(i=0; (i + 8) <= 1500; i = i+8)
-            {
-                /*lint -e679 -esym(679,*)*/
-                PS_PRINTF(" %02x %02x %02x %02x %02x %02x %02x %02x\n ",
-                            pucIpMsg[i], pucIpMsg[i+1],
-                            pucIpMsg[i+2], pucIpMsg[i+3],
-                            pucIpMsg[i+4], pucIpMsg[i+5],
-                            pucIpMsg[i+6], pucIpMsg[i+7]);
-                /*lint -e679 +esym(679,*)*/
-            }
-            while(i < 1500)
-            {
-                PS_PRINTF(" %02x", pucIpMsg[i++]);
-            }
+
             PS_PRINTF("\n**********************\n\n");
 
         }
@@ -544,23 +405,7 @@ IP_BOOL_ENUM_UINT8 IP_IsIcmpv6Packet
     return IP_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : IP_ConstructICMPv6PseudoHeader
- 功能描述  : 为计算checksum构造pseudo-header
- 输入参数  : const NAS_IP_MSG_STRU              *pstIpMsg
-             VOS_UINT32                         ulTypeOffset
-             IPV6_PSEDUOHEADER_STRU             *pstPseduoHeader
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 IP_ConstructICMPv6PseudoHeader
 (
     const VOS_UINT8                   *pucMsgData,
@@ -574,8 +419,8 @@ VOS_UINT32 IP_ConstructICMPv6PseudoHeader
     IP_ASSERT_RTN(VOS_NULL_PTR != pucMsgData, 0);
     IP_ASSERT_RTN(VOS_NULL_PTR != pstPseduoHeader, 0);
 
-    IP_MEM_CPY_S(pstPseduoHeader->aucIPSrc, pucMsgData+IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
-    IP_MEM_CPY_S(pstPseduoHeader->aucIPDes, pucMsgData+IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstPseduoHeader->aucIPSrc, IP_IPV6_ADDR_LEN, pucMsgData+IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstPseduoHeader->aucIPDes, IP_IPV6_ADDR_LEN, pucMsgData+IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
 
     pstPseduoHeader->ucNextHead = IP_HEAD_PROTOCOL_ICMPV6;
 
@@ -596,22 +441,7 @@ VOS_UINT32 IP_ConstructICMPv6PseudoHeader
     return ulLength;
 }
 
-/*****************************************************************************
- 函 数 名  : IP_Unit16Sum
- 功能描述  : 计算16bit SUM
- 输入参数  : VOS_UINT8 *pucData
-             VOS_UINT32 ulLen
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月11日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  IP_Unit16Sum(const VOS_UINT8 *pucData, VOS_UINT32 ulLen)
 {
     VOS_UINT32    ulCheckSum  = 0;
@@ -636,23 +466,7 @@ VOS_UINT32  IP_Unit16Sum(const VOS_UINT8 *pucData, VOS_UINT32 ulLen)
     return ulCheckSum;
 }
 
-/*****************************************************************************
- 函 数 名  : IPv6_Checksum
- 功能描述  : 基于pseduo-header和upper-layer protocal计算checksum
- 输入参数  : VOS_VOID                *pucPseduoHeader
-             VOS_UINT8               *pucData
-             VOS_UINT32              ulLen
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT16 IPv6_Checksum
 (
     const VOS_VOID          *pucPseduoHeader,
@@ -681,22 +495,7 @@ VOS_UINT16 IPv6_Checksum
 
 }
 
-/*****************************************************************************
- 函 数 名  : IP_VerifyICMPv6
- 功能描述  : 校验checksum
- 输入参数  : const NAS_IP_MSG_STRU              *pstIpMsg
-             VOS_UINT32                         ulTypeOffset
- 输出参数  : 无
- 返 回 值  : IP_ERR_ENUM_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 IP_ERR_ENUM_UINT32 IP_VerifyICMPv6
 (
     const VOS_UINT8        *pucIpMsg,
@@ -737,22 +536,7 @@ IP_ERR_ENUM_UINT32 IP_VerifyICMPv6
     return IP_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : IP_IsValidNdMsg
- 功能描述  : 检查是否是合法的ND package
- 输入参数  : const NAS_IP_MSG_STRU              *pstIpMsg
-             VOS_UINT32                         *pulTypeOffset
- 输出参数  : 无
- 返 回 值  : IP_BOOL_ENUM_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月7日
-    作    者   : 00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 IP_BOOL_ENUM_UINT8 IP_IsValidNdMsg
 (
     const VOS_UINT8                    *pucIpMsg,
@@ -803,18 +587,7 @@ IP_BOOL_ENUM_UINT8 IP_IsValidNdMsg
     return IP_FALSE;
 }
 
-/*****************************************************************************
- Function Name   : IP_BuildIcmpv6Checksum
- Description     : 生成ICMPv6报头的校验和
- Input           : pucIpMsg ----------------  报文数据区指针
-                   ulTypeOffset ------------  ICMPv6报头偏移量
- Output          : pucIpMsg ----------------  在数据区ICMPv6报头位置添加校验和
- Return          : IP_ERR_ENUM_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-12  Draft Enact
-
-*****************************************************************************/
 IP_ERR_ENUM_UINT32 IP_BuildIcmpv6Checksum
 (
     VOS_UINT8                          *pucIpMsg,
@@ -857,21 +630,7 @@ IP_ERR_ENUM_UINT32 IP_BuildIcmpv6Checksum
 
 
 /*huibo from V3R1 begin*/
-/*****************************************************************************
- 函 数 名  : TTF_NDIS_IP6_Checksum_Update
- 功能描述  :
- 输入参数  : pbuf   -- 待计算的IP报文内容指针
-             ulBytes -- 长度
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年6月19日
-    作    者   : Hefeng 163499
-    修改内容   :
-*****************************************************************************/
 VOS_UINT32  TTF_NDIS_IP6_Checksum_Update(void *pbuf, VOS_UINT32 ulBytes)
 {
     VOS_UINT32    ulSum;
@@ -905,24 +664,7 @@ VOS_UINT32  TTF_NDIS_IP6_Checksum_Update(void *pbuf, VOS_UINT32 ulBytes)
     return ulSum;
 }
 
-/*****************************************************************************
- 函 数 名  : TTF_NDIS_IP6_Pseudo_Header_Checksum_Update
- 功能描述  :
- 输入参数  : pstIp6SrcAddr - The source address.
-              pstIp6DstAddr - The destination address.
-              ulProto       - The protcol ID of the upper layer protocol.
-              usLen         - The number of octets in the payload for which this is
-                    pseudo header.
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年6月19日
-    作    者   : Hefeng 163499
-    修改内容   :
-*****************************************************************************/
 VOS_UINT32  TTF_NDIS_IP6_Pseudo_Header_Checksum_Update
 (
     const NDIS_IP6_ADDR_STRU                 *pstIp6SrcAddr,
@@ -957,20 +699,7 @@ VOS_UINT32  TTF_NDIS_IP6_Pseudo_Header_Checksum_Update
     return ulSum;
 }
 
-/*****************************************************************************
- 函 数 名  : TTF_NDIS_IP6_Checksum_Finish
- 功能描述  :
- 输入参数  : ulSum - The accumulated 32 bit internet sum.
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年6月19日
-    作    者   : Hefeng 163499
-    修改内容   :
-*****************************************************************************/
 VOS_UINT16  TTF_NDIS_IP6_Checksum_Finish(VOS_UINT32 ulSum)
 {
     /* Fold 32-bit sum to 16 bits. */
@@ -983,25 +712,7 @@ VOS_UINT16  TTF_NDIS_IP6_Checksum_Finish(VOS_UINT32 ulSum)
 }
 
 
-/*****************************************************************************
- 函 数 名  : TTF_NDIS_Ipv6_CalcCheckSum
- 功能描述  : 计算IP报文CheckSum
- 输入参数  : pData         -  IPv6报文
-              usLen         -  IPv6报文总长度
-              pstDstIP6Addr - 目的IPv6地址
-              pstSrcIP6Addr - 源IPv6地址
-              ulProto       - IPv6报文类型
- 输出参数  : 无
- 返 回 值  : VOS_UINT16 - CheckSum值
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年5月24日
-    作    者   : Hefeng 163499
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT16 TTF_NDIS_Ipv6_CalcCheckSum
 (
     VOS_UINT8                          *pData,
@@ -1026,27 +737,7 @@ VOS_UINT16 TTF_NDIS_Ipv6_CalcCheckSum
     return usStdIntelChksum;
 }
 
-/*****************************************************************************
- 函 数 名  : TTF_NDIS_Ipv6GetDhcpOption
- 功能描述  : Returns a specific option.
- 输入参数  : pFirstOpt - Points to the first option in the packet.
-             ulTotOptLen - Length in byte of ICMPv6 header + data.
-             usNdOptCode - The option Code to find.
-             lNumber - The number of the option (if the same option can occure
-              multiple times).
- 输出参数  : pOpt - Will point to the option when the function returns,
-              or to VOS_NULL_PTR if the option was not found.
- 返 回 值  :PS_SUCC - 成功
-             PS_FAIL - 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月28日
-    作    者   : 黄飞 62119
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TTF_NDIS_Ipv6GetDhcpOption
 (
     IPV6_PKT_DHCP_OPT_HDR_STRU             *pFirstOpt,
@@ -1061,12 +752,18 @@ VOS_UINT32 TTF_NDIS_Ipv6GetDhcpOption
 
     *pOpt = pFirstOpt;
 
-    while ( usTotOptLen > 0 )
+    while ( usTotOptLen >= 4 ) /*IPV6_PKT_DHCP_OPT_HDR_STRU中 OptCode与OptLen的长度*/
     {
         usOptLen = VOS_NTOHS((*pOpt)->usDhcpOptLen);
         if ( usOptLen == 0 )
         {
             return PS_FAIL;
+        }
+
+        /*剩余总长度小于当前Option长度, 退出*/
+        if (usTotOptLen < (usOptLen + 4))
+        {
+            break;
         }
 
         if ( VOS_NTOHS((*pOpt)->usDhcpOptCode) == usNdOptCode )
@@ -1079,7 +776,7 @@ VOS_UINT32 TTF_NDIS_Ipv6GetDhcpOption
             lNumber--;
         }
 
-        usTotOptLen    -= usOptLen ;
+        usTotOptLen    -= (usOptLen + 4) ;
         *pOpt           = (IPV6_PKT_DHCP_OPT_HDR_STRU *)(VOS_VOID*)(((VOS_UINT8 *) *pOpt + usOptLen) + 4 );
     }
 
@@ -1089,21 +786,7 @@ VOS_UINT32 TTF_NDIS_Ipv6GetDhcpOption
     return PS_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : TTF_NDIS_Ipv6InputEthHead
- 功能描述  : 填充IP头部
- 输入参数  :
- 输出参数  :
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年4月28日
-    作    者   : Hefeng 163499
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TTF_NDIS_InputUDPHead
 (
     VOS_UINT8                          *pBuf,
@@ -1119,7 +802,7 @@ VOS_UINT32 TTF_NDIS_InputUDPHead
         return VOS_ERR;
     }
 
-    IP_MEM_SET_S(pstUdpHdr, 0, sizeof(UDP_HEAD_ST));
+    IP_MEM_SET_S(pstUdpHdr, sizeof(UDP_HEAD_ST), 0, sizeof(UDP_HEAD_ST));
     pstUdpHdr->usSrcPort    = VOS_HTONS(usSrcPort);
     pstUdpHdr->usDstPort    = VOS_HTONS(usDstPort);
     pstUdpHdr->usLen        = VOS_HTONS(usUdpDataLen);

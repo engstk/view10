@@ -12,6 +12,12 @@
 
 #include "./include/kcode.h"
 
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+#define MAX_CODE_SIZE (50000000)
+#else
+#define MAX_CODE_SIZE (30000000)
+#endif
+
 static const char *TAG = "kcode";
 
 static const struct memrange {
@@ -42,7 +48,7 @@ static int kcode_verify_ranges(void)
 			return 1;
 		}
 
-		if ((unsigned)((range->end - range->start) - 1) > 30000000 ||
+		if ((unsigned)((range->end - range->start) - 1) > MAX_CODE_SIZE ||
 		    (uintptr_t)range->start % 4 ||
 		    (uintptr_t)range->end % 4) {
 			RSLogError(TAG, "range error 2, start=%p, end=%p",
@@ -59,7 +65,7 @@ static int kcode_verify_ranges(void)
 		memrange_size += (unsigned)(range->end - range->start);
 	}
 
-	if (memrange_size > 30000000) {
+	if (memrange_size > MAX_CODE_SIZE) {
 		RSLogError(TAG, "range error 4, memrange_size=%zu",
 							memrange_size);
 		return 1;

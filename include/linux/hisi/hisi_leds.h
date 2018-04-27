@@ -133,5 +133,6 @@ struct hisi_led_flash_data {
 	unsigned int dr_mode_sel_dr4_conf;
 };
 #endif
+
 #endif /* __LINUX_LEDS_HISI_H */
 

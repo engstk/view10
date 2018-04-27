@@ -1470,36 +1470,13 @@ static ssize_t charge_sysfs_show(struct device *dev,
     }
     return 0;
 }
-/**********************************************************
-*  Function:       charge_sysfs_store
-*  Discription:    set the value for charge_data's node which is can be written
-*  Parameters:   dev:device
-*                      attr:device_attribute
-*                      buf:string of node value
-*                      count:unused
-*  return value:  0-sucess or others-fail
-**********************************************************/
-static ssize_t charge_sysfs_store(struct device *dev,
-        struct device_attribute *attr, const char *buf, size_t count)
+
+static int sysfs_iin_thl_set_input_current(struct charge_device_info *di, const char *buf)
 {
-    struct charge_sysfs_field_info *info = NULL;
-    struct charge_device_info *di = dev_get_drvdata(dev);
-    long val = 0;
-    enum charge_status_event events  = VCHRG_POWER_NONE_EVENT;
-
-    info = charge_sysfs_field_lookup(attr->attr.name);
-    if (!info)
-        return -EINVAL;
-
-    switch(info->name){
-        /*NOTICE:
-          it will be charging with default current when the current node has been set to 0/1,
-          include iin_thermal/ichg_thermal/iin_runningtest/ichg_runningtest node
-        */
-    case CHARGE_SYSFS_IIN_THERMAL:
-#ifndef CONFIG_HLTHERM_RUNTEST
+        long val = 0;
         if((strict_strtol(buf, 10, &val) < 0)||(val < 0)||(val > 3000))
             return -EINVAL;
+
         if((val == 0)||(val == 1))
             di->sysfs_data.iin_thl = di->core_data->iin_max;
         else if((val > 1)&&(val <= 100))
@@ -1510,12 +1487,16 @@ static ssize_t charge_sysfs_store(struct device *dev,
         if(di->input_current > di->sysfs_data.iin_thl)
             di->ops->set_input_current(di->sysfs_data.iin_thl);
         hwlog_info("THERMAL set input current = %d\n", di->sysfs_data.iin_thl);
-#endif
-        break;
-    case CHARGE_SYSFS_ICHG_THERMAL:
-#ifndef CONFIG_HLTHERM_RUNTEST
+
+        return 0;
+}
+static int sysfs_ichg_thl_set_charge_current(struct charge_device_info *di, const char *buf)
+{
+        long val = 0;
+
         if((strict_strtol(buf, 10, &val) < 0)||(val < 0)||(val > 3000))
             return -EINVAL;
+
         if((val == 0)||(val == 1))
             di->sysfs_data.ichg_thl = di->core_data->ichg_max;
         else if((val > 1)&&(val <= 500)){
@@ -1528,11 +1509,17 @@ static ssize_t charge_sysfs_store(struct device *dev,
         if(di->charge_current > di->sysfs_data.ichg_thl)
             di->ops->set_charge_current(di->sysfs_data.ichg_thl);
         hwlog_info("THERMAL set charge current = %d\n", di->sysfs_data.ichg_thl);
-#endif
-        break;
-    case CHARGE_SYSFS_IIN_RUNNINGTEST:
+
+        return 0;
+}
+
+static int sysfs_iin_rt_set_input_current(struct charge_device_info *di, const char *buf)
+{
+        long val = 0;
+
         if((strict_strtol(buf, 10, &val) < 0)||(val < 0)||(val > 3000))
             return -EINVAL;
+
         if((val == 0)||(val == 1))
             di->sysfs_data.iin_rt = di->core_data->iin_max;
         else if((val > 1)&&(val <= 100))
@@ -1543,10 +1530,11 @@ static ssize_t charge_sysfs_store(struct device *dev,
         if(di->input_current > di->sysfs_data.iin_rt)
             di->ops->set_input_current(di->sysfs_data.iin_rt);
         hwlog_info("RUNNINGTEST set input current = %d\n", di->sysfs_data.iin_rt);
-        break;
-    case CHARGE_SYSFS_ICHG_RUNNINGTEST:
-        if((strict_strtol(buf, 10, &val) < 0)||(val < 0)||(val > 3000))
-            return -EINVAL;
+
+        return 0;
+}
+static void sysfs_ichg_rt_set_charge_current(struct charge_device_info *di, long val)
+{
         if((val == 0)||(val == 1))
             di->sysfs_data.ichg_rt = di->core_data->ichg_max;
         else if((val > 1)&&(val <= 205))
@@ -1557,10 +1545,11 @@ static ssize_t charge_sysfs_store(struct device *dev,
         if(di->charge_current > di->sysfs_data.ichg_rt)
             di->ops->set_charge_current(di->sysfs_data.ichg_rt);
         hwlog_info("RUNNINGTEST set input current = %d\n", di->sysfs_data.ichg_rt);
-        break;
-    case CHARGE_SYSFS_ENABLE_CHARGER:
-        if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 1))
-            return -EINVAL;
+}
+static void sysfs_set_charge_enable(struct charge_device_info *di, long val)
+{
+        enum charge_status_event events  = VCHRG_POWER_NONE_EVENT;
+
         di->sysfs_data.charge_enable = val;
         di->sysfs_data.charge_limit = TRUE;
         /*why should send events in this command?
@@ -1578,6 +1567,82 @@ static ssize_t charge_sysfs_store(struct device *dev,
         di->ops->set_charge_enable(di->sysfs_data.charge_enable);
         hisi_coul_charger_event_rcv(events);
         hwlog_info("RUNNINGTEST set charge enable = %d\n", di->sysfs_data.charge_enable);
+}
+
+static void sysfs_set_batfet_disable(struct charge_device_info *di, long val)
+{
+        di->sysfs_data.batfet_disable = val;
+        if (1 == val)
+            di->ops->set_input_current(CHARGE_CURRENT_2000_MA);
+        di->ops->set_batfet_disable(di->sysfs_data.batfet_disable);
+        hwlog_info("RUNNINGTEST set batfet disable = %d\n", di->sysfs_data.batfet_disable);
+}
+
+static void sysfs_set_watchdog_disable(struct charge_device_info *di, long val)
+{
+        di->sysfs_data.wdt_disable = val;
+        if(val == 1)
+            di->ops->set_watchdog_timer(WATCHDOG_TIMER_DISABLE);
+        hwlog_info("RUNNINGTEST set wdt disable = %d\n", di->sysfs_data.wdt_disable);
+}
+static void sysfs_set_hiz_enable(struct charge_device_info *di, long val)
+{
+        di->sysfs_data.hiz_enable= val;
+        if (di->ops->set_charger_hiz)
+           di->ops->set_charger_hiz(di->sysfs_data.hiz_enable);
+        hwlog_info("RUNNINGTEST set hiz enable = %d\n", di->sysfs_data.hiz_enable);
+}
+
+/**********************************************************
+*  Function:       charge_sysfs_store
+*  Discription:    set the value for charge_data's node which is can be written
+*  Parameters:   dev:device
+*                      attr:device_attribute
+*                      buf:string of node value
+*                      count:unused
+*  return value:  0-sucess or others-fail
+**********************************************************/
+static ssize_t charge_sysfs_store(struct device *dev,
+        struct device_attribute *attr, const char *buf, size_t count)
+{
+    struct charge_sysfs_field_info *info = NULL;
+    struct charge_device_info *di = dev_get_drvdata(dev);
+    long val = 0;
+
+    info = charge_sysfs_field_lookup(attr->attr.name);
+    if (!info)
+        return -EINVAL;
+
+    switch(info->name){
+        /*NOTICE:
+          it will be charging with default current when the current node has been set to 0/1,
+          include iin_thermal/ichg_thermal/iin_runningtest/ichg_runningtest node
+        */
+    case CHARGE_SYSFS_IIN_THERMAL:
+#ifndef CONFIG_HLTHERM_RUNTEST
+		if(sysfs_iin_thl_set_input_current(di, buf))
+            return -EINVAL;
+#endif
+        break;
+    case CHARGE_SYSFS_ICHG_THERMAL:
+#ifndef CONFIG_HLTHERM_RUNTEST
+        if(sysfs_ichg_thl_set_charge_current(di, buf))
+            return -EINVAL;
+#endif
+        break;
+    case CHARGE_SYSFS_IIN_RUNNINGTEST:
+        if(sysfs_iin_rt_set_input_current(di, buf))
+            return -EINVAL;
+        break;
+    case CHARGE_SYSFS_ICHG_RUNNINGTEST:
+        if((strict_strtol(buf, 10, &val) < 0)||(val < 0)||(val > 3000))
+            return -EINVAL;
+        sysfs_ichg_rt_set_charge_current(di, val);
+        break;
+    case CHARGE_SYSFS_ENABLE_CHARGER:
+        if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 1))
+            return -EINVAL;
+        sysfs_set_charge_enable(di, val);
         break;
     case CHARGE_SYSFS_LIMIT_CHARGING:
         if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 1))
@@ -1595,27 +1660,17 @@ static ssize_t charge_sysfs_store(struct device *dev,
     case CHARGE_SYSFS_BATFET_DISABLE:
         if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 1))
             return -EINVAL;
-        di->sysfs_data.batfet_disable = val;
-        if (1 == val)
-            di->ops->set_input_current(CHARGE_CURRENT_2000_MA);
-        di->ops->set_batfet_disable(di->sysfs_data.batfet_disable);
-        hwlog_info("RUNNINGTEST set batfet disable = %d\n", di->sysfs_data.batfet_disable);
+        sysfs_set_batfet_disable(di, val);
         break;
     case CHARGE_SYSFS_WATCHDOG_DISABLE:
         if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 1))
             return -EINVAL;
-        di->sysfs_data.wdt_disable = val;
-        if(val == 1)
-            di->ops->set_watchdog_timer(WATCHDOG_TIMER_DISABLE);
-        hwlog_info("RUNNINGTEST set wdt disable = %d\n", di->sysfs_data.wdt_disable);
+        sysfs_set_watchdog_disable(di, val);
         break;
     case CHARGE_SYSFS_HIZ:
         if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 1))
             return -EINVAL;
-        di->sysfs_data.hiz_enable= val;
-        if (di->ops->set_charger_hiz)
-           di->ops->set_charger_hiz(di->sysfs_data.hiz_enable);
-        hwlog_info("RUNNINGTEST set hiz enable = %d\n", di->sysfs_data.hiz_enable);
+        sysfs_set_hiz_enable(di, val);
         break;
     case CHARGE_SYSFS_CHARGE_DONE_STATUS:
         if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 10))

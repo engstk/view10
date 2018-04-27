@@ -206,7 +206,7 @@ int usbaudio_probe_msg(struct usbaudio_pcms *pcms)
 	init_completion(&probe_msg_complete);
 
 	probe_msg.msg_type = (unsigned short)USBAUDIO_CHN_MSG_PROBE;
-	for (i=0; i<2; i++) {
+	for (i=0; i<USBAUDIO_PCM_NUM; i++) {
 		probe_msg.pcms.fmts[i].formats = pcms->fmts[i].formats;
 		probe_msg.pcms.fmts[i].channels = pcms->fmts[i].channels;
 		probe_msg.pcms.fmts[i].fmt_type = pcms->fmts[i].fmt_type;

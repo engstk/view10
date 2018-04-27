@@ -30,19 +30,13 @@ enum bustype_select {
 	BUSTYPE_SELECT_SSI = 2,
 };
 
-/* platform type */
-typedef enum {
-	HI_CDCCTRL_PLATFORM_PHONE    = 0,
-	HI_CDCCTRL_PLATFORM_UDP      = 1,
-	HI_CDCCTRL_PLATFORM_FPGA     = 2,
-} hi_cdcctrl_platform_type_t;
-
 struct hi_cdc_ctrl {
 	/* device of codec controller */
 	struct device *dev;
 	enum bustype_select bus_sel;
 	bool pm_runtime_support;
-	hi_cdcctrl_platform_type_t platform_type;
+	uint32_t slimbusclk_cdc_drv;
+	uint32_t slimbusdata_cdc_drv;
 };
 
 void hi_cdcctrl_dump(struct hi_cdc_ctrl *cdc_ctrl);

@@ -68,6 +68,7 @@ extern "C" {
 #include "diag_common.h"
 #include "msp_errno.h"
 
+#define  APPLOG_DATA_OFFSET     (8)
 
 typedef VOS_UINT32 (*DIAG_APPLOG_PROC)(VOS_UINT8 *pData);
 
@@ -110,9 +111,16 @@ typedef struct
     VOS_UINT32 ulSn;
     VOS_UINT32 ulRc;
 }DIAG_APPLOG_CFG_CNF;
-#define  APPLOG_DATA_OFFSET  8
+
+typedef struct
+{
+    VOS_UINT32 ulChannelNum;
+    VOS_UINT32 ulChannelID;
+}DIAG_APPLOG_CTRL;
+
 VOS_VOID diag_AppLogMsgInit(VOS_VOID);
 VOS_UINT32  diag_AppLogDataConfig(VOS_UINT8* pstReq);
+VOS_UINT32 diag_AppConnect(VOS_UINT8 * pData);
 
 #ifdef __cplusplus
     #if __cplusplus

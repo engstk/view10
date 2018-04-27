@@ -1119,7 +1119,6 @@ err_out:
 			}
 
 			kfree(max98925);
-			max98925 = NULL;
 		}
 		maxim_list_del_all();
 	}

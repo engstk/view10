@@ -23,27 +23,16 @@
 #include "dp/drm_dp_helper_additions.h"
 #include "dp/reg.h"
 #include "dp/dbg.h"
-
-#ifdef CONFIG_HUAWEI_DSM
-#include <dsm/dsm_pub.h>
-#include <linux/timer.h>
-#include <linux/timex.h>
-#include <linux/rtc.h>
-#endif
+#include <huawei_platform/dp_source/dp_dsm.h>
+#include <huawei_platform/dp_source/dp_factory.h>
+#include <huawei_platform/dp_source/dp_debug.h>
 
 #define CONFIG_DP_HDCP_ENABLE
 //#define CONFIG_DP_GENERATOR_REF
 #define CONFIG_DP_EDID_DEBUG
 #define CONFIG_DP_SETTING_COMBOPHY 1
 #define DP_TIME_INFO_SIZE		(24)
-#define DP_MONTIOR_NAME_SIZE (10)
-
-#define DP_MANUFACTURER_ID_SIZE          (4) // manufacturer ID
-#define DP_MANUFACTURER_ID_OFFSET        (8) // offset in edid block
-#define DP_MANUFACTURER_ID_LETTER(a, b)  ((a << 8) | b)
-#define DP_MANUFACTURER_ID_LETTER_NUM    (3)
-#define DP_MANUFACTURER_ID_LETTER_OFFSET (5)
-#define DP_MANUFACTURER_ID_LETTER_MASK   (0x1F)
+#define DP_MONTIOR_NAME_SIZE (11)
 
 #define DP_PLUG_TYPE_NORMAL 0
 #define DP_PLUG_TYPE_FLIPPED 1
@@ -66,28 +55,56 @@
 
 #define DPTX_HDCP_REG_DPK_CRC_ORIG	0x331c1169
 #define DPTX_HDCP_MAX_AUTH_RETRY	10
+#define DPTX_HDCP_MAX_REPEATER_AUTH_RETRY 5
+#define DPTX_COMBOPHY_PARAM_NUM		21
+
 
 #define DPTX_AUX_TIMEOUT	(2000)
 
 #define DEFAULT_AUXCLK_DPCTRL_RATE	16000000UL
 #define DEFAULT_ACLK_DPCTRL_RATE_ES	288000000UL
-#define DEFAULT_ACLK_DPCTRL_RATE_CS	208000000UL
+#ifdef CONFIG_HISI_FB_V501
+#define DEFAULT_ACLK_DPCTRL_RATE 207500000UL
+#define DEFAULT_MIDIA_PPLL7_CLOCK_FREQ 1290000000UL
+#define KIRIN_VCO_MIN_FREQ_OUPUT         800000 /*dssv501: 800 * 1000*/
+#define KIRIN_SYS_FREQ   38400 /*dssv501: 38.4 * 1000 */
+#define MIDIA_PPLL7_CTRL0	0x530
+#define MIDIA_PPLL7_CTRL1	0x534
+#define MIDIA_PERI_CTRL4	0x350
+#define TX_VBOOST_ADDR		0x21
+#define PERI_VOLTAGE_065V_CLK 300000000UL
+#define PERI_VOLTAGE_070V_CLK 415000000UL
+#define PERI_VOLTAGE_080V_CLK 594000000UL
+#define PPLL7_DIV_VOLTAGE_065V 5
+#define PPLL7_DIV_VOLTAGE_070V 4
+#define PPLL7_DIV_VOLTAGE_080V 3
+#else
+#define DEFAULT_ACLK_DPCTRL_RATE	208000000UL
 #define DEFAULT_MIDIA_PPLL7_CLOCK_FREQ	1782000000UL
+#define KIRIN_VCO_MIN_FREQ_OUPUT         1000000 /*Boston: 1000 * 1000*/
+#define KIRIN_SYS_FREQ   19200 /*Boston: 19.2f * 1000 */
+#define MIDIA_PPLL7_CTRL0	0x50c
+#define MIDIA_PPLL7_CTRL1	0x510
+#define MIDIA_PERI_CTRL4	0x350
+#define TX_VBOOST_ADDR		0xf
+#define PERI_VOLTAGE_065V_CLK 255000000UL
+#define PERI_VOLTAGE_070V_CLK 415000000UL
+#define PERI_VOLTAGE_080V_CLK 594000000UL
+#define PPLL7_DIV_VOLTAGE_065V 7
+#define PPLL7_DIV_VOLTAGE_070V 5
+#define PPLL7_DIV_VOLTAGE_080V 3
+#endif
+
 #define DEFAULT_MIDIA_PPLL7_CLOCK_FREQ_SAVEMODE	223000000UL
 
 #define MAX_DIFF_SOURCE_X_SIZE	1920
 
-#define KIRIN970_VCO_MIN_FREQ_OUPUT         1000000 /*Boston: 1000 * 1000*/
-#define KIRIN970_SYS_19M2   19200 /*Boston: 19.2f * 1000 */
 
-#define MIDIA_PPLL7_CTRL0	0x50c
-#define MIDIA_PPLL7_CTRL1	0x510
-#define MIDIA_PERI_CTRL4	0x350
 
 #define MIDIA_PPLL7_FREQ_DEVIDER_MASK	GENMASK(25, 2)
 #define MIDIA_PPLL7_FRAC_MODE_MASK	GENMASK(25, 0)
-#define PMCTRL_PERI_CTRL4_TEMPERATURE_MASK	GENMASK(27, 26)
-#define PMCTRL_PERI_CTRL4_TEMPERATURE_SHIFT	26
+#define PMCTRL_PERI_CTRL4_TEMPERATURE_MASK		GENMASK(27, 26)
+#define PMCTRL_PERI_CTRL4_TEMPERATURE_SHIFT		26
 #define NORMAL_TEMPRATURE 0
 
 #define ACCESS_REGISTER_FN_MAIN_ID_HDCP           0xc500aa01
@@ -241,9 +258,8 @@ struct audio_params {
 };
 
 struct dtd {
+	uint64_t pixel_clock;
 	uint16_t pixel_repetition_input;
-	int pixel_clock;
-	uint8_t interlaced; /* 1 for interlaced, 0 progressive */
 	uint16_t h_active;
 	uint16_t h_blanking;
 	uint16_t h_image_size;
@@ -256,6 +272,7 @@ struct dtd {
 	uint16_t v_sync_offset;
 	uint16_t v_sync_pulse_width;
 	uint8_t v_sync_polarity;
+	uint8_t interlaced; /* 1 for interlaced, 0 progressive */
 };
 
 struct video_params {
@@ -277,10 +294,12 @@ struct video_params {
 /*edid info*/
 struct timing_info
 {
-	uint8_t vSyncPolarity;
-	uint8_t	hSyncPolarity;
+	struct list_head list_node;
 
-	uint16_t pixelClock;
+	uint8_t vSyncPolarity;
+	uint8_t hSyncPolarity;
+
+	uint64_t pixelClock;
 	uint16_t hActivePixels;
 	uint16_t hBlanking;
 	uint16_t hSyncOffset;
@@ -321,10 +340,10 @@ struct edid_video
 	uint16_t maxHFreq;
 	uint16_t minHFreq;
 	uint16_t maxPixelClock;
-	struct timing_info *TimingInfo;
+
+	struct list_head *dptx_timing_list;
 	struct ext_timing *extTiming;
 	char *dp_monitor_descriptor;
-
 };
 
 struct edid_audio_info
@@ -334,35 +353,6 @@ struct edid_audio_info
 	uint16_t sampling;
 	uint16_t bitrate;
 };
-
-#ifdef CONFIG_HUAWEI_DSM
-typedef union dsm_info_vs_pe
-{
-	uint32_t vswing_preemp;
-	struct {
-		uint8_t vswing:4;
-		uint8_t preemp:4;
-	} vs_pe[4];
-} dsm_info_vs_pe_t;
-
-struct dsm_info
-{
-	char dsm_dp_on_time[DP_TIME_INFO_SIZE];
-	char dsm_link_succ_time[DP_TIME_INFO_SIZE];
-	char dsm_dp_off_time[DP_TIME_INFO_SIZE];
-	char dsm_monitor_info[DP_MONTIOR_NAME_SIZE];
-	char manufacturer_id[DP_MANUFACTURER_ID_SIZE];
-	uint16_t m_width;
-	uint16_t m_high;
-	uint16_t m_fps;
-	uint8_t tu;
-	uint8_t max_rate:4;
-	uint8_t max_lanes:4;
-	uint8_t rate:4;
-	uint8_t lanes:4;
-	dsm_info_vs_pe_t vp;
-};
-#endif
 
 struct edid_audio
 {
@@ -448,12 +438,9 @@ struct dp_ctrl {
 	uint8_t detect_times;
 	uint32_t hpd_state;
 	uint32_t user_mode;
-	uint32_t swing2_value;
+	uint32_t combophy_pree_swing[DPTX_COMBOPHY_PARAM_NUM];
 	uint32_t max_edid_timing_hactive;
 	enum video_format_type user_mode_format;
-#ifdef CONFIG_HUAWEI_DSM
-	struct dsm_info m_dsm_info;
-#endif
 	int sysfs_index;
 	struct attribute *sysfs_attrs[DP_SYSFS_ATTRS_NUM];
 	struct attribute_group sysfs_attr_group;
@@ -500,10 +487,5 @@ void dp_send_cable_notification(struct dp_ctrl *dptx, int val);
 struct hisi_fb_data_type;
 int hisi_dp_hpd_register(struct hisi_fb_data_type *hisifd);
 void hisi_dp_hpd_unregister(struct hisi_fb_data_type *hisifd);
-
-#ifdef CONFIG_HUAWEI_DSM
-void dptx_dmd_report(int dmd_num, const char* pszFormat, ...);
-int dptx_get_current_time(char *output);
-#endif
 
 #endif  /* HISI_DP_H */

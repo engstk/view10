@@ -854,6 +854,17 @@ static long ivp_ioctl(struct file *fd, unsigned int cmd, unsigned long args)
         ivp_dev_hwa_enable();
         break;
 
+    case IVP_IOCTL_CLK_LEVEL: {
+        unsigned int level = 0;
+        if (0 != copy_from_user(&level, (void *)args, sizeof(unsigned int))) {
+            ivp_err("Invalid input param size.");
+            return -EINVAL;
+        }
+        pdev->clk_level = level;
+        ivp_change_clk(pdev);
+        break;
+    }
+
     default:
         ivp_err("Invalid ioctl command(0x%08x) received!", cmd);
         ret = -EINVAL;

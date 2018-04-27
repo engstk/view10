@@ -22,6 +22,7 @@
 #include <media/huawei/hw_extern_pmic.h>
 #include <linux/slab.h>
 #include <linux/atomic.h>
+#include <linux/hisi/hisi_cpufreq_lowtemp.h>
 #include "fingerprint.h"
 #if defined (CONFIG_TEE_TUI)
 #include "tui.h"
@@ -39,6 +40,7 @@ struct dsm_dev dsm_fingerprint =
     .buff_size = 1024,
 };
 struct dsm_client *fingerprint_dclient = NULL;
+static DEFINE_MUTEX(ic_name_lock);
 
 static fp_sensor_info g_fp_sensor_info[] = {
         {0x021b, "FPC1021B"},
@@ -96,6 +98,7 @@ static int fp_fiq_flg = 0;
 struct regulator *fp_ex_regulator = NULL;
 #define FINGERPRINT_EXTERN_LDO_NUM "fingreprint_ldo"
 #define FINGERPRINT_EXTERN_LDO_NAME "EXTERN_LDO"
+extern unsigned int get_pd_charge_flag(void);
 extern int tp_gpio_num;
 /**
  * sysf node to check the interrupt status of the sensor, the interrupt
@@ -304,6 +307,48 @@ static ssize_t module_id_store(struct device* device,
     return count;
 }
 
+static ssize_t module_id_ud_show(struct device* device,
+                       struct device_attribute* attribute,
+                       char* buffer)
+{
+    if (NULL == buffer)
+    {return -EINVAL;}
+    struct fp_data* fingerprint = dev_get_drvdata(device);
+    if (NULL == fingerprint)
+    {return -EINVAL;}
+    return scnprintf(buffer,64, "%s", fingerprint->module_id_ud);
+}
+
+static ssize_t module_id_ud_store(struct device* device,
+                       struct device_attribute* attribute,
+                       const char* buffer, size_t count)
+{
+    struct fp_data* fingerprint = dev_get_drvdata(device);
+    if (NULL == fingerprint)
+    {return -EINVAL;}
+    strncpy( fingerprint->module_id_ud,buffer ,63);
+    fingerprint->module_id_ud[63] = '\0';// write the tail
+    return count;
+}
+
+static ssize_t low_temperature_show(struct device* device,
+                       struct device_attribute* attribute,
+                       char* buffer)
+{
+    bool temperature_status = 0;
+    if (NULL == buffer)
+    {return -EINVAL;}
+    temperature_status = is_low_temprature();
+    return scnprintf(buffer,PAGE_SIZE, "%d", temperature_status);
+}
+
+static ssize_t low_temperature_store(struct device* device,
+                       struct device_attribute* attribute,
+                       const char* buffer, size_t count)
+{
+    return count;
+}
+
 static DEVICE_ATTR(irq, S_IRUSR | S_IWUSR, irq_get, irq_ack);
 static DEVICE_ATTR(result, S_IRUSR | S_IWUSR, result_show, result_store);
 static DEVICE_ATTR(read_image_flag, S_IRUSR | S_IWUSR, read_image_flag_show, read_image_flag_store);
@@ -311,19 +356,22 @@ static DEVICE_ATTR(test_power_en, S_IRUSR | S_IWUSR, test_power_en_show, test_po
 static DEVICE_ATTR(nav, S_IRUSR | S_IWUSR |S_IRGRP |S_IWGRP, nav_show, nav_store);
 static DEVICE_ATTR(module_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, module_id_show, module_id_store);
 static DEVICE_ATTR(irq_enabled, S_IRUSR | S_IWUSR, irq_enabled_show, irq_enabled_store);
+static DEVICE_ATTR(module_id_ud, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, module_id_ud_show, module_id_ud_store);
+static DEVICE_ATTR(low_temperature, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP, low_temperature_show, low_temperature_store);
+
 
 /*
 *FUNCTION: fingerprint_get_module_name
 *
 *DESCRIPTION:
-*	This API is used to get module name based on module id
+*   This API is used to get module name based on module id
 *@fingerprint:the fingerprint info
 *@module:the buf to store the module name
 *@len:the buf length
 *
 *RETRUN:
-*	SUCCESS:	0
-*	FAILED:		not 0
+*   SUCCESS:    0
+*   FAILED:     not 0
 */
 static int fingerprint_get_module_name(struct fp_data* fingerprint, char *module, unsigned int len)
 {
@@ -395,12 +443,12 @@ exit:
 *FUNCTION: fingerprint_get_sensor_name
 *
 *DESCRIPTION:
-*	This API is used to get sensor info based on hardware id
+*   This API is used to get sensor info based on hardware id
 *@sensor_id:the hardware id
 *
 *RETRUN:
-*	SUCCESS:	pointer to sensor info
-*	FAILED:		NULL
+*   SUCCESS:    pointer to sensor info
+*   FAILED:     NULL
 */
 static char* fingerprint_get_sensor_name(unsigned int sensor_id)
 {
@@ -420,7 +468,7 @@ static char* fingerprint_get_sensor_name(unsigned int sensor_id)
 *FUNCTION: fingerprint_update_vendor_info
 *
 *DESCRIPTION:
-*	This API is used to upate vendor info based on sensor_id & module_name for DMD
+*   This API is used to upate vendor info based on sensor_id & module_name for DMD
 *@fingerprint:pointer to the structer that contained the sensor_id and module_name
 *
 *RETRUN:
@@ -436,6 +484,7 @@ static void fingerprint_update_vendor_info(struct fp_data* fingerprint)
         hwlog_err("the pointer is null");
         return;
     }
+    mutex_lock(&ic_name_lock);
     if(FP_RETURN_SUCCESS == fingerprint_get_module_name(fingerprint, module_name, FP_MAX_MODULE_INFO_LEN))
     {
         dsm_fingerprint.module_name = module_name;
@@ -453,6 +502,7 @@ static void fingerprint_update_vendor_info(struct fp_data* fingerprint)
         if(NULL == ic_name)
         {
             hwlog_err("malloc failed!\n");
+            mutex_unlock(&ic_name_lock);
             return;
         }
         snprintf(ic_name, FP_MAX_SENSOR_ID_LEN, "%x", fingerprint->sensor_id);
@@ -461,6 +511,7 @@ static void fingerprint_update_vendor_info(struct fp_data* fingerprint)
         kfree(ic_name);
         dsm_fingerprint.ic_name = NULL;
     }
+    mutex_unlock(&ic_name_lock);
 }
 #endif
 
@@ -503,6 +554,8 @@ static struct attribute* attributes[] =
     &dev_attr_nav.attr,
     &dev_attr_module_id.attr,
     &dev_attr_irq_enabled.attr,
+    &dev_attr_module_id_ud.attr,
+    &dev_attr_low_temperature.attr,
     NULL
 };
 
@@ -544,8 +597,19 @@ static unsigned long last_nav_stamp = 0;
 static atomic_t g_pen_in_range_status = ATOMIC_INIT(TS_PEN_OUT_RANGE);
 static struct notifier_block pen_nb;
 // Define in vendor/huawei/chipset_common/devkit/tpkit/huawei_ts_kit_core.c for ts status notify.
+#if defined (CONFIG_HUAWEI_TS_KIT)
 extern int ts_event_notifier_register(struct notifier_block *nb);
 extern int ts_event_notifier_unregister(struct notifier_block *nb);
+#else
+static int ts_event_notifier_register(struct notifier_block *nb)
+{
+    return 0;
+}
+static int ts_event_notifier_unregister(struct notifier_block *nb)
+{
+    return 0;
+}
+#endif
 
 static void update_last_nav_event_time_stamp(int key)
 {
@@ -617,12 +681,20 @@ static int stylus_pen_notify_fp(struct notifier_block *nb, unsigned long event, 
 static irqreturn_t fingerprint_irq_handler(int irq, void* handle)
 {
     struct fp_data* fingerprint = handle;
+    int irq_gpio;
 
     smp_rmb();
 
     if (fingerprint->wakeup_enabled)
     {
         wake_lock_timeout(&fingerprint->ttw_wl, msecs_to_jiffies(FPC_TTW_HOLD_TIME));
+    }
+
+    if (0 == strcmp(fingerprint->product_name, "columbia"))
+    {
+        irq_gpio = gpio_get_value(fingerprint->irq_gpio);
+        if(irq_gpio == 0)
+            return IRQ_HANDLED;
     }
 
     sysfs_notify(&fingerprint->pf_dev->dev.kobj, NULL, dev_attr_irq.attr.name);
@@ -671,9 +743,11 @@ void fingerprint_get_navigation_adjustvalue(struct device* dev, struct fp_data* 
 
 int fingerprint_get_dts_data(struct device* dev, struct fp_data* fp_data)
 {
+    hwlog_info("%s enter\n", __func__);
     struct device_node* np;
     int ret = 0;
-    const char* extern_ldo_info;
+    const char* extern_ldo_info = NULL;
+    const char* product = NULL;
 
     if (!dev || !dev->of_node)
     {
@@ -683,10 +757,7 @@ int fingerprint_get_dts_data(struct device* dev, struct fp_data* fp_data)
 
     np = dev->of_node;
 
-
-    ret = of_property_read_u32(np, "fingerprint,reset_gpio",
-                               (unsigned int *)(&fp_data->rst_gpio));
-
+    ret = of_property_read_u32(np, "fingerprint,reset_gpio", (unsigned int *)(&fp_data->rst_gpio));
     if (ret)
     {
         fp_data->rst_gpio = -EINVAL;
@@ -694,9 +765,28 @@ int fingerprint_get_dts_data(struct device* dev, struct fp_data* fp_data)
         goto exit;
     }
 
-    ret = of_property_read_u32(np, "fingerprint,irq_gpio",
-                               (unsigned int *)(&fp_data->irq_gpio));
+    ret = of_property_read_u32(np, "fingerprint,reset_gpio_ud", (unsigned int *)(&fp_data->rst1_gpio));
+    if (ret)
+    {
+        fp_data->rst1_gpio = -EINVAL;
+        hwlog_err("%s failed to get rst1_gpio from device tree\n", __func__);
+    }
 
+    ret = of_property_read_u32(np, "fingerprint,cs_gpio", (unsigned int *)(&fp_data->cs0_gpio));//UG
+    if (ret)
+    {
+        fp_data->cs0_gpio = -EINVAL;
+        hwlog_err("%s failed to get cs0_gpio from device tree\n", __func__);
+    }
+
+    ret = of_property_read_u32(np, "fingerprint,cs_gpio_ud", (unsigned int *)(&fp_data->cs1_gpio));//UD
+    if (ret)
+    {
+        fp_data->cs1_gpio = -EINVAL;
+        hwlog_err("%s failed to get cs gpio ud from device tree\n", __func__);
+    }
+
+    ret = of_property_read_u32(np, "fingerprint,irq_gpio", (unsigned int *)(&fp_data->irq_gpio));
     if (ret)
     {
         fp_data->irq_gpio = -EINVAL;
@@ -739,6 +829,18 @@ int fingerprint_get_dts_data(struct device* dev, struct fp_data* fp_data)
           ret = 0;
           hwlog_info("%s failed to get extern_vol gpio from device tree, just go on\n", __func__);
        }
+   }
+
+   ret = of_property_read_string(np, "fingerprint,product", &product);
+   if (ret)
+    {
+        strncpy(fp_data->product_name, "EINVAL", 7);
+        hwlog_err("%s failed to get product_name from device tree, just go on\n", __func__);
+    }
+   else
+   {
+       strncpy(fp_data->product_name, product, sizeof(fp_data->product_name));
+       fp_data->product_name[(sizeof(fp_data->product_name)-1)] = '\0';
    }
 
     fp_data->moduleID_gpio = of_get_named_gpio(np, "fingerprint,moduleid_gpio", 0);
@@ -952,7 +1054,20 @@ static int fingerprint_get_irq_status(struct fp_data* fingerprint )
     return status;
 }
 
+static int fingerprint_ipc_wakelock_status(unsigned int value)
+{
+    struct fp_data* fingerprint = g_fingerprint;
+    if(!fingerprint){
+        hwlog_err("%s:error:g_fingerprint is NULL\n", __func__);
+        return -EINVAL;
+    }
 
+    if(value)
+    {pm_stay_awake(fingerprint->dev);}
+    else
+    {pm_relax(fingerprint->dev);}
+    return 0;
+}
 
 static long fingerprint_ioctl(struct file* file, unsigned int cmd, unsigned long arg)
 {
@@ -964,6 +1079,7 @@ static long fingerprint_ioctl(struct file* file, unsigned int cmd, unsigned long
     int key;
     int status;
     unsigned int sensor_id;
+    unsigned int set_ipc_wakelock;
 
     fingerprint = (struct fp_data*)file->private_data;
     if (NULL == fingerprint)
@@ -1060,6 +1176,20 @@ static long fingerprint_ioctl(struct file* file, unsigned int cmd, unsigned long
 #endif
             hwlog_info("%s FP_IOC_CMD_SEND_SENSORID =%x\n", __func__,sensor_id);
             break;
+        case FP_IOC_CMD_SET_IPC_WAKELOCKS:
+            if (copy_from_user(&set_ipc_wakelock, argp, sizeof(set_ipc_wakelock)))
+            {
+                hwlog_err("%s copy_from_user failed.\n", __func__);
+                return -EFAULT;
+            }
+            error = fingerprint_ipc_wakelock_status(set_ipc_wakelock);
+            if(error < 0)
+            {
+                hwlog_err(" fingerprint set ipc_wakelock failed\n");
+            }
+            hwlog_info("%s FP_IOC_CMD_SET_IPC_WAKELOCKS =%d\n", __func__,set_ipc_wakelock);
+            break;
+
         default:
             hwlog_err("%s error = -EFAULT.\n", __func__);
             error = -EFAULT;
@@ -1143,7 +1273,6 @@ err_pinctrl_put:
 static int fingerprint_power_en_gpio_init(struct fp_data* fingerprint)
 {
     int error = 0;
-
     error = gpio_request(fingerprint->power_en_gpio, "fingerprint_power_en_gpio");
 
     if (error)
@@ -1164,11 +1293,61 @@ static int fingerprint_power_en_gpio_init(struct fp_data* fingerprint)
 
 }
 
+static int fingerprint_poweroff_pd_charge(struct fp_data* fingerprint)
+{
+	int max_cnt = 100; /* max times that try to close the power */
+	int error = 0;
+	int poweroff_flag = 0;
+
+	error = of_property_read_u32(fingerprint->dev->of_node, "fingerprint,poweroff_when_pd_charge", (unsigned int *)(&poweroff_flag));
+	if (error)
+	{
+		hwlog_info("%s failed to get poweroff_when_pd_charge from device tree, just go on \n", __func__);
+		return -EINVAL;
+	}
+	hwlog_info(" fingerprint deal powerdown charge config: %d charger:%d\n", poweroff_flag, get_pd_charge_flag());
+
+	/*  power off the power when the config value is 1 */
+	if (1 == poweroff_flag)
+	{
+		/* when the state is power down charge the charge_flag is 1 */
+		if (1 == get_pd_charge_flag())
+		{
+		    if (IS_ERR(fp_ex_regulator))
+		    {
+		        hwlog_err("%s:No extern ldo found for fingerprint\n", __func__);
+		        return -EINVAL;
+		    }
+
+		    /* the power may be shared with other modules,so now close the power maybe more then one times */
+		    do
+		    {
+		        hwlog_info("%s regulator flag:%d\n", __func__, regulator_is_enabled(fp_ex_regulator));
+		        if (regulator_is_enabled(fp_ex_regulator))
+		        {
+		            error = regulator_disable(fp_ex_regulator);
+		            if(0 != error)
+		            {
+		                hwlog_err("%s:regulator_disable fail,ret = %d \n", __func__, error);
+		            }
+		            /* break the process when the ldo regulator is close */
+		            if (0 == regulator_is_enabled(fp_ex_regulator))
+		            {
+		                hwlog_info("regulator is close and break \n");
+		                break;
+		            }
+		        }
+		    }while(max_cnt-->0);
+		}
+	}
+
+    return 0;
+}
+
 static int fingerprint_extern_power_en(struct fp_data* fingerprint)
 {
     int error = 0;
     error = strncmp(fingerprint->extern_ldo_name, "CAM_LDO", 7);
-
     if (error == 0)
     {
         if ((-EINVAL == fingerprint->extern_ldo_num) || (-EINVAL == fingerprint->extern_vol))
@@ -1218,6 +1397,8 @@ static int fingerprint_extern_power_en(struct fp_data* fingerprint)
                 hwlog_err("%s:regulator_enable,ret = %d \n", __func__, error);
             }
 
+            fingerprint_poweroff_pd_charge(fingerprint);
+
             return 0;
         }
         else
@@ -1227,6 +1408,52 @@ static int fingerprint_extern_power_en(struct fp_data* fingerprint)
         }
     }
 }
+
+static int fingerprint_rst_cs_control(struct fp_data* fingerprint)
+{
+    int error = 0;
+    hwlog_info("%s enter\n", __func__);
+
+    if (-EINVAL != fingerprint->rst1_gpio)
+    {
+        error = gpio_direction_output(fingerprint->rst1_gpio, 1);
+        if (error)
+        {
+            hwlog_err("%s rst1_gpio gpio_direction_output failed\n", __func__);
+            return error;
+        }
+    }
+    if (-EINVAL != fingerprint->cs1_gpio)
+    {
+        error = gpio_direction_output(fingerprint->cs1_gpio, 1);
+        if (error)
+        {
+            hwlog_err("%s cs1_gpio gpio_direction_output failed\n", __func__);
+            return error;
+        }
+    }
+    if (-EINVAL != fingerprint->rst_gpio)
+    {
+        error = gpio_direction_output(fingerprint->rst_gpio, 1);
+        if (error)
+        {
+            hwlog_err("%s rst_gpio gpio_direction_output failed\n", __func__);
+            return error;
+        }
+    }
+    if (-EINVAL != fingerprint->cs0_gpio)
+    {
+        error = gpio_direction_output(fingerprint->cs0_gpio, 1);
+        if (error)
+        {
+            hwlog_err("%s cs0_gpio gpio_direction_output failed\n", __func__);
+            return error;
+        }
+    }
+
+    return error;
+}
+
 /*
  * This Function will be called when tui init or exit
  * It will set tui_flg, when it is set to 1 this mean tui is displaying
@@ -1422,7 +1649,8 @@ static int fingerprint_probe(struct platform_device* pdev)
     fingerprint_get_navigation_adjustvalue(&pdev->dev, fingerprint);
 
 #if defined (CONFIG_HISI_PARTITION_KIRIN970)
-    hwlog_info("fingerprint driver KIRIN970.");
+#elif defined (CONFIG_HISI_PARTITION_LIBRA)
+#elif defined (CONFIG_HISI_PARTITION_CANCER)
 #else
     rc = fingerprint_reset_gpio_init(fingerprint);
 
@@ -1453,6 +1681,15 @@ static int fingerprint_probe(struct platform_device* pdev)
         {
             hwlog_err("something wrong in extern_power_en  init error=%d\n", rc);
             rc = 0;
+        }
+    }
+
+    if (0 == strcmp(fingerprint->product_name, "neo"))
+    {
+        rc = fingerprint_rst_cs_control(fingerprint);
+        if (rc)
+        {
+            hwlog_err("something wrong in fingerprint_rst_cs_control\n");
         }
     }
 
@@ -1558,6 +1795,11 @@ static int fingerprint_probe(struct platform_device* pdev)
 
     irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT | IRQF_NO_SUSPEND;
 
+    if (0 == strcmp(fingerprint->product_name, "columbia"))
+    {
+        irqf = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING | IRQF_ONESHOT | IRQF_NO_SUSPEND;
+    }
+
     device_init_wakeup(dev, 1);
     wake_lock_init(&fingerprint->ttw_wl, WAKE_LOCK_SUSPEND, "fpc_ttw_wl");
 
@@ -1642,11 +1884,7 @@ static int fingerprint_suspend(struct device* dev)
     {
         if (!fingerprint->irq_enabled)
         {
-            if (!dsm_client_ocuppy(fingerprint_dclient))
-            {
-                dsm_client_record(fingerprint_dclient,"irq not enable before suspend, adjust1=%d, irq_enabled=%d",fingerprint->navigation_adjust1, (int)fingerprint->irq_enabled);
-                dsm_client_notify(fingerprint_dclient, DSM_FINGERPRINT_WAIT_FOR_FINGER_ERROR_NO);
-            }
+            hwlog_err("irq not enable before suspend, adjust1=%d, irq_enabled=%d",fingerprint->navigation_adjust1, (int)fingerprint->irq_enabled);
         }
     }
 #endif

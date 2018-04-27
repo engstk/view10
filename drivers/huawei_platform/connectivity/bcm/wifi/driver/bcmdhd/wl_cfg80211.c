@@ -179,7 +179,9 @@ u32 g_scan_trace = 1;
 #endif
 
 s32 g_pre_chain = 0;
-
+#ifdef HW_P2PGO_2G_SISO
+s32 g_p2pgo_siso = 0;
+#endif
 /* cfg80211 suspend flag */
 #ifdef HW_WIFI_SUSPEND_ISSUE
 volatile bool hw_cfg80211_suspend = FALSE;
@@ -4185,6 +4187,29 @@ scan_out:
 }
 #endif /* BRCM_RSDB */
 
+static int wifitem_seq_set_current_tem(u32 current_tem);
+static u32 wl_get_tempt(struct net_device *dev)
+{
+	u32 tempt = 0;
+	s32 err = 0;
+	if(dev == NULL)
+	{
+		WL_ERR(("wl_get_tempt:dev is NULL\n"));
+		return 0;
+	}
+
+	err = wldev_iovar_getint(dev, "phy_tempsense", &tempt);
+	if (unlikely(err))
+	{
+		WL_ERR(("wl_get_tempt Failed (%d)\n", err));
+		return 0;
+	}
+	else
+	{
+		return tempt;
+	}
+}
+
 #if defined(WL_CFG80211_P2P_DEV_IF)
 static s32
 wl_cfg80211_scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
@@ -4195,6 +4220,7 @@ wl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
 #endif /* WL_CFG80211_P2P_DEV_IF */
 {
 	s32 err = 0;
+	u32 tempt = 0;
 	struct bcm_cfg80211 *cfg = wiphy_priv(wiphy);
 #if defined(WL_CFG80211_P2P_DEV_IF)
 	struct net_device *ndev = wdev_to_wlc_ndev(request->wdev, cfg);
@@ -4213,6 +4239,17 @@ wl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
 	mutex_lock(&cfg->usr_sync);
 #endif
 	err = __wl_cfg80211_scan(wiphy, ndev, request, NULL);
+
+	if(0 != wl_get_drv_status(cfg, CONNECTED, ndev))
+	{
+		tempt = wl_get_tempt(ndev);
+	}
+	else
+	{
+		tempt = 0;
+	}
+	wifitem_seq_set_current_tem(tempt);
+
 #ifndef  BRCM_RSDB
 	if (unlikely(err)) {
 		if ((err == BCME_EPERM) && cfg->scan_suppressed)
@@ -11770,12 +11807,15 @@ wl_cfg80211_start_ap(
 	printf("#### channel=%d\n", ap_channel);
 	// If ap channel is 2g or v project
 	if((ap_channel <= 14) || (dhd->rsdb_mode == FALSE)) {
+		//If current mimo mode ,then cut back mimo mode when stop_ap
 		wldev_iovar_getint(dev, "txchain", &g_pre_chain);
-		if (3 == g_pre_chain) {
-			printf("#### set anntenna to 1\n");
-			wldev_iovar_setint(dev, "txchain", 1);
-			wldev_iovar_setint(dev, "rxchain", 1);
-		}
+		printf("#### set anntenna to 1\n");
+		wldev_iovar_setint(dev, "txchain", 1);
+		wldev_iovar_setint(dev, "rxchain", 1);
+		//set siso mode
+#ifdef HW_P2PGO_2G_SISO
+		g_p2pgo_siso = 1;
+#endif
 	}
 #endif
 	WL_DBG(("** AP/GO Created **\n"));
@@ -12043,6 +12083,9 @@ wl_cfg80211_stop_ap(
 				wldev_iovar_setint(dev, "rxchain", 3);
 				g_pre_chain = 0;
 			}
+#ifdef HW_P2PGO_2G_SISO
+			g_p2pgo_siso = 0;
+#endif
 		}
 		WL_DBG(("Stopping P2P GO \n"));
 		DHD_OS_WAKE_LOCK_CTRL_TIMEOUT_ENABLE((dhd_pub_t *)(cfg->pub),
@@ -14204,6 +14247,7 @@ struct hw_tem_ctrl_chr{
     u16  maxtem;		/* max temprature of wifi tem control process */
     u16  mindutycycle_cnt;	/* sum of min dutycycle  of wifi tem control process */
     u32  exceed_warn_tem_cnt;	/* sum of exceed max tem cnt */
+    u32  current_tem;
 };
 
 static struct hw_tem_ctrl_chr tem_ctrl_chr;
@@ -14226,8 +14270,17 @@ static int wifitem_seq_show(struct seq_file *seq, void *v)
 	seq_printf(seq, "maxtem:%d \n", tem_ctrl_chr.maxtem);
 	seq_printf(seq, "mindutycycle_cnt:%d \n", tem_ctrl_chr.mindutycycle_cnt);
 	seq_printf(seq, "exceed_warn_tem_cnt:%d \n", tem_ctrl_chr.exceed_warn_tem_cnt);
+	seq_printf(seq, "currnet_tem:%d \n", tem_ctrl_chr.current_tem);
 	seq_puts(seq, "\n");
 	memset(&tem_ctrl_chr,0,sizeof(struct hw_tem_ctrl_chr));
+	mutex_unlock(&tem_ctrl_mutex);
+	return 0;
+}
+
+static int wifitem_seq_set_current_tem(u32 current_tem)
+{
+	mutex_lock(&tem_ctrl_mutex);
+	tem_ctrl_chr.current_tem = current_tem;
 	mutex_unlock(&tem_ctrl_mutex);
 	return 0;
 }
@@ -14310,6 +14363,21 @@ wl_notify_connect_status(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
 
 	if (wl_get_mode_by_netdev(cfg, ndev) == WL_MODE_AP) {
 		err = wl_notify_connect_status_ap(cfg, ndev, e, data);
+#ifdef HW_P2PGO_2G_SISO
+		//previous p2p go already cut siso mode, confirm whether siso mode when p2p connect complete
+		if (!err && (g_p2pgo_siso == 1) && p2p_is_on(cfg) &&  \
+			(event == WLC_E_ASSOC_IND) && (ndev->ieee80211_ptr->iftype == NL80211_IFTYPE_P2P_GO)) {
+			s32 cur_txchain = 0;
+			// read mimo/siso capacity
+			wldev_iovar_getint(ndev, "txchain", &cur_txchain);
+			// 2.4G P2P only connect whether wifi chip auto cut back mimo
+			if(cur_txchain == 3) {
+				wldev_iovar_setint(ndev, "txchain", 1);
+				wldev_iovar_setint(ndev, "rxchain", 1);
+				WL_ERR(("%s: current antenna mimo mode when P2P connect, set antenna to 1 \n", __FUNCTION__));
+			}
+		}
+#endif
 	} else if (wl_get_mode_by_netdev(cfg, ndev) == WL_MODE_IBSS) {
 		err = wl_notify_connect_status_ibss(cfg, ndev, e, data);
 	} else if (wl_get_mode_by_netdev(cfg, ndev) == WL_MODE_BSS) {
@@ -14581,7 +14649,7 @@ wl_notify_connect_status(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
 
 #ifdef WL_TEM_CTRL
 #ifdef CONFIG_BCMDHD_PCIE
-#define HW_MAX_CHIP_TEM 110
+#define HW_MAX_CHIP_TEM 100
 #else
 #define HW_MAX_CHIP_TEM 100
 #endif
@@ -14736,6 +14804,7 @@ void wl_hw_tem_ctrl_event_report(void)
                             tem_ctrl_elec_maxtemp_record.elec4, tem_ctrl_max_temp_time);
         tmp_len += snprintf(dsm_buff+tmp_len, DSM_BUFF_SIZE_MAX-tmp_len, "MinDuty:%d@%s", tem_ctrl_min_duty, tem_ctrl_min_duty_time);
         hw_wifi_dsm_client_notify(DSM_WIFI_WLC_GET_CHANNEL_ERROR, dsm_buff);
+	hw_wifi_dsm_client_notify(DSM_WIFI_TEM_CTRL_EVENT, dsm_buff);
         WL_ERR(("dsm_buff:%s\n", dsm_buff));
 #endif
 	    static struct timeval tem_ctrl_cycle_end;
@@ -14807,6 +14876,7 @@ wl_hw_tem_ctrl_event_handler(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev
                         hw_wifi_dsm_client_notify(DSM_WIFI_WLC_SET_PASSIVE_SCAN_ERROR, dsm_buff);
                     } else {
                         hw_wifi_dsm_client_notify(DSM_WIFI_WLC_SET_SCANSUPPRESS_ERROR, dsm_buff);
+			hw_wifi_dsm_client_notify(DSM_WIFI_CHIPSET_DAMAGE_WARNING, dsm_buff);
                     }
                 }
 #endif
@@ -14857,6 +14927,7 @@ wl_hw_tem_ctrl_event_handler(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev
     return BCME_OK;
 }
 #endif
+
 
 #ifndef  BRCM_RSDB
 #ifdef GSCAN_SUPPORT
@@ -15304,6 +15375,30 @@ static s32 wl_get_assoc_ies(struct bcm_cfg80211 *cfg, struct net_device *ndev)
 	assoc_info.req_len = htod32(assoc_info.req_len);
 	assoc_info.resp_len = htod32(assoc_info.resp_len);
 	assoc_info.flags = htod32(assoc_info.flags);
+#ifdef BCM_PATCH_CVE_2017_13292_13303
+
+	if (assoc_info.req_len >
+		(MAX_REQ_LINE + sizeof(struct dot11_assoc_req) +
+		((assoc_info.flags & WLC_ASSOC_REQ_IS_REASSOC) ?
+		ETHER_ADDR_LEN : 0))) {
+		return BCME_BADLEN;
+	}
+	if ((assoc_info.req_len > 0) &&
+	    (assoc_info.req_len < (sizeof(struct dot11_assoc_req) +
+		((assoc_info.flags & WLC_ASSOC_REQ_IS_REASSOC) ?
+		ETHER_ADDR_LEN : 0)))) {
+		return BCME_BADLEN;
+	}
+	if (assoc_info.resp_len >
+		(MAX_REQ_LINE + sizeof(struct dot11_assoc_resp))) {
+		return BCME_BADLEN;
+	}
+	if ((assoc_info.resp_len > 0) &&
+		(assoc_info.resp_len < sizeof(struct dot11_assoc_resp))) {
+		return BCME_BADLEN;
+	}
+
+#endif
 	if (conn_info->req_ie_len) {
 		conn_info->req_ie_len = 0;
 		bzero(conn_info->req_ie, sizeof(conn_info->req_ie));
@@ -17022,6 +17117,12 @@ wl_notify_vowifi_event(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
 
 }
 #endif
+#ifdef HW_READ_FW_LOG
+extern void dhd_read_console_ex(dhd_pub_t *dhd);
+#define TIME_1S_IN_JIFFIES msecs_to_jiffies(1000) /* 1s */
+unsigned long timeout;
+unsigned long previous_jiffies = 0;	/* The last active tx wakelock time */
+#endif
 
 #ifdef HW_DFX_TXFAIL_EVENT
 static s32
@@ -17036,6 +17137,16 @@ wl_notify_txfail_event(struct bcm_cfg80211 *cfg, bcm_struct_cfgdev *cfgdev,
 	int txpwrindex = 0;
 	int rssi = 0;
 	int rate = 0;
+
+#ifdef HW_READ_FW_LOG
+	unsigned long timeout;
+
+	timeout = previous_jiffies + TIME_1S_IN_JIFFIES;
+	if (time_after(jiffies, timeout) || previous_jiffies == 0) {
+		dhd_read_console_ex(dhdp);
+	}
+	previous_jiffies = jiffies;
+#endif
 
 	/* now we have two types of tx fail(no ack from ap):
 	WLC_STATUS_ARP_TX_FRAME_FAIL 0x10

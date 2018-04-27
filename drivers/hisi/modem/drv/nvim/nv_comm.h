@@ -102,12 +102,12 @@ extern struct nv_global_ctrl_stru * g_flash_emmc_info_ptr;
 #define nv_taskdelay(n)             msleep(n)
 #define nv_flush_cache(ptr, size)   mb()
 
-#define nv_debug_trace(pdata,len)\
+#define nv_debug_trace(pdata,data_len)\
     if(g_nv_ctrl.debug_sw == true)\
     {\
         u32 marcro_i;\
-        nv_printf("<%s> len :0x%x\n",__FUNCTION__,len);\
-        for(marcro_i=0; marcro_i<len; marcro_i++)\
+        nv_printf("<%s> len :0x%x\n",__FUNCTION__,data_len);\
+        for(marcro_i=0; marcro_i<data_len; marcro_i++)\
         {\
             nv_printf("%02x ",*((u8*)pdata+marcro_i));\
         }\

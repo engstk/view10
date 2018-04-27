@@ -46,21 +46,7 @@
  *
  */
 
-/************************************************************************
-Copyright   : 2005-2008, Huawei Tech. Co., Ltd.
-File name   : SimApi.c
-Author      : H59254
-Version     : V200R001
-Date        : 2008-10-18
-Description : 该文件定义了usim模块提供给APP/AT的SIM卡接口的实现
 
-Description : SIM卡APP/AT的接口
-History     :
-
-1.日    期  : 2008年10月14日
-  作    者  : H59254
-  修改内容  : Create
-************************************************************************/
 
 #include "vos.h"
 #include "si_pih.h"
@@ -77,42 +63,7 @@ History     :
 #define    THIS_FILE_ID PS_FILE_ID_PIH_API_C
 
 
-/*****************************************************************************
-函 数 名  :SI_PIH_IsSvlte
-功能描述  :判断单独编译接口是否是SVLTE　
-输入参数  :无
-输出参数  :无
-修订记录  :
-1. 日    期   : 2014年1月2日
-   作    者   : h59254
-   修改内容   : Creat
-*****************************************************************************/
-VOS_UINT32 SI_PIH_IsSvlte(VOS_VOID)
-{
-    SVLTE_SUPPORT_FLAG_STRU             stSvlteFlag = {0};
 
-    if (VOS_OK != NV_ReadEx(MODEM_ID_0, en_NV_Item_SVLTE_FLAG, &stSvlteFlag, sizeof(SVLTE_SUPPORT_FLAG_STRU)))
-    {
-        return VOS_FALSE;
-    }
-
-    return (VOS_UINT32)stSvlteFlag.ucSvlteSupportFlag;
-
-}
-
-/*****************************************************************************
-函 数 名  : SI_PIH_GetReceiverPid
-功能描述  : FDN激活
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : H59254
-  修改内容  : Create
-*****************************************************************************/
 VOS_UINT32 SI_PIH_GetReceiverPid(
     MN_CLIENT_ID_T                      ClientId,
     VOS_UINT32                          *pulReceiverPid)
@@ -138,28 +89,12 @@ VOS_UINT32 SI_PIH_GetReceiverPid(
         *pulReceiverPid = I0_MAPS_PIH_PID;
     }
 
-    if (VOS_TRUE == SI_PIH_IsSvlte())
-    {
-        *pulReceiverPid = I0_MAPS_PIH_PID;
-    }
 
     return VOS_OK;
 }
 
 
-/*****************************************************************************
-函 数 名  : SI_PIH_FdnEnable
-功能描述  : FDN激活
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : H59254
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_FdnEnable (
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -204,19 +139,7 @@ VOS_UINT32 SI_PIH_FdnEnable (
 
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_FdnDisable
-功能描述  : FDN去激活
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : H59254
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_FdnDisable (
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -260,19 +183,7 @@ VOS_UINT32 SI_PIH_FdnDisable (
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_FdnBdnQuery
-功能描述  : FDN状态查询
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月20日
-  作    者  : H59254
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_FdnBdnQuery(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -320,19 +231,7 @@ VOS_UINT32 SI_PIH_FdnBdnQuery(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_GenericAccessReq
-功能描述  : FDN去激活
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : H59254
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_GenericAccessReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -390,21 +289,7 @@ VOS_UINT32 SI_PIH_GenericAccessReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_IsdbAccessReq
-功能描述  : ISDB透传APDU接口函数
-输入参数  : ClientId:用户ID
-            OpId    :Op项ID
-            pstData :输入的命令结构体
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2012年08月28日
-  作    者  : H59254
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_IsdbAccessReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -458,21 +343,7 @@ VOS_UINT32 SI_PIH_IsdbAccessReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CchoSetReq
-功能描述  : 打开逻辑通道请求
-输入参数  : ClientId:用户ID
-            OpId    :Op项ID
-            pstCchoCmd :输入的命令结构体
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2013年05月15日
-  作    者  : g47350
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CchoSetReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -515,7 +386,7 @@ VOS_UINT32 SI_PIH_CchoSetReq(
     pstMsg->stMsgHeader.ulEventType     =   SI_PIH_EVENT_CCHO_SET_CNF;
     pstMsg->ulAIDLen                    =   pstCchoCmd->ulAIDLen;
 
-    PAM_MEM_CPY_S(pstMsg->aucADFName, pstCchoCmd->ulAIDLen, pstCchoCmd->pucADFName, pstCchoCmd->ulAIDLen);
+    PAM_MEM_CPY_S(pstMsg->aucADFName, sizeof(pstMsg->aucADFName), pstCchoCmd->pucADFName, pstCchoCmd->ulAIDLen);
 
     if (VOS_OK !=  VOS_SendMsg(WUEPS_PID_AT, pstMsg))
     {
@@ -528,21 +399,7 @@ VOS_UINT32 SI_PIH_CchoSetReq(
 
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CchpSetReq
-功能描述  : 打开逻辑通道请求
-输入参数  : ClientId:用户ID
-            OpId    :Op项ID
-            pstCchpCmd :输入的命令结构体
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2016年09月26日
-  作    者  : z00377832
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CchpSetReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -586,7 +443,7 @@ VOS_UINT32 SI_PIH_CchpSetReq(
     pstMsg->ucAPDUP2                    =   pstCchpCmd->ucAPDUP2;
     pstMsg->ulAIDLen                    =   pstCchpCmd->ulAIDLen;
 
-    PAM_MEM_CPY_S(pstMsg->aucADFName, pstCchpCmd->ulAIDLen, pstCchpCmd->pucADFName, pstCchpCmd->ulAIDLen);
+    PAM_MEM_CPY_S(pstMsg->aucADFName, sizeof(pstMsg->aucADFName), pstCchpCmd->pucADFName, pstCchpCmd->ulAIDLen);
 
     if (VOS_OK !=  VOS_SendMsg(WUEPS_PID_AT, pstMsg))
     {
@@ -600,21 +457,7 @@ VOS_UINT32 SI_PIH_CchpSetReq(
 }
 
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CchcSetReq
-功能描述  : 关闭逻辑通道请求
-输入参数  : ClientId:用户ID
-            OpId    :Op项ID
-            pstCchoCmd :输入的命令结构体
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2013年05月15日
-  作    者  : g47350
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CchcSetReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -658,21 +501,7 @@ VOS_UINT32 SI_PIH_CchcSetReq(
 
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CglaSetReq
-功能描述  : 透传逻辑通道APDU接口函数
-输入参数  : ClientId:用户ID
-            OpId    :Op项ID
-            pstData :输入的命令结构体
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2013年05月15日
-  作    者  : g47350
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CglaSetReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -714,7 +543,7 @@ VOS_UINT32 SI_PIH_CglaSetReq(
     pstMsg->ulSessionID                 =   pstData->ulSessionID;
     pstMsg->ulDataLen                   =   pstData->ulLen;
 
-    PAM_MEM_CPY_S(pstMsg->aucData, pstData->ulLen, pstData->pucCommand, pstData->ulLen);
+    PAM_MEM_CPY_S(pstMsg->aucData, sizeof(pstMsg->aucData), pstData->pucCommand, pstData->ulLen);
 
     if (VOS_OK != VOS_SendMsg(WUEPS_PID_AT, pstMsg))
     {
@@ -726,20 +555,7 @@ VOS_UINT32 SI_PIH_CglaSetReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_GetCardATRReq
-功能描述  : 获取卡的ATR内容
-输入参数  : ClientId:用户ID
-            OpId    :Op项ID
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2013年08月22日
-  作    者  : g47350
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_GetCardATRReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -781,22 +597,7 @@ VOS_UINT32 SI_PIH_GetCardATRReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_HvSstSet
-功能描述  : FDN去激活
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2013年03月18日
-  作    者  : zhuli
-  修改内容  : Create
-2.日    期  : 2014年10月9日
-  作    者  : zhuli
-  修改内容  : 根据青松产品要求，该接口不受宏控制
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_HvSstSet (
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -845,22 +646,7 @@ VOS_UINT32 SI_PIH_HvSstSet (
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_HvSstQuery
-功能描述  : HVSST命令查询函数
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2013年3月18日
-  作    者  : zhuli
-  修改内容  : Create
-2.日    期  : 2014年10月9日
-  作    者  : zhuli
-  修改内容  : 根据青松产品要求，该接口不受宏控制
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_HvSstQuery(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -899,19 +685,7 @@ VOS_UINT32 SI_PIH_HvSstQuery(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_SciCfgSet
-功能描述  : SCICFG Set
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年10月9日
-  作    者  : zhuli
-  修改内容  : 根据青松产品要求，新增
-*****************************************************************************/
+
 
 VOS_UINT32 SI_PIH_SciCfgSet (
     MN_CLIENT_ID_T                      ClientId,
@@ -960,19 +734,7 @@ VOS_UINT32 SI_PIH_SciCfgSet (
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_SciCfgQuery
-功能描述  : SCICFG Query
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年10月9日
-  作    者  : zhuli
-  修改内容  : 根据青松产品要求，新增
-*****************************************************************************/
+
 
 VOS_UINT32 SI_PIH_SciCfgQuery (
     MN_CLIENT_ID_T                      ClientId,
@@ -1013,19 +775,7 @@ VOS_UINT32 SI_PIH_SciCfgQuery (
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_AcpuInit
-功能描述  : HVTEE Set
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年10月9日
-  作    者  : zhuli
-  修改内容  : 根据青松产品要求，新增
-*****************************************************************************/
+
 VOS_VOID SI_PIH_AcpuInit(VOS_VOID)
 {
     VOS_UINT8    aucUUID[] = {0x47,0x91,0xe8,0xab,
@@ -1045,38 +795,13 @@ VOS_VOID SI_PIH_AcpuInit(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : SI_PIH_GetSecIccVsimVer
- 功能描述  :
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月6日
-    作    者   : c00299064
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 SI_PIH_GetSecIccVsimVer(VOS_VOID)
 {
     return SI_PIH_SEC_ICC_VSIM_VER;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_TEETimeOutCB
-功能描述  : HVTEE Set
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年10月9日
-  作    者  : zhuli
-  修改内容  : 根据青松产品要求，新增
-*****************************************************************************/
+
 
 VOS_VOID SI_PIH_TEETimeOutCB (
     TEEC_TIMER_PROPERTY_STRU            *pstTimerData
@@ -1111,79 +836,23 @@ VOS_VOID SI_PIH_TEETimeOutCB (
     return ;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_HvCheckCardQuery
-功能描述  : 内容查询命令
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2013年3月26日
-  作    者  : g43750
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_HvCheckCardQuery(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
 {
-    SI_PIH_HVCHECKCARD_REQ_STRU         *pstMsg;
-    VOS_UINT32                          ulReceiverPid;
-
-    if (VOS_OK != SI_PIH_GetReceiverPid(ClientId, &ulReceiverPid))
-    {
-        PIH_ERROR_LOG("SI_PIH_HvCheckCardQuery:Get ulReceiverPid Error.");
-        return TAF_FAILURE;
-    }
-
-    pstMsg = (SI_PIH_HVCHECKCARD_REQ_STRU *)VOS_AllocMsg(WUEPS_PID_AT, sizeof(SI_PIH_HVCHECKCARD_REQ_STRU) - VOS_MSG_HEAD_LENGTH);
-
-    if (VOS_NULL_PTR == pstMsg)
-    {
-        PIH_WARNING_LOG("SI_PIH_HvCheckCardQuery: AllocMsg FAILED");
-        return TAF_FAILURE;
-    }
-
-    pstMsg->stMsgHeader.ulReceiverPid = ulReceiverPid;
-    pstMsg->stMsgHeader.ulMsgName     = SI_PIH_HVCHECKCARD_REQ;
-    pstMsg->stMsgHeader.usClient      = ClientId;
-    pstMsg->stMsgHeader.ucOpID        = OpId;
-    pstMsg->stMsgHeader.ulEventType   = SI_PIH_EVENT_HVCHECKCARD_CNF;
-
-    if(VOS_OK != VOS_SendMsg(WUEPS_PID_AT, pstMsg))
-    {
-        PIH_WARNING_LOG("SI_PIH_HvCheckCardQuery:WARNING SendMsg FAILED");
-
-        return TAF_FAILURE;
-    }
-
     return TAF_SUCCESS;
 }
 
 
-/*****************************************************************************
-函 数 名  : SI_PIH_UiccAuthReq
-功能描述  : GBA鉴权请求函数
-输入参数  : ClientId:用户ID
-            OpId:OP id
-            pstData:鉴权数据
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年3月21日
-  作    者  : zhuli
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_UiccAuthReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
     SI_PIH_UICCAUTH_STRU                *pstData)
 {
     SI_PIH_UICCAUTH_REQ_STRU        *pstMsg;
-    VOS_UINT32                      ulReceiverPid;
+    VOS_UINT32                       ulReceiverPid;
 
     if (VOS_OK != SI_PIH_GetReceiverPid(ClientId, &ulReceiverPid))
     {
@@ -1227,21 +896,7 @@ VOS_UINT32 SI_PIH_UiccAuthReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_AccessUICCFileReq
-功能描述  :
-输入参数  : ClientId:用户ID
-            OpId:OP id
-            pstData:鉴权数据
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年3月21日
-  作    者  : zhuli
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_AccessUICCFileReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -1293,20 +948,7 @@ VOS_UINT32 SI_PIH_AccessUICCFileReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CardTypeQueryProc
-功能描述  :
-输入参数  : ClientId:用户ID
-            OpId:OP id
-输出参数  : 无
-返 回 值  : 无
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年06月04日
-  作    者  : w00180399
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CardTypeQueryProc(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -1348,19 +990,7 @@ VOS_UINT32 SI_PIH_CardTypeQueryProc(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CardTypeExQuery
-功能描述  : 查询CardTypeEx状态处理
-输入参数  :
-输出参数  : 无
-返 回 值  : VOS_OK
-调用函数  :
 
-修订记录  :
-1. 日    期   : 2017年8月2日
-   作    者   : d00212987
-   修改内容   : AT^CardTypeEx新增
-*****************************************************************************/
 VOS_UINT32 SI_PIH_CardTypeExQuery(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -1371,19 +1001,100 @@ VOS_UINT32 SI_PIH_CardTypeExQuery(
                                     SI_PIH_EVENT_CARDTYPEEX_QUERY_CNF);
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CardTypeQuery
-功能描述  : 查询CardType状态处理
-输入参数  :
-输出参数  : 无
-返 回 值  : VOS_OK
-调用函数  :
 
-修订记录  :
-1. 日    期   : 2017年8月2日
-   作    者   : d00212987
-   修改内容   : AT^CardTypeEx修改
-*****************************************************************************/
+VOS_UINT32 SI_PIH_GetSilentPinInfoReq(
+    MN_CLIENT_ID_T                      ClientId,
+    MN_OPERATION_ID_T                   OpId,
+    VOS_UINT8                          *pucPin)
+{
+    SI_PIH_SILENT_PININFO_REQ_STRU     *pstMsg;
+    VOS_UINT32                          ulReceiverPid;
+
+    if (VOS_OK != SI_PIH_GetReceiverPid(ClientId, &ulReceiverPid))
+    {
+        PIH_ERROR_LOG("SI_PIH_GetSilentPinInfoReq: Get ulReceiverPid Error.");
+        return TAF_FAILURE;
+    }
+
+    pstMsg = (SI_PIH_SILENT_PININFO_REQ_STRU *)VOS_AllocMsg(WUEPS_PID_AT,
+                        (VOS_UINT32)sizeof(SI_PIH_SILENT_PININFO_REQ_STRU) - VOS_MSG_HEAD_LENGTH);
+
+    if (VOS_NULL_PTR == pstMsg)
+    {
+        PIH_WARNING_LOG("SI_PIH_GetSilentPinInfoReq: WARNING AllocMsg FAILED");
+
+        return TAF_FAILURE;
+    }
+
+    pstMsg->stMsgHeader.ulReceiverPid   =   ulReceiverPid;
+    pstMsg->stMsgHeader.ulMsgName       =   SI_PIH_SILENT_PININFO_SET_REQ;
+    pstMsg->stMsgHeader.usClient        =   ClientId;
+    pstMsg->stMsgHeader.ucOpID          =   OpId;
+    pstMsg->stMsgHeader.ulEventType     =   SI_PIH_EVENT_SILENT_PININFO_SET_CNF;
+    pstMsg->ulDataLen                   =   USIMM_PINNUMBER_LEN;
+
+    PAM_MEM_CPY_S(pstMsg->aucData,
+                  USIMM_PINNUMBER_LEN,
+                  pucPin,
+                  USIMM_PINNUMBER_LEN);
+
+    if (VOS_OK != VOS_SendMsg(WUEPS_PID_AT, pstMsg))
+    {
+        PIH_WARNING_LOG("SI_PIH_GetSilentPinInfoReq:WARNING SendMsg FAILED");
+
+        return TAF_FAILURE;
+    }
+
+    return TAF_SUCCESS;
+}
+
+
+VOS_UINT32 SI_PIH_SetSilentPinReq(
+    MN_CLIENT_ID_T                      ClientId,
+    MN_OPERATION_ID_T                   OpId,
+    SI_PIH_CRYPTO_PIN_STRU             *pstCryptoPin)
+{
+    SI_PIH_SILENT_PIN_REQ_STRU         *pstMsg;
+    VOS_UINT32                          ulReceiverPid;
+
+    if (VOS_OK != SI_PIH_GetReceiverPid(ClientId, &ulReceiverPid))
+    {
+        PIH_ERROR_LOG("SI_PIH_SetSilentPinReq: Get ulReceiverPid Error.");
+        return TAF_FAILURE;
+    }
+
+    pstMsg = (SI_PIH_SILENT_PIN_REQ_STRU *)VOS_AllocMsg(WUEPS_PID_AT,
+                        (VOS_UINT32)sizeof(SI_PIH_SILENT_PIN_REQ_STRU) - VOS_MSG_HEAD_LENGTH);
+
+    if (VOS_NULL_PTR == pstMsg)
+    {
+        PIH_WARNING_LOG("SI_PIH_SetSilentPinReq: WARNING AllocMsg FAILED");
+
+        return TAF_FAILURE;
+    }
+
+    pstMsg->stMsgHeader.ulReceiverPid   =   ulReceiverPid;
+    pstMsg->stMsgHeader.ulMsgName       =   SI_PIH_SILENT_PIN_SET_REQ;
+    pstMsg->stMsgHeader.usClient        =   ClientId;
+    pstMsg->stMsgHeader.ucOpID          =   OpId;
+    pstMsg->stMsgHeader.ulEventType     =   SI_PIH_EVENT_SILENT_PIN_SET_CNF;
+
+    PAM_MEM_CPY_S(&(pstMsg->stCryptoPin),
+                  sizeof(SI_PIH_CRYPTO_PIN_STRU),
+                  pstCryptoPin,
+                  sizeof(SI_PIH_CRYPTO_PIN_STRU));
+
+    if (VOS_OK != VOS_SendMsg(WUEPS_PID_AT, pstMsg))
+    {
+        PIH_WARNING_LOG("SI_PIH_SetSilentPinReq:WARNING SendMsg FAILED");
+
+        return TAF_FAILURE;
+    }
+
+    return TAF_SUCCESS;
+}
+
+
 VOS_UINT32 SI_PIH_CardTypeQuery(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -1394,20 +1105,7 @@ VOS_UINT32 SI_PIH_CardTypeQuery(
                                     SI_PIH_EVENT_CARDTYPE_QUERY_CNF);
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CardVoltageQuery
-功能描述  : 获取voltage信息
-输入参数  : ClientId:用户ID
-            OpId:OP id
-输出参数  : 无
-返 回 值  : VOS_UINT32
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2017年01月18日
-  作    者  : x00306642
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CardVoltageQuery(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -1447,21 +1145,7 @@ VOS_UINT32 SI_PIH_CardVoltageQuery(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_PrivateCglaSetReq
-功能描述  : 透传逻辑通道APDU接口函数
-输入参数  : ClientId:用户ID
-            OpId    :Op项ID
-            pstData :输入的命令结构体
-输出参数  : 无
-返 回 值  : VOS_UINT32 函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2017年02月21日
-  作    者  : x00306642
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_PrivateCglaSetReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -1495,7 +1179,7 @@ VOS_UINT32 SI_PIH_PrivateCglaSetReq(
     pstMsg->ulSessionID                 =   pstData->ulSessionID;
     pstMsg->ulDataLen                   =   pstData->ulLen;
 
-    PAM_MEM_CPY_S(pstMsg->aucData, pstData->ulLen, pstData->pucCommand, pstData->ulLen);
+    PAM_MEM_CPY_S(pstMsg->aucData, sizeof(pstMsg->aucData), pstData->pucCommand, pstData->ulLen);
 
     if (VOS_OK != VOS_SendMsg(WUEPS_PID_AT, pstMsg))
     {
@@ -1507,20 +1191,7 @@ VOS_UINT32 SI_PIH_PrivateCglaSetReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CrsmSetReq
-功能描述  :
-输入参数  : ClientId:用户ID
-            OpId:OP id
-输出参数  : 无
-返 回 值  : 无
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年06月04日
-  作    者  : w00180399
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CrsmSetReq(
     MN_CLIENT_ID_T                          ClientId,
     MN_OPERATION_ID_T                       OpId,
@@ -1564,20 +1235,7 @@ VOS_UINT32 SI_PIH_CrsmSetReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CrlaSetReq
-功能描述  :
-输入参数  : ClientId:用户ID
-            OpId:OP id
-输出参数  : 无
-返 回 值  : 无
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年06月04日
-  作    者  : w00180399
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CrlaSetReq(
     MN_CLIENT_ID_T                          ClientId,
     MN_OPERATION_ID_T                       OpId,
@@ -1621,20 +1279,7 @@ VOS_UINT32 SI_PIH_CrlaSetReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CardSessionQuery
-功能描述  :
-输入参数  : ClientId:用户ID
-            OpId:OP id
-输出参数  : 无
-返 回 值  : 无
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年06月04日
-  作    者  : w00180399
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CardSessionQuery(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId
@@ -1674,20 +1319,7 @@ VOS_UINT32 SI_PIH_CardSessionQuery(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CimiSetReq
-功能描述  :
-输入参数  : ClientId:用户ID
-            OpId:OP id
-输出参数  : 无
-返 回 值  : 无
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年06月04日
-  作    者  : w00180399
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CimiSetReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId
@@ -1727,20 +1359,7 @@ VOS_UINT32 SI_PIH_CimiSetReq(
     return TAF_SUCCESS;
 }
 
-/*****************************************************************************
-函 数 名  : SI_PIH_CCimiSetReq
-功能描述  :
-输入参数  : ClientId:用户ID
-            OpId:OP id
-输出参数  : 无
-返 回 值  : 无
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2014年06月04日
-  作    者  : w00180399
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_PIH_CCimiSetReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId

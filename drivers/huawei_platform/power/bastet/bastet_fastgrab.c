@@ -1,21 +1,5 @@
 
-/******************************************************************************
 
-				  版权所有 (C), 2014, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : bastet_fastgrab.c
-  版 本 号   : 初稿
-  作	者   : d00173029
-  生成日期   : 2015年09月30日
-  最近修改   :
-  功能描述   : 处理快抢技术Kernel层逻辑
-  函数列表   :
-  修改历史   :
-  1.日	期   : 2015年09月30日
-	作	者   : d00173029
-	修改内容   : 创建文件
-******************************************************************************/
 
 /*****************************************************************************
   1 头文件包含
@@ -60,19 +44,7 @@ uid_t      g_CurrntAccUId;
    6 函数实现
 ******************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : BST_FG_Init
- 功能描述  : 初始化快抢技术相关结构体
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 void BST_FG_Init(void)
 {
 	uint16_t usLooper1;
@@ -88,20 +60,7 @@ void BST_FG_Init(void)
 	g_CurrntAccUId = BST_FG_INVALID_UID;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_ProcWXSock
- 功能描述  : 处理微信相关Socket状态变化
- 输入参数  : struct sock *pstSock,  sock结构对象
-			 int state			  新的socket状态
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static void BST_FG_ProcWXSock(struct sock *pstSock, int state)
 {
 	/**
@@ -124,22 +83,7 @@ static void BST_FG_ProcWXSock(struct sock *pstSock, int state)
 	}
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_ProcWXMatchKeyWord_DL
- 功能描述  : 处理微信socket下行勾包，仅对push信道起作用
- 输入参数  :
-    BST_FG_KEYWORD_STRU *pstKwdIns   需要匹配的关键字
-    uint8_t*    pData,   收到的下行数据(来自skbuff)
-    uint32_t    ulLength,   承载的最大有效数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日     期   : 2016年12月19日
-      作     者   : z00371705
-     修改内容   : 新生成函数
-*****************************************************************************/
+
 static bool BST_FG_ProcWXMatchKeyWord_DL(
 	BST_FG_KEYWORD_STRU *pstKwdIns,
 	uint8_t *pData,
@@ -172,22 +116,7 @@ static bool BST_FG_ProcWXMatchKeyWord_DL(
 	return false;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_ProcWXPacket_DL
- 功能描述  : 处理微信socket下行勾包，仅对push信道起作用
- 输入参数  :
-	struct sock	*pstSock,	sock对象
-	uint8_t*		pData,	  收到的下行数据(来自skbuff)
-	uint32_t		ulLength,   承载的最大有效数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static uint8_t BST_FG_ProcWXPacket_DL(
 	struct sock *pstSock,
 	uint8_t *pData,
@@ -220,24 +149,7 @@ static uint8_t BST_FG_ProcWXPacket_DL(
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_Proc_Send_RPacket_Priority
- 功能描述  : 处理微信数据判断是否为微信数据
- 输入参数  :
-    struct sock    *pstSock,    sock对象
-    uint8_t*        pData,      收到的下行数据(强制转换msg，iov用户空间数据)
-    uint32_t        ulLength,   承载的最大有效数据长度
- 输出参数  : 无
- 返 回 值  :
-    0               没有关键数据信息
-    1               有关键数据信息
- 调用函数  :tcp_output.c/tcp_write_xmit中调用。
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2016年05月25日
-      作    者   : h00359249
-      修改内容   : 新生成函数
-*****************************************************************************/
+
 
 uint8_t BST_FG_Proc_Send_RPacket_Priority(struct sock *pstSock) {
     if(!pstSock) {
@@ -251,24 +163,7 @@ uint8_t BST_FG_Proc_Send_RPacket_Priority(struct sock *pstSock) {
     return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_ProcWXPacket_UL
- 功能描述  : 处理微信上行数据勾包
- 输入参数  :
-	struct sock *pstSock, sock对象
-	uint8_t* pData, 收到的下行数据(强制转换msg，iov用户空间数据)
-	uint32_t ulLength, 承载的最大有效数据长度
- 输出参数  : 无
- 返 回 值  :
-	0			   没有关键数据信息
-	1			   有关键数据信息
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static uint8_t BST_FG_ProcWXPacket_UL(
 	struct sock *pstSock,
 	uint8_t *pData,
@@ -344,25 +239,7 @@ static uint8_t BST_FG_ProcWXPacket_UL(
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_ProcWXPacket
- 功能描述  : 处理微信的勾包
- 输入参数  :
-	struct sock	*pstSock,	sock对象
-	uint8_t*		pData,	  收到的数据
-	uint32_t		ulLength,   承载的最大有效数据长度
-	uint32_t		ulRole	  收发方向
- 输出参数  : 无
- 返 回 值  :
-	0			   没有关键数据信息
-	1			   有关键数据信息
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static uint8_t BST_FG_ProcWXPacket(
 	struct sock *pstSock,
 	uint8_t *pData,
@@ -382,30 +259,17 @@ static uint8_t BST_FG_ProcWXPacket(
 	return ucRtn;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_HookPacket
- 输入参数  : 对外接口，处理外部socket收发数据勾包
-	struct sock	*pstSock,	sock对象
-	uint8_t*		pData,	  收到的数据
-	uint32_t		ulLength,   承载的最大有效数据长度
-	uint32_t		ulRole	  收发方向
- 输出参数  : 无
- 返 回 值  :
-	0			   没有关键数据信息
-	1			   有关键数据信息
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 uint8_t BST_FG_HookPacket(
 	struct sock *pstSock,
 	uint8_t *pData,
 	uint32_t ulLength,
 	uint32_t ulRole)
 {
+	if (IS_ERR_OR_NULL(pstSock)) {
+		BASTET_LOGE("invalid parameter");
+		return 0;
+	}
 	uid_t lSockUid = 0;
 	uint8_t ucRtn = 0;
 	uint16_t usIdx = BST_FG_IDX_INVALID_APP;
@@ -425,7 +289,7 @@ uint8_t BST_FG_HookPacket(
 	if (!BST_FG_IsAppIdxValid(usIdx))
 		return 0;
 
-	BASTET_LOGI("BST_FG_Hook1  Length=%d, Role=%d, sk_state=%d",
+	BASTET_LOGI("BST_FG_Hook1  Length=%u, Role=%u, sk_state=%d",
 				 ulLength, ulRole, pstSock->fg_Spec);
 	/**
 	 * Call different packet proc according the Application Name(Index).
@@ -444,21 +308,7 @@ uint8_t BST_FG_HookPacket(
 	return ucRtn;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_SetHongbaoPushSock
- 功能描述  : 找到并设置微信的PUSH-Sock
- 输入参数  :
-	int32_t	 tid_num,	共多少个pid需要匹配
-	int32_t	*tids		pid内容信息列表
- 输出参数  : 无
- 返 回 值  : 匹配出错情况信息
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static int BST_FG_SetHongbaoPushSock(int32_t tid_num, int32_t *tids)
 {
 	struct task_struct *pstTask = NULL;
@@ -514,7 +364,7 @@ static int BST_FG_SetHongbaoPushSock(int32_t tid_num, int32_t *tids)
 				sock_put(pstSock);
 				continue;
 			}
-			if (pstSock->sk_socket->type != SOCK_STREAM) {
+			if ( pstSock->sk_socket && pstSock->sk_socket->type != SOCK_STREAM) {
 				sock_put(pstSock);
 				continue;
 			}
@@ -567,19 +417,7 @@ static int BST_FG_SetHongbaoPushSock(int32_t tid_num, int32_t *tids)
 	return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_SaveKeyword
- 功能描述  : 保存应用匹配关键字信息
- 输入参数  : unsigned long arg  用户空间iov指针
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static void BST_FG_SaveKeyword(unsigned long arg)
 {
 	void __user *argp = (void __user *)arg;
@@ -619,6 +457,9 @@ static void BST_FG_SaveKeyword(unsigned long arg)
 			+ sizeof(BST_FG_KWS_COMM_STRU),
 			sizeof(BST_FG_KEYWORD_STRU))) {
 			BASTET_LOGE("BST_FG_SaveKeyword copy_from_user pstKwdSrc error");
+			break;
+		}
+		if (pstKwdSrc->stKeyWord.usTotLen > BST_FG_MAX_KW_LEN) {
 			break;
 		}
 		pstKwdDst = (BST_FG_KEYWORD_STRU *)kmalloc(
@@ -668,19 +509,7 @@ static void BST_FG_SaveKeyword(unsigned long arg)
 	spin_unlock_bh(&pstAppIns->stLocker);
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_SaveUidInfo
- 功能描述  : 保存对应应用的UID更新信息
- 输入参数  : unsigned long arg  用户空间iov指针
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static void BST_FG_SaveUidInfo(unsigned long arg)
 {
 	void __user *argp = (void __user *)arg;
@@ -705,19 +534,7 @@ static void BST_FG_SaveUidInfo(unsigned long arg)
 	spin_unlock_bh(&pstAppIns->stLocker);
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_SaveTidInfo
- 功能描述  : 获取承载UID中关键PID信息列表
- 输入参数  : unsigned long arg  用户空间iov指针
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 static void BST_FG_SaveTidInfo(unsigned long arg)
 {
 	void __user *argp = (void __user *)arg;
@@ -776,19 +593,7 @@ static void BST_FG_SaveTidInfo(unsigned long arg)
 	spin_unlock_bh(&pstAppIns->stLocker);
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_SaveTidInfo
- 功能描述  : 获取当前dscp值
- 输入参数  : unsigned long arg  用户空间iov指针
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2016年06月14日
-	  作	者   : l00180987
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 extern int g_FastGrabDscp;
 static void BST_FG_SaveDscpInfo(unsigned long arg)
 {
@@ -808,19 +613,7 @@ static void BST_FG_SaveDscpInfo(unsigned long arg)
 	return;
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_Update_Acc
- 功能描述  : 上层通知加速
- 输入参数  : lUid 应用的uid
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日     期   : 2016年12月13日
-      作     者   : z00371705
-      修改内容   : 新生成函数
-*****************************************************************************/
+
 
 static void BST_FG_Update_Acc(unsigned long arg)
 {
@@ -843,19 +636,7 @@ static void BST_FG_Update_Acc(unsigned long arg)
 
 
 
-/*****************************************************************************
- 函 数 名  : BST_FG_Check_AccUid
- 功能描述  : 检查上行数据包是否要加速
- 输入参数  : lUid 应用的uid
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日     期   : 2016年12月13日
-      作     者   : z00371705
-      修改内容   : 新生成函数
-*****************************************************************************/
+
 
 static bool BST_FG_Check_AccUid(uid_t lUid)
 {
@@ -874,20 +655,7 @@ static bool BST_FG_Check_AccUid(uid_t lUid)
 
 #if defined(CONFIG_PPPOLAC) || defined(CONFIG_PPPOPNS)
 #ifndef CONFIG_HUAWEI_XENGINE
-/*****************************************************************************
- 函 数 名  : BST_FG_Hook_Ul_Stub
- 功能描述  : 勾取上行数据包
- 输入参数  : struct sock *pstSock  socket对象
-                           struct msghdr *msg   发送的消息结构体
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2015年12月13日
-      作    者   : z00371705
-      修改内容   : 新生成函数
-*****************************************************************************/
+
 
 void BST_FG_Hook_Ul_Stub(struct sock *pstSock, struct msghdr *msg)
 {
@@ -936,20 +704,7 @@ void BST_FG_Hook_Ul_Stub(struct sock *pstSock, struct msghdr *msg)
 	return;
 }
 #else
-/*****************************************************************************
- 函 数 名  : BST_FG_Hook_Ul_Stub
- 功能描述  : 勾取上行数据包
- 输入参数  : struct sock *pstSock  socket对象
-                           struct msghdr *msg   发送的消息结构体
- 输出参数  : 无
- 返 回 值  : 是否加速
- 调用函数  :
- 被调函数  :
- 修改历史  :
-    1.日    期   : 2015年12月13日
-      作    者   : z00371705
-      修改内容   : 新生成函数
-*****************************************************************************/
+
 bool BST_FG_Hook_Ul_Stub(struct sock *pstSock, struct msghdr *msg)
 {
 	uid_t lSockUid;
@@ -992,19 +747,7 @@ bool BST_FG_Hook_Ul_Stub(struct sock *pstSock, struct msghdr *msg)
 #endif
 
 
-/*****************************************************************************
- 函 数 名  : BST_FG_IoCtrl
- 功能描述  : Fast-grab技术对外IoCtrl接口
- 输入参数  : unsigned long arg  用户空间iov指针
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 void BST_FG_IoCtrl(unsigned long arg)
 {
 	void __user *argp = (void __user *)arg;
@@ -1047,24 +790,16 @@ void BST_FG_IoCtrl(unsigned long arg)
 	}
 }
 
-/*****************************************************************************
- 函 数 名  : BST_FG_CheckSockUid
- 功能描述  : 处理uid相关的socket状态变化信息
- 输入参数  : struct sock *pstSock,  sock结构对象
-			 int state			  新的socket状态
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-	1.日	期   : 2015年09月30日
-	  作	者   : d00173029
-	  修改内容   : 新生成函数
-*****************************************************************************/
+
 void BST_FG_CheckSockUid(struct sock *pstSock, int state)
 {
 	uid_t lUid = BST_FG_INVALID_UID;
 	uint16_t usIdx = BST_FG_IDX_INVALID_APP;
+
+	 if (IS_ERR_OR_NULL(pstSock)) {
+		BASTET_LOGE("invalid parameter");
+		return;
+	 }
 
 	/**
 	 * Judge the state if it's should be cared.
@@ -1094,7 +829,7 @@ void BST_FG_CheckSockUid(struct sock *pstSock, int state)
 #endif
 	for (usIdx = 0; usIdx < BST_FG_MAX_APP_NUMBER; usIdx++) {
 		if (lUid == g_FastGrabAppInfo[usIdx].lUid) {
-			BASTET_LOGI("BST_FG_CheckSockUid Cared Uid Found, uid=%d",
+			BASTET_LOGI("BST_FG_CheckSockUid Cared Uid Found, uid=%u",
 				lUid);
 			post_indicate_packet(BST_IND_FG_UID_SOCK_CHG,
 				&lUid, sizeof(uid_t));

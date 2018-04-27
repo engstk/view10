@@ -405,7 +405,7 @@ int spmi_ext_register_readl(struct spmi_controller *ctrl,
 				u8 sid, u16 addr, u8 *buf, int len)
 {
 	/* 4-bit Slave Identifier, 16-bit register address, up to 16 bytes */
-	if (sid > SPMI_MAX_SLAVE_ID || len <= 0 || len > 16 || buf == NULL)
+	if (sid > SPMI_MAX_SLAVE_ID || len <= 0 || len > 8 || buf == NULL)
 		return -EINVAL;
 
 	return spmi_read_cmd(ctrl, SPMI_CMD_EXT_READL, sid, addr, len, buf);
@@ -474,7 +474,7 @@ int spmi_ext_register_writel(struct spmi_controller *ctrl,
 	u8 op = SPMI_CMD_EXT_WRITEL;
 
 	/* 4-bit Slave Identifier, 16-bit register address, up to 16 bytes */
-	if (sid > SPMI_MAX_SLAVE_ID || len <= 0 || len > 16 || buf == NULL)
+	if (sid > SPMI_MAX_SLAVE_ID || len <= 0 || len > 8 || buf == NULL)
 		return -EINVAL;
 
 	return spmi_write_cmd(ctrl, op, sid, addr, len, buf);

@@ -248,8 +248,7 @@ int ftm_close_dir(int fd)
  */
 /* 调用举例: TODO: ...
  */
-/* 作    者: 崔军强/00064416 [2009-08-11]
- */
+
 /******************************************************************************
  */
 static VOS_UINT32 ChgErrorCode(VOS_UINT32 usTafErrorCode)
@@ -303,8 +302,7 @@ static VOS_UINT32 ChgErrorCode(VOS_UINT32 usTafErrorCode)
  */
 /* 调用举例: TODO: ...
  */
-/* 作    者: 崔军强/00064416 [2009-08-11]
- */
+
 /******************************************************************************
  */
 VOS_VOID CmdErrProc(VOS_UINT8 ucClientId, VOS_UINT32 ulErrCode, VOS_UINT16 usBufLen, VOS_UINT8* pucBuf)
@@ -392,31 +390,7 @@ VOS_UINT32 atSendFtmDataMsg(VOS_UINT32 TaskId, VOS_UINT32 MsgId, VOS_UINT32 ulCl
 }
 
 
-/*****************************************************************************
- 函 数 名  : atSendL4aDataMsg
- 功能描述  : AT给L4A模块发送消息
- 输入参数  : VOS_UINT32 TaskId
-             VOS_UINT32 MsgId
-             VOS_UINT32 ulClientId
-             IN VOS_VOID* pData
-             VOS_UINT32 uLen
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年8月25日
-    作    者   : c64416
-    修改内容   : 新生成函数
-  2.日    期   : 2013年6月6日
-    作    者   : c64416
-    修改内容   : 适配L4A优化方案
-  3.日    期   : 2016年8月18日
-    作    者   : w00316404
-    修改内容   : 双L编译修改
-
-*****************************************************************************/
 VOS_UINT32 atSendL4aDataMsg(MN_CLIENT_ID_T usClientId, VOS_UINT32 TaskId, VOS_UINT32 MsgId, VOS_VOID* pData, VOS_UINT32 uLen)
 {
     VOS_UINT32 u32Ret = 0;
@@ -468,33 +442,7 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtTLCmdTbl[] = {
 /*lint -restore*/
 
 
-/*****************************************************************************
 
- 函 数 名  : At_RegisterTLCmdTable
-
- 功能描述  : 向AT解析器注册TDS/LTE专有命令表
-
- 输入参数  : 无
-
- 输出参数  : 无
-
- 返 回 值  : VOS_UINT32
-
- 调用函数  :
-
- 被调函数  :
-
- 修改历史  :
-
-  1.日    期   : 2013年9月22日
-
-
-     作    者   : c64416
-
-     修改内容   : 新生成函数
-
-
-*****************************************************************************/
 VOS_UINT32 At_RegisterTLCmdTable(VOS_VOID)
 {
     return AT_RegisterCmdTable(g_astAtTLCmdTbl, sizeof(g_astAtTLCmdTbl)/sizeof(g_astAtTLCmdTbl[0]));

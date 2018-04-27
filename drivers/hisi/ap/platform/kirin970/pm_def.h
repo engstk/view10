@@ -2,6 +2,11 @@
 #define __PM_DEF_H__ 
 #include <pmic_interface.h>
 #include <soc_crgperiph_interface.h>
+#ifndef LPMCU_USER_VERSION
+#define MODEM_TEST BIT(SOC_SCTRL_SCINT_MASK_timer61_int_START)
+#else
+#define MODEM_TEST 0
+#endif
 #define AP_WAKE_INT_MASK (BIT(SOC_SCTRL_SCINT_MASK_gpio_22_int_START) | \
                       BIT(SOC_SCTRL_SCINT_MASK_gpio_23_int_START) | \
                       BIT(SOC_SCTRL_SCINT_MASK_gpio_24_int_START) | \
@@ -13,8 +18,10 @@
                       BIT(SOC_SCTRL_SCINT_MASK_timer00_int_START) | \
                       BIT(SOC_SCTRL_SCINT_MASK_timer11_int_START) | \
                       BIT(SOC_SCTRL_SCINT_MASK_timer40_int_START) | \
+                      BIT(SOC_SCTRL_SCINT_MASK_timer41_int_START) | \
                       BIT(SOC_SCTRL_SCINT_MASK_timer50_int_START) | \
-                             BIT(SOC_SCTRL_SCINT_MASK_timer71_int_START))
+                         BIT(SOC_SCTRL_SCINT_MASK_timer71_int_START) | \
+       MODEM_TEST)
 #define AP_WAKE_INT_MASK1 (BIT(SOC_SCTRL_SCINT_MASK1_se_gpio1_START) | \
         BIT(SOC_SCTRL_SCINT_MASK1_gpio_28_int_START) | \
         BIT(SOC_SCTRL_SCINT_MASK1_gpio_18_int_START) | \

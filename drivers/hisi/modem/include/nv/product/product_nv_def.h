@@ -86,14 +86,7 @@ typedef struct
     u32  ulTempLowCount;
 }CHG_BATTERY_LOW_TEMP_PROTECT_NV;
 
-/*****************************************************************************
-结构名    : OM_BATTREY_TEMP_CFG_STRU
-结构说明  : 暂时没用
-对应NVID: 50016 NV_BatteryTemp_Cfg
-  1.日    期   : 2013年5月16日
-    作    者   : j00174725
-    修改内容   : 初始生成
-*****************************************************************************/
+
 typedef struct
 {
     u32                          ulIsEnable;

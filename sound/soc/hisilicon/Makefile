@@ -1,5 +1,6 @@
 subdir-ccflags-y += -Wall -Werror
 
+EXTRA_CFLAGS += -Idrivers/devkit/audiokit
 ifeq ($(CONFIG_HIFI_MAILBOX), y)
 EXTRA_CFLAGS += -I$(srctree)/drivers/hisi/hifi_mailbox/mailbox
 EXTRA_CFLAGS += -I$(srctree)/drivers/hisi/hifi_mailbox/ipcm

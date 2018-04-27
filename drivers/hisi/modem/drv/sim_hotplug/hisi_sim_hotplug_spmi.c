@@ -1435,7 +1435,7 @@ free_sim_det_wq:
     }
 
 free_info:
-    kfree(info);
+    devm_kfree(&pdev->dev, info);
 
     return ret;
 }
@@ -1471,7 +1471,7 @@ static int hisi_sim_hotplug_remove(struct spmi_device *pdev)
         destroy_workqueue(info->sim_debounce_delay_wq);
     }
 
-    kfree(info);
+    devm_kfree(&pdev->dev, info);
     dev_set_drvdata(&pdev->dev, NULL);
 
     return 0;

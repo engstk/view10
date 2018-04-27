@@ -1,20 +1,4 @@
-/*******************************************************************************
 
-  版权所有 (C), 2001-2011, 华为技术有限公司
-
- *******************************************************************************
- 文 件 名   : rdr_hisi_ap_adapter.c
- 版 本 号   : 初稿
- 作    者   : 蒋孝伟 00207786
- 生成日期   : 2015年1月12日
- 最近修改   :
- 功能描述   : 基于RDR框架，AP侧适配，实现资源、异常初始化，dump及reset操作
- 修改历史   :
- 1.日  期   : 2015年1月12日
-   作  者   : 蒋孝伟 00207786
- 修改内容   : 创建文件
-
- *******************************************************************************/
 
 /*******************************************************************************
   1 头文件包含
@@ -56,7 +40,7 @@
 #include <linux/hisi/eeye_ftrace_pub.h>
 #include <linux/mfd/hisi_pmic.h>
 #include <linux/hisi/hisi_powerkey_event.h>
-
+#include <linux/hisi/hisi_sp805_wdt.h>
 
 
 #define BUFFER_SIZE			128
@@ -80,6 +64,7 @@ static struct rdr_register_module_result current_info;
 static struct mutex dump_mem_mutex;
 static u64 g_mi_notify_lpm3_addr;
 static unsigned long long g_pmu_reset_reg;
+static unsigned long long g_pmu_subtype_reg;
 int g_bbox_fpga_flag = -1;
 /* -1 未初始化；0 非fpga板；1 fpga板 */
 
@@ -108,39 +93,39 @@ rdr_e_callback e_callback;
 struct rdr_exception_info_s einfo[] = {
 	{{0, 0}, MODID_AP_S_PANIC, MODID_AP_S_PANIC, RDR_ERR,
 	 RDR_REBOOT_NOW, RDR_AP, RDR_AP, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_PANIC, (u32)RDR_UPLOAD_YES, "ap", "ap",
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_PANIC, 0, (u32)RDR_UPLOAD_YES, "ap", "ap",
 	 0, 0, 0},
 	{{0, 0}, MODID_AP_S_NOC, MODID_AP_S_NOC, RDR_ERR,
 	 RDR_REBOOT_NOW, RDR_AP, RDR_AP, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_NOC, (u32)RDR_UPLOAD_YES, "ap", "ap",
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_NOC, 0, (u32)RDR_UPLOAD_YES, "ap", "ap",
 	 0, 0, 0},
 	{{0, 0}, MODID_AP_S_DDRC_SEC, MODID_AP_S_DDRC_SEC, RDR_ERR,
 	 RDR_REBOOT_NOW, RDR_AP, RDR_AP, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_DDRC_SEC, (u32)RDR_UPLOAD_YES, "ap",
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_DDRC_SEC, 0,(u32)RDR_UPLOAD_YES, "ap",
 	 "ap", 0, 0, 0},
 	{{0, 0}, MODID_AP_S_COMBINATIONKEY, MODID_AP_S_COMBINATIONKEY,
 	 RDR_ERR, RDR_REBOOT_NOW, RDR_AP, RDR_AP, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_COMBINATIONKEY, (u32)RDR_UPLOAD_YES,
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_COMBINATIONKEY, 0, (u32)RDR_UPLOAD_YES,
 	 "ap", "ap", 0, 0, 0},
 	{{0, 0}, MODID_AP_S_MAILBOX, MODID_AP_S_MAILBOX, RDR_WARN,
 	 RDR_REBOOT_NO, RDR_AP, 0, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_MAILBOX, (u32)RDR_UPLOAD_YES, "ap",
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_MAILBOX, 0, (u32)RDR_UPLOAD_YES, "ap",
 	 "ap", 0, 0, 0},
 	{{0, 0}, MODID_AP_S_PMU, MODID_AP_S_PMU, RDR_ERR,
 	 RDR_REBOOT_NOW, RDR_AP, RDR_AP, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_PMU, (u32)RDR_UPLOAD_YES, "ap pmu", "ap pmu",
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_PMU, 0, (u32)RDR_UPLOAD_YES, "ap pmu", "ap pmu",
 	 0, 0, 0},
 	 {{0, 0}, MODID_AP_S_SMPL, MODID_AP_S_SMPL, RDR_ERR,
 	 RDR_REBOOT_NOW, RDR_AP, RDR_AP, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_SMPL, (u32)RDR_UPLOAD_YES, "ap smpl", "ap smpl",
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_SMPL, 0, (u32)RDR_UPLOAD_YES, "ap smpl", "ap smpl",
 	 0, 0, 0},
 	 {{0, 0}, MODID_AP_S_SCHARGER, MODID_AP_S_SCHARGER, RDR_ERR,
 	 RDR_REBOOT_NOW, RDR_AP, RDR_AP, RDR_AP,
-	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_SCHARGER, (u32)RDR_UPLOAD_YES, "ap scharger", "ap scharger",
+	 (u32)RDR_REENTRANT_DISALLOW, (u32)AP_S_SCHARGER, 0, (u32)RDR_UPLOAD_YES, "ap scharger", "ap scharger",
 	 0, 0, 0},
 	{{0, 0}, MODID_AP_S_RESUME_SLOWY, MODID_AP_S_RESUME_SLOWY, RDR_WARN,
 	RDR_REBOOT_NO, RDR_AP, 0, RDR_AP,
-	(u32)RDR_REENTRANT_DISALLOW, AP_S_RESUME_SLOWY, (u32)RDR_UPLOAD_YES,
+	(u32)RDR_REENTRANT_DISALLOW, AP_S_RESUME_SLOWY, 0, (u32)RDR_UPLOAD_YES,
 	"ap resumeslowy", "ap resumeslowy", 0, 0, 0},
 };
 
@@ -502,6 +487,8 @@ void print_debug_info(void)
 	       g_rdr_ap_root->modid);
 	printk(KERN_INFO "[%s], e_exce_type [0x%x],\n", __func__,
 	       g_rdr_ap_root->e_exce_type);
+	printk(KERN_INFO "[%s], e_exce_subtype [0x%x],\n", __func__,
+	       g_rdr_ap_root->e_exce_subtype);
 	printk(KERN_INFO "[%s], coreid [0x%llx]\n", __func__,
 	       g_rdr_ap_root->coreid);
 	printk(KERN_INFO "[%s], slice [%llu]\n", __func__,
@@ -984,10 +971,12 @@ u64 get_32k_abs_timer_value(void)
 	return timer_count;
 }
 
-void rdr_set_wdt_kick_slice(void)
+void rdr_set_wdt_kick_slice(u64 kickslice)
 {
 	static u32 kicktimes;
-	u64 kickslice = get_32k_abs_timer_value();
+	rdr_arctimer_t *rdr_arctimer = rdr_get_arctimer_record();
+
+	rdr_arctimer_register_read(rdr_arctimer);
 
 	if (g_rdr_ap_root != NULL) {
 		g_rdr_ap_root->wdt_kick_slice[kicktimes % WDT_KICK_SLICE_TIMES] = kickslice;
@@ -1018,6 +1007,7 @@ u64 rdr_get_last_wdt_kick_slice(void)
 	return last_kick_slice;
 }
 
+
 void regs_dump(void)
 {
 	int i;
@@ -1041,10 +1031,9 @@ void regs_dump(void)
 		       __func__, regs_info[i].reg_size, i,
 		       regs_info[i].reg_map_addr,
 		       regs_info[i].reg_dump_addr);
-
 		memcpy(regs_info[i].reg_dump_addr,
-		       regs_info[i].reg_map_addr,
-		       regs_info[i].reg_size);
+			   regs_info[i].reg_map_addr,
+			   regs_info[i].reg_size);
 	}
 }
 
@@ -1596,6 +1585,7 @@ void save_hisiap_log(char *log_path, u32 modid)
 	temp.e_reset_core_mask = RDR_AP;
 	temp.e_from_core = RDR_AP;
 	temp.e_exce_type = rdr_get_reboot_type();
+	temp.e_exce_subtype = rdr_get_exec_subtype_value();
 
 	if (temp.e_exce_type == LPM3_S_EXCEPTION) {
 		temp.e_from_core = RDR_LPM3;
@@ -1624,8 +1614,23 @@ void save_hisiap_log(char *log_path, u32 modid)
 	return;
 }
 
-void rdr_hisiap_dump(u32 modid, u32 etype, u64 coreid, char *log_path,
-		     pfn_cb_dump_done pfn_cb)
+void rdr_hisiap_dump_root_head(u32 modid, u32 etype, u64 coreid)
+{
+	if (!g_rdr_ap_root) {
+		printk(KERN_ERR "[%s], exit!\n", __func__);
+		return;
+	}
+
+	g_rdr_ap_root->modid = modid;
+	g_rdr_ap_root->e_exce_type = etype;
+	g_rdr_ap_root->coreid = coreid;
+	g_rdr_ap_root->slice = get_32k_abs_timer_value();
+	g_rdr_ap_root->enter_times++;
+	return;
+}
+
+void rdr_hisiap_dump(u32 modid, u32 etype,
+	u64 coreid, char *log_path, pfn_cb_dump_done pfn_cb)
 {
 	unsigned long exception_info = 0;
 	unsigned long exception_info_len = 0;
@@ -1717,13 +1722,7 @@ out:
 	}
 }
 
-/*****************************************************************************
-Description : 初始化复位原因
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 void hisiap_nmi_notify_lpm3(void)
 {
 	unsigned int value;
@@ -1746,19 +1745,15 @@ void hisiap_nmi_notify_lpm3(void)
 void get_bbox_curtime_slice(void)
 {
 	u64 curtime, curslice;
+
 	curtime = hisi_getcurtime();
 	curslice = get_32k_abs_timer_value();
+
 	printk(KERN_ERR
 	       "printk_time is %llu, 32k_abs_timer_value is %llu.\n",
 	       curtime, curslice);
 }
-/*****************************************************************************
-Description : 异常时，ap的reset函数
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 void rdr_hisiap_reset(u32 modid, u32 etype, u64 coreid)
 {
 	printk("%s start\n", __func__);
@@ -1779,7 +1774,7 @@ void rdr_hisiap_reset(u32 modid, u32 etype, u64 coreid)
 		do {
 		} while (1);
 	}
-
+	pr_err("%s blk flush ok\n", __func__);
 	flush_ftrace_buffer_cache();
 	mntn_show_stack_cpustall();
 	kmsg_dump(KMSG_DUMP_PANIC);
@@ -1815,7 +1810,13 @@ int get_pmu_reset_base_addr(void)
 		g_pmu_reset_reg = (unsigned long long)
 			hisi_bbox_map(pmu_reset_reg_addr, 0x4);
 		if (!g_pmu_reset_reg) {
-			printk(KERN_ERR "get pmu reset reg error\n");
+			pr_err("get pmu reset reg error\n");
+			return -1;
+		}
+		g_pmu_subtype_reg = (unsigned long long)
+			hisi_bbox_map(FPGA_EXCSUBTYPE_REG_ADDR, 0x4);
+		if (!g_pmu_subtype_reg) {
+			pr_err("get pmu subtype reg error\n");
 			return -1;
 		}
 		printk("pmu reset reg phy is 0x%llx\n", pmu_reset_reg_addr);
@@ -1823,25 +1824,19 @@ int get_pmu_reset_base_addr(void)
 	return 0;
 }
 
-/*****************************************************************************
-Description : 获取记录复位原因的pmu寄存器的地址
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 unsigned long long get_pmu_reset_reg(void)
 {
 	return g_pmu_reset_reg;
 }
 
-/*****************************************************************************
-Description : 设置reboot reason 到 pmu中
-History
-1.Date: 2016/11/15
-Author : l00352922
-Modification : Created function
-*****************************************************************************/
+
+unsigned long long get_pmu_subtype_reg(void)
+{
+	return g_pmu_subtype_reg;
+}
+
+
 void set_reboot_reason(unsigned int reboot_reason)
 {
 	unsigned int value = 0;
@@ -1870,13 +1865,7 @@ void set_reboot_reason(unsigned int reboot_reason)
 
 }
 
-/*****************************************************************************
-Description : 获取reboot reason
-History
-1.Date: 2016/11/15
-Author : l00352922
-Modification : Created function
-*****************************************************************************/
+
 unsigned int get_reboot_reason(void)
 {
 	unsigned int value = 0;
@@ -1894,13 +1883,7 @@ unsigned int get_reboot_reason(void)
 	return value;
 
 }
-/*****************************************************************************
-Description : 供rdr使用，将异常记录到pmu中
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 void record_exce_type(struct rdr_exception_info_s *e_info)
 {
 	if (!e_info) {
@@ -1908,14 +1891,9 @@ void record_exce_type(struct rdr_exception_info_s *e_info)
 		return;
 	}
 	set_reboot_reason(e_info->e_exce_type);
+	set_subtype_exception(e_info->e_exce_subtype, false);
 }
-/*****************************************************************************
-Description : 注册异常的参数，在dump和reset之间调用
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 void hisiap_callback(u32 argc, void *argv)
 {
 	int ret;
@@ -1930,13 +1908,7 @@ void hisiap_callback(u32 argc, void *argv)
 	return;
 }
 
-/*****************************************************************************
-Description : 向rdr注册异常
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 static void rdr_hisiap_register_exception(void)
 {
 	int i;
@@ -1962,13 +1934,7 @@ static void rdr_hisiap_register_exception(void)
 	printk("[%s], end\n", __func__);
 }
 
-/*****************************************************************************
-Description : 向rdr注册dump和reset函数
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 static int rdr_hisiap_register_core(void)
 {
 	struct rdr_module_ops_pub s_soc_ops;
@@ -1987,6 +1953,14 @@ static int rdr_hisiap_register_core(void)
 		return ret;
 	}
 
+	ret = rdr_register_cleartext_ops(coreid, rdr_hisiap_cleartext_print);
+	if (ret < 0) {
+		printk(KERN_ERR
+		       "rdr_register_cleartext_ops fail, ret = [%d]\n",
+		       ret);
+		return ret;
+	}
+
 	current_info.log_addr = retinfo.log_addr;
 	current_info.log_len = retinfo.log_len;
 	current_info.nve = retinfo.nve;
@@ -1994,25 +1968,13 @@ static int rdr_hisiap_register_core(void)
 	return ret;
 }
 
-/*****************************************************************************
-Description : 获取初始化状态
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 bool rdr_get_ap_init_done(void)
 {
 	return rdr_ap_init == 1;
 }
 
-/*****************************************************************************
-Description : 将一个文件的内容copy到另一个文件中
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 static int rdr_copy_file_apend(char *dst, char *src)
 {
 	long fddst, fdsrc;
@@ -2322,20 +2284,14 @@ out:
 	return ret;
 }
 
-/*****************************************************************************
-Description : 将未注册到rdr的异常写入history.log中
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 int record_reason_task(void *arg)
 {
 	char date[DATATIME_MAXLEN];
 	struct rdr_exception_info_s temp = {
 		{0, 0}, 0x80000001, 0x80000001, RDR_ERR, RDR_REBOOT_NOW,
 		(u64)RDR_AP, (u64)RDR_AP, (u64)RDR_AP,(u32)RDR_REENTRANT_DISALLOW,
-		(u32)COLDBOOT, (u32)RDR_UPLOAD_YES, "ap", "ap", 0, (void *)0, 0
+		(u32)COLDBOOT, 0, (u32)RDR_UPLOAD_YES, "ap", "ap", 0, (void *)0, 0
 	};
 	temp.e_from_core = RDR_AP;
 	temp.e_exce_type = rdr_get_reboot_type();
@@ -2349,13 +2305,7 @@ int record_reason_task(void *arg)
 	return 0;
 }
 
-/*****************************************************************************
-Description : 钩子函数，用于系统panic处理之前死循环，使现场保留
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 static int acpu_panic_loop_notify(struct notifier_block *nb,
 				  unsigned long event, void *buf)
 {
@@ -2367,13 +2317,7 @@ static int acpu_panic_loop_notify(struct notifier_block *nb,
 	return 0;
 }
 
-/*****************************************************************************
-Description : panic复位的钩子函数
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 static int rdr_hisiap_panic_notify(struct notifier_block *nb,
 				   unsigned long event, void *buf)
 {
@@ -2382,26 +2326,14 @@ static int rdr_hisiap_panic_notify(struct notifier_block *nb,
 	return 0;
 }
 
-/*****************************************************************************
-Description : die复位的钩子函数
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 static int rdr_hisiap_die_notify(struct notifier_block *nb,
 				 unsigned long event, void *pReg)
 {
 	return 0;
 }
 
-/*****************************************************************************
-Description : 初始化函数
-History
-1.Date: 2015/02/06
-Author : l00249396
-Modification : Created function
-*****************************************************************************/
+
 int __init rdr_hisiap_init(void)
 {
 	struct task_struct *recordTask = NULL;
@@ -2456,9 +2388,7 @@ int __init rdr_hisiap_init(void)
 	}
 	reboot_type = rdr_get_reboot_type();
 
-	if ((REBOOT_REASON_LABEL1 > reboot_type
-	    || (REBOOT_REASON_LABEL4 <= reboot_type
-	    && REBOOT_REASON_LABEL5 > reboot_type))
+	if (REBOOT_REASON_LABEL1 > reboot_type
 	    && check_himntn(HIMNTN_GOBAL_RESETLOG)) {
 		recordTask = kthread_run(record_reason_task, NULL, "recordTask");
 		printk(KERN_INFO

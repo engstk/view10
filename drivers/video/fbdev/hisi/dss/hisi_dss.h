@@ -27,6 +27,8 @@
 #define FB_ACCEL_HI625x 0x8
 #define FB_ACCEL_HI366x 0x10
 #define FB_ACCEL_KIRIN970 0x40
+#define FB_ACCEL_DSSV320 0x80
+#define FB_ACCEL_DSSV501 0x100
 #define FB_ACCEL_PLATFORM_TYPE_FPGA 0x10000000   //FPGA
 #define FB_ACCEL_PLATFORM_TYPE_ASIC 0x20000000   //ASIC
 
@@ -37,19 +39,19 @@
 #define HISIFB_MDC_POWER_DOWNUP_CTRL _IOW(HISIFB_IOCTL_MAGIC, 805, int)
 
 #define HISIFB_VSYNC_CTRL _IOW(HISIFB_IOCTL_MAGIC, 0x02, unsigned int)
-#define HISIFB_DSS_CLK_RATE_SET _IOW(HISIFB_IOCTL_MAGIC, 0x04, struct dss_clk_rate)
+#define HISIFB_DSS_VOTE_CMD_SET _IOW(HISIFB_IOCTL_MAGIC, 0x04, struct dss_vote_cmd)
 #define HISIFB_DIRTY_REGION_UPDT_SET _IOW(HISIFB_IOCTL_MAGIC, 0x06, int)
 #define HISIFB_DSS_MMBUF_ALLOC _IOW(HISIFB_IOCTL_MAGIC, 0x08, struct dss_mmbuf)
 #define HISIFB_DSS_MMBUF_FREE _IOW(HISIFB_IOCTL_MAGIC, 0x09, struct dss_mmbuf)
-#define HISIFB_DSS_VOLTAGE_GET _IOW(HISIFB_IOCTL_MAGIC, 0x10, struct dss_clk_rate)
-#define HISIFB_DSS_VOLTAGE_SET _IOW(HISIFB_IOCTL_MAGIC, 0x11, struct dss_clk_rate)
+#define HISIFB_DSS_VOLTAGE_GET _IOW(HISIFB_IOCTL_MAGIC, 0x10, struct dss_vote_cmd)
+#define HISIFB_DSS_VOLTAGE_SET _IOW(HISIFB_IOCTL_MAGIC, 0x11, struct dss_vote_cmd)
 
 #define HISIFB_OV_ONLINE_PLAY _IOW(HISIFB_IOCTL_MAGIC, 0x21, struct dss_overlay)
 #define HISIFB_OV_OFFLINE_PLAY _IOW(HISIFB_IOCTL_MAGIC, 0x22, struct dss_overlay)
 #define HISIFB_OV_COPYBIT_PLAY _IOW(HISIFB_IOCTL_MAGIC, 0x23, struct dss_overlay)
 #define HISIFB_OV_MEDIA_COMMON_PLAY _IOW(HISIFB_IOCTL_MAGIC, 0x24, struct dss_overlay)
-
-#define HISIFB_IDLE_IS_ALLOWED	_IOW(HISIFB_IOCTL_MAGIC, 0x42, int)
+#define HISIFB_DEBUG_CHECK_FENCE_TIMELINE _IOW(HISIFB_IOCTL_MAGIC, 0x30, int)
+#define HISIFB_IDLE_IS_ALLOWED _IOW(HISIFB_IOCTL_MAGIC, 0x42, int)
 
 #define HISIFB_CE_ENABLE _IOW(HISIFB_IOCTL_MAGIC, 0x49, int)
 #define HISIFB_CE_SUPPORT_GET _IOW(HISIFB_IOCTL_MAGIC, 0x50, unsigned int)
@@ -60,6 +62,7 @@
 #define HISIFB_CE_PARAM_SET _IOW(HISIFB_IOCTL_MAGIC, 0x55, int)
 #define HISIFB_GET_REG_VAL _IOW(HISIFB_IOCTL_MAGIC, 0x56, struct dss_reg)
 #define HISIFB_HIACE_PARAM_GET _IOW(HISIFB_IOCTL_MAGIC, 0x57, struct dss_effect_info)
+#define HISIFB_HIACE_HDR10_LUT_SET _IOW(HISIFB_IOCTL_MAGIC, 0x58, struct int)
 
 #define HISIFB_EFFECT_MODULE_INIT _IOW(HISIFB_IOCTL_MAGIC, 0x60, struct dss_effect)
 #define HISIFB_EFFECT_MODULE_DEINIT _IOW(HISIFB_IOCTL_MAGIC, 0x61, struct dss_effect)
@@ -99,6 +102,16 @@
 #define LCD_FPS_60 (60)
 
 #define DSS_WCH_MAX  (2)
+
+enum PERI_VOLTAGE_LEVEL {
+	PERI_VOLTAGE_LEVEL0 = 0x0,
+	PERI_VOLTAGE_LEVEL1 = 0x1,
+	PERI_VOLTAGE_LEVEL2 = 0x2,
+	PERI_VOLTAGE_LEVEL3 = 0x3,
+	PERI_VOLTAGE_LEVEL4 = 0x4,
+	PERI_VOLTAGE_LEVEL5 = 0x5,
+	PERI_VOLTAGE_MAXLEVEL = 0x7,
+};
 
 
 /* for YUV */
@@ -517,17 +530,20 @@ typedef struct dss_overlay {
 	uint32_t to_be_continued;
 	int32_t release_fence;
 	int32_t retire_fence;
-	uint32_t reserved0;
+	uint8_t video_idle_status;
+	uint8_t mask_layer_exist;
+	uint8_t reserved_0;
+	uint8_t reserved_1;
 } dss_overlay_t;
 
-typedef struct dss_clk_rate {
+typedef struct dss_vote_cmd {
 	uint64_t dss_pri_clk_rate;
 	uint64_t dss_pclk_dss_rate;
 	uint64_t dss_pclk_pctrl_rate;
 	uint64_t dss_mmbuf_rate;
-	uint32_t dss_voltage_value; //0:0.7v, 2:0.8v
+	uint32_t dss_voltage_level;
 	uint32_t reserved;
-} dss_clk_rate_t;
+} dss_vote_cmd_t;
 
 typedef struct ce_algorithm_parameter {
 	int iDiffMaxTH;
@@ -629,6 +645,13 @@ typedef struct hiace_interface_set {
 	unsigned int *lut;
 } hiace_interface_set_t;
 
+typedef struct hiace_HDR10_lut_set {
+	unsigned int *detail_weight;
+	unsigned int *LogLumEOTFLUT;
+	unsigned int *LumEOTFGammaLUT;
+} hiace_HDR10_lut_set_t;
+
+
 enum display_engine_module_id {
 	DISPLAY_ENGINE_BLC = BIT(0),
 	DISPLAY_ENGINE_DDIC_CABC = BIT(1),
@@ -637,11 +660,28 @@ enum display_engine_module_id {
 	DISPLAY_ENGINE_DDIC_RGBW = BIT(4),
 	DISPLAY_ENGINE_HBM = BIT(5),
 	DISPLAY_ENGINE_COLOR_RECTIFY = BIT(6),
+	DISPLAY_ENGINE_AMOLED_ALGO = BIT(7),
 };
 
 typedef struct display_engine_hbm_param {
+	uint8_t dimming;
 	uint32_t level;
 } display_engine_hbm_param_t;
+
+typedef struct display_engine_amoled_param {
+	bool HBMEnable;
+	bool AmoledDimingEnable;
+	int HBM_Threshold_BackLight;
+	int HBM_Threshold_Dimming;
+	int HBM_Dimming_Frames;
+	int HBM_Min_BackLight;
+	int HBM_Max_BackLight;
+	int HBM_MinLum_Regvalue;
+	int HBM_MaxLum_Regvalue;
+	int Hiac_DBVThres;
+	int Hiac_DBV_XCCThres;
+	int Hiac_DBV_XCC_MinThres;
+} display_engine_amoled_param_t;
 
 typedef struct display_engine_blc_param {
 	uint32_t enable;
@@ -676,6 +716,8 @@ typedef struct display_engine_panel_info_param {
 	int minluminance;
 	int maxbacklight;
 	int minbacklight;
+	int factory_gamma_enable;
+	uint16_t factory_gamma[800];//800 > 257 * 3
 } display_engine_panel_info_param_t;
 
 struct disp_panelid
@@ -730,6 +772,7 @@ typedef struct display_engine_param {
 	display_engine_panel_info_param_t panel_info;
 	display_engine_hbm_param_t hbm;
 	display_engine_color_rectify_param_t color_param;
+	display_engine_amoled_param_t amoled_param;
 } display_engine_param_t;
 
 typedef enum dss_module_id {

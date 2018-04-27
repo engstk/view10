@@ -35,6 +35,16 @@ typedef struct {
 	HI_U64 SmmuPageBaseAddr;
 } VeduEfl_DTS_CONFIG_S;
 
+
+typedef enum {
+	YUV420_SEMIPLANAR     = 0,
+	YUV420_PLANAR         = 3,
+	YUV422_PLANAR         = 4,
+	YUV422_PACKAGE        = 6,
+	RGB_32BIT             = 8,
+	YUV420_SEMIPLANAR_CMP = 10,
+} COLOR_FMT_TYPE;
+
 HI_S32	VENC_DRV_EflOpenVedu(HI_VOID);
 HI_S32	VENC_DRV_EflCloseVedu(HI_VOID);
 HI_S32	VENC_DRV_EflResumeVedu(HI_VOID);

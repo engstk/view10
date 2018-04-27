@@ -4,21 +4,21 @@ EXTRA_CFLAGS 	+= -Idrivers/hisi/mntn/blackbox/platform_lpm3
 
 subdir-ccflags-y              += -Wall -Werror
 
-ifeq ($(TARGET_BOARD_PLATFORM), hi3660)
-EXTRA_CFLAGS += -DHISEE_POWER_MANAGE_COUNT
-endif
-
-ifeq ($(TARGET_BOARD_PLATFORM), kirin970)
-EXTRA_CFLAGS += -DHISEE_POWER_MANAGE_PRO
-EXTRA_CFLAGS += -DCONFIG_HISEE_CHIPTEST_SUPPORT_APPLET_OPTIMIZATION
-ifneq ($(chip_type), es)
-EXTRA_CFLAGS += -DCFG_HICOS_MISCIMG_PATCH
-endif
-endif
-
 #if support casd key, open the macro
 #EXTRA_CFLAGS += -DHISEE_CHIPTEST_SUPPORT_CASDKEY
 
+ifeq ($(TARGET_VERSION_MODE),factory)
+EXTRA_CFLAGS += -DCONFIG_HISI_HISEE_CHIPTEST_RT
+endif
+
+ifneq ($(TARGET_BUILD_VARIANT),user)
+EXTRA_CFLAGS += -DCONFIG_HISI_HISEE_CHIPTEST_SLT
+endif
+
+#Support to disable HiSEE.
+ifeq ($(hisee),false)
+EXTRA_CFLAGS += -DCONFIG_HISEE_DISABLE
+endif
 
 obj-$(CONFIG_HISI_HISEE)  += hisi_hisee.o
 obj-$(CONFIG_HISI_HISEE)  += hisi_hisee_power.o

@@ -31,7 +31,9 @@
 #ifdef CONFIG_DIRECT_CHARGER
 #include <huawei_platform/power/direct_charger.h>
 #endif
+#include <huawei_platform/power/huawei_charger.h>
 
+#define FUSB3601_MUS_INTERRUPT_MASK 0xd4
 static int detect_finish_flag = 1;
 static struct delayed_work m_work;
 #define HWLOG_TAG moisture_detection
@@ -99,6 +101,8 @@ void moisture_detection_complete(void)
 	int ret;
 	FSC_U8 data;
 	int vbus_val = 0;
+	static int moisture_detected_already_reported = 0;
+	static int moisture_detected_counter = 0;
 	ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_VBUS_VOLTAGEL,&data);
 	if (ret) {
 		hwlog_info("%s:VBUS_VOLTAGEL is: [0x%x]\n", __func__, data);
@@ -118,32 +122,44 @@ void moisture_detection_complete(void)
 	vbus_val /= TEN;
 	detect_finish_flag = 1;
 	hwlog_info("%s:vbus voltage is: %d mv\n", __func__, vbus_val);
+	if (vbus_val < MOISTURE_DETECTED_THRESHOLD) {
+		moisture_detected_counter ++;
+	} else {
+		moisture_detected_counter = 0;
+	}
+	if (moisture_detected_counter >= MOISTURE_DETECTED_CNT_THRESHOLD) {
+		hwlog_info("%s:moisture detected\n", __func__);
+		if (!moisture_detected_already_reported) {
+			send_water_intrused_event(true);
+			moisture_detected_already_reported = 1;
+		}
+	} else {
+		hwlog_info("%s:moisture not detected\n", __func__);
+		if (moisture_detected_already_reported) {
+			send_water_intrused_event(false);
+			moisture_detected_already_reported = 0;
+		}
+	}	
 }
 
 static void monitor_work(struct work_struct *work)
 {
 	int ret;
 	FSC_U8 data;
-	ret = FUSB3601_fusb_I2C_ReadData(0xd4,&data);
-	hwlog_info("%s:MUS_INTERRUPT_MASK before: 0x%x mv\n", __func__, data);
-	data = 0x3f;
-	ret = FUSB3601_fusb_I2C_WriteData(0xd4, 1, &data);
-	ret = FUSB3601_fusb_I2C_ReadData(0xd4,&data);
-	hwlog_info("%s:MUS_INTERRUPT_MASK after: 0x%x mv\n", __func__, data);
+	ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_MUS_INTERRUPT_MASK,&data);
+	hwlog_info("%s:MUS_INTERRUPT_MASK : 0x%x mv\n", __func__, data);
 	if (detect_finish_flag) {
 		moisture_detection_enable();
 	} else {
 		hwlog_info(" %s: moisture_detection not finish!\n",__func__);
 	}
-	schedule_delayed_work(&m_work, msecs_to_jiffies(1000));
+	/*schedule_delayed_work(&m_work, msecs_to_jiffies(1000));*/
 }
 void moisture_detection_init(void)
 {
-    hwlog_info(" %s++!\n", __func__);
-
-
+    /*hwlog_info(" %s++!\n", __func__);
     INIT_DELAYED_WORK(&m_work, monitor_work);
     schedule_delayed_work(&m_work, msecs_to_jiffies(0));
-    hwlog_info(" %s--!\n", __func__);
+    hwlog_info(" %s--!\n", __func__);*/
 }
 

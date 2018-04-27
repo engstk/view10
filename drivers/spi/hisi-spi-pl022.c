@@ -165,6 +165,12 @@ static int hisi_spi_get_pins_data(struct pl022 *pl022, struct device *dev)
 	if (IS_ERR(pl022->pins_sleep))
 		dev_dbg(dev, "could not get sleep pinstate\n");
 
+	pl022->pins.p = pl022->pinctrl;
+	pl022->pins.default_state = pl022->pins_default;
+	pl022->pins.idle_state = pl022->pins_idle;
+	pl022->pins.sleep_state = pl022->pins_sleep;
+	dev->pins = &pl022->pins;
+
 	return 0;
 }
 

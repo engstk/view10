@@ -52,9 +52,9 @@ static unsigned int rilim = 124;	/*this should be configured in dts file based o
 static unsigned int adc_channel_iin = 10;	/*this should be configured in dts file based on the real adc channel number*/
 static unsigned int adc_channel_vbat_sys = 14;
 static u32 is_board_type;	/*0:sft 1:udp 2:asic */
-static bool first_charging_done = FALSE;	/* has ever reach charge done state after connect charger. */
-static bool charging_again_after_charging_done = FALSE;
 static int ico_current_mode;
+static int iin_set = IINLIM_MIN_100;
+
 /**********************************************************
 *  Function:       bq25892_write_block
 *  Discription:    register write block interface
@@ -429,7 +429,7 @@ static ssize_t bq25892_sysfs_store(struct device *dev,
 		info->reg = info2->reg;
 	}
 	if (!strncmp(("reg_addr"), attr->attr.name, strlen("reg_addr"))) {
-		if (v < (u8) BQ25892_REG_TOTAL_NUM && v >= (u8) 0x00) {
+		if (v < (u8) BQ25892_REG_TOTAL_NUM) {
 			info->reg = v;
 			return count;
 		} else {
@@ -621,8 +621,8 @@ static int bq25892_chip_init(void)
 	/* do not init input current 500 ma(REG00) to support lpt without battery  */
 	/*02 enable Start 1s Continuous Conversion ,others as default */
 	ret |= bq25892_write_byte(BQ25892_REG_02, 0x1D);	/*adc off*/
-	/*03 WD_RST 1,CHG_CONFIG 1,SYS_MIN 3.5 */
-	ret |= bq25892_write_byte(BQ25892_REG_03, 0x5A);
+	/*03 WD_RST 1,CHG_CONFIG 0,SYS_MIN 3.5 */
+	ret |= bq25892_write_byte(BQ25892_REG_03, 0x4A);
 	/*04 Fast Charge Current Limit 2048mA */
 	ret |= bq25892_write_byte(BQ25892_REG_04, 0x20);
 	/*05 Precharge Current Limit 256mA,Termination Current Limit 256mA */
@@ -694,26 +694,8 @@ static int bq25892_check_input_current_exit_PFM_when_CD(unsigned int limit_defau
 	if (((reg14 & BQ25892_REG_14_REG_PN_MASK) == BQ25892_REG_14_REG_PN_IS_25892) &&	/* bq25892 */
 	    (limit_default > IINLIM_FOR_BQ25892_EXIT_PFM)) {
 		if ((reg0B & BQ25892_REG_0B_CHRG_STAT_MASK) == BQ25892_CHGR_STAT_CHARGE_DONE) {	/* charging done */
-			if (FALSE == first_charging_done) {	/* first time charging done */
-				first_charging_done = TRUE;
-				limit_default = IINLIM_FOR_BQ25892_EXIT_PFM;
-			} else if (FALSE == charging_again_after_charging_done) {	/* charging done and there is NOT second charging */
-				limit_default = IINLIM_FOR_BQ25892_EXIT_PFM;
-			} else {
-				/* charging done but thers is second charging, keep iinlim as upper layer suggests */
-			}
-
-			if (IINLIM_FOR_BQ25892_EXIT_PFM == limit_default) {
-				hwlog_err
-				    ("this is bq25892 and CD, 1stCD(%d), 2nd FC(%d), limit input current to %d to force exit PFM\n",
-				     first_charging_done,
-				     charging_again_after_charging_done,
-				     limit_default);
-			}
-		} else if (TRUE == first_charging_done) {	/* fast charging,  is it ever charging done? */
-			charging_again_after_charging_done = TRUE;	/* keep iinlim as upper layer suggests */
-		} else {
-			/* keep iinlim as upper layer suggests, as normal charging before first charging done */
+			limit_default = IINLIM_FOR_BQ25892_EXIT_PFM;
+			hwlog_err("%s, limit input current to %dmA to force exit PFM\n", __func__, limit_default);
 		}
 	}
 
@@ -726,13 +708,12 @@ static int bq25892_check_input_current_exit_PFM_when_CD(unsigned int limit_defau
 *  Parameters:   value:input current value
 *  return value:  0-sucess or others-fail
 **********************************************************/
-
 static int bq25892_set_input_current(int value)
 {
 	unsigned int limit_current = 0;
 	u8 Iin_limit = 0;
 	limit_current = value;
-	if (limit_current <= IINLIM_MIN_100) {
+	if (limit_current < IINLIM_MIN_100) {
 		hwlog_info("input current %dmA is out of range:%dmA!!", value,
 			   IINLIM_MIN_100);
 		limit_current = IINLIM_MIN_100;
@@ -748,15 +729,21 @@ static int bq25892_set_input_current(int value)
 
 	/* in order to avoid smpl because bq25892 bug,
 	   set iinlim to 400mA if under charging done and chip ic is bq25892, OTHERWISE keep it change */
-	limit_current =
-	    bq25892_check_input_current_exit_PFM_when_CD(limit_current);
+	if (!strstr(saved_command_line, "androidboot.mode=charger")) {
+		limit_current =
+			bq25892_check_input_current_exit_PFM_when_CD(limit_current);
+	}
 
 	hwlog_debug("input current is set %dmA\n", limit_current);
 	Iin_limit = (limit_current - IINLIM_MIN_100) / IINLIM_STEP_50;
+	iin_set = Iin_limit * IINLIM_STEP_50 + IINLIM_MIN_100;
 	return bq25892_write_mask(BQ25892_REG_00, BQ25892_REG_00_IINLIM_MASK,
 				  BQ25892_REG_00_IINLIM_SHIFT, Iin_limit);
 }
-
+static int bq25892_get_input_current_set(void)
+{
+	return iin_set;
+}
 /**********************************************************
 *  Function:       bq25892_set_charge_current
 *  Discription:    set the charge current in charging process
@@ -1146,14 +1133,22 @@ static int bq25892_dump_register(char *reg_value)
 	u8 reg[BQ25892_REG_TOTAL_NUM] = { 0 };
 	char buff[26] = { 0 };
 	int i = 0;
+	int vbus = 0;
+	int ret = 0;
 
 	memset(reg_value, 0, CHARGELOG_SIZE);
-	snprintf(buff, 26, "%-8.2d", bq25892_get_ilim());
+	snprintf(buff, BQ25892_REG_HEAD_LEN_MAX, "%-8.2d", bq25892_get_ilim());
+	strncat(reg_value, buff, strlen(buff));
+	ret = bq25892_get_vbus_mv((unsigned int *)&vbus);
+	if (ret) {
+		hwlog_err("%s bq25892_get_vbus_mv failed!\n", __func__);
+	}
+	snprintf(buff, BQ25892_REG_HEAD_LEN_MAX, "%-8.2d", vbus);
 	strncat(reg_value, buff, strlen(buff));
 	for (i = 0; i < BQ25892_REG_TOTAL_NUM; i++) {
 		bq25892_read_byte(i, &reg[i]);
 		bq25892_read_byte(i, &reg[i]);
-		snprintf(buff, 26, "0x%-8.2x", reg[i]);
+		snprintf(buff, BQ25892_REG_HEAD_LEN_MAX, "0x%-8x", reg[i]);
 		strncat(reg_value, buff, strlen(buff));
 	}
 	return 0;
@@ -1167,14 +1162,16 @@ static int bq25892_dump_register(char *reg_value)
 **********************************************************/
 static int bq25892_get_register_head(char *reg_head)
 {
-	char buff[26] = { 0 };
+	char buff[BQ25892_REG_HEAD_LEN_MAX] = { 0 };
 	int i = 0;
 
 	memset(reg_head, 0, CHARGELOG_SIZE);
-	snprintf(buff, 26, "Ibus    ");
+	snprintf(buff, BQ25892_REG_HEAD_LEN_MAX, "Ibus    ");
+	strncat(reg_head, buff, strlen(buff));
+	snprintf(buff, BQ25892_REG_HEAD_LEN_MAX, "Vbus    ");
 	strncat(reg_head, buff, strlen(buff));
 	for (i = 0; i < BQ25892_REG_TOTAL_NUM; i++) {
-		snprintf(buff, 26, "Reg[%d] ", i);
+		snprintf(buff, BQ25892_REG_HEAD_LEN_MAX, "Reg[0x%2x] ", i);
 		strncat(reg_head, buff, strlen(buff));
 	}
 	return 0;
@@ -1362,8 +1359,8 @@ static int bq25892_fcp_chip_init(void)
 	/* do not init input current 500 ma(REG00) to support lpt without battery  */
 	/*02 enable Start 1s Continuous Conversion ,others as default */
 	ret |= bq25892_write_byte(BQ25892_REG_02, 0x1D);	/*adc off*/
-	/*03 WD_RST 1,CHG_CONFIG 1,SYS_MIN 3.5 */
-	ret |= bq25892_write_byte(BQ25892_REG_03, 0x5A);
+	/*03 WD_RST 1,CHG_CONFIG 0,SYS_MIN 3.5 */
+	ret |= bq25892_write_byte(BQ25892_REG_03, 0x4A);
 	/*04 Fast Charge Current Limit 2048mA */
 	ret |= bq25892_write_byte(BQ25892_REG_04, 0x20);
 	/*05 Precharge Current Limit 256mA,Termination Current Limit 256mA */
@@ -1424,10 +1421,6 @@ static int bq25892_stop_charge_config(void)
 {
 	int ret = 0;
 
-	/* reset to prepare for next charger plug */
-	first_charging_done = FALSE;
-	charging_again_after_charging_done = FALSE;
-
 	/* as vindpm of bq25892 won't be reset after watchdog timer out,if vindpm is higher than 5v ,IC will not supply power with USB/AC  */
 	ret = bq25892_set_dpm_voltage(CHARGE_VOLTAGE_4520_MV);
 	return ret;
@@ -1475,6 +1468,7 @@ static struct charge_device_ops bq25892_ops = {
 	.soft_vbatt_ovp_protect = NULL,
 	.rboost_buck_limit = NULL,
 	.get_charge_current = NULL,
+	.get_iin_set = bq25892_get_input_current_set,
 };
 
 /**********************************************************
@@ -1734,25 +1728,6 @@ static int bq25892_remove(struct i2c_client *client)
 	}
 	return 0;
 }
-
-#ifdef CONFIG_LLT_TEST
-struct bq25892_static_ops bq25892_llt_ops = {
-	.bq25892_write_mask = bq25892_write_mask,
-	.bq25892_write_byte = bq25892_write_byte,
-	.bq25892_read_byte = bq25892_read_byte,
-	.bq25892_set_bat_comp = bq25892_set_bat_comp,
-	.bq25892_set_vclamp = bq25892_set_vclamp,
-	.bq25892_set_input_current = bq25892_set_input_current,
-	.bq25892_set_charge_current = bq25892_set_charge_current,
-	.bq25892_set_terminal_voltage = bq25892_set_terminal_voltage,
-	.bq25892_set_dpm_voltage = bq25892_set_dpm_voltage,
-	.bq25892_set_terminal_current = bq25892_set_terminal_current,
-	.bq25892_set_otg_current = bq25892_set_otg_current,
-	.bq25892_get_vbus_mv = bq25892_get_vbus_mv,
-	.bq25892_set_watchdog_timer = bq25892_set_watchdog_timer,
-	.bq25892_set_charger_hiz = bq25892_set_charger_hiz,
-};
-#endif
 
 MODULE_DEVICE_TABLE(i2c, bq25892);
 static struct of_device_id bq25892_of_match[] = {

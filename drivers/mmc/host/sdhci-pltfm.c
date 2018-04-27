@@ -167,6 +167,10 @@ void sdhci_get_of_property(struct platform_device *pdev)
 
 #ifdef CONFIG_HISI_COUL
 		batterystate_exist = is_hisi_battery_exist();
+#ifdef CONFIG_HLTHERM_RUNTEST
+		batterystate_exist = 1;
+		dev_info(&pdev->dev, "CONFIG_HLTHERM_RUNTEST is enable, set the batterystate_exist to 1\n");
+#endif
 #else 
 		batterystate_exist = 0;
 #endif	

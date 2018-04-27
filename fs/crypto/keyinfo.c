@@ -363,6 +363,13 @@ int fscrypt_get_encryption_info(struct inode *inode)
 	int res;
 	int has_crc = 0;
 	int verify = 0;
+	int flag = 0;
+
+	if (inode->i_sb->s_cop && inode->i_sb->s_cop->get_keyinfo) {
+		res = inode->i_sb->s_cop->get_keyinfo(inode, NULL, &flag);
+		if (flag)
+			return res;
+	}
 
 	if (inode->i_crypt_info)
 		return 0;

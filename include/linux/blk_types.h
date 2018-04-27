@@ -33,7 +33,7 @@ enum bio_process_stage_enum {
 enum req_process_stage_enum {
 	REQ_PROC_STAGE_INIT_FROM_BIO = 0,
 	REQ_PROC_STAGE_START,
-	REQ_PROC_STAGE_COMPLETE,
+	REQ_PROC_STAGE_UPDATE,
 	REQ_PROC_STAGE_FREE,
 	REQ_PROC_STAGE_MQ_ADDTO_PLUGLIST,
 	REQ_PROC_STAGE_MQ_FLUSH_PLUGLIST,
@@ -123,10 +123,14 @@ struct bio {
 	struct list_head counted_list_node;
 #endif
 #ifdef CONFIG_HISI_IO_LATENCY_TRACE
+#ifdef CONFIG_HISI_IO_LATENCY_DEBUG
+	bool bio_latency_test;
+#endif
 	unsigned char from_submit_bio_flag;
 	ktime_t bio_stage_ktime[BIO_PROC_STAGE_MAX];
 	struct timer_list bio_latency_check_timer;
 	void *io_req;
+	volatile int bio_latency_timer_executing;
 	struct block_device	*bi_bdev_part;
 	void *dispatch_task;
 	pid_t task_pid;
@@ -212,6 +216,9 @@ struct bio {
 
 #endif /* CONFIG_BLOCK */
 
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_HOTCOLD
+#define HOTCOLD_ID_BITS		(3)
+#endif
 /*
  * Request flags.  For use in the cmd_flags field of struct request, and in
  * bi_rw of struct bio.  Note that some flags are only valid in either one.
@@ -269,6 +276,10 @@ enum rq_flag_bits {
 	__REQ_MQ_INFLIGHT,	/* track inflight for MQ */
 	__REQ_NO_TIMEOUT,	/* requests may never expire */
 	__REQ_URGENT,		/* urgent request */
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_HOTCOLD
+	__REQ_HOTCOLD_ID,
+	__REQ_HOTCOLD_ID_N = __REQ_HOTCOLD_ID + HOTCOLD_ID_BITS - 1,
+#endif
 	__REQ_NR_BITS,		/* stops here */
 };
 
@@ -288,12 +299,41 @@ enum rq_flag_bits {
 #define REQ_INTEGRITY		(1ULL << __REQ_INTEGRITY)
 #define REQ_URGENT		(1ULL << __REQ_URGENT)
 
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_HOTCOLD
+#define HOTCOLD_ID_MASK					((1 << HOTCOLD_ID_BITS) - 1)
+#define REQ_HOTCOLD_ID(id)					((id > HOTCOLD_ID_MASK) ? 0 : ((((unsigned long int)(id)) & HOTCOLD_ID_MASK) << __REQ_HOTCOLD_ID))
+#define HOTCOLD_ID(flag)				(((unsigned char)(((unsigned long long int)(flag)) >> __REQ_HOTCOLD_ID)) & HOTCOLD_ID_MASK)
+#define REQ_HOTCOLD_MASK				(((1ULL << HOTCOLD_ID_BITS) - 1) << __REQ_HOTCOLD_ID)
+#else
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD
+#define REQ_HOTCOLD_MASK				0
+#endif
+#endif
+
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_HOTCOLD
+#define bio_set_streamid(bio, id) do { \
+	(bio)->bi_rw &= ~REQ_HOTCOLD_ID(HOTCOLD_ID_MASK); \
+	(bio)->bi_rw |= REQ_HOTCOLD_ID(id); \
+} while (0)
+#define bio_get_streamid(bio) (HOTCOLD_ID((bio)->bi_rw))
+#endif
+
 #define REQ_FAILFAST_MASK \
 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD
+#define REQ_COMMON_MASK \
+	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
+	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
+	 REQ_SECURE | REQ_INTEGRITY | REQ_BG | REQ_FG | \
+	 REQ_HOTCOLD_MASK)
+#else
 #define REQ_COMMON_MASK \
 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_SYNC | REQ_META | REQ_PRIO | \
 	 REQ_DISCARD | REQ_WRITE_SAME | REQ_NOIDLE | REQ_FLUSH | REQ_FUA | \
 	 REQ_SECURE | REQ_INTEGRITY | REQ_BG | REQ_FG)
+#endif
+
 #define REQ_CLONE_MASK		REQ_COMMON_MASK
 
 #define BIO_NO_ADVANCE_ITER_MASK	(REQ_DISCARD|REQ_WRITE_SAME)

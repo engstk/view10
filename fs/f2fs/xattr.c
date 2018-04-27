@@ -805,7 +805,7 @@ static int __f2fs_setxattr(struct inode *inode, int index,
 	if (index == F2FS_XATTR_INDEX_ENCRYPTION &&
 			!strcmp(name, F2FS_XATTR_NAME_ENCRYPTION_CONTEXT)) {
 		f2fs_set_encrypted_inode(inode);
-		if (test_opt(sbi, INLINE_ENCRYPT))
+		if (test_hw_opt(sbi, INLINE_ENCRYPT))
 			f2fs_set_inline_encrypted_inode(inode);
 	}
 	f2fs_mark_inode_dirty_sync(inode, true);

@@ -12,7 +12,7 @@
 #define true  1
 
 #define TX_NUM_MAX			30
-#define RX_NUM_MAX			30
+#define RX_NUM_MAX			40
 #define DEVICE_MODE_ADDR		0x00
 #define DEVICE_MODE_WORK		0x00
 #define DEVICE_MODE_FACTORY		0x40
@@ -25,7 +25,7 @@
 
 #define BYTES_PER_TIME			128
 #define MAX_RETRY_TIMES			3
-
+#define TP_TEST_FAILED_REASON_LEN			20
 #define FTS_RESULT_CODE_LEN		4
 #define FTS_TEST_NAME_LEN		16
 #define FTS_STATISTICS_DATA_LEN		32
@@ -51,9 +51,12 @@
 #define	TEST_SUCCESS   0
 #define	SOFTWARE_REASON  1
 #define	PANEL_REASON   2
+#define SHORT_CIRCUIT_COUNT 3
 
 #define FTS_REG_VALUE_0X20		0x20
 #define FTS_REG_VALUE_0X21		0x21
+#define FTS_REG_VALUE_0X31		0x31
+#define FTS_REG_VALUE_0X32		0x32
 #define FTS_REG_VALUE_0X0E	0x0e
 #define FTS_REG_VALUE_0XA0	0xa0
 #define FTS_WRITE_VALUE_0X03			0x03
@@ -69,6 +72,7 @@
 #define FTS_INIT_VALUE					0
 #define FTS_8716_VALUE					2
 #define FTS_8716U_VALUE					6
+#define FTS_8719_VALUE					11
 #define OPEN_ROW_COLUMN_TEST		1
 #define OPEN_LCD_NOISE_DATA_TEST	1
 #define CAP_TEST_BUF_SIZE		100
@@ -102,7 +106,8 @@ struct focal_test_params {
 	int lcd_noise_data;
 	int in_csv_file;
 	int point_by_point_judge;
-
+	int opentest_charge_time;
+	int opentest_reset_time;
 	u8 channel_x_num;
 	u8 channel_y_num;
 	u8 key_num;
@@ -114,6 +119,10 @@ struct focal_test_result {
 	size_t size;
 	char test_name[FTS_TEST_NAME_LEN];
 	char result_code[FTS_RESULT_CODE_LEN];
+	char tptestfailedreason[TP_TEST_FAILED_REASON_LEN];
+	char statistics_data[FTS_STATISTICS_DATA_LEN];
+	u8 typeindex;
+	char testresult;
 };
 
 

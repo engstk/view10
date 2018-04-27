@@ -22,6 +22,29 @@
 #define MAX_PHONE_COLOR_NUM  15
 #define CYPRESS_CHIPS		2
 #define SENSOR_PLATFORM_EXTEND_DATA_SIZE    50
+#define SENSOR_PLATFORM_EXTEND_ALS_DATA_SIZE    60
+#define BH1745_MAX_ThRESHOLD_NUM    23
+#define BH1745_MIN_ThRESHOLD_NUM    24
+
+#define APDS9251_MAX_ThRESHOLD_NUM    17
+#define APDS9251_MIN_ThRESHOLD_NUM    18
+
+#define TMD3725_MAX_ThRESHOLD_NUM    27
+#define TMD3725_MIN_ThRESHOLD_NUM    28
+
+#define LTR582_MAX_ThRESHOLD_NUM    24
+#define LTR582_MIN_ThRESHOLD_NUM    25
+
+#define LTR578_APDS9922_MAX_ThRESHOLD_NUM    8
+#define LTR578_APDS9922_MIN_ThRESHOLD_NUM    9
+
+#define RPR531_MAX_ThRESHOLD_NUM    14
+#define RPR531_MIN_ThRESHOLD_NUM    15
+
+#define TMD2745_MAX_ThRESHOLD_NUM    8
+#define TMD2745_MIN_ThRESHOLD_NUM    9
+
+
 
 typedef uint16_t GPIO_NUM_TYPE;
 
@@ -39,6 +62,8 @@ typedef enum {
 	KEY,
 	MAGN_BRACKET,
 	RPC,
+	VIBRATOR,
+	FINGERPRINT_UD,
 	SENSOR_MAX
 }SENSOR_DETECT_LIST;
 
@@ -75,6 +100,7 @@ struct g_sensor_platform_data {
 	uint8_t negate_x;
 	uint8_t negate_y;
 	uint8_t negate_z;
+	uint8_t used_int_pin;
 	GPIO_NUM_TYPE gpio_int1;
 	GPIO_NUM_TYPE gpio_int2;
 	GPIO_NUM_TYPE gpio_int2_sh;
@@ -85,7 +111,12 @@ struct g_sensor_platform_data {
 	int sensitivity_x;
 	int sensitivity_y;
 	int sensitivity_z;
+	uint8_t device_type;
 	uint8_t calibrate_style;
+	uint8_t calibrate_way;
+	uint16_t x_calibrate_thredhold;
+	uint16_t y_calibrate_thredhold;
+	uint16_t z_calibrate_thredhold;
 	uint8_t wakeup_duration;
 	uint8_t g_sensor_extend_data[SENSOR_PLATFORM_EXTEND_DATA_SIZE];
 };
@@ -106,6 +137,9 @@ struct gyro_platform_data {
 	uint16_t poll_interval;
 	uint8_t fac_fix_offset_Y;
 	uint8_t still_calibrate_threshold;
+	uint8_t calibrate_way;
+	uint16_t calibrate_thredhold;
+	uint16_t gyro_range;
 	uint8_t gyro_extend_data[SENSOR_PLATFORM_EXTEND_DATA_SIZE];
 };
 
@@ -135,17 +169,17 @@ struct als_platform_data {
 	uint8_t again;
 	uint16_t poll_interval;
 	uint16_t init_time;
-	int threshold_value;
-	int GA1;
-	int GA2;
-	int GA3;
-	int COE_B;
-	int COE_C;
-	int COE_D;
+	s16 threshold_value;
+	s16 GA1;
+	s16 GA2;
+	s16 GA3;
+	s16 COE_B;
+	s16 COE_C;
+	s16 COE_D;
 	uint8_t als_phone_type;
 	uint8_t als_phone_version;
 	uint8_t als_phone_tp_colour;
-	uint8_t als_extend_data[SENSOR_PLATFORM_EXTEND_DATA_SIZE];
+	uint8_t als_extend_data[SENSOR_PLATFORM_EXTEND_ALS_DATA_SIZE];
 };
 
 struct ps_platform_data {
@@ -234,6 +268,7 @@ struct cypress_sar_data {
 
 struct semteck_sar_data {
 	uint16_t threshold_to_ap;
+	uint16_t phone_type;
 	uint16_t threshold_to_modem[8];
 	uint32_t init_reg_val[17];
 	uint8_t ph;
@@ -301,7 +336,9 @@ struct fingerprint_platform_data {
 	GPIO_NUM_TYPE gpio_irq_sh;
 	GPIO_NUM_TYPE gpio_cs;
 	GPIO_NUM_TYPE gpio_reset;
+	GPIO_NUM_TYPE gpio_reset_sh;
 	uint16_t poll_interval;
+	uint16_t tp_hover_support;
 };
 
 struct key_platform_data {
@@ -313,6 +350,24 @@ struct key_platform_data {
 	uint8_t reserve[16];
 };
 
+#define HUB_LRA_RATED_VOLTAGE               0x34
+#define HUB_LRA_OVERDRIVE_CLAMP_VOLTAGE     0x76
+#define HUB_REAL_TIME_PLAYBACK_STRENGTH 0x66
+#define HUB_MAX_TIMEOUT 10000
+#define VIB_FAC_LRALVILTAGE 0x48
+
+struct vibrator_paltform_data{
+	struct sensor_combo_cfg cfg;
+	int gpio_enable;
+	int gpio_pwm;
+	int max_timeout_ms;
+	int reduce_timeout_ms;
+	int support_amplitude_control;
+	char lra_rated_voltage;
+	char lra_overdriver_voltage;
+	char lra_rtp_strength;
+	char skip_lra_autocal;
+};
 struct magn_bracket_platform_data {
 	struct sensor_combo_cfg cfg;
 	int mag_x_change_lower;

@@ -421,7 +421,7 @@ struct semteck_sar_data {
 	uint16_t threshold_to_modem[8];
 	uint32_t init_reg_val[17];
 	uint8_t ph;
-	uint16_t calibrate_thred[2];
+	uint16_t calibrate_thred[4];
 };
 union sar_data {
 	struct cypress_sar_data cypress_data;
@@ -437,12 +437,12 @@ union sar_data {
 */
 struct sar_platform_data {
 	struct sensor_combo_cfg cfg;
-	uint8_t gpio_int;
 	uint16_t poll_interval;
 	uint16_t flag_for_threshold_config;
 	int  calibrate_type;
 	int  calibrate_delay;
 	union sar_data	sar_datas;
+	uint8_t  stage_num;
 };
 
 struct sar_cap_proc_calibrate_data {

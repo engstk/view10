@@ -77,28 +77,28 @@ extern uint32_t hisi_fb_msg_level;
  */
 #define HISI_FB_EMERG(msg, ...)    \
 	do { if (hisi_fb_msg_level > 0)  \
-		printk(KERN_EMERG "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_EMERG "[hisifb E]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 #define HISI_FB_ALERT(msg, ...)    \
 	do { if (hisi_fb_msg_level > 1)  \
-		printk(KERN_ALERT "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_ALERT "[hisifb A]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 #define HISI_FB_CRIT(msg, ...)    \
 	do { if (hisi_fb_msg_level > 2)  \
-		printk(KERN_CRIT "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_CRIT "[hisifb C]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 #define HISI_FB_ERR(msg, ...)    \
 	do { if (hisi_fb_msg_level > 3)  \
-		printk(KERN_ERR "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_ERR "[hisifb E]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 #define HISI_FB_WARNING(msg, ...)    \
 	do { if (hisi_fb_msg_level > 4)  \
-		printk(KERN_WARNING "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_WARNING "[hisifb W]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 #define HISI_FB_NOTICE(msg, ...)    \
 	do { if (hisi_fb_msg_level > 5)  \
-		printk(KERN_NOTICE "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_NOTICE "[hisifb N]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 #define HISI_FB_INFO(msg, ...)    \
 	do { if (hisi_fb_msg_level > 6)  \
-		printk(KERN_INFO "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_INFO "[hisifb I]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 #define HISI_FB_DEBUG(msg, ...)    \
 	do { if (hisi_fb_msg_level > 7)  \
-		printk(KERN_INFO "[hisifb]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
+		printk(KERN_INFO "[hisifb D]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
 
 //printk(KERN_DEBUG "[hisifb]%s: "msg, __func__, ## __VA_ARGS__);
 

@@ -1,21 +1,4 @@
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : TafAppCall.h
-  版 本 号   : 初稿
-  作    者   : y00245242
-  生成日期   : 2015年10月22日
-  最近修改   :
-  功能描述   : AT/APP与CALL接口头文件定义
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2015年10月22日
-    作    者   : y00245242
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 #ifndef __TAF_APP_CALL_H__
 #define __TAF_APP_CALL_H__
@@ -47,13 +30,7 @@ extern "C"{
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : TAF_CCA_MSG_TYPE_ENUM_UINT32
- 枚举说明  : APP到TAF的消息类型定义
- 1.日    期   : 2015年10月22日
-   作    者   : y00245242
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_CCA_MSG_TYPE_ENUM
 {
     ID_TAF_CALL_MSG_TYPE_BEGIN                              = TAF_CALL_APP_MSG_START_BASE,
@@ -109,13 +86,7 @@ enum TAF_CCA_MSG_TYPE_ENUM
 };
 typedef VOS_UINT32 TAF_CCA_MSG_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_REMOTE_CTRL_APP_TYPE_ENUM_UINT8
-结构说明    : ECC远程控制类型枚举值
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_REMOTE_CTRL_APP_TYPE_ENUM
 {
     TAF_CALL_REMOTE_CTRL_SEC_INFO_ERASE = 0,
@@ -126,13 +97,7 @@ enum TAF_CALL_REMOTE_CTRL_APP_TYPE_ENUM
 };
 typedef VOS_UINT32   TAF_CALL_REMOTE_CTRL_APP_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_ECC_SRV_CAP_CFG_RESULT_ENUM_UINT32
-结构说明    : ECC远程控制类型枚举值
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_APP_ECC_SRV_CAP_CFG_RESULT_ENUM
 {
     TAF_CALL_APP_ECC_SRV_CAP_CFG_RESULT_SUCC = 0,
@@ -143,13 +108,7 @@ enum TAF_CALL_APP_ECC_SRV_CAP_CFG_RESULT_ENUM
 };
 typedef VOS_UINT32   TAF_CALL_APP_ECC_SRV_CAP_CFG_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_REMOTE_CTRL_APP_RESULT_ENUM_UINT8
-结构说明    : ECC远程控制类型枚举值
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_REMOTE_CTRL_APP_RESULT_ENUM
 {
     TAF_CALL_REMOTE_CTRL_APP_SUCC = 0,
@@ -159,13 +118,7 @@ enum TAF_CALL_REMOTE_CTRL_APP_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_CALL_REMOTE_CTRL_APP_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_REMOTE_CTRL_OPER_RESULT_ENUM_UINT32
-结构说明    : ECC远程控制操作结果类型
-  1.日    期   : 2015年10月26日
-    作    者   : y00245242
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_REMOTE_CTRL_OPER_RESULT_ENUM
 {
     TAF_CALL_SEND_RESULT_SUCC               = 0x00,
@@ -182,13 +135,7 @@ enum TAF_CALL_REMOTE_CTRL_OPER_RESULT_ENUM
 };
 typedef VOS_UINT32 TAF_CALL_REMOTE_CTRL_OPER_RESULT_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_ECC_SRV_CAP_ENUM_UINT8
-结构说明    : ECC平台能力枚举
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_APP_ECC_SRV_CAP_ENUM
 {
     TAF_CALL_APP_ECC_SRV_CAP_DISABLE = 0,
@@ -198,13 +145,7 @@ enum TAF_CALL_APP_ECC_SRV_CAP_ENUM
     TAF_CALL_APP_ECC_SRV_CAP_BUTT
 };
 typedef VOS_UINT32   TAF_CALL_APP_ECC_SRV_CAP_ENUM_UINT32;
-/*****************************************************************************
-结构名      : TAF_CALL_APP_ECC_SRV_STATUS_ENUM_UINT8
-结构说明    : ECC平台能力枚举
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_APP_ECC_SRV_STATUS_ENUM
 {
     TAF_CALL_APP_ECC_SRV_STATUS_CLOSE = 0,
@@ -214,13 +155,7 @@ enum TAF_CALL_APP_ECC_SRV_STATUS_ENUM
 };
 typedef VOS_UINT32   TAF_CALL_APP_ECC_SRV_STATUS_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_SET_EC_TEST_MODE_ENUM_UINT8
-结构说明    : ECC测试模式状态值
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_APP_SET_EC_TEST_MODE_ENUM
 {
     TAF_CALL_APP_SET_EC_TEST_MODE_DISABLE = 0,
@@ -230,13 +165,7 @@ enum TAF_CALL_APP_SET_EC_TEST_MODE_ENUM
 };
 typedef VOS_UINT32   TAF_CALL_APP_SET_EC_TEST_MODE_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_ENCRYPT_VOICE_STATUS_ENUM_UINT32
-结构说明    : ecc密话建立结果
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_APP_ENCRYPT_VOICE_STATUS_ENUM
 {
     TAF_CALL_APP_ENCRYPT_VOICE_SUCC                     = 0x0000,
@@ -295,13 +224,7 @@ enum TAF_CALL_APP_ENCRYPT_VOICE_STATUS_ENUM
 };
 typedef VOS_UINT32  TAF_CALL_APP_ENCRYPT_VOICE_STATUS_ENUM_UINT32;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_ENCRYPT_VOICE_TYPE_ENUM_UINT32
-结构说明    : ECC呼叫模式
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_APP_ENCRYPT_VOICE_TYPE_ENUM
 {
     TAF_CALL_APP_ENCRYPT_VOICE_TYPE_MO_MUNAUL_MODE = 0,
@@ -313,13 +236,7 @@ enum TAF_CALL_APP_ENCRYPT_VOICE_TYPE_ENUM
 };
 typedef VOS_UINT32 TAF_CALL_APP_ENCRYPT_VOICE_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_PRIVACY_MODE_ENUM
- 枚举说明  : Privary mode
- 1.日    期   : 2014年09月04日
-   作    者   : l60609
-   修改内容   : 新增
-*****************************************************************************/
+
 enum TAF_CALL_PRIVACY_MODE_ENUM
 {
     TAF_CALL_PRIVACY_MODE_PUBLIC        = 0x00,
@@ -330,13 +247,7 @@ enum TAF_CALL_PRIVACY_MODE_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_PRIVACY_MODE_ENUM_UINT8;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_RESULT_TYPE_ENUM
-结构说明    : ECC远程控制类型枚举值
-  1.日    期   : 2015年12月22日
-    作    者   : y00245242
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_APP_RESULT_TYPE_ENUM
 {
     TAF_CALL_APP_RESULT_TYPE_SUCCESS,
@@ -359,15 +270,7 @@ typedef struct
     VOS_UINT8                                               aucReserved[3];
 } TAF_CALL_APP_EC_RANDOM_DATA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CCA_CTRL_STRU
- 结构说明  : CCA控制结构体
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : y00245242
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulModuleId;         /* 填入PID */
@@ -736,17 +639,13 @@ typedef struct
     TAF_CCA_MSG_TYPE_ENUM_UINT32                            enMsgName;             /*_H2ASN_Skip*/
     TAF_CCA_CTRL_STRU                                       stCtrl;
     TAF_CALL_PRIVACY_MODE_ENUM_UINT8                        enPrivacyMode;         /* 当前privacy mode设置 */
-    VOS_UINT8                                               aucReserved[2];
+    VOS_UINT8                                               aucReserved[3];
     TAF_CALL_CALL_PRIVACY_MODE_INFO_STRU                    stCallVoicePrivacyInfo; /* 当前呼叫的privacy mode信息 */
 } TAF_CALL_APP_PRIVACY_MODE_IND_STRU;
 
-/*********************************************************************
- 结构名      : TAF_CALL_APP_CNAP_INFO_IND_STRU
- 结构说明    : 主叫名称信息CNAP主动上报结构体
- 1.日    期  : 2016年11月10日
-   作    者  : l00198894
-   修改内容  : 新增枚举
-*********************************************************************/
+typedef  TAF_CALL_APP_PRIVACY_MODE_IND_STRU TAF_CALL_PRIVACY_MODE_IND_STRU;
+
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -755,13 +654,7 @@ typedef struct
     TAF_CALL_CNAP_STRU                  stNameIndicator;
 } TAF_CALL_APP_CNAP_INFO_IND_STRU;
 
-/*********************************************************************
- 结构名      : TAF_CALL_APP_CNAP_QRY_REQ_STRU
- 结构说明    : 主叫名称信息查询请求结构体
- 1.日    期  : 2016年11月10日
-   作    者  : l00198894
-   修改内容  : 新增枚举
-*********************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -769,13 +662,7 @@ typedef struct
     TAF_CCA_CTRL_STRU                       stCtrl;
 } TAF_CALL_APP_CNAP_QRY_REQ_STRU;
 
-/*********************************************************************
- 结构名      : TAF_CALL_APP_CNAP_QRY_CNF_STRU
- 结构说明    : 主叫名称信息查询结果回复结构体
- 1.日    期  : 2016年11月10日
-   作    者  : l00198894
-   修改内容  : 新增枚举
-*********************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER

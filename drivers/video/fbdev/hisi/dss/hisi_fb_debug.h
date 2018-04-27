@@ -82,6 +82,7 @@
 extern int g_debug_ldi_underflow;
 extern int g_debug_ldi_underflow_clear;
 
+extern int g_debug_panel_mode_switch;
 extern int g_debug_mmu_error;
 extern int g_debug_set_reg_val;
 extern int g_debug_online_vsync;
@@ -106,23 +107,26 @@ extern int g_debug_ovl_mediacommon_composer;
 extern int g_debug_ovl_cmdlist;
 extern int g_dump_cmdlist_content;
 extern int g_enable_ovl_cmdlist_online;
-extern int g_enable_l3_cache;
+extern int g_video_idle_l3cache_ctrl;
+extern int g_enable_video_idle;
 extern int g_smmu_global_bypass;
 extern int g_enable_ovl_cmdlist_offline;
 extern int g_rdma_stretch_threshold;
 extern int g_enable_dirty_region_updt;
 extern int g_debug_dirty_region_updt;
-extern int g_enable_crc_debug;
+extern int g_enable_mmbuf_debug;
 extern int g_ldi_data_gate_en;
 extern int g_debug_ovl_credit_step;
 extern int g_debug_layerbuf_sync;
+extern int g_debug_fence_timeline;
 extern int g_enable_dss_idle;
 extern int g_dss_effect_sharpness1D_en;
 extern int g_dss_effect_sharpness2D_en;
 extern int g_dss_effect_acm_ce_en;
 extern int g_debug_dump_mmbuf;
 extern uint32_t g_mmbuf_addr_test;
-#if defined(CONFIG_HISI_FB_3660) || defined (CONFIG_HISI_FB_970)
+extern uint32_t g_dump_sensorhub_aod_hwlock;
+#if defined(CONFIG_HISI_FB_3660) || defined (CONFIG_HISI_FB_970) || defined (CONFIG_HISI_FB_V320) || defined (CONFIG_HISI_FB_V501)
 extern uint32_t g_dss_min_bandwidth_inbusbusy;
 #endif
 

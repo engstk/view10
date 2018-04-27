@@ -315,7 +315,7 @@ static int hw_lm3646_flash_mode(struct hw_flash_ctrl_t *flash_ctrl, int data)
     struct hw_flash_i2c_client *i2c_client;
     struct hw_flash_i2c_fn_t *i2c_func;
     struct hw_lm3646_private_data_t *pdata;
-    unsigned char val;
+    unsigned char val = 0;
 
     cam_info("%s data=%d.\n", __func__, data);
     if (NULL == flash_ctrl) {
@@ -360,7 +360,7 @@ static int hw_lm3646_torch_mode_mmi(struct hw_flash_ctrl_t *flash_ctrl, int data
     struct hw_flash_i2c_client *i2c_client;
     struct hw_flash_i2c_fn_t *i2c_func;
     struct hw_lm3646_private_data_t *pdata;
-    unsigned char val;
+    unsigned char val = 0;
 
     cam_info("%s data=%d.\n", __func__, data);
     if (NULL == flash_ctrl) {
@@ -577,7 +577,7 @@ static int hw_lm3646_off(struct hw_flash_ctrl_t *flash_ctrl)
 {
     struct hw_flash_i2c_client *i2c_client;
     struct hw_flash_i2c_fn_t *i2c_func;
-    unsigned char val;
+    unsigned char val = 0;
     struct hw_lm3646_private_data_t *pdata;
     cam_debug("%s enter.\n", __func__);
     if (NULL == flash_ctrl) {
@@ -970,7 +970,7 @@ static int hw_lm3646_register_attribute(struct hw_flash_ctrl_t *flash_ctrl, stru
     rc = device_create_file(dev, &hw_lm3646_flash_lightness);
     if (rc < 0) {
         cam_err("%s failed to creat flash_lightness attribute.", __func__);
-        goto err_create_lightness_file;
+        goto err_create_flash_lightness_file;
     }
 
     rc = device_create_file(dev, &hw_lm3646_flash_mask);
@@ -980,6 +980,8 @@ static int hw_lm3646_register_attribute(struct hw_flash_ctrl_t *flash_ctrl, stru
     }
     return 0;
 err_create_flash_mask_file:
+    device_remove_file(dev, &hw_lm3646_flash_lightness);
+err_create_flash_lightness_file:
     device_remove_file(dev, &hw_lm3646_lightness);
 err_create_lightness_file:
     led_classdev_unregister(&flash_ctrl->cdev_torch);

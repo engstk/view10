@@ -67,6 +67,8 @@
 #define SCP_ADAPTOR_RESET_ENABLE BIT(5)
 #define SCP_ADAPTOR_RESET_DISABLE 0
 #define SCP_CTRL_BYTE1 0xa1
+#define SCP_DP_DELITCH_MASK (BIT(3) | BIT(4))
+#define SCP_DP_DELITCH_5_MS (BIT(3) | BIT(4))
 #define SCP_WATCHDOG_BITS_PER_SECOND (2)
 #define SCP_WATCHDOG_MASK (BIT(2) | BIT(1) | BIT(0))
 #define SCP_STATUS_BYTE0 0xa2
@@ -75,9 +77,9 @@
 #define SCP_PORT_LEAKAGE_SHIFT 4
 #define SCP_STATUS_BYTE1 0xa3
 #define SCP_SSTS 0xa5
-#define SCP_SSTS_A_MASK (BIT(2) | BIT(1) | BIT(0))
-#define SCP_SSTS_B_MASK (BIT(7))
-#define SCP_SSTS_B_SHIFT 7
+#define SCP_SSTS_A_MASK (BIT(3) | BIT(2) | BIT(1))
+#define SCP_SSTS_B_MASK (BIT(0))
+#define SCP_SSTS_B_SHIFT 0
 #define SCP_INSIDE_TMP 0xa6
 #define SCP_PORT_TMP 0xa7
 #define SCP_READ_VOLT_L 0xa8
@@ -146,7 +148,9 @@
 #define CURRENT_SET_FOR_RES_DETECT_1000_MA 1000
 
 #define VENDOR_ID_RICHTEK 0x01
+#define VENDOR_ID_WELTREND 0x02
 #define VENDOR_ID_IWATT 0x03
+#define VENDOR_ID_0X32 0x32
 
 #define MAX_IOUT_EXP_0 0
 #define MAX_IOUT_EXP_1 1
@@ -187,6 +191,8 @@
 enum adapter_vendor{
 	RICHTEK_ADAPTER,
 	IWATT_ADAPTER,
+	WELTREND_ADAPTER,
+	ID0X32_ADAPTER,
 };
 enum direct_charge_error_code {
 	DIRECT_CHARGE_SUCC,
@@ -268,10 +274,10 @@ enum direct_charge_fault_type {
 	DIRECT_CHARGE_FAULT_TOTAL,
 };
 static const char *const loadswitch_name[] = {
-	[0] = "RICHTEK",
-	[1] = "TI",
-	[2] = "FAIRCHILD",
-	[3] = "NXP",
+	[0] = "RT9748",
+	[1] = "BQ25870",
+	[2] = "FAN54161",
+	[3] = "PCA9498",
 	[4] = "ERROR",
 };
 static const char *const scp_check_stage[] = {
@@ -300,31 +306,6 @@ struct nty_data {
 	u8 event2;
 };
 
-struct smart_charge_ops {
-	int (*is_support_scp)(void);
-	int (*scp_init)(struct scp_init_data*);
-	int (*scp_exit)(struct direct_charge_device*);
-	int (*scp_adaptor_detect)(void);
-	int (*scp_set_adaptor_voltage)(int);
-	int (*scp_get_adaptor_voltage)(void);
-	int (*scp_set_adaptor_current)(int);
-	int (*scp_get_adaptor_current)(void);
-	int (*scp_get_adaptor_current_set)(void);
-	int (*scp_get_adaptor_max_current)(void);
-	int (*scp_adaptor_reset)(void);
-	int (*scp_adaptor_output_enable)(int);
-	int (*scp_chip_reset)(void);
-	int (*scp_stop_charge_config)(void);
-	int (*is_scp_charger_type)(void);
-	int (*scp_get_adaptor_status)(void);
-	int (*scp_get_chip_status)(void);
-	int (*scp_get_adaptor_info)(void*);
-	int (*scp_cable_detect)(void);
-	int (*scp_get_adaptor_temp)(int*);
-	int (*scp_get_adapter_vendor_id)(void);
-	int (*scp_get_usb_port_leakage_current_info)(void);
-	int (*scp_power_enable)(int);
-};
 struct loadswitch_ops {
 	int (*ls_init)(void);
 	int (*ls_exit)(void);
@@ -369,6 +350,11 @@ struct adaptor_info {
 	int fwver_h;
 	int fwver_l;
 };
+
+struct direct_charge_cable_detect_ops {
+	int (*direct_charge_cable_detect)(void);
+};
+
 struct direct_charge_device {
 	struct device *dev;
 	struct smart_charge_ops* scp_ops;
@@ -456,17 +442,43 @@ struct direct_charge_device {
 	int dc_open_retry_cnt;
 };
 
+struct smart_charge_ops {
+	int (*is_support_scp)(void);
+	int (*scp_init)(struct scp_init_data*);
+	int (*scp_exit)(struct direct_charge_device*);
+	int (*scp_adaptor_detect)(void);
+	int (*scp_set_adaptor_voltage)(int);
+	int (*scp_get_adaptor_voltage)(void);
+	int (*scp_set_adaptor_current)(int);
+	int (*scp_get_adaptor_current)(void);
+	int (*scp_get_adaptor_current_set)(void);
+	int (*scp_get_adaptor_max_current)(void);
+	int (*scp_adaptor_reset)(void);
+	int (*scp_adaptor_output_enable)(int);
+	int (*scp_chip_reset)(void);
+	int (*scp_stop_charge_config)(void);
+	int (*is_scp_charger_type)(void);
+	int (*scp_get_adaptor_status)(void);
+	int (*scp_get_chip_status)(void);
+	int (*scp_get_adaptor_info)(void*);
+	int (*scp_cable_detect)(void);
+	int (*scp_get_adaptor_temp)(int*);
+	int (*scp_get_adapter_vendor_id)(void);
+	int (*scp_get_usb_port_leakage_current_info)(void);
+	int (*scp_power_enable)(int);
+};
+
+
 extern struct atomic_notifier_head direct_charge_fault_notifier_list;
 
-struct direct_charge_cable_detect_ops {
-	int (*direct_charge_cable_detect)(void);
-};
+
 int cable_detect_ops_register(struct direct_charge_cable_detect_ops*);
 int scp_ops_register(struct smart_charge_ops*);
 int loadswitch_ops_register(struct loadswitch_ops*);
 int batinfo_ops_register(struct batinfo_ops*);
 void direct_charge_check(void);
 void direct_charge_update_cutoff_flag(void);
+void direct_charge_set_scp_stage_default(void);
 void direct_charge_stop_charging(void);
 enum scp_stage_type scp_get_stage_status(void);
 void scp_set_stop_charging_flag(int flag);

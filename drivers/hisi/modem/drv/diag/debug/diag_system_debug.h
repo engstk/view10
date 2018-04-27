@@ -67,7 +67,6 @@ extern "C" {
 #include <bsp_diag_frame.h>
 #include <bsp_socp.h>
 
-
 #pragma pack(push)
 #pragma pack(4)
 
@@ -232,6 +231,8 @@ static inline void diag_system_debug_send_usb_start(void)
 }
 
 /* º¯ÊýÉùÃ÷*******************************************/
+void DIAG_DebugPTR(void);
+void DIAG_DebugShowPTR(u32 ulnum);
 void diag_PTR(DIAG_PTR_ID_ENUM enType, u32 paraMark, u32 para0, u32 para1);
 u32 DIAG_SystemDebugFileHeader(u32 pFile);
 void diag_ThroughputSave(DIAG_THRPUT_ID_ENUM enChn, u32 bytes);

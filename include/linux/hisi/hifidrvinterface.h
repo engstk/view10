@@ -1,21 +1,4 @@
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : HifiDrvInterface.h
-  版 本 号   : 初稿
-  作    者   : C00137131
-  生成日期   : 2012年8月16日
-  最近修改   :
-  功能描述   : Hifi与DRV之间的接口头文件
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2012年8月16日
-    作    者   : C00137131
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 /*****************************************************************************
   1 其他头文件包含
@@ -112,7 +95,8 @@ enum AUDIO_MSG_ENUM
     ID_AP_AUDIO_CMD_SET_DEVICE_CMD      = 0xDD96,           /* _H2ASN_MsgChoice AUDIO_CMD_COMMON_SET_STRU */
     ID_AP_AUDIO_CMD_SET_MODE_CMD        = 0xDD97,           /* _H2ASN_MsgChoice AUDIO_CMD_COMMON_SET_STRU */
     ID_AP_AUDIO_CMD_MLIB_SET_PARA_CMD   = 0xDD92,           /* _H2ASN_MsgChoice AP_AUDIO_MLIB_SET_PARA_IND_STRU */
-
+    ID_AP_AUDIO_CMD_SET_CVAA_FUNC_CMD   = 0xDD9C,
+    
     /* AP音频驱动与HIFI音频通道模块交互消息ID */
     ID_AP_AUDIO_PCM_OPEN_REQ            = 0xDD25,           /* _H2ASN_MsgChoice AUDIO_PCM_OPEN_REQ_STRU */
     ID_AP_AUDIO_PCM_CLOSE_REQ           = 0xDD26,           /* _H2ASN_MsgChoice AUDIO_PCM_CLOSE_REQ_STRU */

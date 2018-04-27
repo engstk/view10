@@ -12,6 +12,7 @@
 #include "contexthub_pm.h"
 #include "sensor_sysfs.h"
 #include "contexthub_ext_log.h"
+#include "sensor_detect.h"
 
 static aod_display_pos_t *g_aod_pos;
 static char show_str[MAX_STR_SIZE] = {0};
@@ -23,7 +24,13 @@ iomcu_power_status i_power_status;
 static DEFINE_MUTEX(mutex_pstatus);
 
 extern int iom3_need_recovery(int modid, exp_source_t f);
+extern struct als_platform_data als_data;
+extern struct ps_platform_data ps_data;
+extern struct sar_platform_data sar_pdata;
+extern char sensor_chip_info[SENSOR_MAX][MAX_CHIP_INFO_LEN];
 
+extern int g_iom3_state;
+extern int iom3_power_state;
 static struct t_sensor_debug_operations_list sensor_debug_operations_list = {
 	.mlock = __MUTEX_INITIALIZER(sensor_debug_operations_list.mlock),
 	.head = LIST_HEAD_INIT(sensor_debug_operations_list.head),
@@ -65,6 +72,8 @@ static char *iomcu_app_id_str[] = {
 	[TAG_FLP] = "TAG_FLP",
 	[TAG_TILT_DETECTOR] = "TAG_TILT_DETECTOR",
 	[TAG_RPC] = "TAG_RPC",
+	[TAG_FP_UD] = "TAG_FP_UD",
+	[TAG_ACCEL_UNCALIBRATED] = "TAG_ACCEL_UNCALIBRATED",
 	[TAG_HW_PRIVATE_APP_END] = "TAG_HW_PRIVATE_APP_END",
 };
 
@@ -99,6 +108,8 @@ static const struct sensor_debug_tag_map tag_map_tab[] = {
 	{"magn_bracket", TAG_MAGN_BRACKET},
 	{"tiltdetector", TAG_TILT_DETECTOR},
 	{"environment", TAG_ENVIRONMENT},
+	{"fingerprint_ud", TAG_FP_UD},
+	{"acceluncalibrated", TAG_ACCEL_UNCALIBRATED},
 };
 
 static const char *fault_type_table[] = {
@@ -252,6 +263,33 @@ static int set_sensor_softiron(int tag, int argv[], int argc)
 	ret = write_customize_cmd(&pkg_ap, NULL, false);
 	if (ret != 0) {
 		hwlog_err("set %s sensor_softiron failed, ret = %d in %s\n", obj_tag_str[tag], ret, __func__);
+		return -1;
+	}
+	return 0;
+}
+
+static int set_sensor_data_mode(int tag, int argv[], int argc)
+{
+	write_info_t pkg_ap;
+	pkt_parameter_req_t cpkt;
+	pkt_header_t *hd = (pkt_header_t *)&cpkt;
+	int ret = -1;
+	if (argc != 1)
+	{
+		return -1;
+	}
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&cpkt, 0, sizeof(cpkt));
+	pkg_ap.tag = tag;
+	pkg_ap.cmd = CMD_CMN_CONFIG_REQ;
+	cpkt.subcmd = SUB_CMD_SET_DATA_MODE;
+	pkg_ap.wr_buf = &hd[1];
+	pkg_ap.wr_len = sizeof(int)*SOFTIRON_ARGS_NUM*2+SUBCMD_LEN;
+	cpkt.para[0] = (int)argv[0];
+
+	ret = write_customize_cmd(&pkg_ap, NULL, false);
+	if (ret != 0) {
+		hwlog_err("set %s sensor_mode failed, ret = %d in %s\n", obj_tag_str[tag], ret, __func__);
 		return -1;
 	}
 	return 0;
@@ -576,6 +614,309 @@ static int ar_test(int tag, int argv[], int argc)
 	}
 	return ret;
 }
+
+static int set_ps_type(int tag, int argv[], int argc)
+{
+	write_info_t pkg_ap;
+	read_info_t pkg_mcu;
+	pkt_parameter_req_t spkt;
+	pkt_header_t *shd = (pkt_header_t *)&spkt;
+	int ret = 0;
+	unsigned int type = argv[0];
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&pkg_mcu, 0, sizeof(pkg_mcu));
+	memset(&spkt, 0, sizeof(spkt));
+	hwlog_info("%s: data type  is %d(0.nor_data1.raw_data)\n", __FUNCTION__, argv[0]);
+	if (type > SET_PS_TYPE_NUMB_MAX) {
+		hwlog_err("%s:set data type is fail, invalid val\n", __FUNCTION__);
+		return -1;
+	}
+	pkg_ap.tag = TAG_PS;
+	spkt.subcmd = SUB_CMD_SET_DATA_TYPE_REQ;
+
+	pkg_ap.cmd=CMD_CMN_CONFIG_REQ;
+	pkg_ap.wr_buf=&shd[1];
+	pkg_ap.wr_len=sizeof(type)+SUBCMD_LEN;
+	memcpy(spkt.para, &type, sizeof(type));
+	ret = write_customize_cmd(&pkg_ap, &pkg_mcu, true);
+	if (pkg_mcu.errno != 0) {
+		hwlog_err("send tag ps get diff data cmd to mcu fail,ret=%d\n", ret);
+	}
+	return ret;
+}
+
+static int set_als_type(int tag, int argv[], int argc)
+{
+	write_info_t pkg_ap;
+	read_info_t pkg_mcu;
+	pkt_parameter_req_t spkt;
+	pkt_header_t *shd = (pkt_header_t *)&spkt;
+	int ret = 0;
+	unsigned int type = argv[0];
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&pkg_mcu, 0, sizeof(pkg_mcu));
+	memset(&spkt, 0, sizeof(spkt));
+	hwlog_info("%s: data type  is %d(0.nor_data1.raw_data)\n", __FUNCTION__, argv[0]);
+	if (type > SET_ALS_TYPE_NUMB_MAX) {
+		hwlog_err("%s:set data type is fail, invalid val\n", __FUNCTION__);
+		return -1;
+	}
+	pkg_ap.tag = TAG_ALS;
+	spkt.subcmd = SUB_CMD_SET_DATA_TYPE_REQ;
+
+	pkg_ap.cmd=CMD_CMN_CONFIG_REQ;
+	pkg_ap.wr_buf=&shd[1];
+	pkg_ap.wr_len=sizeof(type)+SUBCMD_LEN;
+	memcpy(spkt.para, &type, sizeof(type));
+	ret = write_customize_cmd(&pkg_ap, &pkg_mcu, true);
+	if (pkg_mcu.errno != 0) {
+		hwlog_err("send tag als get diff data cmd to mcu fail,ret=%d\n", ret);
+	}
+	return ret;
+}
+static int als_param_write(int tag, int argv[], int argc)
+{
+	s16 als_para[30];//bh is 25 ,apds is 21, tmd is 29
+	write_info_t pkg_ap;
+	read_info_t pkg_mcu;
+	pkt_parameter_req_t spkt;
+	pkt_header_t *shd = (pkt_header_t *)&spkt;
+	int ret = 0;
+	int i = 0;
+	int param_num = argv[0];
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&pkg_mcu, 0, sizeof(pkg_mcu));
+	memset(&als_para, 0, sizeof(als_para));
+	memset(&spkt, 0, sizeof(spkt));
+	if(param_num > 29)
+	{
+		hwlog_err("%s:param_num %d is invalid\n", __FUNCTION__, param_num);
+		return -1;
+	}
+	for(i=0; i<param_num; i++)
+	{
+		als_para[i] = argv[i+1];
+		hwlog_info("als_para[%d] is %d\n", i,  als_para[i]);
+	}
+	for(i=0; i < param_num;i++)
+	{
+		if (als_para[i] > MAX_SINGNED_SHORT || als_para[i] < MIN_SINGNED_SHORT) {
+			hwlog_err("%s: als param data is invalid\n", __FUNCTION__);
+			return -1;
+		}
+	}
+	memcpy(als_data.als_extend_data, als_para, sizeof(s16)*param_num > SENSOR_PLATFORM_EXTEND_ALS_DATA_SIZE ? SENSOR_PLATFORM_EXTEND_ALS_DATA_SIZE : sizeof(s16)*param_num);
+	spkt.subcmd = SUB_CMD_SET_PARAMET_REQ;
+	pkg_ap.tag = TAG_ALS;
+	pkg_ap.cmd=CMD_CMN_CONFIG_REQ;
+	pkg_ap.wr_buf=&shd[1];
+	pkg_ap.wr_len=sizeof(als_data)+SUBCMD_LEN;
+	memcpy(spkt.para, &als_data, sizeof(als_data));
+
+	hwlog_info("%s g_iom3_state = %d,tag =%d ,cmd =%d\n",__func__,g_iom3_state, pkg_ap.tag, pkg_ap.cmd);
+
+	if (g_iom3_state == IOM3_ST_RECOVERY || iom3_power_state == ST_SLEEP)
+	{
+		ret = write_customize_cmd(&pkg_ap, NULL, false);
+	}else {
+		ret = write_customize_cmd(&pkg_ap, &pkg_mcu, true);
+	}
+
+	if (ret)
+	{
+	    hwlog_err("send tag %d cfg data to mcu fail,ret=%d\n", pkg_ap.tag, ret);
+	}else{
+	    if (pkg_mcu.errno != 0)
+	    {
+	        hwlog_err("send ALS param to mcu fail\n");
+	    }else{
+	        hwlog_info("send ALS param to mcu succes\n");
+	    }
+	}
+	return ret;
+}
+
+static int ps_param_write(int tag, int argv[], int argc)
+{
+	write_info_t pkg_ap;
+	read_info_t pkg_mcu;
+	pkt_parameter_req_t spkt;
+	pkt_header_t *shd = (pkt_header_t *)&spkt;
+	int ret = 0;
+	int i = 0;
+	int pwindows_value = argv[0];
+	int pwave_value = argv[1];
+	int threshold_value = argv[2];
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&pkg_mcu, 0, sizeof(pkg_mcu));
+	memset(&spkt, 0, sizeof(spkt));
+
+	if(pwindows_value < 0 || pwave_value < 0 || threshold_value < 0
+         || pwindows_value > MAX_SINGNED_SHORT || pwave_value > MAX_SINGNED_SHORT
+         ||threshold_value > MAX_SINGNED_SHORT ){
+		hwlog_err("%s:ps_param_write is fail %d %d %d\n", __FUNCTION__,pwindows_value,pwave_value,threshold_value);
+		return -1;
+	}
+
+	ps_data.pwindows_value = pwindows_value;
+	ps_data.pwave_value = pwave_value;
+	ps_data.threshold_value = threshold_value;
+
+	spkt.subcmd = SUB_CMD_SET_PARAMET_REQ;
+	pkg_ap.tag = TAG_PS;
+	pkg_ap.cmd=CMD_CMN_CONFIG_REQ;
+	pkg_ap.wr_buf=&shd[1];
+	pkg_ap.wr_len=sizeof(ps_data)+SUBCMD_LEN;
+	memcpy(spkt.para, &ps_data, sizeof(ps_data));
+
+	hwlog_info("%s g_iom3_state = %d,tag =%d ,cmd =%d\n",__func__,g_iom3_state, pkg_ap.tag, pkg_ap.cmd);
+
+	if (g_iom3_state == IOM3_ST_RECOVERY || iom3_power_state == ST_SLEEP)
+	{
+		ret = write_customize_cmd(&pkg_ap, NULL, false);
+	}else {
+		ret = write_customize_cmd(&pkg_ap, &pkg_mcu, true);
+	}
+
+	if (ret)
+	{
+	    hwlog_err("send tag %d cfg data to mcu fail,ret=%d\n", pkg_ap.tag, ret);
+	}else{
+	    if (pkg_mcu.errno != 0)
+	    {
+	        hwlog_err("send PS param to mcu fail\n");
+	    }else{
+	        hwlog_info("send PS param to mcu succes\n");
+	    }
+	}
+	return ret;
+}
+
+static int sar_param_write(int tag, int argv[], int argc)
+{
+	write_info_t pkg_ap;
+	read_info_t pkg_mcu;
+	pkt_parameter_req_t spkt;
+	pkt_header_t *shd = (pkt_header_t *)&spkt;
+	int ret = 0;
+	int i = 0;
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&pkg_mcu, 0, sizeof(pkg_mcu));
+	memset(&spkt, 0, sizeof(spkt));
+
+	if (!strncmp(sensor_chip_info[CAP_PROX], "huawei,semtech-sx9323", strlen("huawei,semtech-sx9323"))) {
+		if (SAR_SET_REGISTER == argv[0]) {
+			if ((argc - 1) > SEMTECH_SAR_INIT_REG_VAL_LENGTH) {
+				hwlog_err("%s: The number of input data is larger than init_reg_val array.\n", __FUNCTION__);
+				return -1;
+			}
+			for (i = 1; i < argc; i++)
+				sar_pdata.sar_datas.semteck_data.init_reg_val[i - 1] = argv[i];
+		}
+		if (SAR_SET_THRESHOLD == argv[0]) {
+			if ((argc - 1) > SEMTECH_SAR_THRESHOLD_TO_MODEM_LENGTH) {
+				hwlog_err("%s: The number of input data is larger than threshold_to_modem array.\n", __FUNCTION__);
+				return -1;
+			}
+			for (i = 1; i < argc; i++)
+				sar_pdata.sar_datas.semteck_data.threshold_to_modem[i - 1] = argv[i];
+		}
+		if (SAR_SET_THRESHOLD_AND_REGISTER == argv[0]) {
+			if ((argc - 1) > SEMTECH_SAR_INIT_REG_VAL_LENGTH + SEMTECH_SAR_THRESHOLD_TO_MODEM_LENGTH) {
+				hwlog_err("%s: The number of input data is larger than sum of init_reg_val and threshold_to_modem array.\n", __FUNCTION__);
+				return -1;
+			}
+			for (i = 1; i < SEMTECH_SAR_THRESHOLD_TO_MODEM_LENGTH + 1; i++)
+				sar_pdata.sar_datas.semteck_data.threshold_to_modem[i - 1] = argv[i];
+			for (i = SEMTECH_SAR_THRESHOLD_TO_MODEM_LENGTH + 1; i < argc; i++)
+				sar_pdata.sar_datas.semteck_data.init_reg_val[i - 1 - SEMTECH_SAR_THRESHOLD_TO_MODEM_LENGTH] = argv[i];
+		}
+	} else {
+		hwlog_err("%s: This sar does not support the operation.\n", __FUNCTION__);
+		return -1;
+	}
+
+	spkt.subcmd = SUB_CMD_SET_PARAMET_REQ;
+	pkg_ap.tag = TAG_CAP_PROX;
+	pkg_ap.cmd=CMD_CMN_CONFIG_REQ;
+	pkg_ap.wr_buf=&shd[1];
+	pkg_ap.wr_len=sizeof(sar_pdata)+SUBCMD_LEN;
+	memcpy(spkt.para, &sar_pdata, sizeof(sar_pdata));
+
+	hwlog_info("%s g_iom3_state = %d,tag =%d ,cmd =%d\n",__func__,g_iom3_state, pkg_ap.tag, pkg_ap.cmd);
+
+	if (g_iom3_state == IOM3_ST_RECOVERY || iom3_power_state == ST_SLEEP)
+	{
+		ret = write_customize_cmd(&pkg_ap, NULL, false);
+	}else {
+		ret = write_customize_cmd(&pkg_ap, &pkg_mcu, true);
+	}
+
+	if (ret)
+	{
+	    hwlog_err("send tag %d cfg data to mcu fail,ret=%d\n", pkg_ap.tag, ret);
+	}else{
+	    if (pkg_mcu.errno != 0)
+	    {
+	        hwlog_err("send sar param to mcu fail\n");
+	    }else{
+	        hwlog_info("send sar param to mcu succes\n");
+	    }
+	}
+	return ret;
+}
+
+static int change_sar_mode(int tag, int argv[], int argc)
+{
+	write_info_t pkg_ap;
+	read_info_t pkg_mcu;
+	pkt_parameter_req_t spkt;
+	pkt_header_t *shd = (pkt_header_t *)&spkt;
+	int ret = 0;
+	memset(&pkg_ap, 0, sizeof(pkg_ap));
+	memset(&pkg_mcu, 0, sizeof(pkg_mcu));
+	memset(&spkt, 0, sizeof(spkt));
+
+	if (!strncmp(sensor_chip_info[CAP_PROX], "huawei,semtech-sx9323", strlen("huawei,semtech-sx9323"))) {
+		if (1 != argc || (SAR_DEBUG_MODE != argv[0] && SAR_NORMAL_MODE != argv[0])) {
+			hwlog_err("%s: Input incorrect mode.\n", __FUNCTION__);
+			return -1;
+		}
+	} else {
+		hwlog_err("%s: This sar does not support the operation.\n", __FUNCTION__);
+		return -1;
+	}
+
+	spkt.subcmd = SUB_CMD_SET_DATA_MODE;
+	pkg_ap.tag = TAG_CAP_PROX;
+	pkg_ap.cmd=CMD_CMN_CONFIG_REQ;
+	pkg_ap.wr_buf=&shd[1];
+	pkg_ap.wr_len=sizeof(argv[0])+SUBCMD_LEN;
+	memcpy(spkt.para, &argv[0], sizeof(argv[0]));
+
+	hwlog_info("%s g_iom3_state = %d,tag =%d ,cmd =%d\n",__func__,g_iom3_state, pkg_ap.tag, pkg_ap.cmd);
+
+	if (g_iom3_state == IOM3_ST_RECOVERY || iom3_power_state == ST_SLEEP)
+	{
+		ret = write_customize_cmd(&pkg_ap, NULL, false);
+	}else {
+		ret = write_customize_cmd(&pkg_ap, &pkg_mcu, true);
+	}
+
+	if (ret)
+	{
+	    hwlog_err("send tag %d sar mode to mcu fail,ret=%d\n", pkg_ap.tag, ret);
+	}else{
+	    if (pkg_mcu.errno != 0)
+	    {
+	        hwlog_err("send sar mode to mcu fail\n");
+	    }else{
+	        hwlog_info("send sar mode to mcu succes\n");
+	    }
+	}
+	return ret;
+}
+
 static int rpc_test(int tag, int argv[], int argc)
 {
 	write_info_t pkg_ap;
@@ -681,6 +1022,7 @@ static void register_my_debug_operations(void)
 	REGISTER_SENSORHUB_DEBUG_OPERATION(close_sensor);
 	REGISTER_SENSORHUB_DEBUG_OPERATION(set_sensor_slave_addr);
 	REGISTER_SENSORHUB_DEBUG_OPERATION(set_sensor_softiron);
+	REGISTER_SENSORHUB_DEBUG_OPERATION(set_sensor_data_mode);
 	REGISTER_SENSORHUB_DEBUG_OPERATION(set_fault_type);
 	REGISTER_SENSORHUB_DEBUG_OPERATION(set_fault_addr);
 	REGISTER_SENSORHUB_DEBUG_OPERATION(set_log_level);
@@ -688,6 +1030,14 @@ static void register_my_debug_operations(void)
 	REGISTER_SENSORHUB_DEBUG_OPERATION(aod_test);
 	REGISTER_SENSORHUB_DEBUG_OPERATION(environment_test);
 	REGISTER_SENSORHUB_DEBUG_OPERATION(rpc_test);
+	REGISTER_SENSORHUB_DEBUG_OPERATION(set_als_type);
+	REGISTER_SENSORHUB_DEBUG_OPERATION(als_param_write);
+	REGISTER_SENSORHUB_DEBUG_OPERATION(set_ps_type);
+	REGISTER_SENSORHUB_DEBUG_OPERATION(ps_param_write);
+	REGISTER_SENSORHUB_DEBUG_OPERATION(sar_param_write);
+	REGISTER_SENSORHUB_DEBUG_OPERATION(change_sar_mode);
+
+
 }
 
 static void unregister_my_debug_operations(void)
@@ -697,6 +1047,7 @@ static void unregister_my_debug_operations(void)
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(close_sensor);
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_sensor_slave_addr);
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_sensor_softiron);
+	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_sensor_data_mode);
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_fault_type);
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_fault_addr);
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_log_level);
@@ -704,6 +1055,13 @@ static void unregister_my_debug_operations(void)
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(aod_test);
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(environment_test);
 	UNREGISTER_SENSORHUB_DEBUG_OPERATION(rpc_test);
+	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_als_type);
+	UNREGISTER_SENSORHUB_DEBUG_OPERATION(als_param_write);
+	UNREGISTER_SENSORHUB_DEBUG_OPERATION(set_ps_type);
+	UNREGISTER_SENSORHUB_DEBUG_OPERATION(ps_param_write);
+	UNREGISTER_SENSORHUB_DEBUG_OPERATION(sar_param_write);
+	UNREGISTER_SENSORHUB_DEBUG_OPERATION(change_sar_mode);
+
 }
 
 static inline bool is_space_ch(char ch)
@@ -911,7 +1269,7 @@ static CLASS_ATTR(sensorhub_dump, 0660, cls_attr_dump_show_func, NULL);
 
 static ssize_t cls_attr_kernel_support_lib_ver_show_func(struct class *cls, struct class_attribute *attr, char *buf)
 {
-	uint32_t ver = 14;
+	uint32_t ver = 15;//for support large resolution acc sensor
 	hwlog_info("read cls_attr_kernel_support_lib_ver_show_func %d\n", ver);
 	memcpy(buf, &ver, sizeof(ver));
 	return sizeof(ver);

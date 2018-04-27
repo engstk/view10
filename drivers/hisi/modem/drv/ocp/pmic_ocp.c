@@ -113,7 +113,7 @@ static int __init pmic_modem_ocp_init(void)
         return -1;
     }
 
-    for_each_child_of_node(root, child_node)
+    for_each_available_child_of_node(root, child_node)
     {
         ocp = (struct pmic_volt_ocp *)osl_malloc(sizeof(struct pmic_volt_ocp));
         if (NULL == ocp)

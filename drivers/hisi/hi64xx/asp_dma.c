@@ -491,8 +491,6 @@ static int asp_dma_remove (struct platform_device *pdev)
 
 	asp_dma_priv = NULL;
 
-	dev_info(priv->dev, "asp dma driver remove succ.\n");
-
 	return 0;
 }
 

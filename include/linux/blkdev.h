@@ -119,16 +119,15 @@ struct request {
 #ifdef CONFIG_HISI_DEBUG_FS
 	struct list_head counted_list_node;
 	bool req_used;
+	int simulate_mode;
 #endif
 #ifdef CONFIG_HISI_BLK_CORE
 	unsigned char rq_hoq_flag;
 	unsigned char rq_cp_flag;
-#ifdef CONFIG_HISI_MQ_DISPATCH_DECISION
 	struct list_head async_fifo_queuelist;
 	struct list_head async_elv_queuelist;
 	struct rb_node async_dispatch_node;
 #endif
-#endif /* CONFIG_HISI_BLK_MQ */
 #ifdef CONFIG_HISI_IO_LATENCY_TRACE
 	struct timespec req_start_tp;
 	struct timespec req_complete_tp;
@@ -293,6 +292,7 @@ enum blk_eh_timer_return {
 	BLK_EH_NOT_HANDLED,
 	BLK_EH_HANDLED,
 	BLK_EH_RESET_TIMER,
+	BLK_EH_REQUEUE,
 };
 
 typedef enum blk_eh_timer_return (rq_timed_out_fn)(struct request *);
@@ -387,10 +387,18 @@ struct blk_idle_state{
 };
 
 struct blk_lld_func{
+	bool inited;
 	enum blk_lld_base type;
 	void* data;
+#ifdef CONFIG_HISI_DEBUG_FS
+	atomic_t hw_idle_en; /* is hw idle enabled */
+#endif
+#define HISI_BLK_LLD_IDLE_INTR_EN	(1 << 3)
 	unsigned long feature_flag;
+#define HISI_BLK_LLD_IDLE_INTR_CAP	(1 << 3)
+	unsigned long lld_cap;
 	struct blk_idle_state blk_idle;
+	lld_dump_status_fn *dump_status;
 	unsigned long write_len; /* accumulated write len of the whole device */
 	unsigned long discard_len; /* accumulated discard len of the whole device */
 };
@@ -526,7 +534,7 @@ struct queue_limits {
 #ifdef CONFIG_BLK_MQ_REFCOUNT
 #include <linux/blk-mq-ref.h>
 #endif
-#ifdef CONFIG_HISI_MQ_DISPATCH_DECISION
+
 enum mq_sched_strategy_type{
 	HISI_MQ_SCHED_ASYNC_FIFO = 0,
 	HISI_MQ_SCHED_ASYNC_ELV,
@@ -547,15 +555,13 @@ enum hisi_blk_mq_async_dispatch_mode{
 	HISI_BLK_MQ_ASYNC_FWB_MODE,
 	HISI_BLK_MQ_ASYNC_LM_MODE,
 };
-#endif
 
-#ifdef CONFIG_HISI_BLK_MQ
+
 struct hisi_blk_mq_work{
 	struct delayed_work io_dispatch_work;
 	struct request_queue *queue;
 	int cpu_id;
 };
-#endif
 
 struct request_queue {
 	/*
@@ -626,7 +632,6 @@ struct request_queue {
 	atomic_t flush_work_trigger;
 	atomic_t write_after_flush;
 #endif /* CONFIG_HISI_BLK_FLUSH_REDUCE */
-#ifdef CONFIG_HISI_BLK_MQ
 	int total_tags_used_limit;
 	atomic_t total_tags_used_count;
 	atomic_t total_reserved_tags_used_count;
@@ -636,7 +641,6 @@ struct request_queue {
 	 * hisi blk-mq quirks
 	 */
 	unsigned long hisi_blk_mq_quirk_flags;
-#ifdef CONFIG_HISI_MQ_DISPATCH_DECISION
 	enum mq_sched_strategy_type hisi_sched_strategy_type;
 	struct mq_sched_strategy* hisi_sched_strategy;
 	struct list_head high_prio_sync_dispatch_list;
@@ -663,16 +667,14 @@ struct request_queue {
 	ktime_t last_async_io_inflight_limit_update_ktime;
 	bool io_dispatch_work_need_delay;
 	struct list_head io_guard_list_node;
-#endif /* CONFIG_HISI_MQ_DISPATCH_DECISION */
-#endif /* CONFIG_HISI_BLK_MQ */
 	struct gendisk *request_queue_disk;
 	struct blk_lld_func lld_func;
-	lld_dump_status_fn* dump_status;
 	unsigned long sr_l;
 	unsigned long sw_l;
 	unsigned long rr_l;
 	unsigned long rw_l;
 	struct timer_list limit_setting_protect_timer;
+	struct list_head dump_list;
 #endif /* CONFIG_HISI_BLK_CORE */
 #ifdef CONFIG_HISI_IO_LATENCY_TRACE
 	unsigned char io_latency_enable;
@@ -1118,6 +1120,11 @@ static inline bool blk_check_merge_flags(unsigned int flags1,
 	if ((flags1 & REQ_WRITE_SAME) != (flags2 & REQ_WRITE_SAME))
 		return false;
 
+#ifdef CONFIG_HISI_SCSI_VENDOR_CMD_HOTCOLD
+	if (HOTCOLD_ID(flags1) != HOTCOLD_ID(flags2))
+		return false;
+#endif
+
 	return true;
 }
 
@@ -1486,21 +1493,29 @@ extern void blk_set_queue_dying(struct request_queue *);
 #ifdef CONFIG_HISI_BLK_CORE
 extern int blk_busy_idle_event_subscriber(struct block_device*bi_bdev, struct blk_busy_idle_nb* notify_nb);
 extern int blk_queue_busy_idle_event_subscriber(struct request_queue *q, struct blk_busy_idle_nb* notify_nb);
+extern int blk_lld_busy_idle_event_subscriber(struct blk_lld_func* lld, struct blk_busy_idle_nb* notify_nb);
 extern int blk_busy_idle_event_unsubscriber(struct block_device	*bi_bdev, struct blk_busy_idle_nb* notify_nb);
 extern int blk_queue_busy_idle_event_unsubscriber(struct request_queue *q, struct blk_busy_idle_nb* notify_nb);
+extern int blk_lld_busy_idle_event_unsubscriber(struct blk_lld_func* lld, struct blk_busy_idle_nb* notify_nb);
 extern void blk_queue_busy_idle_enable(struct request_queue *q, int enable);
 extern bool blk_busy_idle_enable_query(struct block_device	*bi_bdev);
 extern enum blk_io_state blk_busy_idle_query(struct request_queue *q);
-extern void blk_lld_dump_register(struct request_queue *q, lld_dump_status_fn* dump_status);
+extern void blk_lld_dump_register(struct request_queue *q, lld_dump_status_fn *dump_status, bool runtime_dump_only);
+extern void blk_queue_idle_intr_enable(struct request_queue *q, int enable);
+extern void blk_lld_idle_notify(struct blk_lld_func *lld);
 #else
 static inline int blk_busy_idle_event_subscriber(struct block_device*bi_bdev, struct blk_busy_idle_nb* notify_nb){return 0;}
 static inline int blk_queue_busy_idle_event_subscriber(struct request_queue *q, struct blk_busy_idle_nb* notify_nb){return 0;}
+static inline int blk_lld_busy_idle_event_subscriber(struct blk_lld_func* lld, struct blk_busy_idle_nb* notify_nb){return 0;}
 static inline int blk_busy_idle_event_unsubscriber(struct block_device	*bi_bdev, struct blk_busy_idle_nb* notify_nb){return 0;}
 static inline int blk_queue_busy_idle_event_unsubscriber(struct request_queue *q, struct blk_busy_idle_nb* notify_nb){return 0;}
+static inline int blk_lld_busy_idle_event_unsubscriber(struct blk_lld_func* lld, struct blk_busy_idle_nb* notify_nb){return 0;}
 static inline void blk_queue_busy_idle_enable(struct request_queue *q, int enable){}
 static inline bool blk_busy_idle_enable_query(struct block_device	*bi_bdev){return false;}
 static inline enum blk_io_state blk_busy_idle_query(struct request_queue *q){return BLK_IO_IDLE;}
-static inline void blk_lld_dump_register(struct request_queue *q, lld_dump_status_fn* dump_status){}
+static inline void blk_lld_dump_register(struct request_queue *q, lld_dump_status_fn *dump_status, bool runtime_dump_only){}
+static inline void blk_queue_idle_intr_enable(struct request_queue *q, int enable){}
+static inline void blk_lld_idle_notify(struct blk_lld_func *lld){}
 #endif
 #define BLK_FLUSH_NORMAL		0
 #define BLK_FLUSH_EMERGENCY	1

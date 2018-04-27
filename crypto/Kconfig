@@ -102,6 +102,15 @@ config CRYPTO_AKCIPHER
 	select CRYPTO_AKCIPHER2
 	select CRYPTO_ALGAPI
 
+config CRYPTO_KPP2
+	tristate
+	select CRYPTO_ALGAPI2
+
+config CRYPTO_KPP
+	tristate
+	select CRYPTO_ALGAPI
+	select CRYPTO_KPP2
+
 config CRYPTO_RSA
 	tristate "RSA algorithm"
 	select CRYPTO_AKCIPHER
@@ -109,6 +118,12 @@ config CRYPTO_RSA
 	select ASN1
 	help
 	  Generic implementation of the RSA public key algorithm.
+
+config CRYPTO_ECDH
+	tristate "ECDH algorithm"
+	select CRYTPO_KPP
+	help
+	  Generic implementation of the ECDH algorithm
 
 config CRYPTO_MANAGER
 	tristate "Cryptographic algorithm manager"
@@ -124,6 +139,7 @@ config CRYPTO_MANAGER2
 	select CRYPTO_BLKCIPHER2
 	select CRYPTO_PCOMP2
 	select CRYPTO_AKCIPHER2
+	select CRYPTO_KPP2
 
 config CRYPTO_USER
 	tristate "Userspace cryptographic algorithm configuration"

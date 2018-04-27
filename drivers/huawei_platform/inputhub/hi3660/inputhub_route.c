@@ -620,8 +620,9 @@ int ap_hall_report(int value)
 bool ap_sensor_enable(int tag, bool enable)
 {
 	bool work_on_ap = false;
-	if (tag >= TAG_SENSOR_END)
+	if (tag >= TAG_SENSOR_END){
 		return false;
+		}
 
 	work_on_ap = all_ap_sensor_operations[tag].work_on_ap;
 
@@ -2699,12 +2700,7 @@ void inputhub_process_sensor_report(const pkt_header_t* head)
         }
 
         //hwlog_info("[%lld] Kernel get event %d cnt %d!\n",timestamp, head->tag, sensor_event->cnt);
-        if (sensor_event->cnt < 0)
-        {
-            hwlog_err("Kernel get event %d cnt %d error!\n",
-                      head->tag, sensor_event->cnt);
-        }
-        else if (sensor_event->cnt < 1)
+        if (sensor_event->cnt < 1)
         {
             goto flush_event;
         }
@@ -2808,8 +2804,6 @@ void inputhub_process_sensor_report(const pkt_header_t* head)
             if (sensor_event->xyz[0].y == 1 && ps_value != 0)
             {
                 hwlog_info("ps don't get the point!\n");
-                __dmd_log_report(DSM_SHB_ERR_MCU_PS, __func__,
-                                 "gesture worked\n");
             }
         }
 
@@ -3015,7 +3009,7 @@ int inputhub_route_recv_mcu_data(const char *buf, unsigned int length)
     {
         char* motion_data = (char*)head + sizeof(pkt_header_t);
 
-        if (((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF)
+        if ((((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF) || (((int)motion_data[0]) == MOTIONHUB_TYPE_PICKUP))
         {
             wake_lock_timeout(&wlock, HZ);
             hwlog_err("%s weaklock HZ motiontype = %d \n", __func__,

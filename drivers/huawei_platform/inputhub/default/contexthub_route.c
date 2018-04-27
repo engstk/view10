@@ -72,6 +72,7 @@ static uint32_t valid_step_count;
 static uint32_t recovery_step_count;
 static uint32_t valid_floor_count = 0;
 static uint32_t recovery_floor_count = 0;
+static struct workqueue_struct *mcu_aod_wq;
 static DEFINE_MUTEX(mutex_update);
 
 extern struct CONFIG_ON_DDR *pConfigOnDDr;
@@ -96,12 +97,15 @@ extern uint32_t need_reset_io_power;
 extern uint8_t tag_to_hal_sensor_type[TAG_SENSOR_END];
 
 extern int ak8789_register_report_data(int ms);
+extern int ams_tcs3430_setenable(bool enable);
+extern void fingerprint_ipc_cgbe_abort_handle(void);
 
 static struct inputhub_route_table package_route_tbl[] = {
 	{ROUTE_SHB_PORT, {NULL, 0}, {NULL, 0}, {NULL, 0}, __WAIT_QUEUE_HEAD_INITIALIZER(package_route_tbl[0].read_wait)},
 	{ROUTE_MOTION_PORT, {NULL, 0}, {NULL, 0}, {NULL, 0}, __WAIT_QUEUE_HEAD_INITIALIZER(package_route_tbl[1].read_wait)},
 	{ROUTE_CA_PORT, {NULL,0}, {NULL,0}, {NULL,0}, __WAIT_QUEUE_HEAD_INITIALIZER(package_route_tbl[2].read_wait)},
 	{ROUTE_FHB_PORT, {NULL,0}, {NULL,0}, {NULL,0}, __WAIT_QUEUE_HEAD_INITIALIZER(package_route_tbl[3].read_wait)},
+	{ROUTE_FHB_UD_PORT, {NULL,0}, {NULL,0}, {NULL,0}, __WAIT_QUEUE_HEAD_INITIALIZER(package_route_tbl[4].read_wait)},
 };
 
 bool really_do_enable_disable(int *ref_cnt, bool enable, int bit)
@@ -318,6 +322,13 @@ t_ap_sensor_ops_record all_ap_sensor_operations[TAG_SENSOR_END] = {
 		.ops = {.setdelay = ak8789_register_report_data},
 	},
 #endif
+#ifdef CONFIG_SENSORS_COLOR_AP
+	[TAG_COLOR] = {
+		.work_on_ap = true,
+		.ops = {//.setdelay = ams_tcs3430_setdelay,
+				.enable = ams_tcs3430_setenable},
+	},
+#endif
 };
 
 int register_ap_sensor_operations(int tag, sensor_operation_t *ops)
@@ -383,6 +394,10 @@ int ap_hall_report(int value)
 {
 	hall_value = value;
 	return report_sensor_event(TAG_HALL, &value, sizeof(value));
+}
+int ap_color_report(int value[], int length)
+{
+	return report_sensor_event(TAG_COLOR, value, length);
 }
 
 bool ap_sensor_enable(int tag, bool enable)
@@ -562,9 +577,6 @@ static int inputhub_mcu_send(const char* buf, unsigned int length)
 
 	peri_used_request();
 	len = (length + sizeof(mbox_msg_t) - 1) / (sizeof(mbox_msg_t));
-	hwlog_debug("inputhub_mcu_send------->tag = 0x%x, cmd =0x%x, length = %d, len = %d, data0 0x%x, data1 0x%x, data2 0x%x, data3 0x%x.\n",
-		((pkt_header_t *)buf) ->tag, ((pkt_header_t *)buf) ->cmd, (int)length, (int)len,
-		*(uint32_t*)(buf), *(uint32_t*)(buf+4), *(uint32_t*)(buf+sizeof(pkt_header_t)), *(uint32_t*)(buf+sizeof(pkt_header_t)+4));
 	ret = RPROC_SYNC_SEND(ipc_ap_to_iom_mbx, (mbox_msg_t*) buf, len, NULL, 0);
 	if (ret) {
 	    hwlog_err("RPROC_SYNC_SEND return %d.\n", ret);
@@ -728,6 +740,9 @@ char *obj_tag_str[] = {
 	[TAG_MAGN_BRACKET] = "TAG_MAGN_BRACKET",
 	[TAG_RPC]= "TAG_RPC",
 	[TAG_AGT]="TAG_AGT",
+	[TAG_COLOR]="TAG_COLOR",
+	[TAG_FP_UD] = "TAG_FP_UD",
+	[TAG_ACCEL_UNCALIBRATED] = "TAG_ACCEL_UNCALIBRATED",
 	[TAG_END] = "TAG_END",
 };
 
@@ -1035,7 +1050,7 @@ int write_customize_cmd(const struct write_info *wr, struct read_info *rd, bool 
 	if (wr->wr_buf != NULL) {
 		memcpy(buf + sizeof(pkt_header_t), wr->wr_buf, wr->wr_len);
 	}
-	if ((wr->tag == TAG_SHAREMEM) && (g_iom3_state == IOM3_ST_RECOVERY || iom3_power_state == ST_SLEEP))
+	if ((wr->tag == TAG_SHAREMEM) && (g_iom3_state == IOM3_ST_REPEAT || g_iom3_state == IOM3_ST_RECOVERY || iom3_power_state == ST_SLEEP))
 	{
 		return inputhub_mcu_write_cmd_nolock(buf, sizeof(pkt_header_t) + wr->wr_len);
 	}
@@ -1047,7 +1062,7 @@ int write_customize_cmd(const struct write_info *wr, struct read_info *rd, bool 
 
 static bool is_fingerprint_data_report(const pkt_header_t* head)
 {
-    return (head->tag == TAG_FP) && (CMD_DATA_REQ == head->cmd);
+    return ((head->tag == TAG_FP) || (head->tag == TAG_FP_UD)) && (CMD_DATA_REQ == head->cmd);
 }
 
 static bool is_motion_data_report(const pkt_header_t *head)
@@ -1107,6 +1122,79 @@ static int report_resp_data(const pkt_subcmd_resp_t *head)
 	spin_unlock_irqrestore(&type_record.lock_spin, flags);
 
 	return ret;
+}
+
+static void init_aod_workqueue(void)
+{
+	mcu_aod_wq = create_singlethread_workqueue("mcu_aod_workqueue");
+}
+
+int __weak dss_sr_of_sh_callback(const pkt_header_t *head)
+{
+	if (head)
+		hwlog_debug("weak dss_sr_of_sh_callback:%d\n", head->cmd);
+
+	return 0;
+}
+
+static void mcu_aod_notifier_handler(struct work_struct *work)
+{
+	/*find data according work*/
+	struct mcu_notifier_work *p = container_of(work, struct mcu_notifier_work, worker);
+	if (!p || !p->data) {
+		hwlog_info("invalid data\n");
+		if (p)
+			kfree(p);
+
+		return;
+	}
+
+	dss_sr_of_sh_callback(p->data);
+
+	kfree(p->data);
+	kfree(p);
+}
+
+static bool is_aod_notifier(const pkt_header_t *head)
+{
+	uint32_t *sub_cmd;
+	struct mcu_notifier_work *notifier_work;
+
+	if ((head->tag == TAG_AOD) && (CMD_DATA_REQ == head->cmd) && (head->length > 0)) {
+		sub_cmd = (uint32_t *)(head + 1);
+		if (SUB_CMD_AOD_DSS_ON_REQ == (*sub_cmd)
+			|| SUB_CMD_AOD_DSS_OFF_REQ  == (*sub_cmd)) {
+
+			if (head->length > MAX_PKT_LENGTH) {
+				hwlog_err("is_aod_notifier:invalid data len\n");
+				return true;
+			}
+
+			if (SUB_CMD_AOD_DSS_ON_REQ == (*sub_cmd)) {
+				hwlog_info("SUB_CMD_AOD_DSS_ON_REQ\n");
+				//make sure AOD DSS ON IPC can be handled
+				wake_lock_timeout(&wlock, HZ / 2);
+			} else {
+				hwlog_info("SUB_CMD_AOD_DSS_OFF_REQ\n");
+			}
+
+			notifier_work = kzalloc(sizeof(struct mcu_notifier_work), GFP_ATOMIC);
+			if (NULL == notifier_work)
+				return true;
+
+			notifier_work->data = kzalloc(head->length + sizeof(pkt_header_t), GFP_ATOMIC);
+			if (NULL == notifier_work->data) {
+				kfree(notifier_work);
+				return true;
+			}
+
+			memcpy(notifier_work->data, head, sizeof(pkt_header_t) + head->length);
+			INIT_WORK(&notifier_work->worker, mcu_aod_notifier_handler);
+			queue_work(mcu_aod_wq, &notifier_work->worker);
+		}
+		return true;
+	}
+	return false;
 }
 
 static void init_mcu_notifier_list(void)
@@ -1404,6 +1492,9 @@ static void update_client_info(uint8_t dmd_case)
 		case 0x2C:
 			dsm_sensorhub.ic_name = "SAR_ADUX1050";
 			break;
+		case 0x49:
+			dsm_sensorhub.ic_name = "TP_FTM4CD56D";
+			break;
 		default:
 			hwlog_err("update_client_info uncorrect dmd case %x.\n", dmd_case);
 			return;
@@ -1541,7 +1632,7 @@ static int process_sensors_report(const pkt_header_t* head)
 			}
 			break;
 		case TAG_CAP_PROX:
-			hwlog_info("TAG_CAP_PROX!!!!data[0]=%d,data[1]=%d,data[2]=%d.\n",
+			hwlog_debug("TAG_CAP_PROX!!!!data[0]=%d,data[1]=%d,data[2]=%d.\n",
 				sensor_event->xyz[0].x,sensor_event->xyz[0].y,sensor_event->xyz[0].z);
 			break;
 		case TAG_ACCEL:
@@ -1572,7 +1663,7 @@ static int process_sensors_report(const pkt_header_t* head)
 			hwlog_info("Kernel get magn bracket event %d\n", ((pkt_magn_bracket_data_req_t *)head)->status);
 			break;
 		case TAG_RPC:
-			hwlog_info("TAG_RPC!data[0]=%d,data[1]=%d,data[2]=%d.\n",
+			hwlog_debug("TAG_RPC!data[0]=%d,data[1]=%d,data[2]=%d.\n",
 				sensor_event->xyz[0].x,sensor_event->xyz[0].y,sensor_event->xyz[0].z);
 			break;
 		default:
@@ -1607,12 +1698,10 @@ static void inputhub_process_sensor_report(const pkt_header_t* head)
             timestamp = sensors_tm[head->tag] + 1;
         }
 
-        if (sensor_event->data_hd.cnt < 0) {
-		hwlog_err("Kernel get event %d cnt %d error!\n", head->tag, sensor_event->data_hd.cnt);
-        } else if (sensor_event->data_hd.cnt < 1) {
+        if (sensor_event->data_hd.cnt < 1) {
 		goto flush_event;
         } else if (sensor_event->data_hd.cnt > 1) {
-		delta = sensor_event->data_hd.sample_rate * 1000000;
+		delta = (uint64_t)(sensor_event->data_hd.sample_rate) * 1000000;
 		head_timestamp = timestamp - (sensor_event->data_hd.cnt - 1) * (int64_t)delta;
 		if (head_timestamp <= sensors_tm[head->tag]) {
 			delta = (timestamp - sensors_tm[head->tag]) / sensor_event->data_hd.cnt;
@@ -1746,14 +1835,21 @@ static int inputhub_process_fingerprint_report(const pkt_header_t* head)
 	hwlog_info("fingerprint: %s: tag = %d, data:%d\n", __func__, fingerprint_data_upload->fhd.hd.tag, fingerprint_data_upload->data);
 	fingerprint_data = (char*)fingerprint_data_upload + sizeof(pkt_common_data_t);
 
-	return inputhub_route_write(ROUTE_FHB_PORT, fingerprint_data, sizeof(fingerprint_data_upload->data));
+	fingerprint_ipc_cgbe_abort_handle();
+
+	if (TAG_FP == fingerprint_data_upload->fhd.hd.tag)
+	{
+		return inputhub_route_write(ROUTE_FHB_PORT, fingerprint_data, sizeof(fingerprint_data_upload->data));
+	} else {
+		return inputhub_route_write(ROUTE_FHB_UD_PORT, fingerprint_data, sizeof(fingerprint_data_upload->data));
+	}
 }
 
 static int inputhub_process_motion_report(const pkt_header_t* head)
 {
 	char* motion_data = (char*)head + sizeof(pkt_common_data_t);
 
-	if (((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF)
+	if ((((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF) || (((int)motion_data[0]) == MOTIONHUB_TYPE_PICKUP))
         {
             wake_lock_timeout(&wlock, HZ);
             hwlog_err("%s weaklock HZ motiontype = %d \n", __func__, motion_data[0]);
@@ -1801,6 +1897,9 @@ int inputhub_route_recv_mcu_data(const char *buf, unsigned int length)
 			complete(&iom3_resume_all);
 		}
 		mcu_reboot_callback(head);
+	}
+	if (is_aod_notifier(head)) {
+		is_notifier = true;
 	}
 	if (is_mcu_notifier(head)) {
 		mcu_notifier_queue_work(head, mcu_notifier_handler);
@@ -1866,6 +1965,7 @@ void inputhub_route_init(void)
 	init_locks();
 	init_mcu_notifier_list();
 	init_mcu_event_wait_list();
+	init_aod_workqueue();
 #ifdef CONFIG_CONTEXTHUB_SHMEM
 	if(contexthub_shmem_init())
 	    hwlog_err("failed to init shmem\n");

@@ -14,6 +14,14 @@ ifeq ($(CONFIG_HISI_FB_970),y)
 obj-$(CONFIG_HISI_FB_970) := hisifb.o
 endif
 
+ifeq ($(CONFIG_HISI_FB_V501),y)
+obj-$(CONFIG_HISI_FB_V501) := hisifb.o
+endif
+
+ifeq ($(CONFIG_HISI_FB_V320),y)
+obj-$(CONFIG_HISI_FB_V320) := hisifb.o
+endif
+
 hisifb-objs := \
 	hisi_mipi_dsi_host.o \
 	hisi_mipi_dsi.o \
@@ -46,6 +54,7 @@ hisifb-objs += \
 	hisi_dpe_utils_hi3650.o \
 	hisi_display_effect_hi3650.o \
 	hisi_overlay_utils_hi3650.o \
+	hisi_mipi_dsi_v3xx.o \
 	hisi_rgb2mipi.o \
 	hisi_fb_spi.o \
 	panel/mipi_tianma_OTM9608A.o \
@@ -92,6 +101,7 @@ hisifb-objs += \
 	hisi_dpe_utils_hi3650.o \
 	hisi_display_effect_hi6250.o \
 	hisi_overlay_utils_hi6250.o \
+	hisi_mipi_dsi_v3xx.o \
 	hisi_rgb2mipi.o \
 	hisi_fb_spi.o \
 	panel/mipi_lcd_external_panel.o \
@@ -106,6 +116,7 @@ hisifb-objs += \
 	hisi_dpe_utils_hi3660.o \
 	hisi_display_effect_hi3660.o \
 	hisi_overlay_utils_hi3660.o \
+	hisi_mipi_dsi_v3xx.o \
 	hisi_overlay_copybit.o \
 	backlight/lm36274.o \
 	backlight/lp8556.o\
@@ -144,9 +155,11 @@ hisifb-objs += \
 	hisi_dpe_utils_kirin970.o \
 	hisi_display_effect_kirin970.o \
 	hisi_overlay_utils_kirin970.o \
+	hisi_mipi_dsi_v410.o \
 	hisi_overlay_copybit.o \
 	hisi_overlay_mediacommon.o \
 	hisi_mediacommon_panel.o \
+	hisi_sensorhub_aod.o \
 	backlight/lm36274.o \
 	backlight/lm36923.o \
 	backlight/lp8556.o \
@@ -180,14 +193,64 @@ hisifb-objs += hdcp22/host_lib_driver_linux_kernel.o \
 			hdcp22/hdcp13.o
 endif
 
+ifeq ($(CONFIG_HISI_FB_V501),y)
+hisifb-objs += \
+	hisi_dp.o \
+	hisi_dp_hpd.o \
+	hisi_dpe_utils_dssv501.o \
+	hisi_display_effect_dssv501.o \
+	hisi_overlay_utils_dssv501.o \
+	hisi_mipi_dsi_v410.o \
+	hisi_overlay_copybit.o \
+	hisi_overlay_mediacommon.o \
+	hisi_mediacommon_panel.o \
+	hisi_fb_video_idle.o \
+	panel/dssv501/mipi_cmi_NT35521.o \
+	panel/dssv501/mipi_jdi_R63452.o \
+	panel/kirin970/mipi_lg_TD4322.o \
+	panel/kirin970/mipi_sharp_NT36870.o \
+	panel/kirin970/mipi_lcd_external_panel.o
+
+hisifb-objs += \
+	dp/dp_aux.o \
+	dp/avgen.o \
+	dp/core.o \
+	dp/intr.o \
+	dp/edid.o \
+	dp/link.o \
+	dp/drm_dp_helper.o \
+	panel/dp_fake_panel.o
+
+hisifb-objs += hdcp22/host_lib_driver_linux_kernel.o \
+			hdcp22/hdcp13.o
+endif
+
+ifeq ($(CONFIG_HISI_FB_V320),y)
+hisifb-objs += \
+	hisi_display_effect_dssv320.o \
+	hisi_dpe_utils_dssv320.o \
+	hisi_overlay_utils_dssv320.o \
+	hisi_mipi_dsi_v3xx.o \
+	backlight/lm36274.o \
+	backlight/lm36923.o \
+	backlight/lp8556.o \
+	panel/dssv320/mipi_tm_OTM1911A.o \
+	panel/dssv320/mipi_cmi_NT35521.o
+
+hisifb-objs += \
+	panel/dp_fake_panel.o
+endif
+
 hisifb-objs += \
 	panel/lcdc_fake_panel.o \
 	panel/mipi_fake_panel.o \
 	panel/hdmi_fake_panel.o
 
+ifneq ($(CONFIG_HISI_FB_V501),y)
 hisifb-objs += voltage/tps65132.o
 hisifb-objs += voltage/rt4801h.o
 hisifb-objs += voltage/ina231.o
+endif
 
 EXTRA_CFLAGS += -Idrivers/video/hisi/dss \
 		-Idrivers/video/hisi/panel \

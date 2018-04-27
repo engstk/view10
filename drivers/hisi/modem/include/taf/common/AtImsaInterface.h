@@ -98,14 +98,7 @@ extern "C" {
 /*****************************************************************************
   2 枚举定义
 *****************************************************************************/
-/*****************************************************************************
-枚举名    : AT_IMSA_MSG_TYPE_ENUM
-结构说明  : AT 和IMSA的之间的消息
 
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 定义AT和IMSA之间的接口消息
-*****************************************************************************/
 enum AT_IMSA_MSG_TYPE_ENUM
 {
     /* AT->IMSA */
@@ -231,19 +224,14 @@ enum AT_IMSA_MSG_TYPE_ENUM
     ID_IMSA_AT_DM_RCS_CFG_SET_CNF           = 0x102F,                           /* _H2ASN_MsgChoice IMSA_AT_DM_RCS_CFG_SET_CNF_STRU */
 
     ID_IMSA_AT_USER_AGENT_CFG_SET_CNF       = 0x1030,
+
+    ID_IMSA_AT_IMPU_TYPE_IND                = 0x1031,
     ID_AT_IMSA_MSG_BUTT
 };
 typedef  VOS_UINT32  AT_IMSA_MSG_TYPE_ENUM_UINT32;
 
 
-/*****************************************************************************
-枚举名    : AT_IMSA_IMS_REG_STATE_REPORT_ENUM
-结构说明  : IMS注册状态上报控制
 
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_IMS_REG_STATE_REPORT_ENUM
 {
     AT_IMSA_IMS_REG_STATE_DISABLE_REPORT        = 0,
@@ -254,14 +242,7 @@ enum AT_IMSA_IMS_REG_STATE_REPORT_ENUM
 };
 typedef  VOS_UINT32  AT_IMSA_IMS_REG_STATE_REPORT_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : AT_IMSA_CCWAI_MODE_ENUM
-结构说明  : 网络是否支持IMSVOPS
 
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_CCWAI_MODE_ENUM
 {
     AT_IMSA_CCWAI_MODE_DISABLE               = 0,
@@ -272,14 +253,7 @@ enum AT_IMSA_CCWAI_MODE_ENUM
 typedef  VOS_UINT8 AT_IMSA_CCWAI_MODE_ENUM_UINT8;
 
 
-/*****************************************************************************
-枚举名    : AT_IMSA_IMSVOPS_CAPABILITY_ENUM
-结构说明  : 网络是否支持IMSVOPS
 
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_IMSVOPS_CAPABILITY_ENUM
 {
     AT_IMSA_NW_NOT_SUPORT_IMSVOPS               = 0,
@@ -290,14 +264,7 @@ enum AT_IMSA_IMSVOPS_CAPABILITY_ENUM
 typedef  VOS_UINT32  AT_IMSA_IMSVOPS_CAPABILITY_ENUM_UINT32;
 
 
-/*****************************************************************************
-枚举名    : AT_IMSA_CIREP_REPORT_ENUM
-结构说明  : 是否允许CIREPH和CIREPI主动上报
 
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_CIREP_REPORT_ENUM
 {
     AT_IMSA_CIREP_REPORT_DISENABLE      = 0,
@@ -308,14 +275,7 @@ enum AT_IMSA_CIREP_REPORT_ENUM
 typedef  VOS_UINT32  AT_IMSA_CIREP_REPORT_ENUM_UINT32;
 
 
-/*****************************************************************************
-枚举名    : AT_IMSA_SRVCC_HANDVOER_ENUM
-结构说明  : SRVCC过程状态
 
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_SRVCC_HANDVOER_ENUM
 {
     AT_IMSA_SRVCC_HANDOVER_STARTED                = 0,
@@ -327,14 +287,7 @@ enum AT_IMSA_SRVCC_HANDVOER_ENUM
 };
 typedef  VOS_UINT32  AT_IMSA_SRVCC_HANDVOER_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : AT_IMSA_BATTERY_STATUS_ENUM
-结构说明  : 电池电量状态
 
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_BATTERY_STATUS_ENUM
 {
     AT_IMSA_BATTERY_STATUS_NORMAL                 = 0,                          /* 正常 */
@@ -345,14 +298,7 @@ enum AT_IMSA_BATTERY_STATUS_ENUM
 };
 typedef  VOS_UINT8  AT_IMSA_BATTERY_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : IMSA_AT_REG_FAIL_CODE_ENUM
-结构说明  : IMS注册失败信息
 
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum IMSA_AT_REG_FAIL_CODE_ENUM
 {
     IMSA_AT_REG_FAIL_CODE_PERM                    = 1,
@@ -361,13 +307,7 @@ enum IMSA_AT_REG_FAIL_CODE_ENUM
 };
 typedef  VOS_UINT8  IMSA_AT_REG_FAIL_CODE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : IMSA_AT_IMS_RAT_TYPE_ENUM
- 枚举说明  : IMS接入类型
- 1.日    期   : 2015年10月07日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum IMSA_AT_IMS_RAT_TYPE_ENUM
 {
     IMSA_AT_IMS_RAT_TYPE_LTE            = 0x00,
@@ -378,14 +318,7 @@ enum IMSA_AT_IMS_RAT_TYPE_ENUM
     IMSA_AT_IMS_RAT_TYPE_BUTT
 };
 typedef VOS_UINT8 IMSA_AT_IMS_RAT_TYPE_ENUM_UINT8;
-/*****************************************************************************
-枚举名    : AT_IMSA_ROAMING_IMS_SUPPORT_ENUM
-结构说明  : 漫游状态下是否支持IMS服务
 
-  1.日    期   : 2016年1月15日
-    作    者   : w00316404
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_ROAMING_IMS_SUPPORT_ENUM
 {
     AT_IMSA_ROAMING_IMS_SUPPORT         = 1,
@@ -395,13 +328,7 @@ enum AT_IMSA_ROAMING_IMS_SUPPORT_ENUM
 };
 typedef  VOS_UINT32  AT_IMSA_ROAMING_IMS_SUPPORT_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : IMSA_AT_IMS_REG_DOMAIN_TYPE_ENUM
- 枚举说明  : IMS注册域类型
- 1.日    期   : 2015年10月07日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum IMSA_AT_IMS_REG_DOMAIN_TYPE_ENUM
 {
     IMSA_AT_IMS_REG_DOMAIN_TYPE_LTE     = 0x00,
@@ -414,13 +341,7 @@ enum IMSA_AT_IMS_REG_DOMAIN_TYPE_ENUM
 typedef VOS_UINT8 IMSA_AT_IMS_REG_DOMAIN_TYPE_ENUM_UINT8;
 
 
-/*****************************************************************************
- 枚举名    : IMSA_AT_IMS_RAT_HO_STATUS_ENUM
- 枚举说明  : IMS注册域切换状态
- 1.日    期   : 2016年04月07日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum IMSA_AT_IMS_RAT_HO_STATUS_ENUM
 {
     IMSA_AT_IMS_RAT_HO_STATUS_SUCCESS               = 0x00,     /* RAT handover was successful */
@@ -430,13 +351,7 @@ enum IMSA_AT_IMS_RAT_HO_STATUS_ENUM
 };
 typedef VOS_UINT8 IMSA_AT_IMS_RAT_HO_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : IMSA_AT_IMS_SERVICE_STATUS_ENUM
- 枚举说明  : IMS的服务状态
- 1.日    期   : 2016年04月07日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum IMSA_AT_IMS_SERVICE_STATUS_ENUM
 {
     IMSA_AT_IMS_SERVICE_STATUS_NO_SERVICE           = 0x00,     /* IMS is no service */
@@ -447,13 +362,7 @@ enum IMSA_AT_IMS_SERVICE_STATUS_ENUM
 };
 typedef VOS_UINT8 IMSA_AT_IMS_SERVICE_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : IMSA_AT_HO_CAUSE_ENUM
- 枚举说明  : IMS的HO状态
- 1.日    期   : 2016年04月07日
-   作    者   :  z00353461
-   修改内容   : 创建
-*****************************************************************************/
+
 
 enum IMSA_AT_HO_CAUSE_ENUM
 {
@@ -499,13 +408,7 @@ enum AT_IMSA_VOICE_DOMAIN_ENUM
     AT_IMSA_VOICE_DOMAIN_BUTT
 };
 typedef VOS_UINT32 AT_IMSA_VOICE_DOMAIN_ENUM_UINT32;
-/*****************************************************************************
- 枚举名    : IMSA_AT_REG_ERR_TYPE_ENUM_UINT8
- 枚举说明  : IMS注册失败类型
- 1.日    期   : 2016年11月09日
-   作    者   : w00209181
-   修改内容   : 创建
-*****************************************************************************/
+
 enum IMSA_AT_REG_ERR_TYPE_ENUM
 {
     IMSA_AT_REG_ERR_TYPE_PDN_FAIL       = 0x00,
@@ -513,13 +416,7 @@ enum IMSA_AT_REG_ERR_TYPE_ENUM
     IMSA_AT_REG_ERR_TYPE_BUTT
 };
 typedef VOS_UINT8 IMSA_AT_REG_ERR_TYPE_ENUM_UINT8;
-/*****************************************************************************
- 枚举名    : IMSA_AT_REG_ERR_TYPE_ENUM_UINT8
- 枚举说明  : IMS注册失败类型
- 1.日    期   : 2016年11月09日
-   作    者   : w00209181
-   修改内容   : 创建
-*****************************************************************************/
+
 enum IMSA_AT_PDN_FAIL_CAUSE_ENUM
 {
     IMSA_AT_PDN_FAIL_CAUSE_PARA_ERR                             = 1,
@@ -588,13 +485,7 @@ enum IMSA_AT_PDN_FAIL_CAUSE_ENUM
     IMSA_AT_PDN_FAIL_CAUSE_BUTT
 };
 typedef VOS_UINT32 IMSA_AT_PDN_FAIL_CAUSE_ENUM_UINT32;
-/*****************************************************************************
- 枚举名    : IMSA_AT_REG_FAIL_CAUSE_ENUM
- 枚举说明  : IMS注册失败类型
- 1.日    期   : 2016年11月09日
-   作    者   : w00209181
-   修改内容   : 创建
-*****************************************************************************/
+
 enum IMSA_AT_REG_FAIL_CAUSE_ENUM
 {
     IMSA_AT_REG_FAIL_CAUSE_FAIL                = 1,
@@ -615,14 +506,7 @@ enum IMSA_AT_REG_FAIL_CAUSE_ENUM
 typedef VOS_UINT32 IMSA_AT_REG_FAIL_CAUSE_ENUM_UINT32;
 
 
-/*****************************************************************************
-枚举名    : AT_IMSA_IMS_SRV_STAT_REPORT_ENUM
-结构说明  : IMS服务状态更新上报控制
 
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum AT_IMSA_IMS_SRV_STAT_REPORT_ENUM
 {
     AT_IMSA_IMS_SRV_STAT_DISABLE_REPORT         = 0,
@@ -632,17 +516,20 @@ enum AT_IMSA_IMS_SRV_STAT_REPORT_ENUM
 };
 typedef  VOS_UINT32  AT_IMSA_IMS_SRV_STAT_REPORT_ENUM_UINT32;
 
+
+enum AT_IMSA_IMPU_TYPE_ENUM
+{
+    AT_IMSA_IMPU_TYPE_MSISDN                    = 0,
+    AT_IMSA_IMPU_TYPE_IMSI                      = 1,
+
+    AT_IMSA_IMPU_TYPE_BUTT
+};
+typedef  VOS_UINT32  AT_IMSA_IMPU_TYPE_ENUM_UINT32;
+
 /*****************************************************************************
   3 类型定义
 *****************************************************************************/
-/*****************************************************************************
-结构名    : AT_IMSA_MSG_STRU
-结构说明  : AT模块与IMSA模块间的消息结构
 
-1.日    期  : 2013年09月12日
-  作    者  : Y00213812
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -653,14 +540,7 @@ typedef struct
     VOS_UINT8                           aucContent[4];
 } AT_IMSA_MSG_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_MSG_STRU
-结构说明  : IMSA模块与AT模块间CNF的消息结构
 
-1.日    期  : 2016年7月5日
-  作    者  : w00316404
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -669,68 +549,26 @@ typedef struct
     VOS_UINT32                              ulResult;                           /* 成功返回VOS_OK，失败返回VOS_ERR */
 } IMSA_AT_CNF_MSG_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_CIREG_QRY_REQ_STRU
-结构说明  : ID_AT_IMSA_CIREG_QRY_REQ的消息结构
 
-1.日    期  : 2013年09月12日
-  作    者  : Y00213812
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_CIREG_QRY_REQ_STRU;
 
 
-/*****************************************************************************
-结构名    : AT_IMSA_CIREP_QRY_REQ_STRU
-结构说明  : ID_AT_IMSA_CIREP_QRY_REQ的消息结构
 
-1.日    期  : 2013年09月12日
-  作    者  : Y00213812
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_CIREP_QRY_REQ_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_VOLTEIMPU_QRY_REQ_STRU
-结构说明  : ID_AT_IMSA_VOLTEIMPU_QRY_REQ的消息结构
 
-1.日    期  : 2013年12月05日
-  作    者  : Y00213812
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_VOLTEIMPU_QRY_REQ_STRU;
 
 
-/*****************************************************************************
-结构名    : AT_IMSA_VOLTEIMPI_QRY_REQ_STRU
-结构说明  : ID_AT_IMSA_VOLTEIMPI_QRY_REQ的消息结构
 
-1.日    期  : 2016年10月27日
-  作    者  : W00209181
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_VOLTEIMPI_QRY_REQ_STRU;
 
 
-/*****************************************************************************
-结构名    : AT_IMSA_VOLTEDOMAIN_QRY_REQ_STRU
-结构说明  : ID_AT_IMSA_VOLTEDOMAIN_QRY_REQ的消息结构
 
-1.日    期  : 2016年10月27日
-  作    者  : W00209181
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_VOLTEDOMAIN_QRY_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名  : AT_IMSA_CCWAI_SET_REQ_STRU
- 结构说明: ^CCWAI IMS  呼叫等待
- 修改历史      :
-  1.日    期   : 2014年3月11日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -741,14 +579,7 @@ typedef struct
     VOS_UINT32                          ulSrvClass;
 } AT_IMSA_CCWAI_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CCWAI_SET_CNF_STRU
- 结构说明: ^CCWAI IMS  呼叫等待
- 修改历史      :
-  1.日    期   : 2014年3月11日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -760,14 +591,7 @@ typedef struct
 } IMSA_AT_CCWAI_SET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名  : AT_IMSA_CALL_ENCRYPT_SET_REQ_STRU
- 结构说明: ^CALLENCRYPT: 设置语音加密请求
- 修改历史      :
-  1.日    期   : 2015年10月14日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -779,14 +603,7 @@ typedef struct
     VOS_UINT8                           aucReserved2[3];
 } AT_IMSA_CALL_ENCRYPT_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_CALL_ENCRYPT_SET_CNF_STRU
- 结构说明: ^CALLENCRYPT: 设置语音加密回复
- 修改历史      :
-  1.日    期   : 2015年10月14日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -797,15 +614,7 @@ typedef struct
     VOS_UINT32                          ulResult;                               /* 成功返回VOS_OK，失败返回VOS_ERR */
 } IMSA_AT_CALL_ENCRYPT_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_CIREG_SET_REQ_STRU
- 结构说明: +CIREG IMS注册状态主动上报控制设置
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -817,15 +626,7 @@ typedef struct
 } AT_IMSA_CIREG_SET_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CIREG_SET_CNF_STRU
- 结构说明: +CIREG IMS注册状态主动上报控制
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -837,15 +638,7 @@ typedef struct
 } IMSA_AT_CIREG_SET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CIREG_QRY_CNF_STRU
- 结构说明: +CIREG IMS注册状态查询结果
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -863,15 +656,7 @@ typedef struct
     VOS_UINT32                          ulResult;                               /* 成功返回VOS_OK，失败返回VOS_ERR */
 } IMSA_AT_CIREG_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CIREGU_IND_STRU
- 结构说明: ID_IMSA_AT_CIREGU_IND IMS注册状态主动上报
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -888,15 +673,7 @@ typedef struct
 } IMSA_AT_CIREGU_IND_STRU;
 
 
-/*****************************************************************************
- 结构名  : AT_IMSA_CIREP_SET_REQ_STRU
- 结构说明: +CIREP SRVCC切换状态主动上报控制
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -908,15 +685,7 @@ typedef struct
 } AT_IMSA_CIREP_SET_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CIREP_SET_CNF_STRU
- 结构说明: +CIREP SRVCC切换状态主动上报控制
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -928,15 +697,7 @@ typedef struct
 } IMSA_AT_CIREP_SET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CIREP_QRY_CNF_STRU
- 结构说明: +CIREP IMSVOPS能力查询
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -949,19 +710,7 @@ typedef struct
     VOS_UINT32                          ulResult;                               /* 成功返回VOS_OK，失败返回VOS_ERR */
 } IMSA_AT_CIREP_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_VOLTEIMPU_QRY_CNF_STRU
- 结构说明: ^VOLTEIMPU IMPU信息查询结果
 
- 修改历史      :
-  1.日    期   : 2013年12月05日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-
-  2.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : LGU+ Project新增虚拟号码查询
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                             /* _H2ASN_Skip */
@@ -976,16 +725,7 @@ typedef struct
     VOS_CHAR                            aucImpuVirtual[AT_IMSA_IMPU_MAX_LENGTH];
 } IMSA_AT_VOLTEIMPU_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_VOLTEIMPI_QRY_CNF_STRU
- 结构说明: ^VOLTEIMPI IMPI信息查询结果
 
- 修改历史      :
-  1.日    期   : 2016年10月27日
-    作    者   : W00209181
-    修改内容   : 新增结构
-
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                             /* _H2ASN_Skip */
@@ -997,16 +737,7 @@ typedef struct
     VOS_UINT32                          ulImpiLen;
     VOS_CHAR                            aucImpi[AT_IMSA_IMPI_MAX_LENGTH];
 } IMSA_AT_VOLTEIMPI_QRY_CNF_STRU;
-/*****************************************************************************
- 结构名  : IMSA_AT_VOLTEDOMAIN_QRY_CNF_STRU
- 结构说明: ^VOLTEDOMAIN DOMAIN信息查询结果
 
- 修改历史      :
-  1.日    期   : 2016年10月27日
-    作    者   : W00209181
-    修改内容   : 新增结构
-
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                             /* _H2ASN_Skip */
@@ -1020,26 +751,10 @@ typedef struct
 } IMSA_AT_VOLTEDOMAIN_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名  : AT_IMSA_ROAMING_IMS_QRY_REQ_STRU
- 结构说明: AT通知IMSA查询漫游是否支持的结构
 
- 修改历史      :
-  1.日    期   : 2016年1月15日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_ROAMING_IMS_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_ROAMING_IMS_QRY_CNF_STRU
- 结构说明: ^ROAMIMSSERVICE 漫游状态下IMS服务是否支持查询命令CNF消息
 
- 修改历史      :
-  1.日    期   : 2016年1月15日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1052,15 +767,7 @@ typedef struct
 } IMSA_AT_ROAMING_IMS_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CIREPH_IND_STRU
- 结构说明: +CIREPH SRVCC切换状态主动上报
 
- 修改历史      :
-  1.日    期   : 2013年9月13日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1071,15 +778,7 @@ typedef struct
     AT_IMSA_SRVCC_HANDVOER_ENUM_UINT32  enHandover;
 } IMSA_AT_CIREPH_IND_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CIREPI_IND_STRU
- 结构说明: +CIREPI IMSVOPS主动上报
 
- 修改历史      :
-  1.日    期   : 2013年9月23日
-    作    者   : Y00213812
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1091,15 +790,7 @@ typedef struct
 } IMSA_AT_CIREPI_IND_STRU;
 
 
-/*****************************************************************************
- 结构名称: IMSA_AT_VT_PDP_ACTIVATE_IND_STRU
- 结构说明: IMSA上报VT承载激活成功结果的结构
 
- 修改历史      :
-  1.日    期   : 2014年07月31日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                             /* _H2ASN_Skip */
@@ -1113,15 +804,7 @@ typedef struct
 } IMSA_AT_VT_PDP_ACTIVATE_IND_STRU;
 
 
-/*****************************************************************************
- 结构名称: IMSA_AT_VT_PDP_DEACTIVATE_IND_STRU
- 结构说明: IMSA上报VT承载去激活成功结果的结构
 
- 修改历史      :
-  1.日    期   : 2014年07月31日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                             /* _H2ASN_Skip */
@@ -1164,15 +847,7 @@ typedef struct
     TAF_PDP_TYPE_ENUM_UINT8             enPdpType;
 } IMSA_AT_EMC_PDN_DEACTIVATE_IND_STRU;
 
-/*****************************************************************************
- 结构名称： IMSA_AT_MT_STATES_IND_STRU
- 结构说明:  IMSA上报AT收到被叫事件的结构
 
- 修改历史:
- 1.日期: 2015年03月18日
-   作者: m00277840
-   修改内容:新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                          /* _H2ASN_Skip */
@@ -1186,24 +861,10 @@ typedef struct
     VOS_UINT8                           aucAsciiCallNum[AT_IMSA_CALL_ASCII_NUM_MAX_LENGTH];
 } IMSA_AT_MT_STATES_IND_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_IMS_REG_DOMAIN_QRY_REQ_STRU
- 结构说明: 查询IMS注册域请求
- 修改历史      :
-  1.日    期   : 2015年10月07日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef AT_IMSA_MSG_STRU AT_IMSA_IMS_REG_DOMAIN_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_REG_DOMAIN_QRY_CNF_STRU
- 结构说明: 查询IMS注册域回复
- 修改历史      :
-  1.日    期   : 2015年10月07日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1213,14 +874,7 @@ typedef struct
     IMSA_AT_IMS_REG_DOMAIN_TYPE_ENUM_UINT8  enImsRegDomain;
 } IMSA_AT_IMS_REG_DOMAIN_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_IMS_CTRL_MSG_STRU
- 结构说明: AT转发MAPCON->IMSA的内部消息
- 修改历史      :
-  1.日    期   : 2015年10月07日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1232,14 +886,7 @@ typedef struct
     VOS_UINT8                               aucWifiMsg[4];
 } AT_IMSA_IMS_CTRL_MSG_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_CTRL_MSG_STRU
- 结构说明: AT转发IMSA->MAPCON的内部消息
- 修改历史      :
-  1.日    期   : 2015年10月07日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1252,15 +899,7 @@ typedef struct
 } IMSA_AT_IMS_CTRL_MSG_STRU;
 
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_RAT_HANDOVER_IND_STRU
- 结构说明: IMS注册域切换指示
 
- 修改历史      :
-  1.日    期   : 2016年04月07日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1274,15 +913,7 @@ typedef struct
     IMSA_AT_HO_CAUSE_ENUM_UINT32            enCause;                            /* 切换失败原因值 */
 } IMSA_AT_IMS_RAT_HANDOVER_IND_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_SRV_STATUS_INFO_STRU
- 结构说明: IMS服务状态信息
 
- 修改历史      :
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     IMSA_AT_IMS_SERVICE_STATUS_ENUM_UINT8   enSmsSrvStatus;                     /* 短信的IMS服务状态 */
@@ -1295,15 +926,7 @@ typedef struct
     IMSA_AT_IMS_RAT_TYPE_ENUM_UINT8         enVsSrvRat;                         /* VS的IMS服务域 */
 } IMSA_AT_IMS_SRV_STATUS_INFO_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_SRV_STATUS_UPDATE_IND_STRU
- 结构说明: IMS服务状态变化指示
 
- 修改历史      :
-  1.日    期   : 2016年04月07日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1321,15 +944,7 @@ typedef struct
     AT_APPCTRL_STRU                         stAppCtrl;
 } IMSA_AT_DMCN_IND_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_DMDYN_STRU
- 结构说明: DMDYN配置参数结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月12日
-    作    者   : z00308719
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          bitOpAmrWbOctetAcigned       : 1;
@@ -1369,15 +984,7 @@ typedef struct
 
 } AT_IMSA_DMDYN_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_DMDYN_SET_REQ_STRU
- 结构说明: DMDYN参数配置命令
 
- 修改历史      :
-  1.日    期   : 2016年6月12日
-    作    者   : z00308719
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1386,15 +993,7 @@ typedef struct
     AT_IMSA_DMDYN_STRU                  stDmdyn;
 } AT_IMSA_DMDYN_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_DMDYN_SET_CNF_STRU
- 结构说明: DMDYN参数查询结果
 
- 修改历史      :
-  1.日    期   : 2016年6月12日
-    作    者   : z00308719
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1403,15 +1002,7 @@ typedef struct
     VOS_UINT32                          ulResult;                               /* 成功返回VOS_OK，失败返回VOS_ERR */
 } IMSA_AT_DMDYN_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_DMDYN_QRY_REQ_STRU
- 结构说明: DMDYN参数查询请求命令
 
- 修改历史      :
-  1.日    期   : 2016年6月12日
-    作    者   : z00308719
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_DMDYN_QRY_REQ_STRU;
 
 typedef struct
@@ -1502,15 +1093,7 @@ typedef struct
     IMSA_AT_PCSCF_STRU                  stAtPcscf;
 } IMSA_AT_PCSCF_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_TIMER_STRU
- 结构说明: IMS定时器时间信息结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                              bitOpTimerT1Value   : 1;
@@ -1546,15 +1129,7 @@ typedef struct
 
 }IMSA_AT_IMS_TIMER_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_IMSTIMER_SET_REQ_STRU
- 结构说明: ID_AT_IMSA_IMSTIMER_SET_REQ消息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1563,15 +1138,7 @@ typedef struct
     IMSA_AT_IMS_TIMER_STRU                  stImsTimer;
 }AT_IMSA_IMSTIMER_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMSTIMER_SET_CNF_STRU
- 结构说明: ID_IMSA_AT_IMSTIMER_SET_CNF消息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1580,26 +1147,10 @@ typedef struct
     VOS_UINT32                              ulResult;                   /* 成功返回 VOS_OK,失败返回 VOS_ERR*/
 }IMSA_AT_IMSTIMER_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_IMSTIMER_QRY_REQ_STRU
- 结构说明: ID_AT_IMSA_IMSTIMER_QRY_REQ消息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_IMSTIMER_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMSTIMER_QRY_CNF_STRU
- 结构说明: ID_IMSA_AT_IMSTIMER_QRY_CNF消息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1609,28 +1160,14 @@ typedef struct
     IMSA_AT_IMS_TIMER_STRU                  stImsTimer;
 }IMSA_AT_IMSTIMER_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_SMS_PSI_STRU
- 结构说明: IMS域动态变化参数对应结构体
 
-  1.日    期   : 2016年6月20日
-    作    者   : f00367319
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_CHAR                                acSmsPsi[AT_IMSA_MAX_SMSPSI_LEN + 1];
     VOS_UINT8                               aucReserved[3];
 }IMSA_SMS_PSI_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_SMSPSI_SET_REQ_STRU
- 结构说明: ID_AT_IMSA_SMSPSI_SET_REQ消息对应结构体
 
-  1.日    期   : 2016年6月20日
-    作    者   : f00367319
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1639,14 +1176,7 @@ typedef struct
     IMSA_SMS_PSI_STRU                       stSmsPsi;
 }AT_IMSA_SMSPSI_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_SMSPSI_SET_CNF_STRU
- 结构说明: ID_IMSA_AT_SMSPSI_SET_CNF消息对应结构体
 
-  1.日    期   : 2016年6月20日
-    作    者   : f00367319
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1655,26 +1185,10 @@ typedef struct
     VOS_UINT32                              ulResult;
 }IMSA_AT_SMSPSI_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_SMSPSI_QRY_REQ_STRU
- 结构说明: ID_AT_IMSA_SMSPSI_QRY_REQ消息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月20日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_SMSPSI_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_SMSPSI_QRY_CNF_STRU
- 结构说明: ID_IMSA_AT_SMSPSI_QRY_CNF消息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1685,26 +1199,10 @@ typedef struct
 
 }IMSA_AT_SMSPSI_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_DMUSER_QRY_REQ_STRU
- 结构说明: ID_IMSA_AT_DMUSER_QRY_REQ消息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_DMUSER_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_DMUSER_STRU
- 结构说明: DM用户信息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_CHAR                                acImpi[AT_IMSA_IMPI_MAX_LENGTH + 1];
@@ -1715,15 +1213,7 @@ typedef struct
     VOS_UINT32                              ulIpsecEnable;
 }IMSA_AT_DMUSER_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_DMUSER_STRU
- 结构说明: DM用户信息对应结构体
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1734,15 +1224,7 @@ typedef struct
 }IMSA_AT_DMUSER_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名  : AT_IMSA_NICKNAME_INFO_STRU
- 结构说明: IMS昵称结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                               ucNickNameLen;
@@ -1750,15 +1232,7 @@ typedef struct
     VOS_UINT8                               aucReserved[2];
 } IMSA_AT_NICKNAME_INFO_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_NICKNAME_SET_REQ_STRU
- 结构说明: 设置IMS昵称请求结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1767,36 +1241,13 @@ typedef struct
     IMSA_AT_NICKNAME_INFO_STRU              stNickName;
 } AT_IMSA_NICKNAME_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_NICKNAME_SET_CNF_STRU
- 结构说明: 设置IMS昵称返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_NICKNAME_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_NICKNAME_QRY_REQ_STRU
-结构说明  : 查询IMS昵称结构体
 
-1.日    期  : 2016年07月05日
-  作    者  : w00316404
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_NICKNAME_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_NICKNAME_QRY_CNF_STRU
- 结构说明: 查询IMS昵称返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1806,30 +1257,14 @@ typedef struct
     IMSA_AT_NICKNAME_INFO_STRU              stNickName;
 } IMSA_AT_NICKNAME_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_BATTERY_STATUS_INFO_STRU
- 结构说明: IMS当前电池电量信息结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     AT_IMSA_BATTERY_STATUS_ENUM_UINT8       enBatteryStatus;
     VOS_UINT8                               aucReserved[3];
 } AT_IMSA_BATTERY_STATUS_INFO_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_BATTERY_INFO_SET_REQ_STRU
- 结构说明: 设置IMS当前电池电量信息请求结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1838,41 +1273,17 @@ typedef struct
     AT_IMSA_BATTERY_STATUS_INFO_STRU        stBatteryStatusInfo;
 } AT_IMSA_BATTERY_INFO_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_BATTERY_INFO_SET_CNF_STRU
- 结构说明: 设置IMS当前电池电量信息返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_BATTERY_INFO_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_REG_FAIL_INFO_STRU
- 结构说明: IMS注册失败原因值结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     IMSA_AT_REG_FAIL_CODE_ENUM_UINT8        enFailCode;
     VOS_UINT8                               aucReserved[3];
 } IMSA_AT_REG_FAIL_INFO_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_REG_FAIL_IND_STRU
- 结构说明: 主动上报IMS注册失败原因值结构体
 
- 修改历史      :
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1881,46 +1292,22 @@ typedef struct
     IMSA_AT_REG_FAIL_INFO_STRU              stRegFailInfo;
 } IMSA_AT_REG_FAIL_IND_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_VOLTEREG_NTF_STRU
-结构说明  : 发送VOLTE REG NOTIFY结构体
 
-1.日    期  : 2016年09月06日
-  作    者  : w00316404
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_VOLTEREG_NTF_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_CANCEL_ADD_VIDEO_REQ_STRU
-结构说明  : 发送IMS VIDEO CALL CANCEL结构体
 
-1.日    期  : 2016年10月13日
-  作    者  : w00316404
-  修改内容  : 新增结构
-*****************************************************************************/
-typedef AT_IMSA_MSG_STRU AT_IMSA_CANCEL_ADD_VIDEO_REQ_STRU;
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
+    VOS_UINT32                          ulMsgId;                                /* _H2ASN_Skip */
+    AT_APPCTRL_STRU                     stAppCtrl;
+    VOS_UINT32                          ulCallIndex;
+} AT_IMSA_CANCEL_ADD_VIDEO_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_CANCEL_ADD_VIDEO_CNF_STRU
- 结构说明: 设置VOLTE语音到视频过程中取消视频返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2016年10月13日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_CANCEL_ADD_VIDEO_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_REGERR_REPORT_SET_REQ_STRU
- 结构说明: 设置IMS注册错误是否上报请求结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月09日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1930,37 +1317,13 @@ typedef struct
     VOS_UINT8                           aucReserv[3];
 } AT_IMSA_REGERR_REPORT_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_REGERR_REPORT_SET_CNF_STRU
- 结构说明: 设置IMS注册错误是否上报回复结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月09日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_REGERR_REPORT_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_REGERR_REPORT_QRY_REQ_STRU
- 结构说明: 查询IMS注册错误是否上报请求结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月09日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_REGERR_REPORT_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_REGERR_REPORT_QRY_CNF_STRU
- 结构说明: 查询IMS注册错误是否上报回复结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月09日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1973,15 +1336,7 @@ typedef struct
     VOS_UINT8                           aucReserved[7];
 } IMSA_AT_REGERR_REPORT_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_REGERR_REPORT_IND_STRU
- 结构说明: 主动上报IMS注册失败原因值结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月09日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -1996,15 +1351,7 @@ typedef struct
 } IMSA_AT_REGERR_REPORT_IND_STRU;
 
 
-/*****************************************************************************
- 结构名  : AT_IMSA_IMS_IP_CAP_SET_INFO_STRU
- 结构说明: 设置IMS IP能力信息的结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月05日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                              bitOpIpsecFlag       : 1;
@@ -2014,15 +1361,7 @@ typedef struct
     VOS_UINT32                              ulKeepAliveFlag;                    /* VOS_TRUE:支持KEEP ALIVE；VOS_FALSE:不支持KEEP ALIVE */
 } AT_IMSA_IMS_IP_CAP_SET_INFO_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_IMS_IP_CAP_SET_REQ_STRU
- 结构说明: 设置IMS IP能力请求的结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月05日
-    作    者   : w00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2030,36 +1369,13 @@ typedef struct
     AT_APPCTRL_STRU                     stAppCtrl;
     AT_IMSA_IMS_IP_CAP_SET_INFO_STRU    stIpCapInfo;
 } AT_IMSA_IMS_IP_CAP_SET_REQ_STRU;
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_IP_CAP_SET_CNF_STRU
- 结构说明: 设置IMS IP能力返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2016年11月26日
-    作    者   : W00209181
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_IMS_IP_CAP_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_IMS_IP_CAP_QRY_REQ_STRU
-结构说明  : 查询IMS IP能力的结构体
 
-1.日    期  : 2016年12月14日
-  作    者  : lwx331495
-  修改内容  : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_IMS_IP_CAP_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_IP_CAP_QRY_CNF_STRU
- 结构说明: 查询IMS IP能力请求的结构体
 
- 修改历史      :
-  1.日    期   : 2016年12月14日
-    作    者   : lwx331495
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2070,15 +1386,7 @@ typedef struct
     VOS_UINT32                              ulKeepAliveFlag;
 } IMSA_AT_IMS_IP_CAP_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_IMS_SRV_STAT_REPORT_SET_REQ_STRU
- 结构说明: 设置IMS服务状态更新上报控制请求结构体
 
- 修改历史      :
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2087,36 +1395,13 @@ typedef struct
     AT_IMSA_IMS_SRV_STAT_REPORT_ENUM_UINT32 enImsSrvStatRpt;
 } AT_IMSA_IMS_SRV_STAT_REPORT_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_SRV_STAT_REPORT_SET_CNF_STRU
- 结构说明: 设置IMS服务状态更新上报控制返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_IMS_SRV_STAT_REPORT_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_IMS_SRV_STAT_REPORT_QRY_REQ_STRU
-结构说明  : 查询IMS服务状态更新上报控制结构体
 
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_IMS_SRV_STAT_REPORT_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_SRV_STAT_REPORT_QRY_CNF_STRU
- 结构说明: 查询IMS服务状态更新上报控制返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2126,25 +1411,10 @@ typedef struct
     AT_IMSA_IMS_SRV_STAT_REPORT_ENUM_UINT32 enImsSrvStatRpt;
 } IMSA_AT_IMS_SRV_STAT_REPORT_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : AT_IMSA_IMS_SERVICE_STATUS_QRY_REQ_STRU
-结构说明  : 查询IMS服务状态结构体
 
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef AT_IMSA_MSG_STRU AT_IMSA_IMS_SERVICE_STATUS_QRY_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_IMS_SERVICE_STATUS_QRY_CNF_STRU
- 结构说明: 查询IMS服务状态返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2154,30 +1424,14 @@ typedef struct
     IMSA_AT_IMS_SRV_STATUS_INFO_STRU        stImsSrvStatInfo;
 } IMSA_AT_IMS_SERVICE_STATUS_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_EMERGENCY_AID_INFO_STRU
- 结构说明: EMC AID详细结构体
 
- 修改历史      :
-  1.日    期   : 2017年07月06日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                              ulAddressIdLen;                     /* Address Id 有效长度，允许为0 */
     VOS_CHAR                                acAddressId[AT_IMSA_MAX_EMERGENCY_AID_LEN];
 } AT_IMSA_EMERGENCY_AID_INFO_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_EMERGENCY_AID_SET_REQ_STRU
- 结构说明: 设置EMC AID请求结构体
 
- 修改历史      :
-  1.日    期   : 2017年07月06日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2186,55 +1440,23 @@ typedef struct
     AT_IMSA_EMERGENCY_AID_INFO_STRU         stEmcAIdInfo;
 } AT_IMSA_EMERGENCY_AID_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_EMERGENCY_AID_SET_CNF_STRU
- 结构说明: 设置EMC AID返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2017年07月03日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_EMERGENCY_AID_SET_CNF_STRU;
-/*****************************************************************************
- 结构名  : IMSA_AT_CALL_ALT_SRV_IND_STRU
- 结构说明: 飞行模式，vowifi下拨打普通呼，网络回380场景主动上报结构体
 
- 修改历史      :
-  1.日    期   : 2017年07月06日
-    作    者   : m00217266
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
     VOS_UINT32                              ulMsgId;                            /* _H2ASN_Skip */
     AT_APPCTRL_STRU                         stAppCtrl;
 } IMSA_AT_CALL_ALT_SRV_IND_STRU;
-/*****************************************************************************
- 结构名  : AT_IMSA_DM_RCS_CFG_SET_PARA_STRU
- 结构说明: 设置DM RCS 配置信息请求的结构体
 
- 修改历史      :
-  1.日    期   : 2017年6月23日
-    作    者   : m00217266
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulFeatureTag;
     VOS_UINT32                          ulDevCfg;
 }AT_IMSA_DM_RCS_CFG_SET_PARA_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_DM_RCS_CFG_SET_REQ_STRU
- 结构说明: 设置DM RCS 配置信息请求的结构体
 
- 修改历史      :
-  1.日    期   : 2017年6月23日
-    作    者   : m00217266
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2244,26 +1466,10 @@ typedef struct
     AT_IMSA_DM_RCS_CFG_SET_PARA_STRU    stDmRcsCfgPara;
 } AT_IMSA_DM_RCS_CFG_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_DM_RCS_CFG_SET_CNF_STRU
- 结构说明: 设置dm rcs 配置参数返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2017年06月23日
-    作    者   : m00217266
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_DM_RCS_CFG_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_USER_AGENT_CFG_STRU
- 结构说明: User agent cfg信息结构体
 
- 修改历史      :
-  1.日    期   : 2017年08月17日
-    作    者   : m00217266
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucPara1[AT_IMSA_USER_AGENT_STR_LEN + 1];
@@ -2275,15 +1481,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 } AT_IMSA_USER_AGENT_CFG_STRU;
 
-/*****************************************************************************
- 结构名  : AT_IMSA_USER_AGENT_CFG_SET_REQ_STRU
- 结构说明: 设置User agent cfg请求的结构体
 
- 修改历史      :
-  1.日    期   : 2017年08月17日
-    作    者   : m00217266
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
@@ -2293,16 +1491,19 @@ typedef struct
     AT_IMSA_USER_AGENT_CFG_STRU         stUaCfgInfo;
 } AT_IMSA_USER_AGENT_CFG_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名  : IMSA_AT_USER_AGENT_CFG_SET_CNF_STRU
- 结构说明: 设置User agent cfg参数返回结果结构体
 
- 修改历史      :
-  1.日    期   : 2017年08月17日
-    作    者   : m00217266
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef IMSA_AT_CNF_MSG_STRU IMSA_AT_USER_AGENT_CFG_SET_CNF_STRU;
+
+
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
+    VOS_UINT32                              ulMsgId;                            /* _H2ASN_Skip */
+    AT_APPCTRL_STRU                         stAppCtrl;
+
+    AT_IMSA_IMPU_TYPE_ENUM_UINT32           enImpuType;
+} IMSA_AT_IMPU_TYPE_IND_STRU;
+
 /*****************************************************************************
   4 宏定义
 *****************************************************************************/

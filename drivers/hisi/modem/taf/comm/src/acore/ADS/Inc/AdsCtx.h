@@ -180,7 +180,7 @@ extern "C" {
 
 #define ADS_GET_RABID_FROM_EXRABID(i)   (i & 0x3F)
 
-#define ADS_BUILD_EXRABID(i,j)          (((i << 6) & 0xC0) | (j & 0x3F))
+#define ADS_BUILD_EXRABID(mid,rabid)    ((VOS_UINT8)((((mid) << 6) & 0xC0) | ((rabid) & 0x3F)))
 
 #define ADS_BIT16_MASK(bit)             ((VOS_UINT16)(1 << (bit)))
 #define ADS_BIT16_SET(val,bit)          ((val) | ADS_BIT16_MASK(bit))
@@ -258,7 +258,7 @@ extern "C" {
 #define ADS_UL_SET_SENDING_FLAG(flg)                (g_stAdsCtx.stAdsIpfCtx.ucSendingFlg = flg)
 
 /* 获取存储队列的索引 */
-#define ADS_UL_GET_PRIO_QUEUE_INDEX(i, j)           (g_stAdsCtx.astAdsSpecCtx[i].stAdsUlCtx.aucPrioIndex[j])
+#define ADS_UL_GET_PRIO_QUEUE_INDEX(i, j)           (g_stAdsCtx.astAdsSpecCtx[i].stAdsUlCtx.aulPrioIndex[j])
 
 /* 获取上行队列调度优先级*/
 #define ADS_UL_GET_QUEUE_QCI(i, j)                  (g_stAdsCtx.astAdsSpecCtx[i].stAdsUlCtx.astAdsUlQueue[ADS_UL_GET_PRIO_QUEUE_INDEX(i, j)].enPrio)
@@ -266,8 +266,10 @@ extern "C" {
 /* 获取上行队列信息 */
 #define ADS_UL_GET_QUEUE_LINK_INFO(i, j)            (g_stAdsCtx.astAdsSpecCtx[i].stAdsUlCtx.astAdsUlQueue[ADS_UL_GET_PRIO_QUEUE_INDEX(i, j)].pstAdsUlLink)
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 /* 获取IX OR HRPD的上行IPF过滤组标志 */
 #define ADS_UL_GET_1X_OR_HRPD_UL_IPF_FLAG(i, j)     (g_stAdsCtx.astAdsSpecCtx[i].stAdsUlCtx.astAdsUlQueue[ADS_UL_GET_PRIO_QUEUE_INDEX(i, j)].uc1XorHrpdUlIpfFlag)
+#endif
 
 /* 获取上行队列一个加权数范围内记录的发送个数 */
 #define ADS_UL_GET_RECORD_NUM_IN_WEIGHTED(i, j)     (g_stAdsCtx.astAdsSpecCtx[i].stAdsUlCtx.astAdsUlQueue[ADS_UL_GET_PRIO_QUEUE_INDEX(i, j)].usRecordNum)
@@ -484,14 +486,7 @@ enum ADS_IPF_MEM_POOL_ID_ENUM
 };
 typedef VOS_UINT32 ADS_IPF_MEM_POOL_ID_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : ADS_IPF_MODE_ENUM
-结构说明  : IPF模式定义
 
-  1.日    期   : 2016年11月08日
-    作    者   : l00373346
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum ADS_IPF_MODE_ENUM
 {
     ADS_IPF_MODE_INT  = 0x00,                                                   /* 中断上下文 */
@@ -575,56 +570,27 @@ typedef struct
 
 } ADS_IPF_RD_RECORD_STRU;
 
-/*****************************************************************************
-结构名    : ADS_UL_QUEUE_STRU
-结构说明  : ADS上行队列管理
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS上行队列管理
-  2.日    期   : 2012年02月20日
-    作    者   : f00179208
-    修改内容   : 修改优先级域的定义
-  3.日    期   : 2012年9月12日
-    作    者   : l60609
-    修改内容   : AP适配项目：增加锁处理
-  4.日    期   : 2012年11月27日
-    作    者   : l60609
-    修改内容   : DSDA Phase II:双实例
-  5.日    期   : 2013年05月22日
-    作    者   : f00179208
-    修改内容   : V3R3 PPP RPOJECT:增加PDP TYPE
-*****************************************************************************/
 typedef struct
 {
     IMM_ZC_HEAD_STRU                   *pstAdsUlLink;                           /* Rab Id对应的队列 */
+    VOS_SPINLOCK                        stSpinLock;                             /* 队列锁 */
     VOS_UINT8                           ucIsQueueValid;                         /* 队列是否激活，VOS_TRUE:激活，VOS_FALSE:未激活 */
     ADS_QCI_TYPE_ENUM_UINT8             enPrio;                                 /* 调度优先级 */
     VOS_UINT16                          usRecordNum;                            /* 记录在一个加权数范围内发送数据的个数 */
-    VOS_SPINLOCK                        stSpinLock;                             /* 队列锁 */
     ADS_CDS_IPF_PKT_TYPE_ENUM_UINT8     enPktType;                              /* 数据包类型 */
     VOS_UINT8                           uc1XorHrpdUlIpfFlag;                    /* 1X OR HRPD模式下的IPF过滤组 */
-    VOS_UINT8                           aucRsv[6];
+    VOS_UINT8                           aucRsv[2];
 
 }ADS_UL_QUEUE_STRU;
 
-/*****************************************************************************
-结构名    : ADS_DL_RAB_INFO_STRU
-结构说明  : ADS下行RAB信息管理
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS下行RABID信息管理
-  2.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : Share-PDP项目增加下行过滤接收函数
-*****************************************************************************/
 typedef struct
 {
-    VOS_UINT32                          ulRabId;                                /* Rab Id */
-    ADS_CDS_IPF_PKT_TYPE_ENUM_UINT8     enPktType;                              /* 数据包类型 */
-    VOS_UINT8                           aucRsv[3];                              /* 保留 */
+    VOS_UINT32                          ulRabId;                                /* Rab Id */    
     VOS_UINT32                          ulExParam;                              /* RMNET数据接收扩展参数 */
+    ADS_CDS_IPF_PKT_TYPE_ENUM_UINT8     enPktType;                              /* 数据包类型 */
+    VOS_UINT8                           aucRsv[7];                              /* 保留 */
     RCV_DL_DATA_FUNC                    pRcvDlDataFunc;                         /* 对应的下行接收函数 */
     RCV_DL_DATA_FUNC                    pRcvDlFilterDataFunc;                   /* 对应的下行过滤接收函数 */
 #if (FEATURE_ON == FEATURE_RNIC_NAPI_GRO)
@@ -635,15 +601,7 @@ typedef struct
 
 }ADS_DL_RAB_INFO_STRU;
 
-/*****************************************************************************
- 结构名   : ADS_DL_FC_ASSEM_STRU
- 结构说明 : 流控动态组包参数
 
- 修改历史      :
-  1.日    期   : 2012年11月19日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32              ulEnableMask;
@@ -657,27 +615,7 @@ typedef struct
 
 } ADS_DL_FC_ASSEM_STRU;
 
-/*****************************************************************************
-结构名    : ADS_DL_CTX_STRU
-结构说明  : ADS下行上下文
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS下行上下文
-
-  2.日    期   : 2012年4月12日
-    作    者   : A00165503
-    修改内容   : DTS2012020708222: ADS性能优化
-
-  3.日    期   : 2012年11月19日
-    作    者   : A00165503
-    修改内容   : DTS2012112206761: 底软动态组包参数调整
-
-  4.日    期   : 2012年11月23日
-    作    者   : L60609
-    修改内容   : DSDA Phase II
-
-*****************************************************************************/
 typedef struct
 {
     ADS_DL_RAB_INFO_STRU                astAdsDlRabInfo[ADS_RAB_NUM_MAX];       /*下行Rab信息 */
@@ -685,98 +623,46 @@ typedef struct
 
 } ADS_DL_CTX_STRU;
 
-/*****************************************************************************
-结构名    : ADS_UL_CTX_STRU
-结构说明  : ADS上行上下文
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS上行上下文
-
-  2.日    期   : 2012年02月20日
-    作    者   : f00179208
-    修改内容   : V7R1C50项目，增加上行队列优先级加权数
-
-  3.日    期   : 2012年4月12日
-    作    者   : A00165503
-    修改内容   : DTS2012020708222: ADS性能优化
-
-  4.日    期   : 2012年8月31日
-    作    者   : l60609
-    修改内容   : AP适配项目：增加上行内存释放队列
-
-  5.日    期   : 2012年11月23日
-    作    者   : L60609
-    修改内容   : DSDA Phase II
-*****************************************************************************/
 typedef struct
 {
     ADS_UL_QUEUE_STRU                   astAdsUlQueue[ADS_RAB_ID_MAX + 1];      /* 上行队列管理，只用5-15 */
     ADS_UL_QUEUE_SCHEDULER_PRI_NV_STRU  stQueuePriNv;                           /* 从NV中读取的上行队列优先级对应的加权数 */
-    VOS_UINT8                           aucPrioIndex[ADS_RAB_NUM_MAX];          /* 存储已排好优先级的上行队列的索引 */
+    VOS_UINT32                          aulPrioIndex[ADS_RAB_NUM_MAX];          /* 存储已排好优先级的上行队列的索引 */
     VOS_UINT32                          ulAdsUlCurIndex;                        /* 记录当前调度的队列 */
     VOS_UINT32                          ulUlMaxQueueLength;                     /* 上行队列限长 */
+    VOS_UINT32                          ulReserved;
 }ADS_UL_CTX_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_UL_DATA_STATS_STRU
- 结构说明  : ADS上行数据统计
-   1.日    期   : 2012年1月10日
-     作    者   : L60609
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct ADS_UL_DATA_STATS
 {
     VOS_UINT32                          ulULCurDataRate;                        /* 当前上行速率，保存PDP激活后2秒的速率，去激活后清空 */
     VOS_UINT32                          ulULPeriodSndBytes;                     /* 一个流量统计周期内发送的byte数 */
 }ADS_UL_DATA_STATS_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_DL_DATA_STATS_STRU
- 结构说明  : ADS下行数据统计
-   1.日    期   : 2012年1月10日
-     作    者   : L60609
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct ADS_DL_DATA_STATS
 {
     VOS_UINT32                          ulDLCurDataRate;                        /* 当前下行速率，保存PDP激活后2秒的速率，去激活后清空 */
     VOS_UINT32                          ulDLPeriodRcvBytes;                     /* 一个流量统计周期内收到的byte数 */
 }ADS_DL_DATA_STATS_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_STATS_INFO_CTX_STRU
- 结构说明  : ADS状态统计
-   1.日    期   : 2012年1月10日
-     作    者   : L60609
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     ADS_UL_DATA_STATS_STRU              stULDataStats;                          /* ADS上行数据统计 */
     ADS_DL_DATA_STATS_STRU              stDLDataStats;                          /* ADS下行数据统计 */
 }ADS_STATS_INFO_CTX_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_UL_THRESHOLD_STAT_STRU
- 结构说明  : ADS上行赞包状态统计
-   1.日    期   : 2014年06月03日
-     作    者   : f00179208
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulStatTmrLen;                           /* 统计定时器长度 */
     VOS_UINT32                          ulStatPktNum;                           /* 在单位时间内上行统计包的个数 */
 }ADS_UL_THRESHOLD_STAT_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_UL_DYNAMIC_ASSEM_INFO_STRU
- 结构说明  : ADS上行组包信息
-   1.日    期   : 2014年11月08日
-     作    者   : f00179208
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulActiveFlag;                           /* 使能标识: 0表示去使能,1表示使能 */
@@ -787,14 +673,7 @@ typedef struct
     ADS_UL_THRESHOLD_STAT_STRU          stThresholdStatInfo;                    /* 赞包状态统计 */
 }ADS_UL_DYNAMIC_ASSEM_INFO_STRU;
 
-/*****************************************************************************
- 结构名称  : ADS_IPF_MEM_CFG_STRU
- 结构说明  : 内存配置信息
 
-  1.日    期   : 2015年10月06日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usBlkNum;
@@ -804,14 +683,7 @@ typedef struct
 
 } ADS_IPF_MEM_CFG_STRU;
 
-/*****************************************************************************
- 结构名称  : ADS_IPF_MEM_POOL_CFG_STRU
- 结构说明  : 内存池配置结构
 
-  1.日    期   : 2015年10月06日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulEnable;
@@ -819,14 +691,7 @@ typedef struct
 
 } ADS_IPF_MEM_POOL_CFG_STRU;
 
-/*****************************************************************************
- 结构名称  : ADS_IPF_MEM_POOL_CFG_STRU
- 结构说明  : 内存配置结构
 
-  1.日    期   : 2015年10月06日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usBlkSize;
@@ -837,13 +702,7 @@ typedef struct
 
 } ADS_IPF_MEM_POOL_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_IPF_CTX_STRU
- 结构说明  : ADS与IPF相关的上下文
-   1.日    期   : 2012年11月23日
-     作    者   : L60609
-     修改内容   : DSDA Phase II
-*****************************************************************************/
+
 typedef struct
 {
     IPF_CONFIG_ULPARAM_S                astIpfUlBdCfgParam[IPF_ULBD_DESC_SIZE]; /* 上行BD DESC */
@@ -894,14 +753,7 @@ typedef struct
 
 }ADS_IPF_CTX_STRU;
 
-/*****************************************************************************
-结构名    : ADS_SPEC_CTX_STRU
-结构说明  : ADS每个实例专有的上下文
 
-  1.日    期   : 2012年11月23日
-    作    者   : 鲁琳/l60609
-    修改内容   : DSDA Phase II: 定义ADS每个实例专有的上下文
-*****************************************************************************/
 typedef struct
 {
     ADS_UL_CTX_STRU                     stAdsUlCtx;                             /* 上行上下文 */
@@ -936,18 +788,7 @@ typedef struct
 
 } ADS_PACKET_ERROR_FEEDBACK_CFG_STRU;
 
-/*****************************************************************************
-结构名    : ADS_CTX_STRU
-结构说明  : ADS上下文
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS上下文
-
-  2.日    期   : 2012年11月23日
-    作    者   : L60609
-    修改内容   : DSDA Phase II
-*****************************************************************************/
 typedef struct
 {
     ADS_SPEC_CTX_STRU                   astAdsSpecCtx[ADS_INSTANCE_MAX_NUM];    /* 每个实例专有的上下文 */

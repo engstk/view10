@@ -183,7 +183,7 @@ static ssize_t gmc_compress_write(struct file *file, const char __user *ubuf,
 
 	queue_work(system_unbound_wq, &gmc_work_data->gmc_work);
 
-	return len;
+	return len;//lint !e429
 }
 
 static ssize_t gmc_decompress_write(struct file *file, const char __user *ubuf,
@@ -213,7 +213,7 @@ static ssize_t gmc_decompress_write(struct file *file, const char __user *ubuf,
 
 	queue_work(system_unbound_wq, &gmc_work_data->gmc_work);
 
-	return len;
+	return len;//lint !e429
 }
 
 #ifdef GPU_GMC_DEBUG

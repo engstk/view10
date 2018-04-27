@@ -83,22 +83,62 @@ config SCSI_UFS_QCOM
 	  If unsure, say N.
 
 config SCSI_UFS_KIRIN
-	  tristate "KIRIN UFS Host Controller Driver"
+	  tristate "UFS Host Controller Driver"
 	  depends on SCSI_UFSHCD && SCSI_UFSHCD_PLATFORM
 	  ---help---
-	  This selects the KIRIN UFS host controller driver.
+	  This selects the UFS host controller driver.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config SCSI_UFS_GEMINI
+	  tristate "UFS Host GEMINI Controller Driver"
+	  depends on SCSI_UFSHCD && SCSI_UFSHCD_PLATFORM && SCSI_UFS_KIRIN
+	  ---help---
+	  This selects the UFS GEMINI host controller driver.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config SCSI_UFS_ARIES
+	  tristate "UFS Host ARIES Controller Driver"
+	  depends on SCSI_UFSHCD && SCSI_UFSHCD_PLATFORM && SCSI_UFS_KIRIN
+	  ---help---
+	  This selects the UFS ARIES host controller driver.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config SCSI_UFS_CANCER
+	  tristate "UFS Host CANCER Controller Driver"
+	  depends on SCSI_UFSHCD && SCSI_UFSHCD_PLATFORM && SCSI_UFS_KIRIN
+	  ---help---
+	  This selects the UFS CANCER host controller driver.
+
+	  If you have a controller with this interface, say Y or M here.
+
+	  If unsure, say N.
+
+config SCSI_UFS_LIBRA
+	  tristate "UFS Host LIBRA Controller Driver"
+	  depends on SCSI_UFSHCD && SCSI_UFSHCD_PLATFORM && SCSI_UFS_KIRIN
+	  ---help---
+	  This selects the UFS LIBRA host controller driver.
 
 	  If you have a controller with this interface, say Y or M here.
 
 	  If unsure, say N.
 
 config SCSI_UFS_KIRIN_LINERESET_CHECK
-	  bool "KIRIN UFS background thread to check line-reset"
+	  bool "UFS background thread to check line-reset"
 	  depends on SCSI_UFSHCD && SCSI_UFS_KIRIN
 	  ---help---
 	  This create a thread to check line-reset bug, and recovery it.
 
-	  If using Kirin960, say Y here.
+	  If using GEMINI, say Y here.
 
 	  If unsure, say N.
 
@@ -172,22 +212,12 @@ config HUAWEI_UFS_DSM
        bool "Listen UFS Kernel Error"
        depends on SCSI_UFSHCD
 
-config SCSI_UFS_HIVV_VCMD
-	bool "UFS HiVV Device Vendor Command"
+config SCSI_UFS_HI1861_VCMD
+	bool "UFS Hi1861 Device Vendor Command"
 	depends on SCSI_UFSHCD
 	---help---
 	This adds UFS Hisilicon Device defined vendor command.
 	contained that query fsr and so on.
-
-config SCSI_UFS_KIRIN_V21
-	  tristate "KIRIN V21 UFS Host Controller Driver"
-	  depends on SCSI_UFSHCD && SCSI_UFSHCD_PLATFORM && SCSI_UFS_KIRIN
-	  ---help---
-	  This selects the KIRIN V21 UFS host controller driver.
-
-	  If you have a controller with this interface, say Y or M here.
-
-	  If unsure, say N.
 
 config HISI_UFS_MANUAL_BKOPS
        bool "hisi manual BKOPS support for UFS"

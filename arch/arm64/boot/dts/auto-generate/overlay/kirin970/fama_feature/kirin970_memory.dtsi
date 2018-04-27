@@ -8,14 +8,6 @@
 		status = "ok";
 	};
 
-	smmu_tester{
-		compatible = "hisi,hisi-smmu-tester";
-		iommu_info{
-			start-addr = <0x8000>;
-			size = <0xbfff8000>;
-		};
-	};
-
 	memory@0 {
 		device_type = "memory";
 		reg = <0x0 0x00400000 0x0 0xBFE00000>;
@@ -244,14 +236,6 @@
 			no-map;
 			fama_offset = <0x0 0x0>;
 			status = "disable";
-		};
-		tui_cma: tui-mem{
-			size  = <0x0 0x400000>;
-			alignment = <0x0 0x2000000>;
-			alloc-ranges = <0x0 0x0 0x1 0x0>;
-			compatible = "shared-dma-pool";
-			reusable;
-			status = "ok";
 		};
 	};
 };

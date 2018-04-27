@@ -20,7 +20,7 @@
 #include <linux/hisi/rdr_pub.h>
 
 #include <huawei_platform/log/imonitor.h>
-#define IMONITOR_TEEOS_EVENT_ID		(901002003)
+#define IMONITOR_TA_CRASH_EVENT_ID      (901002003)
 #include "securec.h"
 #include "tc_ns_log.h"
 
@@ -36,30 +36,11 @@
 #include "tlogger.h"
 #include <linux/crc32.h>
 #include "security_auth_enhance.h"
+#include <linux/hisi/secs_power_ctrl.h>
 
 struct session_crypto_info *g_session_root_key = NULL;
 
 /*lint -save -e750 -e529*/
-#include <linux/hisi/hisi_drmdriver.h>
-#include <linux/cpumask.h>
-
-#define SECS_POWER_UP	(0xAA55A5A5)
-#define SECS_POWER_DOWN	(0x55AA5A5A)
-#define SECS_SECCLK_EN  (0x5A5A55AA)
-#define SECS_SECCLK_DIS (0xA5A5AA55)
-
-#define TRIGGER_TIMER (jiffies + HZ) /*trigger time 1s*/
-#define CPU0 (0)
-#define ONLY_CPU0_ONLINE (0xE5A5)
-#define OTHER_CPU_ONLINE (0xA5E5)
-
-static DEFINE_MUTEX(secs_timer_lock);
-static DEFINE_MUTEX(secs_count_lock);
-static void secs_timer_func(unsigned long unused_value);
-static DEFINE_TIMER(secs_timer, secs_timer_func, 0, 0);/*lint -e785 */
-static unsigned long g_secs_power_ctrl_count = 0;
-#define UNUSED(x)                   ((void)x)
-
 #define MAX_EMPTY_RUNS		100
 
 static atomic_t event_nr;
@@ -72,9 +53,6 @@ enum SPI_CLK_MODE {
 	SPI_CLK_OFF = 0,
 	SPI_CLK_ON,
 };
-
-struct regulator_bulk_data regu_burning;
-struct clk *secs_clk;
 
 struct wait_entry {
 	struct list_head list;
@@ -121,14 +99,19 @@ static DECLARE_WAIT_QUEUE_HEAD(siq_th_wait);
 
 static atomic_t smc_th_run;
 static atomic_t siq_th_run;
+static atomic_t block_occur;
 
 static LIST_HEAD(wait_list);
 
 extern int spi_init_secos(unsigned int spi_bus_id);
 extern int spi_exit_secos(unsigned int spi_bus_id);
 
-static int sec_s_power_on(void);
-static int sec_s_power_down(void);
+extern void cmd_monitor_log(TC_NS_SMC_CMD *cmd);
+extern void cmd_monitor_logend(TC_NS_SMC_CMD *cmd);
+extern bool cmd_monitor_hungcheck(struct task_struct *t);
+extern void init_cmd_monitor(void);
+extern void do_cmd_need_archivelog(void);
+
 
 static noinline int smc_send(uint32_t cmd, phys_addr_t cmd_addr,
 			     uint32_t cmd_type, uint8_t wait)
@@ -157,7 +140,7 @@ static noinline int smc_send(uint32_t cmd, phys_addr_t cmd_addr,
 static int siq_thread_fn(void *arg)
 {
 	int ret;
-
+	atomic_set(&block_occur, 0);/*lint !e1058*/
 	while(1) {
 		ret = wait_event_interruptible(siq_th_wait,/*lint !e666*/
 				atomic_read(&siq_th_run));
@@ -167,10 +150,33 @@ static int siq_thread_fn(void *arg)
 		}
 
 		atomic_set(&siq_th_run, 0);/*lint !e1058*/
-		smc_send(TSP_REE_SIQ, (phys_addr_t)1, 0, false);
+		atomic_set(&block_occur, 1);/*lint !e1058*/
+		tc_smc_wakeup();
 	}
 }
 
+static void cmd_result_check(TC_NS_SMC_CMD* cmd)
+{
+	if ((TEEC_SUCCESS == cmd->ret_val) && (TEEC_SUCCESS
+		!= verify_chksum(cmd))) {
+		cmd->ret_val = (uint32_t)TEEC_ERROR_GENERIC;
+		tloge("verify_chksum failed.\n");
+	}
+	if (cmd->ret_val == TEEC_PENDING
+			  || cmd->ret_val == TEEC_PENDING2) { /*lint !e650 */
+		tlogd("wakeup command %d\n", cmd->event_nr);
+	}
+	if (TEE_ERROR_TAGET_DEAD == cmd->ret_val) { /*lint !e650 !e737 */
+		tloge("error smc call: ret = %x and cmd.err_origin=%x\n",
+				cmd->ret_val, cmd->err_origin);
+		if(TEEC_ORIGIN_TRUSTED_APP_TUI == cmd->err_origin){
+			do_ns_tui_release();
+		}
+		tlogger_store_lastmsg();
+		if (0 > teeos_log_exception_archive(IMONITOR_TA_CRASH_EVENT_ID, "ta crash"))
+			tloge("log_exception_archive failed\n");
+	}
+}
 static int smc_thread_fn(void *arg)
 {
 	uint32_t ret, i = 0;
@@ -180,23 +186,31 @@ static int smc_thread_fn(void *arg)
 	bool slept = false;
 
 	atomic_set(&smc_th_run, 0);/*lint !e1058*/
-
+	/* reset the nice value ,let smc thread have more time to run */
+	set_user_nice(current, -5);
 	while (!kthread_should_stop()) {
 		cmd_processed = 0;
 
 		/* Start running TrustedCore becasue
 		 * we have a incoming command */
 		ret = TSP_REQUEST;
-		if (i % 10 == 0 && atomic_read(&outstading_cmds) > 1)
+		if (atomic_read(&block_occur)) {
+			smc_send(TSP_REE_SIQ, (phys_addr_t)1, 0, false);
+			atomic_set(&block_occur, 0);
+			tz_log_write();
+			do_cmd_need_archivelog();
+		} else if (i % 10 == 0 && atomic_read(&outstading_cmds) > 1)
 			smc_send(TSP_REE_SIQ, 0, 0, false);
 		else
 			ret = smc_send(TSP_REQUEST, 0, 0, false);
 		i++;
+		if( i % 250 ==0) {
+			tloge("[cmd_monitor_tick] i=%d\n", i);
+		}
 		if (ret == TSP_CRASH) {
-			tlogd("System has crashed!\n");
+			tloge("System has crashed!\n");
 			sys_crash = 1;
 			tlogger_store_lastmsg();
-			(void)teeos_log_exception_archive();
 			rdr_system_error(0x83000001, 0, 0);
 			break;
 		}
@@ -221,25 +235,7 @@ static int smc_thread_fn(void *arg)
 				goto next_cmd;
 			}
 
-			if ((TEEC_SUCCESS == cmd.ret_val) && (TEEC_SUCCESS
-				!= verify_chksum(&cmd))) {
-				cmd.ret_val = (uint32_t)TEEC_ERROR_GENERIC;
-				tloge("verify_chksum failed.\n");
-			}
-			if (cmd.ret_val == TEEC_PENDING
-			    || cmd.ret_val == TEEC_PENDING2) { /*lint !e650 */
-				tlogd("wakeup command %d\n", cmd.event_nr);
-			}
-			if (TEE_ERROR_TAGET_DEAD == cmd.ret_val) { /*lint !e650 !e737 */
-				tloge("error smc call: ret = %x and cmd.err_origin=%x\n",
-						cmd.ret_val, cmd.err_origin);
-				if(TEEC_ORIGIN_TRUSTED_APP_TUI == cmd.err_origin){
-					do_ns_tui_release();
-				}
-				tlogger_store_lastmsg();
-				if (0 > teeos_log_exception_archive())
-					tloge("log_exception_archive failed\n");
-			}
+			cmd_result_check(&cmd);
 			if (cmd.ret_val == TEEC_PENDING2) { /*lint !e650 */
 				unsigned int agent_id = cmd.agent_id;
 
@@ -328,11 +324,11 @@ next_cmd:
 			tlogd("going to sleep %u!!!\n",
 				atomic_read(&outstading_cmds));
 			if (slept)
-				(void)sec_s_power_down();
+				(void)hisi_secs_power_down();
 			slept = true;
 			(void)wait_event_interruptible(smc_th_wait,/*lint !e666*/
 						 atomic_read(&smc_th_run));
-			(void)sec_s_power_on();
+			(void)hisi_secs_power_on();
 			tlogd("wakeup %u!!!\n",
 				atomic_read(&outstading_cmds));
 			atomic_set(&smc_th_run, 0);/*lint !e1058*/
@@ -347,11 +343,11 @@ next_cmd:
 			tlogd("empty run sleep %u!!!\n",
 				atomic_read(&outstading_cmds));
 			if (slept)
-				(void)sec_s_power_down();
+				(void)hisi_secs_power_down();
 			slept = true;
 			(void)wait_event_interruptible(smc_th_wait,/*lint !e666*/
 						 atomic_read(&smc_th_run));
-			(void)sec_s_power_on();
+			(void)hisi_secs_power_on();
 			tlogd("wakeup from sleep %u!!!\n",
 				atomic_read(&outstading_cmds));
 
@@ -362,7 +358,7 @@ next_cmd:
 	}
 	tlogd("smc thread stopped\n");
 	if (slept)
-		(void)sec_s_power_down();
+		(void)hisi_secs_power_down();
 	/* Wake up all the waiting threads */
 	mutex_lock(&wait_th_lock);
 	list_for_each_entry(we, &wait_list, list) {
@@ -454,7 +450,7 @@ static unsigned int smc_send_func(TC_NS_SMC_CMD *cmd, uint32_t cmd_type,
 		return (unsigned int)TEEC_ERROR_GENERIC;
 
 	}
-
+	cmd_monitor_log(cmd);
 	tlogd("***wait_thr_add waiting for completion %u ***\n",
 		cmd->event_nr);
 	/* We need to make sure the flush the work so
@@ -462,6 +458,7 @@ static unsigned int smc_send_func(TC_NS_SMC_CMD *cmd, uint32_t cmd_type,
 	flush_kthread_work(&work.kthwork);
 	/* In sync mode we don't return till we get an answer */
 	wait_for_completion(&we->done);
+	cmd_monitor_logend(cmd);
 	tlogd("***smc_send_func wait for complete done %d***\n",
 		cmd->event_nr);
 	atomic_dec(&outstading_cmds);
@@ -493,8 +490,8 @@ bool is_tee_hungtask(struct task_struct *t)
 			return true;
 		}
 	}
+	return cmd_monitor_hungcheck(t);
 
-	return false;
 }
 
 void tc_smc_wakeup(void)
@@ -508,129 +505,6 @@ void wakeup_tc_siq(void)
 {
 	atomic_set(&siq_th_run, 1);/*lint !e1058*/
 	wake_up_interruptible(&siq_th_wait);
-}
-
-static void secs_timer_init(void)
-{
-	int cpu;
-	unsigned int flag = ONLY_CPU0_ONLINE;
-
-	mutex_lock(&secs_timer_lock);
-	for_each_online_cpu(cpu) {/*lint -e713 */
-		if (!timer_pending(&secs_timer)) {
-			if (CPU0 == cpu) {
-				flag = ONLY_CPU0_ONLINE;
-				continue;
-			} else {
-				secs_timer.expires = jiffies;
-				add_timer_on(&secs_timer, cpu);
-				flag = OTHER_CPU_ONLINE;
-				break;
-			}
-		}
-	}
-	if (ONLY_CPU0_ONLINE == flag) {
-		pr_err("only cpu0 online secure clk feature disable\n");
-	}
-	mutex_unlock(&secs_timer_lock);
-	return;
-}
-
-static void secs_timer_func(unsigned long unused_value)
-{
-	int ret;
-
-	UNUSED(unused_value);
-	ret = atfd_hisi_service_access_register_smc(ACCESS_REGISTER_FN_MAIN_ID, (u64)SECS_SECCLK_EN, (u64)0, ACCESS_REGISTER_FN_SUB_ID_SECS_POWER_CTRL);
-	if (ret) {
-		pr_err("failed to enable sec_s secclk %d\n", ret);
-		return;
-	} else {
-		mod_timer(&secs_timer, TRIGGER_TIMER);
-		return;
-	}
-}
-
-static int sec_s_power_on(void)
-{
-	int ret = 0;
-
-	if (of_get_property(np, "sec-s-regulator-enable", NULL)) { /*lint !e456*/
-		/*power on ccs */
-		if (of_get_property(np, "sec-s-power-ctrl-en", NULL)) {
-			ret = clk_prepare_enable(secs_clk);
-			if (ret < 0) {
-				pr_err("ck_prepare_enable is failed\n");
-				return ret; /*lint !e454*/
-			}
-		}
-
-		if (of_get_property(np, "sec-s-power-atfd-proc", NULL)) {
-			ret = atfd_hisi_service_access_register_smc(ACCESS_REGISTER_FN_MAIN_ID, (u64)SECS_POWER_UP, (u64)0, ACCESS_REGISTER_FN_SUB_ID_SECS_POWER_CTRL);
-			if (ret)
-				pr_err("failed to powerup sec_s %d\n", ret);
-		} else {
-			ret = regulator_bulk_enable(1, &regu_burning);
-			if (ret)
-				pr_err("failed to enable sec_s regulators %d\n", ret);
-		}
-	} else if (of_get_property(np, "sec-s-power-proc-en", NULL)) {
-		mutex_lock(&secs_count_lock);
-		if (0 == g_secs_power_ctrl_count) {
-			g_secs_power_ctrl_count++;
-			mutex_unlock(&secs_count_lock);
-			secs_timer_init();
-		} else {
-			g_secs_power_ctrl_count++;
-			mutex_unlock(&secs_count_lock);
-		}
-		ret = atfd_hisi_service_access_register_smc(ACCESS_REGISTER_FN_MAIN_ID, (u64)SECS_POWER_UP, (u64)0, ACCESS_REGISTER_FN_SUB_ID_SECS_POWER_CTRL);
-		if (ret) {
-			pr_err("failed to powerup sec_s %d\n", ret);
-		}
-	}
-
-	return ret; /*lint !e454*/
-}
-
-static int sec_s_power_down(void)
-{
-	int ret = 0;
-
-	if (of_get_property(np, "sec-s-regulator-enable", NULL)) {
-		/*power down ccs */
-		if (of_get_property(np, "sec-s-power-ctrl-en", NULL))
-			clk_disable_unprepare(secs_clk);
-
-			if (of_get_property(np, "sec-s-power-atfd-proc", NULL)) {
-				ret = atfd_hisi_service_access_register_smc(ACCESS_REGISTER_FN_MAIN_ID, (u64)SECS_POWER_DOWN, (u64)0, ACCESS_REGISTER_FN_SUB_ID_SECS_POWER_CTRL);
-				if (ret)
-				pr_err("failed to powerdown sec_s %d\n", ret);
-			} else {
-				ret = regulator_bulk_disable(1, &regu_burning);
-				if (ret)
-					pr_err("failed to disable sec_s regulators %d\n", ret);
-			}
-	} else if (of_get_property(np, "sec-s-power-proc-en", NULL)) {
-		mutex_lock(&secs_count_lock);
-		g_secs_power_ctrl_count--;
-		if (0 == g_secs_power_ctrl_count) {
-			mutex_unlock(&secs_count_lock);
-			del_timer_sync(&secs_timer);
-		} else {
-			mutex_unlock(&secs_count_lock);
-		}
-		ret = atfd_hisi_service_access_register_smc(ACCESS_REGISTER_FN_MAIN_ID, (u64)SECS_SECCLK_DIS, (u64)0, ACCESS_REGISTER_FN_SUB_ID_SECS_POWER_CTRL);
-		if (ret) {
-			pr_err("failed to disable sec_s secclk %d\n", ret);
-			return ret;
-		}
-
-		ret = atfd_hisi_service_access_register_smc(ACCESS_REGISTER_FN_MAIN_ID, (u64)SECS_POWER_DOWN, (u64)0, ACCESS_REGISTER_FN_SUB_ID_SECS_POWER_CTRL);
-		if (ret)
-			pr_err("failed to powerdown sec_s %d\n", ret);
-	}
-	return ret;
 }
 
 /*
@@ -910,27 +784,6 @@ int smc_init_data(struct device *class_dev)
 		goto free_mem;
 	}
 	smc_get_cfc_info();
-	if (of_get_property(np, "sec-s-regulator-enable", NULL)) {
-		regu_burning.supply = "sec-s-buring";
-		ret = devm_regulator_bulk_get(class_dev, 1, &regu_burning);
-		if (ret) {
-			dev_err(class_dev,
-				"couldn't get sec_burning regulator %d\n", ret);
-			goto free_mem;
-		} else {
-			pr_info("get sec_s_buring regulator success!\n");
-		}
-		if (of_get_property(np, "sec-s-power-ctrl-en", NULL)) {
-			secs_clk = devm_clk_get(class_dev, "clk_secs");
-			if (IS_ERR(secs_clk)) {
-			    dev_err(class_dev,
-				    "couldn't get sec_s clk!\n");
-			    ret = -ENODEV;
-			    goto free_mem;
-			} else
-			    pr_info("get secs_clk success\n");
-		}
-	}
 
 	smc_thread = kthread_create_on_node(smc_thread_fn,
 					    NULL, cpu_to_node(0),
@@ -943,7 +796,6 @@ int smc_init_data(struct device *class_dev)
 		goto free_mem;
 	}
 
-	kthread_bind(smc_thread, 0);
 
 	siq_thread = kthread_create_on_node(siq_thread_fn,
 					    NULL, cpu_to_node(0),
@@ -956,7 +808,6 @@ int smc_init_data(struct device *class_dev)
 		goto free_smc_worker;
 	}
 
-	kthread_bind(siq_thread, 0);
 
 	cmd_work_thread =
 	    kthread_create(kthread_worker_fn, &cmd_worker, "tcwork");
@@ -970,7 +821,7 @@ int smc_init_data(struct device *class_dev)
 	wake_up_process(cmd_work_thread);
 	wake_up_process(smc_thread);
 	wake_up_process(siq_thread);
-
+	init_cmd_monitor();
 	return 0;
 
 free_siq_worker:
@@ -992,13 +843,17 @@ free_mem:
 }
 
 /*lint -e838*/
-int teeos_log_exception_archive(void)
+int teeos_log_exception_archive(unsigned int eventid,const char* exceptioninfo)
 {
 	int ret;
 	struct imonitor_eventobj *teeos_obj;
-	teeos_obj = imonitor_create_eventobj(IMONITOR_TEEOS_EVENT_ID);
 
-	ret = imonitor_set_param(teeos_obj, E901002003_PNAME_VARCHAR, (long)"teeos");
+	teeos_obj = imonitor_create_eventobj(eventid);
+	if (IMONITOR_TA_CRASH_EVENT_ID == eventid && exceptioninfo!=NULL) {
+	    ret = imonitor_set_param(teeos_obj, 0, (long)exceptioninfo);
+	} else {
+	    ret = imonitor_set_param(teeos_obj, 0, (long)"teeos crash");
+	}
 	if (0 != ret)
 		tloge("imonitor_set_param failed\n");
 

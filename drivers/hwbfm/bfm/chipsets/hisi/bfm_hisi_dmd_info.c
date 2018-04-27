@@ -23,7 +23,7 @@
 #include <asm/uaccess.h>
 #include <linux/list.h>
 
-#include <huawei_platform/log/log_usertype/log-usertype.h>
+#include <log/log_usertype/log-usertype.h>
 
 #define ERROR_NO "[Error no]:"
 
@@ -212,7 +212,7 @@ static int get_the_max_err (struct list_head* plistHead, DmdErrInfo_t* pMaxErrIn
         index = find_index_by_err_no(curDmdErrInfo->modInfo.errNum);
         if(-1 != index) {
             if(curDmdErrInfo->errCount > maxCount) {
-                strncpy(pMaxErrInfo->modInfo.modName, dmd_info_table[index].modName, ERR_NO_SIZE);
+                strncpy(pMaxErrInfo->modInfo.modName, dmd_info_table[index].modName, ERR_NO_SIZE-1);
                 pMaxErrInfo->errNum = curDmdErrInfo->errNum;
                 pMaxErrInfo->errCount = curDmdErrInfo->errCount;
                 maxCount = curDmdErrInfo->errCount;
@@ -230,7 +230,7 @@ static void create_new_list_node(char* pErrNum, struct list_head* plistHead) {
     pDmdErrInfo = (DmdErrInfo_t*)kmalloc(sizeof(DmdErrInfo_t), GFP_KERNEL);
     if (pDmdErrInfo) {
         memset(pDmdErrInfo, 0, sizeof(DmdErrInfo_t));
-        strncpy(pDmdErrInfo->modInfo.errNum, pErrNum, ERR_NUM_SIZE);
+        strncpy(pDmdErrInfo->modInfo.errNum, pErrNum, ERR_NUM_SIZE-1);
         pDmdErrInfo->errNum = (uint32_t)simple_strtoul(pDmdErrInfo->modInfo.errNum, NULL, 10);
         pDmdErrInfo->errCount = 1;
         list_add(&pDmdErrInfo->list, plistHead);
@@ -290,8 +290,8 @@ static int read_line(struct file* fp, char* buffer, loff_t* pPos) {
         }
 
         *pStr = 0;
-        strncpy(buffer, pBuff, MAXSIZES);
-        *pPos = pos - (read_lenth - strlen(buffer) - 1);
+        strncpy(buffer, pBuff, MAXSIZES-1);
+        *pPos = pos - (read_lenth - strlen(buffer)-1);
         return 0;
     }
     else {
@@ -325,7 +325,7 @@ static void count_err_num(struct file* fp, struct list_head* plistHead)
         p = strstr(pBuff, ERROR_NO);
         if (p) {
             char errNumber[ERR_NO_SIZE] = {0};
-            strncpy(errNumber, p+strlen(ERROR_NO), ERR_NO_SIZE);
+            strncpy(errNumber, p+strlen(ERROR_NO), ERR_NO_SIZE-1);
             check_list_for_each(errNumber, plistHead);
         }
     } 
@@ -408,7 +408,7 @@ int get_dmd_err_num(unsigned int* errNum, unsigned int* count, char* errName) {
             *count = dmdErrInfo.errCount;
         }
         if (NULL != errName) {
-            strncpy(errName, dmdErrInfo.modInfo.modName, ERR_NO_SIZE);
+            strncpy(errName, dmdErrInfo.modInfo.modName, ERR_NO_SIZE-1);
         }
     }
 

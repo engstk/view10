@@ -45,26 +45,16 @@ main-objs := $(addprefix main/,$(main-objs))
 
 pm-objs :=  plat_firmware.o plat_pm.o  plat_pm_wlan.o plat_cali.o plat_efuse.o
 
-ifeq ($(CONFIG_HISI_GPS_REF_CLK),y)
-ifeq ($(CONFIG_ARCH_HI6250),y)
-pm-objs += gps_plat_hi6250.o
+ifeq ($(CONFIG_HI110X_GPS_REFCLK),y)
+ifeq ($(CONFIG_HI110X_GPS_REFCLK_SRC_1),y)
+pm-objs += gps_refclk_src_1.o
 endif
-ifeq ($(CONFIG_ARCH_HI3650),y)
-pm-objs += gps_plat_hi3650.o
+ifeq ($(CONFIG_HI110X_GPS_REFCLK_SRC_2),y)
+pm-objs += gps_refclk_src_2.o
 endif
+ifeq ($(CONFIG_HI110X_GPS_REFCLK_SRC_3),y)
+pm-objs += gps_refclk_src_3.o
 endif
-
-ifeq ($(CONFIG_CONNECTIVITY_HI110X_HI6250),y)
-pm-objs += gps_plat_hi6250.o
-endif
-ifeq ($(CONFIG_CONNECTIVITY_HI110X_HI3650),y)
-pm-objs += gps_plat_hi3650.o
-endif
-ifeq ($(CONFIG_CONNECTIVITY_HI110X_HI3660),y)
-pm-objs += gps_plat_hi3660.o
-endif
-ifeq ($(CONFIG_CONNECTIVITY_HI110X_KIRIN970),y)
-pm-objs += gps_plat_hi3660.o
 endif
 
 pm-objs := $(addprefix pm/,$(pm-objs))

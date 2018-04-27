@@ -1200,7 +1200,7 @@ MODULE_DEVICE_TABLE(of, anc_hs_of_match);
 /*lint -save -e* */
 static void load_anc_hs_config(struct device_node *node)
 {
-	int temp;
+	int temp = 0;
 
 	/* read adc channel number */
 	if (!of_property_read_u32(node, "adc_channel_h", &temp)) {

@@ -36,10 +36,17 @@ HWLOG_REGIST();
 #define hwlog_err(fmt, args...)  do { printk(KERN_ERR   "[hw_kb]" fmt, ## args); } while (0)
 #endif
 
+static struct class *hwkb_class = NULL;
+static struct device *hwkb_device = NULL;
+#define KB_DEVICE_NAME "hwsw_kb"
+
 #define VERSION "1.0"
 
 extern int  Process_KBChannelData(char *data, int count);
 extern int kernel_send_kb_cmd(unsigned int cmd,int val);
+
+extern int kbhb_get_hall_value(void);
+#define HALL_COVERD     (1)
 
 #define KBHBIO                         0xB1
 #define KBHB_IOCTL_START			_IOW(KBHBIO, 0x01, short)
@@ -326,6 +333,34 @@ static void swkb_wake_unlock(struct hw_sw_disc_data * pdisc_data)
 	}
 }
 
+static void sw_notify_android_uevent(int isConnOrDisconn)
+{
+     char *disconnected[2] = { "KB_STATE=DISCONNECTED", NULL };
+     char *connected[2]    = { "KB_STATE=CONNECTED", NULL };
+
+	 if(IS_ERR(hwkb_device))
+	 {
+	    pr_info("sw_notify_android_uevent  device uninit \n");
+	    return;
+	 }
+	 switch(isConnOrDisconn)
+	 {
+	    case KBSTATE_ONLINE:
+	       {
+	          kobject_uevent_env(&hwkb_device->kobj,
+                                        KOBJ_CHANGE, connected);
+	          pr_debug("sw_notify_android_uevent  kobject_uevent_env connected \n");
+	       }
+	       break;
+	    case KBSTATE_OFFLINE:
+	       {
+	          kobject_uevent_env(&hwkb_device->kobj,
+                                        KOBJ_CHANGE, disconnected);
+	          pr_debug("sw_notify_android_uevent  kobject_uevent_env disconnected \n");
+	       }
+	       break;
+	 }
+}
 
 static void sw_core_event(struct work_struct *work);
 
@@ -623,6 +658,7 @@ static int sw_process_cmd_handshake(struct hw_sw_core_data * core_data,struct sk
 	if(!core_data->device)
 	{
 		ret = create_hid_devices(core_data,hw_sw_device);
+		sw_notify_android_uevent(KBSTATE_ONLINE);
 	}else
 	{
 		ret = 0;
@@ -653,6 +689,7 @@ static int sw_process_cmd_disconnect(struct hw_sw_core_data * core_data,struct s
 	{
 	   swkb_wake_lock_timeout(pdisc_data,DEFAULT_WAKE_TIMEOUT);
 	   kernel_send_kb_cmd(KBHB_IOCTL_STOP,0);
+	   sw_notify_android_uevent(KBSTATE_OFFLINE);
 	}
 	return ret;
 }
@@ -790,6 +827,40 @@ int sw_core_recv(void *core_data,  u8 *data, int count)
 }
 
 /*
+* if keyboard coverd, we mean some messages from keyborad  may not be processed.
+* Such as key msg\touch msg\work-mode msg etc, but except connect or disconnect msg.
+*/
+static bool is_ignore_KBChannelData(char *data, int count)
+{
+	u8 hdr = 0;
+	int hall_val = kbhb_get_hall_value();
+	if (unlikely(NULL == data))
+	{
+           SW_PRINT_ERR(" received null from KB \n");
+           return true;
+	}
+
+	if (count < 1)
+	{
+           SW_PRINT_ERR(" received count from KB err\n");
+           return true;
+	}
+
+	/*if keyboard coverd , don't respond some msg ,except Disconnect and handshake msg */
+	if(hall_val & HALL_COVERD)
+	{
+           hdr = (u8)data[0];
+           if((hdr != PROTO_CMD_DISCONNECT) && (hdr != PROTO_CMD_HANDSHAKE))
+           {
+                 //SW_PRINT_DBG("[MCU]received KB cmd= [%x,%x] \n",data[0],data[1]);
+                 return true;
+           }
+	}
+
+	return false;
+}
+
+/*
 * if dts config hwsw_kb  g_SW_state = 0
 * in inputhub  kbhub_channel model will init  when  g_SW_state = 0
 */
@@ -826,6 +897,10 @@ int  Process_KBChannelData(char *data, int count)
 	if(!sw_core_data)
 		return -1;
 
+	if(is_ignore_KBChannelData(data,count))
+	{
+		return -1;
+	}
 	ret = sw_core_recv(sw_core_data,(u8*)data,count);
 	return ret ;
 }
@@ -1202,6 +1277,53 @@ static void swkb_channel_com_work(struct work_struct *work)
 }
 
 
+static void sw_destroy_monitor_device(struct platform_device *pdev)
+{
+	if(!pdev)
+	{
+	   return ;
+	}
+	if(!IS_ERR(hwkb_device))
+	{
+	  device_destroy(hwkb_device->class, hwkb_device->devt);
+	}
+	if (!IS_ERR(hwkb_class))
+	{
+	  class_destroy(hwkb_class);
+	}
+	hwkb_device = NULL;
+	hwkb_class = NULL;
+}
+
+static void sw_init_monitor_device(struct platform_device *pdev)
+{
+     int ret = -1;
+     if(hwkb_device  || hwkb_class)
+     {
+		sw_destroy_monitor_device(pdev);
+     }
+     hwkb_class = class_create(THIS_MODULE, KB_DEVICE_NAME);
+     if (IS_ERR(hwkb_class))
+     {
+	   ret =  PTR_ERR(hwkb_class);
+	   goto err_init;
+     }
+
+     hwkb_device = device_create(hwkb_class, NULL,0, NULL, "hwkb");
+     if (IS_ERR(hwkb_device))
+     {
+	    ret =  PTR_ERR(hwkb_device);
+		goto err_init;
+     }
+     return ;
+err_init:
+     SW_PRINT_ERR("sw_init_monitor_device failed %x \n",ret);
+     sw_destroy_monitor_device(pdev);
+
+    return;
+}
+
+
 static int sw_probe(struct platform_device *pdev)
 {
 	struct hw_sw_disc_data * pdisc_data = NULL;
@@ -1255,6 +1377,7 @@ static int sw_probe(struct platform_device *pdev)
 	if (ret) {
 		SW_PRINT_ERR("sw_probe sysfs_create_group error ret =%d. \n", ret);
 	}
+	sw_init_monitor_device(pdev);
 
 	pdisc_data->fb_state = SCREEN_ON;
 	pdisc_data->wait_fb_on = 0;
@@ -1304,6 +1427,7 @@ static int sw_remove(struct platform_device *pdev)
         pdisc_data = NULL;
     }
 
+    sw_destroy_monitor_device(pdev);
 	return 0;
 }
 

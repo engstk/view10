@@ -38,9 +38,10 @@ static s32 batt_temp_too_hot = TEMP_TOO_HOT;
 static s32 batt_temp_too_cold = TEMP_TOO_COLD;
 int pl_calibration_en = FALSE;
 int v_offset_a = DEFAULT_V_OFF_A;
-int v_offset_b = 0;
+int v_offset_b = 0;  /*uV*/
 int c_offset_a = DEFAULT_C_OFF_A;
-int c_offset_b = 0;
+int c_offset_b = 0;  /*uA*/
+static int dts_c_offset_a = 0;
 
 static int delta_sleep_time_offset = 30; //sleep time offset, in s
 static int delta_sleep_time = 10*60; // sleep time bigger could update ocv, in s
@@ -1545,6 +1546,13 @@ static int get_initial_params(struct smartstar_coul_device *di)
     di->batt_limit_fcc    = pinfo->limit_fcc;
     v_offset_a = pinfo->v_offset_a==0?DEFAULT_V_OFF_A:pinfo->v_offset_a;
     v_offset_b = pinfo->v_offset_b==0?DEFAULT_V_OFF_B:pinfo->v_offset_b;
+    if (c_offset_a) {
+        c_offset_a = pinfo->c_offset_a==0?c_offset_a:pinfo->c_offset_a;
+        c_offset_b = pinfo->c_offset_b==0?c_offset_b:pinfo->c_offset_b;
+    } else {
+        c_offset_a = pinfo->c_offset_a==0?DEFAULT_C_OFF_A:pinfo->c_offset_a;
+        c_offset_b = pinfo->c_offset_b==0?DEFAULT_C_OFF_B:pinfo->c_offset_b;
+    }
 
     hwlog_info("pl_v_a=%d,pl_v_b=%d,pl_c_a=%d,pl_c_b=%d,cycles=%d,limit_fcc=%d\n"
                 "reg_c=%d, reg_v=%d,batt_id=%d\n",
@@ -1552,7 +1560,7 @@ static int get_initial_params(struct smartstar_coul_device *di)
         pinfo->charge_cycles,pinfo->limit_fcc, pinfo->calc_ocv_reg_c, pinfo->calc_ocv_reg_v,
         pinfo->hkadc_batt_id_voltage);
 
-    hwlog_info("real use a/b value, v_offset_a=%d,v_offset_b=%d\n",v_offset_a,v_offset_b);
+    hwlog_info("real use a/b value, v_offset_a=%d,v_offset_b=%d,c_offset_a=%d,c_offset_b=%d\n",v_offset_a,v_offset_b,c_offset_a,c_offset_b);
     for (i=0; i<MAX_TEMPS; i++)
     {
         if (pinfo->real_fcc[i] == 0){
@@ -2573,6 +2581,18 @@ int coul_get_battery_aging_safe_policy(AGING_SAFE_POLICY_TYPE *asp)
     return 0;
 }
 
+/*******************************************************
+  Function:        coul_get_battery_limit_fcc
+  Description:     get the battery limit fcc
+  Input:           NULL
+  Output:          NULL
+  Return:          limit fcc
+********************************************************/
+int coul_get_battery_limit_fcc(void)
+{
+    struct smartstar_coul_device *di = g_smartstar_coul_dev;
+    return di->batt_limit_fcc / 1000;
+}
 
 /*******************************************************
   Function:        coul_is_fcc_debounce
@@ -2838,9 +2858,9 @@ static int get_calc_ocv(struct smartstar_coul_device *di)
     batt_temp = di->batt_temp;
     chargecycles = di->batt_chargecycles/100;
 
-    vbatt_uv = di->coul_dev_ops->convert_regval2uv(di->nv_info.calc_ocv_reg_v);
+    vbatt_uv = di->coul_dev_ops->convert_ocv_regval2uv(di->nv_info.calc_ocv_reg_v);
 
-    ibatt_ua = di->coul_dev_ops->convert_regval2ua(di->nv_info.calc_ocv_reg_c);
+    ibatt_ua = di->coul_dev_ops->convert_ocv_regval2ua(di->nv_info.calc_ocv_reg_c);
 
     soc_rbatt = calculate_pc(di, vbatt_uv, batt_temp, chargecycles);
 
@@ -2888,13 +2908,13 @@ static void coul_get_initial_ocv(struct smartstar_coul_device *di)
         if (di->coul_dev_ops->get_fcc_invalid_up_flag())
             di->batt_ocv_valid_to_refresh_fcc = 0;
         di->is_nv_need_save = 0;
-        ocv_uv = di->coul_dev_ops->convert_regval2uv(ocvreg);
+        ocv_uv = di->coul_dev_ops->convert_ocv_regval2uv(ocvreg);
         hwlog_info("using save ocv.\n");
     } else {
         if (di->coul_dev_ops->get_fcc_invalid_up_flag()){
             di->batt_ocv_valid_to_refresh_fcc = 0;
         }
-        ocv_uv = di->coul_dev_ops->convert_regval2uv(ocvreg);
+        ocv_uv = di->coul_dev_ops->convert_ocv_regval2uv(ocvreg);
         di->is_nv_need_save = 0;
         hwlog_info("using pmu ocv from fastboot.\n");
     }
@@ -4223,7 +4243,8 @@ static void make_cc_no_overload(struct smartstar_coul_device *di)
 
 		/*return;*/
 	}
-
+    /*Redefine low_vol_int count according to dts*/
+    count = di->low_vol_filter_cnt;
     if (di->v_low_int_value == LOW_INT_STATE_SLEEP){
 		if ((vbat_uv - LOW_INT_VOL_OFFSET) > (int)di->v_cutoff_sleep){
 			hwlog_err("false low_int,in sleep!\n");
@@ -5842,6 +5863,10 @@ static int save_cali_param(void)
     nve.nv_operation = NV_WRITE;
     pinfo->v_offset_a = v_offset_a;
     pinfo->v_offset_b = v_offset_b;
+    if (dts_c_offset_a != c_offset_a) {
+        pinfo->c_offset_a = c_offset_a;
+        pinfo->c_offset_b = c_offset_b;
+    }
 
     ret = hisi_nve_direct_access(&nve);
     if (ret)
@@ -6389,6 +6414,7 @@ static void coul_core_get_dts(struct smartstar_coul_device *di)
     unsigned int startup_delta_soc = 0;
     unsigned int soc_at_term = 100;
     unsigned int soc_monitor_limit = DEFAULT_SOC_MONITOR_LIMIT;
+    unsigned int low_vol_filter_cnt = LOW_INT_VOL_COUNT;
     const char *compensation_data_string = NULL;
     unsigned int ntc_compensation_is =0;
     int ret = 0;
@@ -6411,8 +6437,9 @@ static void coul_core_get_dts(struct smartstar_coul_device *di)
 	    c_offset_a = DEFAULT_C_OFF_A;
 		hwlog_err("error:get current_offset_a value failed!\n");
     }
-	hwlog_info("dts:get v_a=%d,v_b=%d,c_a=%d,c_b=%d\n",
-        				v_offset_a, v_offset_b, c_offset_a, c_offset_b);
+    dts_c_offset_a = c_offset_a;
+	hwlog_info("dts:get v_a=%d,v_b=%d,c_a=%d,c_b=%d,dts_c=%d\n",
+        				v_offset_a, v_offset_b, c_offset_a, c_offset_b, dts_c_offset_a);
 
     batt_node = of_find_compatible_node(NULL, NULL, "huawei,hisi_bci_battery");
     if (batt_node) {
@@ -6521,6 +6548,12 @@ static void coul_core_get_dts(struct smartstar_coul_device *di)
     di->soc_monitor_limit = soc_monitor_limit;
     hwlog_info("soc_monitor_limit = %d\n",di->soc_monitor_limit);
 
+    if (of_property_read_u32(np, "low_vol_filter_cnt", &low_vol_filter_cnt)) {
+        hwlog_err("dts:get low_vol_filter_cnt fail, use default limit value!\n");
+    }
+    di->low_vol_filter_cnt = low_vol_filter_cnt;
+    hwlog_info("low_vol_filter_cnt = %d\n",di->low_vol_filter_cnt);
+
     if (of_property_read_string(np, "batt_temp_too_hot", &batt_temp_too_hot_string))
 	    hwlog_err("error:get batt_temp_too_hot value failed!\n");
     else
@@ -6569,6 +6602,43 @@ static void battery_para_check(struct smartstar_coul_device *di)
         }
     }
 }
+static void clear_moved_battery_data(struct smartstar_coul_device *di)
+{
+    if(di->coul_dev_ops->is_battery_moved()){
+        di->batt_chargecycles = 0;
+        di->batt_changed_flag = 1;
+        di->batt_limit_fcc = 0;
+        di->adjusted_fcc_temp_lut = NULL; /* enable it when test ok */
+        di->is_nv_need_save = 1;
+        di->coul_dev_ops->set_nv_save_flag(NV_SAVE_FAIL);
+        di->coul_dev_ops->clear_last_soc_flag();
+        /*clear safe record fcc*/
+        di->nv_info.latest_record_index = 0;
+        my_nv_info.latest_record_index = 0;
+        memset(di->nv_info.real_fcc_record, 0, sizeof(di->nv_info.real_fcc_record));
+        memset(my_nv_info.real_fcc_record, 0, sizeof(my_nv_info.real_fcc_record));
+        hwlog_info("battery changed, reset chargecycles!\n");
+    } else {
+        hwlog_info("battery not changed, chargecycles = %d%%\n", di->batt_chargecycles);
+    }
+}
+
+static int coul_dev_ops_check_fail(struct smartstar_coul_device *di)
+{
+    int retval = 0;
+
+    if((di->coul_dev_ops->clear_ocv_temp    == NULL) ||(di->coul_dev_ops->get_use_saved_ocv_flag       == NULL)
+        ||(di->coul_dev_ops->irq_enable        == NULL) ||(di->coul_dev_ops->set_battery_moved_magic_num  == NULL)
+        ||(di->coul_dev_ops->get_last_soc      == NULL) ||(di->coul_dev_ops->save_last_soc                == NULL)
+        ||(di->coul_dev_ops->get_last_soc_flag == NULL) ||(di->coul_dev_ops->clear_last_soc_flag          == NULL)
+        ||(di->coul_dev_ops->get_offset_vol_mod == NULL)||(di->coul_dev_ops->set_offset_vol_mod           == NULL)
+        ||(di->coul_dev_ops->irq_disable       == NULL) ||(di->coul_dev_ops->cali_auto_off              == NULL))
+    {
+        hwlog_err("coul device ops is NULL!\n");
+        retval = -EINVAL;
+    }
+	return 0;
+}
 /*******************************************************
   Function:        hisi_coul_probe
   Description:     probe function
@@ -6583,7 +6653,6 @@ static int  hisi_coul_probe(struct platform_device *pdev)
     int retval = 0;
     struct iscd_info *iscd;
 
-
     di = (struct smartstar_coul_device *)devm_kzalloc(&pdev->dev,sizeof(*di), GFP_KERNEL);
     if (!di) {
 		hwlog_err("%s failed to alloc di struct\n",__FUNCTION__);
@@ -6595,6 +6664,7 @@ static int  hisi_coul_probe(struct platform_device *pdev)
         return -1;/*lint !e429*/
     }
     di->iscd = iscd;
+    di->low_vol_filter_cnt = LOW_INT_VOL_COUNT;
     iscd_reset_isc_buffer(di);
 
     di->dev =&pdev->dev;
@@ -6603,9 +6673,9 @@ static int  hisi_coul_probe(struct platform_device *pdev)
         return -1;/*lint !e429*/
      }
     di->coul_dev_ops = g_coul_core_ops;
-    if((di->coul_dev_ops->calculate_cc_uah     == NULL) ||(di->coul_dev_ops->convert_regval2ua            == NULL)
-        ||(di->coul_dev_ops->convert_regval2uv == NULL) ||(di->coul_dev_ops->is_battery_moved             == NULL)
-        ||(di->coul_dev_ops->convert_uv2regval == NULL) ||(di->coul_dev_ops->get_fifo_avg_data            == NULL)
+    if((di->coul_dev_ops->calculate_cc_uah     == NULL) ||(di->coul_dev_ops->convert_ocv_regval2ua            == NULL)
+        ||(di->coul_dev_ops->convert_ocv_regval2uv == NULL) ||(di->coul_dev_ops->is_battery_moved             == NULL)
+        ||(di->coul_dev_ops->get_fifo_avg_data == NULL)
         ||(di->coul_dev_ops->get_nv_read_flag  == NULL) ||(di->coul_dev_ops->get_delta_rc_ignore_flag     == NULL)
         ||(di->coul_dev_ops->set_nv_save_flag  == NULL) ||(di->coul_dev_ops->get_battery_current_ua       == NULL)
         ||(di->coul_dev_ops->get_coul_time     == NULL) ||(di->coul_dev_ops->clear_cc_register            == NULL)
@@ -6619,18 +6689,19 @@ static int  hisi_coul_probe(struct platform_device *pdev)
         ||(di->coul_dev_ops->get_ate_a         == NULL) ||(di->coul_dev_ops->calculate_eco_leak_uah       == NULL)
         ||(di->coul_dev_ops->get_ate_b         == NULL) ||(di->coul_dev_ops->save_cc_uah                  == NULL)
         ||(di->coul_dev_ops->get_fifo_depth    == NULL) ||(di->coul_dev_ops->get_battery_cur_ua_from_fifo == NULL)
-        ||(di->coul_dev_ops->save_ocv_temp     == NULL) ||(di->coul_dev_ops->get_ocv_temp                 == NULL)
-        ||(di->coul_dev_ops->clear_ocv_temp    == NULL) ||(di->coul_dev_ops->get_use_saved_ocv_flag       == NULL)
-        ||(di->coul_dev_ops->irq_enable        == NULL) ||(di->coul_dev_ops->set_battery_moved_magic_num  == NULL)
-        ||(di->coul_dev_ops->get_last_soc      == NULL) ||(di->coul_dev_ops->save_last_soc                == NULL)
-        ||(di->coul_dev_ops->get_last_soc_flag == NULL) ||(di->coul_dev_ops->clear_last_soc_flag          == NULL)
-        ||(di->coul_dev_ops->get_offset_vol_mod == NULL)||(di->coul_dev_ops->set_offset_vol_mod           == NULL)
-	||(di->coul_dev_ops->irq_disable       == NULL) ||(di->coul_dev_ops->cali_auto_off              == NULL))
+        ||(di->coul_dev_ops->save_ocv_temp     == NULL) ||(di->coul_dev_ops->get_ocv_temp                 == NULL))
     {
         hwlog_err("coul device ops is NULL!\n");
         retval = -EINVAL;
         goto coul_failed;
     }
+
+    if(coul_dev_ops_check_fail(di)) {
+        hwlog_err("coul_dev_ops_check_fail !\n");
+        retval = -EINVAL;
+        goto coul_failed;
+    }
+
     g_smartstar_coul_dev = di;
     platform_set_drvdata(pdev, di);
     /*get dts data*/
@@ -6670,7 +6741,6 @@ static int  hisi_coul_probe(struct platform_device *pdev)
         retval = -1;
         goto coul_failed_1;
     }
-	battery_para_check(di);
     hwlog_info("%s: batt ID is %d, batt_brand is %s\n",__FUNCTION__,di->batt_id_vol, di->batt_data->batt_brand);
 
     /*init battery remove check work*/
@@ -6706,24 +6776,9 @@ static int  hisi_coul_probe(struct platform_device *pdev)
     coul_get_initial_ocv(di);
     di->charging_stop_time = di->coul_dev_ops->get_coul_time();
 
-    /* battery moved, clear battery data  */
-    if(di->coul_dev_ops->is_battery_moved()){
-        di->batt_chargecycles = 0;
-        di->batt_changed_flag = 1;
-        di->batt_limit_fcc = 0;
-        di->adjusted_fcc_temp_lut = NULL; /* enable it when test ok */
-        di->is_nv_need_save = 1;
-        di->coul_dev_ops->set_nv_save_flag(NV_SAVE_FAIL);
-        di->coul_dev_ops->clear_last_soc_flag();
-        /*clear safe record fcc*/
-        di->nv_info.latest_record_index = 0;
-        my_nv_info.latest_record_index = 0;
-        memset(di->nv_info.real_fcc_record, 0, sizeof(di->nv_info.real_fcc_record));
-        memset(my_nv_info.real_fcc_record, 0, sizeof(my_nv_info.real_fcc_record));
-        hwlog_info("battery changed, reset chargecycles!\n");
-    } else {
-        hwlog_info("battery not changed, chargecycles = %d%%\n", di->batt_chargecycles);
-    }
+    /* battery moved, clear battery data, then update basp level */
+    clear_moved_battery_data(di);
+    battery_para_check(di);
 
     g_basp_full_pc = basp_full_pc_by_voltage(di);
     di->qmax = coul_get_qmax(di);
@@ -6772,6 +6827,7 @@ coul_no_battery:
     coul_ops->battery_technology          = coul_get_battery_technology;
     coul_ops->battery_charge_params       = coul_get_battery_charge_params;
     coul_ops->battery_vbat_max            = coul_get_battery_vbat_max;
+    coul_ops->get_battery_limit_fcc       = coul_get_battery_limit_fcc;
     coul_ops->charger_event_rcv           = coul_battery_charger_event_rcv;
     coul_ops->coul_is_fcc_debounce        = coul_is_fcc_debounce;
     coul_ops->battery_cycle_count         = coul_battery_cycle_count;

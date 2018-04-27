@@ -126,6 +126,9 @@ void   PPM_VComIndPortInit(void);
 void   PPM_VComPortInit(void);
 
 void   GU_OamErrLogVComPortInit(void);
+
+void   PPM_VComInfoShow(void);
+
 /*****************************************************************************
   5 全局变量声明
 *****************************************************************************/

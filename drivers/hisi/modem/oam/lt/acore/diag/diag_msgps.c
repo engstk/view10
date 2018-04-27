@@ -55,29 +55,122 @@
 #include "diag_msgmsp.h"
 #include "diag_debug.h"
 #include "diag_acore_common.h"
+#include "soc_socp_adapter.h"
+#include "diag_connect.h"
+#include "diag_api.h"
 
 #define    THIS_FILE_ID        MSP_FILE_ID_DIAG_MSGPS_C
 
 DIAG_TRANS_HEADER_STRU g_stPSTransHead = {{VOS_NULL, VOS_NULL}, 0};
+DIAG_MSGPS_CTRL g_DiagPsCtrl =
+{
+    .ulChannelNum   = 1,
+    .ulChannelId    = SOCP_CODER_SRC_LOM_IND1,
+};
+
+extern HTIMER          g_DebugTimer;
 
 
-/*****************************************************************************
- Function Name   : diag_PsTransProcEntry
- Description     : 该函数用于处理从PS透传命令
- Input           : VOS_UINT8* pstReq
- Output          : None
- Return          : VOS_UINT32
-
- History         :
-    1.c00326366      2015-06-14  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diagPsTransProcEntry(DIAG_FRAME_INFO_STRU* pstReq)
 {
     return diag_TransReqProcEntry(pstReq, &g_stPSTransHead);
 }
 
+VOS_UINT32 diag_PsConnMgr(VOS_UINT8 * pData)
+{
+    DIAG_CONN_MSG_SEND_T *pstRevMsg;
 
+    pstRevMsg = (DIAG_CONN_MSG_SEND_T *)pData;
+
+    if(ID_MSG_DIAG_CMD_CONNECT_REQ == pstRevMsg->ulMsgId)
+    {
+        return diag_PsConnect(pData);
+    }
+    else
+    {
+        return diag_PsDisconnect(pData);
+    }
+}
+
+VOS_UINT32 diag_PsConnect(VOS_UINT8 * pData)
+{
+    VOS_UINT32 ulCnfRst = ERR_MSP_UNAVAILABLE;
+    DIAG_CMD_REPLAY_SET_REQ_STRU stReplay={0};
+    DIAG_CONNECT_RESULT stResult;
+    DIAG_CONN_MSG_SEND_T *pstRevMsg;
+
+    pstRevMsg = (DIAG_CONN_MSG_SEND_T *)pData;
+
+    stResult.ulChannelId = g_DiagPsCtrl.ulChannelId;
+
+    /*设置连接状态开关值*/
+    ulCnfRst = diag_CfgSetGlobalBitValue(&g_ulDiagCfgInfo,DIAG_CFG_CONN_BIT,DIAG_CFG_SWT_OPEN);
+    if(ulCnfRst)
+    {
+        stResult.ulResult = ulCnfRst;
+        diag_printf("Open DIAG_CFG_CONN_BIT failed.\n");
+        return diag_ConnCnf(DIAG_CONN_ID_ACPU_PS, pstRevMsg->ulSn, g_DiagPsCtrl.ulChannelNum, &stResult);
+    }
+
+    ulCnfRst = diag_SendMsg(MSP_PID_DIAG_APP_AGENT,PS_PID_MM,ID_MSG_DIAG_CMD_REPLAY_TO_PS,(VOS_UINT8*)&stReplay,\
+                (VOS_UINT32)sizeof(DIAG_CMD_REPLAY_SET_REQ_STRU));
+    if(ulCnfRst)
+    {
+        stResult.ulResult = ERR_MSP_DIAG_SEND_MSG_FAIL;
+        return diag_ConnCnf(DIAG_CONN_ID_ACPU_PS, pstRevMsg->ulSn, g_DiagPsCtrl.ulChannelNum, &stResult);
+    }
+
+    /*复位维测信息记录*/
+    diag_reset_src_mntn_info();
+    mdrv_diag_reset_dst_mntn_info();
+
+    /* 启动定时器上报可维可测信息给工具定位丢包问题 */
+    ulCnfRst = VOS_StartRelTimer(&g_DebugTimer, MSP_PID_DIAG_APP_AGENT, DIAG_DEBUG_TIMER_LEN, DIAG_DEBUG_TIMER_NAME, \
+                            DIAG_DEBUG_TIMER_PARA, VOS_RELTIMER_NOLOOP, VOS_TIMER_NO_PRECISION);
+    if(ulCnfRst != ERR_MSP_SUCCESS)
+    {
+        diag_printf("start dbug timer fail [%s]\n", __FUNCTION__);
+    }
+
+    stResult.ulResult = ERR_MSP_SUCCESS;
+    return diag_ConnCnf(DIAG_CONN_ID_ACPU_PS, pstRevMsg->ulSn, g_DiagPsCtrl.ulChannelNum, &stResult);
+}
+
+VOS_VOID diag_ConnReset(VOS_VOID)
+{
+    /* 规避老的hids在建链时候下发disconnect命令，不能将开机log配置清除 */
+    if(DIAG_IS_POLOG_ON)
+    {
+        g_ulDiagCfgInfo = DIAG_CFG_INIT | DIAG_CFG_POWERONLOG;
+        diag_printf("diag_ConnReset, keep init&poweronlog flag.\n");
+    }
+    else
+    {
+        g_ulDiagCfgInfo = DIAG_CFG_INIT;
+    }
+
+    return;
+}
+
+VOS_UINT32 diag_PsDisconnect(VOS_UINT8 * pData)
+{
+    DIAG_CONNECT_RESULT stResult;
+    DIAG_CONN_MSG_SEND_T *pstRevMsg;
+
+    pstRevMsg = (DIAG_CONN_MSG_SEND_T *)pData;
+
+    /*重置所有开关状态为未打开*/
+    diag_ConnReset();
+    diag_CfgResetAllSwt();
+
+    /* 删除定时器 */
+    (VOS_VOID)VOS_StopRelTimer(&g_DebugTimer);
+
+    stResult.ulChannelId = g_DiagPsCtrl.ulChannelId;
+    stResult.ulResult = ERR_MSP_SUCCESS;
+    return diag_ConnCnf(DIAG_CONN_ID_ACPU_PS, pstRevMsg->ulSn, g_DiagPsCtrl.ulChannelNum, &stResult);
+
+}
 /*****************************************************************************
  Function Name   : diag_PsMsgInit
  Description     : MSP ps部分初始化
@@ -103,19 +196,16 @@ VOS_VOID diag_PsMsgInit(VOS_VOID)
 
     /*注册message消息回调*/
     DIAG_MsgProcReg(DIAG_MSG_TYPE_PS,diagPsTransProcEntry);
+
+    ulRet = diag_ConnMgrSendFuncReg(DIAG_CONN_ID_ACPU_PS, g_DiagPsCtrl.ulChannelNum, &g_DiagPsCtrl.ulChannelId, diag_PsConnMgr);
+    if(ulRet)
+    {
+        diag_printf("acpu ps reg connect msg fail, ret:0x%x\n", ulRet);
+    }
 }
 
 
-/*****************************************************************************
- Function Name   : DIAG_ShowTransList
- Description     : 调试接口，用于查看链表中是否有残留的节点
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.c00326366      2015-06-14  Draft Enact
-
-*****************************************************************************/
 VOS_VOID DIAG_ShowTransList(VOS_VOID)
 {
     LIST_S* me = NULL;
@@ -135,5 +225,7 @@ VOS_VOID DIAG_ShowTransList(VOS_VOID)
     return ;
 }
 
+EXPORT_SYMBOL(DIAG_LogShowToFile);
+EXPORT_SYMBOL(DIAG_ShowTransList);
 
 

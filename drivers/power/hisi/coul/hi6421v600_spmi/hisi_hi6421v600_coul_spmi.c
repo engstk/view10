@@ -732,7 +732,7 @@ static int hi6421v600_coul_check_version(void)
     do {
         HI6421V600_REGS_READ(HI6421V600_COUL_VERSION_ADDR, &version_reg, 1);
         HI6421V600_COUL_INF("do a dummy read, version is 0x%x\n", version_reg);
-        udelay(500);
+        usleep_range(500,510);
         if ((tryloop++) > 5){
             HI6421V600_COUL_ERR("version is not correct!\n");
             return -1;
@@ -762,9 +762,9 @@ static int hi6421v600_coul_check_debug(void)
 	HI6421V600_REG_WRITE(HI6421V600_DEBUG_WRITE_PRO,COUL_WRITE_UNLOCK);
         HI6421V600_REG_WRITE(HI6421V600_DEBUG_REG, 0x0);
 	HI6421V600_REG_WRITE(HI6421V600_DEBUG_WRITE_PRO,COUL_WRITE_LOCK);
-        udelay(500);
+        usleep_range(500,510);
         HI6421V600_REGS_WRITE(HI6421V600_SAVE_OCV_ADDR, &ocvreg, 2);
-        udelay(500);
+        usleep_range(500,510);
         return -1;
     }
     return 0;
@@ -1211,9 +1211,8 @@ struct coul_device_ops hi6421v600_coul_ops =
 {
     .calculate_cc_uah             = hi6421v600_coul_calculate_cc_uah,
     .save_cc_uah                  = hi6421v600_coul_save_cc_uah,
-    .convert_regval2ua            = hi6421v600_coul_convert_regval2ua,
-    .convert_regval2uv            = hi6421v600_coul_convert_regval2uv,
-    .convert_uv2regval            = hi6421v600_coul_convert_uv2regval,
+    .convert_ocv_regval2ua            = hi6421v600_coul_convert_regval2ua,
+    .convert_ocv_regval2uv            = hi6421v600_coul_convert_regval2uv,
     .is_battery_moved             = hi6421v600_coul_is_battery_moved,
     .set_battery_moved_magic_num  = hi6421v600_coul_set_battery_move_magic,
     .get_fifo_depth               = hi6421v600_coul_get_fifo_depth,
@@ -1259,6 +1258,7 @@ struct coul_device_ops hi6421v600_coul_ops =
     .cali_auto_off		  = hi6421v600_coul_cancle_auto_cali,
     .save_ocv_level				  = hi6421v600_coul_save_ocv_level,
     .get_ocv_level				  = hi6421v600_coul_get_ocv_level,
+
 };
 
 

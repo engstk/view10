@@ -70,6 +70,8 @@
 #include "TafDrvAgent.h"
 #include "nv_stru_lps.h"
 
+#include "AtCtx.h"
+
 /*lint -e767 原因:Log打印*/
 #define    THIS_FILE_ID        MSP_FILE_ID_AT_LTE_CT_PROC_C
 /*lint +e767 */
@@ -119,8 +121,7 @@ VOS_UINT32 atSetFTXONPara(VOS_UINT8 ucClientId)
 
     stFTXONSetReq.enSwtich = (FTM_TXON_SWT_ENUM)(gastAtParaList[0].ulParaValue);
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_SET_TXON_REQ, ucClientId, (VOS_VOID*)(&stFTXONSetReq), sizeof(stFTXONSetReq));
 
     if(AT_SUCCESS == ulRst)
@@ -176,8 +177,7 @@ VOS_UINT32 atQryFTXONPara(VOS_UINT8 ucClientId)
     VOS_UINT32 ulRst;
 
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_RD_TXON_REQ,ucClientId, (VOS_VOID*)(&stFTXONQryReq), sizeof(stFTXONQryReq));
 
     if(AT_SUCCESS == ulRst)
@@ -307,8 +307,7 @@ VOS_UINT32 atSetFRXONPara(VOS_UINT8 ucClientId)
 
     stFRXONSetReq.ulRxSwt = gastAtParaList[0].ulParaValue;
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_SET_RXON_REQ,ucClientId, (VOS_VOID*)(&stFRXONSetReq), sizeof(stFRXONSetReq));
 
     if(AT_SUCCESS == ulRst)
@@ -363,8 +362,7 @@ VOS_UINT32 atQryFRXONPara(VOS_UINT8 ucClientId)
     FTM_RD_RXON_REQ_STRU stFRXONQryReq = {0};
     VOS_UINT32 ulRst;
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_RD_RXON_REQ,ucClientId, (VOS_VOID*)(&stFRXONQryReq), sizeof(stFRXONQryReq));
 
     if(AT_SUCCESS == ulRst)
@@ -472,8 +470,7 @@ VOS_UINT32 atSetFCHANPara(VOS_UINT8 ucClientId)
     (VOS_VOID)AT_SetGlobalFchan((VOS_UINT8)(gastAtParaList[0].ulParaValue));
 
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_SET_FCHAN_REQ,ucClientId, (VOS_VOID*)(&stFCHANSetReq), sizeof(stFCHANSetReq));
 
     if(AT_SUCCESS == ulRst)
@@ -606,8 +603,7 @@ VOS_UINT32 atQryFCHANPara(VOS_UINT8 ucClientId)
     FTM_RD_FCHAN_REQ_STRU stFCHANQryReq = {0};
     VOS_UINT32 ulRst;
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_RD_FCHAN_REQ,ucClientId, (VOS_VOID*)(&stFCHANQryReq), sizeof(stFCHANQryReq));
 
     if(AT_SUCCESS == ulRst)
@@ -717,9 +713,7 @@ VOS_UINT32 atSetTselrfPara(VOS_UINT8 ucClientId)
     }
     else if(FTM_TSELRF_WIFI == ulPath)
     {
-        /*DTS2012041102190 : h00135900 start in 2011-04-11 AT代码融合*/
         /*lint -e774*/
-        /*DTS2012041102190 : h00135900 end in 2011-04-11 AT代码融合*/
         if(ulRst == ERR_MSP_SUCCESS)
         /*lint +e774*/
         {
@@ -882,8 +876,7 @@ VOS_UINT32 atSetFLNAPara(VOS_UINT8 ucClientId)
 
     stFLNASetReq.ucAggcLvl = (VOS_UINT8)(gastAtParaList[0].ulParaValue);
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_SET_AAGC_REQ,ucClientId, (VOS_VOID*)(&stFLNASetReq), sizeof(stFLNASetReq));
 
     if(AT_SUCCESS == ulRst)
@@ -939,8 +932,7 @@ VOS_UINT32 atQryFLNAPara(VOS_UINT8 ucClientId)
     FTM_RD_AAGC_REQ_STRU stFLNAQryReq = {0};
     VOS_UINT32 ulRst;
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_RD_AAGC_REQ,ucClientId, (VOS_VOID*)(&stFLNAQryReq), sizeof(stFLNAQryReq));
 
     if(AT_SUCCESS == ulRst)
@@ -999,8 +991,7 @@ VOS_UINT32 atQryFRSSIPara(VOS_UINT8 ucClientId)
     FTM_FRSSI_REQ_STRU stFRssiQryReq = {0};
     VOS_UINT32 ulRst;
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_FRSSI_REQ,ucClientId, (VOS_VOID*)(&stFRssiQryReq), sizeof(stFRssiQryReq));
 
     if(AT_SUCCESS == ulRst)
@@ -1067,7 +1058,7 @@ VOS_UINT32 AT_GetLteFeatureInfo(AT_FEATURE_SUPPORT_ST*pstFeATure)
 
     MSP_MEMSET(pstEutraCap, (VOS_SIZE_T)sizeof(LRRC_NV_UE_EUTRA_CAP_STRU), 0x00, (VOS_SIZE_T)sizeof(LRRC_NV_UE_EUTRA_CAP_STRU ));
 
-    ulRst = NVM_Read(EN_NV_ID_UE_CAPABILITY,pstEutraCap,sizeof(LRRC_NV_UE_EUTRA_CAP_STRU));
+    ulRst = TAF_ACORE_NV_READ(MODEM_ID_0, EN_NV_ID_UE_CAPABILITY,pstEutraCap,sizeof(LRRC_NV_UE_EUTRA_CAP_STRU));
     if( ulRst != ERR_MSP_SUCCESS )
     {
         VOS_MemFree(WUEPS_PID_AT, pstEutraCap);

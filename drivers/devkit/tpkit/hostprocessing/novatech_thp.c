@@ -34,6 +34,8 @@ struct nvt_ts_trim_id_table_entry {
 };
 
 static const struct nvt_ts_trim_id_table_entry trim_id_table[] = {
+	{.id = {0x0A, 0xFF, 0xFF, 0x72, 0x67, 0x03}, .mask = {1, 0, 0, 1, 1, 1} },
+	{.id = {0x0A, 0xFF, 0xFF, 0x72, 0x66, 0x03}, .mask = {1, 0, 0, 1, 1, 1} },
 	{.id = {0x55, 0x00, 0xFF, 0x00, 0x00, 0x00}, .mask = {1, 1, 0, 1, 1, 1} },
 	{.id = {0x55, 0x72, 0xFF, 0x00, 0x00, 0x00}, .mask = {1, 1, 0, 1, 1, 1} },
 	{.id = {0xAA, 0x00, 0xFF, 0x00, 0x00, 0x00}, .mask = {1, 1, 0, 1, 1, 1} },
@@ -338,9 +340,18 @@ static int __init thp_novatech_module_init(void)
 
 	return rc;
 err:
-	kfree(dev->tx_buff);
-	kfree(dev->rx_buff);
-	kfree(dev);
+	if(dev->tx_buff){
+		kfree(dev->tx_buff);
+		dev->tx_buff = NULL;
+	}
+	if(dev->rx_buff){
+		kfree(dev->rx_buff);
+		dev->rx_buff = NULL;
+	}
+	if(dev){
+		kfree(dev);
+		dev = NULL;
+	}
 	return rc;
 }
 static void __exit thp_novatech_module_exit(void)

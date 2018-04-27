@@ -48,34 +48,10 @@ struct asp_cfg_priv {
 	unsigned int asp_h2x_module_count;
 	bool usb_h2x_enable;
 	bool asp_h2x_enable;
-	bool is_vr;
 };
 
 static struct asp_cfg_priv *asp_cfg_priv = NULL;
 
-void dp_notify_audio(bool is_vr)
-{
-	struct asp_cfg_priv *priv = asp_cfg_priv;
-
-	if (NULL == priv) {
-		pr_err("[%s:%d],priv is NULL\n", __FUNCTION__, __LINE__);
-		return;
-	}
-
-	priv->is_vr = is_vr;
-
-	pr_info("[%s:%d], priv->is_vr is %s\n", __FUNCTION__, __LINE__, is_vr ? "true" : "false");
-}
-EXPORT_SYMBOL(dp_notify_audio);
-
-bool asp_cfg_is_vr(void)
-{
-	struct asp_cfg_priv *priv = asp_cfg_priv;
-
-	BUG_ON(NULL == priv);
-
-	return priv->is_vr;
-}
 
 static unsigned int asp_cfg_reg_read(unsigned int reg)
 {
@@ -298,37 +274,24 @@ void asp_cfg_hdmi_module_disable(void)
 
 void asp_cfg_dp_module_enable(void)
 {
-	if (asp_cfg_is_vr()) {
-		/*spdif mode */
-		asp_cfg_reg_write(ASP_CFG_R_GATE_EN_REG, CLK_GT_SPDIF_BIT);
-		asp_cfg_reg_write(ASP_CFG_R_GATE_EN_REG, CLK_SPDIF_HCLK_BIT);
+	/*enable clk */
+	asp_cfg_reg_write(ASP_CFG_R_GATE_EN_REG, CLK_GT_SPDIF_BIT);
+	asp_cfg_reg_write(ASP_CFG_R_GATE_EN_REG, CLK_SPDIF_HCLK_BIT);
 
-		asp_cfg_reg_set_bit(ASP_CFG_R_GATE_CLKDIV_EN_REG, ASP_CFG_GT_SPDIF_BCLK_DIV_OFFSET);
-	} else {
-		/*i2s mode enable clk */
-		asp_cfg_reg_write(ASP_CFG_R_GATE_EN_REG, CLK_HDMI_BCLK_BIT);
-
-		/*enable hdmirefclk_div*/
-		asp_cfg_reg_set_bit(ASP_CFG_R_GATE_CLKDIV_EN_REG, ASP_CFG_GT_HDMIADWS_CLK_DIV_OFFSET);
-	}
-	pr_info("[%s:%d],asp_cfg_dp_module_enable, dp mode:%s", __FUNCTION__, __LINE__, asp_cfg_is_vr() ? "spdif": "i2s");
+	/*enable hdmirefclk_div*/
+	asp_cfg_reg_set_bit(ASP_CFG_R_GATE_CLKDIV_EN_REG, ASP_CFG_GT_SPDIF_BCLK_DIV_OFFSET);
+	pr_info("[%s:%d],asp_cfg_dp_module_enable", __FUNCTION__, __LINE__);
 }
 
 void asp_cfg_dp_module_disable(void)
 {
-	if (asp_cfg_is_vr()) {
-		asp_cfg_reg_write(ASP_CFG_R_GATE_DIS_REG, CLK_GT_SPDIF_BIT);
-		asp_cfg_reg_write(ASP_CFG_R_GATE_DIS_REG, CLK_SPDIF_HCLK_BIT);
+	/*disable clk */
+	asp_cfg_reg_write(ASP_CFG_R_GATE_DIS_REG, CLK_GT_SPDIF_BIT);
+	asp_cfg_reg_write(ASP_CFG_R_GATE_DIS_REG, CLK_SPDIF_HCLK_BIT);
 
-		asp_cfg_reg_clr_bit(ASP_CFG_R_GATE_CLKDIV_EN_REG, ASP_CFG_GT_SPDIF_BCLK_DIV_OFFSET);
-	} else {
-		/*disable clk */
-		asp_cfg_reg_write(ASP_CFG_R_GATE_DIS_REG, CLK_HDMI_BCLK_BIT);
-
-		/*disable hdmirefclk_div*/
-		asp_cfg_reg_clr_bit(ASP_CFG_R_GATE_CLKDIV_EN_REG, ASP_CFG_GT_HDMIADWS_CLK_DIV_OFFSET);
-	}
-	pr_info("[%s:%d],asp_cfg_dp_module_disable, dp mode:%s", __FUNCTION__, __LINE__, asp_cfg_is_vr() ? "spdif": "i2s");
+	/*disable hdmirefclk_div*/
+	asp_cfg_reg_clr_bit(ASP_CFG_R_GATE_CLKDIV_EN_REG, ASP_CFG_GT_SPDIF_BCLK_DIV_OFFSET);
+	pr_info("[%s:%d],asp_cfg_dp_module_disable", __FUNCTION__, __LINE__);
 }
 
 unsigned int asp_cfg_get_irq_value(void)
@@ -392,7 +355,6 @@ static int asp_cfg_probe(struct platform_device *pdev)
 	spin_lock_init(&priv->h2x_lock);
 
 	priv->dev = dev;
-	priv->is_vr = false;
 
 	platform_set_drvdata(pdev, priv);
 

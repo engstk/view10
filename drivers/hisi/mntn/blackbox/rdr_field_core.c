@@ -83,12 +83,16 @@ void rdr_field_baseinfo_init(void)
 	pbb->base_info.arg2 = 0;
 	pbb->base_info.e_core = 0;
 	pbb->base_info.e_type = 0;
+	pbb->base_info.e_subtype = 0;
 	pbb->base_info.start_flag = 0;
 	pbb->base_info.savefile_flag = 0;
 	pbb->base_info.reboot_flag = 0;
 	memset(pbb->base_info.e_module, 0, MODULE_NAME_LEN);
 	memset(pbb->base_info.e_desc, 0, STR_EXCEPTIONDESC_MAXLEN);
 	memset(pbb->base_info.datetime, 0, DATATIME_MAXLEN);
+
+	pbb->cleartext_info.savefile_flag = 0;
+
 	BB_PRINT_END();
 	return;
 }
@@ -101,11 +105,15 @@ void rdr_field_baseinfo_reinit(void)
 	pbb->base_info.arg2 = 0;
 	pbb->base_info.e_core = 0;
 	pbb->base_info.e_type = 0;
+	pbb->base_info.e_subtype = 0;
 	pbb->base_info.start_flag = RDR_PROC_EXEC_START;
 	pbb->base_info.savefile_flag = RDR_DUMP_LOG_START;
 	/* memset(pbb->base_info.e_module, 0, MODULE_NAME_LEN); */
 	/* memset(pbb->base_info.e_desc, 0, STR_EXCEPTIONDESC_MAXLEN); */
 	memset(pbb->base_info.datetime, 0, DATATIME_MAXLEN);
+
+	pbb->cleartext_info.savefile_flag = 0;
+
 	BB_PRINT_END();
 	return;
 }
@@ -117,6 +125,16 @@ void rdr_field_areainfo_init(void)
 		pbb->area_info[index].offset = rdr_area_mem_addr[index];
 		pbb->area_info[index].length = rdr_area_mem_size[index];
 	}
+}
+
+char *rdr_field_get_datetime(void)
+{
+	return (char *)(pbb->base_info.datetime);
+}
+
+void rdr_cleartext_dumplog_done(void)
+{
+	pbb->cleartext_info.savefile_flag = 1;
 }
 
 void rdr_field_dumplog_done(void)
@@ -246,6 +264,7 @@ void rdr_fill_edata(struct rdr_exception_info_s *e, char *date)
 	BB_PRINT_START();
 	pbb->base_info.e_core = e->e_from_core;
 	pbb->base_info.e_type = e->e_exce_type;
+	pbb->base_info.e_subtype = e->e_exce_subtype;
 	memcpy(pbb->base_info.datetime, date, DATATIME_MAXLEN);
 	memcpy(pbb->base_info.e_module, e->e_from_module, MODULE_NAME_LEN);
 	memcpy(pbb->base_info.e_desc, e->e_desc, STR_EXCEPTIONDESC_MAXLEN);
@@ -277,12 +296,14 @@ void rdr_show_base_info(int flag)
 	p->base_info.e_module[MODULE_NAME_LEN - 1] = '\0';
 	p->base_info.e_desc[STR_EXCEPTIONDESC_MAXLEN - 1] = '\0';
 	p->top_head.build_time[RDR_BUILD_DATE_TIME_LEN - 1] = '\0';
+
 	BB_PRINT_PN("========= print baseinfo start =========\n");
 	BB_PRINT_PN("modid        :[0x%x]\n", p->base_info.modid);
 	BB_PRINT_PN("arg1         :[0x%x]\n", p->base_info.arg1);
 	BB_PRINT_PN("arg2         :[0x%x]\n", p->base_info.arg2);
 	BB_PRINT_PN("coreid       :[0x%x]\n", p->base_info.e_core);
 	BB_PRINT_PN("reason       :[0x%x]\n", p->base_info.e_type);
+	BB_PRINT_PN("subtype      :[0x%x]\n", p->base_info.e_subtype);
 	BB_PRINT_PN("e data       :[%s]\n", p->base_info.datetime);
 	BB_PRINT_PN("e module     :[%s]\n", p->base_info.e_module);
 	BB_PRINT_PN("e desc       :[%s]\n", p->base_info.e_desc);
@@ -305,4 +326,8 @@ void rdr_show_base_info(int flag)
 			pbb->area_info[index].length);
 	}
 	BB_PRINT_PN("========= print areainfo e n d =========\n");
+
+	BB_PRINT_PN("========= print clear text start =========\n");
+	BB_PRINT_PN("savefile_flag:[0x%x]\n", p->cleartext_info.savefile_flag);
+	BB_PRINT_PN("========= print clear text e n d =========\n");
 }

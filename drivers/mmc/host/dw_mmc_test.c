@@ -51,6 +51,11 @@ extern void __iomem *pericrg_base;
 
 /*sd modus change*/
 unsigned int sd_caps_modus = 0;
+unsigned int sd_loop_flag = 0;
+/*sdcard reset test flag*/
+#if defined(CONFIG_HISI_DEBUG_FS)
+unsigned int sd_test_reset_flag = 0;
+#endif
 #define SD_SDR104    1
 #define SD_SDR50      2
 #define SD_SDR25      4
@@ -74,6 +79,17 @@ unsigned int sd_caps_modus = 0;
 
 unsigned int test_sd_data = 0;
 
+void mmc_sd_test(unsigned int loop_enable_flag)
+{
+	sd_init_loop_work = 0;
+	if (loop_enable_flag == 1)
+		sd_loop_flag = 0x5a5a;
+	else if (loop_enable_flag == 0)
+		sd_loop_flag = 0;
+	else
+		printk(KERN_ERR "Don't support this argument, please input again!\n");
+}
+
 /*sd loop test*/
 void mmc_sd_loop_test(void)
 {
@@ -94,6 +110,8 @@ void test_sd_delete_host_caps(struct mmc_host *host)
 
         if(sd_caps_modus & SD_SDR12)
                 host->caps &= ~MMC_CAP_UHS_SDR12;
+        if(0x1f == sd_caps_modus)
+                host->caps  |= MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 | MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_SDR104;
 
 }
 
@@ -121,10 +139,10 @@ void sd_sdio_loop_test(struct work_struct *work)
 
         /*do what you want,example read 0x0 reg*/
         /*dev_err(dw_host->dev, ": CTRL:	0x%08x\n", mci_readl(dw_host, CTRL));*/
-        printk(KERN_ERR "sd_sdio_loop_testXXXXXXXXX\n");
-
-        queue_delayed_work(sd_sdio_test_work,&host->sd_sdio_test_work, msecs_to_jiffies(1000));
-
+	if (sd_loop_flag == 0x5a5a) {
+		printk(KERN_ERR "sd_sdio_loop_testXXXXXXXXX\n");
+		queue_delayed_work(sd_sdio_test_work,&host->sd_sdio_test_work, msecs_to_jiffies(1000));
+	}
 }
 
 void dw_mci_dump_crg(struct dw_mci *host)
@@ -161,10 +179,23 @@ static int sd_modul_proc_show(struct seq_file *m, void *v)
 		seq_printf(m, "Max SD model is SDR12\n");
 	else if(0xf == sd_caps_modus)
 		seq_printf(m, "Max SD model is HS\n");
+	else if(0x1f == sd_caps_modus)
+		seq_printf(m, "Change to Max SD speed mode\n");
              else
 		seq_printf(m, "Invalid sd_caps_model\n");
 
              return 0;
+}
+
+static int sd_reset_proc_show(struct seq_file *m, void *v)
+{
+	if (1 == sd_test_reset_flag)
+		seq_printf(m, "sd_reset:enable reset function\n");
+	else if (0 == sd_test_reset_flag)
+		seq_printf(m,"cancel_reset:close reset function\n");
+	else
+		seq_printf(m, "Invalid sd_test_reset_flag\n");
+	return 0;
 }
 
 static ssize_t sd_modul_set_proc_write(struct file *p_file, const char __user * userbuf, size_t count, loff_t * ppos)/*lint !e40*/
@@ -190,7 +221,26 @@ static ssize_t sd_modul_set_proc_write(struct file *p_file, const char __user * 
 		sd_caps_modus = 7;
 	else if(!strncmp("HSPEED",buf,strlen("HSPEED")))
 		sd_caps_modus = 0xf;
+	else if(!strncmp("ALL",buf,strlen("ALL")))
+		sd_caps_modus = 0x1f;
+	return (ssize_t)count;
+}
 
+static ssize_t sd_test_reset_proc_write(struct file *p_file, const char __user * userbuf, size_t count, loff_t * ppos)/*lint !e40*/
+{
+	char buf[10] = {0};
+
+	if (count == 0)
+		return -1;
+
+	if(NULL == userbuf)
+		return -1;
+
+	if(copy_from_user(buf, userbuf, sizeof(buf) - 1))
+		return -1;
+
+	if(!strncmp("sd_reset",buf,strlen("sd_reset")))
+		sd_test_reset_flag = 1;
 	return (ssize_t)count;
 }
 
@@ -200,6 +250,10 @@ static int sd_modul_proc_open(struct inode *p_inode, struct file *p_file)
 	return single_open(p_file, sd_modul_proc_show, NULL);
 }
 
+static int sd_reset_proc_open(struct inode *p_inode, struct file *p_file)
+{
+	return single_open(p_file, sd_reset_proc_show, NULL);
+}
 
 static const struct file_operations sd_modul_set_proc_fops = {
 	.open		= sd_modul_proc_open,
@@ -207,6 +261,14 @@ static const struct file_operations sd_modul_set_proc_fops = {
 	.write          = sd_modul_set_proc_write,
 	.llseek		= seq_lseek,/*lint !e64 !e65*/
 	.release	= single_release,
+};
+
+static const struct file_operations sd_test_reset_proc_fops = {
+	.open           = sd_reset_proc_open,
+	.read           = seq_read,
+	.write          = sd_test_reset_proc_write,
+	.llseek         = seq_lseek,/*lint !e64 !e65*/
+	.release        = single_release,
 };
 
 #define DEVICE_INIT 1
@@ -223,6 +285,7 @@ void proc_sd_test_init(void)
         }
 
         proc_create("sd_test_device/sd_modul_set", 0660, (struct proc_dir_entry *)NULL, &sd_modul_set_proc_fops);
+	proc_create("sd_test_device/sd_test_reset", 0660, (struct proc_dir_entry *)NULL, &sd_test_reset_proc_fops);
         is_device_inited = DEVICE_INIT;
 }
 #endif

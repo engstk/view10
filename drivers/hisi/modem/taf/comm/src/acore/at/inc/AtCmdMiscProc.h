@@ -93,6 +93,16 @@ extern "C" {
 #define AT_MODEM_ZONE_LEN                           (3)                         /* 字符串时区的长度 */
 #define AT_GET_MODEM_TIME_BUFF_LEN                  (5)
 
+#define AT_MODEM_DEFALUT_AUX_MODE_YEAR_LEN          (2)                         /* "yy"总长度 */
+#define AT_MODEM_OTHER_AUX_MODE_YEAR_LEN            (4)                         /* "yyyy"总长度 */
+#define AT_MODEM_AUX_MODE_EXCEPT_YEAR_TIME_LEN      (18)                        /* "/mm/dd,hh:mm:ss(+/-)zz"总长度 */
+
+#define AT_MODEM_DEFALUT_AUX_MODE_YEAR_MAX          (99)                        /* "yy"可设置年最大值 */
+#define AT_MODEM_DEFALUT_AUX_MODE_YEAR_MIN          (0)                         /* "yy"可设置年最小值 */
+
+#define AT_MODEM_TIME_ZONE_MAX                      (48)                        /* 可设置时区最大值 */
+#define AT_MODEM_TIME_ZONE_MIN                      (-48)                       /* 可设置时区最大值 */
+
 #define AT_MODEM_YEAR_MAX                           (2050)                      /* 可设置年最大值 */
 #define AT_MODEM_YEAR_MIN                           (1970)                      /* 可设置年最小值 */
 #define AT_MODEM_MONTH_MAX                          (12)                        /* 可设置月最大值 */
@@ -109,6 +119,10 @@ extern "C" {
 
 #define AT_MODEM_ZONE_MAX                           (12)                        /* 可设置时区最大值 */
 #define AT_MODEM_ZONE_MIN                           (-12)                       /* 可设置时区最小值 */
+
+#define AT_TEMP_ZONE_DEFAULT                        (31)                        /* 温区默认值 二进制11111 */
+
+#define AT_GMT_TIME_DEFAULT                         (70)                        /* 判断标准时间是1900还是1970 */
 
 
 /*****************************************************************************
@@ -237,6 +251,25 @@ VOS_UINT32 AT_RcvMtaCACellSetCnf(
 VOS_UINT32 AT_RcvMtaCACellQryCnf(
     VOS_VOID                           *pMsg
 );
+VOS_UINT32 AT_SetFineTimeReqPara(
+    VOS_UINT8                           ucIndex
+);
+VOS_UINT32 AT_RcvMtaFineTimeSetCnf(
+    VOS_VOID                           *pMsg
+);
+VOS_UINT32 AT_RcvMtaSibFineTimeNtf(
+    VOS_VOID                           *pstMsg
+);
+VOS_UINT32 AT_RcvMtaLppFineTimeNtf(
+    VOS_VOID                           *pstMsg
+);
+
+VOS_UINT32 AT_RcvMtaEpsNetworkInfoInd(
+    VOS_VOID                           *pMsg
+);
+VOS_UINT32 AT_RcvMtaEpsNetworkQryCnf(
+    VOS_VOID                           *pMsg
+);
 #endif
 
 VOS_UINT32 AT_SetLogEnablePara(VOS_UINT8 ucIndex);
@@ -246,7 +279,6 @@ VOS_UINT32 AT_SetActPdpStubPara(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_SetNVCHKPara(VOS_UINT8 ucIndex);
 
-#if ((FEATURE_ON == FEATURE_SC_DATA_STRUCT_EXTERN) || (FEATURE_ON == FEATURE_BOSTON_AFTER_FEATURE))
 VOS_UINT32 AT_RcvDrvAgentSimlockWriteExSetCnf(VOS_VOID *pMsg);
 VOS_UINT32 AT_RcvDrvAgentSimlockDataReadExReadCnf(VOS_VOID *pMsg);
 VOS_UINT32 AT_SimLockDataReadExPara(VOS_UINT8 ucIndex);
@@ -263,7 +295,7 @@ VOS_UINT32  AT_ProcSimlockWriteExData(
     VOS_UINT8                          *pucSimLockData,
     VOS_UINT16                          usParaLen
 );
-#endif
+
 
 VOS_UINT32 AT_RcvMtaAfcClkInfoCnf(
     VOS_VOID                           *pMsg
@@ -273,6 +305,10 @@ extern VOS_UINT32 AT_SetPdmCtrlPara(VOS_UINT8 ucIndex);
 
 VOS_UINT32 AT_SetPhyComCfgPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_RcvMtaPhyComCfgSetCnf(VOS_VOID *pMsg);
+
+VOS_UINT32 AT_SetSamplePara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_RcvMtaSetSampleCnf(VOS_VOID *pMsg);
+
 
 #if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 AT_SetEvdoSysEvent(VOS_UINT8 ucIndex);
@@ -333,7 +369,15 @@ VOS_UINT32 AT_SetLineDetailPara(
     VOS_UINT8                           ucIndex
 );
 
-/* Add by c00380008 for WIFI 共天线连接态上报 2016-08-22 begin */
+#if (FEATURE_ON == FEATURE_DSDS)
+VOS_UINT32 AT_RcvMmaDsdsStateSetCnf(
+    VOS_VOID                           *pstMsg
+);
+VOS_UINT32 AT_RcvMmaDsdsStateNotify(
+    VOS_VOID                           *pstMsg
+);
+#endif
+
 extern VOS_UINT32 AT_SetCrrconnPara(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_QryCrrconnPara(VOS_UINT8 ucIndex);
@@ -363,9 +407,38 @@ extern VOS_UINT32 AT_RcvMtaRlQualityInfoInd(
 extern VOS_UINT32 AT_RcvMtaVideoDiagInfoRpt(
     VOS_VOID                           *pMsg
 );
-/* Add by c00380008 for WIFI 共天线连接态上报 2016-08-22 end */
 
 VOS_UINT32 AT_SetEccCfgPara(VOS_UINT8 ucIndex);
+
+VOS_UINT32 AT_SetSmsDomainPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_RcvMtaSmsDomainSetCnf(
+    VOS_VOID                           *pMsg
+);
+VOS_UINT32 AT_QrySmsDomainPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_RcvMtaSmsDomainQryCnf(
+    VOS_VOID                        *pMsg
+);
+
+VOS_UINT32 AT_SetCenfsPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_QryCenfsPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_SetWs46Para(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_QryWs46Para(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_TestWs46Para( VOS_UINT8 ucIndex );
+
+VOS_UINT32 AT_SetGameModePara(
+    VOS_UINT8                           ucIndex
+);
+
+VOS_UINT32 AT_SetGpsLocSetPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_RcvMtaGpsLocSetCnf(VOS_VOID *pMsg);
+
+
+extern VOS_VOID AT_PrintCclkTime(
+    VOS_UINT8                           ucIndex,
+    TIME_ZONE_TIME_STRU                *pstTimeZoneTime,
+    MODEM_ID_ENUM_UINT16                enModemId
+);
+VOS_UINT32 AT_RcvMtaCclkQryCnf(VOS_VOID *pMsg);
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

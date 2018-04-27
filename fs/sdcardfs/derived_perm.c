@@ -78,27 +78,6 @@ struct fs_struct *prepare_fs_struct(
 	return fs;
 }
 
-/* Kernel has already enforced everything we returned through
- * derive_permissions_locked(), so this is used to lock down access
- * even further, such as enforcing that apps hold sdcard_rw. */
-int check_caller_access_to_name(
-	struct dentry *parent,
-	const char *name
-) {
-	int err = 1;
-	struct sdcardfs_tree_entry *pi = SDCARDFS_DI_R(parent);
-	/* Always block security-sensitive files at root */
-	if (pi->perm == PERM_ROOT) {
-		if (!strcasecmp(name, "autorun.inf")
-			|| !strcasecmp(name, ".android_secure")
-			|| !strcasecmp(name, "android_secure")) {
-			err = 0;
-		}
-	}
-	read_unlock(&pi->lock);
-	return err;
-}
-
 /* copy derived state from parent inode */
 static inline void
 __inherit_derived_state(
@@ -141,7 +120,12 @@ void __get_derived_permission(struct super_block *sb, const char *name,
 				/* App-specific directories inside; let anyone traverse */
 				ci->perm = PERM_ANDROID;
 				ci->under_android = true;
-			}
+			/* Moved from check_caller_access_to_name() */
+			/* Always block security-sensitive files at root */
+			} else if (!strcasecmp(name, "autorun.inf")
+				|| !strcasecmp(name, ".android_secure")
+				|| !strcasecmp(name, "android_secure"))
+				ci->perm = PERM_JAILHOUSE;
 			break;
 
 		case PERM_ANDROID:
@@ -169,6 +153,11 @@ void __get_derived_permission(struct super_block *sb, const char *name,
 				ci->revision = 0;
 			else
 				ci->d_uid = multiuser_get_uid(pi->userid, appid);
+			break;
+
+		case PERM_JAILHOUSE:
+			/* always denied due to security issues */
+			ci->perm = PERM_JAILHOUSE;
 			break;
 	}
 }

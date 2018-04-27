@@ -13,6 +13,7 @@
 
 #include "hisi_fb.h"
 #include "hisi_fb_panel.h"
+#include "panel/mipi_lcd_utils.h"
 
 
 DEFINE_SEMAPHORE(hisi_fb_dts_resource_sem);
@@ -794,6 +795,32 @@ int panel_next_get_lcd_id(struct platform_device *pdev)
 		next_pdata = dev_get_platdata(&next_pdev->dev);
 		if ((next_pdata) && (next_pdata->get_lcd_id))
 			ret = next_pdata->get_lcd_id(next_pdev);
+	}
+	return ret;
+}
+
+int panel_next_bypass_powerdown_ulps_support(struct platform_device *pdev)
+{
+	int ret = 0;
+	struct hisi_fb_panel_data *pdata = NULL;
+	struct hisi_fb_panel_data *next_pdata = NULL;
+	struct platform_device *next_pdev = NULL;
+
+	if (NULL == pdev) {
+		HISI_FB_ERR("pdev is NULL");
+		return 0;
+	}
+	pdata = dev_get_platdata(&pdev->dev);
+	if (NULL == pdata) {
+		HISI_FB_ERR("pdata is NULL");
+		return 0;
+	}
+
+	next_pdev = pdata->next;
+	if (next_pdev) {
+		next_pdata = dev_get_platdata(&next_pdev->dev);
+		if ((next_pdata) && (next_pdata->panel_bypass_powerdown_ulps_support))
+			ret = next_pdata->panel_bypass_powerdown_ulps_support(next_pdev);
 	}
 	return ret;
 }
@@ -1976,6 +2003,49 @@ bool is_mipi_panel(struct hisi_fb_data_type *hisifd)
 	return false;
 }
 
+bool is_hisync_mode(struct hisi_fb_data_type *hisifd)
+{
+	if (NULL == hisifd) {
+		HISI_FB_ERR("hisifd is NULL");
+		return false;
+	}
+
+	if (is_mipi_video_panel(hisifd) && hisifd->panel_info.en_hisync_mode) {
+		return true;
+	}
+
+	return false;
+}
+
+bool is_vsync_delay_en(struct hisi_fb_data_type *hisifd)
+{
+	if (NULL == hisifd) {
+		HISI_FB_ERR("hisifd is NULL");
+		return false;
+	}
+
+	if (is_hisync_mode(hisifd) && hisifd->panel_info.vsync_delay_en) {
+		return true;
+	}
+
+	return false;
+}
+
+bool is_video_idle_ctrl_mode(struct hisi_fb_data_type *hisifd)
+{
+	if (NULL == hisifd) {
+		HISI_FB_ERR("hisifd is NULL");
+		return false;
+	}
+
+	//if (is_mipi_video_panel(hisifd) && hisifd->panel_info.en_idle_disp_mode) {
+	if (hisifd->panel_info.en_video_idle_ctrl_mode) {
+		return true;
+	}
+
+	return false;
+}
+
 bool is_dual_mipi_panel(struct hisi_fb_data_type *hisifd)
 {
 	if (NULL == hisifd) {
@@ -2045,6 +2115,121 @@ bool is_ifbc_vesa_panel(struct hisi_fb_data_type *hisifd)
 	return false;
 }
 
+ssize_t panel_mode_switch_store(struct hisi_fb_data_type *hisifd,
+	const char *buf, size_t count)
+{
+	struct hisi_panel_info *pinfo = NULL;
+	uint8_t mode_switch_to_tmp = MODE_8BIT;
+	int str_len = 0;
+	int i = 0;
+
+	if (NULL == hisifd) {
+		HISI_FB_ERR("hisifd is NULL");
+		return -EINVAL;
+	}
+	pinfo = &(hisifd->panel_info);
+
+	for (i = 0; buf[i] != '\0' && buf[i] != '\n'; i++) {
+		str_len++;
+		if (str_len >= 9) {
+			HISI_FB_ERR("invalid input parameter: n_str = %d, count = %ld\n", str_len, count);
+			break;
+		}
+	}
+
+	if (str_len != 8) {
+		HISI_FB_ERR("invalid input parameter: n_str = %d, count = %ld\n", str_len, count);
+		return count;
+	}
+
+	if (!hisifd->panel_info.panel_mode_swtich_support) {
+		HISI_FB_INFO("fb%d, not support!\n", hisifd->index);
+		return count;
+	}
+
+	if (pinfo->current_mode != pinfo->mode_switch_to) {
+		HISI_FB_ERR("last switch action is not over.\n");
+		return count;
+	}
+
+	HISI_FB_DEBUG("fb%d, +.\n", hisifd->index);
+
+	if (g_debug_panel_mode_switch == 1) {
+		HISI_FB_ERR("panel_mode_switch is closed.\n");
+		return count;
+	}
+
+	if (!strncmp(buf, PANEL_10BIT_VIDEO_MODE_STR, str_len)) {
+		mode_switch_to_tmp = MODE_10BIT_VIDEO_3X;
+	} else if (!strncmp(buf, PANEL_8BIT_CMD_MODE_STR, str_len)) {
+		mode_switch_to_tmp = MODE_8BIT;
+	} else {
+		HISI_FB_ERR("fb%d, unknown panel mode!\n", hisifd->index);
+		return count;
+	}
+
+	if (mode_switch_to_tmp != pinfo->mode_switch_to) {
+		pinfo->mode_switch_to = mode_switch_to_tmp;
+	} else {
+		HISI_FB_ERR("current mode or mode_switch_to is already %d !\n", mode_switch_to_tmp);
+		return count;
+	}
+
+	HISI_FB_INFO("switch panel mode to %s.\n", buf);
+	HISI_FB_DEBUG("fb%d, -.\n", hisifd->index);
+
+	return count;
+}
+
+static uint32_t mode_switch_wait_vfp(struct hisi_fb_data_type *hisifd, uint8_t mode_switch_to)
+{
+	uint32_t wait_time = 0;
+	struct hisi_panel_info *pinfo = NULL;
+
+	pinfo = &(hisifd->panel_info);
+
+	if (mode_switch_to == MODE_8BIT) {
+		wait_time = (pinfo->ldi.h_back_porch + pinfo->ldi.h_front_porch + pinfo->ldi.h_pulse_width) / 3;
+		wait_time += pinfo->xres *30 /24 / 3;
+		wait_time *= pinfo->ldi.v_front_porch;
+		wait_time = wait_time / (uint32_t)(pinfo->pxl_clk_rate /1000000 /3);
+	}
+
+	HISI_FB_DEBUG("wait_time:%d us.\n", wait_time);
+	return wait_time;
+}
+
+void panel_mode_switch_isr_handler(struct hisi_fb_data_type *hisifd, uint8_t mode_switch_to)
+{
+	struct hisi_panel_info *pinfo = NULL;
+	int ret = -1;
+	uint32_t wait_time_us = 0;
+
+	if (NULL == hisifd) {
+		HISI_FB_ERR("hisifd is NULL .\n");
+		return;
+	}
+	pinfo = &(hisifd->panel_info);
+
+	HISI_FB_DEBUG("+ .\n");
+	HISI_FB_DEBUG(" LDI_CTRL = 0x%x .\n", inp32(hisifd->dss_base + DSS_LDI0_OFFSET + LDI_CTRL));
+
+	wait_time_us = mode_switch_wait_vfp(hisifd, mode_switch_to);
+	udelay(wait_time_us);
+
+	ret = switch_panel_mode(hisifd, mode_switch_to);
+
+	single_frame_update(hisifd);
+
+	if (ret == 0) {
+		HISI_FB_INFO("panel mode successfully switched from %d to %d.\n", pinfo->current_mode, mode_switch_to);
+		pinfo->current_mode = pinfo->mode_switch_to;
+	}
+
+	HISI_FB_DEBUG("- .\n");
+	return;
+}
+
 bool mipi_panel_check_reg (struct hisi_fb_data_type *hisifd,
 	uint32_t *read_value)
 {
@@ -2075,6 +2260,7 @@ bool mipi_panel_check_reg (struct hisi_fb_data_type *hisifd,
 	return true;
 }
 
+/*lint -save -e573*/
 int mipi_ifbc_get_rect(struct hisi_fb_data_type *hisifd, struct dss_rect *rect)
 {
 	uint32_t ifbc_type;
@@ -2115,11 +2301,19 @@ int mipi_ifbc_get_rect(struct hisi_fb_data_type *hisifd, struct dss_rect *rect)
 		rect->w *= 2;
 		rect->h /= 2;
 	}
-	rect->w /= xres_div;
+
+	if ((hisifd->panel_info.mode_switch_to == MODE_10BIT_VIDEO_3X)
+		&& (hisifd->panel_info.ifbc_type == IFBC_TYPE_VESA3X_DUAL)) {
+		rect->w = rect->w * 30 / 24 / xres_div;
+	} else {
+		rect->w /= xres_div;
+	}
+
 	rect->h /= yres_div;
 
 	return 0;
 }
+/*lint -restore*/
 
 void hisifb_snd_cmd_before_frame(struct hisi_fb_data_type *hisifd)
 {

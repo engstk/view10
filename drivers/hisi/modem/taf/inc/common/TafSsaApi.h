@@ -76,9 +76,6 @@ extern "C" {
 #define TAF_SSA_LCS_THIRD_PARTY_ADDR_MAX_LEN    (20)
 #define TAF_SSA_LCS_MTLR_MAX_NUM                (7)
 
-/* 封装OSA申请消息接口 */
-#define TAF_SSA_ALLOC_MSG_WITH_HDR(ulMsgLen)\
-            PS_ALLOC_MSG_WITH_HEADER_LEN(WUEPS_PID_TAF, (ulMsgLen))
 
 /* 封装OSA消息头 */
 #define TAF_SSA_CFG_MSG_HDR(pstMsg, ulRecvPid, ulMsgId)\
@@ -106,22 +103,11 @@ extern "C" {
 #define TAF_SSA_CLR_MSG_ENTITY(pstMsg)\
             TAF_MEM_SET_S(TAF_SSA_GET_MSG_ENTITY(pstMsg), TAF_SSA_GET_MSG_LENGTH(pstMsg), 0x00, TAF_SSA_GET_MSG_LENGTH(pstMsg))
 
-/* 封装OSA发送消息接口 */
-#define TAF_SSA_SEND_MSG(pstMsg)\
-            PS_SEND_MSG(WUEPS_PID_TAF, pstMsg)
 
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名称: TAF_SSA_MSG_ID_ENUM
- 枚举说明: 补充业务接口消息ID
 
- 修改历史      :
-  1.日    期   : 2015年09月09日
-    作    者   : l00198894
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum TAF_SSA_MSG_ID_ENUM
 {
     /* 标准命令[0x5000, 0x50FF] */
@@ -145,15 +131,7 @@ enum TAF_SSA_MSG_ID_ENUM
 };
 typedef VOS_UINT32 TAF_SSA_MSG_ID_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名称: TAF_SSA_EVT_ID_ENUM
- 枚举说明: TAF SSA模块上报事件原语
 
- 修改历史      :
-  1.日    期   : 2015年09月09日
-    作    者   : l00198894
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum TAF_SSA_EVT_ID_ENUM
 {
     /* 标准命令[0x5800, 0x58FF] */
@@ -182,13 +160,7 @@ enum TAF_SSA_EVT_ID_ENUM
 typedef VOS_UINT32 TAF_SSA_EVT_ID_ENUM_UINT32;
 
 
-/*******************************************************************************
- 枚举名    : TAF_SSA_LCS_MOLR_ENABLE_TYPE_ENUM
- 结构说明  : LCS特性MO-LR流程位置上报类型枚举
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增枚举
-*******************************************************************************/
+
 enum TAF_SSA_LCS_MOLR_ENABLE_TYPE_ENUM
 {
     TAF_SSA_LCS_MOLR_ENABLE_TYPE_DISABLE    = 0,
@@ -200,13 +172,7 @@ enum TAF_SSA_LCS_MOLR_ENABLE_TYPE_ENUM
 };
 typedef VOS_UINT8 TAF_SSA_LCS_MOLR_ENABLE_TYPE_ENUM_UINT8;
 
-/*******************************************************************************
- 枚举名    : TAF_SSA_LCS_MOLR_RPT_TYPE_ENUM
- 结构说明  : LCS特性MO-LR流程位置上报内容枚举
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增枚举
-*******************************************************************************/
+
 enum TAF_SSA_LCS_MOLR_RPT_ENUM
 {
     TAF_SSA_LCS_MOLR_RPT_NMEA           = 0,
@@ -216,13 +182,7 @@ enum TAF_SSA_LCS_MOLR_RPT_ENUM
 };
 typedef VOS_UINT8 TAF_SSA_LCS_MOLR_RPT_ENUM_UINT8;
 
-/*******************************************************************************
- 枚举名    : TAF_SSA_LCS_MTLR_SUBSCRIBE_ENUM
- 结构说明  : LCS特性MT-LR定位请求上报方式枚举
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增枚举
-*******************************************************************************/
+
 enum TAF_SSA_LCS_MTLR_SUBSCRIBE_ENUM
 {
     TAF_SSA_LCS_MTLR_SUBSCRIBE_OFF          = 0,
@@ -254,13 +214,7 @@ typedef VOS_UINT8 TAF_SSA_LCS_MTLR_SUBSCRIBE_ENUM_UINT8;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*******************************************************************************
- 结构名    : TAF_SSA_LCS_NMEA_REP_STRU
- 结构说明  : LCS特性MO-LR流程参数NMEA-rep对应结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*******************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           bitGPGSA    : 1;
@@ -272,13 +226,7 @@ typedef struct
     VOS_UINT8                           bitSpare    : 2;
 } TAF_SSA_LCS_NMEA_REP_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_LCS_MOLR_PARA_SET_STRU
- 结构说明  : LCS特性MO-LR参数结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                                  bitOpMethod             : 1;
@@ -320,52 +268,28 @@ typedef struct
     ***************************************************************************/
 }TAF_SSA_LCS_MOLR_PARA_SET_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_SET_LCS_MOLR_REQ_STRU
- 结构说明  : LCS特性MO-LR参数设置请求结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
     TAF_SSA_LCS_MOLR_PARA_SET_STRU      stMolrPara;
 }TAF_SSA_SET_LCS_MOLR_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_SET_LCS_MOLR_CNF_STRU
- 结构说明  : LCS特性MO-LR参数设置回复结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
     TAF_ERROR_CODE_ENUM_UINT32          enResult;
 }TAF_SSA_SET_LCS_MOLR_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_GET_LCS_MOLR_REQ_STRU
- 结构说明  : LCS特性MO-LR参数设置查询结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
     VOS_UINT8                           aucReserved1[4];
 }TAF_SSA_GET_LCS_MOLR_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_GET_LCS_MOLR_CNF_STRU
- 结构说明  : LCS特性MO-LR参数查询回复结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                           stCtrl;
@@ -377,13 +301,7 @@ typedef struct
     VOS_UINT8                               aucReserved[1];
 }TAF_SSA_GET_LCS_MOLR_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_LCS_MOLR_NTF_STRU
- 结构说明  : LCS特性MO-LR流程网络定位信息上报结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
@@ -394,13 +312,7 @@ typedef struct
     VOS_CHAR                            acLocationStr[8];
 }TAF_SSA_LCS_MOLR_NTF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_SET_LCS_MTLR_REQ_STRU
- 结构说明  : LCS特性MT-LR定位请求上报方式设置结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                           stCtrl;
@@ -408,31 +320,13 @@ typedef struct
     VOS_UINT8                               aucReserved1[3];
 }TAF_SSA_SET_LCS_MTLR_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_SET_LCS_MTLR_CNF_STRU
- 结构说明  : LCS特性MT-LR定位请求上报方式设置回复结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef TAF_SSA_SET_LCS_MOLR_CNF_STRU   TAF_SSA_SET_LCS_MTLR_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_GET_LCS_MTLR_REQ_STRU
- 结构说明  : LCS特性MT-LR定位请求上报方式查询结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef TAF_SSA_GET_LCS_MOLR_REQ_STRU   TAF_SSA_GET_LCS_MTLR_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_GET_LCS_MTLR_CNF_STRU
- 结构说明  : LCS特性MT-LR定位请求上报方式查询回复结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                           stCtrl;
@@ -441,26 +335,14 @@ typedef struct
     VOS_UINT8                               aucReserved1[3];
 }TAF_SSA_GET_LCS_MTLR_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_LCS_MTLR_NTF_STRU
- 结构说明  : LCS特性MT-LR流程网络定位请求上报结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
     LCS_MTLR_PARA_STRU                  stMtlrPara;
 }TAF_SSA_LCS_MTLR_NTF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_LCS_MTLRA_PARA_SET_STRU
- 结构说明  : LCS特性MT-LR 响应操作参数结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     LCS_MTLRA_OP_ENUM_UINT8             enAllow;
@@ -468,44 +350,20 @@ typedef struct
     VOS_UINT8                           aucReserved1[2];
 }TAF_SSA_LCS_MTLRA_PARA_SET_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_SET_LCS_MTLRA_REQ_STRU
- 结构说明  : LCS特性MT-LR用户响应网络定位请求结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
     TAF_SSA_LCS_MTLRA_PARA_SET_STRU     stCmtlraPara;
 }TAF_SSA_SET_LCS_MTLRA_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_SET_LCS_MTLRA_CNF_STRU
- 结构说明  : LCS特性MT-LR用户响应网络定位请求回复结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef TAF_SSA_SET_LCS_MOLR_CNF_STRU   TAF_SSA_SET_LCS_MTLRA_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_GET_LCS_MTLRA_REQ_STRU
- 结构说明  : LCS特性MT-LR用户响应网络定位请求记录查询结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef TAF_SSA_GET_LCS_MOLR_REQ_STRU   TAF_SSA_GET_LCS_MTLRA_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_SSA_GET_LCS_MTLRA_CNF_STRU
- 结构说明  : LCS特性MT-LR用户响应网络定位请求记录查询回复结构体
-  1.日    期   : 2015年8月25日
-    作    者   : l00198894
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     TAF_CTRL_STRU                       stCtrl;
@@ -516,15 +374,7 @@ typedef struct
     VOS_UINT8                           aucReserved1[1];
 }TAF_SSA_GET_LCS_MTLRA_CNF_STRU;
 
-/*****************************************************************************
- 结构名称: TAF_SSA_EVT_STRU
- 结构说明: SS补充业务事件结构
 
- 修改历史      :
-  1.日    期   : 2015年10月19日
-    作    者   : l00198894
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     MSG_HEADER_STRU                     stHeader;                               /*_H2ASN_Skip*/

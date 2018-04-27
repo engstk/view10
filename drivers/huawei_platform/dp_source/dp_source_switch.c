@@ -17,6 +17,7 @@
 #include <linux/device.h>
 #include <linux/kernel.h>
 #include <linux/of.h>
+#include <huawei_platform/dp_source/dp_dsm.h>
 #include "dp_source_switch.h"
 
 extern int hisi_dptx_switch_source(uint32_t user_mode,  uint32_t user_format);
@@ -74,6 +75,7 @@ int update_external_display_timming_info(uint32_t width,uint32_t high,uint32_t f
 	g_dp_data.m_externel_info.m_width = width;
 	g_dp_data.m_externel_info.m_high = high;
 	g_dp_data.m_externel_info.m_fps = fps;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(update_external_display_timming_info);
 
@@ -166,6 +168,7 @@ static ssize_t dp_source_mode_store(struct device *dev, struct device_attribute 
             return count;
         }
         printk("%s: store ok, g_source_mode=%d\n", __func__, g_dp_data.m_source_mode);
+        dp_imonitor_set_param(DP_PARAM_SOURCE_SWITCH, &g_dp_data.m_source_mode);
         hisi_dptx_switch_source(0, 0);
     } else {
         printk("%s: invalid g_source_mode value, mode=%d.\n", __func__, g_dp_data.m_source_mode);
@@ -207,7 +210,7 @@ static ssize_t dp_source_resolution_store(struct device *dev, struct device_attr
 
 	if (resolution_type >RESOLUTION_UNDEF){
 		printk("%s Do not support this resolution_type=%d, please check it\n",__func__, resolution_type);
-		ret = RESOLUTION_UNDEF;
+		//ret = RESOLUTION_UNDEF;
 		goto err_out;
 	}
 	g_dp_data.m_resolution_type = resolution_type;

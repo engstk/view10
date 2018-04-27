@@ -4,6 +4,7 @@
 #include "huawei_platform/audio/usb_analog_hs_interface.h"
 #include "huawei_platform/usb/hw_pd_dev.h"
 
+extern void pd_dpm_send_event(enum pd_dpm_cable_event_type event);
 
 #ifdef CONFIG_USB_ANALOG_HS_FSA4476
 int usb_ana_hs_fsa4476_check_hs_pluged_in(void);

@@ -62,6 +62,7 @@ void fiq_print_src(u64 intrsrc)
 	if (IRQ_WDT_INTR_FIQ == intr) {
 		printk(KERN_ERR "fiq triggered by: Watchdog\n");
 	} else if (IRQ_DMSS_INTR_FIQ == intr) {
+		smp_send_stop();
 		printk(KERN_ERR "fiq triggered by: DMSS\n");
 	} else {
 		printk(KERN_ERR "fiq triggered by: Unknown, intr=0x%x\n", (unsigned int)intrsrc);

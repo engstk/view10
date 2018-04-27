@@ -23,6 +23,7 @@
 #include <linux/types.h>
 #include <linux/delay.h>
 #include <linux/err.h>
+#include <linux/platform_data/remoteproc-hisi.h>
 
 #include "hjpeg_debug.h"
 #include "hjpeg160/hjpg_cfg_power_reg.h"
@@ -272,5 +273,58 @@ int cfg_powerdn_regs(void)
     return 0;
 }
 
-
 #endif//(POWER_CTRL_INTERFACE==POWER_CTRL_CFG_REGS)
+
+#if defined( HISP120_CAMERA )
+
+static void __iomem* jpeg_120_map_reg[4];
+unsigned int jpeg_120_reg[4] = {
+    0xE87FF000+0X00C, //MEDIA1_CRG1
+    0xE8420000+0X374, //ISP_ISPSS_CTRL1
+    0xE8420000+0X0010, //ISP_ISPSS_CTRL2
+    0xE8583000+0X700 //ISP_SUBCTRL
+};
+
+int hjpeg_120_map_reg(void)
+{
+    unsigned int i = 0;
+    cam_info("%s: enter", __func__);
+    for(i = 0; i< sizeof(jpeg_120_reg) / sizeof(int); i++) {
+        jpeg_120_map_reg[i] = ioremap_nocache(jpeg_120_reg[i], 4);
+        if (IS_ERR_OR_NULL(jpeg_120_map_reg[i])) {
+            cam_err("ioremap failed 0x%x", jpeg_120_reg[i]);
+            hjpeg_120_unmap_reg();
+            return -ENXIO;
+        }
+    }
+    return 0;
+}
+
+void hjpeg_120_unmap_reg(void)
+{
+    unsigned int i = 0;
+    cam_info("%s: enter", __func__);
+    for(i = 0; i< sizeof(jpeg_120_reg) / sizeof(int); i++) {
+        if(jpeg_120_map_reg[i]) {
+            iounmap((void*)jpeg_120_map_reg[i]);
+            jpeg_120_map_reg[i] = NULL;
+        }
+    }
+}
+
+void hjpeg_120_dump_reg(void)
+{
+    unsigned int i = 0;
+    int ret;
+    cam_info("%s: enter", __func__);
+    if ((ret = get_ispcpu_cfg_info()) < 0) {
+        cam_err("get_ispcpu_cfg_info:%d", ret);
+    }
+
+    for(i = 0; i< sizeof(jpeg_120_reg) / sizeof(int); i++) {
+        if(jpeg_120_map_reg[i]) {
+            cam_err("hjpeg read reg:0x%x = 0x%x\n", jpeg_120_reg[i], get_reg_val(jpeg_120_map_reg[i]));
+        }
+    }
+}
+#endif

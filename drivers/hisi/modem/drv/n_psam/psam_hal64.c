@@ -4,17 +4,7 @@
 extern struct psam_device *g_psam_device;
 
 const unsigned int g_psam64_setting_table[][2] = {
-    //adq
-	{HI_PSAM_ADQ_CTRL_OFFSET, 0xfffffff0},
-	{HI_PSAM64_ADQ0_BASE_H_OFFSET, 0xffffffff},
-	{HI_PSAM64_ADQ0_BASE_L_OFFSET, 0xffffffff},
-	{HI_PSAM64_ADQ1_BASE_H_OFFSET, 0xffffffff},
-	{HI_PSAM64_ADQ1_BASE_L_OFFSET, 0xffffffff},
-	{HI_PSAM_ADQ0_WPTR_OFFSET, 0xffffffff}, 
-	{HI_PSAM_ADQ1_WPTR_OFFSET, 0xffffffff},
-	{HI_PSAM_ADQ0_RPTR_OFFSET, 0xffffffff}, 
-	{HI_PSAM_ADQ1_RPTR_OFFSET, 0xffffffff},
-	{HI_PSAM_ADQ_CTRL_OFFSET, 0xffffffff},
+    PSAM_ADQ_SETTING_TABLE
 };
 
 void psam64_save_reg(unsigned int *base)

@@ -96,8 +96,7 @@ int mdrv_ipc_sem_take (unsigned int u32SignalNum,int s32timeout)
 
 int mdrv_ipc_sem_give(unsigned int u32SignalNum)
 {
-	(void)bsp_ipc_sem_give(u32SignalNum);
-	return MDRV_OK;
+	return bsp_ipc_sem_give(u32SignalNum);
 }
 
 void mdrv_ipc_spin_lock(unsigned int u32SignalNum)

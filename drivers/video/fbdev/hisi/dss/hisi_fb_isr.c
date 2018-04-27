@@ -18,6 +18,31 @@
 /*******************************************************************************
 ** handle isr
 */
+static bool need_panel_mode_swtich(struct hisi_fb_data_type *hisifd, uint32_t isr_s2)
+{
+
+	if (hisifd->panel_mode_switch_isr_handler
+		&& hisifd->panel_info.panel_mode_swtich_support
+		&& (hisifd->panel_info.mode_switch_to != hisifd->panel_info.current_mode)) {
+		if (!(isr_s2 & BIT_LDI_UNFLOW)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+static bool need_dsi_bit_clk_upt(struct hisi_fb_data_type *hisifd)
+{
+	if (hisifd->mipi_dsi_bit_clk_upt_isr_handler
+		&& hisifd->panel_info.dsi_bit_clk_upt_support
+		&& hisifd->panel_info.mipi.dsi_bit_clk_upt
+		&& (hisifd->panel_info.mipi.dsi_bit_clk_upt != hisifd->panel_info.mipi.dsi_bit_clk)) {
+		return true;
+	}
+
+	return false;
+}
+
 static void dss_pdp_isr_vactive0_end_handle(struct hisi_fb_data_type *hisifd, uint32_t isr_s2, struct hisifb_secure *secure_ctrl)
 {
 	uint32_t temp = 0;
@@ -38,10 +63,12 @@ static void dss_pdp_isr_vactive0_end_handle(struct hisi_fb_data_type *hisifd, ui
 		hisifd->xcc_coef_set = 0;
 	}
 
-	if (hisifd->panel_info.dsi_bit_clk_upt_support
-		&& hisifd->mipi_dsi_bit_clk_upt_isr_handler
-		&& hisifd->panel_info.mipi.dsi_bit_clk_upt
-		&& (hisifd->panel_info.mipi.dsi_bit_clk_upt != hisifd->panel_info.mipi.dsi_bit_clk)) {
+	if (need_panel_mode_swtich(hisifd, isr_s2)) {
+		if ((inp32(hisifd->dss_base + DSS_LDI0_OFFSET + LDI_CTRL) & 0x1) == 0) {
+			hisifd->panel_mode_switch_isr_handler(hisifd, hisifd->panel_info.mode_switch_to);
+		}
+		hisifd->panel_info.mode_switch_state = MODE_SWITCHED;
+	} else if (need_dsi_bit_clk_upt(hisifd)) {
 		if (!(isr_s2 & BIT_VACTIVE0_START)) {
 			hisifd->mipi_dsi_bit_clk_upt_isr_handler(hisifd);
 		}
@@ -61,6 +88,31 @@ static void dss_pdp_isr_vactive0_end_handle(struct hisi_fb_data_type *hisifd, ui
 			hisifd->index, hisifd->ov_req.frame_no, temp);
 		g_err_status &= ~DSS_PDP_LDI_UNDERFLOW;
 	}
+
+	return;
+}
+
+static void dss_pdp_isr_vactive0_start_handle(struct hisi_fb_data_type *hisifd, uint32_t isr_s2)
+{
+	uint32_t temp = 0;
+
+	if (hisifd->ov_vactive0_start_isr_handler) {
+		hisifd->ov_vactive0_start_isr_handler(hisifd);
+	}
+
+	if (g_err_status & DSS_PDP_LDI_UNDERFLOW) {
+		temp = inp32(hisifd->dss_base + DSS_DPP_OFFSET + DPP_DBG_CNT);
+		HISI_FB_INFO("fb%d, BIT_VACTIVE0_START: frame_no=%d, dpp_dbg=0x%x\n",
+			hisifd->index, hisifd->ov_req.frame_no, temp);
+	}
+
+
+	if (need_panel_mode_swtich(hisifd, isr_s2)) {
+		disable_ldi(hisifd);
+		hisifd->panel_info.mode_switch_state = MODE_SWITCHING;
+	}
+
+	return;
 }
 
 irqreturn_t dss_pdp_isr(int irq, void *ptr)
@@ -76,6 +128,7 @@ irqreturn_t dss_pdp_isr(int irq, void *ptr)
 	struct timeval tv;
 	struct hisifb_secure *secure_ctrl = NULL;
 	dss_module_reg_t *dss_module = NULL;
+	struct hisifb_video_idle_ctrl *video_idle_ctrl = NULL;
 
 	hisifd = (struct hisi_fb_data_type *)ptr;
 	if (NULL == hisifd) {
@@ -84,11 +137,13 @@ irqreturn_t dss_pdp_isr(int irq, void *ptr)
 	}
 	secure_ctrl = &(hisifd->secure_ctrl);
 	dss_module = &(hisifd->dss_module);
+	video_idle_ctrl = &(hisifd->video_idle_ctrl);
 
 	isr_s1 = inp32(hisifd->dss_base + GLB_CPU_PDP_INTS);
 	isr_s2 = inp32(hisifd->dss_base + DSS_LDI0_OFFSET + LDI_CPU_ITF_INTS);
 	isr_s2_dpp = inp32(hisifd->dss_base + DSS_DPP_OFFSET + DPP_INTS);
 	isr_s2_smmu = inp32(hisifd->dss_base + DSS_SMMU_OFFSET + SMMU_INTSTAT_NS);
+
 
 	outp32(hisifd->dss_base + DSS_SMMU_OFFSET + SMMU_INTCLR_NS, isr_s2_smmu);
 	outp32(hisifd->dss_base + DSS_DPP_OFFSET + DPP_INTS, isr_s2_dpp);
@@ -105,20 +160,13 @@ irqreturn_t dss_pdp_isr(int irq, void *ptr)
 		isr_te_vsync = BIT_VSYNC;
 	}
 
+
 	if (isr_s2 & BIT_VACTIVE0_END) {
 		dss_pdp_isr_vactive0_end_handle(hisifd, isr_s2, secure_ctrl);
 	}
 
 	if (isr_s2 & BIT_VACTIVE0_START) {
-		if (hisifd->ov_vactive0_start_isr_handler) {
-			hisifd->ov_vactive0_start_isr_handler(hisifd);
-		}
-
-		if (g_err_status & DSS_PDP_LDI_UNDERFLOW) {
-			temp = inp32(hisifd->dss_base + DSS_DPP_OFFSET + DPP_DBG_CNT);
-			HISI_FB_INFO("fb%d, BIT_VACTIVE0_START: frame_no=%d, dpp_dbg=0x%x\n",
-				hisifd->index, hisifd->ov_req.frame_no, temp);
-		}
+		dss_pdp_isr_vactive0_start_handle(hisifd, isr_s2);
 	}
 
 	if (isr_s2 & isr_te_vsync) {
@@ -199,6 +247,7 @@ irqreturn_t dss_pdp_isr(int irq, void *ptr)
 
 irqreturn_t dss_sdp_isr(int irq, void *ptr)
 {
+	char __iomem *ldi_base;
 	struct hisi_fb_data_type *hisifd = NULL;
 	uint32_t isr_s1 = 0;
 	uint32_t isr_s2 = 0;
@@ -211,16 +260,18 @@ irqreturn_t dss_sdp_isr(int irq, void *ptr)
 		return IRQ_NONE;
 	}
 
+	ldi_base = hisifd->dss_base + DSS_LDI1_OFFSET;
+
 	isr_s1 = inp32(hisifd->dss_base + GLB_CPU_SDP_INTS);
-	isr_s2 = inp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INTS);
+	isr_s2 = inp32(ldi_base + LDI_CPU_ITF_INTS);
 	isr_s2_smmu = inp32(hisifd->dss_base + DSS_SMMU_OFFSET + SMMU_INTSTAT_NS);
 
 	outp32(hisifd->dss_base + DSS_SMMU_OFFSET + SMMU_INTCLR_NS, isr_s2_smmu);
-	outp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INTS, isr_s2);
+	outp32(ldi_base + LDI_CPU_ITF_INTS, isr_s2);
 	outp32(hisifd->dss_base + GLB_CPU_SDP_INTS, isr_s1);
 
 	isr_s1 &= ~(inp32(hisifd->dss_base + GLB_CPU_SDP_INT_MSK));
-	isr_s2 &= ~(inp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INT_MSK));
+	isr_s2 &= ~(inp32(ldi_base + LDI_CPU_ITF_INT_MSK));
 
 	if (isr_s2 & BIT_VACTIVE0_END) {
 		hisifd->vactive0_end_flag = 1;
@@ -242,9 +293,9 @@ irqreturn_t dss_sdp_isr(int irq, void *ptr)
 	}
 
 	if (isr_s2 & BIT_LDI_UNFLOW) {
-		mask = inp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INT_MSK);
+		mask = inp32(ldi_base + LDI_CPU_ITF_INT_MSK);
 		mask |= BIT_LDI_UNFLOW;
-		outp32(hisifd->dss_base + DSS_LDI1_OFFSET + LDI_CPU_ITF_INT_MSK, mask);
+		outp32(ldi_base + LDI_CPU_ITF_INT_MSK, mask);
 		if (g_debug_ldi_underflow_clear) {
 			if (is_mipi_cmd_panel(hisifd)) {
 				if (g_ldi_data_gate_en == 0) {
@@ -324,17 +375,17 @@ irqreturn_t dss_adp_isr(int irq, void *ptr)
 		}
 	}
 
-		if (isr_s3_copybit & BIT_OFF_CAM_WCH2_FRMEND_INTS) {
-			if (hisifd->copybit_info->copybit_flag == 1) {
-				hisifd->copybit_info->copybit_done = 1;
-				wake_up_interruptible_all(&(hisifd->copybit_info->copybit_wq));
-			}
-
-			if (hisifd->cmdlist_info->cmdlist_wb_flag[WB_TYPE_WCH2] == 1) {
-				hisifd->cmdlist_info->cmdlist_wb_done[WB_TYPE_WCH2] = 1;
-				wake_up_interruptible_all(&(hisifd->cmdlist_info->cmdlist_wb_wq[WB_TYPE_WCH2]));
-			}
+	if (isr_s3_copybit & BIT_OFF_CAM_WCH2_FRMEND_INTS) {
+		if (hisifd->copybit_info->copybit_flag == 1) {
+			hisifd->copybit_info->copybit_done = 1;
+			wake_up_interruptible_all(&(hisifd->copybit_info->copybit_wq));
 		}
+
+		if (hisifd->cmdlist_info->cmdlist_wb_flag[WB_TYPE_WCH2] == 1) {
+			hisifd->cmdlist_info->cmdlist_wb_done[WB_TYPE_WCH2] = 1;
+			wake_up_interruptible_all(&(hisifd->cmdlist_info->cmdlist_wb_wq[WB_TYPE_WCH2]));
+		}
+	}
 
 
 	return IRQ_HANDLED;

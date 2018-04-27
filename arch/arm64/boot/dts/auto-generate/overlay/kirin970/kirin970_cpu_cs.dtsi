@@ -11,6 +11,7 @@
 			reg = <0x0 0x0>;
 			clocks = <&clk_cluster0 0>;
 			clock-names = "cpu-cluster.0";
+			freq-vote-channel = "little-freq", "vote-src-1";
 			enable-method = "psci";
 			clock-frequency = <0>;
 			clock-latency = <0>;
@@ -34,6 +35,7 @@
 			reg = <0x0 0x1>;
 			clocks = <&clk_cluster0 0>;
 			clock-names = "cpu-cluster.0";
+			freq-vote-channel = "little-freq", "vote-src-1";
 			enable-method = "psci";
 			clock-frequency = <0>;
 			clock-latency = <0>;
@@ -57,6 +59,7 @@
 			reg = <0x0 0x2>;
 			clocks = <&clk_cluster0 0>;
 			clock-names = "cpu-cluster.0";
+			freq-vote-channel = "little-freq", "vote-src-1";
 			enable-method = "psci";
 			clock-frequency = <0>;
 			clock-latency = <0>;
@@ -80,6 +83,7 @@
 			reg = <0x0 0x3>;
 			clocks = <&clk_cluster0 0>;
 			clock-names = "cpu-cluster.0";
+			freq-vote-channel = "little-freq", "vote-src-1";
 			enable-method = "psci";
 			clock-frequency = <0>;
 			clock-latency = <0>;
@@ -105,6 +109,7 @@
 			reg = <0x0 0x100>;
 			clocks = <&clk_cluster1 0>;
 			clock-names = "cpu-cluster.1";
+			freq-vote-channel = "big-freq", "vote-src-1";
 			enable-method = "psci";
 			clock-frequency = <0>;
 			clock-latency = <0>;
@@ -130,6 +135,7 @@
 			reg = <0x0 0x101>;
 			clocks = <&clk_cluster1 0>;
 			clock-names = "cpu-cluster.1";
+			freq-vote-channel = "big-freq", "vote-src-1";
 			clock-frequency = <0>;
 			clock-latency = <0>;
 			cpu-idle-states = <&CPU_SLEEP_0 &CLUSTER_SLEEP_1>;
@@ -155,6 +161,7 @@
 			reg = <0x0 0x102>;
 			clocks = <&clk_cluster1 0>;
 			clock-names = "cpu-cluster.1";
+			freq-vote-channel = "big-freq", "vote-src-1";
 			clock-frequency = <0>;
 			clock-latency = <0>;
 			cpu-idle-states = <&CPU_SLEEP_0 &CLUSTER_SLEEP_1>;
@@ -180,6 +187,7 @@
 			reg = <0x0 0x103>;
 			clocks = <&clk_cluster1 0>;
 			clock-names = "cpu-cluster.1";
+			freq-vote-channel = "big-freq", "vote-src-1";
 			clock-frequency = <0>;
 			clock-latency = <0>;
 			cpu-idle-states = <&CPU_SLEEP_0 &CLUSTER_SLEEP_1>;
@@ -388,6 +396,19 @@
 		target_cpu = "Kirin 970";
 	};
 
+	cpu-idle-flag {
+		compatible = "hisilicon,cpu-idle-flag";
+		idle-reg-base = <0xfff0a000>;
+		core-0-flag = <0x42c 0x0>; /* SOC_SCTRL_SCBAKDATA8_ADDR */
+		core-1-flag = <0x42c 0x1>; /* SOC_SCTRL_SCBAKDATA8_ADDR */
+		core-2-flag = <0x42c 0x2>; /* SOC_SCTRL_SCBAKDATA8_ADDR */
+		core-3-flag = <0x42c 0x3>; /* SOC_SCTRL_SCBAKDATA8_ADDR */
+		core-4-flag = <0x430 0x0>; /* SOC_SCTRL_SCBAKDATA9_ADDR */
+		core-5-flag = <0x430 0x1>; /* SOC_SCTRL_SCBAKDATA9_ADDR */
+		core-6-flag = <0x430 0x2>; /* SOC_SCTRL_SCBAKDATA9_ADDR */
+		core-7-flag = <0x430 0x3>; /* SOC_SCTRL_SCBAKDATA9_ADDR */
+	};
+
 	support-target {
 		compatible = "hisi,supportedtarget";
 		support_name = "Kirin 970","Kirin 975";
@@ -404,7 +425,6 @@
 		cpu-mask = <0x0>, <0xF0>;
 		switch-profile = <682000>;
 	};
-
 	l2_retention_freq {
 		compatible = "hisi,l2-retention-dis-freq";
 		dis_retention_cluster = <1>;
@@ -461,9 +481,7 @@
 		hisi,target-dev = <&memlat_cpu0>;
 		hisi,core-dev-table =
 			< 509000 415>,
-			< 1556000 415>,
-			< 1690000 830 >,
-			< 1844000 830 >;
+			< 1844000 415 >;
 	};
 
 	devfreq_memlat_4: hisi,arm-memlat-mon-4 {
@@ -472,10 +490,18 @@
 		hisi,target-dev = <&memlat_cpu4>;
 		hisi,core-dev-table =
 			<  682000  415 >,
-			< 1018000 830 >,
-			< 1498000 830 >,
+			< 1498000 415 >,
 			< 1652000 1244 >,
 			< 2093000 1244 >,
 			< 2362000 1866 >;
+	};
+
+	cpu_lowtemp {
+		compatible = "hisi,cpu-lowtemp";
+		#address-cells = <2>;
+		#size-cells=<2>;
+		reg = <0x0 0xFFF31000 0x0 0x1000>;
+		hisi,lowtemp-reg = <0x350>;
+		hisi,lowtemp-reg-offset = <26>;
 	};
 };

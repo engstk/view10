@@ -89,6 +89,8 @@ extern "C" {
 #define AT_CMD_LINE_INDEX_LIST_BS_MAX_LENGTH     (500)
 #define AT_CMD_LINE_DETAIL_BS_MAX_LENGTH         (500)
 
+#define AT_CMD_COMM_BOOSTER_BS_MAX_LENGTH     (500)
+
 /*******************************************************************************
  结构名    : AT_DATE_STRU
  协议表格  :
@@ -247,10 +249,19 @@ enum AT_RRETURN_CODE_ENUM
     AT_CME_1X_RAT_NOT_SUPPORTED,
 
     AT_CME_USB_TO_VCOM_IN_CONN_ERROR,
-    
+
     AT_CME_OPERATION_NOT_ALLOWED_IN_CL_MODE,
 
+    AT_CME_SILENT_AES_DEC_PIN_ERROR,
+    AT_CME_SILENT_VERIFY_PIN_ERROR,
+    AT_CME_SILENT_AES_ENC_PIN_ERROR,
     AT_CME_IMS_OPEN_LTE_NOT_SUPPORT,
+
+    AT_CME_NOT_FIND_FILE,
+    AT_CME_NOT_FIND_NV,
+    AT_CME_MODEM_ID_ERROR,
+    AT_CME_WRITE_NV_TimeOut,
+    AT_CME_NV_NOT_SUPPORT_ERR,
 
     AT_CME_ERROR_ENUM_END,                   /* CME ERROR 结束 */
 
@@ -460,13 +471,7 @@ typedef VOS_UINT32 AT_RRETURN_CODE_ENUM_UINT32;
 
 #if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 #if (FEATURE_ON == FEATURE_CHINA_TELECOM_VOICE_ENCRYPT)
-/*****************************************************************************
-结构名      : AT_ENCRYPT_VOICE_STATUS_ENUM_UINT32
-结构说明    : ecc密话建立结果
-  1.日    期   : 2015年10月16日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum AT_ENCRYPT_VOICE_ERROR_ENUM
 {
 
@@ -656,15 +661,13 @@ typedef VOS_UINT32 (*PFN_AT_FW_MSG_PROC)(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlo
 #define CMD_TBL_CLAC_IS_INVISIBLE_E5         CMD_TBL_LIMITED_NULL         /* E5形态下+CLAC命令中不输出显示的命令 */
 #define CMD_TBL_CLAC_IS_INVISIBLE_STICK      CMD_TBL_LIMITED_NULL          /* STICK形态下+CLAC命令中不输出显示的命令 */
 
-/* Modified by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, begin */
 
 #if (FEATURE_ON == FEATURE_LTE)
-#define CGDCONT_CMD_PARA_STRING         "(0-31),(\"IP\",\"IPV6\",\"IPV4V6\",\"PPP\",\"\"),(APN),(PdpAddr),(0-2),(0-3),(0,1),(0,1),(0-2),(0,1)"
+#define CGDCONT_CMD_PARA_STRING         "(0-31),(\"IP\",\"IPV6\",\"IPV4V6\",\"PPP\",\"\"),(APN),(PdpAddr),(0-2),(0-3),(0,1),(0,1),(0-2),(0,1),(0,1)"
 #else
-#define CGDCONT_CMD_PARA_STRING         "(1-11),(\"IP\",\"IPV6\",\"IPV4V6\",\"PPP\",\"\"),(APN),(PdpAddr),(0-2),(0-3),(0,1),(0,1),(0-2),(0,1)"
+#define CGDCONT_CMD_PARA_STRING         "(1-11),(\"IP\",\"IPV6\",\"IPV4V6\",\"PPP\",\"\"),(APN),(PdpAddr),(0-2),(0-3),(0,1),(0,1),(0-2),(0,1),(0,1)"
 #endif  /* FEATURE_ON == FEATURE_LTE */
 
-#if ((FEATURE_ON == FEATURE_SC_DATA_STRUCT_EXTERN) || (FEATURE_ON == FEATURE_BOSTON_AFTER_FEATURE))
 #if (FEATURE_ON == FEATURE_BOSTON_AFTER_FEATURE)
 #define SIMLOCKDATAREADEX_CMD_PARA_STRING                "(0,1,2,3,255),(1-255)"
 #define SIMLOCKDATAWRITEEX_CMD_PARA_STRING               "(0,1,2,3,255),(1-255),(1-255),(@SimlockData),(@hmac)"
@@ -672,14 +675,12 @@ typedef VOS_UINT32 (*PFN_AT_FW_MSG_PROC)(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlo
 #define SIMLOCKDATAREADEX_CMD_PARA_STRING                "(0,1,2,3),(1-255)"
 #define SIMLOCKDATAWRITEEX_CMD_PARA_STRING               "(0,1,2,3),(1-255),(1-255),(@SimlockData),(@hmac)"
 #endif
-#endif
 
 #if (FEATURE_ON == FEATURE_LTE)
-#define CGDSCONT_CMD_PARA_STRING        "(1-31),(0-31),(0-2),(0-3)"
+#define CGDSCONT_CMD_PARA_STRING        "(1-31),(0-31),(0-2),(0-3),(0-1)"
 #else
-#define CGDSCONT_CMD_PARA_STRING        "(1-11),(0-11),(0-2),(0-3)"
+#define CGDSCONT_CMD_PARA_STRING        "(1-11),(0-11),(0-2),(0-3),(0-1)"
 #endif  /* FEATURE_ON == FEATURE_LTE */
-/* Modified by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, end */
 
 #if (FEATURE_ON == FEATURE_LTE)
 #define CGTFT_CMD_PARA_STRING           "(1-31),(1-16),(0-255),(IpMask),(0-255),(Dpr),(Spr),(0-4294967295),(TosM),(0-1048575),(0-3),(LocalIpMask)"
@@ -800,7 +801,7 @@ typedef VOS_UINT32 (*PFN_AT_FW_MSG_PROC)(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlo
 
 /* Modified by l60609 for V9R1 IPv6&TAF/SM Project, 2013-4-25, begin */
 #if (FEATURE_ON == FEATURE_LTE)
-#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#if (MULTI_MODEM_NUMBER >= 2)
 #if (MULTI_MODEM_NUMBER == 3)
 #define CHDATA_TEST_CMD_PARA_STRING   "(1-31),(1-7)"
 #else
@@ -810,7 +811,7 @@ typedef VOS_UINT32 (*PFN_AT_FW_MSG_PROC)(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlo
 #define CHDATA_TEST_CMD_PARA_STRING   "(1-31),(1-3)"
 #endif
 #else
-#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#if (MULTI_MODEM_NUMBER >= 2)
 #if (MULTI_MODEM_NUMBER == 3)
 #define CHDATA_TEST_CMD_PARA_STRING   "(1-11),(1-7)"
 #else
@@ -823,7 +824,6 @@ typedef VOS_UINT32 (*PFN_AT_FW_MSG_PROC)(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlo
 /* Modified by l60609 for V9R1 IPv6&TAF/SM Project, 2013-4-25, end */
 
 /* Added by l47619 for C50 IPC Project, 2012-03-19, end */
-/*DTS2012041102190 : h00135900 start in 2011-04-11 AT代码融合*/
 #if (FEATURE_ON == FEATURE_LTE)
 #if (FEATURE_ON == FEATURE_IPV6)
 #define PDPROFMOD_CMD_PARA_STRING       "(1-31),(\"IP\",\"IPV6\",\"IPV4V6\",\"\"),(APN),(username),(passwd),(0-2)"
@@ -837,15 +837,18 @@ typedef VOS_UINT32 (*PFN_AT_FW_MSG_PROC)(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlo
 #define PDPROFMOD_CMD_PARA_STRING       "(1-31),(\"IP\",\"\"),(APN),(username),(passwd),(0-2)"
 #endif  /* FEATURE_ON == FEATURE_IPV6 */
 #endif  /* FEATURE_ON == FEATURE_LTE */
-/*DTS2012041102190 : h00135900 end in 2011-04-11 AT代码融合*/
 
 #if((FEATURE_ON == FEATURE_LTE) && (FEATURE_ON == FEATURE_LTE_MBMS))
 #define MBMSCMD_CMD_PARA_STRING         "(\"MBMS_SERVICE_ENABLER\",\"ACTIVATE\",\"DEACTIVATE\",\"DEACTIVATE_ALL\",\"MBMS_PREFERENCE\",\"SIB16_GET_NETWORK_TIME\",\"BSSI_SIGNAL_LEVEL\",\"NETWORK_INFORMATION\",\"MODEM_STATUS\"),(@paramone),(paramtwo)"
 #endif
 
+#if (FEATURE_ON == FEATURE_IMS)
+#define SMSDOMAIN_CMD_PARA_STRING         "(0,1)"
+#else
+#define SMSDOMAIN_CMD_PARA_STRING         "(0)"
+#endif  /* FEATURE_ON == FEATURE_IMS */
 
-
-#if (FEATURE_ON == FEATURE_MULTI_MODEM) && (MULTI_MODEM_NUMBER == 3)
+#if(MULTI_MODEM_NUMBER == 3)
 #define SCICHG_CMD_PARA_STRING          "(0-2),(0-2),(0-2)"
 #else
 #define SCICHG_CMD_PARA_STRING          "(0-2),(0-2)"
@@ -1009,9 +1012,7 @@ extern VOS_UINT8* At_GetFirstBasicCmdAddr(VOS_UINT8 *pData, VOS_UINT32* pulLen);
 
 extern VOS_VOID AT_BlockCmdTimeOutProc(VOS_UINT8 ucIndex);
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 extern VOS_UINT32 AT_SDParamErrCode(VOS_VOID);
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 
 VOS_UINT32 AT_IsAbortCmdStr(

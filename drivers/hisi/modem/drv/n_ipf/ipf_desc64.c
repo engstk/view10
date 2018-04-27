@@ -9,6 +9,7 @@
 #include <bsp_ipc.h>
 #include <linux/skbuff.h>
 #include <bsp_slice.h>
+#include <securec.h>
 #include <../../adrv/adrv.h>
 
 extern struct ipf_ctx g_ipf_ctx;
@@ -92,7 +93,7 @@ int ipf64_cd_en_get(void* bd_base, unsigned int index){
 void ipf64_cd_clear(void* cd_base, unsigned int index)
 {
 	ipf64_cd_s* cd = (ipf64_cd_s*)cd_base;
-	memset(&cd[index], 0, sizeof(ipf64_cd_s));
+	memset_s(&cd[index], sizeof(cd[index]), 0, sizeof(ipf64_cd_s));
 }
 
 void ipf64_bd_s2h(IPF_CONFIG_PARAM_S* param, void* bd_base, unsigned int index)
@@ -130,7 +131,7 @@ void ipf64_rd_h2s(IPF_RD_DESC_S* param, void* rd_base, unsigned int index)
     static ipf64_rd_s tmp;
     ipf64_rd_s* rd = (ipf64_rd_s*)rd_base;
 
-	memcpy(&tmp, &rd[index], sizeof(ipf64_rd_s));
+	memcpy_s(&tmp, sizeof(tmp), &rd[index], sizeof(ipf64_rd_s));
 	param->u16Attribute	= tmp.attribute.u16;
 	param->u16PktLen	= tmp.pkt_len;
 	param->u16Result	= tmp.result;
@@ -326,27 +327,34 @@ unsigned int ipf64_get_dlrd_num(void)
 void ipf64_dump_callback(void)
 {
     unsigned char* p = g_ipf_ctx.dump_area;
+    unsigned int size = IPF_DUMP_SIZE;
+
+    if(size<(sizeof(ipf64_rd_s)+sizeof(ipf64_bd_s)+sizeof(ipf64_ad_s)+sizeof(ipf64_ad_s)))
+    {
+        return;
+    }
     
     if(!p) return;
     if(!g_ipf_ctx.last_rd) return;
-    memcpy(p, g_ipf_ctx.last_rd, sizeof(ipf64_rd_s));
+    memcpy_s(p, size,  g_ipf_ctx.last_rd, sizeof(ipf64_rd_s));
     p += sizeof(ipf64_rd_s);
+    size -= sizeof(ipf64_rd_s);
 
     if(!g_ipf_ctx.last_bd) return;
-    memcpy(p, g_ipf_ctx.last_bd, sizeof(ipf64_bd_s));
+    memcpy_s(p, size, g_ipf_ctx.last_bd, sizeof(ipf64_bd_s));
     p += sizeof(ipf64_bd_s);
+    size -= sizeof(ipf64_bd_s);
 
     if(!g_ipf_ctx.last_ad0) return;
-    memcpy(p, g_ipf_ctx.last_ad0, sizeof(ipf64_ad_s));
+    memcpy_s(p, size, g_ipf_ctx.last_ad0, sizeof(ipf64_ad_s));
     p += sizeof(ipf64_ad_s);
+    size -= sizeof(ipf64_ad_s);
 
     if(!g_ipf_ctx.last_ad1) return;
-    memcpy(p, g_ipf_ctx.last_ad1, sizeof(ipf64_ad_s));
-    
-//    memcpy(&g_ipf_ctx.share_mem->ubd ,g_ipf_ctx.ul_info.pstIpfBDQ, sizeof(ipf_ubd_u));
-    memcpy(&g_ipf_ctx.share_mem->drd ,g_ipf_ctx.dl_info.pstIpfRDQ, sizeof(ipf_drd_u));
-//    memcpy(&g_ipf_ctx.share_mem->dad0 ,g_ipf_ctx.dl_info.pstIpfADQ0, sizeof(ipf_dad_u));
-//    memcpy(&g_ipf_ctx.share_mem->dad1 ,g_ipf_ctx.dl_info.pstIpfADQ1, sizeof(ipf_dad_u));
+    memcpy_s(p, size, g_ipf_ctx.last_ad1, sizeof(ipf64_ad_s));
+
+    memcpy_s(&g_ipf_ctx.share_mem->drd, sizeof(g_ipf_ctx.share_mem->drd),
+            g_ipf_ctx.dl_info.pstIpfRDQ, sizeof(ipf_drd_u));
 }
 
 void ipf64_acpu_wake_ccpu(void)
@@ -359,9 +367,13 @@ void ipf64_acpu_wake_ccpu(void)
     bsp_ipc_spin_lock(IPC_SEM_IPF_PWCTRL);
 
     if(IPF_PWR_DOWN == sm->init.status.ccore){
-        UPDATE2(reg, HI_IPF_TRANS_CNT_CTRL, 
+        UPDATE1(reg, HI_IPF_TIMER_LOAD,
+                    timer_load, IPF_FAST_TIMEOUT);
+
+        UPDATE3(reg, HI_IPF_TRANS_CNT_CTRL, 
                     timer_en, 1,
-                    timer_clear, 1);
+                    timer_clear, 1,
+                    timer_prescaler, IPF_FAST_TIMEOUT);
         g_ipf_ctx.stax.timer_start++;
         g_ipf_ctx.stax.wake_time = bsp_get_slice_value();
     }
@@ -373,22 +385,22 @@ void ipf64_acpu_wake_ccpu(void)
 struct ipf_desc_handler_s ipf_desc64_handler = {
     .name = "ipf64_desc",
     .dma_mask = 0xffffffffffffffffULL,
-	.config = ipf64_config,
-	.cd_en_set = ipf64_cd_en_set,
-	.cd_en_get = ipf64_cd_en_get,
-	.cd_clear = ipf64_cd_clear,
-	.bd_s2h = ipf64_bd_s2h,
-	.bd_h2s = ipf64_bd_h2s,
-	.rd_h2s = ipf64_rd_h2s,
-	.ad_h2s = ipf64_ad_h2s,
-	.cd_last_get = ipf64_last_get,
-	.get_bd_num = ipf64_get_ulbd_num,
-	.get_ulrd_num = ipf64_get_ulrd_num,
-	.config_bd = ipf64_config_bd,
-	.get_rd = ipf64_get_dlrd,
-	.get_dlrd_num = ipf64_get_dlrd_num,
-	.is_busy = ipf64_is_busy,
-	.save_reg = _ipf64_reg_save,
+    .config = ipf64_config,
+    .cd_en_set = ipf64_cd_en_set,
+    .cd_en_get = ipf64_cd_en_get,
+    .cd_clear = ipf64_cd_clear,
+    .bd_s2h = ipf64_bd_s2h,
+    .bd_h2s = ipf64_bd_h2s,
+    .rd_h2s = ipf64_rd_h2s,
+    .ad_h2s = ipf64_ad_h2s,
+    .cd_last_get = ipf64_last_get,
+    .get_bd_num = ipf64_get_ulbd_num,
+    .get_ulrd_num = ipf64_get_ulrd_num,
+    .config_bd = ipf64_config_bd,
+    .get_rd = ipf64_get_dlrd,
+    .get_dlrd_num = ipf64_get_dlrd_num,
+    .is_busy = ipf64_is_busy,
+    .save_reg = _ipf64_reg_save,
     .restore_reg = _ipf64_reg_load,
     .acpu_wake_ccpu = ipf64_acpu_wake_ccpu,
     .dump = ipf64_dump_callback,

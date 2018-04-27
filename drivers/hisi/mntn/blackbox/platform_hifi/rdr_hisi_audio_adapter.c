@@ -41,6 +41,334 @@ struct rdr_audio_des_s {
 };
 static struct rdr_audio_des_s s_rdr_audio_des;
 
+enum {
+	TASK = 0,
+	INTERRUPT,
+	REGION,
+	TARGET_BUTT
+};
+
+struct cpuview_task_info {
+	unsigned int task_no;
+	char task_name[32];
+};
+
+static struct cpuview_task_info cpuview_codec_task_info[] =
+{
+	{0, "FID_RT"},
+	{1, "FID_NORMAL"},
+	{2, "FID_LOW"},
+	{3, "IDLE"},
+	{4, "UNDEFINE"},
+};
+
+static struct cpuview_task_info cpuview_soc_task_info[] =
+{
+	{0, "FID_RT"},
+	{1, "FID_NORMAL"},
+	{2, "FID_LOW"},
+	{3, "UNDEFINE"},
+	{4, "IDLE"},
+};
+
+struct cpuview_interrupt_info {
+	unsigned int interrupt_no;
+	char interrupt_name[32];
+};
+
+static struct cpuview_interrupt_info cpuview_soc_int_info[] =
+{
+	{0, "NMI_0"},
+	{1, "SoftINT_1"},
+	{2, "RPROC_2"},
+	{3, "AP2HIFI_3"},
+	{4, "INT_4"},
+	{5, "HIFI_Timer0_5"},
+	{6, "HIFI_Timer1_6"},
+	{7, "INT_7"},
+	{8, "ASP_Timer0_8"},
+	{9, "ASP_Timer1_9"},
+	{10, "INT_10"},
+	{11, "INT_11"},
+	{12, "INT_12"},
+	{13, "INT_13"},
+	{14, "INT_14"},
+	{15, "OCBC_15"},
+	{16, "INT_16"},
+	{17, "DMAC_S_17"},
+	{18, "DMAC_NS_18"},
+	{19, "INT_19"},
+	{20, "INT_20"},
+	{21, "INT_21"},
+	{22, "WatchDog_22"},
+	{23, "LPM3_2_HIFI_23"},
+	{24, "INT_24"},
+	{25, "CCORE_2_HIFI_25"},
+	{26, "BBE16_2_HIFI_26"},
+	{27, "INT_27"},
+	{28, "INT_28"},
+	{29, "WriteErr_29"},
+	{30, "INT_30"},
+	{31, "INT_31"},
+};
+
+static struct cpuview_interrupt_info cpuview_codec_int_info[] =
+{
+	{0, "NMI_0"},
+	{1, "SoftINT_1"},
+	{2, "INT_2"},
+	{3, "INT_3"},
+	{4, "INT_4"},
+	{5, "HIFI_Timer0_5"},
+	{6, "HIFI_Timer1_6"},
+	{7, "INT_7"},
+	{8, "INT_8"},
+	{9, "INT_9"},
+	{10, "INT_10"},
+	{11, "INT_11"},
+	{12, "DMAC_12"},
+	{13, "MAD_13"},
+	{14, "CMD_14"},
+	{15, "CFG_CLK_SW_15"},
+	{16, "Timer0_0_16"},
+	{17, "Timer0_1_17"},
+	{18, "Timer0_1_18"},
+	{19, "Timer0_1_19"},
+	{20, "GPIO0_20"},
+	{21, "GPIO0_21"},
+	{22, "GPIO0_22"},
+	{23, "GPIO0_23"},
+	{24, "Dlock_24"},
+	{25, "UART_25"},
+	{26, "CFG_26"},
+	{27, "INT_27"},
+	{28, "INT_28"},
+	{29, "WriteErr_29"},
+	{30, "INT_30"},
+	{31, "INT_31"},
+};
+
+struct cpuview_region_info {
+	unsigned int region_no;
+	char region_name[64];
+};
+
+static struct cpuview_region_info cpuview_soc_region_info[] =
+{
+	{0, "UCOM_WFI"},
+	{1, "UCOM_DRF"},
+	{2, "UCOM_POWERDOWN"},
+	{3, "VOS_INIT"},
+	{4, "TEXT_CHECK"},
+	{5, "TASK_PROC"},
+	{6, "TASK_SWITCH_FLL"},
+	{7, "UNDEFINE"},
+	{8, "AUDIO_PCM_UPDATE_BUFF_PLAY"},
+	{9, "AUDIO_PCM_UPDATE_BUFF_CAPTURE"},
+	{10, "AUDIO_DSP_IN_EFFECT_PROCESS"},
+	{11, "AUDIO_DSP_OUT_EFFECT_PROCESS"},
+	{12, "UNDEFINE"},
+	{13, "UNDEFINE"},
+	{14, "AUDIO_PLAYER_DECODE"},
+	{15, "AUDIO_PLAYER_SRC"},
+	{16, "AUDIO_PLAYER_DTS"},
+	{17, "UNDEFINE"},
+	{18, "UNDEFINE"},
+	{19, "UNDEFINE"},
+	{20, "UNDEFINE"},
+	{21, "UNDEFINE"},
+	{22, "UNDEFINE"},
+	{23, "UNDEFINE"},
+	{24, "VOICE_PROC_MICIN"},
+	{25, "VOICE_PROC_SPKOUT"},
+	{26, "VOICE_ENCODE"},
+	{27, "VOICE_DECODE"},
+	{28, "UNDEFINE"},
+};
+
+static struct cpuview_region_info cpuview_codec_region_info[] =
+{
+	{0, "ANC_MLIB_PROC"},
+	{1, "PLL_SWITCH_WFI"},
+	{2, "PA_MLIB_PROC"},
+	{3, "INIT"},
+	{4, "FIRST_WFI"},
+	{5, "IDLE_WFI"},
+	{6, "WAKEUP_MLIB_PROC"},
+	{7, "SEND_PLL_SW_CNF"},
+	{8, "RECEIVE_MSG"},
+	{9, "SEND_MSG_CNF"},
+	{10, "SEND_PWRON_CNF"},
+	{11, "HISI_WAKEUP_DECODE_PROC"},
+	{12, "HISI_WAKEUP_DECODE_MSG"},
+};
+
+struct cpuview_total_info {
+	struct cpuview_task_info * task_info;
+	struct cpuview_interrupt_info * int_info;
+	struct cpuview_region_info *region_info;
+	unsigned int task_num;
+	unsigned int int_num;
+	unsigned int region_num;
+};
+
+static void parse_single_cpuview_info(char *info_buf, const unsigned int buf_len,
+	struct cpuview_slice_record *record, struct cpuview_total_info *total_info)
+{
+	memset(info_buf, 0, buf_len);/* unsafe_function_ignore: memset */
+
+	switch(record->target) {
+	case TASK:
+		if (record->target_id < total_info->task_num) {
+			snprintf(info_buf, buf_len, "%-15s %-40s", "TASK",
+				total_info->task_info[record->target_id].task_name);
+		} else {
+			snprintf(info_buf, buf_len, "%-15s %-40s", "TASK", "UNDEFINE");
+		}
+
+		break;
+	case INTERRUPT:
+		if (record->target_id < total_info->int_num) {
+			snprintf(info_buf, buf_len, "%-15s %-40s", "INT",
+				total_info->int_info[record->target_id].interrupt_name);
+		} else {
+			snprintf(info_buf, buf_len, "%-15s %-40s", "INT", "UNDEFINE");
+		}
+
+		break;
+	case REGION:
+		if (record->target_id < total_info->region_num) {
+			snprintf(info_buf, buf_len, "%-15s %-40s", "REGION",
+				total_info->region_info[record->target_id].region_name);
+		} else {
+			snprintf(info_buf, buf_len, "%-15s %-40s", "REGION", "UNDEFINE");
+		}
+
+		break;
+	default:
+		snprintf(info_buf, buf_len, "%-55s %u","UNDEFINE TARGET", record->target_id);
+		break;
+	}
+
+	snprintf(info_buf + strlen(info_buf), buf_len - strlen(info_buf), "%-15s %-11u",
+		record->action == 0 ? "ENTER" : "EXIT",
+		record->time_stamp);
+
+	return;
+}
+
+int parse_hifi_cpuview(char *original_buf, unsigned int original_buf_size,
+	char *parsed_buf, unsigned int parsed_buf_size, unsigned int core_type)
+{
+	int ret = 0;
+	unsigned short index;
+	struct cpuview_details *details = NULL;
+	struct cpuview_total_info total_info;
+	unsigned int cpuview_info_num;
+	unsigned int original_data_size, parsed_data_size;
+
+	if (!original_buf || !parsed_buf) {
+		BB_PRINT_ERR("input data buffer is null\n");
+		return -ENOMEM;
+	}
+
+	if (core_type == CODECDSP) {
+		cpuview_info_num = CODEC_CPUVIEW_DETAIL_MAX_NUM;
+		parsed_data_size = PARSER_CODEC_CPUVIEW_LOG_SIZE;
+		total_info.int_info = cpuview_codec_int_info;
+		total_info.int_num = ARRAY_SIZE(cpuview_codec_int_info);
+		total_info.region_info = cpuview_codec_region_info;
+		total_info.region_num = ARRAY_SIZE(cpuview_codec_region_info);
+		total_info.task_info = cpuview_codec_task_info;
+		total_info.task_num = ARRAY_SIZE(cpuview_codec_task_info);
+	} else if (core_type == SOCHIFI){
+		cpuview_info_num = SOCHIFI_CPUVIEW_DETAIL_MAX_NUM;
+		parsed_data_size = PARSER_SOCHIFI_CPUVIEW_LOG_SIZE;
+		total_info.int_info = cpuview_soc_int_info;
+		total_info.int_num = ARRAY_SIZE(cpuview_soc_int_info);
+		total_info.region_info = cpuview_soc_region_info;
+		total_info.region_num = ARRAY_SIZE(cpuview_soc_region_info);
+		total_info.task_info = cpuview_soc_task_info;
+		total_info.task_num = ARRAY_SIZE(cpuview_soc_task_info);
+	} else {
+		BB_PRINT_ERR("input core type error, %d\n", core_type);
+		return -EINVAL;
+	}
+
+	original_data_size = sizeof(struct cpuview_details) + cpuview_info_num * sizeof(struct cpuview_slice_record);
+	if (original_buf_size < original_data_size || parsed_buf_size < parsed_data_size) {
+		BB_PRINT_ERR("input buf size error, original_buf_size:%u, parsed_buf_size:%u\n",
+			original_buf_size, parsed_buf_size);
+		return -EINVAL;
+	}
+
+	memset(parsed_buf, 0, parsed_buf_size);/* unsafe_function_ignore: memset */
+	details = (struct cpuview_details *)original_buf;
+	index = details->curr_idx;
+	snprintf(parsed_buf, parsed_data_size, "\n\n/*********[cpuview info begin]*********/\n\n");
+
+	if (index < cpuview_info_num) {
+		unsigned int i;
+		char single_info[CPUVIEW_ONE_INFO_LEN];
+		struct cpuview_slice_record *slice;
+
+		snprintf(parsed_buf + strlen(parsed_buf), parsed_data_size - strlen(parsed_buf),
+			"Target         Target Id                                ACTION          OrigTS \n");
+
+		for (i = 0; i < cpuview_info_num; i++) {
+			slice = details->records + index;
+			parse_single_cpuview_info(single_info, CPUVIEW_ONE_INFO_LEN, slice, &total_info);
+
+			snprintf(parsed_buf + strlen(parsed_buf), parsed_data_size - strlen(parsed_buf),
+				"%s \n", single_info);
+
+			index++;
+			if (index == cpuview_info_num) {
+				index = 0;
+			}
+		}
+	} else {
+		BB_PRINT_ERR("record index error, %d\n", index);
+		ret = -EINVAL;
+	}
+
+	snprintf(parsed_buf + strlen(parsed_buf), parsed_data_size - strlen(parsed_buf),
+		"\n\n/*********[cpuview info end]*********/\n\n");
+
+	return ret;
+}
+
+int parse_hifi_trace(char *original_data, unsigned int original_data_size, char *parsed_data, unsigned int parsed_data_size, unsigned int core_type)
+{
+	unsigned int i;
+	unsigned int stack_depth;
+	unsigned int stack_top;
+	unsigned int *stack;
+
+	if (NULL == original_data || NULL == parsed_data) {
+	    BB_PRINT_ERR("input data buffer is null\n");
+	    return -EINVAL;
+	}
+
+	memset(parsed_data, 0, parsed_data_size);/* unsafe_function_ignore: memset */
+	snprintf(parsed_data, parsed_data_size, "\n\n/*********[trace info begin]*********/\n\n");
+	stack = (unsigned int *)original_data + 8;
+	stack_top = *((unsigned int *)original_data + 4);
+	stack_depth = (original_data_size - 0x20)/4;
+
+	snprintf(parsed_data + strlen(parsed_data), parsed_data_size - strlen(parsed_data), "panic addr:0x%08x, cur_pc:0x%08x, pre_pc:0x%08x, cause:0x%08x\n",
+		*(unsigned int *)original_data, *((unsigned int *)original_data + 1), *((unsigned int *)original_data + 2), *((unsigned int *)original_data + 3));
+	for (i = 0; i < stack_depth; i += 4) {
+		snprintf(parsed_data + strlen(parsed_data), parsed_data_size - strlen(parsed_data), "addr:%08x    %08x    %08x    %08x    %08x\n",
+			stack_top+i*4, *(stack + i), *(stack + 1 + i), *(stack + 2 + i), *(stack + 3 + i));
+	}
+
+	snprintf(parsed_data + strlen(parsed_data), parsed_data_size - strlen(parsed_data), "\n\n/*********[trace info end]*********/\n\n");
+
+	return 0;
+}
+
+
 static int create_dir(char *path)
 {
 	long fd;
@@ -165,7 +493,7 @@ int rdr_audio_write_file(char *name, char *data, u32 size)
 	BUG_ON(NULL == data);
 	BUG_ON(0 == size);
 
-	oldfs = get_fs();
+	oldfs = get_fs();/*lint !e501*/
 	set_fs(KERNEL_DS);/*lint !e501*/
 
 	ret = rdr_audio_loopwrite_open(name, &fd);

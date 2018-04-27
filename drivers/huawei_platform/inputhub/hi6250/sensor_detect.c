@@ -51,6 +51,8 @@
 #define ADAPT_SENSOR_LIST_NUM           20
 #define MAX_FILE_ID	80
 #define CURRENT_FAC_AKM_INIT  0
+#define SEMTECH_REGS_NEED_INITIATED_NUM	(12)
+#define SEMTECH_REGS_MAX_INITIATED_NUM	(17)
 
 int switch_irq;
 
@@ -986,12 +988,6 @@ static void read_capprox_data_from_dts(struct device_node *dn)
 			 0x000f000C, 0x007a8000};
 	read_chip_info(dn, CAP_PROX);
 
-	temp = of_get_named_gpio(dn, "gpio_int", 0);
-	if (temp < 0)
-		hwlog_err("%s:read gpio_int1 fail\n", __func__);
-	else
-		sar_pdata.gpio_int = (uint8_t) temp;
-
 	if (of_property_read_u32(dn, "poll_interval", &temp))
 		hwlog_err("%s:read poll_interval fail\n", __func__);
 	else
@@ -1064,6 +1060,10 @@ static void read_capprox_data_from_dts(struct device_node *dn)
 		}
 		hwlog_info("  modem:%u %u %u\n", *threshold_to_modem, *(threshold_to_modem+1), *(threshold_to_modem+2));
 	}else if (!strncmp(sensor_chip_info[CAP_PROX], "huawei,semtech-sx9323", strlen("huawei,semtech-sx9323"))){
+		if (of_property_read_u32(dn, "stage_number", &temp))
+			sar_pdata.stage_num = 1;
+		else
+			sar_pdata.stage_num = (uint8_t)temp;
 		if (of_property_read_u16(dn, "to_ap_threshold", &threshold_to_ap))
 			sar_pdata.sar_datas.semteck_data.threshold_to_ap = 0xC8;
 		else
@@ -1077,12 +1077,23 @@ static void read_capprox_data_from_dts(struct device_node *dn)
 		hwlog_info("read threshold_to_modem %u %u %u\n", *threshold_to_modem, *(threshold_to_modem+1), *(threshold_to_modem+7));
 
 		init_reg_val = sar_pdata.sar_datas.semteck_data.init_reg_val;
-		if (of_property_read_u32_array(dn, "init_reg_val", init_reg_val, 6)) {
-			hwlog_err("%s:read init_reg_val fail\n", __func__);
-			memcpy(init_reg_val, init_reg_val_default, sizeof(init_reg_val_default));
-		}
-		hwlog_info("init_reg_val:%8x %8x\n", *init_reg_val, *(init_reg_val+5));
+		if(sar_pdata.stage_num == 2){//sar double stage
+		       if (of_property_read_u32_array(dn, "init_reg_val", init_reg_val, SEMTECH_REGS_MAX_INITIATED_NUM)) {
+			    hwlog_err("%s:read init_reg_val fail\n", __func__);
+			    init_reg_val_default[0] = 0x0; //when read fail, modify para num is 0
+			    memcpy(init_reg_val, init_reg_val_default, sizeof(init_reg_val_default));
+		       }
+		       hwlog_info("init_reg_val:%8x %8x\n", *init_reg_val, *(init_reg_val+SEMTECH_REGS_MAX_INITIATED_NUM-1));
 
+		}
+		else{
+		       if (of_property_read_u32_array(dn, "init_reg_val", init_reg_val, SEMTECH_REGS_NEED_INITIATED_NUM)) {
+		            hwlog_err("%s:read init_reg_val fail\n", __func__);
+		            init_reg_val_default[0] = 0x0; //when read fail, modify para num is 0
+		            memcpy(init_reg_val, init_reg_val_default, sizeof(init_reg_val_default));
+		       }
+		       hwlog_info("init_reg_val:%8x %8x\n", *init_reg_val, *(init_reg_val+SEMTECH_REGS_NEED_INITIATED_NUM-1));
+		}
 		if (of_property_read_u32(dn, "ph", &ph))
 		{
 			sar_pdata.sar_datas.semteck_data.ph= 0x2f;
@@ -1094,12 +1105,24 @@ static void read_capprox_data_from_dts(struct device_node *dn)
 			hwlog_info("%s:read ph:0x%x\n",__func__,sar_pdata.sar_datas.semteck_data.ph);
 		}
 		calibrate_thred = sar_pdata.sar_datas.semteck_data.calibrate_thred;
-		if (of_property_read_u16_array(dn, "calibrate_thred", calibrate_thred, 2)) {
-			hwlog_err("%s:read calibrate_thred fail\n", __func__);
-			*calibrate_thred = 0;
-			*(calibrate_thred+1) = 0;
+		if (sar_pdata.stage_num == 2){//sar double stage
+		        if (of_property_read_u16_array(dn, "calibrate_thred", calibrate_thred, 4)) {//sar calibrate_thred num
+			     hwlog_err("%s:read calibrate_thred fail\n", __func__);
+			     *calibrate_thred = 0;//sar calibrate_thred0 init
+			     *(calibrate_thred+1) = 0;//sar calibrate_thred1 init
+			     *(calibrate_thred+2) = 0;//sar calibrate_thred2 init
+			     *(calibrate_thred+3) = 0;//sar calibrate_thred3 init
+		        }
+		        hwlog_info("calibrate_thred:%d %d %d %d\n", *calibrate_thred, *(calibrate_thred+1),*(calibrate_thred+2),*(calibrate_thred+3));//print calibrate_thred
 		}
-		hwlog_info("calibrate_thred:%d %d\n", *calibrate_thred, *(calibrate_thred+1));
+		else{
+		        if (of_property_read_u16_array(dn, "calibrate_thred", calibrate_thred, 2)) {
+			     hwlog_err("%s:read calibrate_thred fail\n", __func__);
+			     *calibrate_thred = 0;
+			     *(calibrate_thred+1) = 0;
+		        }
+		        hwlog_info("calibrate_thred:%d %d\n", *calibrate_thred, *(calibrate_thred+1));
+		}
 	}
 	read_sensorlist_info(dn, CAP_PROX);
 }

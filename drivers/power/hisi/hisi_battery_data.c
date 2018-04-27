@@ -187,6 +187,65 @@ static int get_age_para (struct device_node *np, struct hisi_coul_battery_data *
 	}
 	return 0;
 }
+
+static int get_fcc_sf_dts(struct device_node *np, struct hisi_coul_battery_data *pdat)
+{
+	int i, ret;
+
+	ret = of_property_read_u32(np, "fcc_sf_cols", (unsigned int *)(&(pdat->fcc_sf_lut->cols)));
+	if (ret) {
+		hwlog_err("get fcc_sf_cols failed\n");
+		return -EINVAL;
+	}
+	hisi_bat_info("fcc_sf_cols is %d\n", pdat->fcc_sf_lut->cols);
+	for (i = 0; i < pdat->fcc_sf_lut->cols; i++) {
+		ret = of_property_read_u32_index(np, "fcc_sf_x", i, (unsigned int *)(&(pdat->fcc_sf_lut->x[i])));
+		if (ret) {
+			hwlog_err("get fcc_sf_x[%d] failed\n", i);
+			return -EINVAL;
+		}
+		hisi_bat_info("fcc_sf_x[%d] is %d\n", i, pdat->fcc_sf_lut->x[i]);
+		ret = of_property_read_u32_index(np, "fcc_sf_y", i, (unsigned int *)(&(pdat->fcc_sf_lut->y[i])));
+		if (ret) {
+			hwlog_err("get fcc_sf_y[%d] failed\n", i);
+			return -EINVAL;
+		}
+		hisi_bat_info("fcc_sf_y[%d] is %d\n", i, pdat->fcc_sf_lut->y[i]);
+	}
+	/* pc_sf_lut */
+	ret = of_property_read_u32(np, "pc_sf_rows", (unsigned int *)(&(pdat->pc_sf_lut->rows)));
+	if (ret) {
+		hwlog_err("get pc_sf_rows failed\n");
+		return -EINVAL;
+	}
+	hisi_bat_info("pc_sf_rows is %d\n", pdat->pc_sf_lut->rows);
+	ret = of_property_read_u32(np, "pc_sf_cols", (unsigned int *)(&(pdat->pc_sf_lut->cols)));
+	if (ret) {
+		hwlog_err("get pc_sf_cols failed\n");
+		return -EINVAL;
+	}
+	hisi_bat_info("pc_sf_cols is %d\n", pdat->pc_sf_lut->cols);
+	ret = of_property_read_u32(np, "pc_sf_row_entries", (unsigned int *)(&(pdat->pc_sf_lut->row_entries[0])));
+	if (ret) {
+		hwlog_err("get pc_sf_row_entries failed\n");
+		return -EINVAL;
+	}
+	hisi_bat_info("pc_sf_row_entries is %d\n", pdat->pc_sf_lut->row_entries[0]);
+	ret = of_property_read_u32(np, "pc_sf_percent", (unsigned int *)(&(pdat->pc_sf_lut->percent[0])));
+	if (ret) {
+		hwlog_err("get pc_sf_percent failed\n");
+		return -EINVAL;
+	}
+	hisi_bat_info("pc_sf_percent is %d\n", pdat->pc_sf_lut->percent[0]);
+	ret = of_property_read_u32(np, "pc_sf_sf", (unsigned int *)(&(pdat->pc_sf_lut->sf[0][0])));
+	if (ret) {
+		hwlog_err("get pc_sf_sf failed\n");
+		return -EINVAL;
+	}
+	hisi_bat_info("pc_sf_sf is %d\n", pdat->pc_sf_lut->sf[0][0]);
+	return 0;
+}
+
 static int get_dat(struct device_node *np, struct hisi_coul_battery_data *pdat)
 {
 	int ret = 0;
@@ -278,7 +337,7 @@ static int get_dat(struct device_node *np, struct hisi_coul_battery_data *pdat)
 		}
 		pdat->chrg_para->volt_data[i / (VOLT_PARA_TOTAL)][i % (VOLT_PARA_TOTAL)] = simple_strtol(chrg_data_string, NULL, 10);
 		hisi_bat_info("chrg_para->volt_data[%d][%d] = %d\n",
-			i / (VOLT_PARA_TOTAL), 
+			i / (VOLT_PARA_TOTAL),
 			i % (VOLT_PARA_TOTAL),
 			pdat->chrg_para->volt_data[i / (VOLT_PARA_TOTAL)][i % (VOLT_PARA_TOTAL)]);
 	}
@@ -323,57 +382,12 @@ static int get_dat(struct device_node *np, struct hisi_coul_battery_data *pdat)
 		hisi_bat_info("fcc_temp[%d] is %d\n", i, pdat->fcc_temp_lut->y[i]);
 	}
 	/* fcc_sf */
-	ret = of_property_read_u32(np, "fcc_sf_cols", (unsigned int *)(&(pdat->fcc_sf_lut->cols)));
+	ret = get_fcc_sf_dts(np, pdat);
 	if (ret) {
-		hwlog_err("get fcc_sf_cols failed\n");
+		hwlog_err("get_fcc_sf_dts failed\n");
 		return -EINVAL;
 	}
-	hisi_bat_info("fcc_sf_cols is %d\n", pdat->fcc_sf_lut->cols);
-	for (i = 0; i < pdat->fcc_sf_lut->cols; i++) {
-		ret = of_property_read_u32_index(np, "fcc_sf_x", i, (unsigned int *)(&(pdat->fcc_sf_lut->x[i])));
-		if (ret) {
-			hwlog_err("get fcc_sf_x[%d] failed\n", i);
-			return -EINVAL;
-		}
-		hisi_bat_info("fcc_sf_x[%d] is %d\n", i, pdat->fcc_sf_lut->x[i]);
-		ret = of_property_read_u32_index(np, "fcc_sf_y", i, (unsigned int *)(&(pdat->fcc_sf_lut->y[i])));
-		if (ret) {
-			hwlog_err("get fcc_sf_y[%d] failed\n", i);
-			return -EINVAL;
-		}
-		hisi_bat_info("fcc_sf_y[%d] is %d\n", i, pdat->fcc_sf_lut->y[i]);
-	}
-	/* pc_sf_lut */
-	ret = of_property_read_u32(np, "pc_sf_rows", (unsigned int *)(&(pdat->pc_sf_lut->rows)));
-	if (ret) {
-		hwlog_err("get pc_sf_rows failed\n");
-		return -EINVAL;
-	}
-	hisi_bat_info("pc_sf_rows is %d\n", pdat->pc_sf_lut->rows);
-	ret = of_property_read_u32(np, "pc_sf_cols", (unsigned int *)(&(pdat->pc_sf_lut->cols)));
-	if (ret) {
-		hwlog_err("get pc_sf_cols failed\n");
-		return -EINVAL;
-	}
-	hisi_bat_info("pc_sf_cols is %d\n", pdat->pc_sf_lut->cols);
-	ret = of_property_read_u32(np, "pc_sf_row_entries", (unsigned int *)(&(pdat->pc_sf_lut->row_entries[0])));
-	if (ret) {
-		hwlog_err("get pc_sf_row_entries failed\n");
-		return -EINVAL;
-	}
-	hisi_bat_info("pc_sf_row_entries is %d\n", pdat->pc_sf_lut->row_entries[0]);
-	ret = of_property_read_u32(np, "pc_sf_percent", (unsigned int *)(&(pdat->pc_sf_lut->percent[0])));
-	if (ret) {
-		hwlog_err("get pc_sf_percent failed\n");
-		return -EINVAL;
-	}
-	hisi_bat_info("pc_sf_percent is %d\n", pdat->pc_sf_lut->percent[0]);
-	ret = of_property_read_u32(np, "pc_sf_sf", (unsigned int *)(&(pdat->pc_sf_lut->sf[0][0])));
-	if (ret) {
-		hwlog_err("get pc_sf_sf failed\n");
-		return -EINVAL;
-	}
-	hisi_bat_info("pc_sf_sf is %d\n", pdat->pc_sf_lut->sf[0][0]);
+
 	/* rbat_sf */
 	ret = of_property_read_u32(np, "rbatt_sf_rows", (unsigned int *)(&(pdat->rbatt_sf_lut->rows)));
 	if (ret) {

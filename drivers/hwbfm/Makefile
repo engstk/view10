@@ -2,6 +2,7 @@
 
 obj-$(CONFIG_HUAWEI_BFM)  += main/
 obj-$(CONFIG_HUAWEI_BFM)  += common/
+obj-$(CONFIG_HUAWEI_BFM)  += abns/
 
 ifeq ($(CONFIG_HW_BFMR_HISI),y)
 obj-$(CONFIG_HUAWEI_BFM)  += common/chipsets/hisi/

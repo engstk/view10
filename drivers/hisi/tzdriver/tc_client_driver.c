@@ -286,10 +286,9 @@ static int tee_calc_task_hash(unsigned char *digest, bool cfc_rehash);
 static char *get_process_path(struct task_struct *task, char *tpath)
 {
 	char *ret_ptr = NULL;
-	struct vm_area_struct *vma = NULL;
 	struct path base_path = {0};
 	struct mm_struct *mm = NULL;
-	bool find_path = false;
+	struct file *exe_file;
 	errno_t sret;
 
 	if (NULL == tpath || NULL == task)
@@ -304,29 +303,20 @@ static char *get_process_path(struct task_struct *task, char *tpath)
 	mm = get_task_mm(task);
 	if(!mm)
 		return NULL;
-	if (mm->mmap) {
-		vma = mm->mmap;
-	} else {
+	if (!mm->exe_file) {
 		mmput(mm);
 		return NULL;
 	}
-	down_read(&mm->mmap_sem);
 
-	while (vma) {
-		if ((vma->vm_flags & VM_EXEC) && vma->vm_file) {
-			base_path = vma->vm_file->f_path;
-			path_get(&base_path);
-			find_path = true;
-			break;
-		}
-		vma = vma->vm_next;
-	}
-	up_read(&mm->mmap_sem);
-	mmput(mm);
-	if (find_path){
+	exe_file = get_mm_exe_file(mm);
+	if (exe_file) {
+		base_path = exe_file->f_path;
+		path_get(&base_path);
 		ret_ptr = d_path(&base_path, tpath, MAX_PATH_SIZE);
 		path_put(&base_path);
+		fput(exe_file);
 	}
+	mmput(mm);
 	return ret_ptr;
 }
 
@@ -1986,9 +1976,18 @@ find_service:
 	return ret; /*lint !e429 */
 error:
 	mutex_lock(&service->session_lock);
-	if (session && session->tc_ns_token.token_buffer) {
-		kfree(session->tc_ns_token.token_buffer);
-		session->tc_ns_token.token_buffer = NULL;
+	{
+		int needkillsession = 0;
+		int needfree = 0;
+		needkillsession = context->session_id!=0;
+		if (needkillsession) {
+			kill_session(dev_file, context->uuid, context->session_id);
+		}
+		needfree = session && session->tc_ns_token.token_buffer;
+		if (needfree) {
+			kfree(session->tc_ns_token.token_buffer);
+			session->tc_ns_token.token_buffer = NULL;
+		}
 	}
 	mutex_unlock(&service->session_lock);
 
@@ -2002,6 +2001,7 @@ error:
 int TC_NS_CloseSession(TC_NS_DEV_File *dev_file, TC_NS_ClientContext *context)
 {
 	int ret = -EINVAL;
+	errno_t ret_s;
 	TC_NS_Service *service = NULL;
 	TC_NS_Session *session = NULL;
 
@@ -2046,10 +2046,13 @@ int TC_NS_CloseSession(TC_NS_DEV_File *dev_file, TC_NS_ClientContext *context)
 
 		mutex_lock(&service->session_lock);
 		/* Clean this session secure information */
-		memset_s((void *)&session->secure_info,
+		ret_s = memset_s((void *)&session->secure_info,
 			 sizeof(session->secure_info),
 			 0,
 			 sizeof(session->secure_info));
+		if (ret_s != EOK) {
+			 tloge("TC_NS_CloseSession memset_s error=%d\n", ret_s);
+		}
 		list_del(&session->head);
 		put_session_struct(session);
 		mutex_unlock(&service->session_lock);
@@ -2422,6 +2425,7 @@ int TC_NS_ClientOpen(TC_NS_DEV_File **dev_file, uint8_t kernel_api)
 int TC_NS_ClientClose(TC_NS_DEV_File *dev, int flag)
 {
 	int ret = TEEC_ERROR_GENERIC;
+	errno_t ret_s;
 	TC_NS_Service *service = NULL, *service_temp = NULL;
 	TC_NS_Shared_MEM *shared_mem = NULL;
 	TC_NS_Shared_MEM *shared_mem_temp = NULL;
@@ -2451,10 +2455,13 @@ int TC_NS_ClientClose(TC_NS_DEV_File *dev, int flag)
 						     session->session_id);
 					mutex_unlock(&session->ta_session_lock);
 					/* Clean session secure information */
-					memset_s((void *)&session->secure_info,
+					ret_s = memset_s((void *)&session->secure_info,
 						 sizeof(session->secure_info),
 						 0,
 						 sizeof(session->secure_info));
+					if (ret_s != EOK) {
+						 tloge("TC_NS_ClientClose memset_s error=%d\n", ret_s);
+					}
 					put_session_struct(session); /* pair with open session */
 				}
 				mutex_unlock(&service->session_lock);
@@ -2574,25 +2581,29 @@ static int tc_client_mmap(struct file *filp, struct vm_area_struct *vma)
 	if ((g_teecd_task == current->group_leader) && (!TC_NS_get_uid())) {
 		event_control = find_event_control_from_vma_pgoff(vma->vm_pgoff);
 
-		if (event_control)
+		if (event_control) {
 			shared_mem = event_control->buffer;
-
+		}
 		is_teecd = true;
 	}
 
 	if (!shared_mem)
 		shared_mem = tc_mem_allocate(len, is_teecd);
 
-	if (IS_ERR(shared_mem))
+	if (IS_ERR(shared_mem)) {
+		put_agent_event(event_control);
 		return -1;
+	}
 
 	if (shared_mem->from_mailbox) {
 		pfn = virt_to_phys(shared_mem->kernel_addr) >> PAGE_SHIFT;
 		if (!valid_mmap_phys_addr_range(pfn, (unsigned long)shared_mem->len)) {
 			tloge("Invalid mapping length: 0x%x\n", shared_mem->len);
-			if (event_control)
+			if (event_control) {
+				put_agent_event(event_control);
 				return -1;/*lint !e429*/
-
+			}
+			put_agent_event(event_control);
 			tc_mem_free(shared_mem);
 			return -1;
 		}
@@ -2607,10 +2618,12 @@ static int tc_client_mmap(struct file *filp, struct vm_area_struct *vma)
 		tloge("can't remap %s to user, ret = %d\n",
 			shared_mem->from_mailbox ? "pfn":"vmalloc", ret);
 
-		if (event_control)
+		if (event_control) {
+			put_agent_event(event_control);
 			return -1;/*lint !e429*/
-
+		}
 		tc_mem_free(shared_mem);
+		put_agent_event(event_control);
 		return -1;
 	}
 
@@ -2625,7 +2638,7 @@ static int tc_client_mmap(struct file *filp, struct vm_area_struct *vma)
 	list_add_tail(&shared_mem->head, &dev_file->shared_mem_list);
 	atomic_set(&shared_mem->usage, 1); /*lint !e1058 */
 	mutex_unlock(&dev_file->shared_mem_lock);
-
+	put_agent_event(event_control);
 	return ret;/*lint !e429*/
 }
 
@@ -2648,6 +2661,8 @@ static long tc_client_session_ioctl(struct file *file, unsigned cmd,
 		TCERR("copy from user failed\n");
 		return -EFAULT;
 	}
+
+	context.returns.origin = TEEC_ORIGIN_COMMS;
 
 	switch (cmd) {
 	case TC_NS_CLIENT_IOCTL_SES_OPEN_REQ: {
@@ -3051,6 +3066,7 @@ static const struct file_operations TC_NS_ClientFops = {
 };
 
 static int tui_flag = 0;
+
 static __init int tc_init(void)
 {
 	struct device *class_dev = NULL;
@@ -3137,6 +3153,12 @@ static __init int tc_init(void)
 	ret = agent_init();
 	if (ret < 0)
 		goto free_agent;
+
+	ret = TC_NS_register_ion_mem();
+	if (ret < 0) {
+		pr_err("Failed to register ion mem in tee.\n");
+		goto free_agent;
+	}
 
 	ret = TC_NS_register_rdr_mem();
 	if (ret)

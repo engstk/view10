@@ -198,10 +198,14 @@ static int noc_dump(void *dump_addr, unsigned int size)
 		goto malloc_free;
 	}
 
-	for (i = 0; i < (NOC_DUMP_SYNC_LEN - 1); i++) {
+	for (i = 0; i < (NOC_DUMP_SYNC_LEN - 2); i++) {
 		/* sync head 1 */
 		pt_dump->sync[i] = NOC_DUMP_SYNC_HEAD1;
 	}
+
+	/* save max number of register that noc dump in ap */
+	pt_dump->sync[i++] = NOC_DUMP_MAX_REG_NUM;
+
 	/* sync head 2 */
 	pt_dump->sync[i] = ((NOC_DUMP_SYNC_HEAD2 & 0xFFFFFF00) |
 				(g_noc_dump_info.noc_device_ptr->noc_property->platform_id & 0xFF));
@@ -303,13 +307,6 @@ ERR_PROBE_DUMP_END:
 	/* COPY data to RDR module */
 	memcpy(dump_addr, pt_dump, (unsigned long)ret_size);/*[false alarm]:ret_size alredy checked.*/
 
-	/* Check buffer data */
-	ptr = (uint *) pt_dump;
-	for (i = 0; i < sizeof(*pt_dump) / 16; i++) {
-		pr_info("(%03d~%03d)%08x %08x %08x %08x\n", 4 * i, 4 * i + 3,
-			ptr[4 * i], ptr[4 * i + 1], ptr[4 * i + 2],
-			ptr[4 * i + 3]); /*lint !e679*/
-	}
 
 malloc_free:
 	/* kmalloc free */

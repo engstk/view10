@@ -71,11 +71,6 @@
 #define SERIAL_AMBA_MINOR	64
 #define SERIAL_AMBA_NR		UART_NR
 
-#ifdef CONFIG_HISI_AMBA_PL011
-#define IOMCU_PERI_AHB_DIV_EN              BIT(15)
-#define IOMCU_PERI0_DIV(n)             (((n) & 0x3) << 12)
-#endif
-
 #define AMBA_ISR_PASS_LIMIT	256
 
 #define UART_DR_ERROR		(UART011_DR_OE|UART011_DR_BE|UART011_DR_PE|UART011_DR_FE)
@@ -1725,24 +1720,9 @@ static int pl011_startup(struct uart_port *port)
 	unsigned int cr;
 	int retval;
 #ifdef CONFIG_HISI_AMBA_PL011
-	u32 reg, expect_val = 0;
 	dev_info(port->dev, "%s: ttyAMA%d\n", __func__, port->line);
 	uart_chip_reset_endisable(uap, 1);
 	uart_chip_reset_endisable(uap, 0);
-
-	if(uap->reset_clk_reg_base){
-		reg = readl(uap->reset_clk_reg_base + uap->reset_clk_reg_offset);
-
-		expect_val = IOMCU_PERI0_DIV(0x01);
-
-		/* we need check bit12~13 is valid */
-		if((reg & IOMCU_PERI0_DIV(0x3)) != (expect_val)){
-			dev_info(port->dev,"%s:the clk_div is not correct, rewrite the uart3 clk_div num!\n",__func__);
-			/* we need the org bit8~11,and replace the bit12~13,15. bit14 is reserved */
-			reg = expect_val | IOMCU_PERI_AHB_DIV_EN | (reg&0x0F00);
-			writel(reg, uap->reset_clk_reg_base + uap->reset_clk_reg_offset);
-		}
-	}
 #endif
 	retval = pl011_hwinit(port);
 	if (retval)
@@ -2569,9 +2549,6 @@ struct amba_device *pdev = container_of(dev,struct amba_device,dev);
 	if (ret) {
 		dev_err(&pdev->dev, "%s can not enable reset function!\n", __func__);
 	}
-
-	/*enable the reset-clk-register print*/
-	uartprint_enable(pdev,uap);
 
 	ret = clk_prepare_enable(uap->clk);
 	if (ret) {

@@ -78,7 +78,7 @@ extern "C" {
 /*****************************************************************************
   4 全局变量声明
 *****************************************************************************/
-
+extern VOS_UINT32                        g_ulBindPid;
 
 /*****************************************************************************
   5 消息头定义
@@ -142,9 +142,21 @@ VOS_VOID RNIC_DeinitNetCard(
 struct net_device_stats *RNIC_GetNetCardStats(
     struct net_device                  *pstNetDev
 );
+
+ssize_t RNIC_ReadBindPidFile(
+    struct file                        *file,
+    char __user                        *buf,
+    size_t                              len,
+    loff_t                             *ppos
+);
+ssize_t RNIC_WriteBindPidFile(
+    struct file                        *file,
+    const char __user                  *buf,
+    size_t                              len,
+    loff_t                             *ppos
+);
 VOS_INT RNIC_InitNetCard(VOS_VOID);
-
-
+VOS_INT RNIC_InitBindProc(VOS_VOID);
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

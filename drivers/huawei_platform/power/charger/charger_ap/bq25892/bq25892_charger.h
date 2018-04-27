@@ -32,6 +32,7 @@ struct bq25892_device_info {
 };
 /*************************marco define area***************************/
 #define BQ25892_REG_TOTAL_NUM   (21)
+#define BQ25892_REG_HEAD_LEN_MAX   (26)
 
  /**/
 #define BQ25892_REG_NONE 0x00

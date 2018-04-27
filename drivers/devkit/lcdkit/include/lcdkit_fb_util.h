@@ -72,6 +72,8 @@ ssize_t alpm_function_store(struct device* dev, struct device_attribute* attr, c
 ssize_t alpm_setting_store(struct device* dev, struct device_attribute* attr, const char* buf, size_t count);
 ssize_t lcd_func_switch_show(struct device* dev, struct device_attribute* attr, char* buf);
 ssize_t lcd_func_switch_store(struct device* dev, struct device_attribute* attr, const char* buf, size_t count);
+ssize_t lcd_dynamic_porch_show(struct device* dev, struct device_attribute* attr, char* buf);
+ssize_t lcd_dynamic_porch_store(struct device* dev, struct device_attribute* attr, const char* buf, size_t count);
 ssize_t lcd_test_config_show(struct device* dev, struct lcdkit_panel_data* lcdkit_info, char* buf);
 ssize_t lcd_test_config_store(struct device* dev, struct lcdkit_panel_data* lcdkit_info, const char* buf);
 ssize_t lv_detect_show(struct device* dev, struct lcdkit_panel_data* lcdkit_info, char* buf);
@@ -87,6 +89,7 @@ ssize_t lcd_se_mode_show(struct device* dev, struct lcdkit_panel_data* lcdkit_in
 ssize_t lcd_bl_mode_store(struct device* dev, struct lcdkit_panel_data* lcdkit_info, const char* buf);
 ssize_t lcd_support_bl_mode_show(struct device* dev, struct lcdkit_panel_data* lcdkit_info, char* buf);
 ssize_t lcd_ldo_check_show(struct device* dev, char* buf);
+ssize_t lcd_mipi_config_store(struct device* dev, struct lcdkit_panel_data* lcdkit_info, const char* buf);
 extern int lcdkit_get_vsp_voltage(void);
 extern int lcdkit_get_vsn_voltage(void);
 #endif

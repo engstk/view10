@@ -28,13 +28,20 @@ static unsigned long  g_mntn_dump_reserved_addr;
 static unsigned int  	g_mntn_dump_init;
 static unsigned int  	g_mntn_dump_size;
 static struct mdump_head  	*g_mdump_head;
-unsigned int g_mntn_dump_mem_size[MNTN_DUMP_MAX] = {
-	MNTN_DUMP_HEAD_SIZE,
-	MNTN_DUMP_ETR_SIZE,
-	MNTN_DUMP_KERNEL_DUMP_SIZE,
-	MNTN_DUMP_PANIC_SIZE,
-	MNTN_DUMP_FTRACE_SIZE,
-	MNTN_DUMP_PSTORE_RAMOOPS_SIZE
+
+#define MNTN_DUMP_NOCLEAN (0xAA)
+struct mntn_dump_mem_info{
+	unsigned int size; // mntn dump region size
+	unsigned int clean_flag; // clean flag
+};
+struct mntn_dump_mem_info g_mntn_dump_mem_size[MNTN_DUMP_MAX] = {
+	{MNTN_DUMP_HEAD_SIZE,0},
+	{MNTN_DUMP_ETR_SIZE,0},
+	{MNTN_DUMP_KERNEL_DUMP_SIZE,0},
+	{MNTN_DUMP_PANIC_SIZE,0},
+	{MNTN_DUMP_FTRACE_SIZE,0},
+	{MNTN_DUMP_PSTORE_RAMOOPS_SIZE,0},
+	{MNTN_DUMP_BC_PANIC_SIZE,MNTN_DUMP_NOCLEAN}
 };
 
 static DEFINE_RAW_SPINLOCK(g_mdump_lock);
@@ -113,13 +120,16 @@ int mntn_dump_init(void)
 	/* clean the memory of information struct  */
 	memset((void *)g_mdump_mem_info, 0x00, sizeof(g_mdump_mem_info));
 
-	/*clean the total area of reserve memory of mntn dump*/
-	memset((void *)g_mntn_dump_base, 0x00, g_mntn_dump_size);
+
 	offset = 0;
 	for (i = 0; i < MNTN_DUMP_MAX; i++) {
 		g_mdump_mem_info[i].offset = offset;
-		g_mdump_mem_info[i].size = g_mntn_dump_mem_size[i];
+		g_mdump_mem_info[i].size = g_mntn_dump_mem_size[i].size;
 		g_mdump_mem_info[i].vaddr = g_mntn_dump_base + offset;
+
+		/*clean the reserve memory of mntn dump*/
+		if (MNTN_DUMP_NOCLEAN != g_mntn_dump_mem_size[i].clean_flag)
+			memset((void *)g_mdump_mem_info[i].vaddr, 0x00, g_mdump_mem_info[i].size);
 
 		offset += g_mdump_mem_info[i].size;
 		if (offset >= MNTN_DUMP_MAXSIZE) {

@@ -290,6 +290,11 @@ static int del_all_proc_info_from_white_list(void)
  */
 int set_proc_info(struct set_process_info *info)
 {
+	if(IS_ERR_OR_NULL(info)) {
+		BASTET_LOGE("invalid parameter");
+		return -EFAULT;
+	}
+
 	int rc = 0;
 
 	switch (info->cmd) {

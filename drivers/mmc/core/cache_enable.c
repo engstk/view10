@@ -30,6 +30,10 @@ int mmc_screen_test_cache_enable(struct mmc_card *card)
 	runmode_normal = !runmode_is_factory();
 #ifdef CONFIG_HISI_COUL
 	batterystate_exist = is_hisi_battery_exist();
+#ifdef CONFIG_HLTHERM_RUNTEST
+	printk(KERN_INFO "CONFIG_HLTHERM_RUNTEST is enable, set the batterystate_exist to 1\n");
+	batterystate_exist = 1;
+#endif
 #else
 	batterystate_exist = 0;
 #endif

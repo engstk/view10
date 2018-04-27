@@ -48,8 +48,8 @@ enum SVC_SECBOOT_CMD_ID {
 	SECBOOT_CMD_ID_COPY_VRL_TYPE,  /**< Secboot Task 拷贝VRL，并传递SoC Type*/
 	SECBOOT_CMD_ID_COPY_DATA_TYPE,	/**< Secboot Task 拷贝镜像,并传递SoC Type*/
 	SECBOOT_CMD_ID_VERIFY_DATA_TYPE, /**< Secboot Task 校验，并传递SoC Type，校验成功解复位SoC*/
-	 /**< Secboot Task原地校验，并传递SoC Type,校验成功解复位SoC*/
-	SECBOOT_CMD_ID_VERIFY_DATA_TYPE_LOCAL,
+	SECBOOT_CMD_ID_VERIFY_DATA_TYPE_LOCAL, /**< Secboot Task原地校验，并传递SoC Type,校验成功解复位SoC*/
+	SECBOOT_CMD_ID_COPY_IMG_TYPE,          /*<Secboot Task Copy img from secure buffer to run addr>*/
 	SECBOOT_CMD_ID_BSP_MODEM_CALL,           /**< Secboot Task 执行对应函数*/
 	SECBOOT_CMD_ID_BSP_MODULE_VERIFY,        /**< Secboot Task modem module校验函数*/
 	SECBOOT_CMD_ID_BSP_ICC_OPEN_THREAD,      /**< Secboot Task icc open函数*/

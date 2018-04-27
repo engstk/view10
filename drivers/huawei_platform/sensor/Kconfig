@@ -8,3 +8,4 @@ menuconfig HUAWEI_SENSORS_INPUT_INFO
 source "drivers/huawei_platform/sensor/fingerprint/Kconfig"
 source "drivers/huawei_platform/sensor/hall/Kconfig"
 source "drivers/huawei_platform/sensor/touch_key/Kconfig"
+source "drivers/huawei_platform/sensor/color_sensor/Kconfig"

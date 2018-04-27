@@ -669,6 +669,11 @@ VOS_UINT32 VOS_GetCurrentTaskID( VOS_VOID )
  *****************************************************************************/
 VOS_UINT32 VOS_CreateEvent( VOS_UINT32 ulTaskID )
 {
+    if ( ulTaskID >= vos_TaskCtrlBlkNumber )
+    {
+        return VOS_ERR;
+    }
+
     if ( VOS_TASK_CTRL_BLK_IDLE == vos_TaskCtrlBlk[ulTaskID].Flag )
     {
         return VOS_ERR;
@@ -693,6 +698,11 @@ VOS_UINT32 VOS_CreateEvent( VOS_UINT32 ulTaskID )
  *****************************************************************************/
 VOS_UINT32 VOS_CheckEvent( VOS_UINT32 ulTaskID )
 {
+    if ( ulTaskID >= vos_TaskCtrlBlkNumber )
+    {
+        return VOS_ERR;
+    }
+
     if ( VOS_TASK_CTRL_BLK_IDLE == vos_TaskCtrlBlk[ulTaskID].Flag )
     {
         return VOS_ERR;

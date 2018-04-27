@@ -52,9 +52,7 @@
 #include "AdsCtx.h"
 #include "AdsLog.h"
 #include "AdsFilter.h"
-/* Modified by m00217266 for L-C互操作项目, 2014-2-11, begin */
 #include "AdsInterface.h"
-/* Modified by m00217266 for L-C互操作项目, 2014-2-11, end */
 #include "NVIM_Interface.h"
 
 
@@ -113,20 +111,7 @@ ADS_FILTER_DECODE_DL_ICMP_FUNC_STRU     g_astAdsFilterDecodeDlIcmpFuncTbl[] =
 /*****************************************************************************
   3 函数实现
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ResetIPv6Addr
- 功能描述  : 重置过滤的IPv6地址
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_ResetIPv6Addr(VOS_VOID)
 {
     TAF_MEM_SET_S(ADS_FILTER_GET_IPV6_ADDR(), sizeof(ADS_IPV6_ADDR_UN), 0x00, sizeof(ADS_IPV6_ADDR_UN));
@@ -134,20 +119,7 @@ VOS_VOID ADS_FILTER_ResetIPv6Addr(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_InitListsHead
- 功能描述  : 初始化ADS下行数据过滤表
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_InitListsHead(VOS_VOID)
 {
     VOS_UINT32                          ulLoop;
@@ -163,23 +135,7 @@ VOS_VOID ADS_FILTER_InitListsHead(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_InitCtx
- 功能描述  : 初始化ADS过滤器上下文
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-  2.日    期   : 2013年07月222日
-    作    者   : j00177245
-    修改内容   : 清理编译warning
-*****************************************************************************/
 VOS_VOID ADS_FILTER_InitCtx(VOS_VOID)
 {
     TAF_NVIM_SHARE_PDP_INFO_STRU        stSharePdp;
@@ -193,10 +149,11 @@ VOS_VOID ADS_FILTER_InitCtx(VOS_VOID)
     /* 初始化老化周期 */
     /* 读取NV项，获取过滤节点老化时长 */
     TAF_MEM_SET_S(&stSharePdp, sizeof(stSharePdp), 0x00, sizeof(stSharePdp));
-    if (NV_OK != NV_ReadEx(MODEM_ID_0,
-                           en_NV_Item_SHARE_PDP_INFO,
-                           &stSharePdp,
-                           sizeof(stSharePdp)))
+
+    if (NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_SHARE_PDP_INFO,
+                                   &stSharePdp,
+                                   sizeof(stSharePdp)))
     {
         ADS_WARNING_LOG(ACPU_PID_ADS_DL, "ADS_FILTER_InitCtx: NV Read Failed!");
         stSharePdp.usAgingTimeLen = ADS_FILTER_DEFAULT_AGING_TIMELEN;
@@ -213,20 +170,7 @@ VOS_VOID ADS_FILTER_InitCtx(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_HeapAlloc
- 功能描述  : ADS过滤器系统内存申请函数
- 输入参数  : VOS_UINT32 ulSize  -- 申请内存大小
- 输出参数  : 无
- 返 回 值  : VOS_VOID*          -- 申请内存地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID* ADS_FILTER_HeapAlloc(VOS_UINT32 ulSize)
 {
     VOS_VOID                           *ret = VOS_NULL_PTR;
@@ -241,20 +185,7 @@ VOS_VOID* ADS_FILTER_HeapAlloc(VOS_UINT32 ulSize)
     return ret;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_HeapFree
- 功能描述  : ADS过滤器系统内存释放函数
- 输入参数  : VOS_VOID *pAddr    -- 需要释放的内存地址
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_HeapFree(VOS_VOID *pAddr)
 {
     if (pAddr == NULL)
@@ -267,20 +198,7 @@ VOS_VOID ADS_FILTER_HeapFree(VOS_VOID *pAddr)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_AddFilter
- 功能描述  : 增加过滤器到过滤表
- 输入参数  : ADS_FILTER_IPV4_INFO_STRU *pstFilter   -- 新增的过滤器
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_AddFilter(
     ADS_FILTER_IPV4_INFO_STRU          *pstFilter)
 {
@@ -311,20 +229,7 @@ VOS_VOID ADS_FILTER_AddFilter(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ResetLists
- 功能描述  : 重置ADS下行数据过滤表
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_ResetLists(VOS_VOID)
 {
     VOS_UINT32                          ulLoop;
@@ -352,20 +257,7 @@ VOS_VOID ADS_FILTER_ResetLists(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_Reset
- 功能描述  : 重置过滤信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_Reset(VOS_VOID)
 {
     /* 重置IPv6过滤地址 */
@@ -377,22 +269,7 @@ VOS_VOID ADS_FILTER_Reset(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_Match
- 功能描述  : 在过滤表匹配标示信息，若匹配将刷新老化周期
- 输入参数  : HI_LIST_S                 *pstListHead     -- 过滤表首节点
-             ADS_FILTER_IPV4_INFO_STRU *pstFilter       -- 用于匹配的标示信息
- 输出参数  : 无
- 返 回 值  : VOS_TRUE   -- 过滤信息匹配
-             VOS_FALSE  -- 过滤信息不匹配
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_IsInfoMatch(
     ADS_FILTER_IPV4_INFO_STRU          *pstFilter1,
     ADS_FILTER_IPV4_INFO_STRU          *pstFilter2)
@@ -449,21 +326,7 @@ VOS_UINT32 ADS_FILTER_IsInfoMatch(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_Match
- 功能描述  : 在过滤表匹配标示信息，若匹配将刷新老化周期
- 输入参数  : ADS_FILTER_IPV4_INFO_STRU *pstFilter       -- 用于匹配的标示信息
- 输出参数  : 无
- 返 回 值  : VOS_TRUE   -- 过滤信息匹配
-             VOS_FALSE  -- 过滤信息不匹配
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_Match(
     ADS_FILTER_IPV4_INFO_STRU          *pstFilter)
 {
@@ -529,20 +392,7 @@ VOS_UINT32 ADS_FILTER_Match(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_SaveIPAddrInfo
- 功能描述  : 保存IP过滤地址信息
- 输入参数  : ADS_FILTER_IP_ADDR_INFO_STRU       *pstFilterIpAddr    -- IP地址信息
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_SaveIPAddrInfo(
     ADS_FILTER_IP_ADDR_INFO_STRU       *pstFilterIpAddr)
 {
@@ -558,21 +408,7 @@ VOS_VOID ADS_FILTER_SaveIPAddrInfo(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeUlPacket
- 功能描述  : ADS过滤器上行数据包解码，只支持TCP\UDP\ICMP
- 输入参数  : IMM_ZC_STRU                *pstData       -- 上行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU  *pstIPv4Filter -- 过滤标志结构体指针
- 返 回 值  : VOS_OK     -- 上行数据包解码成功
-             VOS_ERR    -- 上行数据包解码失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_DecodeUlPacket(
     IMM_ZC_STRU                        *pstData,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter)
@@ -658,21 +494,7 @@ VOS_UINT32 ADS_FILTER_DecodeUlPacket(
     return VOS_ERR;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ProcUlPacket
- 功能描述  : ADS过滤器上行数据包处理
- 输入参数  : IMM_ZC_STRU               *pstData     -- 上行数据包
-             ADS_PKT_TYPE_ENUM_UINT8    enIpType    -- 上行数据包IP类型
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_ProcUlPacket(
     IMM_ZC_STRU                        *pstData,
     ADS_PKT_TYPE_ENUM_UINT8             enIpType)
@@ -710,20 +532,7 @@ VOS_VOID ADS_FILTER_ProcUlPacket(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeDlIPv4NotFirstFragPacket
- 功能描述  : 下行分片报文(非首片)的过滤信息提取
- 输入参数  : ADS_IPV4_HDR_STRU                        *pstIPv4Hdr     -- 下行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU                *pstIPv4Filter  -- 过滤标志结构体指针
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_DecodeDlIPv4NotFirstFragPacket(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter)
@@ -741,21 +550,7 @@ VOS_VOID ADS_FILTER_DecodeDlIPv4NotFirstFragPacket(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeDlIPv4EchoReplyPacket
- 功能描述  : 下行ECHO REPLY报文的过滤信息提取
- 输入参数  : ADS_IPV4_HDR_STRU                        *pstIPv4Hdr     -- 下行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU                *pstIPv4Filter  -- 过滤标志结构体指针
- 返 回 值  : VOS_OK     -- 下行数据包解码成功
-             VOS_ERR    -- 下行数据包解码失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_DecodeDlIPv4EchoReplyPacket(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter)
@@ -776,21 +571,7 @@ VOS_UINT32 ADS_FILTER_DecodeDlIPv4EchoReplyPacket(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeDlIPv4IcmpErrorPacket
- 功能描述  : 下行ICMP差错报文的过滤信息提取
- 输入参数  : ADS_IPV4_HDR_STRU                        *pstIPv4Hdr     -- 下行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU                *pstIPv4Filter  -- 过滤标志结构体指针
- 返 回 值  : VOS_OK     -- 下行数据包解码成功
-             VOS_ERR    -- 下行数据包解码失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_DecodeDlIPv4IcmpErrorPacket(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter)
@@ -830,20 +611,7 @@ VOS_UINT32 ADS_FILTER_DecodeDlIPv4IcmpErrorPacket(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeDlIPv4TcpPacket
- 功能描述  : 下行TCP报文的过滤信息提取
- 输入参数  : ADS_IPV4_HDR_STRU                        *pstIPv4Hdr     -- 下行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU                *pstIPv4Filter  -- 过滤标志结构体指针
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_DecodeDlIPv4TcpPacket(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter)
@@ -864,20 +632,7 @@ VOS_VOID ADS_FILTER_DecodeDlIPv4TcpPacket(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeDlIPv4UdpPacket
- 功能描述  : 下行UDP报文的过滤信息提取
- 输入参数  : ADS_IPV4_HDR_STRU                        *pstIPv4Hdr     -- 下行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU                *pstIPv4Filter  -- 过滤标志结构体指针
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_DecodeDlIPv4UdpPacket(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter)
@@ -898,22 +653,7 @@ VOS_VOID ADS_FILTER_DecodeDlIPv4UdpPacket(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeDlIPv4FragPacket
- 功能描述  : 下行分片报文的过滤信息提取
- 输入参数  : ADS_IPV4_HDR_STRU                        *pstIPv4Hdr     -- 下行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU                *pstIPv4Filter  -- 过滤标志结构体指针
-             ADS_FILTER_ORIG_PKT_ENUM_UINT32          *penOrigPktType -- 下行数据包原始类型
- 返 回 值  : VOS_OK     -- 下行数据包解码成功
-             VOS_ERR    -- 下行数据包解码失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月18日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_DecodeDlIPv4FragPacket(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter,
@@ -972,24 +712,7 @@ VOS_UINT32 ADS_FILTER_DecodeDlIPv4FragPacket(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_DecodeDlIPv4Packet
- 功能描述  : 判断报文类型是否为TCP\UDP\ICMP(ECHO REPLY或ICMP差错报文)\分片包非首片，
-             并提取对应报文类型中的过滤标示信息
-             注意: 源和目的是倒换的，因为过滤表信息是按上行方向来填写的
- 输入参数  : ADS_IPV4_HDR_STRU                        *pstIPv4Hdr,    -- 下行数据包
- 输出参数  : ADS_FILTER_IPV4_INFO_STRU                *pstIPv4Filter  -- 过滤标志结构体指针
-             ADS_FILTER_ORIG_PKT_ENUM_UINT32          *penOrigPktType -- 下行数据包原始类型
- 返 回 值  : VOS_OK     -- 下行数据包解码成功
-             VOS_ERR    -- 下行数据包解码失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月13日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_DecodeDlIPv4Packet(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter,
@@ -1059,21 +782,7 @@ VOS_UINT32 ADS_FILTER_DecodeDlIPv4Packet(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ProcDlIPv4Packet
- 功能描述  : ADS过滤处理IPv4类型下行数据包处理
- 输入参数  : IMM_ZC_STRU               *pstData     -- 下行数据包
- 输出参数  : 无
- 返 回 值  : VOS_OK   -- 数据包处理完毕
-             VOS_ERR  -- 数据包未处理
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_ProcDlIPv4Packet(
     IMM_ZC_STRU                        *pstData)
 {
@@ -1117,21 +826,7 @@ VOS_UINT32 ADS_FILTER_ProcDlIPv4Packet(
     return VOS_ERR;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ProcDlIPv6Packet
- 功能描述  : ADS过滤处理IPv6类型下行数据包处理
- 输入参数  : IMM_ZC_STRU               *pstData     -- 下行数据包
- 输出参数  : 无
- 返 回 值  : VOS_OK   -- 数据包处理完毕
-             VOS_ERR  -- 数据包未处理
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_ProcDlIPv6Packet(
     IMM_ZC_STRU                        *pstData)
 {
@@ -1156,22 +851,7 @@ VOS_UINT32 ADS_FILTER_ProcDlIPv6Packet(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ProcDlPacket
- 功能描述  : ADS过滤器下行数据包处理
- 输入参数  : IMM_ZC_STRU               *pstData     -- 下行数据包
-             ADS_PKT_TYPE_ENUM_UINT8    enIpType    -- 下行数据包IP类型
- 输出参数  : 无
- 返 回 值  : VOS_OK     -- 数据包处理完毕
-             VOS_ERR    -- 数据包未处理
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_UINT32 ADS_FILTER_ProcDlPacket(
     IMM_ZC_STRU                        *pstData,
     ADS_PKT_TYPE_ENUM_UINT8             enIpType)
@@ -1202,20 +882,7 @@ VOS_UINT32 ADS_FILTER_ProcDlPacket(
 }
 
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ShowStatisticInfo
- 功能描述  : 可维可测打印函数，打印上下行报文统计个数
- 输入参数  : VOS_VOID
- 输出参数  : VOS_VOID
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年6月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_ShowStatisticInfo(VOS_VOID)
 {
     PS_PRINTF("\n********************ADS FILTER 上行统计信息************************\n");
@@ -1238,20 +905,7 @@ VOS_VOID ADS_FILTER_ShowStatisticInfo(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ResetStatisticInfo
- 功能描述  : 清除可维可测信息
- 输入参数  : VOS_VOID
- 输出参数  : VOS_VOID
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年6月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_ResetStatisticInfo(VOS_VOID)
 {
     TAF_MEM_SET_S(ADS_FILTER_DBG_GET_STATS_ARRAY_ADDR(), (VOS_SIZE_T)(sizeof(VOS_UINT32) * ADS_FILTER_ORIG_PKT_BUTT), 0x00, (VOS_SIZE_T)(sizeof(VOS_UINT32) * ADS_FILTER_ORIG_PKT_BUTT));
@@ -1259,20 +913,7 @@ VOS_VOID ADS_FILTER_ResetStatisticInfo(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : ADS_FILTER_ShowIPv6Addr
- 功能描述  : 可维可测打印函数，打印IPv6地址
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年06月04日
-    作    者   : l00198894
-    修改内容   : V3R3 Share-PDP项目新增函数
-*****************************************************************************/
 VOS_VOID ADS_FILTER_ShowIPv6Addr(VOS_VOID)
 {
     VOS_UINT8                           *pucIPv6Addr = VOS_NULL_PTR;

@@ -109,13 +109,7 @@ enum AT_UART_LINK_TYPE_ENUM
 };
 typedef VOS_UINT16 AT_UART_LINK_TYPE_ENUM_UINT16;
 
-/*****************************************************************************
- 枚举名    : NAPI_WEIGHT_ADJ_MODE_ENUM
- 结构说明  : NAPI Weight调整模式枚举
- 1.日    期   : 2017年06月05日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
+
 enum NAPI_WEIGHT_ADJ_MODE_ENUM
 {
     NAPI_WEIGHT_ADJ_STATIC_MODE           = 0x00,
@@ -140,14 +134,7 @@ typedef struct
     VOS_UINT32                          reserve2;
 }USB_ENUM_STATUS_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_COMMDEGBUG_CFG_STRU
- 结构说明  : en_NV_Item_COMMDEGBUG_CFG(27)结构
 
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulCommDebugFlag;
@@ -162,55 +149,25 @@ typedef struct
     VOS_UINT32                          ulPidEnabled;
 }nv_pid_enable_type;
 
-/*****************************************************************************
- 结构名    : OM_SW_VER_FLAG_STRU
- 结构说明  : NV_SW_VER_Flag(36)结构
 
-  1.日    期   : 2013年16日
-    作    者   : j00174725
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulNvSwVerFlag;                          /*[0,1]*/
 }OM_SW_VER_FLAG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_DISSD_PWD_STRU
- 结构说明  : en_NV_Item_AT_DISSD_PWD(43)结构
 
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_INT8                           acATE5DissdPwd[AT_DISSD_PWD_LEN];
 }TAF_AT_NVIM_DISSD_PWD_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_DISLOG_PWD_NEW_STRU
- 结构说明  : en_NV_Item_AT_DISLOG_PWD_NEW(48)结构
 
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_INT8                           acATOpwordPwd[AT_OPWORD_PWD_LEN];
 }TAF_AT_NVIM_DISLOG_PWD_NEW_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_DEFAULT_LINK_OF_UART_STRU
- 结构说明  : en_NV_Item_DEFAULT_LINK_OF_UART(53)结构
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     AT_UART_LINK_TYPE_ENUM_UINT16       enUartLinkType;
@@ -228,16 +185,7 @@ typedef struct
     VOS_UINT16                          max_value;
 }VBAT_CALIBART_TYPE;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_FACTORY_INFO_STRU
- 结构说明  : en_NV_Item_AT_FACTORY_INFO(115)结构
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucFactInfo1[AT_FACINFO_INFO1_STR_LENGTH];
@@ -246,26 +194,13 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }TAF_AT_NVIM_FACTORY_INFO_STRU;
 
-/*****************************************************************************
-结构名    : TAF_AT_NVIM_MANUFACTURE_DATE_STRU
-结构说明  : en_NV_Item_AT_MANUFACTURE_DATE(116)结构
-1.日    期   : 2013年5月22日
-  作    者   : m00217266
-  修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucMDate[AT_MDATE_STRING_LENGTH];
 }TAF_AT_NVIM_MANUFACTURE_DATE_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_UART_RI_CFG_STRU
- 结构说明  : UART RI信号波形结构
 
-  1.日    期   : 2013年09月18日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulSmsRiOnInterval;      /* 短信RI高电平持续时间(ms) */
@@ -276,14 +211,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 } TAF_NV_UART_RI_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_UART_FRAME_STRU
- 结构说明  : UART 帧结构
 
-  1.日    期   : 2013年09月18日
-    作    者   : j00174725
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucFormat;               /* UART 数据位停止位位宽 */
@@ -292,14 +220,7 @@ typedef struct
 
 } TAF_NV_UART_FRAME_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_UART_CFG_STRU
- 结构说明  : en_NV_Item_UART_CFG(141)结构   UART 相关配置
 
-  1.日    期   : 2013年09月18日
-    作    者   : j00174725
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulBaudRate;             /* UART波特率 */
@@ -307,54 +228,27 @@ typedef struct
     TAF_NV_UART_RI_STRU                 stRiConfig;             /* UART Ring脚配置 */
 } TAF_NV_UART_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_PORT_BUFF_CFG_STRU
- 结构说明  : en_NV_Item_PORT_BUFF_CFG(144)结构   缓存控制
 
-  1.日    期   : 2013年12月28日
-    作    者   : j00174725
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucEnableFlg;
     VOS_UINT8                           aucReserved[3];
 } TAF_NV_PORT_BUFF_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NVIM_CDMAMODEMSWITCH_NOT_RESET_CFG_STRU
- 结构说明  : en_NV_Item_CDMAMODEMSWITCH_NOT_RESET_CFG(2102)结构  CDMAMODEMSWITCH不重启特性控制NV
 
-  1.日    期   : 2016年10月26日
-    作    者   : h00313353
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucEnableFlg;                            /* CDMAMODEMSWITCH不重启特性NV开关, 1: 打开，0：关闭 */
     VOS_UINT8                           aucReversed[7];                         /* 八字节对齐 */
 } TAF_NVIM_CDMAMODEMSWITCH_NOT_RESET_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NVIM_CCPU_RESET_RECORD_STRU
- 结构说明  : en_NV_Item_Ipv6_Address_Test_Mode_Cfg(2336) NV项结构
-  1.日    期   : 2015年7月29日
-    作    者   : n00269697
-    修改内容   : DTS2015072804293 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulIpv6AddrTestModeCfg;                  /* 0x55aa55aa是测试模式，其他值为正常模式 */
 }TAF_NVIM_IPV6_ADDR_TEST_MODE_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_ADS_IPF_MODE_CFG_STRU
- 结构说明  : en_NV_Item_ADS_IPF_MODE_CFG(2337)  IPF处理ADS下行数据的模式
 
- 1.日    期   : 2016年11月3日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucIpfMode;                              /* IPF处理ADS下行数据的模式, 0: 中断上下文(默认)，1：线程上下文 */
@@ -363,27 +257,13 @@ typedef struct
     VOS_UINT8                           ucReserved2;
 } TAF_NV_ADS_IPF_MODE_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : OM_MANUFACTUREINFO_STRU
- 结构说明  : 对应NVID: 2351 ManufactureInfo old: 32768
 
-  1.日    期   : 2013年5月16日
-    作    者   : j00174725
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucInfo[128];
 }OM_MANUFACTUREINFO_STRU;
 
-/*****************************************************************************
- 结构名称  : TAF_NV_ADS_WAKE_LOCK_CFG_STRU
- 结构说明  : en_NV_Item_ADS_WAKE_LOCK_CFG(2354) ADS WALE LOCK配置结构
 
-  1.日    期   : 2015年09月23日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulEnable;                               /* 使能标识 */
@@ -392,14 +272,7 @@ typedef struct
     VOS_UINT32                          ulReserved;
 } TAF_NV_ADS_WAKE_LOCK_CFG_STRU;
 
-/*****************************************************************************
- 结构名称  : TAF_NV_PRINT_MODEM_LOG_TYPE_STRU
- 结构说明  : en_NV_Item_Print_Modem_Log_Type(2361)  控制是否输出modem log的类型
 
-  1.日    期   : 2015年10月17日
-    作    者   : w00316404
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucPrintModemLogType;                    /* 0:输出modem log，1:不输出modem log，default:0 */
@@ -408,14 +281,7 @@ typedef struct
     VOS_UINT8                           ucReserved2;
 } TAF_NV_PRINT_MODEM_LOG_TYPE_STRU;
 
-/*****************************************************************************
- 结构名称  : TAF_NV_ADS_MEM_CFG_STRU
- 结构说明  : 内存配置信息
 
-  1.日    期   : 2015年10月06日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usBlkNum;
@@ -425,28 +291,14 @@ typedef struct
 
 } TAF_NV_ADS_MEM_CFG_STRU;
 
-/*****************************************************************************
- 结构名称  : TAF_NV_ADS_MEM_POOL_CFG_STRU
- 结构说明  : en_NV_Item_ADS_MEM_POOL_CFG(2369) 内存池配置结构
 
-  1.日    期   : 2015年10月06日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulEnable;
     TAF_NV_ADS_MEM_CFG_STRU             astMemCfg[2];
 } TAF_NV_ADS_MEM_POOL_CFG_STRU;
 
-/*****************************************************************************
- 结构名称  : TAF_NV_ADS_ERROR_FEEDBACK_CFG_STRU
- 结构说明  : en_NV_Item_ADS_PACKET_ERROR_FEEDBACK_CFG() 错误反馈配置
 
-  1.日    期   : 2017年7月11日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulEnabled;                              /* 使能标识 */
@@ -456,13 +308,7 @@ typedef struct
 
 } TAF_NV_ADS_ERROR_FEEDBACK_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NVIM_USER_REBOOT_SUPPORT_STRU
- 结构说明  : en_NV_Item_User_Reboot_Support_Flg(2391)    是否支持用户发起整机复位
- 1.日    期   : 2016年05月30日
-   作    者   : h00360002
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucUserRebootConfig;
@@ -471,28 +317,14 @@ typedef struct
     VOS_UINT8                           ucReserved3;
 }TAF_NVIM_USER_REBOOT_SUPPORT_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_PDP_REDIAL_FOR_NO_CAUSE_CFG_STRU
- 结构说明  : en_NV_Item_PDP_REDIAL_FOR_NO_CAUSE_CFG(2413) 网侧无原因值重拨功能开关
 
- 1.日    期   : 2016年08月31日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucEnable;                               /* 网侧无原因值重拨功能开关, 1: 打开，0：关闭 */
     VOS_UINT8                           aucReversed[3];                         /* 四字节对齐 */
 } TAF_NV_PDP_REDIAL_FOR_NO_CAUSE_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_NAPI_PKT_NUM_PER_SEC_LEVEL_STRU
- 结构说明  : RNIC NAPI每秒收包数档位配置
 
- 1.日    期   : 2017年03月10日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulDlPktNumPerSecLevel1;                 /* 每秒收包数档位Level1 */
@@ -506,14 +338,7 @@ typedef struct
 
 } RNIC_NAPI_DL_PKT_NUM_PER_SEC_LEVEL_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_NAPI_WEIGHT_LEVEL_STRU
- 结构说明  : RNIC NAPI Weight档位配置
 
- 1.日    期   : 2017年03月10日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucNapiWeightLevel1;                     /* NAPI Weight值档位Level1 */
@@ -527,14 +352,7 @@ typedef struct
 
 } RNIC_NAPI_WEIGHT_LEVEL_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_NAPI_WEIGHT_DYNAMIC_ADJ_CFG_STRU
- 结构说明  : RNIC NAPI Weight动态调整参数配置
 
- 1.日    期   : 2017年03月10日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     RNIC_NAPI_DL_PKT_NUM_PER_SEC_LEVEL_STRU   stDlPktNumPerSecLevel;            /* RNIC网卡下行每秒收包个数档位值 */
@@ -542,14 +360,7 @@ typedef struct
 
 } RNIC_NAPI_WEIGHT_DYNAMIC_ADJ_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_RNIC_NET_IF_CFG_STRU
- 结构说明  : en_NV_Item_Rnic_Net_If_Cfg(2421)     RNIC下行数据到Linux网络协议栈的接口模式配置
 
- 1.日    期   : 2017年03月10日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                                     ucNetInterfaceMode;           /* RNIC网卡下行数据到Linux网络协议栈的接口模式, 0: Net_rx(默认)，1：NAPI接口 */
@@ -563,27 +374,13 @@ typedef struct
 
 } TAF_NV_RNIC_NET_IF_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_AT_CLIENT_CFG_STRU
- 结构说明  : en_NV_Item_AT_CLIENT_CONFIG 2437
 
-  1.日    期   : 2017年02月20日
-    作    者   : lwx331495
-    修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                          aucAtClientConfig[TAF_AT_NVIM_CLIENT_CFG_LEN];     /*包括了nv预留的32个字节*/
 }TAF_AT_NVIM_AT_CLIENT_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_PDP_REDIAL_FOR_NO_PDP_TYPE_CAUSE_CFG_STRU
- 结构说明  : 网侧拒绝28号原因值重拨功能开关
 
- 1.日    期   : 2017年05月20日
-   作    者   : w00316404
-   修改内容   : 新建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucEnablePolicy;                         /* 网侧拒绝28号原因值重拨功能开关, 1: 打开，0：关闭 */
@@ -592,16 +389,7 @@ typedef struct
     VOS_UINT8                           ucReserved3;
 } TAF_NV_PDP_REDIAL_FOR_NO_PDP_TYPE_CAUSE_CFG_STRU;
 
-/*****************************************************************************
-结构名    : TAF_AT_NV_GMM_INFO_STRU
-结构说明  : en_NV_Item_GmmInfo 8200(已废弃)
-1.日    期   : 2013年5月22日
-  作    者   : m00217266
-  修改内容   : 新建
-2.日    期   : 2015年3月2日
-  作    者   : w00316404
-  修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucGmmInfo[2];
@@ -609,16 +397,7 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }TAF_AT_NV_GMM_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : AT_NVIM_SEND_DOMAIN_STRU
- 结构说明  : en_NV_Item_SMS_SEND_DOMAIN(8295)结构#
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucActFlg;
@@ -627,16 +406,7 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }AT_NVIM_SEND_DOMAIN_STRU;/* NVIM项中短信发送域的结构 */
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_RXDIV_CONFIG_STRU
- 结构说明  : en_NV_Item_RXDIV_CONFIG(8319)结构
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucVaild;
@@ -645,16 +415,7 @@ typedef struct
     VOS_UINT8                           ucReserved3;
 }TAF_AT_NVIM_RXDIV_CONFIG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_REPORT_REG_ACT_FLG_STRU
- 结构说明  : en_NV_Item_REPORT_REG_ACT_FLG(8340)结构
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usReportRegActFlg;
@@ -671,16 +432,7 @@ typedef struct
     VOS_UINT32                          ulDhcpLeaseHour;                        /* Range:[0x1,0x2250] */
 }NDIS_NV_DHCP_LEASE_HOUR_STRU;
 
-/*****************************************************************************
-结构名    : NAS_NV_CREG_CGREG_CI_FOUR_BYTE_RPT_STRU
-结构说明  : en_NV_Item_CREG_CGREG_CI_Four_Byte_Rpt(8345)结构#
-1.日    期   : 2013年5月22日
-  作    者   : m00217266
-  修改内容   : 新建
-2.日    期   : 2015年3月2日
-  作    者   : w00316404
-  修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucStatus;                               /* 1: NV有效标志位，0：无效 */
@@ -689,50 +441,26 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }NAS_NV_CREG_CGREG_CI_FOUR_BYTE_RPT_STRU; /* VDF需求: CREG/CGREG命令<CI>域是否以4字节上报的NV项控制结构体 */
 
-/*****************************************************************************
- 结构名    : TAF_AT_TZ_STRU
- 结构说明  : en_NV_Item_ATSETZ_RET_VALUE(8488) NV项结构
-  1.日    期   : 2011年7月25日
-    作    者   : z00161729
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_INT8                            acTz[AT_NVIM_SETZ_LEN];
 }TAF_AT_TZ_STRU;
 
-/*****************************************************************************
- 结构名    : AT_NOT_SUPPORT_CMD_ERROR_TEXT_STRU
- 结构说明  : en_NV_Item_NOT_SUPPORT_RET_VALUE(8489) NV项结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_INT8                            acErrorText[AT_NOTSUPPORT_STR_LEN];
 }TAF_AT_NOT_SUPPORT_CMD_ERROR_TEXT_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_RIGHT_OPEN_FLAG_STRU
- 结构说明  : en_NV_Item_AT_RIGHT_PASSWORD(8492) NV项结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          enRightOpenFlg;
     VOS_INT8                            acPassword[AT_NVIM_RIGHT_PWD_LEN];
 }TAF_AT_NVIM_RIGHT_OPEN_FLAG_STRU;
 
-/*****************************************************************************
-结构名    : TAF_NDIS_NV_IPV6_ROUTER_MTU_STRU
-结构说明  : en_NV_Item_IPV6_ROUTER_MTU 8513(该nv项属于北京,该结构北京没有使用)
-1.日    期   : 2013年5月22日
-  作    者   : m00217266
-  修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulIpv6RouterMtu;
@@ -751,16 +479,7 @@ typedef struct
     VOS_UINT8                           aucReversed[2];     /* 四字节对齐 */
 } AT_NV_IPV6_CAPABILITY_STRU;
 
-/*****************************************************************************
- 结构名    : NAS_PREVENT_TEST_IMSI_REG_STRU
- 结构说明  : en_NV_Item_DIAL_CONNECT_DISPLAY_RATE(8516)
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 移植
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucGsmConnectRate;
@@ -773,14 +492,7 @@ typedef struct
     VOS_UINT8                           ucReserve3;
 }AT_NVIM_DIAL_CONNECT_DISPLAY_RATE_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_UL_QUEUE_SCHEDULER_PRI_NV_STRU
- 结构说明  : en_NV_Item_ADS_Queue_Scheduler_Pri(9039)  ADS上行队列优先级的NV结构
 
-  1.日    期   : 2012年02月24日
-    作    者   : f00179208
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulStatus;                               /* 该NV项的状态 0:未使能，表示不采用优先级，先激活先处理 1:使能，采用优先级算法 */
@@ -788,14 +500,7 @@ typedef struct
     VOS_UINT8                           aucRsv[2];
 }ADS_UL_QUEUE_SCHEDULER_PRI_NV_STRU;
 
-/*****************************************************************************
- 结构名    : AT_WIFI_INFO_STRU (9040 代码中实际使用的定义的结构体名)
- 结构说明  : en_NV_Item_WIFI_INFO(9040)   用于从NV项读取WIFI相关信息
- 修改记录  :
-  1.日    期   : 2012年02月02日
-    作    者   : l00198894
-    修改内容   : B050 Project, 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          bitOpbSupport       : 1;
@@ -837,16 +542,7 @@ typedef struct
     VOS_UINT16                          ausnPower[2];
 }nv_wifi_info;
 
-/*****************************************************************************
- 结构名    : NAS_PREVENT_TEST_IMSI_REG_STRU
- 结构说明  : en_NV_Item_SubPlatFormInfo(9041) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 移植
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usPlatform;
@@ -854,16 +550,7 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }NAS_NVIM_PLATFORM_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_EQ_VER_STRU
- 结构说明  : en_NV_Item_Eqver(9070) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 移植
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usEqver;
@@ -871,16 +558,7 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }TAF_AT_EQ_VER_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NVIM_CS_VER_STRU
- 结构说明  : en_NV_Item_Csver(9071) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 移植
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usCsver;
@@ -888,16 +566,7 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }TAF_NVIM_CS_VER_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_MUX_SUPPORT_FLG_STRU
- 结构说明  : en_NV_Item_Mux_Support_Flg(9100) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 移植
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucMuxSupportFlg;
@@ -906,26 +575,7 @@ typedef struct
     VOS_UINT8                           ucReserved3;
 }TAF_AT_NVIM_MUX_SUPPORT_FLG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_MULTI_WIFI_SEC_STRU
- 协议表格  :
- ASN.1描述 :
- 结构说明  : en_NV_Item_MULTI_WIFI_KEY(9110) NV项对应的结构，
-             用于保存wifi 安全信息
-             nv_wifisec_type结构的副本必须与NV项50012的数据结构nv_wifisec_type保持一致
-             aucwlAuthMode              鉴权模式
-             aucBasicEncryptionModes    基本加密模式
-             aucWPAEncryptionModes      WPA加密模式
-             aucWifiWepKey1...aucWifiWepKey4               WIFI KEY
-             ucWifiWepKeyIndex          使用的WIFI KEY index,例如，1代表使用wlKeys1
-             aucWpaPsk                  WPA的密码
-             ucWpsEnable                wps是否使能开关
-             ucWpsCfg                   是否允许register来改变enrollee的参数,  0:不允许(默认);  1:允许
 
-  1.日    期   : 2012年9月15日
-    作    者   : z60575
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucWifiAuthmode[AT_WIFI_WLAUTHMODE_LEN];
@@ -941,58 +591,14 @@ typedef struct
     VOS_UINT8                           ucWifiWpscfg;
 }TAF_AT_MULTI_WIFI_SEC_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_TAF_AT_MULTI_WIFI_SSID_STRU
- 协议表格  :
- ASN.1描述 :
- 结构说明  : en_NV_Item_MULTI_WIFI_STATUS_SSID(9111) NV项对应的结构，
-             用于保存wifi SSID，该NV结构如下，由于出了SSID以外的部分不会做
-             任何操作，为了避免增加PADDING，在定义时直接定义为UINT8类型的数组
-             aucwlSsid[AT_WIFI_MAX_SSID_NUM][AT_WIFI_SSID_LEN_MAX];
-             ulwlChannel;
-             ulwlHide;
-             aucwlCountry[NV_WLCOUNTRY_CODE_LEN];
-             aucwlMode[NV_WLMODE_LEN];
-             ulwlRate;
-             ulwlTxPwrPcnt;
-             ulwlMaxAssoc;
-             ucwlEnbl;
-             ulwlFrgThrshld;
-             ulwlRtsThrshld;
-             ulwlDtmIntvl;
-             ulwlBcnIntvl;
-             ulwlWme;
-             ulwlPamode;
-             ulwlIsolate;
-             ulwlProtectionmode;
-             ulwloffenable;
-             ucwlofftime;
-             aucwlExtends[12];
-             ucReserve;
 
-  1.日    期   : 2012年9月15日
-    作    者   : z60575
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucWifiSsid[AT_WIFI_MAX_SSID_NUM][AT_WIFI_SSID_LEN_MAX];
     VOS_UINT8                           aucReserved[84];
 }TAF_AT_MULTI_WIFI_SSID_STRU;
 
-/*****************************************************************************
- 结构名    : AT_NVIM_ABORT_CMD_PARA_STRU
- 结构说明  : en_NV_Item_AT_ABORT_CMD_PARA(9113)
-             用于配置AT打断命令的命令名和返回结果的结构, NV中使用
-             如配置用户输入"AT"表示发起打断请求, 返回"ABORT"表示打断完成. 不区分大小写
 
-  1.日    期   : 2012年09月21日
-    作    者   : L00171473
-    修改内容   : for V7R1C50_At_Abort,  新增
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucAbortEnableFlg;                           /* AT打断开关标志 */
@@ -1003,42 +609,19 @@ typedef struct
     VOS_UINT8                           aucAbortAtRspStr[AT_MAX_ABORT_RSP_STR_LEN]; /* 打断命令的返回结果 */
 }AT_NVIM_ABORT_CMD_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_MUX_REPORT_CFG_STRU
- 结构说明  : en_NV_Item_MUX_REPORT_CFG(9125) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulMuxReportCfg;
 }TAF_AT_NVIM_MUX_REPORT_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_CIMI_PORT_CFG_STRU
- 结构说明  : en_NV_Item_CIMI_PORT_CFG(9128) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulCimiPortCfg;
 }TAF_AT_NVIM_CIMI_PORT_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : AT_SS_CUSTOMIZE_PARA_STRU
- 结构说明  : en_NV_Item_SS_CUSTOMIZE_PARA(9132)
-             SS定制参数，包括
-             NV项激活标志ucStatus，0: 不激活，1: 激活
-             SS标准命令定制参数
-             BIT 0 控制+CCWA查询命令是否输出完整业务状态，0，不输出 ；1: 输出
-             BIT 1 控制+CLCK查询命令是否输出完整业务状态，0，不输出 ；1: 输出
-  1.日    期  : 2013年01月24日
-    作    者  : f62575
-    修改内容  : SS定制需求新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucStatus;                               /* NV是否激活标志,  */
@@ -1046,13 +629,7 @@ typedef struct
     VOS_UINT8                           aucReserved1[2];
 } AT_SS_CUSTOMIZE_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NVIM_SHARE_PDP_INFO_STRU
- 结构说明  : en_NV_Item_SHARE_PDP_INFO(9218)  Share-PDP特性控制NV
-  1.日    期   : 2013年06月03日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucEnableFlag;                           /* 是否使能Share PDP特性, 0 - 禁止;  1 - 使能 */
@@ -1060,13 +637,7 @@ typedef struct
     VOS_UINT16                          usAgingTimeLen;                         /* 老化时间，单位为秒 */
 } TAF_NVIM_SHARE_PDP_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_UL_WATER_MARK_LEVEL_NV_STRU
- 结构说明  : ADS UL水线界别结构
-   1.日    期   : 2014年06月03日
-     作    者   : f00179208
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulWaterLevel1;                          /* 水线界别1 */
@@ -1075,13 +646,7 @@ typedef struct
     VOS_UINT32                          ulWaterLevel4;                          /* 水线界别4,预留 */
 } ADS_UL_WATER_MARK_LEVEL_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_UL_WATER_MARK_LEVEL_NV_STRU
- 结构说明  : ADS UL赞包门限结构
-   1.日    期   : 2014年06月03日
-     作    者   : f00179208
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulThreshold1;                           /* 赞包门限1 */
@@ -1090,13 +655,7 @@ typedef struct
     VOS_UINT32                          ulThreshold4;                           /* 赞包门限4 */
 } ADS_UL_THRESHOLD_LEVEL_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_UL_WATER_MARK_LEVEL_NV_STRU
- 结构说明  : en_NV_Item_ADS_DYNAMIC_THRESHOLD_CFG(9268) ADS UL动态赞包结构
-   1.日    期   : 2014年06月03日
-     作    者   : f00179208
-     修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulActiveFlag;                           /* 使能标识: 0表示去使能,1表示使能 */
@@ -1106,13 +665,7 @@ typedef struct
     VOS_UINT32                          aulReserved[6];
 } ADS_NV_DYNAMIC_THRESHOLD_STRU;
 
-/*******************************************************************************
- 结构名    : TAF_NV_VCOM_DEBUG_CFG_STRU
- 结构说明  : en_NV_Item_DMS_DEBUG_CFG(9269) VCOM DEBUG配置相关NV项
-  1.日    期   : 2014年06月03日
-    作    者   : n00269697
-    修改内容   : VCOM DEBUG配置
-*******************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulDebugLevel;                           /* VCOM DEBUG级别:ERR,NORMAL,INFO,DEBUG */
@@ -1120,30 +673,13 @@ typedef struct
     VOS_UINT32                          ulReserved[4];                          /* 预留 */
 } TAF_NV_PORT_DEBUG_CFG_STRU;
 
-/*****************************************************************************
-结构名    : OM_MAC_ADDR_STRU
-结构说明  :
-对应NVID: 50014 en_NV_Item_WIFI_MAC_ADDR
 
-  1.日    期   : 2013年5月16日
-    作    者   : j00174725
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucMacAddr[32];
 }OM_MAC_ADDR_STRU;
 
-/*****************************************************************************
- 结构名    : MMA_CUSTOM_CARDLOCK_OPERATOR_STRU
- 结构说明  : en_NV_Item_PRODUCT_ID(50048) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-  2.日    期   : 2015年3月2日
-    作    者   : w00316404
-    修改内容   : 四字节对齐，增加reserve位
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulNvStatus;
@@ -1152,13 +688,7 @@ typedef struct
     VOS_UINT8                           ucReserve2;
 }TAF_AT_PRODUCT_ID_STRU;
 
-/*****************************************************************************
- 结构名    : NAS_NV_PPP_DIAL_ERR_CODE_STRU
- 结构说明  : en_NV_Item_PPP_DIAL_ERR_CODE(50061)结构
-  1.日    期   : 2013年5月22日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucStatus;                               /* 1: NV有效标志位，0：无效 */
@@ -1177,62 +707,32 @@ typedef struct
     VOS_UINT8                           aucReserved[22];                        /* 保留 */
 }AT_DYNAMIC_PID_TYPE_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_WEB_ADMIN_PASSWORD_STRU
- 结构说明  : en_NV_Item_WEB_ADMIN_PASSWORD(52001)结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucWebPwd[AT_WEBUI_PWD_MAX];
 }TAF_AT_NVIM_WEB_ADMIN_PASSWORD_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_AP_RPT_SRV_URL_STRU
- 结构说明  : en_NV_Item_AP_RPT_SRV_URL(52002) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucApRptSrvUrl[AT_AP_XML_RPT_SRV_URL_STR_LEN];
 }TAF_AT_NVIM_AP_RPT_SRV_URL_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_AP_XML_INFO_TYPE_STRU
- 结构说明  : en_NV_Item_AP_XML_INFO_TYPE(52003) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucApXmlInfoType[AT_AP_NVIM_XML_RPT_INFO_TYPE_STR_LEN];
 }TAF_AT_NVIM_AP_XML_INFO_TYPE_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_AT_NVIM_AP_XML_RPT_FLG_STRU
- 结构说明  : en_NV_Item_AP_XML_RPT_FLAG(52004) 结构
-  1.日    期   : 2013年5月22日
-    作    者   : l00167671
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucApXmlRptFlg;
     VOS_UINT8                           ucReserve[3];
 }TAF_AT_NVIM_AP_XML_RPT_FLG_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_NV_IMS_SWITCH_RAT_RELATION_CFG_STRU
- 结构说明  : en_NV_Item_IMS_SWITCH_RAT_RELATION_CFG(2478) 结构
-  1.日    期   : 2017年8月8日
-    作    者   : l00198894
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucUtranRelationLteFlg;      /* 控制当^IMSSWITCH命令未携带<utran_enable>参数时，此参数值是否与<lte_enable>关联 */

@@ -208,6 +208,8 @@ void lcdkit_parse_platform_dts(struct device_node* np,  void* pdata)
     OF_PROPERTY_READ_U32_RETURN(np, "hw,lcdkit-mipi-clk-t-hs-exit-adjust", &pinfo->mipi.clk_t_hs_exit_adjust);
     OF_PROPERTY_READ_U32_RETURN(np, "hw,lcdkit-mipi-clk-t-hs-zero-adjust", &pinfo->mipi.clk_t_hs_zero_adjust);
     OF_PROPERTY_READ_U32_RETURN(np, "hw,lcdkit-mipi-data-t-hs-trail-adjust", &pinfo->mipi.data_t_hs_trial_adjust);
+    OF_PROPERTY_READ_U32_RETURN(np, "hw,lcdkit-mipi-data-t-hs-prepare-adjust", &pinfo->mipi.data_t_hs_prepare_adjust);
+    OF_PROPERTY_READ_U32_RETURN(np, "hw,lcdkit-mipi-data-t-hs-zero-adjust", &pinfo->mipi.data_t_hs_zero_adjust);
     OF_PROPERTY_READ_S8_RETURN(np, "hw,lcdkit-mipi-data-t-lpx-adjust", &pinfo->mipi.data_t_lpx_adjust);
     OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-platform-esd-support", &g_lcdkit_pri_info.platform_esd_support, 0);
     OF_PROPERTY_READ_U32_DEFAULT(np, "hw,hw,lcdkit-platform-esd-reg", &g_lcdkit_pri_info.platform_esd_reg, 0xc0);
@@ -218,6 +220,8 @@ void lcdkit_parse_platform_dts(struct device_node* np,  void* pdata)
     OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-mipi-hs-wr-to-time", &pinfo->mipi.hs_wr_to_time, 0);
     OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-mipi-phy_update", &pinfo->mipi.phy_m_n_count_update, 0);
     OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-power-off-simut-support", &g_lcdkit_pri_info.power_off_simult_support, 0);
+    OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-mipi-eotp-disable-flag", &pinfo->mipi.eotp_disable_flag, 0);
+    OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-blpwm-input-disable", &pinfo->blpwm_input_disable, 0);
 
     OF_PROPERTY_READ_DIRTYREGION_INFO_RETURN(np, "hw,lcdkit-dirt-left-align", &pinfo->dirty_region_info.left_align);
     OF_PROPERTY_READ_DIRTYREGION_INFO_RETURN(np, "hw,lcdkit-dirt-right-align", &pinfo->dirty_region_info.right_align);
@@ -265,6 +269,7 @@ void lcdkit_parse_platform_dts(struct device_node* np,  void* pdata)
     if (lcdkit_info.panel_infos.esd_support) {
         OF_PROPERTY_READ_U32_DEFAULT(np, "hw,lcdkit-hisi-esd-support", &g_lcdkit_pri_info.esd_support, 0);
         if (g_lcdkit_pri_info.esd_support) {
+            OF_PROPERTY_READ_U8_DEFAULT(np,"hw,lcdkit-panel-esd-expect-value-type",&pinfo->esd_expect_value_type,0);
             lcdkit_parse_dcs_cmds(np, "hw,lcdkit-hisi-esd-reg-command", "hw,lcdkit-hisi-esd-reg-command-state", &g_lcdkit_pri_info.esd_cmds);
             lcdkit_parse_array_data(np, "hw,lcdkit-hisi-esd-value", &g_lcdkit_pri_info.esd_value);
         }

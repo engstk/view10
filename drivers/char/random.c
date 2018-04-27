@@ -854,6 +854,8 @@ void add_input_randomness(unsigned int type, unsigned int code,
 		return;
 
 	last_value = value;
+	if (unlikely(!nonblocking_pool.initialized))
+		pr_notice("random: %s type=%u code=%u value=%u\n", __func__, type, code, value);
 	add_timer_randomness(&input_timer_state,
 			     (type << 4) ^ code ^ (code >> 4) ^ value);
 	trace_add_input_randomness(ENTROPY_BITS(&input_pool));
@@ -946,6 +948,8 @@ void add_interrupt_randomness(int irq, int irq_flags)
 	fast_pool->count = 0;
 
 	/* award one bit for the contents of the fast pool */
+	if (unlikely(!nonblocking_pool.initialized))
+		pr_notice("random: %s irq=%d irq_flags=%d\n", __func__, irq, irq_flags);
 	credit_entropy_bits(r, credit + 1);
 }
 EXPORT_SYMBOL_GPL(add_interrupt_randomness);
@@ -956,6 +960,8 @@ void add_disk_randomness(struct gendisk *disk)
 	if (!disk || !disk->random)
 		return;
 	/* first major is 1, so we get >= 0x200 here */
+	if (unlikely(!nonblocking_pool.initialized))
+		pr_notice("random: %s disk=%08x\n", __func__, disk);
 	add_timer_randomness(disk->random, 0x100 + disk_devt(disk));
 	trace_add_disk_randomness(disk_devt(disk), ENTROPY_BITS(&input_pool));
 }

@@ -381,6 +381,15 @@ error:
 int devfreq_remove_devbw(struct device *dev)
 {
 	struct dev_data *d = dev_get_drvdata(dev);
+	unsigned long freq = 0;
+	int cpu = cpumask_any(&d->cpus);
+
+	find_freq(&d->dp, &freq, 0);
+
+	spin_lock(&d->vote_spinlock);
+	set_ddr_freq(d, cpu, freq);
+	spin_unlock(&d->vote_spinlock);
+
 	devfreq_remove_device(d->df);
 	return 0;
 }
@@ -388,6 +397,15 @@ int devfreq_remove_devbw(struct device *dev)
 int devfreq_suspend_devbw(struct device *dev)
 {
 	struct dev_data *d = dev_get_drvdata(dev);
+	unsigned long freq = 0;
+	int cpu = cpumask_any(&d->cpus);
+
+	find_freq(&d->dp, &freq, 0);
+
+	spin_lock(&d->vote_spinlock);
+	set_ddr_freq(d, cpu, freq);
+	spin_unlock(&d->vote_spinlock);
+
 	return devfreq_suspend_device(d->df);
 }
 

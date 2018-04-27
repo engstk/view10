@@ -448,10 +448,7 @@ static int hisi_pcm_dp_hw_params(struct snd_pcm_substream *substream,
 			goto err_out;
 		}
 
-		if (asp_cfg_is_vr())
-			asp_hdmi_spdif_config(sio_parameters);
-		else
-			asp_hdmi_SIO_config(sio_parameters);
+		asp_hdmi_spdif_config(sio_parameters);
 
 		return 0;
 err_out:

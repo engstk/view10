@@ -125,6 +125,12 @@ static int __sdcardfs_evaluate_real_locked(
 	rcu_read_unlock();
 	if (candidate->d_parent != pte->real.dentry)
 		valid = 0;
+	/* parent dentry shouldn't invalid since referenced */
+	if (unlikely(pte->real.dentry_invalid)) {
+		errln_warn(1, "unexpected invalid parent dentry %p of %p",
+			parent, dentry);
+		valid = 0;
+	}
 	read_unlock(&pte->lock);
 
 	if (valid) {
@@ -187,6 +193,20 @@ _sdcardfs_reactivate_real_locked(
 	/* if the real is still not updated */
 	pivot = __sdcardfs_d_reclaim_alias(real_inode,
 		te->real.dentry, te->real.d_seq);
+
+	{
+		struct inode *inode = d_inode_rcu(dentry);
+		if (unlikely(inode != NULL &&
+			(real_inode->i_mode & S_IFMT) != (inode->i_mode & S_IFMT))) {
+			errln_warn(1, "unexpected dentry %p i_mode : (ino %ld) %o vs (ino %ld) %o",
+				dentry, inode->i_ino, inode->i_mode,
+				real_inode->i_ino, real_inode->i_mode);
+
+			victim = pivot;
+			pivot = NULL;
+		}
+
+	}
 
 #ifdef SDCARDFS_UNDERLAY_MULTI_ALIASES
 	if (pivot != NULL && !S_ISDIR(real_inode->i_mode)) {

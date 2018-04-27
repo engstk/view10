@@ -254,7 +254,7 @@ int rscan_data_upload(uint rstatus, int err_code,
 			break;
 		}
 
-#ifdef RS_DEBUG
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
 		for (index = 0; index <	 RSCAN_LAST; index++) {
 			if (NULL != uevent_envp[index]) {
 				RSLogDebug(TAG, "uevent_envp[%d] is %s", index,

@@ -1,21 +1,4 @@
-/******************************************************************************
 
-  Copyright(C)2008,Hisilicon Co. LTD.
-
- ******************************************************************************
-  File Name       : LPSCommon.h
-  Description     : LPSCommon.h header file
-  History         :
-      1.XiaoJun 58160       2008-11-5   Draft Enact
-      2.xiaoJun 58160       2009-05-19  BJ9D00823 enum PS_MSG_ID_SECTION_ENUM中
-                   增加协议栈使用的空口消息的消息ID的起始值：PS_AIR_MSG_ID_BASE
-      3.xiaojun 58160       2009-05-19  BJ9D00828  AppMmInterface.h中关于路测
-                               的公共定义移植到OmCommon.h中，利于各个模块公共使
-                               用、维护
-      4.xiaojun 58160       2009-06-05  BJ9D01038  L2 OM透明命令特性合入, OM模块
-                               需要同步修改接口
-	  5.wangyue 00151278    2011-07-15 DTS2011062801783: KDF算法修改
-******************************************************************************/
 
 #ifndef __LPSCOMMON_H__
 #define __LPSCOMMON_H__
@@ -111,11 +94,6 @@ BYTE4  消息号:0~255
 
 /* boston add begin */
 
-#if defined(INSTANCE_1)
-#define LPS_MODEM_ID                MODEM_ID_1
-#else
-#define LPS_MODEM_ID                MODEM_ID_0
-#endif
 
 #if (FEATURE_ON == FEATURE_MODEM1_SUPPORT_LTE)
 #define LPS_MAX_MODEM_NUM                2
@@ -182,35 +160,10 @@ typedef VOS_UINT32 LTE_SECU_KEY_INDEX_ENUM_UINT32;
 *****************************************************************************/
 enum LPS_SECU_KEY_INDEX_ENUM
 {
-#if defined(INSTANCE_1)
-    /* 双LTE，modem1 */
-    LTE_SECU_NAS_INTEGRITY_KEY_INDEX                        = I1_LTE_SECU_NAS_INTEGRITY_KEY_INDEX,
-    LTE_SECU_NAS_CIPHER_KEY_INDEX                           = I1_LTE_SECU_NAS_CIPHER_KEY_INDEX,
-    LTE_SECU_PDCP_UP_CIPHER_KEY_INDEX                       = I1_LTE_SECU_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_RRC_INTEGRITY_KEY_INDEX                        = I1_LTE_SECU_RRC_INTEGRITY_KEY_INDEX,
-    LTE_SECU_RRC_CIPHER_KEY_INDEX                           = I1_LTE_SECU_RRC_CIPHER_KEY_INDEX,
-    LTE_SECU_LASTEST_PDCP_UP_CIPHER_KEY_INDEX               = I1_LTE_SECU_LASTEST_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_LRRC_KDF_OUTPUT_INDEX                          = I1_LTE_SECU_LRRC_KDF_OUTPUT_INDEX,
-    LTE_SECU_LMM_KDF_OUTPUT_INDEX                           = I1_LTE_SECU_LMM_KDF_OUTPUT_INDEX,
-    /* DC support */
-    LTE_SECU_SCG_PDCP_UP_CIPHER_KEY_INDEX                   = I1_LTE_SECU_SCG_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_SCG_LASTEST_PDCP_UP_CIPHER_KEY_INDEX           = I1_LTE_SECU_SCG_LASTEST_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_SCG_LRRC_KDF_OUTPUT_INDEX                      = I1_LTE_SECU_SCG_LRRC_KDF_OUTPUT_INDEX,
-#else
     /* 双LTE，modem0 */
     LTE_SECU_NAS_INTEGRITY_KEY_INDEX                        = I0_LTE_SECU_NAS_INTEGRITY_KEY_INDEX,
     LTE_SECU_NAS_CIPHER_KEY_INDEX                           = I0_LTE_SECU_NAS_CIPHER_KEY_INDEX,
-    LTE_SECU_PDCP_UP_CIPHER_KEY_INDEX                       = I0_LTE_SECU_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_RRC_INTEGRITY_KEY_INDEX                        = I0_LTE_SECU_RRC_INTEGRITY_KEY_INDEX,
-    LTE_SECU_RRC_CIPHER_KEY_INDEX                           = I0_LTE_SECU_RRC_CIPHER_KEY_INDEX,
-    LTE_SECU_LASTEST_PDCP_UP_CIPHER_KEY_INDEX               = I0_LTE_SECU_LASTEST_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_LRRC_KDF_OUTPUT_INDEX                          = I0_LTE_SECU_LRRC_KDF_OUTPUT_INDEX,
     LTE_SECU_LMM_KDF_OUTPUT_INDEX                           = I0_LTE_SECU_LMM_KDF_OUTPUT_INDEX,
-    /* DC support */
-    LTE_SECU_SCG_PDCP_UP_CIPHER_KEY_INDEX                   = I0_LTE_SECU_SCG_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_SCG_LASTEST_PDCP_UP_CIPHER_KEY_INDEX           = I0_LTE_SECU_SCG_LASTEST_PDCP_UP_CIPHER_KEY_INDEX,
-    LTE_SECU_SCG_LRRC_KDF_OUTPUT_INDEX                      = I0_LTE_SECU_SCG_LRRC_KDF_OUTPUT_INDEX,
-#endif
     LTE_SECU_KEY_INDEX_BUTT
 };
 typedef VOS_UINT32 LPS_SECU_KEY_INDEX_ENUM_UINT32;
@@ -384,9 +337,7 @@ enum PS_MSG_ID_SECTION_ENUM
     PS_MSG_ID_ESM_TO_ESM_OM_BASE  = PS_MSG_ID_EMM_TO_EMM_OM_BASE + 0x60,
     PS_MSG_ID_ERABM_TO_ERABM_OM_BASE= PS_MSG_ID_ESM_TO_ESM_OM_BASE + 0x20,
 
-    /*DTS2013022506993 软调信息添加 BEGIN*/
     TRRC_DEBUG_MSG_BASE = PS_MSG_ID_ERABM_TO_ERABM_OM_BASE+0x20 ,   /*0x1d15*/
-    /*DTS2013022506993 软调信息添加 END*/
 
     PS_MSG_ID_LNAS_TO_OM_BASE       = TRRC_DEBUG_MSG_BASE + 0x20,
 
@@ -447,13 +398,7 @@ enum PS_MSG_ID_SECTION_ENUM
     PS_MSG_ID_LPSOM_PS_BASE   = PS_ERR_LOG_MSG_ID_BASE,
 
 };
-/*****************************************************************************
- 枚举名    : TL_KPI_MSG_ID_SECTION_ENUM
- 枚举说明  : KPI各模块消息段
- 1.日    期   : 2015年6月3日
-   作    者   : leixiantiao 00258641
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TL_KPI_MSG_ID_SECTION_ENUM
 {
     TL_KPI_MSG_ID_LTE_NAS_BASE = PS_MSG_ID_TL_KPI_BASE,
@@ -464,13 +409,7 @@ enum TL_KPI_MSG_ID_SECTION_ENUM
     TL_KPI_MSG_ID_BUTT
 };
 
-/*****************************************************************************
- 枚举名    : TL_DBG_MSG_ID_SECTION_ENUM
- 枚举说明  : 各模块DEBUG消息段
- 1.日    期   : 2015年8月28日
-   作    者   : leixiantiao 00258641
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TL_DBG_MSG_ID_SECTION_ENUM
 {
     TL_DBG_MSG_ID_LTE_NAS_BASE = PS_MSG_ID_TL_DBG_BASE,
@@ -481,13 +420,7 @@ enum TL_DBG_MSG_ID_SECTION_ENUM
     TL_DBG_MSG_ID_BUTT
 };
 
-/*****************************************************************************
- 枚举名    : TL_PTL_MSG_ID_SECTION_ENUM
- 枚举说明  : PTL各模块消息段
- 1.日    期   : 2015年7月20日
-   作    者   : y00151394
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TL_PTL_MSG_ID_SECTION_ENUM
 {
     TL_PTL_MSG_ID_LTE_NAS_BASE = PS_MSG_ID_TL_PTL_BASE,
@@ -498,13 +431,7 @@ enum TL_PTL_MSG_ID_SECTION_ENUM
     TL_PTL_MSG_ID_BUTT
 };
 
-/*****************************************************************************
- 枚举名    : TL_DT_MSG_ID_SECTION_ENUM
- 枚举说明  : DT各模块消息段
- 1.日    期   : 2015年7月20日
-   作    者   : y00151394
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TL_DT_MSG_ID_SECTION_ENUM
 {
     TL_DT_MSG_ID_LTE_NAS_BASE = PS_MSG_ID_TL_DT_BASE,
@@ -538,6 +465,8 @@ typedef VOS_UINT8 UE_MSG_TYPE_ENUM_UINT8;
  结构名    : UE_FUNC_MODULE_ID_ENUM
  结构说明  : UE侧的模块ID的定义, PS的模块ID范围 [0xF200 -- 0xF800)
 *****************************************************************************/
+//[NV elf编译项目] nv_define编译失败，此处用宏去除
+#ifndef NV_DEFINE
 enum UE_FUNC_MODULE_ID_ENUM
 {
     UE_MODULE_PS_ID             = 0x00,     /*UE的PS侧的统称*/
@@ -589,7 +518,7 @@ enum UE_FUNC_MODULE_ID_ENUM
     UE_MODULE_BACKOFF_ID       = 0xF21a
 };
 typedef VOS_UINT32 UE_FUNC_MODULE_ID_ENUM_UINT32;
-
+#endif
 /*****************************************************************************
  结构名    : UE_APP_MODULE_ID_ENUM
  结构说明  : OM软件的模块ID的定义

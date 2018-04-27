@@ -245,6 +245,9 @@ struct sock_common {
 		u32		skc_tw_snd_nxt; /* struct tcp_timewait_sock */
 	};
 	/* public: */
+    #ifdef CONFIG_HW_DPIMARK_MODULE
+	unsigned int    skc_hwdpi_mark;
+    #endif
 };
 
 #ifdef CONFIG_HW_CROSSLAYER_OPT
@@ -376,6 +379,7 @@ struct sock {
 #define sk_incoming_cpu		__sk_common.skc_incoming_cpu
 #define sk_flags		__sk_common.skc_flags
 #define sk_rxhash		__sk_common.skc_rxhash
+#define sk_hwdpi_mark   __sk_common.skc_hwdpi_mark
 
 	socket_lock_t		sk_lock;
 	struct sk_buff_head	sk_receive_queue;
@@ -419,10 +423,6 @@ struct sock {
 #endif
 #if defined(CONFIG_HUAWEI_BASTET) || defined(CONFIG_HUAWEI_XENGINE)
 	uint8_t acc_state;
-#endif
-
-#ifdef CONFIG_HW_DPIMARK_MODULE
-	unsigned int    sk_hwdpi_mark;
 #endif
 
 #ifdef CONFIG_HW_WIFIPRO
@@ -525,6 +525,9 @@ struct sock {
 		struct nm_dnsp_entry	*sk_nm_dnsp;
 	};
 #endif /* CONFIG_HW_NETWORK_MEASUREMENT */
+#ifdef CONFIG_HUAWEI_XENGINE
+	int			hicom_flag;
+#endif
 };
 
 #ifdef CONFIG_TCP_CONG_BBR
@@ -815,6 +818,10 @@ enum sock_flags {
 		     */
 	SOCK_FILTER_LOCKED, /* Filter cannot be changed anymore */
 	SOCK_SELECT_ERR_QUEUE, /* Wake select on error queue */
+#ifdef CONFIG_MPTCP
+	SOCK_MPTCP, /* MPTCP set on this socket */
+	SOCK_MPTCP_ONCE_SET, /* MPTCP set on this socket once */
+#endif
 };
 
 #define SK_FLAGS_TIMESTAMP ((1UL << SOCK_TIMESTAMP) | (1UL << SOCK_TIMESTAMPING_RX_SOFTWARE))
@@ -1009,6 +1016,18 @@ void sk_clear_memalloc(struct sock *sk);
 
 int sk_wait_data(struct sock *sk, long *timeo, const struct sk_buff *skb);
 
+#ifdef CONFIG_MPTCP
+/* START - needed for MPTCP */
+struct sock *sk_prot_alloc(struct proto *prot, gfp_t priority, int family);
+void sock_lock_init(struct sock *sk);
+
+extern struct lock_class_key af_callback_keys[AF_MAX];
+extern char *const af_family_clock_key_strings[AF_MAX+1];
+
+#define SK_FLAGS_TIMESTAMP ((1UL << SOCK_TIMESTAMP) | (1UL << SOCK_TIMESTAMPING_RX_SOFTWARE))
+/* END - needed for MPTCP */
+#endif
+
 struct request_sock_ops;
 struct timewait_sock_ops;
 struct inet_hashinfo;
@@ -1084,7 +1103,9 @@ struct proto {
 	void			(*rehash)(struct sock *sk);
 	int			(*get_port)(struct sock *sk, unsigned short snum);
 	void			(*clear_sk)(struct sock *sk, int size);
-
+#ifdef CONFIG_MPTCP
+	void			(*copy_sk)(struct sock *nsk, const struct sock *osk);
+#endif
 	/* Keeping track of sockets in use */
 #ifdef CONFIG_PROC_FS
 	unsigned int		inuse_idx;

@@ -41,6 +41,11 @@ void bastet_reconn_init(void)
 
 void bastet_reconn_config(struct sock *sk, int val)
 {
+	if (IS_ERR_OR_NULL(sk)) {
+		BASTET_LOGE("invalid parameter");
+		return;
+	}
+
 	struct bastet_reconn *reconn;
 
 	BASTET_LOGI("val=%d", val);
@@ -96,7 +101,7 @@ static bool check_sk_reconn(struct sk_reconn *reconn,
 {
 	bool ret = false;
 #ifdef CONFIG_SECURITY
-	if (reconn->tmp_sk->sk_security) {
+	if (reconn && reconn->tmp_sk && reconn->tmp_sk->sk_security) {
 		if (memcmp(&reconn->comm, &comm,
 			sizeof(struct bst_sock_comm_prop)) == 0)
 			ret = true;
@@ -168,6 +173,11 @@ static inline bool is_socket_err_close(int err)
 
 void bastet_inet_release(struct sock *sk)
 {
+	if (IS_ERR_OR_NULL(sk)) {
+		BASTET_LOGE("invalid parameter");
+		return;
+	}
+
 	if (sk->reconn && !sk->reconn->err_close)
 		bastet_notify_close(sk, BST_IND_SOCK_NORMAL_CLOSE);
 

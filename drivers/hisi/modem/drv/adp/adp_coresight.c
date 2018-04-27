@@ -93,213 +93,6 @@ struct mdmcp_coresight_device_info
 struct mdmcp_coresight_device_info g_mdmcp_coresight[CPU_NUMS];
 
 
-#include <bsp_sysctrl.h>
-typedef struct modem_sys_cfg
-{
-    void*           mdm_ctrl_sys_virt_addr;
-    unsigned long   mdm_ctrl_sys_phy_addr;
-    unsigned long   mdm_ctrl_sys_mem_size;
-    struct
-    {
-        u32 offset;
-        u32 mdm_dbg_clk_status;
-        u32 mdm_pd_clk_status;
-    }clk;
-    struct
-    {
-        u32 offset;
-        u32 mdm_pd_srst_status;
-        u32 mdm_cpu_srst_status;
-    }rst;
-    struct
-    {
-        u32 offset;
-        u32 mdm_mtcmos_strl_status;
-    }mtcmos;
-}modem_sysctrl_cfg_t;
-
-typedef struct perctrl2
-{
-    void* virt_addr;
-    u32 offset;
-    u32 pclkdbg_clkoff_sys;           /*bit 1*/
-    u32 atclkoff_sys;                 /*bit 7*/
-    u32 pclkdbg_to_modem_clk_off_sys; /*bit 17*/
-    u32 atclk_to_modem_clkoff_sys;    /*bit 16*/
-    u32 modem_cssys_rst_req;          /*bit 18*/
-}PERCTRL2_REG;
-
-modem_sysctrl_cfg_t  g_modem_sysctrl_cfg;
-PERCTRL2_REG g_perctrl2_reg = {0,};
-
-
-int  mdmcp_debug_perctrl2_init(void)
-{
-    char* name = "coresight,extern_dep" ;
-    struct device_node* dev_node;
-
-    dev_node = of_find_compatible_node(NULL, NULL, name);
-    if(NULL == dev_node)
-    {
-        return 0;
-    }
-    g_perctrl2_reg.virt_addr= of_iomap(dev_node,0);
-
-    (void)of_property_read_u32_index(dev_node, "offset", 0,&g_perctrl2_reg.offset);
-    (void)of_property_read_u32_index(dev_node, "pclkdbg_clkoff_sys", 0,&g_perctrl2_reg.pclkdbg_clkoff_sys);
-    (void)of_property_read_u32_index(dev_node, "atclkoff_sys", 0,&g_perctrl2_reg.atclkoff_sys);
-    (void)of_property_read_u32_index(dev_node, "pclkdbg_to_modem_clk_off_sys", 0,&g_perctrl2_reg.pclkdbg_to_modem_clk_off_sys);
-    (void)of_property_read_u32_index(dev_node, "atclk_to_modem_clkoff_sys", 0,&g_perctrl2_reg.atclk_to_modem_clkoff_sys);
-    (void)of_property_read_u32_index(dev_node, "modem_cssys_rst_req", 0,&g_perctrl2_reg.modem_cssys_rst_req);
-
-    return 0;
-
-}
-
-int  mdmcp_debug_get_perctrl2_status(void)
-{
-    u32 status;
-    if(g_perctrl2_reg.virt_addr == NULL)
-    {
-        printk(KERN_ERR"base addr is  null.\r\n");
-        return 0;
-    }
-    status = (u32)readl(g_perctrl2_reg.virt_addr + g_perctrl2_reg.offset);
-    printk("status = 0x%x \n",status);
-    if(!BVAL(status, g_perctrl2_reg.pclkdbg_clkoff_sys))
-    {
-        printk(KERN_ERR"g_perctrl2_reg.pclkdbg_clkoff_sys is 0\n");
-        return -1;
-    }
-    if(!BVAL(status, g_perctrl2_reg.atclkoff_sys))
-    {
-        printk(KERN_ERR"g_perctrl2_reg.atclkoff_sys is 0\n");
-        return -1;
-    }
-    if(!BVAL(status, g_perctrl2_reg.pclkdbg_to_modem_clk_off_sys))
-    {
-        printk(KERN_ERR"g_perctrl2_reg.pclkdbg_to_modem_clk_off_sys is 0\n");
-        return -1;
-    }
-    if(!BVAL(status, g_perctrl2_reg.atclk_to_modem_clkoff_sys))
-    {
-        printk(KERN_ERR"g_perctrl2_reg.atclk_to_modem_clkoff_sys is 0\n");
-        return -1;
-    }
-    if(BVAL(status, g_perctrl2_reg.modem_cssys_rst_req))
-    {
-        printk(KERN_ERR"g_perctrl2_reg.modem_cssys_rst_req is 1\n");
-        return -1;
-    }
-    return 0;
-
-}
-
-int  mdmcp_debug_sysctrl_init(void)
-{
-    struct device_node* sysctrl_node;
-    unsigned int reg_data[2] = {0,};
-    unsigned int rst_data[3] = {0,};
-    char* name = "ap_modem,sysctrl_cfg";
-    unsigned long sz;
-    memset(&g_modem_sysctrl_cfg,'\0',sizeof(g_modem_sysctrl_cfg));
-    sysctrl_node = of_find_compatible_node(NULL, NULL, name);
-    if(sysctrl_node)
-    {
-        sz = 2;
-        if(of_property_read_u32_array(sysctrl_node, "reg", reg_data, sz))
-        {
-            printk(KERN_ERR" cs get dts reg error\n");
-            return -1;
-        }
-        g_modem_sysctrl_cfg.mdm_ctrl_sys_phy_addr  = (reg_data[0]);
-        g_modem_sysctrl_cfg.mdm_ctrl_sys_mem_size  = reg_data[1];
-        g_modem_sysctrl_cfg.mdm_ctrl_sys_virt_addr = bsp_sysctrl_addr_get((void*)g_modem_sysctrl_cfg.mdm_ctrl_sys_phy_addr);
-        sz = 3;
-        if(of_property_read_u32_array(sysctrl_node, "clk", rst_data, sz))
-        {
-            memset(&g_modem_sysctrl_cfg,0,sizeof(g_modem_sysctrl_cfg));
-            printk(KERN_ERR" cs get dts clk error\n");
-            return -1;
-        }
-        g_modem_sysctrl_cfg.clk.offset = (rst_data[0]);
-        g_modem_sysctrl_cfg.clk.mdm_dbg_clk_status = (rst_data[1]);
-        g_modem_sysctrl_cfg.clk.mdm_pd_clk_status = (rst_data[2]);
-
-        memset(rst_data,0,sizeof(rst_data));
-        sz = 3;
-        if(of_property_read_u32_array(sysctrl_node, "reset", rst_data, sz))
-        {
-            memset(&g_modem_sysctrl_cfg,0,sizeof(g_modem_sysctrl_cfg));
-            printk(KERN_ERR" cs get dts reset error\n");
-            return -1;
-        }
-
-        g_modem_sysctrl_cfg.rst.offset = (rst_data[0]);
-        g_modem_sysctrl_cfg.rst.mdm_pd_srst_status = (rst_data[1]);
-        g_modem_sysctrl_cfg.rst.mdm_cpu_srst_status = (rst_data[2]);
-
-        sz = 2;
-        if(of_property_read_u32_array(sysctrl_node, "mtcmos", reg_data, sz))
-        {
-            memset(&g_modem_sysctrl_cfg,0,sizeof(g_modem_sysctrl_cfg));
-            printk(KERN_ERR" cs get dts tcmos error\n");
-            return -1;
-        }
-        g_modem_sysctrl_cfg.mtcmos.offset = (reg_data[0]);
-        g_modem_sysctrl_cfg.mtcmos.mdm_mtcmos_strl_status = (reg_data[1]);
-    }
-
-    return 0;
-}
-
-int  mdmcp_debug_get_sysctrl_status(void)
-{
-    u32 clk;
-    u32 rst;
-    u32 tcmos;
-
-    if(g_modem_sysctrl_cfg.mdm_ctrl_sys_virt_addr == NULL)
-    {
-        printk(KERN_ERR"sys ctrl base addr is null\n");
-        return 0;
-    }
-
-    clk = (u32)readl(g_modem_sysctrl_cfg.mdm_ctrl_sys_virt_addr + g_modem_sysctrl_cfg.clk.offset);
-    rst = (u32)readl(g_modem_sysctrl_cfg.mdm_ctrl_sys_virt_addr + g_modem_sysctrl_cfg.rst.offset);
-    tcmos = (u32)readl(g_modem_sysctrl_cfg.mdm_ctrl_sys_virt_addr + g_modem_sysctrl_cfg.mtcmos.offset);
-
-    printk(KERN_ERR"clk = %x,rst = %x,tcmos = %x\n",clk,rst,tcmos);
-
-    if(!BVAL(clk, g_modem_sysctrl_cfg.clk.mdm_dbg_clk_status))
-    {
-        printk(KERN_ERR"mdm_dbg_clk_status is disable,mdm_dbg_clk_status=0x%x status=0x%x\n",g_modem_sysctrl_cfg.clk.mdm_dbg_clk_status,clk);
-        return -1;
-    }
-    if(!BVAL(clk, g_modem_sysctrl_cfg.clk.mdm_pd_clk_status))
-    {
-        printk(KERN_ERR"mdm_pd_clk_status is disable,bit=0x%x status=0x%x\n",g_modem_sysctrl_cfg.clk.mdm_pd_clk_status,clk);
-        return -1;
-    }
-    if(BVAL(rst, g_modem_sysctrl_cfg.rst.mdm_pd_srst_status))
-    {
-        printk(KERN_ERR"mdm_pd_srst_status is disable,bit=0x%x status =0x%x\n",g_modem_sysctrl_cfg.rst.mdm_pd_srst_status,rst);
-        return -1;
-    }
-    if(BVAL(rst, g_modem_sysctrl_cfg.rst.mdm_cpu_srst_status))
-    {
-        printk(KERN_ERR"mdm_cpu_srst_status is disable,bit=0x%x status =0x%x\n",g_modem_sysctrl_cfg.rst.mdm_cpu_srst_status,rst);
-        return -1;
-    }
-    if(!BVAL(tcmos, g_modem_sysctrl_cfg.mtcmos.mdm_mtcmos_strl_status))
-    {
-        printk(KERN_ERR"mdm_cpu_srst_status is disable,bit=0x%x status = 0x%x",g_modem_sysctrl_cfg.mtcmos.mdm_mtcmos_strl_status,tcmos);
-        return -1;
-    }
-    return 0;
-}
-
-
 static void* get_mdmcp_etb_buf(u32 cpu)
 {
     void* addr;
@@ -541,78 +334,35 @@ static struct of_device_id coresight_match[] = {
     {}/*lint !e785*/
 };
 
-static struct of_device_id coresight_match_es[] = {
-    {
-        .name       = "coresight-tmc",
-        .compatible = "arm,coresight-tmc,cp,es"
-    },/*lint !e785*/
-    {
-        .name       = "cpu-debug",
-        .compatible = "arm,r8,cpu_debug,es"
-    },/*lint !e785*/
-    {}/*lint !e785*/
-};
 int mdmcp_coresight_init(void)
 {
     struct device_node * node;
     struct device_node * child;
 
-    if(bsp_get_version_info()->cses_type == TYPE_ES)
+    /*parse tmc node*/
+    node = of_find_compatible_node(NULL, NULL, coresight_match[0].compatible);
+    if(!node)
     {
-        /*parse tmc node*/
-        node = of_find_compatible_node(NULL, NULL, coresight_match_es[0].compatible);
-        if(!node)
-        {
-            printk(KERN_ERR"can not find %s node!\n",coresight_match_es[0].compatible);
-            return -1;
-        }
+        printk(KERN_ERR"can not find %s node!\n",coresight_match[0].compatible);
+        return -1;
+    }
+    for_each_child_of_node(node, child)
+    {
+        mdmcp_coresight_tmc_probe(child);
+    }
+    node = of_find_compatible_node(NULL, NULL, coresight_match[1].compatible);
+    if(node)
+    {
         for_each_child_of_node(node, child)
         {
-            mdmcp_coresight_tmc_probe(child);
-        }
-
-        node = of_find_compatible_node(NULL, NULL, coresight_match_es[1].compatible);
-        if(node)
-        {
-            for_each_child_of_node(node, child)
-            {
-                mdmcp_cpudebug_probe(child);
-            }
-        }
-        else
-        {
-            printk(KERN_ERR"can not find %s node!\n",coresight_match_es[1].compatible);
+            mdmcp_cpudebug_probe(child);
         }
     }
     else
     {
-        /*parse tmc node*/
-        node = of_find_compatible_node(NULL, NULL, coresight_match[0].compatible);
-        if(!node)
-        {
-            printk(KERN_ERR"can not find %s node!\n",coresight_match[0].compatible);
-            return -1;
-        }
-        for_each_child_of_node(node, child)
-        {
-            mdmcp_coresight_tmc_probe(child);
-        }
-        node = of_find_compatible_node(NULL, NULL, coresight_match[1].compatible);
-        if(node)
-        {
-            for_each_child_of_node(node, child)
-            {
-                mdmcp_cpudebug_probe(child);
-            }
-        }
-        else
-        {
-            printk(KERN_ERR"can not find %s node!\n",coresight_match[1].compatible);
-        }
+        printk(KERN_ERR"can not find %s node!\n",coresight_match[1].compatible);
     }
 
-    (void)mdmcp_debug_perctrl2_init();
-    (void)mdmcp_debug_sysctrl_init();
     printk(KERN_ERR"mdmcp_coresight_init ok\n");
 
     return 0;
@@ -638,11 +388,6 @@ int bsp_coresight_stop_cp(void)
     {
         printk(KERN_ERR"modem cp trace not enable\n");
         return 0;
-    }
-
-    if(mdmcp_debug_get_perctrl2_status()|| mdmcp_debug_get_sysctrl_status()){
-        printk(KERN_ERR"cp coresight is powerdown or cp is pownerdown!\n");
-        return -1;
     }
 
     for(cpu=0 ; cpu<CPU_NUMS ; cpu++)
@@ -695,10 +440,6 @@ void bsp_coresight_save_cp_etb(char* dir_name)
         ret = bsp_write((u32)fd,data,(u32)DUMP_CP_UTRACE_SIZE);
         if(ret != DUMP_CP_UTRACE_SIZE){
             printk(KERN_ERR"write modem cp cpu%d etb data error,ret = 0x%x\n",cpu,ret);
-            ret = bsp_close((u32)fd);
-            if(ret)
-                printk(KERN_ERR"close file error ,ret = 0x%x\n",ret);
-            continue;
         }
         ret = bsp_close((u32)fd);
         if(ret)

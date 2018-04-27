@@ -831,6 +831,69 @@ static inline void ep0_out_start(dwc_otg_core_if_t *core_if,
 #endif
 }
 
+static inline void reset_flush_ep0_dma(dwc_otg_core_if_t *core_if,
+				 dwc_otg_pcd_t *pcd)
+{
+	dwc_otg_dev_if_t *dev_if = core_if->dev_if;
+	deptsiz0_data_t doeptsize0 = {.d32 = 0 };
+	dwc_otg_dev_dma_desc_t *dma_desc;
+	depctl_data_t doepctl = {.d32 = 0 };
+
+#ifdef VERBOSE
+	DWC_DEBUGPL(DBG_PCDV, "%s() doepctl0=%0x\n", __func__,
+		    DWC_READ_REG32(&dev_if->out_ep_regs[0]->doepctl));
+#endif
+
+	doeptsize0.b.supcnt = 3;
+	doeptsize0.b.pktcnt = 1;
+	doeptsize0.b.xfersize = 8 * 3;
+
+	if (core_if->dma_enable) {
+		printk(KERN_ERR "ep0_out_start dma enable\n");
+		if (!core_if->dma_desc_enable) {
+			/** put here as for Hermes mode deptisz register should not be written */
+			DWC_WRITE_REG32(&dev_if->out_ep_regs[0]->doeptsiz,
+					doeptsize0.d32);
+
+			/** @todo dma needs to handle multiple setup packets (up to 3) */
+			DWC_WRITE_REG32(&dev_if->out_ep_regs[0]->doepdma,
+					pcd->setup_pkt_dma_handle);
+		} else {
+			printk("ep0_out_start dma desc enable\n");
+			dev_if->setup_desc_index =
+				(dev_if->setup_desc_index + 1) & 1;
+			dma_desc =
+				dev_if->setup_desc_addr[dev_if->setup_desc_index];
+
+			/** DMA Descriptor Setup */
+			dma_desc->status.b.bs = BS_HOST_BUSY;
+			if (core_if->snpsid >= OTG_CORE_REV_3_00a) {
+				dma_desc->status.b.sr = 0;
+				dma_desc->status.b.mtrf = 0;
+			}
+			dma_desc->status.b.l = 1;
+			dma_desc->status.b.ioc = 1;
+			dma_desc->status.b.bytes = pcd->ep0.dwc_ep.maxpacket;
+			dma_desc->buf = pcd->setup_pkt_dma_handle;
+			dma_desc->status.b.sts = 0;
+			dma_desc->status.b.bs = BS_HOST_READY;
+
+			/** DOEPDMA0 Register write */
+			DWC_WRITE_REG32(&dev_if->out_ep_regs[0]->doepdma,
+					dev_if->dma_setup_desc_addr
+					[dev_if->setup_desc_index]);
+		}
+
+	} else {
+		/** put here as for Hermes mode deptisz register should not be written */
+		DWC_WRITE_REG32(&dev_if->out_ep_regs[0]->doeptsiz,
+				doeptsize0.d32);
+	}
+
+	asm("dsb sy");
+	asm("isb sy");
+
+}
 
 /**
  * This interrupt occurs when a USB Reset is detected. When the USB
@@ -1040,6 +1103,8 @@ int32_t dwc_otg_pcd_handle_usb_reset_intr(dwc_otg_pcd_t *pcd)
 	/* setup EP0 to receive SETUP packets */
 	if (core_if->snpsid <= OTG_CORE_REV_2_94a)
 		ep0_out_start(core_if, pcd);
+	else
+		reset_flush_ep0_dma(core_if, pcd);
 
 	/* Clear interrupt */
 	gintsts.d32 = 0;

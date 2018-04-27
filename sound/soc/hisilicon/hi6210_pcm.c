@@ -1,36 +1,4 @@
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : hi6210_pcm.c
-  版 本 号   : 初稿
-  作    者   : 石旺来 s00212991
-  生成日期   : 2012年7月31日
-  最近修改   :
-  功能描述   : xxxx
-  函数列表   :
-              hi6210_exit
-              hi6210_init
-              hi6210_pcm_close
-              hi6210_pcm_free
-              hi6210_pcm_hw_free
-              hi6210_pcm_hw_params
-              hi6210_pcm_new
-              hi6210_pcm_open
-              hi6210_pcm_pointer
-              hi6210_pcm_prepare
-              hi6210_pcm_trigger
-              hi6210_platform_probe
-              hi6210_platform_remove
-              status_read_proc_hstatus
-              status_write_proc_hstatus
-  修改历史   :
-  1.日    期   : 2012年7月31日
-    作    者   : 石旺来 s00212991
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 /*
 the 2 MACRO should be used seperately
@@ -71,6 +39,10 @@ __DRV_AUDIO_MAILBOX_WORK__   : leave mailbox's work to workqueue
 #ifdef CONFIG_HIFI_MAILBOX
 #include "drv_mailbox_cfg.h"
 //#include "../../../drivers/hisi/hifi_mailbox/mailbox/drv_mailbox_cfg.h"
+#endif
+
+#ifdef CONFIG_HUAWEI_DSM
+#include <dsm_audio/dsm_audio.h>
 #endif
 
 #ifdef CONFIG_HI6XXX_MAILBOX_MULTICORE
@@ -157,7 +129,7 @@ __DRV_AUDIO_MAILBOX_WORK__   : leave mailbox's work to workqueue
 #undef NULL
 #define NULL ((void *)0)
 
-#define ALSA_TIMEOUT_MILLISEC 30
+#define ALSA_TIMEOUT_MILLISEC 40
 
 PCM_DMA_BUF_CONFIG  g_pcm_dma_buf_config[PCM_DEVICE_MAX][PCM_STREAM_MAX] =
 {
@@ -541,8 +513,12 @@ static int hi6210_mailbox_send_data(void *pmsg_body, unsigned int msg_len,
 
 	ret = DRV_MAILBOX_SENDMAIL(MAILBOX_MAILCODE_ACPU_TO_HIFI_AUDIO, pmsg_body, msg_len);
 	if (MAILBOX_OK != ret) {
-		if (err_count % 50 == 0)
+		if (err_count % 50 == 0) {
+#ifdef CONFIG_HUAWEI_DSM
+			audio_dsm_report_info(AUDIO_CODEC, DSM_PCM_DRV_UPDATE_PCM_BUFF_DELAY, "update pcm buffer delay");
+#endif
 			HiLOGE("audio", "Hi6210_pcm","mailbox ap to hifi fail,ret=%d, maybe ap is abnormal\n", ret);
+		}
 		err_count++;
 	} else {
 		err_count = 0;
@@ -638,10 +614,11 @@ void snd_pcm_print_timeout(struct snd_pcm_substream *substream, unsigned int tim
 {
 	long delay_time;
 	long curr_time;
+	static unsigned int timeout_count[SND_TIMEOUT_TYPE_MAX] = {0};
 	const char *timeout_str[SND_TIMEOUT_TYPE_MAX] = {
 		"pcm write interval timeout",
 		"pcm write proc timeout",
-		"pcm read interval timeout"
+		"pcm read interval timeout",
 		"pcm read proc timeout"};
 
 	if (hifi_misc_get_platform_type() != HIFI_DSP_PLATFORM_ASIC) {
@@ -661,13 +638,19 @@ void snd_pcm_print_timeout(struct snd_pcm_substream *substream, unsigned int tim
 	delay_time = curr_time - substream->runtime->pre_time;
 
 	if (delay_time > ALSA_TIMEOUT_MILLISEC && (substream->runtime->pre_time != 0)) {
-		logw("%s, delay time %ld ms.\n", timeout_str[timeout_type], delay_time);
+		timeout_count[timeout_type]++;
+
+		if ((timeout_count[timeout_type] == 1) || (timeout_count[timeout_type] % 20 == 0)) {
+			logw("%s, delay time: %ld ms.\n", timeout_str[timeout_type], delay_time);
+        }
+	} else {
+		timeout_count[timeout_type] = 0;
 	}
 
 	if (timeout_type == SND_TIMEOUT_TYPE_WRITE_INTERVAL
 		|| timeout_type == SND_TIMEOUT_TYPE_READ_INTERVAL) {
 		substream->runtime->pre_time = curr_time;
-    }
+	}
 }
 EXPORT_SYMBOL(snd_pcm_print_timeout);
 
@@ -682,6 +665,28 @@ void snd_pcm_reset_pre_time(struct snd_pcm_substream *substream)
 }
 EXPORT_SYMBOL(snd_pcm_reset_pre_time);
 
+static int hi6210_pcm_check_substream(struct snd_pcm_substream * substream)
+{
+	if (NULL == substream) {
+		loge("substream from hifi is NULL\n");
+		return -1;
+	}
+
+	if (NULL == substream->runtime) {
+		loge("substream runtime is NULL\n");
+		return -1;
+	}
+
+	if (pdata.pcm_rtd_playback.substream != substream
+		&& pdata.pcm_rtd_capture.substream != substream
+		&& pdata.pcm_rtd_direct_playback.substream != substream
+		&& pdata.pcm_rtd_fast_playback.substream != substream) {
+		loge("substream from hifi is invalid\n");
+		return -1;
+	}
+
+	return 0;
+}
 /*****************************************************************************
 	function name  : hi6210_notify_recv_isr
 	Description  : recv data and process
@@ -723,14 +728,8 @@ static irq_rt_t hi6210_notify_recv_isr(void *usr_para, void *mail_handle, unsign
 
 #ifdef __DRV_AUDIO_MAILBOX_WORK__
 	substream = INT_TO_ADDR(mail_buf.substream_l32,mail_buf.substream_h32);
-	if (NULL == substream) {
-		loge("substream from hifi is NULL\n");
+	if (hi6210_pcm_check_substream(substream))
 		return IRQ_NH_OTHERS;
-	}
-	if (NULL == substream->runtime) {
-		loge("substream runtime is NULL\n");
-		return IRQ_NH_OTHERS;
-	}
 
 	prtd = (struct hi6210_runtime_data *)substream->runtime->private_data;
 	if (NULL == prtd) {
@@ -766,6 +765,9 @@ static irq_rt_t hi6210_notify_recv_isr(void *usr_para, void *mail_handle, unsign
 	return ret;
 #else
 	substream = INT_TO_ADDR(mail_buf.substream_l32,mail_buf.substream_h32);
+	if (hi6210_pcm_check_substream(substream))
+		return IRQ_NH_OTHERS;
+
 	switch(mail_buf.msg_type)
 	{
 	case HI_CHN_MSG_PCM_PERIOD_ELAPSED:

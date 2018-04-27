@@ -360,7 +360,7 @@ static int tps65132_probe(struct i2c_client *client, const struct i2c_device_id 
 	if (nRet > 0) {
 		pr_info("tps65132 inited needn't reset value\n");
 	} else if (nRet < 0) {
-		pr_err("tps65132 I2C read fail\n");
+		pr_err("tps65132 I2C read not success\n");
 		retval = -ENODEV;
 		goto failed_2;
 	} else {

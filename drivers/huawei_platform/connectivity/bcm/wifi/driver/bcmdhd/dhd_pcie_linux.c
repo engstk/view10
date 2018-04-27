@@ -1537,6 +1537,7 @@ dhdpcie_bus_request_irq(struct dhd_bus *bus)
 #ifdef HW_WIFI_SHUTDOWN
 #ifdef HW_PCIE_STABILITY
 extern void dhdpcie_advertise_bus_cleanup(dhd_pub_t	 *dhdp);
+extern void dhd_devwake_release(dhd_pub_t *dhdp);
 #endif
 void dhdpcie_shutdown(dhd_pub_t *dhd_pub) {
 	unsigned long flags;
@@ -1546,6 +1547,9 @@ void dhdpcie_shutdown(dhd_pub_t *dhd_pub) {
 	DHD_GENERAL_LOCK(dhd_pub, flags);
         dhd_pub->hang_report = FALSE;
 	DHD_GENERAL_UNLOCK(dhd_pub, flags);
+#ifdef DHD_DEVWAKE_EARLY
+        dhd_devwake_release(dhd_pub);
+#endif /* DHD_DEVWAKE_EARLY */
 	/* Wait for all actions finished. */
 	if (dhd_pub->busstate != DHD_BUS_DOWN) {
 		dhdpcie_advertise_bus_cleanup(dhd_pub);

@@ -14,7 +14,8 @@
 
 //#define LCD_DEBUG_BUF	            (1024)
 //#define LCD_PARAM_BUF	            (256)
-#define LCDKIT_MAX_PARAM_NUM        (25)
+#define LCDKIT_MAX_PARAM_NUM        (256)
+#define LCDKIT_MAX_PARAM_BUF        (256)
 
 #define LCDKIT_OPER_READ            (1)
 #define LCDKIT_OPER_WRITE           (2)
@@ -146,7 +147,8 @@ struct lcdkit_debug
     int lcdkit_panel_vsn;
 
     int lcdkit_ic_mipi_reg;    // read register
-    int lcdkit_ic_mipi_value;  // read value
+    int lcdkit_ic_mipi_value[LCDKIT_MAX_PARAM_BUF];  // read value
+    int lcdkit_g_param_num;
 
     //struct platform_device*
     void* lcdkit_ctrl_pdev;

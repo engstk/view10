@@ -217,7 +217,7 @@ static int hw_mp3331_flash_mode(struct hw_flash_ctrl_t *flash_ctrl, int data)
 	}
 	else
 	{
-		if( data*10 > MP3331_FLASH_MAX_CUR_LEV * MP3331_CUR_STEP_LEV){
+		if( data > MP3331_FLASH_MAX_CUR_LEV * MP3331_CUR_STEP_LEV / 10){
 		      current_level = MP3331_FLASH_DEFAULT_CUR_LEV;
 		}
 		else{
@@ -269,7 +269,7 @@ static int hw_mp3331_torch_mode(struct hw_flash_ctrl_t *flash_ctrl, int data)
 	}
 	else
 	{
-		if( data*10 > MP3331_TORCH_MAX_CUR_LEV * MP3331_CUR_STEP_LEV){
+		if( data > MP3331_TORCH_MAX_CUR_LEV * MP3331_CUR_STEP_LEV / 10){
 		      current_level = MP3331_TORCH_MAX_CUR_LEV;
 		}
 		else{

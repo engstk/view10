@@ -81,6 +81,7 @@ spinlock_t pix_lock = __SPIN_LOCK_UNLOCKED("camerafs");
 #define LDO_NUM_MAX 6
 #define LDO_RUN_COUNT 20
 #define LDO_NAME_LEN 32
+#define LDO_DROP_CURRENT_COUNT 2
 enum
 {
     REAR_POS = 0,
@@ -393,6 +394,9 @@ struct device_attribute *attr, const char *buf, size_t count)
     int i, j= 0;
     int sum_cur = 0;
     int cur_val = 0;
+    int drop_count = LDO_DROP_CURRENT_COUNT;
+    int min_cur = 0;
+    int max_cur = 0;
     cam_ldo *p_ldo = NULL;
     mutex_lock(&ldo_lock);
     if(buf == NULL){
@@ -417,9 +421,19 @@ struct device_attribute *attr, const char *buf, size_t count)
         for(j=0; j<LDO_RUN_COUNT; j++){
             cur_val = hisi_adc_get_current(p_ldo->ldo_channel[i]);
             if(cur_val < 0){
+                cam_err("%s ldo read data error cur_val = %d\n", __func__, cur_val);
                 sum_cur = -1;
                 break;
             }else{
+                if(j==0) {
+                    min_cur = cur_val;
+                    max_cur = cur_val;
+                }else {
+                    if(min_cur > cur_val)
+                        min_cur = cur_val;
+                    if(max_cur < cur_val)
+                        max_cur = cur_val;
+                }
                 sum_cur = sum_cur + cur_val;
             }
             msleep(5);
@@ -427,7 +441,7 @@ struct device_attribute *attr, const char *buf, size_t count)
         if(sum_cur == -1){
             p_ldo->ldo_current[i] = sum_cur;
         }else{
-            p_ldo->ldo_current[i] = sum_cur/LDO_RUN_COUNT;
+            p_ldo->ldo_current[i] = (sum_cur-min_cur-max_cur)/(LDO_RUN_COUNT-drop_count);
         }
     }
     mutex_unlock(&ldo_lock);

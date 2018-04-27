@@ -44,6 +44,8 @@ typedef enum {
 typedef enum {
 	KIRIN_970_ES,
 	KIRIN_970_CS,
+	HIVCODECV300,
+	HIVCODECV210,
 	KIRIN_BUTT,
 } KIRIN_PLATFORM_E;
 
@@ -85,6 +87,17 @@ static HI_S32 omxvdec_get_file_index(struct file *file)
 	return index;
 }
 
+static ssize_t omxvdec_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+#ifdef USER_DISABLE_VDEC_PROC
+	return snprintf(buf, PAGE_SIZE, "0x%pK\n", (void *)(uintptr_t)gSmmuPageBase); /* unsafe_function_ignore: snprintf */
+#else
+	return 0;
+#endif
+}
+
+static DEVICE_ATTR(omxvdec_misc, 0444, omxvdec_show, NULL);
+
 static HI_S32 omxvdec_setup_cdev(OMXVDEC_ENTRY *omxvdec, const struct file_operations *fops)
 {
 	HI_S32 rc;
@@ -111,17 +124,25 @@ static HI_S32 omxvdec_setup_cdev(OMXVDEC_ENTRY *omxvdec, const struct file_opera
 		goto unregister_region;
 	}
 
+	rc = device_create_file(dev, &dev_attr_omxvdec_misc);
+	if (rc) {
+		dprint(PRN_FATAL, "%s, create device file failed\n", __func__);
+		goto dev_destroy;
+	}
+
 	cdev_init(&omxvdec->cdev, fops);
 	omxvdec->cdev.owner = THIS_MODULE;
 	omxvdec->cdev.ops = fops;
 	rc = cdev_add(&omxvdec->cdev, g_OmxVdecDevNum, 1);
 	if (rc < 0) {
 		dprint(PRN_FATAL, "%s call cdev_add failed, rc : %d\n", __func__, rc);
-		goto dev_destroy;
+		goto file_close;
 	}
 
 	return HI_SUCCESS;
 
+file_close:
+	device_remove_file(dev, &dev_attr_omxvdec_misc);
 dev_destroy:
 	device_destroy(g_OmxVdecClass, g_OmxVdecDevNum);
 unregister_region:
@@ -140,6 +161,7 @@ static HI_S32 omxvdec_cleanup_cdev(OMXVDEC_ENTRY *omxvdec)
 		return HI_FAILURE;
 	}
 
+	device_remove_file(omxvdec->device, &dev_attr_omxvdec_misc);
 	cdev_del(&omxvdec->cdev);
 	device_destroy(g_OmxVdecClass, g_OmxVdecDevNum);
 	unregister_chrdev_region(g_OmxVdecDevNum, 1);
@@ -377,6 +399,7 @@ static long omxvdec_ioctl_common(struct file *file, unsigned int cmd, unsigned l
 		break;
 
 	case VDEC_IOCTL_VDM_PROC:
+		memset(&vdm_state_reg, 0, sizeof(vdm_state_reg));/* unsafe_function_ignore: memset */
 		CHECK_PARA_SIZE_RETURN(sizeof(vdm_reg_cfg), vdec_msg.in_size, "VDEC_IOCTL_VDM_PROC_IN");
 		CHECK_PARA_SIZE_RETURN(sizeof(vdm_state_reg), vdec_msg.out_size, "VDEC_IOCTL_VDM_PROC_OUT");
 		if (copy_from_user(&vdm_reg_cfg, vdec_msg.in, sizeof(vdm_reg_cfg))) {
@@ -507,6 +530,16 @@ static HI_BOOL omxvdec_device_idle(KIRIN_PLATFORM_E plt_frm)
 		if (pctrl)
 			idle = readl(pctrl) & 0x40000; //b[18]
 		break;
+	case HIVCODECV300 :
+		pctrl  = (HI_U32 *)ioremap(PCTRL_PERI_SATA0, 4);
+		if (pctrl)
+			idle = readl(pctrl) & 0x40000; //b[18]
+		break;
+	case HIVCODECV210 :
+		pctrl  = (HI_U32 *)ioremap(PCTRL_PERI_SATA0, 4);
+		if (pctrl)
+			idle = readl(pctrl) & 0x20000; //b[17]
+		break;
 	default :
 		dprint(PRN_ERROR,  "unkown platform %d\n", plt_frm);
 		break;
@@ -521,10 +554,26 @@ static HI_BOOL omxvdec_device_idle(KIRIN_PLATFORM_E plt_frm)
 	pctrl = HI_NULL;
 	return ((idle != 0) ? HI_TRUE : HI_FALSE); /* [false alarm] */
 }
-
-static HI_S32 omxvdec_probe(struct platform_device *pltdev)
+static HI_S32 omxvdec_device_probe(struct platform_device *pltdev)
 {
-	HI_S32 ret;
+	HI_S32 ret = HI_FAILURE;
+
+#ifdef PLATFORM_HIVCODECV300
+	HI_U32 fpga_es = 0;
+	struct device *dev = &pltdev->dev;
+
+	of_property_read_u32(dev->of_node, "fpga_flag_es", &fpga_es);
+	if (fpga_es == 1) {
+		dprint(PRN_ALWS, "HiVCodecV300 es fpga\n");
+		if (omxvdec_device_idle(HIVCODECV300) == HI_FALSE) {
+			dprint(PRN_ERROR,  "vdec is not exist\n");
+			return ret;
+		}
+	} else {
+		dprint(PRN_ALWS, "not HiVCodecV300 es fpga\n");
+	}
+	ret = HI_SUCCESS;
+#endif
 
 #ifdef PLATFORM_KIRIN970
 	HI_U32 fpga_cs = 0;
@@ -537,18 +586,51 @@ static HI_S32 omxvdec_probe(struct platform_device *pltdev)
 		dprint(PRN_ALWS, "boston es fpga\n");
 		if (omxvdec_device_idle(KIRIN_970_ES) == HI_FALSE) {
 			dprint(PRN_ERROR,  "vdec is not exist\n");
-			return HI_FAILURE;
+			return ret;
 		}
 	} else if (fpga_cs == 1) {
 		dprint(PRN_ALWS, "boston cs fpga\n");
 		if (omxvdec_device_idle(KIRIN_970_CS) == HI_FALSE) {
 			dprint(PRN_ERROR,  "vdec is not exist\n");
-			return HI_FAILURE;
+			return ret;
 		}
 	} else {
 		dprint(PRN_ALWS, "not boston cs/es fpga\n");
+		ret = HI_SUCCESS;
 	}
+	ret = HI_SUCCESS;
 #endif
+
+#ifdef PLATFORM_HIVCODECV210
+	HI_U32 fpga = 0;
+	struct device *dev = &pltdev->dev;
+
+	if (of_property_read_u32(dev->of_node, "vdec_fpga", &fpga))
+	{
+		printk(KERN_INFO "read failed, but vdec has defualt value\n");
+	}
+
+	if (fpga == 1) {
+		printk(KERN_INFO "HiVCodecV210 fpga\n");
+		if (!omxvdec_device_idle(HIVCODECV210)) {
+			printk(KERN_ERR "vdec is not exist\n");
+		}
+	} else {
+		printk(KERN_INFO "not HiVCodecV210 fpga\n");
+	}
+	ret = HI_SUCCESS;
+#endif
+
+	return ret;
+}
+static HI_S32 omxvdec_probe(struct platform_device *pltdev)
+{
+	HI_S32 ret;
+
+	if (HI_FAILURE == omxvdec_device_probe(pltdev))
+	{
+		return HI_FAILURE;
+	}
 
 	if (gIsDeviceDetected == HI_TRUE) {
 		dprint(PRN_DBG, "Already probe omxvdec\n");

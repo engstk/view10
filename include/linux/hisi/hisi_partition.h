@@ -53,6 +53,7 @@ enum {
 
 /*partition macro definition*/
 #define PART_XLOADER                   "xloader"
+#define PART_XLOADER_INSE           "xloader_inse"
 #define PART_PTABLE                    "ptable"
 #define PART_VRL                       "vrl"
 #define PART_VRL_BACKUP                "vrl_backup"
@@ -112,6 +113,7 @@ enum {
 #define PART_RESERVED8                 "reserved8"
 #define PART_RESERVED9                 "reserved9"
 #define PART_RESERVED10                 "reserved10"
+#define PART_RESERVED11                 "reserved11"
 #define PART_HHEE                 "hhee"
 #define PART_HHEE_A                 "hhee_a"
 #define PART_ISP_BOOT                  "isp_boot"
@@ -132,7 +134,9 @@ enum {
 #define PART_PTABLE_LU5                "ptable_lu5"
 #define PART_PTABLE_LU6                "ptable_lu6"
 #define PART_XLOADER_A                 "xloader_a"
+#define PART_XLOADER_INSE_A           "xloader_inse_a"
 #define PART_XLOADER_B                 "xloader_b"
+#define PART_XLOADER_INSE_B           "xloader_inse_b"
 #define PART_PTABLE_ENHANCED           "ptable_enhanced"
 #define PART_PTABLE_PROTECT_A          "ptable_protect_a"
 #define PART_PTABLE_PROTECT_B          "ptable_protect_b"
@@ -221,4 +225,9 @@ enum {
 #define PART_RECOVERY_VBMETA_A        "recovery_vbmeta_a"
 #define PART_ERECOVERY_VBMETA         "erecovery_vbmeta"
 #define PART_ERECOVERY_VBMETA_A       "erecovery_vbmeta_a"
+#define PART_FLASH_AGEING             "flash_ageing"
+#define PART_ENG_SYSTEM_A             "eng_system_a"
+#define PART_ENG_VENDOR_A             "eng_vendor_a"
+#define PART_ENG_SYSTEM               "eng_system"
+#define PART_ENG_VENDOR               "eng_vendor"
 #endif

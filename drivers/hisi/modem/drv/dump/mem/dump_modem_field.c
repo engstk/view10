@@ -47,6 +47,7 @@
  */
 
 #include <product_config.h>
+#include "securec.h"
 #include "bsp_dump_mem.h"
 #include "dump_modem_field.h"
 #include "dump_modem_area.h"
@@ -118,14 +119,14 @@ s32 dump_get_cp_save_done(void)
         return BSP_ERROR;
     }
     /*coverity[secure_coding]*/
-    memcpy(&flag,(u32*)(((dump_area_head_t*)(area_info.vaddr))->version),sizeof(u32));
+    memcpy_s(&flag,sizeof(flag),(u32*)(((dump_area_head_t*)(area_info.vaddr))->version),sizeof(flag));
 
     /*lint -e650 -esym(650,*)*/
     if((flag == DUMP_SAVE_SUCCESS ))
     {
         return BSP_OK;
     }
-    /*lint -e650 +esym(650,*)*/    
+    /*lint -e650 +esym(650,*)*/
 
     return BSP_ERROR;
 }
@@ -160,7 +161,7 @@ u8 * bsp_dump_get_field_addr(u32 field_id)
     }
     /*根据area id查找对应area 基地址*/
     /*coverity[secure_coding]*/
-    memset(&area_info,0,sizeof(area_info));
+    memset_s(&area_info,sizeof(area_info),0,sizeof(area_info));
     if(dump_get_area_info((DUMP_AREA_ID)area_id,&area_info))
     {
         dump_fetal("get area info error\n");
@@ -332,7 +333,7 @@ u8 * bsp_dump_register_field(u32 field_id, char * name, void * virt_addr, void *
     {
         self = (struct dump_field_self_info_s*)ret;
         self->magic_num = DUMP_FIELD_SELF_MAGICNUM;
-        self->phy_addr  = (uintptr_t)phy_addr;
+        self->phy_addr  = phy_addr;
         self->virt_addr  = virt_addr;
         self->reserved  = 0;
     }
@@ -377,7 +378,7 @@ void bsp_dump_save_self_addr(void)
         {
             self_virt = self->virt_addr;
             /*coverity[secure_coding]*/
-            memcpy(self,self_virt,area_info->fields[i].length);
+            memcpy_s(self,area_info->fields[i].length,self_virt,area_info->fields[i].length);
         }
     }
     spin_unlock_irqrestore(&g_st_field_ctrl.lock, flags);
@@ -411,7 +412,7 @@ s32 bsp_dump_field_init(void)
 
     spin_lock_init(&g_st_field_ctrl.lock);
 
-    memset(&area_info,0,sizeof(struct dump_area_mntn_addr_info_s));
+    memset_s(&area_info,sizeof(area_info),0,sizeof(area_info));
 
     if(dump_get_area_info(CURRENT_AREA,&area_info))
     {
@@ -433,10 +434,10 @@ s32 bsp_dump_field_init(void)
     g_st_field_ctrl.free_offset    = sizeof(dump_area_t);
     g_st_field_ctrl.free_length    = g_st_field_ctrl.total_length - g_st_field_ctrl.free_offset;
     /*coverity[secure_coding]*/
-    memset(g_st_field_ctrl.virt_area_addr,0,g_st_field_ctrl.total_length);
+    memset_s(g_st_field_ctrl.virt_area_addr,g_st_field_ctrl.total_length,0,g_st_field_ctrl.total_length);
     g_st_field_ctrl.virt_area_addr->area_head.magic_num = DUMP_AREA_MAGICNUM;
     /*coverity[secure_coding]*/
-    memcpy(g_st_field_ctrl.virt_area_addr->area_head.name,CURRENT_AREA_NAME,strlen(CURRENT_AREA_NAME));
+    memcpy_s(g_st_field_ctrl.virt_area_addr->area_head.name,sizeof(g_st_field_ctrl.virt_area_addr->area_head.name),CURRENT_AREA_NAME,strlen(CURRENT_AREA_NAME));
     g_st_field_ctrl.virt_area_addr->area_head.field_num = 0;
 
     dump_fetal("virt_area_addr = 0x%p phy_area_addr = 0x%p total_length = 0x%x free_offset = 0x%x free_length=0x%x\n", \
@@ -569,7 +570,7 @@ void dump_show_field(void)
     {
         used_size = 0;
         /*coverity[secure_coding]*/
-        memset(&area_info,0,sizeof(struct dump_area_mntn_addr_info_s));
+        memset_s(&area_info,sizeof(area_info),0,sizeof(area_info));
         if(dump_get_area_info((DUMP_AREA_ID)i,&area_info))
         {
             continue;
@@ -599,4 +600,8 @@ void dump_show_field(void)
 }
 
 arch_initcall(bsp_dump_mem_init);
+EXPORT_SYMBOL_GPL(bsp_dump_register_field);
+EXPORT_SYMBOL_GPL(bsp_dump_get_field_addr);
+EXPORT_SYMBOL(dump_show_field);
+
 

@@ -115,9 +115,7 @@
 /* 双卡双待项目中空口消息与trans消息区分modem0和modem1 */
 #define NAS_OM_FUNCTION_TYPE_MODEM_MASK   (0xc0)
 #define NAS_OM_FUNCTION_TYPE_VALUE_MASK   (0x3f)
-/* Added by z00301431 for OM融合, 2015-6-27 begin */
 #define NAS_MAX_TIMER_EVENT               (100)
-/* Added by z00301431 for OM融合, 2015-6-27 end */
 
 /*****************************************************************************
   3 枚举定义
@@ -205,11 +203,9 @@ typedef enum
     NAS_OM_EVENT_STK_ACCESS_TECHNOLOGY_CHANGE_EVENT = 73,
     NAS_OM_EVENT_STK_NETWORK_SEARCH_MODE_CHANGE_EVENT   = 74,
 
-    /* added  by l00167671 for v9r1 dcm logger可维可测项目, 2013-06-27, begin */
     NAS_OM_EVENT_TIMER_OPERATION_START      = 75,
     NAS_OM_EVENT_TIMER_OPERATION_STOP       = 76,
     NAS_OM_EVENT_TIMER_OPERATION_EXPIRED    = 77,
-    /* added  by l00167671 for v9r1 dcm logger可维可测项目, 2013-06-27, end */
 
     /* Added by z60575 for PA_STAR, 2013-7-19 begin */
     NAS_OM_EVENT_PA_STAR_ABNORMAL           = 78,
@@ -230,6 +226,7 @@ typedef enum
     NAS_OM_EVENT_BASTET_SMS_BARRED          = 90,
     NAS_OM_EVENT_RADIO_RESOURCE_CHECK_EXCEPTION          = 91,
 
+    NAS_OM_EVENT_SEARCHED_PLMN_NUM_MAX = 92,
     NAS_OM_EVENT_ID_BUTT
 }NAS_OM_EVENT_ID_ENUM;
 
@@ -699,14 +696,7 @@ typedef struct
 
 #define NAS_OM_DATA_PTR_LEN          4                                          /* NAS_OM之间传输数据的指针长度*/
 
-/* Modified by wx270776 for OM融合, 2015-7-25, begin */
-/*****************************************************************************
- 结构名    : ID_NAS_OM_INQUIRE_STRU
- 结构说明  : OM发给NAS的REQ消息结构
- 1.日    期   : 2015年07月23日
-   作    者   : wx270776
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -717,29 +707,15 @@ typedef struct
     VOS_UINT32                          ulSN;
     VOS_UINT8                           aucData[NAS_OM_DATA_PTR_LEN];           /* 传输的消息内容                         */
 }ID_NAS_OM_INQUIRE_STRU;
-/* Modified by wx270776 for OM融合, 2015-7-25, end */
 
-/* Added by z00301431 for OM融合, 2015-6-27 begin */
-/*****************************************************************************
- 结构名    : OAM_MMA_TIMER_REPORT_CFG_IND_STRU
- 结构说明  : OAM发给MMA的TIMER OTA上报事件 配置信息
- 1.日    期   : 2013年06月20日
-   作    者   : l00167671
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulItems;
     VOS_UINT32                          aulTimerMsg[NAS_MAX_TIMER_EVENT];
 }NAS_TIMER_EVENT_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : NAS_OM_CONFIG_TIMER_REPORT_REQ_STRU
- 结构说明  : OAM发给MMA的TIMER OTA上报事件 配置信息
- 1.日    期   : 2015年06月27日
-   作    者   : z00301431
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -753,16 +729,8 @@ typedef struct
     VOS_UINT32                          ulCommand;
     NAS_TIMER_EVENT_INFO_STRU           stTimerMsg;
 }NAS_OM_CONFIG_TIMER_REPORT_REQ_STRU;
-/* Added by z00301431 for OM融合, 2015-6-27 end */
 
-/* Added by wx270776 for OM融合, 2015-7-14, begin */
-/*****************************************************************************
- 结构名    : NAS_OM_CONFIG_TIMER_REPORT_CNF_STRU
- 结构说明  : MMC回复OM TIMER OTA上报事件 配置信息
- 1.日    期   : 2015年7月14日
-   作    者   : wx270776
-   修改内容   : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -773,11 +741,9 @@ typedef struct
     VOS_UINT32                          ulTimeStamp;
     VOS_UINT32                          ulSN;
 }NAS_OM_CONFIG_TIMER_REPORT_CNF_STRU;
-/* Added by wx270776 for OM融合, 2015-7-14, end */
 
 #define NAS_OM_DATA_OFFSET              12                                      /* usLength下一字节到aucData的偏移*/
 
-/* Modified by wx270776 for OM融合, 2015-7-25, begin */
 typedef struct
 {
     VOS_MSG_HEADER
@@ -788,11 +754,9 @@ typedef struct
     VOS_UINT32                          ulSN;                             /* 工具ID，用于支持多工具，由工具定义，UE侧原值返回即可 */
     VOS_UINT8                           aucData[NAS_OM_DATA_PTR_LEN];                             /* 传输的消息内容                         */
 }ID_NAS_OM_CNF_STRU;
-/* Modified by wx270776 for OM融合, 2015-7-25, end */
 
 
 /*OTA相关*/
-/* Modified by wx270776 for OM融合, 2015-7-25, begin */
 typedef struct
 {
     VOS_MSG_HEADER
@@ -805,10 +769,8 @@ typedef struct
 
     VOS_UINT32                          ulOnOff;                                /* 0 - 停止上报 1 - 开始上报 */
 }OM_NAS_OTA_REQ_STRUCT;
-/* Modified by wx270776 for OM融合, 2015-7-25, end */
 
 
-/* Modified by wx270776 for OM融合, 2015-7-25, begin */
 typedef struct
 {
     VOS_MSG_HEADER
@@ -821,9 +783,7 @@ typedef struct
 
     VOS_UINT32                          ulErrCode;                              /* 传输的消息内容 */
 }NAS_OM_OTA_CNF_STRUCT;
-/* Modified by wx270776 for OM融合, 2015-7-25, end */
 
-/* Modified by wx270776 for OM融合, 2015-7-25, begin */
 typedef struct
 {
     VOS_UINT32    ulModule;
@@ -833,7 +793,27 @@ typedef struct
     VOS_UINT32    ulLength;
     VOS_UINT8     aucData[NAS_OM_DATA_PTR_LEN];
 }NAS_OM_OTA_IND_STRUCT;
-/* Modified by wx270776 for OM融合, 2015-7-25, end */
+
+typedef struct
+{
+    VOS_UINT32                          ulPid;
+    VOS_UINT32                          ulMsgLen;
+    MODEM_ID_ENUM_UINT16                enModemId;
+    VOS_UINT16                          usMsgID;
+    VOS_UINT8                           ucUpDown;
+    VOS_UINT8                           aucReserve[3];
+    VOS_UINT8                          *pucMsg;
+}NAS_OM_OTA_SEND_AIR_MSG_TO_OM;
+
+#define NAS_OM_OTA_FILL_SEND_AIR_MSG_TO_OM_STRU(pSendMsg, ulPidPara, usMsgIDPara, ucUpDownPara, ulMsgLenPara, pucMsgPara)    \
+{ \
+    (pSendMsg)->ulPid        = ulPidPara; \
+    (pSendMsg)->enModemId    = NAS_MULTIINSTANCE_GetCurrInstanceModemId(ulPidPara); \
+    (pSendMsg)->usMsgID      = usMsgIDPara; \
+    (pSendMsg)->ucUpDown     = ucUpDownPara; \
+    (pSendMsg)->ulMsgLen     = ulMsgLenPara; \
+    (pSendMsg)->pucMsg       = (VOS_UINT8 *)pucMsgPara; \
+}
 
 typedef struct
 {
@@ -861,12 +841,16 @@ extern VOS_VOID NAS_EventReport(
     VOS_UINT32                          ulLen
 );
 
-extern VOS_VOID NAS_SendAirMsgToOM(
+extern VOS_VOID NAS_EventReportByModemId(
+    MODEM_ID_ENUM_UINT16                enModemId,
     VOS_UINT32                          ulPid,
-    VOS_UINT16                          usMsgID,
-    VOS_UINT8                           ucUpDown,
-    VOS_UINT32                          ulMsgLen,
-    VOS_UINT8                           *pucMsg
+    NAS_OM_EVENT_ID_ENUM                enEventId,
+    VOS_VOID                           *pPara,
+    VOS_UINT32                          ulLen
+);
+
+extern VOS_VOID NAS_SendAirMsgToOM(
+    NAS_OM_OTA_SEND_AIR_MSG_TO_OM      *pstOtaMsg
 );
 
 extern VOS_VOID NAS_RcvOmOtaReq( OM_NAS_OTA_REQ_STRUCT *pstOtaReq );
@@ -875,8 +859,6 @@ extern NAS_OM_REGISTER_STATE_ENUM_UINT8 NAS_GetRegisterState(VOS_VOID);
 
 extern NAS_OM_SERVICE_TYPE_ENUM_UINT8   NAS_GetServiceType(VOS_VOID);
 
-/* Deleted by wx270776 for OM融合, 2015-7-18, begin */
-/* Deleted by wx270776 for OM融合, 2015-7-18, end */
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

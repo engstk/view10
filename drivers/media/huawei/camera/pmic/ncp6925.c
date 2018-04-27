@@ -18,6 +18,8 @@
 #endif
 
 //lint -save -e31
+//lint -save -e568
+//lint -esym(568,*)
 
 /* NCP6925 Registers define */
 #define CHIP_REV        0x00
@@ -99,6 +101,7 @@ struct hisi_pmic_ctrl_t ncp6925_ctrl;
 static int ncp6925_poweron = 0;
 static int pmic_enable_sensor_1v8_flag = 0;
 static int pmic_enable_sensor_3v3_flag = 0;
+static int pmic_extern_config_flag = 0;
 extern struct dsm_client *client_pmic;
 static voltage_map_t voltage_map[VOUT_MAX] =
 {
@@ -125,15 +128,21 @@ static int ncp6925_on(struct hisi_pmic_ctrl_t *pmic_ctrl, void *data);
 int hw_extern_pmic_config(int index, int voltage, int enable)
 {
     struct hisi_pmic_ctrl_t *pmic_ctrl = NULL;
-    pmic_ctrl = hisi_get_pmic_ctrl();
-    if(pmic_ctrl != NULL) {
-        cam_debug("pmic power on!");
-        pmic_ctrl->func_tbl->pmic_on(pmic_ctrl, 0);
+    if (pmic_extern_config_flag == 0) {
+        cam_debug("using pmic extern config");
+        pmic_ctrl = hisi_get_pmic_ctrl();
+        if(pmic_ctrl != NULL) {
+            cam_debug("pmic power on!");
+            pmic_ctrl->func_tbl->pmic_on(pmic_ctrl, 0);
+        } else {
+            cam_err("pmic_ctrl is NULL,just return");
+            return -1;
+        }
+        return ncp6925_seq_config(&ncp6925_ctrl, (pmic_seq_index_t)index, (u32)voltage, enable);
     } else {
-        cam_err("pmic_ctrl is NULL,just return");
-        return -1;
+        cam_info("pmic extern config disable");
+        return 0;
     }
-    return ncp6925_seq_config(&ncp6925_ctrl, (pmic_seq_index_t)index, (u32)voltage, enable);
 }
 
 int hw_extern_pmic_query_state(int index, int *state)
@@ -477,6 +486,21 @@ static int ncp6925_match(struct hisi_pmic_ctrl_t *pmic_ctrl)
     return 0;
 }
 
+static void ncp6925_get_extern_cfg(struct device_node* dev_node)
+{
+    int rc = -1;
+    int pmic_ex_config = 0;
+
+    rc = of_property_read_u32(dev_node, "hisi,pmic_ex_func_disable",
+            (u32 *)&pmic_ex_config);
+    if (rc < 0) {
+        cam_debug("%s can not read pmic_ex_func_disable\n", __func__);
+    } else {
+        pmic_extern_config_flag = pmic_ex_config;
+        cam_debug("%s pmic_ex_func_disable:%d\n", __func__, pmic_ex_config);
+    }
+}
+
 static int ncp6925_get_dt_data(struct hisi_pmic_ctrl_t *pmic_ctrl)
 {
     struct ncp6925_private_data_t *pdata;
@@ -519,6 +543,8 @@ static int ncp6925_get_dt_data(struct hisi_pmic_ctrl_t *pmic_ctrl)
                     pdata->voltage[i]);
         }
     }
+
+    ncp6925_get_extern_cfg(dev_node);
 
     rc = of_property_read_u32(dev_node, "hisi,pmic_sensor_1v8",
         (u32 *)&pmic_sensor_1v8);
@@ -620,6 +646,12 @@ static int ncp6925_seq_config(struct hisi_pmic_ctrl_t *pmic_ctrl, pmic_seq_index
         return -1;
     }
 
+    if(VOUT_MAX <= seq_index)
+    {
+        cam_err("%s seq_index out of range.", __func__);
+        return -1;
+    }
+
     i2c_client = pmic_ctrl->pmic_i2c_client;
     i2c_func = pmic_ctrl->pmic_i2c_client->i2c_func_tbl;
 
@@ -658,11 +690,16 @@ static int ncp6925_seq_config(struct hisi_pmic_ctrl_t *pmic_ctrl, pmic_seq_index
         i2c_func->i2c_write(i2c_client, CHX_EN, chx_enable_tmp & (~chx_enable));
         //i2c_func->i2c_write(i2c_client, voltage_reg, state);
         if (seq_index >= VOUT_BUCK_1) {
-            i2c_func->i2c_write(i2c_client, BUCK_VSEL, 0);
+            i2c_func->i2c_read(i2c_client, BUCK_VSEL, &buck12_prog_old);
+            buck12_prog = buck12_prog_old & (~(seq_index == VOUT_BUCK_1 ? 0x1 : 0x2));
+            i2c_func->i2c_write(i2c_client, BUCK_VSEL, buck12_prog);
         }
     }
 
     i2c_func->i2c_read(i2c_client, CHX_ERR, &chx_enable_tmp);
+    if (chx_enable_tmp != 0) {
+        cam_err("%s PMIC CHX_ERR code 0x%x", __func__, chx_enable_tmp);
+    }
 
     return ret;
 }

@@ -389,6 +389,7 @@ static int __init vbat_ovp_complete_init(void)
 {
 	hwlog_info("%s:init succ!!!\n", __func__);
 	init_completion(&usb_detach_completion);
+	return 0;
 }
 static void __exit vbat_ovp_complete_exit(void)
 {

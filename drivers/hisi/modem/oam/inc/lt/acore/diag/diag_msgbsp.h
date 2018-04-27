@@ -137,7 +137,11 @@ typedef struct
      DIAG_FRAME_INFO_STRU               stInfo;
 }DIAG_BSP_MSG_A_TRANS_C_STRU;
 
-
+typedef struct
+{
+    VOS_UINT32  ulChannelNum;
+    VOS_UINT32  ulChannelId;
+}DIAG_BSP_CTRL;
 /*****************************************************************************
 描述 : 读NV
 ID   : DIAG_CMD_NV_RD
@@ -258,6 +262,12 @@ typedef struct
      VOS_UINT32                         ulCmdList[50];
 }DIAG_BSP_CMDLIST_STRU;
 
+typedef struct
+{
+    VOS_UINT32 ulNVId;         /* 需要写入的NV ID*/
+    VOS_UINT32 ulDataSize;     /* 需要写入的NV项数据的大小*/
+    VOS_UINT8  aucData[0];     /* 数据缓冲区*/
+}DIAG_NV_WRITE_TABLE_STRU;
 /*****************************************************************************
   6 UNION
 *****************************************************************************/
@@ -275,7 +285,6 @@ VOS_UINT32  diag_BspMsgProc(DIAG_FRAME_INFO_STRU *pData);
 
 VOS_VOID diag_nvInit(VOS_VOID);
 VOS_VOID diag_BspMsgInit(VOS_VOID);
-#if (VOS_OS_VER == VOS_LINUX)
 VOS_UINT32  diag_NvRdProc(VOS_UINT8* pstReq);
 VOS_UINT32  diag_NvWrProc(VOS_UINT8* pstReq);
 VOS_UINT32  diag_GetNvListProc(VOS_UINT8* pstReq);
@@ -284,11 +293,8 @@ VOS_VOID    diag_InitAuthVariable(VOS_VOID);
 VOS_VOID    diag_AuthNvCfg(MsgBlock* pMsgBlock);
 VOS_VOID    diag_BspRecvCmdList(MsgBlock* pMsgBlock);
 VOS_UINT32  diag_fsInit(void);
-#else
-VOS_UINT32  diag_AppTransBspProc(MsgBlock* pMsgBlock);
-VOS_UINT32 diag_NvAuthSendAcore(VOS_UINT32 ulLev);
-VOS_UINT32 diag_BspSendCmdList(VOS_VOID);
-#endif
+VOS_UINT32 diag_BspConnMgr(VOS_UINT8 *pData);
+
 
 /*****************************************************************************
   9 OTHERS

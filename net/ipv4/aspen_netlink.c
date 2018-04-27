@@ -15,7 +15,7 @@ static DEFINE_MUTEX(aspen_nl_mutex);
 static void
 nl_do_recv_msg(struct sk_buff *skb)
 {
-	struct nlmsghdr *nlh;
+	struct nlmsghdr *nlh = NULL;
 
 	if (!skb) {
 		ASPEN_ERR("Invalid parameter: zero pointer reference.(skb)");
@@ -23,12 +23,14 @@ nl_do_recv_msg(struct sk_buff *skb)
 	}
 
 	nlh = (struct nlmsghdr *)skb->data;
-
+	if (NULL == nlh) {
+		ASPEN_ERR("nl_do_recv_msg:  nlh = NULL\n");
+		return;
+	}
 	/* pid of sending process in userland */
 	aspen_nl_entry.userland_pid = nlh->nlmsg_pid;
 
-	ASPEN_INFO("Aspen netlink received msg \"%s\" from userland.(pid=%d)",
-		   (char *)nlmsg_data(nlh), aspen_nl_entry.userland_pid);
+	ASPEN_INFO("Aspen netlink received msg from userland.(pid=%d)", aspen_nl_entry.userland_pid);
 }
 
 /* Note: This is called from process context only because of mutex_lock */

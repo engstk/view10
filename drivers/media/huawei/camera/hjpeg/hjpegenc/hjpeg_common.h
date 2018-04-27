@@ -38,7 +38,7 @@ if JPGENC_HEAD_OFFSET small than 4, func jpgenc_add_header must be modify */
 #define JPGENC_HEAD_SIZE                     640
 #define JPGENC_HEAD_OFFSET                   11
 
-#define MAX_JPEG_BUFFER_SIZE                 (32 * 1024 * 1024) /* 32MB */
+#define MAX_JPEG_BUFFER_SIZE                 (64 * 1024 * 1024) /* 64MB=8192x8192 */
 #define JPGENC_RESTART_INTERVAL              0
 #define JPGENC_RESTART_INTERVAL_ON           1
 #define WAIT_ENCODE_TIMEOUT                  10000

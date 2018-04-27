@@ -76,6 +76,7 @@ int bfmr_get_device_full_path(char *dev_name, char *path_buf, unsigned int path_
     return 0;
 }
 
+
 /**
     @function: unsigned int bfmr_get_bootup_time(void)
     @brief: get bootup time.
@@ -90,11 +91,11 @@ unsigned int bfmr_get_bootup_time(void)
 {
     u64 ts = 0;
 
-    #ifdef CONFIG_HISI_TIME
+#ifdef CONFIG_HISI_TIME
     ts = hisi_getcurtime();/* ns */
-    #else
+#else
     ts = sched_clock();
-    #endif
+#endif
 
     return (unsigned int)(ts / 1000 / 1000 / 1000);
 }

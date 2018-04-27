@@ -94,30 +94,11 @@ HTIMER          g_DebugTimer;
   3 Function
 *****************************************************************************/
 
-/*****************************************************************************
- Function Name   : diag_CfgResetAllSwt
- Description     : 重置开关状态
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.w00182550      2012-12-1  Draft Enact
-
-*****************************************************************************/
 VOS_VOID diag_CfgResetAllSwt(VOS_VOID)
 {
     VOS_ULONG    ulLockLevel;
 
-    /* 规避老的hids在建链时候下发disconnect命令，不能将开机log配置清除 */
-    if(DIAG_IS_POLOG_ON)
-    {
-        g_ulDiagCfgInfo = DIAG_CFG_INIT | DIAG_CFG_POWERONLOG;
-        diag_printf("diag_CfgResetAllSwt, keep init&poweronlog flag.\n");
-    }
-    else
-    {
-        g_ulDiagCfgInfo = DIAG_CFG_INIT;
-    }
 
     /*清空层间开关状态*/
     (VOS_VOID)VOS_MemSet_s(g_ALayerSrcModuleCfg, (VOS_UINT32)sizeof(g_ALayerSrcModuleCfg), 0, (VOS_UINT32)sizeof(g_ALayerSrcModuleCfg));
@@ -135,7 +116,7 @@ VOS_VOID diag_CfgResetAllSwt(VOS_VOID)
     g_PrintTotalCfg = DIAG_CFG_PRINT_TOTAL_MODULE_SWT_NOT_USE;
 
     /*清空消息过滤开关状态*/
-    (VOS_VOID)VOS_MemSet_s(&g_stMsgCfg, (VOS_UINT32)sizeof(DIAG_CFG_LOG_CAT_CFG_STRU), 0, (VOS_UINT32)sizeof(DIAG_CFG_LOG_CAT_CFG_STRU));
+    (VOS_VOID)VOS_MemSet_s(&g_stMsgCfg, (VOS_UINT32)sizeof(g_stMsgCfg), 0, (VOS_UINT32)sizeof(g_stMsgCfg));
 
     VOS_SpinLockIntLock(&g_DiagLogPktNum.ulPrintLock, ulLockLevel);
     g_DiagLogPktNum.ulPrintNum = 0;
@@ -169,19 +150,6 @@ VOS_VOID diag_CfgResetAllSwt(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- Function Name   : diag_CfgSetGlobalBitValue
- Description     : 设置DIAG空口等开关状态
- Input           :VOS_UINT32* pstDiagGlobal
-                ENUM_DIAG_CFG_BIT enBit
-                VOS_UINT32 enSwtich
- Output          : None
- Return          : VOS_UINT32
-
- History         :
-    1.w00182550      2012-12-1  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_CfgSetGlobalBitValue(VOS_UINT32* pstDiagGlobal,ENUM_DIAG_CFG_BIT_U32 enBit,ENUM_DIAG_CFG_SWT_U8 enSwtich)
 {
     /*设置为open 1时，需要使用|才能置该bit 为1*/
@@ -201,18 +169,7 @@ VOS_UINT32 diag_CfgSetGlobalBitValue(VOS_UINT32* pstDiagGlobal,ENUM_DIAG_CFG_BIT
     return ERR_MSP_SUCCESS;
 }
 
-/*****************************************************************************
- Function Name   : diag_AirCfgProc
- Description     : 该函数用于处理CfgProcEntry传进来的空口开关命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_UINT32 diag_AirCfgProc (VOS_UINT8* pstReq)
 {
     VOS_UINT32 ret;
@@ -230,15 +187,19 @@ VOS_UINT32 diag_AirCfgProc (VOS_UINT8* pstReq)
         /* 收到空口开关恢复为正常的开关控制上报 */
         g_ulDiagCfgInfo &= (~DIAG_CFG_POWERONLOG);
 
-        /* 通过空口开关来作为开机log上报的触发命令 */
-        mdrv_scm_reg_ind_coder_dst_send_fuc();
-
-        /* 手动触发log上报，并readdone操作后去除中断屏蔽 */
-        mdrv_scm_ind_dst_read_cb();
+        mdrv_socp_send_data_manager(SOCP_CODER_DST_OM_IND, SOCP_DEST_DSM_ENABLE);
     }
 
     pstDiagHead  = (DIAG_FRAME_INFO_STRU*)(pstReq);
     mdrv_diag_PTR(EN_DIAG_PTR_AIR_CFG_PROC, 1, pstDiagHead->ulCmdId, 0);
+
+    if(pstDiagHead->ulMsgLen < sizeof(DIAG_CMD_LOG_CAT_AIR_REQ_STRU ) + sizeof(MSP_DIAG_DATA_REQ_STRU))
+    {
+        diag_error("rec data len error, head->msglen:0x%x\n", pstDiagHead->ulMsgLen);
+        ret = ERR_MSP_INVALID_PARAMETER;
+        goto DIAG_ERROR;
+    }
+
     pstAirSwtReq = (DIAG_CMD_LOG_CAT_AIR_REQ_STRU*)(pstReq + DIAG_MESSAGE_DATA_HEADER_LEN);
 
     /*设置LT空口开关值*/
@@ -260,22 +221,12 @@ DIAG_ERROR:
 
     ret = DIAG_MsgReport(&stDiagInfo, &stAirSwtCnf, (VOS_UINT32)sizeof(stAirSwtCnf));
     mdrv_diag_PTR(EN_DIAG_PTR_AIR_CFG_FAIL_CNF, 1, pstDiagHead->ulCmdId, ret);
+
     return ret;
 }
 
 
-/*****************************************************************************
- Function Name   : diag_CfgSetLayerSwt
- Description     : 设置层间消息开关
- Input           :DIAG_CMD_LOG_CAT_LAYER_REQ_STRU* pstLayerReq
-                VOS_UINT32 ulCfgCnt
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.w00182550      2012-11-29  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_CfgSetLayerSwt(DIAG_CMD_LOG_CAT_LAYER_REQ_STRU* pstLayerReq, VOS_UINT32 ulCfgSize)
 {
 
@@ -325,18 +276,7 @@ VOS_UINT32 diag_CfgSetLayerSwt(DIAG_CMD_LOG_CAT_LAYER_REQ_STRU* pstLayerReq, VOS
 }
 
 
-/*****************************************************************************
- Function Name   : diag_LayerCfgProc
- Description     : 该函数用于处理CfgProcEntry传进来的层间开关命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_UINT32 diag_LayerCfgProc (VOS_UINT8* pstReq)
 {
     VOS_UINT32 ret;
@@ -350,6 +290,13 @@ VOS_UINT32 diag_LayerCfgProc (VOS_UINT8* pstReq)
     pstDiagHead = (DIAG_FRAME_INFO_STRU*)(pstReq);
 
     mdrv_diag_PTR(EN_DIAG_PTR_LAYER_CFG_PROC, 1, pstDiagHead->ulCmdId, 0);
+
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU))
+    {
+        diag_error("rec data len error, u32DataLen:0x%x\n", pstDiagHead->ulMsgLen);
+        ret = ERR_MSP_INVALID_PARAMETER;
+        goto DIAG_ERROR;
+    }
 
     pstLayerSwtReq = (DIAG_CMD_LOG_CAT_LAYER_REQ_STRU*)(pstReq + DIAG_MESSAGE_DATA_HEADER_LEN);
 
@@ -377,18 +324,7 @@ DIAG_ERROR:
 }
 
 
-/*****************************************************************************
- Function Name   : diag_EventCfgProc
- Description     : 该函数用于处理CfgProcEntry传进来的事件开关命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_UINT32 diag_EventCfgProc(VOS_UINT8* pstReq)
 {
     DIAG_CMD_LOG_CAT_EVENT_REQ_STRU* pstEvtSwtReq = NULL;
@@ -403,7 +339,22 @@ VOS_UINT32 diag_EventCfgProc(VOS_UINT8* pstReq)
 
     pstDiagHead = (DIAG_FRAME_INFO_STRU*)pstReq;
     mdrv_diag_PTR(EN_DIAG_PTR_EVENT_CFG_PROC, 1, pstDiagHead->ulCmdId, 0);
+
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(DIAG_CMD_LOG_CAT_EVENT_REQ_STRU))
+    {
+        diag_error("rec data len error, u32DataLen:0x%x\n", pstDiagHead->ulMsgLen);
+        ret = ERR_MSP_INVALID_PARAMETER;
+        goto DIAG_ERROR;
+    }
+
     pstEvtSwtReq = (DIAG_CMD_LOG_CAT_EVENT_REQ_STRU*)(pstReq + DIAG_MESSAGE_DATA_HEADER_LEN);
+
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(DIAG_CMD_LOG_CAT_EVENT_REQ_STRU) + sizeof(VOS_UINT32) * pstEvtSwtReq->ulCount)
+    {
+        diag_error("rec data len error, u32DataLen:0x%x, switch count:0x%x\n", pstDiagHead->ulMsgLen, pstEvtSwtReq->ulCount);
+        ret = ERR_MSP_INVALID_PARAMETER;
+        goto DIAG_ERROR;
+    }
 
     enSwitch = (ENUM_DIAG_CFG_SWT_U8)pstEvtSwtReq->ulSwt;
 
@@ -441,18 +392,7 @@ DIAG_ERROR:
     return ret;
 }
 
-/*****************************************************************************
- Function Name   : diag_SetMsgCfgSwt
- Description     : 消息ID过滤开关设置
- Input           :DIAG_CMD_LOG_CAT_CFG_REQ_STRU *pstCatCfgReq
-                VOS_UINT32 ulCfgSize
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.w00182550      2012-12-5  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_CfgSetMsgSwt(DIAG_CMD_LOG_CAT_CFG_REQ_STRU *pstCatCfgReq,VOS_UINT32 ulCfgSize)
 {
     VOS_UINT32 i = 0,j;
@@ -521,18 +461,7 @@ VOS_UINT32 diag_CfgSetMsgSwt(DIAG_CMD_LOG_CAT_CFG_REQ_STRU *pstCatCfgReq,VOS_UIN
 
 }
 
-/*****************************************************************************
- Function Name   : diag_MsgCfgProc
- Description     : 该函数用于处理CfgProcEntry传进来的消息开关命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_UINT32 diag_MsgCfgProc(VOS_UINT8* pstReq)
 {
     DIAG_CMD_LOG_CAT_CFG_CNF_STRU stCatSwtCnf = {0};
@@ -545,6 +474,14 @@ VOS_UINT32 diag_MsgCfgProc(VOS_UINT8* pstReq)
 
     pstDiagHead = (DIAG_FRAME_INFO_STRU*)(pstReq);
     mdrv_diag_PTR(EN_DIAG_PTR_MSG_CFG_PROC, 1, pstDiagHead->ulCmdId, 0);
+
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU))
+    {
+        diag_printf("rec data len error, u32DataLen:0x%x\n", pstDiagHead->ulMsgLen);
+        ret = ERR_MSP_INVALID_PARAMETER;
+        goto DIAG_ERROR;
+    }
+
     pstCatCfgReq = (DIAG_CMD_LOG_CAT_CFG_REQ_STRU*)(pstReq + DIAG_MESSAGE_DATA_HEADER_LEN);
 
     /*设置消息过滤开关到全局变量中*/
@@ -570,19 +507,7 @@ DIAG_ERROR:
 }
 
 
-/*****************************************************************************
- Function Name   : diag_CfgSetPrintSwt
- Description     : 设置打印开关状态
- Input           :DIAG_CMD_LOG_CAT_PRINT_REQ_STRU* pstPrintReq
-                VOS_UINT32 ulCfgCnt
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.w00182550      2012-12-6  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_UINT32 diag_CfgSetPrintSwt(DIAG_CMD_LOG_CAT_PRINT_REQ_STRU* pstPrintReq, VOS_UINT32 ulCfgSize)
 {
     VOS_UINT32 j = 0;
@@ -636,18 +561,7 @@ VOS_UINT32 diag_CfgSetPrintSwt(DIAG_CMD_LOG_CAT_PRINT_REQ_STRU* pstPrintReq, VOS
 }
 
 
-/*****************************************************************************
- Function Name   : diag_PrintCfgProc
- Description     : 该函数用于处理CfgProcEntry传进来的打印开关命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_UINT32 diag_PrintCfgProc(VOS_UINT8* pstReq)
 {
     VOS_UINT32 ret;
@@ -661,6 +575,13 @@ VOS_UINT32 diag_PrintCfgProc(VOS_UINT8* pstReq)
     pstDiagHead = (DIAG_FRAME_INFO_STRU*)(pstReq);
 
     mdrv_diag_PTR(EN_DIAG_PTR_PRINT_CFG_PROC, 1, pstDiagHead->ulCmdId, 0);
+
+    if(pstDiagHead->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU))
+    {
+        diag_error("rec data len error, u32DataLen:0x%x\n", pstDiagHead->ulMsgLen);
+        ret = ERR_MSP_INVALID_PARAMETER;
+        goto DIAG_ERROR;
+    }
 
     pstPrintSwtReq = (DIAG_CMD_LOG_CAT_PRINT_REQ_STRU*)(pstReq + DIAG_MESSAGE_DATA_HEADER_LEN);
 
@@ -688,17 +609,7 @@ DIAG_ERROR:
 }
 
 
-/*****************************************************************************
- Function Name   : diag_GetFrameTime
- Description     : 获取时间戳
- Input           :VOS_VOID
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.w00182550      2012-12-19  Draft Enact
-
-*****************************************************************************/
 VOS_UINT64 diag_GetFrameTime(VOS_VOID)
 {
     VOS_UINT32 ultimelow = 0;
@@ -751,422 +662,6 @@ VOS_UINT32 diag_GetTimeStampInitValue(VOS_UINT8* pstReq)
     mdrv_diag_PTR(EN_DIAG_PTR_GET_TIME_STAMP_CNF, 1, pstDiagHead->ulCmdId, ret);
     return (VOS_UINT32)ret;
 }
-
-
-#define DIAG_NV_IMEI_LEN                             15
-/*****************************************************************************
- Function Name   : diag_GetImei
- Description     : 获取imei号
- Input           :VOS_VOID
- Output          : None
- Return          : VOS_UINT32
-
- History         :
-    1.y00228784      2012-12-19  Draft Enact
-
-*****************************************************************************/
-VOS_UINT32 diag_GetImei(VOS_CHAR szimei [ 16 ])
-{
-    VOS_UINT32  ret;
-    VOS_UINT32  uslen;
-    VOS_UINT32  subscript = 0;
-    VOS_CHAR   checkdata = 0;
-    VOS_CHAR   auctemp[DIAG_NV_IMEI_LEN+1] = {0};
-
-    uslen = DIAG_NV_IMEI_LEN+1;
-
-    ret = NV_Read(0, auctemp, uslen);
-
-    if(ret != 0)
-    {
-        return ret;
-    }
-    else
-    {
-        for (subscript = 0; subscript < (DIAG_NV_IMEI_LEN - 1); subscript += 2)
-        {
-            checkdata += (VOS_CHAR)(((auctemp[subscript])
-                           +((auctemp[subscript + sizeof(VOS_CHAR)] * 2) / 10))
-                           +((auctemp[subscript + sizeof(VOS_CHAR)] * 2) % 10));
-        }
-        checkdata = (10 - (checkdata%10)) % 10;
-
-        for (subscript = 0; subscript < uslen; subscript++)
-        {
-            *(szimei + subscript) = *(auctemp + subscript) + 0x30; /*字符转换*/
-        }
-
-        szimei[DIAG_NV_IMEI_LEN - 1] = checkdata + 0x30;
-        szimei[DIAG_NV_IMEI_LEN] = 0;
-    }
-
-    return 0;
-}
-
-
-/*****************************************************************************
- Function Name   : diag_GetModemInfo
- Description     : 获取modem信息(用于工具未连接时，工具后台查询单板信息)
- Input           : VOS_VOID
- Output          : None
- Return          : VOS_UINT32
-
- History         :
-    1.c00326366      2016-02-15  Draft Enact
-
-*****************************************************************************/
-VOS_VOID diag_GetModemInfo(DIAG_FRAME_INFO_STRU *pstDiagHead)
-{
-    VOS_UINT32 ulCnfRst;
-    DIAG_CMD_HOST_CONNECT_CNF_STRU stCnf    = {0};
-    const MODEM_VER_INFO_S* pstVerInfo;
-    MSP_DIAG_CNF_INFO_STRU stDiagInfo       = {0};
-    DIAG_MSG_REPORT_HEAD_STRU stDiagHead    = {0};
-
-    /*处理结果*/
-    stCnf.ulAuid = ((MSP_DIAG_DATA_REQ_STRU*)(pstDiagHead->aucData))->ulAuid;
-    stCnf.ulSn   = ((MSP_DIAG_DATA_REQ_STRU*)(pstDiagHead->aucData))->ulSn;
-
-    (VOS_VOID)VOS_MemSet_s(&(stCnf.stBuildVersion), (VOS_UINT32)sizeof(DIAG_CMD_UE_BUILD_VER_STRU), 0, (VOS_UINT32)sizeof(DIAG_CMD_UE_BUILD_VER_STRU));
-
-    /*获取版本信息*/
-    pstVerInfo = mdrv_ver_get_info();
-	if(pstVerInfo!=NULL)
-	{
-        stCnf.stBuildVersion.usVVerNo        = pstVerInfo->stswverinfo.ulVVerNO;
-        stCnf.stBuildVersion.usRVerNo        = pstVerInfo->stswverinfo.ulRVerNO;
-        stCnf.stBuildVersion.usCVerNo        = pstVerInfo->stswverinfo.ulCVerNO;
-        stCnf.stBuildVersion.usBVerNo        = pstVerInfo->stswverinfo.ulBVerNO;
-        stCnf.stBuildVersion.usSpcNo         = pstVerInfo->stswverinfo.ulSpcNO;
-        stCnf.stBuildVersion.usHardwareVerNo = pstVerInfo->stswverinfo.ulCustomNOv;
-        stCnf.stBuildVersion.ulProductNo     = pstVerInfo->stswverinfo.ulProductNo;
-
-        /*获取数采基地址*/
-        stCnf.ulChipBaseAddr = (VOS_UINT32)pstVerInfo->stproductinfo.echiptype;
-	}
-
-    /*获取IMEI号*/
-    /* 安全整改，diag不再上报Imei号 2017-7-29 w00393099 */
-    //(VOS_VOID)diag_GetImei(stCnf.szImei);
-    
-    /*获取软件版本号*/
-    (VOS_VOID)VOS_MemSet_s(&stCnf.stUeSoftVersion, (VOS_UINT32)sizeof(DIAG_CMD_UE_SOFT_VERSION_STRU), 0, (VOS_UINT32)sizeof(DIAG_CMD_UE_SOFT_VERSION_STRU));
-
-    /*路测信息获取*/
-    (VOS_VOID)NV_Read(EN_NV_ID_AGENT_FLAG, &(stCnf.stAgentFlag), (VOS_UINT32)sizeof(NV_ITEM_AGENT_FLAG_STRU));
-
-    stCnf.diag_cfg.UintValue = 0;
-
-    /* 010: OM通道融合的版本 */
-    /* 110: OM融合GU未融合的版本 */
-    /* 100: OM完全融合的版本 */
-    stCnf.diag_cfg.CtrlFlag.ulDrxControlFlag    = 0; /*和HIDS确认此处不再使用,打桩处理即可*/
-    stCnf.diag_cfg.CtrlFlag.ulPortFlag          = 0;
-    stCnf.diag_cfg.CtrlFlag.ulOmUnifyFlag       = 1;
-
-	stCnf.ulLpdMode                             = 0x5a5a5a5a;
-    stCnf.ulRc                                  = ERR_MSP_SUCCESS;
-
-    (VOS_VOID)VOS_MemCpy_s(stCnf.szProduct, (VOS_UINT32)sizeof(PRODUCT_FULL_VERSION_STR), PRODUCT_FULL_VERSION_STR, (VOS_UINT32)sizeof(PRODUCT_FULL_VERSION_STR));
-
-    DIAG_MSG_COMMON_PROC(stDiagInfo, stCnf, pstDiagHead);
-
-    stDiagInfo.ulMsgType = DIAG_MSG_TYPE_MSP;
-
-    stDiagHead.u.stID.pri4b     = (stDiagInfo.ulMsgType & 0xf);
-    stDiagHead.u.stID.mode4b    = (stDiagInfo.ulMode & 0xf);
-    stDiagHead.u.stID.sec5b     = (stDiagInfo.ulSubType & 0x1f);
-    stDiagHead.u.stID.cmdid19b  = (stDiagInfo.ulMsgId & 0x7ffff);
-    stDiagHead.ulSsid           = stDiagInfo.ulSSId;
-    stDiagHead.ulModemId        = stDiagInfo.ulModemid;
-    stDiagHead.ulDirection      = stDiagInfo.ulDirection;
-    stDiagHead.ulMsgTransId     = stDiagInfo.ulTransId;
-    stDiagHead.ulChanId         = SCM_CODER_SRC_LOM_CNF;
-    stDiagHead.ulDataSize       = sizeof(stCnf);
-    stDiagHead.pData            = &stCnf;
-
-    ulCnfRst = diag_ServicePackData(&stDiagHead);
-
-    if(ERR_MSP_SUCCESS != ulCnfRst)
-    {
-        diag_printf("diag_GetModemInfo failed.\n");
-    }
-    else
-    {
-        diag_printf("diag_GetModemInfo success.\n");
-    }
-
-    return;
-}
-
-/*****************************************************************************
- Function Name   : diag_ConnProc
- Description     : 该函数用于处理ConnProcEntry传进来的HSO连接命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
-
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
-VOS_UINT32 diag_ConnProc(VOS_UINT8* pstReq)
-{
-    VOS_UINT32 ret;
-    VOS_UINT32 ulCnfRst = ERR_MSP_UNAVAILABLE;
-    DIAG_MSG_MSP_CONN_STRU *pstConn;
-    DIAG_CMD_HOST_CONNECT_CNF_STRU stCnf = {0};
-    MSP_DIAG_CNF_INFO_STRU stDiagInfo = {0};
-    const MODEM_VER_INFO_S* pstVerInfo = VOS_NULL;
-    DIAG_CMD_REPLAY_SET_REQ_STRU stReplay={0};
-    DIAG_FRAME_INFO_STRU *pstDiagHead;
-    DIAG_CMD_GET_MDM_INFO_REQ_STRU *pstInfo = VOS_NULL;
-
-    pstDiagHead = (DIAG_FRAME_INFO_STRU *)pstReq;
-
-    mdrv_diag_PTR(EN_DIAG_PTR_MSGMSP_CONN_IN, 1, pstDiagHead->ulCmdId, 0);
-
-    /* 新增获取modem信息的命令用于工具查询单板信息 */
-    if(sizeof(DIAG_CMD_GET_MDM_INFO_REQ_STRU) == pstDiagHead->ulMsgLen)
-    {
-        pstInfo = (DIAG_CMD_GET_MDM_INFO_REQ_STRU *)pstDiagHead->aucData;
-        if((VOS_NULL != pstInfo) && (DIAG_GET_MODEM_INFO == pstInfo->ulInfo))
-        {
-            diag_GetModemInfo(pstDiagHead);
-            return ERR_MSP_SUCCESS;
-        }
-    }
-
-    diag_printf("Receive tool connect cmd!\n");
-
-    pstConn = (DIAG_MSG_MSP_CONN_STRU *)VOS_AllocMsg(MSP_PID_DIAG_APP_AGENT, (VOS_UINT32)(sizeof(DIAG_MSG_MSP_CONN_STRU)-VOS_MSG_HEAD_LENGTH));
-    if(VOS_NULL == pstConn)
-    {
-        ulCnfRst = ERR_MSP_DIAG_ALLOC_MALLOC_FAIL;
-        goto DIAG_ERROR;
-    }
-
-    /*设置连接状态开关值*/
-    ulCnfRst = diag_CfgSetGlobalBitValue(&g_ulDiagCfgInfo,DIAG_CFG_CONN_BIT,DIAG_CFG_SWT_OPEN);
-    if(ulCnfRst)
-    {
-        diag_printf("Open DIAG_CFG_CONN_BIT failed.\n");
-        goto DIAG_ERROR;
-    }
-
-    /* 关闭SOCP模块的自动降频 */
-    mdrv_socp_disalbe_dfs();
-
-    (VOS_VOID)VOS_MemSet_s(&(pstConn->stConnInfo.stBuildVersion), (VOS_UINT32)sizeof(DIAG_CMD_UE_BUILD_VER_STRU), 0, (VOS_UINT32)sizeof(DIAG_CMD_UE_BUILD_VER_STRU));
-
-    /*获取版本信息*/
-    pstVerInfo = mdrv_ver_get_info();
-    if(pstVerInfo!=NULL)
-    {
-        pstConn->stConnInfo.stBuildVersion.usVVerNo        = pstVerInfo->stswverinfo.ulVVerNO;
-        pstConn->stConnInfo.stBuildVersion.usRVerNo        = pstVerInfo->stswverinfo.ulRVerNO;
-        pstConn->stConnInfo.stBuildVersion.usCVerNo        = pstVerInfo->stswverinfo.ulCVerNO;
-        pstConn->stConnInfo.stBuildVersion.usBVerNo        = pstVerInfo->stswverinfo.ulBVerNO;
-        pstConn->stConnInfo.stBuildVersion.usSpcNo         = pstVerInfo->stswverinfo.ulSpcNO;
-        pstConn->stConnInfo.stBuildVersion.usHardwareVerNo = pstVerInfo->stswverinfo.ulCustomNOv;
-        pstConn->stConnInfo.stBuildVersion.ulProductNo     = pstVerInfo->stswverinfo.ulProductNo;
-
-        /*获取数采基地址*/
-        pstConn->stConnInfo.ulChipBaseAddr = (VOS_UINT32)pstVerInfo->stproductinfo.echiptype;
-    }
-
-    /*获取IMEI号*/
-    /* 安全整改，diag不再上报Imei号 2017-7-29 w00393099 */
-    //(VOS_VOID)diag_GetImei(pstConn->stConnInfo.szImei);
-
-    /*获取软件版本号*/
-    (VOS_VOID)VOS_MemSet_s(&pstConn->stConnInfo.stUeSoftVersion, (VOS_UINT32)sizeof(DIAG_CMD_UE_SOFT_VERSION_STRU), 0, (VOS_UINT32)sizeof(DIAG_CMD_UE_SOFT_VERSION_STRU));
-
-    /*路测信息获取*/
-    (VOS_VOID)NV_Read(EN_NV_ID_AGENT_FLAG,&(pstConn->stConnInfo.stAgentFlag), (VOS_UINT32)sizeof(NV_ITEM_AGENT_FLAG_STRU));
-
-    pstConn->stConnInfo.diag_cfg.UintValue = 0;
-
-    /* 010: OM通道融合的版本 */
-    /* 110: OM融合GU未融合的版本 */
-    /* 100: OM完全融合的版本 */
-    pstConn->stConnInfo.diag_cfg.CtrlFlag.ulDrxControlFlag = 0; /*和HIDS确认此处不再使用,打桩处理即可*/
-    pstConn->stConnInfo.diag_cfg.CtrlFlag.ulPortFlag = 0;
-    pstConn->stConnInfo.diag_cfg.CtrlFlag.ulOmUnifyFlag = 1;
-
-    pstConn->stConnInfo.ulLpdMode = 0x5a5a5a5a;
-
-    (VOS_VOID)VOS_MemCpy_s(pstConn->stConnInfo.szProduct, (VOS_UINT32)sizeof(PRODUCT_FULL_VERSION_STR), PRODUCT_FULL_VERSION_STR, (VOS_UINT32)sizeof(PRODUCT_FULL_VERSION_STR));
-
-    ulCnfRst = diag_SendMsg(MSP_PID_DIAG_APP_AGENT,PS_PID_MM,ID_MSG_DIAG_CMD_REPLAY_TO_PS,(VOS_UINT8*)&stReplay,\
-                (VOS_UINT32)sizeof(DIAG_CMD_REPLAY_SET_REQ_STRU));
-    if(ulCnfRst)
-    {
-        ulCnfRst = ERR_MSP_DIAG_SEND_MSG_FAIL;
-        goto DIAG_ERROR;
-    }
-
-    /*处理结果*/
-    pstConn->stConnInfo.ulAuid = ((MSP_DIAG_DATA_REQ_STRU*)(pstDiagHead->aucData))->ulAuid;
-    pstConn->stConnInfo.ulSn   = ((MSP_DIAG_DATA_REQ_STRU*)(pstDiagHead->aucData))->ulSn;
-    pstConn->stConnInfo.ulRc   = ERR_MSP_SUCCESS;
-
-    pstConn->ulReceiverPid = MSP_PID_DIAG_AGENT;
-    pstConn->ulSenderPid   = MSP_PID_DIAG_APP_AGENT;
-    pstConn->ulCmdId       = pstDiagHead->ulCmdId;
-    pstConn->ulMsgId       = DIAG_MSG_MSP_CONN_REQ;
-
-    diag_AgentVoteToSocp(SOCP_VOTE_FOR_WAKE);
-
-    ulCnfRst = VOS_SendMsg(MSP_PID_DIAG_APP_AGENT, pstConn);
-    if(ERR_MSP_SUCCESS == ulCnfRst)
-    {
-        /*复位维测信息记录*/
-        diag_reset_src_mntn_info();
-        mdrv_diag_reset_dst_mntn_info();
-
-        /* 启动定时器上报可维可测信息给工具定位丢包问题 */
-        ret = VOS_StartRelTimer(&g_DebugTimer, MSP_PID_DIAG_APP_AGENT, DIAG_DEBUG_TIMER_LEN, DIAG_DEBUG_TIMER_NAME, \
-                                DIAG_DEBUG_TIMER_PARA, VOS_RELTIMER_NOLOOP, VOS_TIMER_NO_PRECISION);
-        if(ret != ERR_MSP_SUCCESS)
-        {
-            diag_printf("VOS_StartRelTimer fail [%s]\n", __FUNCTION__);
-        }
-
-        mdrv_applog_conn();
-
-        mdrv_hds_printlog_conn();
-
-        mdrv_hds_translog_conn();
-
-        diag_printf("Diag send ConnInfo to Modem success.\n");
-
-        return ulCnfRst;
-    }
-
-DIAG_ERROR:
-
-    if(pstConn)
-    {
-      VOS_FreeMsg(MSP_PID_DIAG_APP_AGENT, pstConn);
-    }
-    DIAG_MSG_COMMON_PROC(stDiagInfo, stCnf, pstDiagHead);
-
-    stDiagInfo.ulMsgType    = DIAG_MSG_TYPE_MSP;
-
-    stCnf.ulRc   = ulCnfRst;
-
-    ulCnfRst = DIAG_MsgReport(&stDiagInfo, &stCnf, (VOS_UINT32)sizeof(stCnf));
-
-    diag_printf("diag connect failed.\n");
-
-    return ulCnfRst;
-}
-
-
-/*****************************************************************************
- Function Name   : diag_FwSetChanSta
- Description     : 给C核发送连接状态，在USB拔除等情况使用到
- Input           : VOS_UINT32 flag
- Output          : None
- Return          : VOS_UINT32
-
- History         :
-    1.w00182550      2013-1-15  Draft Enact
-
-*****************************************************************************/
-VOS_UINT32 diag_SetChanDisconn(MsgBlock* pMsgBlock)
-{
-    if(!DIAG_IS_CONN_ON)
-    {
-        return 0;
-    }
-    else
-    {
-        diag_CfgResetAllSwt();
-
-        mdrv_om_set_hsoflag(0);
-
-        mdrv_hds_printlog_disconn();
-
-        mdrv_hds_translog_disconn();
-
-        /*将状态发送给C核*/
-        diag_SendMsg(MSP_PID_DIAG_APP_AGENT,MSP_PID_DIAG_AGENT,ID_MSG_DIAG_HSO_DISCONN_IND, VOS_NULL, 0);
-        diag_AgentVoteToSocp(SOCP_VOTE_FOR_SLEEP);
-    }
-
-    return 0;
-}
-
-
-/*****************************************************************************
- Function Name   : diag_DisConnProc
- Description     : 该函数用于处理ConnProcEntry传进来的HSO断开命令
- Input           : pstReq 待处理数据
- Output          : None
- Return          : VOS_UINT32
-
- History         :
-    1.y00228784      2012-11-22  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
-VOS_UINT32 diag_DisConnProc(VOS_UINT8* pstReq)
-{
-    VOS_UINT32 ret;
-    DIAG_CMD_HOST_DISCONNECT_CNF_STRU stCnfDisConn = {0};
-    MSP_DIAG_CNF_INFO_STRU stDiagInfo = {0};
-    DIAG_FRAME_INFO_STRU *pstDiagHead;
-    VOS_UINT32 ulLen;
-    DIAG_MSG_A_TRANS_C_STRU *pstInfo;
-
-
-    diag_printf("Receive tool disconnect cmd!\n");
-
-    pstDiagHead = (DIAG_FRAME_INFO_STRU *)pstReq;
-
-    mdrv_diag_PTR(EN_DIAG_PTR_MSGMSP_DISCONN_IN, 1, pstDiagHead->ulCmdId, 0);
-
-    /*重置所有开关状态为未打开*/
-    diag_CfgResetAllSwt();
-
-    /* 删除定时器 */
-    (VOS_VOID)VOS_StopRelTimer(&g_DebugTimer);
-
-    DIAG_MSG_ACORE_CFG_PROC(ulLen, pstDiagHead, pstInfo, ret);
-
-    /* 打开SOCP模块的自动降频 */
-    mdrv_socp_enalbe_dfs();
-
-    /*解码投睡眠票由agent代投*/
-    diag_AgentVoteToSocp(SOCP_VOTE_FOR_SLEEP);
-
-    mdrv_hds_printlog_disconn();
-
-    mdrv_hds_translog_disconn();
-
-    return ret;
-
-DIAG_ERROR:
-
-    DIAG_MSG_COMMON_PROC(stDiagInfo, stCnfDisConn, pstDiagHead);
-
-    stDiagInfo.ulMsgType    = DIAG_MSG_TYPE_MSP;
-
-    stCnfDisConn.ulRc   = ret;
-
-    ret = DIAG_MsgReport(&stDiagInfo, &stCnfDisConn, (VOS_UINT32)sizeof(stCnfDisConn));
-
-    diag_AgentVoteToSocp(SOCP_VOTE_FOR_SLEEP);
-
-    diag_printf("diag disconnect failed.\n");
-
-    return ret;
-
-}
-
 
 
 

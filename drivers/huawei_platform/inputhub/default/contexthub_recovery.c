@@ -62,6 +62,7 @@ extern uint32_t g_enable_dump;
 extern int g_iom3_state;
 extern struct completion sensorhub_rdr_completion;
 extern uint32_t need_reset_io_power;
+extern uint32_t need_set_3v_io_power;
 extern struct regulator *sensorhub_vddio;
 extern char sensor_chip_info[SENSOR_MAX][MAX_CHIP_INFO_LEN];
 extern struct CONFIG_ON_DDR* pConfigOnDDr;
@@ -71,6 +72,7 @@ extern rproc_id_t ipc_ap_to_iom_mbx;
 extern rproc_id_t ipc_ap_to_lpm_mbx;
 
 extern void disable_fingerprint_when_sysreboot(void);
+extern void disable_fingerprint_ud_when_sysreboot(void);
 extern void rdr_system_error(u32 modid, u32 arg1, u32 arg2);
 extern void emg_flush_logbuff(void);
 extern void reset_logbuff(void);
@@ -447,11 +449,13 @@ static int sh_savebuf2fs(char* logpath, char* filename, void* buf, u32 len, u32 
 	vfs_fsync(fp, 0);
 out1:
 	filp_close(fp, NULL);
+#ifdef CONFIG_HISI_BB
 	/*根据权限要求，hisi_logs目录及子目录群组调整为root-system */
 	ret = (int)bbox_chown((const char __user*)path, ROOT_UID, SYSTEM_GID, false);
 	if (ret) {
 	    hwlog_err("[%s], chown %s uid [%d] gid [%d] failed err [%d]!\n", __func__, path, ROOT_UID, SYSTEM_GID, ret);
 	}
+#endif
 	set_fs(old_fs);
 out2:
 	return ret;
@@ -529,8 +533,9 @@ static int sh_create_dir(const char* path)
 }
 
 extern char* rdr_get_timestamp(void);
+#ifdef CONFIG_HISI_BB
 extern u64 rdr_get_tick(void);
-
+#endif
 static int write_sh_dump_history(void)
 {
 	int ret = 0;
@@ -541,7 +546,9 @@ static int write_sh_dump_history(void)
 	char date[DATATIME_MAXLEN];
 	hwlog_info("%s: write sensorhub dump history file\n", __func__);
 	memset(date, 0, DATATIME_MAXLEN);
+#ifdef CONFIG_HISI_BB
 	snprintf(date, DATATIME_MAXLEN, "%s-%08lld", rdr_get_timestamp(), rdr_get_tick());
+#endif
 
 	memset(local_path, 0, PATH_MAXLEN);
 	snprintf(local_path, PATH_MAXLEN, "%s/%s", g_dump_dir, "history.log");
@@ -589,7 +596,9 @@ static int write_sh_dump_file(void)
 	char path[PATH_MAXLEN];
 	dump_zone_head_t* dzh;
 	memset(date, 0, DATATIME_MAXLEN);
+#ifdef CONFIG_HISI_BB
 	snprintf(date, DATATIME_MAXLEN, "%s-%08lld", rdr_get_timestamp(), rdr_get_tick());
+#endif
 
 	memset(path, 0, PATH_MAXLEN);
 	snprintf(path, PATH_MAXLEN, "sensorhub-%02d.dmp", g_dump_index);
@@ -662,9 +671,9 @@ static int rdr_sh_thread(void* arg)
 	        }
 	        hwlog_warn(" ===========dump sensorhub log end==========\n");
 	    }
-	    complete_all(&sensorhub_rdr_completion);
 	    wake_unlock(&rdr_wl);
-	peri_used_release();
+	    peri_used_release();
+	    complete_all(&sensorhub_rdr_completion);
 	}
 
 	return 0;
@@ -809,7 +818,7 @@ static void operations_when_recovery_iom3(void)
 	enable_key_when_recovery_iom3();
 	notify_modem_when_iom3_recovery_finish();
 }
-
+#ifdef CONFIG_HISI_BB
 /*
 return value
 0:success
@@ -841,6 +850,7 @@ static int rdr_sensorhub_init_early(void)
 		{ ret = 0; }
 	return ret;
 }
+#endif
 
 static int sensorhub_panic_notify(struct notifier_block *nb, unsigned long action, void *data)
 {
@@ -964,10 +974,17 @@ static void reset_sensor_power(void)
 	if (ret< 0) {
 		hwlog_err("failed to disable regulator sensorhub_vddio\n");
 		return;
-       }
-        msleep(10);
-        ret = regulator_enable(sensorhub_vddio);
-        msleep(5);
+	}
+	msleep(10);
+	if (need_set_3v_io_power) {
+		ret = regulator_set_voltage(sensorhub_vddio, SENSOR_VOLTAGE_3V, SENSOR_VOLTAGE_3V);
+		if (ret < 0) {
+			hwlog_err("failed to set sensorhub_vddio voltage to 3V\n");
+			return;
+		}
+	}
+	ret = regulator_enable(sensorhub_vddio);
+	msleep(5);
 	if (ret< 0) {
 		hwlog_err("failed to enable regulator sensorhub_vddio\n");
 		return;
@@ -998,6 +1015,13 @@ recovery_iom3:
 		hwlog_err("%s exit\n", __func__);
 		return;
 	}
+
+	/* fix bug nmi can't be clear by iomcu,
+	or iomcu will not start correctly */
+	if (readl(sysctrl_base + nmi_reg) & 0x2) {
+		hwlog_err("%s nmi remain!\n", __func__);
+	}
+	writel(0, sysctrl_base + nmi_reg);
 
 	show_iom3_stat();	/*only for IOM3 debug*/
 	reset_sensor_power();
@@ -1096,6 +1120,11 @@ int iom3_need_recovery(int modid, exp_source_t f)
 		notify_rdr_thread();
 		queue_delayed_work(iom3_rec_wq, &iom3_rec_work, 0);
 	}
+	else if ( f == SH_FAULT_INTERNELFAULT && completion_done(&sensorhub_rdr_completion))
+	{
+		wake_unlock(&rdr_wl);
+		peri_used_release();
+	}
 	return ret;
 }
 
@@ -1138,6 +1167,7 @@ static int shb_reboot_notifier(struct notifier_block *nb, unsigned long foo,
 		disable_motions_when_sysreboot();
 		disable_cas_when_sysreboot();
 		disable_fingerprint_when_sysreboot();
+		disable_fingerprint_ud_when_sysreboot();
 		disable_key_when_sysreboot();
 	}
 	hwlog_info("shb:%s: -\n", __func__);

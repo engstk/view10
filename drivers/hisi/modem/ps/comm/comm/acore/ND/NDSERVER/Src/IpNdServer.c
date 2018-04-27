@@ -101,22 +101,7 @@ extern VOS_UINT8* Ndis_GetMacAddr( VOS_VOID );
 extern VOS_UINT32 Ndis_SendMacFrm(const VOS_UINT8  *pucBuf, VOS_UINT32 ulLen, VOS_UINT8 ucRabId);
 extern VOS_UINT32 Ndis_DlSendNcm(VOS_UINT8 ucRabId, ADS_PKT_TYPE_ENUM_UINT8 ucPktType, IMM_ZC_STRU *pstImmZc);
 
-/*****************************************************************************
- 函 数 名  : IP_NDSERVER_SaveTeDetectIp
- 功能描述  : 临时保存Te IP地址，在TE不发重复地址检测的情况下用来获取TE MAC地
-             址
- 输入参数  : VOS_UINT8* pucTeGlobalAddr
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年5月17日
-    作    者   : w00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_SaveTeDetectIp( const VOS_UINT8* pucTeGlobalAddr )
 {
     VOS_UINT32  ulIndex = g_astNdServerTeDetectBuf.ulHead;
@@ -140,7 +125,7 @@ VOS_VOID IP_NDSERVER_SaveTeDetectIp( const VOS_UINT8* pucTeGlobalAddr )
         /* modify by jiqiang 2014.04.13 pclint 960 end */
             {
             /* 相同Prefix只保留一个地址 */
-            IP_MEM_CPY_S(g_astNdServerTeDetectBuf.astTeIpBuf[ulIndex].aucTeGlobalAddr, pucTeGlobalAddr, IP_IPV6_ADDR_LEN);
+            IP_MEM_CPY_S(g_astNdServerTeDetectBuf.astTeIpBuf[ulIndex].aucTeGlobalAddr, IP_IPV6_ADDR_LEN, pucTeGlobalAddr, IP_IPV6_ADDR_LEN);
             return;
         }
         ulIndex = TTF_MOD_ADD(ulIndex, 1, g_astNdServerTeDetectBuf.ulMaxNum);
@@ -157,27 +142,13 @@ VOS_VOID IP_NDSERVER_SaveTeDetectIp( const VOS_UINT8* pucTeGlobalAddr )
     }
 
     /* 保存IP地址 */
-    IP_MEM_CPY_S(g_astNdServerTeDetectBuf.astTeIpBuf[g_astNdServerTeDetectBuf.ulTail].aucTeGlobalAddr, pucTeGlobalAddr, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(g_astNdServerTeDetectBuf.astTeIpBuf[g_astNdServerTeDetectBuf.ulTail].aucTeGlobalAddr, IP_IPV6_ADDR_LEN, pucTeGlobalAddr, IP_IPV6_ADDR_LEN);
     g_astNdServerTeDetectBuf.astTeIpBuf[g_astNdServerTeDetectBuf.ulTail].ulValid = IP_TRUE;
 
     g_astNdServerTeDetectBuf.ulTail = TTF_MOD_ADD(g_astNdServerTeDetectBuf.ulTail, 1, g_astNdServerTeDetectBuf.ulMaxNum);
 }
 
-/*****************************************************************************
- 函 数 名  : IP_NDSERVER_GetTeDetectIp
- 功能描述  : 获取临时保存的TE IP地址
- 输入参数  : VOS_UINT8* pucPrefixAddr
- 输出参数  : 无
- 返 回 值  : VOS_UINT8*
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年5月17日
-    作    者   : w00145177
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT8* IP_NDSERVER_GetTeDetectIp( const VOS_UINT8* pucPrefixAddr )
 {
     VOS_UINT32  ulIndex = g_astNdServerTeDetectBuf.ulHead;
@@ -207,17 +178,7 @@ VOS_UINT8* IP_NDSERVER_GetTeDetectIp( const VOS_UINT8* pucPrefixAddr )
     return IP_NULL_PTR;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_SetLocalParam
- Description     : 设置本地网络参数
- Input           : None
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli  00180715      2011-04-01  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_SetLocalParam( VOS_VOID )
 {
     /* M标识，0，主机不能通过DHCPv6获取IPv6地址 */
@@ -256,16 +217,7 @@ VOS_VOID IP_NDSERVER_SetLocalParam( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_DebugInit
- Description     : 清除统计信息
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-11  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_DebugInit(VOS_VOID)
 {
     VOS_UINT32                          ulIndex;
@@ -273,6 +225,7 @@ VOS_VOID IP_NDSERVER_DebugInit(VOS_VOID)
     for (ulIndex = 0; ulIndex < IP_NDSERVER_ADDRINFO_MAX_NUM; ulIndex++)
     {
         IP_MEM_SET_S( IP_NDSERVER_GET_STATINFO_ADDR(ulIndex),
+                    sizeof(IP_NDSERVER_PACKET_STATISTICS_INFO_STRU),
                     IP_NULL,
                     sizeof(IP_NDSERVER_PACKET_STATISTICS_INFO_STRU));
     }
@@ -280,18 +233,7 @@ VOS_VOID IP_NDSERVER_DebugInit(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_IsTimerNameValid
- Description     : 判断定时器名是否合法
- Input           : ulIndex     --- ND SERVER数据体索引号
-                   enTimerType --- 定时器类型
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-02  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32  IP_NDSERVER_IsTimerNameValid
 (
     VOS_UINT32                          ulIndex,
@@ -319,18 +261,7 @@ VOS_UINT32  IP_NDSERVER_IsTimerNameValid
     return IP_FALSE;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_GetTimer
- Description     : 获取定时器
- Input           : enTimerType------------------定时器类型
-                   ulIndex----------------------定时器索引号
- Output          : None
- Return          : IP_TIMER_STRU*
 
- History         :
-    1.sunli 00180715      2011-04-02  Draft Enact
-
-*****************************************************************************/
 IP_TIMER_STRU*  IP_NDSERVER_GetTimer
 (
     VOS_UINT32                          ulIndex,
@@ -355,17 +286,7 @@ IP_TIMER_STRU*  IP_NDSERVER_GetTimer
     return pstTimerInfo;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_GetTimerLen
- Description     : 获取定时器时长
- Input           : enTimerType------------------定时器类型
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-02  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32  IP_NDSERVER_GetTimerLen
 (
     NDSER_TIMER_ENUM_UINT32              enTimerType
@@ -395,18 +316,7 @@ VOS_UINT32  IP_NDSERVER_GetTimerLen
     return ulTimerLen;
 }
 /*lint -e550*/
-/*****************************************************************************
- Function Name   : IP_NDSERVER_PrintTimeStartInfo
- Description     : 打印定时器启动信息
- Input           : enTimerType------------------定时器类型
-                   ulIndex----------------------定时器索引号
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2010-04-02  Draft Enact
-
-*****************************************************************************/
 VOS_VOID  IP_NDSERVER_PrintTimeStartInfo
 (
     VOS_UINT32                          ulIndex,
@@ -438,17 +348,7 @@ VOS_VOID  IP_NDSERVER_PrintTimeStartInfo
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_PrintTimeStopInfo
- Description     : 打印定时器关闭信息
- Input           : enTimerType------------------定时器类型
-                   ulIndex----------------------定时器索引号
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2010-04-02  Draft Enact
-
-*****************************************************************************/
 VOS_VOID  IP_NDSERVER_PrintTimeStopInfo
 (
     VOS_UINT32                          ulIndex,
@@ -480,16 +380,7 @@ VOS_VOID  IP_NDSERVER_PrintTimeStopInfo
     return;
 }
 /*lint +e550*/
-/*****************************************************************************
- Function Name  : IP_NDSERVER_TimerStart
- Discription    : 启动某一承载的某种类型的定时器
- Input          : VOS_UINT32             ulIndex
-                  NDSER_TIMER_ENUM_UINT32 enTimerType
- Output         : VOS_VOID
- Return         : None
- History:
-      1.sunli 00180715      2011-04-02  Draft Enact
-*****************************************************************************/
+
 VOS_VOID IP_NDSERVER_TimerStart
 (
     VOS_UINT32                          ulIndex,
@@ -560,16 +451,7 @@ VOS_VOID IP_NDSERVER_TimerStart
     return;
 }
 
-/*****************************************************************************
- Function Name  : IP_NDSERVER_TimerStop
- Discription    : 停止某一承载某种类型定时器
- Input          : VOS_UINT32             ulIndex
-                  NDSER_TIMER_ENUM_UINT32 enTimerType
- Output         : VOS_VOID
- Return         : None
- History:
-      1.sunli 00180715      2011-04-02  Draft Enact
-*****************************************************************************/
+
 VOS_VOID IP_NDSERVER_TimerStop
 (
     VOS_UINT32                          ulIndex,
@@ -621,17 +503,7 @@ VOS_VOID IP_NDSERVER_TimerStop
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_Init
- Description     : ND SERVER模块的初始化
- Input           : None
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli  00180715      2011-04-01  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_Init( VOS_VOID )
 {
     VOS_UINT32                          ulIndex;
@@ -644,18 +516,22 @@ VOS_VOID IP_NDSERVER_Init( VOS_VOID )
     for (ulIndex = 0; ulIndex < IP_NDSERVER_ADDRINFO_MAX_NUM; ulIndex++)
     {
         IP_MEM_SET_S( IP_NDSERVER_ADDRINFO_GET_ADDR(ulIndex),
+                    sizeof(IP_NDSERVER_ADDR_INFO_STRU),
                     IP_NULL,
                     sizeof(IP_NDSERVER_ADDR_INFO_STRU));
 
         IP_MEM_CPY_S( IP_NDSERVER_ADDRINFO_GET_MACADDR(ulIndex),
+                   IP_MAC_ADDR_LEN,
                    (VOS_VOID*)Ndis_GetMacAddr(),
                    IP_MAC_ADDR_LEN);
 
         IP_MEM_CPY_S((IP_NDSERVER_ADDRINFO_GET_MACFRAME(ulIndex) + IP_MAC_ADDR_LEN),
+                   (IP_ETH_MAC_HEADER_LEN - IP_MAC_ADDR_LEN),
                    (VOS_VOID*)Ndis_GetMacAddr(),
                    IP_MAC_ADDR_LEN);
 
         IP_MEM_CPY_S((IP_NDSERVER_ADDRINFO_GET_MACFRAME(ulIndex) + 2*IP_MAC_ADDR_LEN),
+                   (IP_ETH_MAC_HEADER_LEN - 2*IP_MAC_ADDR_LEN),
                    (VOS_UINT8*)(&usPayLoad),
                    2);
 
@@ -671,6 +547,7 @@ VOS_VOID IP_NDSERVER_Init( VOS_VOID )
     }
 
     IP_MEM_SET_S(&g_astNdServerTeDetectBuf,
+                sizeof(IP_NDSERVER_TE_DETECT_BUF_STRU),
                 IP_NULL,
                 sizeof(IP_NDSERVER_TE_DETECT_BUF_STRU));
 
@@ -681,21 +558,7 @@ VOS_VOID IP_NDSERVER_Init( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : APP_NdServer_Pid_InitFunc
- 功能描述  : ND SERVER PID初始化函数
- 输入参数  : enum VOS_INIT_PHASE_DEFINE ePhase
- 输出参数  : 无
- 返 回 值  : extern VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月7日
-    作    者   : h00159435
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  APP_NdServer_Pid_InitFunc( enum VOS_INIT_PHASE_DEFINE ePhase)
 {
     switch( ePhase )
@@ -722,17 +585,7 @@ VOS_UINT32  APP_NdServer_Pid_InitFunc( enum VOS_INIT_PHASE_DEFINE ePhase)
     return 0;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_Stop
- Description     : 清除ND SERVER相关信息
- Input           : ulIndex --- ND SERVER结构索引号
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli  00180715      2011-04-01  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_Stop(VOS_UINT32 ulIndex)
 {
     IP_NDSERVER_ADDR_INFO_STRU         *pstInfoAddr = IP_NULL_PTR;
@@ -745,7 +598,7 @@ VOS_VOID IP_NDSERVER_Stop(VOS_UINT32 ulIndex)
 
     pstInfoAddr->ucEpsbId = 0;
 
-    IP_MEM_SET_S(&pstInfoAddr->stIpv6NwPara, IP_NULL, sizeof(ESM_IP_IPV6_NW_PARA_STRU));
+    IP_MEM_SET_S(&pstInfoAddr->stIpv6NwPara, sizeof(ESM_IP_IPV6_NW_PARA_STRU), IP_NULL, sizeof(ESM_IP_IPV6_NW_PARA_STRU));
 
     if (IP_NDSERVER_TE_ADDR_INEXISTENT != pstInfoAddr->stTeAddrInfo.enTeAddrState)
     {
@@ -754,29 +607,20 @@ VOS_VOID IP_NDSERVER_Stop(VOS_UINT32 ulIndex)
 
     /* 清除TE地址记录 */
     IP_MEM_SET_S( &pstInfoAddr->stTeAddrInfo,
+                sizeof(IP_NDSERVER_TE_ADDR_INFO_STRU),
                 IP_NULL,
                 sizeof(IP_NDSERVER_TE_ADDR_INFO_STRU));
 
     IP_NDSERVER_TimerStop(ulIndex, pstInfoAddr->stTimerInfo.ulName);
 
-    IP_MEM_SET_S(&pstInfoAddr->stIpSndNwMsg, IP_NULL, sizeof(IP_SND_MSG_STRU));
+    IP_MEM_SET_S(&pstInfoAddr->stIpSndNwMsg, sizeof(IP_SND_MSG_STRU), IP_NULL, sizeof(IP_SND_MSG_STRU));
 
     g_aulPeriodicRaTimeCnt[ulIndex] = g_ulPeriodicRaTimerLen / g_ulPeriodicNsTimerLen;
 
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_ClearDlPktQue
- Description     : 释放下行缓存队列中的PKT
- Input           : VOS_UINT8 ucRabId
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.h00159435 00159435      2011-12-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_ClearDlPktQue(VOS_UINT32 ulIndex)
 {
     IMM_ZC_STRU                        *pstImmZc    = VOS_NULL_PTR;
@@ -800,18 +644,7 @@ VOS_VOID IP_NDSERVER_ClearDlPktQue(VOS_UINT32 ulIndex)
     return;
 }
 
-/*****************************************************************************
- Function Name   : NdSer_Ipv6PdnRel
- Description     : 处理NDIS发来的Ipv6PdnRel
- Input           : VOS_UINT8 ucRabId
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.h00159435 00159435      2011-12-09  Draft Enact
-    2.h00218138 00218138      2013-1-16  DSDA
-
-*****************************************************************************/
 VOS_VOID NdSer_Ipv6PdnRel(VOS_UINT8 ucExRabId)
 {
     VOS_UINT32                          ulIndex;
@@ -834,17 +667,7 @@ VOS_VOID NdSer_Ipv6PdnRel(VOS_UINT8 ucExRabId)
     return;
 }
 
-/*****************************************************************************
- Function Name   : NdSer_Ipv6PdnValid
- Description     : 供NDIS调用，查询对应承载的ND SERVER实体是否还有效
- Input           : VOS_UINT8 ucRabId
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.huibo 00159435      2011-12-06  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 NdSer_Ipv6PdnValid(VOS_UINT8 ucRabId)
 {
     VOS_UINT32                          ulIndex;
@@ -858,17 +681,7 @@ VOS_UINT32 NdSer_Ipv6PdnValid(VOS_UINT8 ucRabId)
     return PS_SUCC;
 }
 
-/*****************************************************************************
- Function Name   : NdSer_GetMacFrm
- Description     : 供NDIS调用，获取ND SERVER对应实体的完整MAC帧头
- Input           : VOS_UINT8 ucIndex
- Output          : None
- Return          : VOS_UINT8*
 
- History         :
-    1.huibo 00159435      2011-12-06  Draft Enact
-
-*****************************************************************************/
 VOS_UINT8* NdSer_GetMacFrm(VOS_UINT8 ucIndex, VOS_UINT8 *enTeAddrState)
 {
     IP_NDSERVER_ADDR_INFO_STRU         *pstInfoAddr  = IP_NULL_PTR;
@@ -885,17 +698,7 @@ VOS_UINT8* NdSer_GetMacFrm(VOS_UINT8 ucIndex, VOS_UINT8 *enTeAddrState)
     return IP_NDSERVER_ADDRINFO_GET_MACFRAME(ucIndex);
 }
 
-/*****************************************************************************
- Function Name   : NdSer_MacAddrInvalidProc
- Description     : 供NDIS调用，当未获得PC MAC地址时，缓存下行IP包
- Input           : VOS_UINT8 ucIndex
- Output          : None
- Return          : VOS_UINT8*
 
- History         :
-    1.huibo 00159435      2011-12-06  Draft Enact
-
-*****************************************************************************/
 VOS_VOID NdSer_MacAddrInvalidProc(IMM_ZC_STRU *pstImmZc, VOS_UINT8 ucIndex)
 {
     IMM_ZC_STRU                        *pstQueHead;
@@ -939,17 +742,7 @@ VOS_VOID NdSer_MacAddrInvalidProc(IMM_ZC_STRU *pstImmZc, VOS_UINT8 ucIndex)
     return;
 }
 
-/*****************************************************************************
- Function Name  : IP_NDSERVER_FindIpv6EffectivePrefix
- Description    : 查找第一个可用的IPv6前缀
- Input          : pstConfigParaInd ---- ESM_IP_NW_PARA_IND_STRU消息指针
- Output         : pulPrefixIndex   ---- 前缀索引指针
- Return Value   : VOS_UINT32
 
- History        :
-      1.sunli 00180715     2011-04-05  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_FindIpv6EffectivePrefix
 (
     AT_NDIS_IPV6_PDN_INFO_STRU            *pstConfigParaInd,
@@ -977,17 +770,7 @@ VOS_UINT32 IP_NDSERVER_FindIpv6EffectivePrefix
     return IP_FAIL;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_GetNwPara
- Description     : 从ID_ESM_IP_NW_PARA_IND中获取网络参数
- Input           : pstNwParaInd--------------消息指针
- Output          : pstNwParamTmp-------------网络参数指针
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-05  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_GetNwPara
 (
     ESM_IP_IPV6_NW_PARA_STRU           *pstNwParamTmp,
@@ -997,7 +780,7 @@ VOS_UINT32 IP_NDSERVER_GetNwPara
     VOS_UINT32                          ulPrefixIndex       = IP_NULL;
     VOS_UINT32                          ulRslt              = IP_NULL;
 
-    IP_MEM_SET_S(pstNwParamTmp, IP_NULL, sizeof(ESM_IP_IPV6_NW_PARA_STRU));
+    IP_MEM_SET_S(pstNwParamTmp, sizeof(ESM_IP_IPV6_NW_PARA_STRU), IP_NULL, sizeof(ESM_IP_IPV6_NW_PARA_STRU));
 
     /* 获取HOP LIMIT */
     pstNwParamTmp->ucCurHopLimit = pstNwParaInd->ulBitCurHopLimit;
@@ -1011,6 +794,7 @@ VOS_UINT32 IP_NDSERVER_GetNwPara
 
     /* 获取接口标识符 */
     IP_MEM_CPY_S( pstNwParamTmp->aucInterfaceId,
+                ND_IP_IPV6_IFID_LENGTH,
                 pstNwParaInd->aucInterfaceId,
                 ND_IP_IPV6_IFID_LENGTH);
 
@@ -1023,6 +807,7 @@ VOS_UINT32 IP_NDSERVER_GetNwPara
     }
 
     IP_MEM_CPY_S( &pstNwParamTmp->astPrefixList[IP_NULL],
+                sizeof(ND_IP_IPV6_PREFIX_STRU),
                 &pstNwParaInd->astPrefixList[ulPrefixIndex],
                 sizeof(ND_IP_IPV6_PREFIX_STRU));
 
@@ -1030,18 +815,22 @@ VOS_UINT32 IP_NDSERVER_GetNwPara
 
     /* 获取DNS服务器列表 */
     IP_MEM_CPY_S( pstNwParamTmp->stDnsSer.aucPriDnsServer,
+                IP_IPV6_ADDR_LEN,
                 pstNwParaInd->stDnsSer.aucPriServer,
                 IP_IPV6_ADDR_LEN);
     IP_MEM_CPY_S( pstNwParamTmp->stDnsSer.aucSecDnsServer,
+                IP_IPV6_ADDR_LEN,
                 pstNwParaInd->stDnsSer.aucSecServer,
                 IP_IPV6_ADDR_LEN);
     pstNwParamTmp->stDnsSer.ucDnsSerNum = pstNwParaInd->stDnsSer.ucSerNum;
 
     /* 获取SIP服务器列表 */
     IP_MEM_CPY_S( pstNwParamTmp->stSipSer.aucPriSipServer,
+                IP_IPV6_ADDR_LEN,
                 pstNwParaInd->stPcscfSer.aucPriServer,
                 IP_IPV6_ADDR_LEN);
     IP_MEM_CPY_S( pstNwParamTmp->stSipSer.aucSecSipServer,
+                IP_IPV6_ADDR_LEN,
                 pstNwParaInd->stPcscfSer.aucSecServer,
                 IP_IPV6_ADDR_LEN);
     pstNwParamTmp->stSipSer.ucSipSerNum = pstNwParaInd->stPcscfSer.ucSerNum;
@@ -1049,17 +838,7 @@ VOS_UINT32 IP_NDSERVER_GetNwPara
     return IP_SUCC;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormRaHeaderMsg
- Description     : RA报文头固定部分设置
- Input           : ulIndex --- ND SERVER实体索引
- Output          : pucData --- 报文缓冲指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormRaHeaderMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1105,19 +884,7 @@ VOS_VOID IP_NDSERVER_FormRaHeaderMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormRaOptMsg
- Description     : RA报文选项部分设置
- Input           : ulIndex --- ND SERVER实体索引
-                   pucMacAddr- 源链路层地址
- Output          : pucData --- 报文缓冲指针
-                   pulLen ---- 报文长度指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormRaOptMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1142,7 +909,7 @@ VOS_VOID IP_NDSERVER_FormRaOptMsg
     pucData++;
 
     /* 链路层地址 */
-    IP_MEM_CPY_S(pucData, pucMacAddr, IP_MAC_ADDR_LEN);
+    IP_MEM_CPY_S(pucData, IP_MAC_ADDR_LEN, pucMacAddr, IP_MAC_ADDR_LEN);
     pucData += IP_MAC_ADDR_LEN;
 
     (*pulLen) += IP_ND_OPT_UNIT_LEN;
@@ -1199,7 +966,7 @@ VOS_VOID IP_NDSERVER_FormRaOptMsg
         pucData += 4;
 
         /* 前缀 */
-        IP_MEM_CPY_S(pucData, pstNwPara->astPrefixList[ulCount].aucPrefix, IP_IPV6_ADDR_LEN);
+        IP_MEM_CPY_S(pucData, IP_IPV6_ADDR_LEN, pstNwPara->astPrefixList[ulCount].aucPrefix, IP_IPV6_ADDR_LEN);
         pucData += IP_IPV6_ADDR_LEN;
 
         (*pulLen) += (4 * IP_ND_OPT_UNIT_LEN);
@@ -1208,18 +975,7 @@ VOS_VOID IP_NDSERVER_FormRaOptMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormEtherHeaderMsg
- Description     : IPv6报头设置
- Input           : aucSrcMacAddr --- 源MAC地址
-                   aucDstMacAddr --- 目的MAC地址
- Output          : pucData --- 报文缓冲指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormEtherHeaderMsg
 (
     const VOS_UINT8                    *aucSrcMacAddr,
@@ -1229,12 +985,14 @@ VOS_VOID IP_NDSERVER_FormEtherHeaderMsg
 {
     /* 目的MAC */
     IP_MEM_CPY_S( pucData,
+                IP_MAC_ADDR_LEN,
                 aucDstMacAddr,
                 IP_MAC_ADDR_LEN);
     pucData += IP_MAC_ADDR_LEN;
 
     /* 源MAC */
     IP_MEM_CPY_S( pucData,
+                IP_MAC_ADDR_LEN,
                 aucSrcMacAddr,
                 IP_MAC_ADDR_LEN);
     pucData += IP_MAC_ADDR_LEN;
@@ -1246,20 +1004,7 @@ VOS_VOID IP_NDSERVER_FormEtherHeaderMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormRaMsg
- Description     : 生成路由公告消息
- Input           : ulIndex ------- 处理RA发包实体索引
-                   pstNdMsgData -- 目的信息参数
- Output          : pucSendBuff --- 发送RA报文缓冲
-                   pulSendLen ---- 发送报文长度
 
- Return          : VOS_VOID
-
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormRaMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1290,11 +1035,12 @@ VOS_VOID IP_NDSERVER_FormRaMsg
 
     /* 根据自身MAC地址生成link-local地址 */
     IP_MEM_CPY_S( aucSrcMacAddr,
+                IP_MAC_ADDR_LEN,
                 (VOS_VOID*)Ndis_GetMacAddr(),
                 IP_MAC_ADDR_LEN);
     IP_ProduceIfaceIdFromMacAddr(aucSrcIPAddr, aucSrcMacAddr);
     IP_SetUint16Data(aucSrcIPAddr, IP_IPV6_LINK_LOCAL_PREFIX);
-    IP_MEM_CPY_S(pstInfoAddr->aucUeLinkLocalAddr, aucSrcIPAddr, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstInfoAddr->aucUeLinkLocalAddr, IP_IPV6_ADDR_LEN, aucSrcIPAddr, IP_IPV6_ADDR_LEN);
 
     /* 设置RA报文选项 */
     IP_NDSERVER_FormRaOptMsg(ulIndex, aucSrcMacAddr, (VOS_VOID *)(pucData + ulPacketLen), &ulPacketLen);
@@ -1305,20 +1051,24 @@ VOS_VOID IP_NDSERVER_FormRaMsg
             && (1 == pstNdMsgData->uNdMsgStru.stRs.ucBitOpSrcLinkLayerAddr))
     {
         IP_MEM_CPY_S( aucDstIPAddr,
+                    IP_IPV6_ADDR_LEN,
                     pstNdMsgData->aucSrcIp,
                     IP_IPV6_ADDR_LEN);
 
         IP_MEM_CPY_S( aucDstMacAddr,
+                    IP_MAC_ADDR_LEN,
                     pstNdMsgData->uNdMsgStru.stRs.aucSrcLinkLayerAddr,
                     IP_MAC_ADDR_LEN);
     }
     else
     {
         IP_MEM_CPY_S( aucDstIPAddr,
+                    IP_IPV6_ADDR_LEN,
                     g_aucNdAllNodesMulticaseAddr,
                     IP_IPV6_ADDR_LEN);
 
         IP_MEM_CPY_S( aucDstMacAddr,
+                    IP_MAC_ADDR_LEN,
                     g_aucNdAllNodesMacAddr,
                     IP_MAC_ADDR_LEN);
     }
@@ -1345,18 +1095,7 @@ VOS_VOID IP_NDSERVER_FormRaMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_SendRaMsg
- Description     : 发送路由公告消息
- Input           : ulIndex ------- 处理RA发包实体索引
-                   pstNdMsgData -- 目的信息参数
- Output          :
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_SendRaMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1371,7 +1110,7 @@ VOS_UINT32 IP_NDSERVER_SendRaMsg
     ulEpsbId = IP_NDSERVER_GET_EPSBID(ulIndex);
 
     pucSendBuff = IP_NDSERVER_GET_SENDMSG_BUFFER();
-    IP_MEM_SET_S(pucSendBuff, IP_NULL, IP_IPM_MTU);
+    IP_MEM_SET_S(pucSendBuff, IP_IPM_MTU, IP_NULL, IP_IPM_MTU);
 
     /* 调用形成RA消息函数 */
     IP_NDSERVER_FormRaMsg(ulIndex, pstNdMsgData, pucSendBuff, &ulSendLen);
@@ -1384,18 +1123,7 @@ VOS_UINT32 IP_NDSERVER_SendRaMsg
 
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormNaHeaderMsg
- Description     : NA报文头固定部分设置
- Input           : pucTargetIPAddr --- 目的IP地址
-                   ucSolicitFlag   --- 请求标志
- Output          : pucData --- 报文缓冲指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormNaHeaderMsg
 (
     const VOS_UINT8                    *pucTargetIPAddr,
@@ -1423,6 +1151,7 @@ VOS_VOID IP_NDSERVER_FormNaHeaderMsg
 
     /* 目标地址 */
     IP_MEM_CPY_S( pucData,
+                IP_IPV6_ADDR_LEN,
                 pucTargetIPAddr,
                 IP_IPV6_ADDR_LEN);
     pucData += IP_IPV6_ADDR_LEN;
@@ -1430,18 +1159,7 @@ VOS_VOID IP_NDSERVER_FormNaHeaderMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormNaOptMsg
- Description     : NA报文选项部分设置
- Input           : pucMacAddr- 源链路层地址
- Output          : pucData --- 报文缓冲指针
-                   pulLen ---- 报文长度指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormNaOptMsg
 (
     const VOS_UINT8                    *pucMacAddr,
@@ -1458,7 +1176,7 @@ VOS_VOID IP_NDSERVER_FormNaOptMsg
     pucData++;
 
     /* 链路层地址 */
-    IP_MEM_CPY_S(pucData, pucMacAddr, IP_MAC_ADDR_LEN);
+    IP_MEM_CPY_S(pucData, IP_MAC_ADDR_LEN, pucMacAddr, IP_MAC_ADDR_LEN);
     pucData += IP_MAC_ADDR_LEN;
 
     (*pulLen) += IP_ND_OPT_UNIT_LEN;
@@ -1466,20 +1184,7 @@ VOS_VOID IP_NDSERVER_FormNaOptMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormNaMsg
- Description     : 生成邻居公告消息
- Input           : ulIndex ------- 处理NA发包实体索引
-                   pstNdMsgData -- 目的信息参数
- Output          : pucSendBuff --- 发送NA报文缓冲
-                   pulSendLen ---- 发送报文长度
 
- Return          : VOS_VOID
-
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormNaMsg
 (
     const IP_ND_MSG_STRU               *pstNdMsgData,
@@ -1500,6 +1205,7 @@ VOS_VOID IP_NDSERVER_FormNaMsg
 
     /* 根据自身MAC地址作为源MAC */
     IP_MEM_CPY_S( aucSrcMacAddr,
+                IP_MAC_ADDR_LEN,
                 (VOS_VOID*)Ndis_GetMacAddr(),
                 IP_MAC_ADDR_LEN);
 
@@ -1513,6 +1219,7 @@ VOS_VOID IP_NDSERVER_FormNaMsg
     {
         /* 使用目标地址作为源IP */
         IP_MEM_CPY_S( aucSrcIPAddr,
+                    IP_IPV6_ADDR_LEN,
                     pstNdMsgData->uNdMsgStru.stNs.aucTargetAddr,
                     IP_IPV6_ADDR_LEN);
     }
@@ -1525,10 +1232,12 @@ VOS_VOID IP_NDSERVER_FormNaMsg
             && (1 == pstNdMsgData->uNdMsgStru.stNs.ucBitOpSrcLinkLayerAddr))
     {
         IP_MEM_CPY_S( aucDstIPAddr,
+                    IP_IPV6_ADDR_LEN,
                     pstNdMsgData->aucSrcIp,
                     IP_IPV6_ADDR_LEN);
 
         IP_MEM_CPY_S( aucDstMacAddr,
+                    IP_MAC_ADDR_LEN,
                     pstNdMsgData->uNdMsgStru.stNs.aucSrcLinkLayerAddr,
                     IP_MAC_ADDR_LEN);
 
@@ -1537,10 +1246,12 @@ VOS_VOID IP_NDSERVER_FormNaMsg
     else
     {
         IP_MEM_CPY_S( aucDstIPAddr,
+                    IP_IPV6_ADDR_LEN,
                     g_aucNdAllNodesMulticaseAddr,
                     IP_IPV6_ADDR_LEN);
 
         IP_MEM_CPY_S( aucDstMacAddr,
+                    IP_MAC_ADDR_LEN,
                     g_aucNdAllNodesMacAddr,
                     IP_MAC_ADDR_LEN);
     }
@@ -1577,18 +1288,7 @@ VOS_VOID IP_NDSERVER_FormNaMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_SendNaMsg
- Description     : 发送邻居公告消息
- Input           : ulIndex ------- 处理NA发包实体索引
-                   pstNdMsgData -- 目的信息参数
- Output          :
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_SendNaMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1603,7 +1303,7 @@ VOS_UINT32 IP_NDSERVER_SendNaMsg
     ulEpsbId = IP_NDSERVER_GET_EPSBID(ulIndex);
 
     pucSendBuff = IP_NDSERVER_GET_SENDMSG_BUFFER();
-    IP_MEM_SET_S(pucSendBuff, IP_NULL, IP_IPM_MTU);
+    IP_MEM_SET_S(pucSendBuff, IP_IPM_MTU, IP_NULL, IP_IPM_MTU);
 
     /* 调用形成NA消息函数 */
     IP_NDSERVER_FormNaMsg(pstNdMsgData, pucSendBuff, &ulSendLen);
@@ -1614,17 +1314,7 @@ VOS_UINT32 IP_NDSERVER_SendNaMsg
     return Ndis_SendMacFrm(pucSendBuff, ulSendLen, (VOS_UINT8)ulEpsbId);
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormNsHeaderMsg
- Description     : NS报文头固定部分设置
- Input           : ulIndex --- ND SERVER实体索引
- Output          : pucData --- 报文缓冲指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormNsHeaderMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1650,6 +1340,7 @@ VOS_VOID IP_NDSERVER_FormNsHeaderMsg
 
     /* 目标地址 */
     IP_MEM_CPY_S( pucData,
+                IP_IPV6_ADDR_LEN,
                 pstDstAddr,
                 IP_IPV6_ADDR_LEN);
 
@@ -1658,18 +1349,7 @@ VOS_VOID IP_NDSERVER_FormNsHeaderMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormNsOptMsg
- Description     : NS报文选项部分设置
- Input           : pucMacAddr- 源链路层地址
- Output          : pucData --- 报文缓冲指针
-                   pulLen ---- 报文长度指针
- Return          :
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormNsOptMsg
 (
     const VOS_UINT8                    *pucMacAddr,
@@ -1686,7 +1366,7 @@ VOS_VOID IP_NDSERVER_FormNsOptMsg
     pucData++;
 
     /* 链路层地址 */
-    IP_MEM_CPY_S(pucData, pucMacAddr, IP_MAC_ADDR_LEN);
+    IP_MEM_CPY_S(pucData, IP_MAC_ADDR_LEN, pucMacAddr, IP_MAC_ADDR_LEN);
     pucData += IP_MAC_ADDR_LEN;
 
     (*pulLen) += IP_ND_OPT_UNIT_LEN;
@@ -1694,19 +1374,7 @@ VOS_VOID IP_NDSERVER_FormNsOptMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormNsMsg
- Description     : 生成地址解析邻居请求消息
- Input           : ulIndex ------- 处理NS发包实体索引
- Output          : pucSendBuff --- 发送NS报文缓冲
-                   pulSendLen ---- 发送报文长度
 
- Return          : VOS_VOID
-
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_FormNsMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1729,6 +1397,7 @@ VOS_VOID IP_NDSERVER_FormNsMsg
 
     /* 根据自身MAC地址生成link-local地址 */
     IP_MEM_CPY_S( aucSrcMacAddr,
+                IP_MAC_ADDR_LEN,
                 (VOS_VOID*)Ndis_GetMacAddr(),
                 IP_MAC_ADDR_LEN);
     IP_ProduceIfaceIdFromMacAddr(aucSrcIPAddr, aucSrcMacAddr);
@@ -1770,17 +1439,7 @@ VOS_VOID IP_NDSERVER_FormNsMsg
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_SendNsMsg
- Description     : 发送地址解析邻居请求消息
- Input           : ulIndex ------- 处理NS发包实体索引
- Output          :
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_SendNsMsg
 (
     VOS_UINT32                          ulIndex,
@@ -1795,7 +1454,7 @@ VOS_UINT32 IP_NDSERVER_SendNsMsg
     ulEpsbId = IP_NDSERVER_GET_EPSBID(ulIndex);
 
     pucSendBuff = IP_NDSERVER_GET_SENDMSG_BUFFER();
-    IP_MEM_SET_S(pucSendBuff, IP_NULL, IP_IPM_MTU);
+    IP_MEM_SET_S(pucSendBuff, IP_IPM_MTU, IP_NULL, IP_IPM_MTU);
 
     /* 调用形成NS消息函数 */
     IP_NDSERVER_FormNsMsg(ulIndex, pucSendBuff, &ulSendLen, pstDstAddr);
@@ -1807,21 +1466,7 @@ VOS_UINT32 IP_NDSERVER_SendNsMsg
 }
 
 
-/*****************************************************************************
- 函 数 名  : NdSer_GetAddrInfoIdx
- 功能描述  : 根据ExRabId查找NDSERVER实体的索引
- 输入参数  : VOS_UINT8 ucExRabId
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年1月15日
-    作    者   : h00218138
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 NdSer_GetAddrInfoIdx(VOS_UINT8 ucExRabId)
 {
     VOS_UINT32 i = 0;
@@ -1839,21 +1484,7 @@ VOS_UINT32 NdSer_GetAddrInfoIdx(VOS_UINT8 ucExRabId)
     return IP_NDSERVER_ADDRINFO_MAX_NUM;
 }
 
-/*****************************************************************************
- 函 数 名  : NdSer_AllocAddrInfo
- 功能描述  : 分配一个空闲的NDSERVER实体
- 输入参数  : 无
- 输出参数  : ulIndex
- 返 回 值  : IP_NDSERVER_ADDR_INFO_STRU*
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年1月15日
-    作    者   : h00218138
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 IP_NDSERVER_ADDR_INFO_STRU* NdSer_AllocAddrInfo(VOS_UINT32* pUlIndex)
 {
     VOS_UINT32 i = 0;
@@ -1878,25 +1509,7 @@ IP_NDSERVER_ADDR_INFO_STRU* NdSer_AllocAddrInfo(VOS_UINT32* pUlIndex)
     return IP_NULL_PTR;
 }
 
-/*****************************************************************************
- 函 数 名  : NdSer_CheckIpv6PdnInfo
- 功能描述  : PDN IPV6地址信息检查
- 输入参数  : AT_NDIS_IPV6_PDN_INFO_STRU
- 输出参数  :
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月11日
-    作    者   : h00159435
-    修改内容   : 新生成函数
-
-  2.日    期   : 2013年1月15日
-    作    者   : h00218138
-    修改内容   : DSDA开发，使用ExRabId来映射NdSer实体
-
-*****************************************************************************/
 VOS_UINT32 NdSer_CheckIpv6PdnInfo(AT_NDIS_IPV6_PDN_INFO_STRU *pstIpv6PdnInfo)
 {
     VOS_UINT32                          ulIndex       = IP_NULL;
@@ -1919,17 +1532,7 @@ VOS_UINT32 NdSer_CheckIpv6PdnInfo(AT_NDIS_IPV6_PDN_INFO_STRU *pstIpv6PdnInfo)
     return PS_FAIL;
 }
 
-/*****************************************************************************
- Function Name   : NdSer_Ipv6PdnInfoCfg
- Description     : 处理NDIS发来的Ipv6PdnInfoCfg
- Input           : VOS_UINT8 ucRabId, AT_NDIS_IPV6_PDN_INFO_STRU *pstIpv6PdnInfo
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.huibo 00159435      2011-12-09  Draft Enact
-    1.houguoqiang 00218138      2013-1-16  Modified for DSDA
-*****************************************************************************/
 VOS_VOID NdSer_Ipv6PdnInfoCfg(VOS_UINT8 ucExRabId, AT_NDIS_IPV6_PDN_INFO_STRU *pstIpv6PdnInfo)
 {
     VOS_UINT32                          ulIndex       = IP_NULL;
@@ -1974,7 +1577,7 @@ VOS_VOID NdSer_Ipv6PdnInfoCfg(VOS_UINT8 ucExRabId, AT_NDIS_IPV6_PDN_INFO_STRU *p
         {
             IPND_INFO_LOG(NDIS_NDSERVER_PID, "NdSer_Ipv6PdnInfoCfg: Using saved TeAddr to get MAC.");
 
-            IP_MEM_CPY_S(pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr, pucIpV6, ND_IP_IPV6_ADDR_LENGTH);
+            IP_MEM_CPY_S(pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr, IP_IPV6_ADDR_LEN, pucIpV6, ND_IP_IPV6_ADDR_LENGTH);
             pstInfoAddr->stTeAddrInfo.enTeAddrState = IP_NDSERVER_TE_ADDR_INCOMPLETE;
 
             /* 启动收到重复地址检测后的等待定时器 */
@@ -1997,6 +1600,7 @@ VOS_VOID NdSer_Ipv6PdnInfoCfg(VOS_UINT8 ucExRabId, AT_NDIS_IPV6_PDN_INFO_STRU *p
 
         /* 清除TE地址记录 */
         IP_MEM_SET_S( &pstInfoAddr->stTeAddrInfo,
+                    sizeof(IP_NDSERVER_TE_ADDR_INFO_STRU),
                     IP_NULL,
                     sizeof(IP_NDSERVER_TE_ADDR_INFO_STRU));
 
@@ -2006,6 +1610,7 @@ VOS_VOID NdSer_Ipv6PdnInfoCfg(VOS_UINT8 ucExRabId, AT_NDIS_IPV6_PDN_INFO_STRU *p
 
     /* 将stNwParamTmp中的内容拷贝到pstInfoAddr->stIpv6NwPara中 */
     IP_MEM_CPY_S( &pstInfoAddr->stIpv6NwPara,
+                sizeof(ESM_IP_IPV6_NW_PARA_STRU),
                 &stNwParamTmp,
                 sizeof(ESM_IP_IPV6_NW_PARA_STRU));
 
@@ -2027,19 +1632,7 @@ VOS_VOID NdSer_Ipv6PdnInfoCfg(VOS_UINT8 ucExRabId, AT_NDIS_IPV6_PDN_INFO_STRU *p
 }
 
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_DecodeRsData
- Description     : 对RS包进行格式转换
- Input           : pucSrcData ----------- 源报文指针
-                   pstDestData ---------- 目的转换结构指针
-                   ulIcmpv6HeadOffset --- ICMPv6报头偏移量
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-07  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32  IP_NDSERVER_DecodeRsData
 (
     VOS_UINT8                          *pucSrcData,
@@ -2065,8 +1658,8 @@ VOS_UINT32  IP_NDSERVER_DecodeRsData
         return IP_FAIL;
     }
 
-    IP_MEM_CPY_S(pstDestData->aucSrcIp, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
-    IP_MEM_CPY_S(pstDestData->aucDesIp, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstDestData->aucSrcIp, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstDestData->aucDesIp, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
 
     /*lint -e679 -esym(679,*)*/
     pucIpMsg += ulIcmpv6HeadOffset + IP_ICMPV6_RS_HEADER_LEN;
@@ -2091,7 +1684,7 @@ VOS_UINT32  IP_NDSERVER_DecodeRsData
                     {
                         if(0 == pstRs->ucBitOpSrcLinkLayerAddr)
                         {
-                            IP_MEM_CPY_S(pstRs->aucSrcLinkLayerAddr, pucIpMsg+2, IP_MAC_ADDR_LEN);
+                            IP_MEM_CPY_S(pstRs->aucSrcLinkLayerAddr, IP_MAC_ADDR_LEN, pucIpMsg+2, IP_MAC_ADDR_LEN);
                             pstRs->ucBitOpSrcLinkLayerAddr = 1;
                         }
                         else
@@ -2123,19 +1716,7 @@ VOS_UINT32  IP_NDSERVER_DecodeRsData
     return IP_SUCC;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_RsMsgProc
- Description     : 处理RS消息
- Input           : ulIndex  -------------- 处理消息实体索引
-                   pucSrcData ------------ IP数据报
-                   ulIcmpv6HeadOffset ---- ICMPv6报文头偏移量
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-06  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_RsMsgProc
 (
     VOS_UINT32                          ulIndex,
@@ -2161,7 +1742,7 @@ VOS_VOID IP_NDSERVER_RsMsgProc
     }
 
     pstNdMsgData = IP_NDSERVER_GET_NDMSGDATA_ADDR();
-    IP_MEM_SET_S(pstNdMsgData, IP_NULL, sizeof(IP_ND_MSG_STRU));
+    IP_MEM_SET_S(pstNdMsgData, sizeof(IP_ND_MSG_STRU), IP_NULL, sizeof(IP_ND_MSG_STRU));
 
     if (IP_SUCC != IP_NDSERVER_DecodeRsData(pucIpMsg, pstNdMsgData, ulIcmpv6HeadOffset))
     {
@@ -2180,19 +1761,7 @@ VOS_VOID IP_NDSERVER_RsMsgProc
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_DecodeNsData
- Description     : 对NS包进行格式转换
- Input           : pucSrcData ----------- 源报文指针
-                   pstDestData ---------- 目的转换结构指针
-                   ulIcmpv6HeadOffset --- ICMPv6报头偏移量
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32  IP_NDSERVER_DecodeNsData
 (
     VOS_UINT8                          *pucSrcData,
@@ -2218,10 +1787,11 @@ VOS_UINT32  IP_NDSERVER_DecodeNsData
         return IP_FAIL;
     }
 
-    IP_MEM_CPY_S(pstDestData->aucSrcIp, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
-    IP_MEM_CPY_S(pstDestData->aucDesIp, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstDestData->aucSrcIp, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstDestData->aucDesIp, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
 
     IP_MEM_CPY_S( pstNs->aucTargetAddr,
+                IP_IPV6_ADDR_LEN,
                 pucIpMsg + ulIcmpv6HeadOffset + IP_ICMPV6_TARGET_ADDR_OFFSET,
                 IP_IPV6_ADDR_LEN);
     /*lint -e679 -esym(679,*)*/
@@ -2247,7 +1817,7 @@ VOS_UINT32  IP_NDSERVER_DecodeNsData
                     {
                         if(0 == pstNs->ucBitOpSrcLinkLayerAddr)
                         {
-                            IP_MEM_CPY_S(pstNs->aucSrcLinkLayerAddr, pucIpMsg+2, IP_MAC_ADDR_LEN);
+                            IP_MEM_CPY_S(pstNs->aucSrcLinkLayerAddr, IP_MAC_ADDR_LEN, pucIpMsg+2, IP_MAC_ADDR_LEN);
                             pstNs->ucBitOpSrcLinkLayerAddr = 1;
                         }
                         else
@@ -2279,18 +1849,7 @@ VOS_UINT32  IP_NDSERVER_DecodeNsData
     return IP_SUCC;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_IsSelfIPAddr
- Description     : 判断是否是自己的IP地址
- Input           : ulIndex  -------------- 处理消息实体索引
-                   aucIPAddr ------------  IP地址指针
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_IsSelfIPAddr
 (
     VOS_UINT32                          ulIndex,
@@ -2306,6 +1865,7 @@ VOS_UINT32 IP_NDSERVER_IsSelfIPAddr
 
     /* 根据自身MAC地址生成link-local地址 */
     IP_MEM_CPY_S( aucMacAddr,
+                IP_MAC_ADDR_LEN,
                 (VOS_VOID*)Ndis_GetMacAddr(),
                 IP_MAC_ADDR_LEN);
     IP_ProduceIfaceIdFromMacAddr(aucLinkLocalIPAddr, aucMacAddr);
@@ -2314,6 +1874,7 @@ VOS_UINT32 IP_NDSERVER_IsSelfIPAddr
     IP_ProduceIfaceIdFromMacAddr(aucGlobalIPAddr, aucMacAddr);
     pstNwPara = IP_NDSERVER_ADDRINFO_GET_NWPARA(ulIndex);
     IP_MEM_CPY_S( aucGlobalIPAddr,
+                IP_IPV6_ADDR_LEN,
                 pstNwPara->astPrefixList[0].aucPrefix,
                 ND_IP_IPV6_ADDR_LENGTH - ND_IP_IPV6_IFID_LENGTH);
 
@@ -2337,18 +1898,7 @@ VOS_UINT32 IP_NDSERVER_IsSelfIPAddr
     }
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_EqualAdvertisedPrefix
- Description     : 判断是否符合已公告的全球前缀
- Input           : ulIndex  -------------- 处理消息实体索引
-                   aucIPAddr ------------  IP地址指针
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_EqualAdvertisedPrefix
 (
     VOS_UINT32                          ulIndex,
@@ -2372,18 +1922,7 @@ VOS_UINT32 IP_NDSERVER_EqualAdvertisedPrefix
     }
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_RcvTeDetectionAddr
- Description     : 收到重复地址检测地址
- Input           : ulIndex  -------------- ND SERVER实体索引
-                   aucIPAddr ------------  IP地址指针
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_RcvTeDetectionAddr
 (
     VOS_UINT32                          ulIndex,
@@ -2408,6 +1947,7 @@ VOS_VOID IP_NDSERVER_RcvTeDetectionAddr
     /*IP_PrintArray(IP_GET_IP_PRINT_BUF(), pstTeInfo->aucTeGlobalAddr, IP_IPV6_ADDR_LEN);
  */
     IP_MEM_CPY_S( pstTeInfo->aucTeGlobalAddr,
+                IP_IPV6_ADDR_LEN,
                 aucIPAddr,
                 IP_IPV6_ADDR_LEN);
     pstTeInfo->enTeAddrState = IP_NDSERVER_TE_ADDR_INCOMPLETE;
@@ -2419,19 +1959,7 @@ VOS_VOID IP_NDSERVER_RcvTeDetectionAddr
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_NsMsgProc
- Description     : 处理NS消息
- Input           : ulIndex  -------------- 处理消息实体索引
-                   pucSrcData ------------ IP数据报
-                   ulIcmpv6HeadOffset ---- ICMPv6报文头偏移量
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_NsMsgProc
 (
     VOS_UINT32                          ulIndex,
@@ -2450,7 +1978,7 @@ VOS_VOID IP_NDSERVER_NsMsgProc
     pstInfoAddr = IP_NDSERVER_ADDRINFO_GET_ADDR(ulIndex);
 
     pstNdMsgData = IP_NDSERVER_GET_NDMSGDATA_ADDR();
-    IP_MEM_SET_S(pstNdMsgData, IP_NULL, sizeof(IP_ND_MSG_STRU));
+    IP_MEM_SET_S(pstNdMsgData, sizeof(IP_ND_MSG_STRU), IP_NULL, sizeof(IP_ND_MSG_STRU));
 
     if (IP_SUCC != IP_NDSERVER_DecodeNsData(pucIpMsg, pstNdMsgData, ulIcmpv6HeadOffset))
     {
@@ -2528,19 +2056,7 @@ VOS_VOID IP_NDSERVER_NsMsgProc
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_DecodeNaData
- Description     : 对NA包进行格式转换
- Input           : pucSrcData ----------- 源报文指针
-                   pstDestData ---------- 目的转换结构指针
-                   ulIcmpv6HeadOffset --- ICMPv6报头偏移量
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-09  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32  IP_NDSERVER_DecodeNaData
 (
     VOS_UINT8                          *pucSrcData,
@@ -2566,14 +2082,15 @@ VOS_UINT32  IP_NDSERVER_DecodeNaData
         return IP_FAIL;
     }
 
-    IP_MEM_CPY_S(pstDestData->aucSrcIp, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
-    IP_MEM_CPY_S(pstDestData->aucDesIp, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstDestData->aucSrcIp, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(pstDestData->aucDesIp, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
 
     pstNa->ucBitR = ((*(pucIpMsg + ulIcmpv6HeadOffset + IP_ICMPV6_NA_FLAG_OFFSET)) >> 7) & 0x01;
     pstNa->ucBitS = ((*(pucIpMsg + ulIcmpv6HeadOffset + IP_ICMPV6_NA_FLAG_OFFSET)) >> 6) & 0x01;
     pstNa->ucBitO = ((*(pucIpMsg + ulIcmpv6HeadOffset + IP_ICMPV6_NA_FLAG_OFFSET)) >> 5) & 0x01;
 
     IP_MEM_CPY_S( pstNa->aucTargetAddr,
+                IP_IPV6_ADDR_LEN,
                 pucIpMsg + ulIcmpv6HeadOffset + IP_ICMPV6_TARGET_ADDR_OFFSET,
                 IP_IPV6_ADDR_LEN);
     /*lint -e679 -esym(679,*)*/
@@ -2599,7 +2116,7 @@ VOS_UINT32  IP_NDSERVER_DecodeNaData
                     {
                         if(0 == pstNa->ucBitOpTargetLinkLayerAddr)
                         {
-                            IP_MEM_CPY_S(pstNa->aucTargetLinkLayerAddr, pucIpMsg+2, IP_MAC_ADDR_LEN);
+                            IP_MEM_CPY_S(pstNa->aucTargetLinkLayerAddr, IP_MAC_ADDR_LEN, pucIpMsg+2, IP_MAC_ADDR_LEN);
                             pstNa->ucBitOpTargetLinkLayerAddr = 1;
                         }
                         else
@@ -2631,19 +2148,7 @@ VOS_UINT32  IP_NDSERVER_DecodeNaData
     return IP_SUCC;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_EqualSavedTeAddr
- Description     : 判断是否是已保存的TE地址
- Input           : ulIndex  -------------  ND SERVER实体索引
-                   aucIPAddr ------------  IP地址指针
-                   aucMACAddr -----------  MAC地址指针
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.sunli 00180715      2011-04-09  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 IP_NDSERVER_EqualSavedTeAddr
 (
     VOS_UINT32                          ulIndex,
@@ -2671,17 +2176,7 @@ VOS_UINT32 IP_NDSERVER_EqualSavedTeAddr
         return IP_FALSE;
     }
 }
-/*****************************************************************************
- Function Name   : IP_NDSERVER_SendDlPkt
- Description     : 发送下行缓存的IPV6数据包
- Input           : ulIndex  -------------  ND SERVER实体索引
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.huibo 00159435      2011-12-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_SendDlPkt(VOS_UINT32 ulIndex)
 {
     IMM_ZC_STRU                        *pstImmZc    = VOS_NULL_PTR;
@@ -2722,20 +2217,7 @@ VOS_VOID IP_NDSERVER_SendDlPkt(VOS_UINT32 ulIndex)
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_UpdateTeAddrInfo
- Description     : 收到重复地址检测地址
- Input           : ulIndex  -------------  ND SERVER实体索引
-                   aucGlobalIPAddr ------  全球IP地址指针
-                   aucMACAddr -----------  MAC地址指针
-                   aucLinkLocalIPAddr ---  链路本地IP地址指针
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_UpdateTeAddrInfo
 (
     VOS_UINT32                          ulIndex,
@@ -2753,27 +2235,32 @@ VOS_VOID IP_NDSERVER_UpdateTeAddrInfo
     /*IP_PrintArray(IP_GET_IP_PRINT_BUF(), pstTeInfo->aucTeGlobalAddr, IP_IPV6_ADDR_LEN);
  */
     IP_MEM_CPY_S( pstTeInfo->aucTeGlobalAddr,
+                IP_IPV6_ADDR_LEN,
                 aucGlobalIPAddr,
                 IP_IPV6_ADDR_LEN);
 
     IP_MEM_CPY_S( pstTeInfo->aucTeLinkLayerAddr,
+                IP_MAC_ADDR_LEN,
                 aucMACAddr,
                 IP_MAC_ADDR_LEN);
 
     /*更新完整MAC帧头中的目的MAC地址*/
     IP_MEM_CPY_S( IP_NDSERVER_ADDRINFO_GET_MACFRAME(ulIndex),
+                IP_ETH_MAC_HEADER_LEN,
                 aucMACAddr,
                 IP_MAC_ADDR_LEN);
 
     if (IP_IPV6_IS_LINKLOCAL_ADDR(aucLinkLocalIPAddr))
     {
         IP_MEM_CPY_S( pstTeInfo->aucTeLinkLocalAddr,
+                    IP_IPV6_ADDR_LEN,
                     aucLinkLocalIPAddr,
                     IP_IPV6_ADDR_LEN);
     }
     else
     {
         IP_MEM_SET_S( pstTeInfo->aucTeLinkLocalAddr,
+                    IP_IPV6_ADDR_LEN,
                     IP_NULL,
                     IP_IPV6_ADDR_LEN);
 
@@ -2791,19 +2278,7 @@ VOS_VOID IP_NDSERVER_UpdateTeAddrInfo
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_NaMsgProc
- Description     : 处理NA消息
- Input           : ulIndex  -------------- 处理消息实体索引
-                   pucSrcData ------------ IP数据报
-                   ulIcmpv6HeadOffset ---- ICMPv6报文头偏移量
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-08  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_NaMsgProc
 (
     VOS_UINT32                          ulIndex,
@@ -2828,7 +2303,7 @@ VOS_VOID IP_NDSERVER_NaMsgProc
     }
 
     pstNdMsgData = IP_NDSERVER_GET_NDMSGDATA_ADDR();
-    IP_MEM_SET_S(pstNdMsgData, IP_NULL, sizeof(IP_ND_MSG_STRU));
+    IP_MEM_SET_S(pstNdMsgData, sizeof(IP_ND_MSG_STRU), IP_NULL, sizeof(IP_ND_MSG_STRU));
 
     if (IP_SUCC != IP_NDSERVER_DecodeNaData(pucIpMsg, pstNdMsgData, ulIcmpv6HeadOffset))
     {
@@ -2880,19 +2355,7 @@ VOS_VOID IP_NDSERVER_NaMsgProc
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_BuildTooBigICMPPkt
- Description     : 形成向PC回复的超长包响应
- Input           : pucSrcData ----------- 源报文指针
-                   pstDestData ---------- 目的转换结构指针
-                   ulIcmpv6HeadOffset --- ICMPv6报头偏移量
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.h00159435      2011-12-09  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32  IP_NDSERVER_BuildTooBigICMPPkt
 (
     VOS_UINT32                          ulIndex,
@@ -2917,17 +2380,19 @@ VOS_UINT32  IP_NDSERVER_BuildTooBigICMPPkt
 
     /* 根据自身MAC地址生成link-local地址 */
     IP_MEM_CPY_S( aucSrcMacAddr,
+                IP_MAC_ADDR_LEN,
                 (VOS_VOID*)Ndis_GetMacAddr(),
                 IP_MAC_ADDR_LEN);
     IP_ProduceIfaceIdFromMacAddr(aucSrcIPAddr, aucSrcMacAddr);
     IP_SetUint16Data(aucSrcIPAddr, IP_IPV6_LINK_LOCAL_PREFIX);
 
     /*得到目的IPV6地址*/
-    IP_MEM_CPY_S(aucDstIPAddr, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(aucDstIPAddr, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
 
     /*得到目的MAC地址*/
     pstTeInfo = IP_NDSERVER_ADDRINFO_GET_TEINFO(ulIndex);
     IP_MEM_CPY_S( aucDstMacAddr,
+                IP_MAC_ADDR_LEN,
                 pstTeInfo->aucTeLinkLayerAddr,
                 IP_MAC_ADDR_LEN);
 
@@ -2949,13 +2414,14 @@ VOS_UINT32  IP_NDSERVER_BuildTooBigICMPPkt
     /*MTU 域*/
     /*lint -e960*/
     ulDatatemp = VOS_HTONL(ulDataLen);/*linux 4字节对齐*/
-    IP_MEM_CPY_S(pucData,(VOS_UINT8 *)(&ulDatatemp),sizeof(VOS_UINT32));/*linux 4字节对齐*/
+    IP_MEM_CPY_S(pucData, sizeof(VOS_UINT32), (VOS_UINT8 *)(&ulDatatemp), sizeof(VOS_UINT32));/*linux 4字节对齐*/
     //    *(VOS_UINT32 *)(VOS_VOID*)pucData = VOS_HTONL(ulDataLen); /*linux 4字节对齐*/
     /*lint +e960*/
     pucData += 4;
 
     /*填写ICMP PayLoad部分*/
-    IP_MEM_CPY_S(pucData, pucIpMsg,((ulDataLen-IP_IPV6_HEAD_LEN)- IP_ICMPV6_HEAD_LEN));
+    IP_MEM_CPY_S(pucData, (IP_IPM_MTU - IP_ETHERNET_HEAD_LEN - IP_IPV6_HEAD_LEN - IP_ICMPV6_HEAD_LEN),
+                 pucIpMsg,((ulDataLen-IP_IPV6_HEAD_LEN)- IP_ICMPV6_HEAD_LEN));
 
     /*指向IPV6首部*/
     pstDestData += IP_ETHERNET_HEAD_LEN;
@@ -2976,21 +2442,7 @@ VOS_UINT32  IP_NDSERVER_BuildTooBigICMPPkt
     return IP_SUCC;
 }
 
-/*****************************************************************************
- 函 数 名  : IP_NDSERVER_ProcTooBigPkt
- 功能描述  : 处理PC发送的超长包
- 输入参数  : VOS_VOID  *pRcvMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月9日
-    作    者   : 00159435
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_ProcTooBigPkt(VOS_UINT8 ucRabId, VOS_UINT8 *pucSrcData, VOS_UINT32 ulDataLen)
 {
     VOS_UINT32                           ulIndex;
@@ -3010,7 +2462,7 @@ VOS_VOID IP_NDSERVER_ProcTooBigPkt(VOS_UINT8 ucRabId, VOS_UINT8 *pucSrcData, VOS
     pstInfoAddr = IP_NDSERVER_ADDRINFO_GET_ADDR(ulIndex);
 
     pucSendBuff = IP_NDSERVER_GET_SENDMSG_BUFFER();
-    IP_MEM_SET_S(pucSendBuff, IP_NULL, IP_IPM_MTU);
+    IP_MEM_SET_S(pucSendBuff, IP_IPM_MTU, IP_NULL, IP_IPM_MTU);
 
     if (IP_SUCC != IP_NDSERVER_BuildTooBigICMPPkt(ulIndex, pucIpMsg, pucSendBuff, ulDataLen))
     {
@@ -3032,19 +2484,7 @@ VOS_VOID IP_NDSERVER_ProcTooBigPkt(VOS_UINT8 ucRabId, VOS_UINT8 *pucSrcData, VOS
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_FormEchoReply
- Description     : 形成向PC回复的ECHO REPLY
- Input           : pucSrcData ----------- 源报文指针
-                   pstDestData ---------- 目的转换结构指针
-                   ulIcmpv6HeadOffset --- ICMPv6报头偏移量
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.h00159435      2011-12-09  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32  IP_NDSERVER_FormEchoReply
 (
     VOS_UINT32                          ulIndex,
@@ -3069,17 +2509,19 @@ VOS_UINT32  IP_NDSERVER_FormEchoReply
 
     /* 根据自身MAC地址生成link-local地址 */
     IP_MEM_CPY_S( aucSrcMacAddr,
+                IP_MAC_ADDR_LEN,
                 (VOS_VOID*)Ndis_GetMacAddr(),
                 IP_MAC_ADDR_LEN);
     IP_ProduceIfaceIdFromMacAddr(aucSrcIPAddr, aucSrcMacAddr);
     IP_SetUint16Data(aucSrcIPAddr, IP_IPV6_LINK_LOCAL_PREFIX);
 
     /*得到目的IPV6地址*/
-    IP_MEM_CPY_S(aucDstIPAddr, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(aucDstIPAddr, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
 
     /*得到目的MAC地址*/
     pstTeInfo = IP_NDSERVER_ADDRINFO_GET_TEINFO(ulIndex);
     IP_MEM_CPY_S( aucDstMacAddr,
+                IP_MAC_ADDR_LEN,
                 pstTeInfo->aucTeLinkLayerAddr,
                 IP_MAC_ADDR_LEN);
 
@@ -3088,7 +2530,7 @@ VOS_UINT32  IP_NDSERVER_FormEchoReply
 
     /*填写ICMP报文*/
     pucIpMsg += IP_IPV6_HEAD_LEN;
-    IP_MEM_CPY_S(pucData, pucIpMsg,(ulDataLen-IP_IPV6_HEAD_LEN));
+    IP_MEM_CPY_S(pucData, (IP_IPM_MTU - IP_ETHERNET_HEAD_LEN - IP_IPV6_HEAD_LEN), pucIpMsg, (ulDataLen - IP_IPV6_HEAD_LEN));
 
     /*ICMP type域*/
     *pucData = IP_ICMPV6_TYPE_ECHOREPLY;
@@ -3120,19 +2562,7 @@ VOS_UINT32  IP_NDSERVER_FormEchoReply
     return IP_SUCC;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_EchoRequestMsgProc
- Description     : 处理ECHO REQUEST消息
- Input           : ulIndex  -------------- 处理消息实体索引
-                   pucSrcData ------------ IP数据报
-                   ulIcmpv6HeadOffset ---- ICMPv6报文头偏移量
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.huibo 00159435      2011-12-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_EchoRequestMsgProc
 (
     VOS_UINT32                          ulIndex,
@@ -3158,7 +2588,7 @@ VOS_VOID IP_NDSERVER_EchoRequestMsgProc
         return ;
     }
 
-    IP_MEM_CPY_S(aucPktAddr, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(aucPktAddr, IP_IPV6_ADDR_LEN, pucIpMsg + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
     if (IP_TRUE != IP_NDSERVER_IsSelfIPAddr(ulIndex, aucPktAddr))
     {
         IP_NDSERVER_AddErrEchoPktNum(ulIndex);
@@ -3166,7 +2596,7 @@ VOS_VOID IP_NDSERVER_EchoRequestMsgProc
     }
 
     pucSendBuff = IP_NDSERVER_GET_SENDMSG_BUFFER();
-    IP_MEM_SET_S(pucSendBuff, IP_NULL, IP_IPM_MTU);
+    IP_MEM_SET_S(pucSendBuff, IP_IPM_MTU, IP_NULL, IP_IPM_MTU);
 
     if (IP_SUCC != IP_NDSERVER_FormEchoReply(ulIndex,pucIpMsg, pucSendBuff, ulDataLen))
     {
@@ -3188,18 +2618,7 @@ VOS_VOID IP_NDSERVER_EchoRequestMsgProc
     return;
 }
 
-/*****************************************************************************
- Function Name   : NdSer_NdAndEchoPktProc
- Description     : 接收PC发送的ND和ECHO REQUEST报文
- Input           : pRcvMsg
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.huibo 00159435      2011-12-09  Draft Enact
-    2.h00218138          2013-1-15  DSDA
-
-*****************************************************************************/
 VOS_VOID NdSer_NdAndEchoPktProc(VOS_VOID *pRcvMsg)
 {
     ADS_NDIS_DATA_IND_STRU             *pstAdsNdisMsg  = (ADS_NDIS_DATA_IND_STRU*)pRcvMsg;
@@ -3281,17 +2700,7 @@ VOS_VOID NdSer_NdAndEchoPktProc(VOS_VOID *pRcvMsg)
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_SendDhcp6Reply
- Description     : 组装并发送DHCPV6报文
- Input           :
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.h00159435          2011-12-6  Draft Enact
-
-*****************************************************************************/
 /*lint -e778*/
 /*lint -e572*/
 VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
@@ -3324,6 +2733,7 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
     IP_NDSERVER_TE_ADDR_INFO_STRU      *pstTeInfo  = IP_NULL_PTR;
     VOS_UINT8                          *pucSendBuff = VOS_NULL_PTR;
     VOS_UINT8                           ucEpsId;
+    VOS_UINT32                          ulTmpDestLen;
 
     if ( usReqIp6PktLen <= ((IP_IPV6_HEAD_LEN + IP_UDP_HEAD_LEN) + IP_UDP_DHCP_HDR_SIZE))
     {
@@ -3334,8 +2744,8 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
     }
 
     /*20160122 V722 coverity --begin*/
-    IP_MEM_SET_S(&stIpv6DhcpDnsOpt, 0, sizeof(IPV6_DHCP_DNS_OPTION_STRU));
-    IP_MEM_SET_S(&stDhcpDuidLLOpt, 0, sizeof(IPV6_PKT_DHCP_DUID_LL_OPT_STRU));
+    IP_MEM_SET_S(&stIpv6DhcpDnsOpt, sizeof(IPV6_DHCP_DNS_OPTION_STRU), 0, sizeof(IPV6_DHCP_DNS_OPTION_STRU));
+    IP_MEM_SET_S(&stDhcpDuidLLOpt, sizeof(IPV6_PKT_DHCP_DUID_LL_OPT_STRU), 0, sizeof(IPV6_PKT_DHCP_DUID_LL_OPT_STRU));
     /*20160122 V722 coverity --end*/
 
     usReqDhcpOptLen     = usReqIp6PktLen - ((IP_IPV6_HEAD_LEN + IP_UDP_HEAD_LEN) + IP_UDP_DHCP_HDR_SIZE) ;
@@ -3390,7 +2800,7 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
         }
     }
 
-    if ( usReplyUdpDataLen <= (IP_UDP_HEAD_LEN + IP_UDP_DHCP_HDR_SIZE + IP_IPV6_DHCP_DUID_LL_OPT_LEN))
+    if ( usReplyUdpDataLen <= (IP_UDP_HEAD_LEN + IP_UDP_DHCP_HDR_SIZE + IP_IPV6_DHCP_OPT_CLIENT_ID_LEN))
     {
         /*PS_LOG(WUEPS_PID_NDIS, PS_SUBMOD_NULL, PS_PRINT_ERROR,
              "NDIS, TTF_NDIS_Ipv6RouterLanEthOutputDhcp6Reply, No content need to reply!");*/
@@ -3403,22 +2813,24 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
 
     /* 根据自身MAC地址生成link-local地址 */
     IP_MEM_CPY_S( aucSrcMacAddr,
+                IP_MAC_ADDR_LEN,
                 (VOS_VOID*)Ndis_GetMacAddr(),
                 IP_MAC_ADDR_LEN);
     IP_ProduceIfaceIdFromMacAddr(aucSrcIPAddr, aucSrcMacAddr);
     IP_SetUint16Data(aucSrcIPAddr, IP_IPV6_LINK_LOCAL_PREFIX);
 
     /*得到目的IPV6地址*/
-    IP_MEM_CPY_S(aucDstIPAddr, pDhcpInfoReqData + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(aucDstIPAddr, IP_IPV6_ADDR_LEN, pDhcpInfoReqData + IP_IPV6_SRC_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
 
     /*得到目的MAC地址*/
     pstTeInfo = IP_NDSERVER_ADDRINFO_GET_TEINFO(ulIndex);
     IP_MEM_CPY_S( aucDstMacAddr,
+                IP_MAC_ADDR_LEN,
                 pstTeInfo->aucTeLinkLayerAddr,
                 IP_MAC_ADDR_LEN);
 
     pucSendBuff = IP_NDSERVER_GET_SENDMSG_BUFFER();
-    IP_MEM_SET_S(pucSendBuff, IP_NULL, IP_IPM_MTU);
+    IP_MEM_SET_S(pucSendBuff, IP_IPM_MTU, IP_NULL, IP_IPM_MTU);
 
     /*指向IPV6首部*/
     pucSendBuff += IP_ETHERNET_HEAD_LEN;
@@ -3441,6 +2853,7 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
     (*pDhcpReplyDhcpHdrOffset) = IP_IPV6_DHCP6_TYPE_REPLY;
     pDhcpReplyDhcpHdrOffset   += 1;
     IP_MEM_CPY_S( pDhcpReplyDhcpHdrOffset,
+                            IP_IPV6_DHCP6_TRANS_ID_LEN,
                             ((pDhcpInfoReqData + IP_IPV6_HEAD_LEN) + IP_UDP_HEAD_LEN) + 1,
                             IP_IPV6_DHCP6_TRANS_ID_LEN );
 
@@ -3450,6 +2863,7 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
     stDhcpDuidLLOpt.usDhcpDuidType      = VOS_HTONS(IP_IPV6_DHCP_DUID_LL_OPT_TYPE);
     stDhcpDuidLLOpt.usDhcpDuidHWType    = VOS_HTONS(IP_IPV6_HW_TYPE);
     IP_MEM_CPY_S(stDhcpDuidLLOpt.aucLinkLayerAddr,
+                            IP_IPV6_DHCP_OPT_LINKADDR_SIZE,
                             aucSrcMacAddr,
                             IP_IPV6_DHCP_OPT_LINKADDR_SIZE);
 
@@ -3458,6 +2872,7 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
     (*(VOS_UINT16 *)pDhcpReplyDhcpHdrOffset) = VOS_HTONS(IP_IPV6_DHCP_DUID_LL_OPT_LEN);
     pDhcpReplyDhcpHdrOffset   += sizeof(VOS_UINT16);
     IP_MEM_CPY_S(pDhcpReplyDhcpHdrOffset,
+                            IP_IPV6_DHCP_DUID_LL_OPT_LEN,
                             (VOS_UINT8 *)(&stDhcpDuidLLOpt),
                             IP_IPV6_DHCP_DUID_LL_OPT_LEN);
 
@@ -3465,12 +2880,15 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
 
 
     /*=====================*//* 填充 DHCP CLient ID option */
+    ulTmpDestLen = IP_IPM_MTU - IP_ETHERNET_HEAD_LEN - sizeof(NDIS_IP6_HDR_STRU) - sizeof(UDP_HEAD_ST) - IP_IPV6_DHCP6_REPLY_HDR_LEN - IP_IPV6_DHCP_DUID_LL_OPT_LEN;
     if ( VOS_NULL_PTR != pstDhcpClientIdOpt )
     {
         IP_MEM_CPY_S(pDhcpReplyDhcpHdrOffset,
-                            (VOS_UINT8 *)pstDhcpClientIdOpt,
-                            (VOS_NTOHS(pstDhcpClientIdOpt->usDhcpOptLen) + 4));
+                     ulTmpDestLen,
+                     (VOS_UINT8 *)pstDhcpClientIdOpt,
+                     (VOS_NTOHS(pstDhcpClientIdOpt->usDhcpOptLen) + 4));
         pDhcpReplyDhcpHdrOffset += (VOS_NTOHS(pstDhcpClientIdOpt->usDhcpOptLen) + 4);
+        ulTmpDestLen -= TTF_MIN(ulTmpDestLen, (VOS_UINT32)(VOS_NTOHS(pstDhcpClientIdOpt->usDhcpOptLen) + 4));
     }
 
     /*=====================*//* 填充 DHCP DNS OPTION */
@@ -3478,17 +2896,20 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
     {
         stIpv6DhcpDnsOpt.usOptionCode = VOS_HTONS(IP_IPV6_DHCP6_OPT_DNS_SERVERS);
         IP_MEM_CPY_S(&stIpv6DhcpDnsOpt.astIpv6DNS[0],
+                            (sizeof(NDIS_IP6_ADDR_STRU)),
                             pstDnsSer->aucPriDnsServer,
                             (sizeof(NDIS_IP6_ADDR_STRU)));
 
         if (IP_IPV6_MAX_DNS_NUM == usDnsOptLen)
         {
             IP_MEM_CPY_S(&stIpv6DhcpDnsOpt.astIpv6DNS[1],
+                                (sizeof(NDIS_IP6_ADDR_STRU)),
                                 pstDnsSer->aucSecDnsServer,
                                 (sizeof(NDIS_IP6_ADDR_STRU)));
         }
         stIpv6DhcpDnsOpt.usOptionLen  = VOS_HTONS((VOS_UINT16)(IP_IPV6_ADDR_LEN * usDnsOptLen)) ;
         IP_MEM_CPY_S(pDhcpReplyDhcpHdrOffset,
+                            ulTmpDestLen,
                             (VOS_UINT8 *)&stIpv6DhcpDnsOpt,
                             (4 + (usDnsOptLen * sizeof(NDIS_IP6_ADDR_STRU))));
 
@@ -3513,24 +2934,15 @@ VOS_UINT32  IP_NDSERVER_SendDhcp6Reply
 
     ucEpsId = IP_NDSERVER_ADDRINFO_GET_EPSID(ulIndex);
 
+    usDhcpReplyPktLen = TTF_MIN(usDhcpReplyPktLen, IP_IPM_MTU);
+
     /* 将DHCPV6 REPLY消息发送到PC */
     return Ndis_SendMacFrm(pucSendBuff, usDhcpReplyPktLen, ucEpsId);
 }
 /*lint +e778*/
 /*lint +e572*/
 
-/*****************************************************************************
- Function Name   : NdSer_DhcpV6PktProc
- Description     : 处理DHCPV6报文
- Input           :
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.h00159435          2011-12-6  Draft Enact
-    2.h00218138          2013-1-15  DSDA
-
-*****************************************************************************/
 VOS_VOID NdSer_DhcpV6PktProc(VOS_VOID *pRcvMsg)
 {
     VOS_UINT16                          usSrcPort;
@@ -3616,17 +3028,7 @@ VOS_VOID NdSer_DhcpV6PktProc(VOS_VOID *pRcvMsg)
     return;
 }
 
-/*****************************************************************************
- Function Name  : IP_NDSERVER_ProcTimerMsgNsExp
- Description    : 发送邻居请求后，等待邻居公告超时
- Input          : pMsg -------- 消息指针
- Output         : VOS_VOID
- Return Value   : VOS_VOID
 
- History        :
-      1.sunli 00180715      2011-04-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_ProcTimerMsgNsExp
 (
     const VOS_VOID                     *pMsg
@@ -3701,17 +3103,7 @@ VOS_VOID IP_NDSERVER_ProcTimerMsgNsExp
     return;
 }
 
-/*****************************************************************************
- Function Name  : IP_NDSERVER_ProcTimerMsgPeriodicNsExp
- Description    : 周期性邻居请求超时
- Input          : pMsg -------- 消息指针
- Output         : VOS_VOID
- Return Value   : VOS_VOID
 
- History        :
-      1.sunli 00180715      2011-04-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_ProcTimerMsgPeriodicNsExp
 (
     const VOS_VOID                     *pMsg
@@ -3766,17 +3158,7 @@ VOS_VOID IP_NDSERVER_ProcTimerMsgPeriodicNsExp
     return;
 }
 
-/*****************************************************************************
- Function Name  : IP_NDSERVER_ProcTimerMsgPeriodicNsExp
- Description    : 收到重复地址检测后等待定时器超时
- Input          : pMsg -------- 消息指针
- Output         : VOS_VOID
- Return Value   : VOS_VOID
 
- History        :
-      1.sunli 00180715      2011-04-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_ProcTimerMsgFirstNsExp
 (
     const VOS_VOID                     *pMsg
@@ -3818,17 +3200,7 @@ VOS_VOID IP_NDSERVER_ProcTimerMsgFirstNsExp
     return;
 }
 
-/*****************************************************************************
- Function Name  : IP_NDSERVER_ProcTimerMsgRaExp
- Description    : 收到重复地址检测前周期发送路由公告超时
- Input          : pMsg -------- 消息指针
- Output         : VOS_VOID
- Return Value   : VOS_VOID
 
- History        :
-      1.sunli 00180715      2011-04-09  Draft Enact
-
-*****************************************************************************/
 VOS_VOID IP_NDSERVER_ProcTimerMsgRaExp
 (
     const VOS_VOID                     *pMsg
@@ -3885,7 +3257,7 @@ VOS_VOID IP_NDSERVER_ProcTimerMsgRaExp
     }
 
     /*得到目的IPV6地址，触发NS发送*/
-    IP_MEM_CPY_S(aucDstIPAddr, pucData + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
+    IP_MEM_CPY_S(aucDstIPAddr, IP_IPV6_ADDR_LEN, pucData + IP_IPV6_DST_ADDR_OFFSET, IP_IPV6_ADDR_LEN);
     if (PS_SUCC != IP_NDSERVER_SendNsMsg(ulIndex, aucDstIPAddr))
     {
         IPND_ERROR_LOG(NDIS_NDSERVER_PID, "IP_NDSERVER_ProcTimerMsgRaExp, IP_NDSERVER_SendNsMsg return NULL");
@@ -3895,16 +3267,7 @@ VOS_VOID IP_NDSERVER_ProcTimerMsgRaExp
     return;
 }
 
-/*****************************************************************************
- Function Name  : IP_NDSERVER_TimerMsgDistr
- Description    : ND SERVER TIMER消息分发函数
- Input          : VOS_VOID *pRcvMsg
- Output         : VOS_VOID
- Return Value   : NDSER_TIMER_ENUM_UINT32
 
- History        :
-      1.sunli 00180715     2011-04-02  Draft Enact
-*****************************************************************************/
 NDSER_TIMER_ENUM_UINT32 IP_NDSERVER_TimerMsgDistr(const VOS_VOID *pRcvMsg )
 {
     VOS_UINT32                          ulIndex         = IP_NULL;
@@ -3963,21 +3326,7 @@ NDSER_TIMER_ENUM_UINT32 IP_NDSERVER_TimerMsgDistr(const VOS_VOID *pRcvMsg )
     return IP_MSG_HANDLED;
 }
 
-/*****************************************************************************
- 函 数 名  : APP_NdServer_PidMsgProc
- 功能描述  : PP NDIS上行PID消息处理函数
- 输入参数  : MsgBlock* pMsgBlock
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月9日
-    作    者   : h00159435
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID APP_NdServer_PidMsgProc(const MsgBlock *pRcvMsg)
 {
     if (VOS_NULL_PTR == pRcvMsg)
@@ -3997,16 +3346,7 @@ VOS_VOID APP_NdServer_PidMsgProc(const MsgBlock *pRcvMsg)
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_CmdHelp
- Description     : IP NDSERVER模块命令显示
- Input           : None
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-11  Draft Enact
-*****************************************************************************/
 VOS_VOID  IP_NDSERVER_CmdHelp( VOS_VOID )
 {
     vos_printf("\r\n");
@@ -4020,17 +3360,7 @@ VOS_VOID  IP_NDSERVER_CmdHelp( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_ShowLocalNwParamInfo
- Description     : 显示本地保存的网络参数信息
- Input           : None
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-11  Draft Enact
-
-*****************************************************************************/
 VOS_VOID  IP_NDSERVER_ShowLocalNwParamInfo( VOS_VOID )
 {
     vos_printf("************************本地保存的网络参数信息***********************\r\n");
@@ -4049,17 +3379,7 @@ VOS_VOID  IP_NDSERVER_ShowLocalNwParamInfo( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_ShowAddrInfo
- Description     : 显示某实体地址参数信息
- Input           : ulIndex --- 实体索引
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-11  Draft Enact
-
-*****************************************************************************/
 VOS_VOID  IP_NDSERVER_ShowAddrInfo( VOS_UINT32 ulIndex )
 {
     IP_NDSERVER_ADDR_INFO_STRU         *pstInfoAddr = IP_NULL_PTR;
@@ -4207,47 +3527,6 @@ VOS_VOID  IP_NDSERVER_ShowAddrInfo( VOS_UINT32 ulIndex )
 
     vos_printf("************TE地址信息************\r\n");
     vos_printf("TE地址状态: %d\r\n",pstInfoAddr->stTeAddrInfo.enTeAddrState);
-    vos_printf("全球地址: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[0],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[1],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[2],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[3],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[4],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[5],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[6],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[7],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[8],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[9],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[10],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[11],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[12],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[13],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[14],
-                                pstInfoAddr->stTeAddrInfo.aucTeGlobalAddr[15]);
-    vos_printf("链路层地址: %02x:%02x:%02x:%02x:%02x:%02x\r\n",
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLayerAddr[0],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLayerAddr[1],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLayerAddr[2],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLayerAddr[3],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLayerAddr[4],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLayerAddr[5]);
-    vos_printf("链路本地地址: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[0],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[1],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[2],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[3],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[4],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[5],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[6],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[7],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[8],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[9],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[10],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[11],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[12],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[13],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[14],
-                                pstInfoAddr->stTeAddrInfo.aucTeLinkLocalAddr[15]);
 
     vos_printf("************定时器状态************\r\n");
     vos_printf("系统定时器地址: %p\r\n",pstInfoAddr->stTimerInfo.hTm);
@@ -4255,38 +3534,10 @@ VOS_VOID  IP_NDSERVER_ShowAddrInfo( VOS_UINT32 ulIndex )
     vos_printf("定时器超时次数: %d\r\n",pstInfoAddr->stTimerInfo.ucLoopTimes);
     vos_printf("周期性路由公告时间计数: %d\r\n",g_aulPeriodicRaTimeCnt[ulIndex]);
 
-    vos_printf("************单板侧信息************\r\n");
-    vos_printf("单板侧本地链路地址: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n",
-                                pstInfoAddr->aucUeLinkLocalAddr[0],
-                                pstInfoAddr->aucUeLinkLocalAddr[1],
-                                pstInfoAddr->aucUeLinkLocalAddr[2],
-                                pstInfoAddr->aucUeLinkLocalAddr[3],
-                                pstInfoAddr->aucUeLinkLocalAddr[4],
-                                pstInfoAddr->aucUeLinkLocalAddr[5],
-                                pstInfoAddr->aucUeLinkLocalAddr[6],
-                                pstInfoAddr->aucUeLinkLocalAddr[7],
-                                pstInfoAddr->aucUeLinkLocalAddr[8],
-                                pstInfoAddr->aucUeLinkLocalAddr[9],
-                                pstInfoAddr->aucUeLinkLocalAddr[10],
-                                pstInfoAddr->aucUeLinkLocalAddr[11],
-                                pstInfoAddr->aucUeLinkLocalAddr[12],
-                                pstInfoAddr->aucUeLinkLocalAddr[13],
-                                pstInfoAddr->aucUeLinkLocalAddr[14],
-                                pstInfoAddr->aucUeLinkLocalAddr[15]);
     return;
 }
 
-/*****************************************************************************
- Function Name   : IP_NDSERVER_ShowStatInfo
- Description     : 显示报文统计信息
- Input           : ulIndex --- 实体索引
- Output          : None
- Return          : VOS_VOID
 
- History         :
-    1.sunli 00180715      2011-04-11  Draft Enact
-
-*****************************************************************************/
 VOS_VOID  IP_NDSERVER_ShowStatInfo( VOS_UINT32 ulIndex )
 {
     IP_NDSERVER_PACKET_STATISTICS_INFO_STRU    *pstPktStatInfo = IP_NULL_PTR;

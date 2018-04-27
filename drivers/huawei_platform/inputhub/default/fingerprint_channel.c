@@ -18,7 +18,7 @@
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
 #include <huawei_platform/inputhub/fingerprinthub.h>
-
+#include <linux/poll.h>
 #include "contexthub_route.h"
 #include "contexthub_boot.h"
 #include "protocol.h"
@@ -31,6 +31,8 @@ extern int flag_for_sensor_test;
 
 extern bool really_do_enable_disable(int *ref_cnt, bool enable, int bit);
 extern int send_app_config_cmd_with_resp(int tag, void *app_config, bool use_lock);
+wait_queue_head_t ipc_wait;
+unsigned int fingerprint_ipc_cbge_handle = 0;
 
 struct fingerprint_cmd_map
 {
@@ -46,6 +48,12 @@ static const struct fingerprint_cmd_map fingerprint_cmd_map_tab[] =
     {FHB_IOCTL_FP_STOP,   -1,  TAG_FP, CMD_CMN_CLOSE_REQ},
     {FHB_IOCTL_FP_DISABLE_SET, -1, TAG_FP, FHB_IOCTL_FP_DISABLE_SET_CMD},
 };
+
+void fingerprint_ipc_cgbe_abort_handle(void)
+{
+    fingerprint_ipc_cbge_handle = 1;
+    wake_up_interruptible_sync_poll(&ipc_wait, POLLIN);
+}
 
 static void update_fingerprint_info(obj_cmd_t cmd, fingerprint_type_t type)
 {
@@ -73,6 +81,7 @@ static void fingerprint_report(void)
     fingerprint_upload.fhd.hd.cmd = CMD_DATA_REQ;
     fingerprint_upload.data = 0; //0: cancel wait sensorhub msg
     char* fingerprint_data = (char*)(&fingerprint_upload) + sizeof(pkt_common_data_t);
+    fingerprint_ipc_cgbe_abort_handle();
     inputhub_route_write(ROUTE_FHB_PORT, fingerprint_data, sizeof(fingerprint_upload.data));
 }
 
@@ -207,7 +216,10 @@ Return:         length of read data
 *******************************************************************************************/
 static ssize_t fhb_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
-    return inputhub_route_read(ROUTE_FHB_PORT, buf, count);
+    ssize_t ret =0;
+    ret = inputhub_route_read(ROUTE_FHB_PORT, buf, count);
+    fingerprint_ipc_cbge_handle = 0;
+    return ret;
 }
 
 /*******************************************************************************************
@@ -330,6 +342,17 @@ static struct notifier_block fingerprint_recovery_notify = {
 };
 
 /*******************************************************************************************
+Description:   fhb_poll CBGE
+*******************************************************************************************/
+static unsigned int fhb_poll(struct file *file, poll_table *wait)
+{
+    unsigned int mask = 0;
+    poll_wait(file, &ipc_wait, wait);
+    mask = fingerprint_ipc_cbge_handle ? POLLIN : 0;
+    return mask;
+}
+
+/*******************************************************************************************
 Description:   file_operations to fingerprinthub
 *******************************************************************************************/
 static const struct file_operations fhb_fops =
@@ -342,6 +365,7 @@ static const struct file_operations fhb_fops =
     .compat_ioctl      = fhb_ioctl,
 #endif
     .open              = fhb_open,
+    .poll              = fhb_poll,
 };
 
 /*******************************************************************************************
@@ -385,6 +409,7 @@ static int __init fingerprinthub_init(void)
         return ret;
     }
     register_iom3_recovery_notifier(&fingerprint_recovery_notify);
+    init_waitqueue_head(&ipc_wait);
     hwlog_info( "%s  ok \n", __func__);
 
     return ret;

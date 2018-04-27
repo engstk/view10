@@ -355,23 +355,27 @@ s32 wait_for_ccore_reset_done(u32 timeout)
 void master_in_idle_timestamp_dump(void)
 {
     printk(KERN_ERR "[indedicator   ]0x%-8x [fiq_cnt       ]0x%-8x [fail_cnt     ]0x%-8x [flow_begin   ]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_BASE_ADDR), readl((volatile const void *)STAMP_RESET_FIQ_COUNT), readl((volatile const void *)STAMP_RESET_IDLE_FAIL_COUNT), readl((volatile const void *)STAMP_RESET_MASTER_ENTER_IDLE));
-    printk(KERN_ERR "[bbe16_inidle  ]0x%-8x [cipher_chn_dis]0x%-8x [cipher_inidle]0x%-8x [cipher_reset ]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_BBE16_ENTER_IDLE),readl((volatile const void *)STAMP_RESET_CIPHER_DISABLE_CHANNLE), readl((volatile const void *)STAMP_RESET_CIPHER_ENTER_IDLE),readl((volatile const void *)STAMP_RESET_CIPHER_SOFT_RESET));
-    printk(KERN_ERR "[edma_bus_stop ]0x%-8x [edma_inidle   ]0x%-8x [upacc_inidle1]0x%-8x [upacc_inidle2]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_EDMA_STOP_BUS),readl((volatile const void *)STAMP_RESET_EDMA_ENTER_IDLE), readl((volatile const void *)STAMP_RESET_UPACC_ENTER_IDLE_1), readl((volatile const void *)STAMP_RESET_UPACC_ENTER_IDLE_2));
+    reset_stamp(STAMP_RESET_BASE_ADDR), reset_stamp(STAMP_RESET_FIQ_COUNT), reset_stamp(STAMP_RESET_IDLE_FAIL_COUNT), reset_stamp(STAMP_RESET_MASTER_ENTER_IDLE));
+    printk(KERN_ERR "[nxdsp_inidle  ]0x%-8x [cipher_chn_dis]0x%-8x [cipher_inidle]0x%-8x [cipher_reset ]0x%-8x\n",
+    reset_stamp(STAMP_RESET_BBE16_ENTER_IDLE),reset_stamp(STAMP_RESET_CIPHER_DISABLE_CHANNLE), reset_stamp(STAMP_RESET_CIPHER_ENTER_IDLE),reset_stamp(STAMP_RESET_CIPHER_SOFT_RESET));
+    printk(KERN_ERR "[edma_reset_in ]0x%-8x [edma_dev_id   ]0x%-8x [edma_clock   ]0x%-8x [edma_stop_bus]0x%-8x\n",
+    reset_stamp(STAMP_RESET_EDMA_IN),reset_stamp(STAMP_RESET_EDMA_DEV_NUM), reset_stamp(STAMP_RESET_EDMA_CHECK_CLK), reset_stamp(STAMP_RESET_EDMA_STOP_BUS));
+    printk(KERN_ERR "[edma_in_idle  ]0x%-8x [edma_reset_out]0x%-8x [upacc_inidle1]0x%-8x [upacc_inidle2]0x%-8x\n",
+    reset_stamp(STAMP_RESET_EDMA_ENTER_IDLE),reset_stamp(STAMP_RESET_EDMA_OUT), reset_stamp(STAMP_RESET_UPACC_ENTER_IDLE_1), reset_stamp(STAMP_RESET_UPACC_ENTER_IDLE_2));
     printk(KERN_ERR "[upacc_inidle3 ]0x%-8x [cicom0_rst    ]0x%-8x [cicom1_rst   ]0x%-8x [ipf_inidle   ]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_UPACC_ENTER_IDLE_3),readl((volatile const void *)STAMP_RESET_CICOM0_SOFT_RESET), readl((volatile const void *)STAMP_RESET_CICOM1_SOFT_RESET), readl((volatile const void *)STAMP_RESET_IPF_SOFT_RESET));
+    reset_stamp(STAMP_RESET_UPACC_ENTER_IDLE_3),reset_stamp(STAMP_RESET_CICOM0_SOFT_RESET), reset_stamp(STAMP_RESET_CICOM1_SOFT_RESET), reset_stamp(STAMP_RESET_IPF_SOFT_RESET));
     printk(KERN_ERR "[ipf_rst       ]0x%-8x [bbp_dma_inidle]0x%-8x [wbbp_mst_stop]0x%-8x [wbbp_slv_stop]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_IPF_ENTER_IDLE),readl((volatile const void *)STAMP_RESET_BBP_DMA_ENTER_IDLE), readl((volatile const void *)STAMP_RESET_WBBP_MSTER_STOP), readl((volatile const void *)STAMP_RESET_WBBP_SLAVE_STOP));
+    reset_stamp(STAMP_RESET_IPF_ENTER_IDLE),reset_stamp(STAMP_RESET_BBP_DMA_ENTER_IDLE), reset_stamp(STAMP_RESET_WBBP_MSTER_STOP), reset_stamp(STAMP_RESET_WBBP_SLAVE_STOP));
     printk(KERN_ERR "[wbbp_inidle   ]0x%-8x [bbp_dbg       ]0x%-8x [in_out_idle  ]0x%-8x [flow_end     ]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_WBBP_ENTER_IDLE),readl((volatile const void *)STAMP_RESET_BBP_DEBUG),readl((volatile const void *)STAMP_RESET_MASTER_INOUT_IDLE),readl((volatile const void *)STAMP_RESET_MASTER_IDLE_QUIT));
+    reset_stamp(STAMP_RESET_WBBP_ENTER_IDLE),reset_stamp(STAMP_RESET_BBP_DEBUG),reset_stamp(STAMP_RESET_MASTER_INOUT_IDLE),reset_stamp(STAMP_RESET_MASTER_IDLE_QUIT));
     printk(KERN_ERR "[hwspinlock    ]0x%-8x [hdlc_rst      ]0x%-8x [cbbe16_inidle]0x%-8x [nv idle      ]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_HWSPINLOCK_IDLE),readl((volatile const void *)STAMP_RESET_HDLC_SOFT_RESET),readl((volatile const void *)STAMP_RESET_CBBE16_ENTER_IDLE), readl((volatile const void *)STAMP_RESET_NV_IDLE));
+    reset_stamp(STAMP_RESET_HWSPINLOCK_IDLE),reset_stamp(STAMP_RESET_HDLC_SOFT_RESET),reset_stamp(STAMP_RESET_CBBE16_ENTER_IDLE), reset_stamp(STAMP_RESET_NV_IDLE));
     printk(KERN_ERR "[bbp_harq_idle ]0x%-8x [rsracc in     ]0x%-8x [rsracc step  ]0x%-8x [rsracc out   ]0x%-8x\n",
-       readl((volatile const void *)STAMP_RESET_BBP_HARQ_IDLE),readl((volatile const void *)STAMP_RESET_RSRACC_ENTER_IDLE),readl((volatile const void *)STAMP_RESET_RSRACC_STEP),readl((volatile const void *)STAMP_RESET_RSRACC_OUT_IDLE));
-    printk(KERN_ERR "[fiq_in_core0  ]0x%-8x [fiq_in_core1  ]0x%-8x [bbe16 waiti  ]0x%-8x\n",
-    readl((volatile const void *)STAMP_RESET_CORE0_INFIQ),readl((volatile const void *)STAMP_RESET_CORE1_INFIQ),readl((volatile const void *)STAMP_RESET_BBE16_WAITI_FAILED));
+        reset_stamp(STAMP_RESET_BBP_HARQ_IDLE),reset_stamp(STAMP_RESET_RSRACC_ENTER_IDLE),reset_stamp(STAMP_RESET_RSRACC_STEP),reset_stamp(STAMP_RESET_RSRACC_OUT_IDLE));
+    printk(KERN_ERR "[fiq_in_core0  ]0x%-8x [fiq_in_core1  ]0x%-8x [nxdsp reset  ]0x%-8x [cbbe16 reset ]0x%-8x\n",
+        reset_stamp(STAMP_RESET_CORE0_INFIQ),reset_stamp(STAMP_RESET_CORE1_INFIQ),reset_stamp(STAMP_RESET_NXDSP_SYSBUS_RESET),reset_stamp(STAMP_RESET_CBBE16_SYSBUS_RESET));
+    printk(KERN_ERR "[nx waiti state]0x%-8x [socp mdm reset]0x%-8x\n",
+        reset_stamp(STAMP_RESET_NXDSP_WAITI_STATE),reset_stamp(STAMP_RESET_SOCP_MODEM_CHAN_STATE));
 
     if (g_reset_debug.dump_state == (u32)RESET_DUMP_MAGIC)
     {
@@ -770,7 +774,7 @@ void modem_power_off_do_work(struct work_struct *work)
 }
 
 s32 reset_pm_notify(struct notifier_block *notify_block,
-                    unsigned long mode, void *unused)
+                    unsigned long mode, void *reset_unused)
 {
     switch (mode)
 	{
@@ -836,6 +840,11 @@ void reset_ipc_isr_reboot(u32 data)
 {
 	reset_print_debug("\n");
 	osl_sem_up(&(g_modem_reset_ctrl.wait_ccore_reset_ok_sem));
+}
+
+u32 bsp_reset_is_feature_on(void)
+{
+	return g_modem_reset_ctrl.nv_config.is_feature_on;
 }
 
 u32 bsp_reset_is_connect_ril(void)
@@ -1112,6 +1121,7 @@ EXPORT_SYMBOL(reset_feature_on); /*lint !e19 */
 EXPORT_SYMBOL(reset_ril_on); /*lint !e19 */
 EXPORT_SYMBOL(reset_ctrl_debug_show); /*lint !e19 */
 EXPORT_SYMBOL(bsp_reset_is_connect_ril); /*lint !e19 */
+EXPORT_SYMBOL(bsp_reset_is_feature_on); /*lint !e19 */
 
 module_init(bsp_reset_init); /*lint !e19*/
 

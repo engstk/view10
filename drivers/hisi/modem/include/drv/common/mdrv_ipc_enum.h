@@ -6,7 +6,7 @@
  * apply:
  *
  * * This program is free software; you can redistribute it and/or modify
- * * it under the terms of the GNU General Public License version 2 and 
+ * * it under the terms of the GNU General Public License version 2 and
  * * only version 2 as published by the Free Software Foundation.
  * *
  * * This program is distributed in the hope that it will be useful,
@@ -28,10 +28,10 @@
  * * 2) Redistributions in binary form must reproduce the above copyright
  * *    notice, this list of conditions and the following disclaimer in the
  * *    documentation and/or other materials provided with the distribution.
- * * 3) Neither the name of Huawei nor the names of its contributors may 
- * *    be used to endorse or promote products derived from this software 
+ * * 3) Neither the name of Huawei nor the names of its contributors may
+ * *    be used to endorse or promote products derived from this software
  * *    without specific prior written permission.
- * 
+ *
  * * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -53,6 +53,8 @@ extern "C"
 {
 #endif
 
+
+#ifndef __OS_NRCCPU__
 /* 处理器类型*/
 typedef enum tagIPC_INT_CORE_E
 {
@@ -70,6 +72,21 @@ typedef enum tagIPC_INT_CORE_E
     /* !!!!新增元素请添加到最后  */
     IPC_CORE_BUTTOM
 }IPC_INT_CORE_E;
+#else
+typedef enum tagIPC_INT_CORE_E
+{
+    IPC_CORE_LDSP = -1,
+    IPC_CORE_HiFi = -1,
+    IPC_CORE_CCORE = -1,
+    IPC_CORE_HL1C = 0x0,
+    IPC_CORE_NRCCORE,
+    IPC_CORE_L2HAC,
+    IPC_CORE_LL1C,
+    IPC_CORE_ACORE,
+    IPC_CORE_MCORE,
+    IPC_CORE_BUTTOM
+}IPC_INT_CORE_E;
+#endif
 
 /*********************************************************
 *  添加新IPC资源，枚举命名格式:
@@ -92,7 +109,7 @@ typedef enum tagIPC_INT_LEV_E
     IPC_INT_DSP_PS_PUB_MBX                 ,/* 上行DSP->ARM,与低功耗IPC中断复用 */
     IPC_INT_DSP_PS_MAC_MBX                 ,/* 上行DSP->ARM,与低功耗IPC中断复用 */
     IPC_INT_DSP_MBX_RSD                    ,/* 上行DSP->ARM,与低功耗IPC中断复用 */
-    IPC_CCPU_INT_SRC_DSP_MNTN              ,/* BBE16可维可测中断通知mailbox，崔军强 */
+    IPC_CCPU_INT_SRC_DSP_MNTN              ,/* CCPU->DSP DVFS模块调频调压后通知 NXP */
     /* 定义TDS使用的邮箱IPC中断,end */
     IPC_CCPU_INT_SDR_CCPU_BBP_MASTER_ERROR ,   /* BBE16通知C核发生了通道异常 */
     IPC_CCPU_INT_SRC_LDSP_OM_MBX,               /* 上行DSP->ARM, 通用邮箱消息到达 */
@@ -110,7 +127,7 @@ typedef enum tagIPC_INT_LEV_E
     IPC_CCPU_INT_SRC_XDSP_MNTN             ,   /* XDSP邮箱异常维测中断 */
     IPC_CCPU_INT_SRC_XDSP_PS_MBX           ,   /* PS与X模邮箱通信使用的中断 */
     IPC_CCPU_INT_SRC_XDSP_DVS              ,   /* CBBE16通知CCPU对dsp进行调频调压 */
-    
+
     IPC_CCPU_INT_SRC_ACPU_IPC_EXTEND = 30, /* acpu发给ccpu中断,用于扩展IPC 中断*/
     /*  austin项目和 mcu 通信使用 icc 中断号, 不能变更 */
     IPC_CCPU_INT_SRC_ACPU_ICC              = 31, /* acpu发给ccpu中断*/
@@ -118,16 +135,16 @@ typedef enum tagIPC_INT_LEV_E
     /*  安全ICC通信使用中断号, 不能变更 */
     IPC_CCPU_INT_SRC_SECOS_ICC_IFC         = 32, /* 对应安全IPC的0号中断，安全ICC共享通道中断 */
     IPC_CCPU_INT_SRC_SECOS_ICC_VSIM        = 33, /* 对应安全IPC的1号中断，安全ICC天际通通道中断 */
-	
-	/*modem 内部IPC*/
+
+    /*modem 内部IPC*/
     IPC_CCPU_INT_SRC_LTE0_HALT   =  64 ,   /*LTE0 (  主卡) 给CCPU 的HALT  中断*/
     IPC_CCPU_INT_SRC_LTE1_HALT  ,             /*LTE1 (  副卡) 给CCPU 的HALT  中断*/
-    IPC_CCPU_INT_SRC_TDS_HALT  ,    		  /*TDS  给CCPU的HALT中断*/
-    IPC_CCPU_INT_SRC_LTE0_RESUME  ,	  /*LTE0 (  主卡) 给CCPU 的RESUME 中断*/
-    IPC_CCPU_INT_SRC_LTE1_RESUME  ,	  /*LTE1 (  副卡) 给CCPU 的RESUME  中断*/
-    IPC_CCPU_INT_SRC_TDS_RESUME  ,	         /* TDS 给CCPU 的RESUME  中断*/
+    IPC_CCPU_INT_SRC_TDS_HALT  ,              /*TDS  给CCPU的HALT中断*/
+    IPC_CCPU_INT_SRC_LTE0_RESUME  ,   /*LTE0 (  主卡) 给CCPU 的RESUME 中断*/
+    IPC_CCPU_INT_SRC_LTE1_RESUME  ,   /*LTE1 (  副卡) 给CCPU 的RESUME  中断*/
+    IPC_CCPU_INT_SRC_TDS_RESUME  ,           /* TDS 给CCPU 的RESUME  中断*/
 
-    IPC_INNER_INT_TEST        = 90, 
+    IPC_INNER_INT_TEST        = 90,
 
     /* 定义MCU IPC跨核消息中断源bit位置 */
     IPC_MCU_INT_SRC_ACPU_MSG             = 0,    /* ACPU跨核消息通知 */
@@ -149,10 +166,12 @@ typedef enum tagIPC_INT_LEV_E
     IPC_MCU_INT_SRC_HIFI_DDR_DFS_QOS        , /* HIFI对DDR调频投票 */
     IPC_MCU_INT_SRC_TEST                    ,   /* for test a\c interact with m3 */
     IPC_MCPU_INT_SRC_ACPU_USB_PME_EN        ,  /* acore向M3通报USB唤醒完成事件 */
+    IPC_MCU_INT_SRC_NR_CCPU_START           ,  /* 通知MCU启动NR CCPU */
+    IPC_MCU_INT_SRC_LR_CCPU_START           ,
     /* 以下3个austin修改，和AP对齐，不能修改 */
     IPC_MCU_INT_SRC_ICC                 = 29,   /* m3 icc公用的ipc中断 */
     IPC_MCU_INT_SRC_CCPU_PD             = 30,    /* ccpu power down */
-    IPC_MCU_INT_SRC_CCPU_START          = 31,   /* 通知MCU启动CCPU */
+    IPC_MCU_INT_SRC_CCPU_START          = 31,   /* 通知MCU启动LR CCPU */
 
     /* 定义ACPU IPC跨核消息中断源bit位置 */
     IPC_ACPU_INT_SRC_CCPU_MSG             = 0,   /* CCPU跨核消息通知 */
@@ -191,9 +210,9 @@ typedef enum tagIPC_INT_LEV_E
     IPC_INT_PS_DSP_MAC_MBX     ,   /* 下行ARM->DSP */
     IPC_INT_HIFI_DSP_MBX       ,   /* HIFI->DSP */
     IPC_BBE16_INT_SRC_HIFI_MSG ,   /* 邮箱消息，HIFI发送给BBE16的IPC中断 */
-    IPC_INT_MSP_DSP_LTE0_WAKE_UP  , 	  /*CCPU 给DSP 的LTE0  唤醒中断*/
-    IPC_INT_MSP_DSP_LTE1_WAKE_UP  ,	  /*CCPU 给DSP 的LTE1  唤醒中断*/
-    IPC_INT_MSP_DSP_TDS_WAKE_UP  ,	  /*CCPU 给DSP 的TDS  唤醒中断*/
+    IPC_INT_MSP_DSP_LTE0_WAKE_UP  ,       /*CCPU 给DSP 的LTE0  唤醒中断*/
+    IPC_INT_MSP_DSP_LTE1_WAKE_UP  ,   /*CCPU 给DSP 的LTE1  唤醒中断*/
+    IPC_INT_MSP_DSP_TDS_WAKE_UP  ,    /*CCPU 给DSP 的TDS  唤醒中断*/
     IPC_BBE16_INT_SRC_END  ,
 
 
@@ -202,9 +221,9 @@ typedef enum tagIPC_INT_LEV_E
     IPC_XDSP_INT_SRC_CCPU_HRPD_WAKE   ,   /* HRPD Wake中断 */
     IPC_XDSP_INT_SRC_CCPU_OM_MBX      ,   /* C核->XDSP */
     IPC_XDSP_INT_SRC_CCPU_PUB_MBX     ,   /* C核->XDSP */
-    IPC_XDSP_INT_SRC_CCPU_1X_WAKE_UP  ,	  /*CCPU 给DSP 的1X  唤醒中断*/
-    IPC_XDSP_INT_SRC_CCPU_HRPD_WAKE_UP  ,	  /*CCPU 给DSP 的HRPD  唤醒中断*/
-    IPC_XDSP_INT_SRC_END ,   
+    IPC_XDSP_INT_SRC_CCPU_1X_WAKE_UP  ,   /*CCPU 给DSP 的1X  唤醒中断*/
+    IPC_XDSP_INT_SRC_CCPU_HRPD_WAKE_UP  ,     /*CCPU 给DSP 的HRPD  唤醒中断*/
+    IPC_XDSP_INT_SRC_END ,
 
 
     /* 仅解决编译问题 */
@@ -215,9 +234,9 @@ typedef enum tagIPC_SEM_ID_E
 {
     IPC_SEM_MEM          ,
     IPC_SEM_DICC         ,
-    IPC_SEM_SYNC         , 
+    IPC_SEM_SYNC         ,
     IPC_SEM_SYSCTRL      ,
-    IPC_SEM_BBP          ,  /*该值与BBE16镜像绑定，修改需通知BBE16作相应修改*/
+    IPC_SEM_BBP_RESERVED ,  /*该值与BBE16镜像绑定，修改需通知BBE16作相应修改*/
     IPC_SEM_LBBP1        ,  /*副卡bbp，ccore 与 tlphy 使用 */
     IPC_SEM_NVIM         ,
     IPC_SEM_1X_MODE      ,  /* 1X模式锁，GSDR开发合入 */
@@ -238,14 +257,17 @@ typedef enum tagIPC_SEM_ID_E
     IPC_SEM_MDRV_LOCK    ,
     IPC_SEM_CDMA_DRX     , /* C核与XDSP使用 */
     IPC_SEM_GU_SLEEP     ,
-    IPC_SEM_CPM		      ,
     IPC_SEM2_IPC_TEST    , /*IPC自动化测试使用*/
     IPC_SEM_DFS_FIX      = 31, /*M3 DFS与HIFI互斥访问APB总线使用,仅HI6950芯片平台上使用*/
+
+    IPC_SEM_CPM          = 64,
+    IPC_SEM_CPM_1X       = 65,    /*X模融合到nxp上新增1X核间锁*/
+    IPC_SEM_BBP          = 66,
 
     IPC_SEM_INNER_TEST = 70,
     IPC_SEM_BUTTOM       = 96
 } IPC_SEM_ID_E;
- 
+
 #ifdef __cplusplus
 }
 #endif

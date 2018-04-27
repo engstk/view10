@@ -9,67 +9,33 @@
 
 #include <net/tcp.h>
 
-#include <linux/compiler.h>
-#include <linux/gfp.h>
-#include <linux/module.h>
-
-
-#include <linux/fs.h>
-#ifdef CONFIG_HW_CROSSLAYER_OPT
-#ifdef CONFIG_HW_CROSSLAYER_OPT_DBG
-#include <linux/time.h>
-#include <linux/timex.h>
-#include <linux/rtc.h>
-#endif 
-#include <net/tcp_crosslayer.h>
-#endif 
-
-#ifdef CONFIG_HW_WIFIPRO
-#include <huawei_platform/net/ipv4/wifipro_tcp_monitor.h>
-#endif
-#ifdef CONFIG_HW_WIFI
-#include <huawei_platform/net/ipv4/wifi_tcp_statistics.h>
-#endif
+#include <linux/sched.h>
+#include <linux/rcupdate.h>
 
 #include "pid_socket.h"
 
 
-/*20150114 add,get pid and process name of the app who used connect function.*/
-int get_proc_name(int pid, char *buf, int len)
-{
-	char filename[32];
-	struct file *filep;
-	int result = 0;
-	mm_segment_t oldfs;
-
-	oldfs = get_fs();
-	set_fs(KERNEL_DS);
-	snprintf(filename, sizeof(filename), "/proc/%d/cmdline", pid);
-	filep = filp_open(filename, O_RDONLY, 0);
-	if (IS_ERR(filep)) {
-		pr_err("get_proc_name:open file error\n");
-		result = -EINVAL;
-		set_fs(oldfs);
-		return -1;
-	}
-
-	filep->f_pos = 0;
-	result = filep->f_op->read(filep, buf, len, &filep->f_pos);
-	filp_close(filep, NULL);
-	set_fs(oldfs);
-	return 0;
-}
-
-
 void print_process_pid_name(struct inet_sock *inet)
 {
-	char process_name[100] = {0};
-	int pid = task_tgid_vnr(current);
+	if (NULL == inet || NULL == inet->sk.sk_socket) {
+		return;
+	}
+
+	int pid = inet->sk.sk_socket->pid;
 	unsigned short source_port = inet->inet_sport;
 
-	get_proc_name(pid, process_name, 99);
+	rcu_read_lock();
+	struct task_struct * task=find_task_by_vpid(pid);
+	if (NULL == task) {
+		rcu_read_unlock();
+		return;
+	}
+	get_task_struct(task);
+	rcu_read_unlock();
+
 	source_port = htons(source_port);
-	pr_crit("%s: pid:(%d),name:(%s),port:(%d)\n", __func__, pid, process_name, source_port);
+	pr_crit("%s: pid:(%d),name:(%s),port:(%d)\n", __func__, pid, task->comm, source_port);
+	put_task_struct(task);
 }
 
 /*20150114 add,get pid and process name of the app who used connect function.*/

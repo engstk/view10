@@ -100,7 +100,10 @@ enum _task_msg_type_e_
     NV_TASK_MSG_UPDATE_FACTORY  = 0x5,     /*更新出厂分区数据*/
     NV_TASK_MSG_RESET_FROM_FACTORY  = 0x6,     /*恢复出厂设置*/
     NV_TASK_MSG_REVERT_FROM_BAK     = 0x7,      /*从备份分区备份恢复*/
-    NV_TASK_MSG_RESUEM_ITEM         = 0x8,     /*resume single nv 请求*/    
+    NV_TASK_MSG_RESUEM_ITEM         = 0x8,     /*resume single nv 请求*/
+#ifdef FEATURE_NV_CARRIER_CUST
+    NV_TASK_MSG_RESUME_CARD         = 0x9,
+#endif
     NV_TASK_MSG_BUTT,
 };
 
@@ -113,6 +116,9 @@ enum _icc_msg_e_
     NV_ICC_REQ_SHUT_DOWN_FLUSH          = 0x43,         /*ccore 关机写请求消息*/
     NV_ICC_REQ_RESUME                   = 0x44,         /*请求恢复DDR中的nv数据*/
     NV_ICC_REQ_RESUME_ITEM              = 0x45,         /*请求恢复DDR中的nv单个数据*/
+#ifdef FEATURE_NV_CARRIER_CUST
+    NV_ICC_REQ_RESUME_CARD              = 0x46,         /*请求恢复mbn_comm的的NV数据*/
+#endif
     NV_ICC_CNF                          = 127,
     NV_ICC_BUTT                         = 0xFF,
 };

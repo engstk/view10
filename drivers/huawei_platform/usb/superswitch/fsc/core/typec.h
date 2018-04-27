@@ -10,6 +10,7 @@
 #include "port.h"
 
 #define SLEEP_DELAY_US    80    /* 0.08ms */
+#define REDOBC12_MAX_CNT  8
 
 void FUSB3601_StateMachineTypeC(struct Port *port);
 void FUSB3601_StateMachineDisabled(struct Port *port);

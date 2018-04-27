@@ -1171,12 +1171,11 @@ int do_send_sig_info(int sig, struct siginfo *info, struct task_struct *p,
 {
 	unsigned long flags;
 	int ret = -ESRCH;
-
-	if (lock_task_sighand(p, &flags)) {
 #ifdef CONFIG_HUAWEI_KSTATE
-		if (sig == SIGKILL || sig == SIGTERM || sig == SIGABRT)
-			hwkillinfo(p->tgid, sig);
+	if (sig == SIGKILL || sig == SIGTERM || sig == SIGABRT || sig == SIGQUIT)
+		hwkillinfo(p->tgid, sig);
 #endif
+	if (lock_task_sighand(p, &flags)) {
 #ifdef CONFIG_HW_DIE_CATCH
 		/*if the process have KILL_CATCH_FLAG, need to catch it in android platform*/
 		if (p->signal->unexpected_die_catch_flags & KILL_CATCH_FLAG) {

@@ -55,22 +55,12 @@
 #define    THIS_FILE_ID        MSP_FILE_ID_DIAG_MSGHIFI_C
 
 
-/*****************************************************************************
- Function Name   : diag_HifiMsgProc
- Description     : HIFI命令直接透传消息给HIFI，并由MSP代替回复
- Input           : VOS_UINT8* pstReq
- Output          : None
- Return          : VOS_UINT32
 
- History         :
-    1.c00326366      2015-06-14  Draft Enact
-
-*****************************************************************************/
 VOS_UINT32 diag_HifiMsgProc(DIAG_FRAME_INFO_STRU* pstReq)
 {
     VOS_UINT32 ulRet                    = ERR_MSP_SUCCESS;
     DIAG_COMM_CNF_STRU stHifiCnf        = {0};
-    MSP_DIAG_CNF_INFO_STRU stDiagInfo   = {0};  
+    MSP_DIAG_CNF_INFO_STRU stDiagInfo   = {0};
     VOS_UINT32 ulLen;
     DIAG_HIFI_MSG_A_TRANS_C_STRU *pstInfo;
 
@@ -83,14 +73,19 @@ VOS_UINT32 diag_HifiMsgProc(DIAG_FRAME_INFO_STRU* pstReq)
         ulRet = ERR_MSP_MALLOC_FAILUE;
         goto DIAG_ERROR;
     }
-    
+
     pstInfo->ulReceiverPid = MSP_PID_DIAG_AGENT;
     pstInfo->ulSenderPid   = MSP_PID_DIAG_APP_AGENT;
     pstInfo->ulMsgId       = DIAG_MSG_HIFI_A_TRANS_C_REQ;
-    
+
     ulLen = sizeof(DIAG_FRAME_INFO_STRU) + pstReq->ulMsgLen;
-    (VOS_VOID)VOS_MemCpy_s(&pstInfo->stInfo, ulLen, pstReq, ulLen);
-    
+    if(!VOS_MemCpy_s(&pstInfo->stInfo, ulLen, pstReq, ulLen))
+    {
+        diag_error("memcpy_s error\n");
+        VOS_FreeMsg(MSP_PID_DIAG_APP_AGENT, pstInfo);
+        return ERR_MSP_MEMCPY_S_ERROR;
+    }
+
     ulRet = VOS_SendMsg(MSP_PID_DIAG_APP_AGENT, pstInfo);
     if(ulRet)
     {
@@ -99,9 +94,9 @@ VOS_UINT32 diag_HifiMsgProc(DIAG_FRAME_INFO_STRU* pstReq)
     }
 
     return ulRet;
-    
+
 DIAG_ERROR:
-    
+
     stHifiCnf.ulRet  = ulRet;
     DIAG_MSG_COMMON_PROC(stDiagInfo, stHifiCnf, pstReq);
 

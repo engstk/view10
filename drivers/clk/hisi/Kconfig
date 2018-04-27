@@ -23,7 +23,7 @@ config HISI_CLK_HI3660
 	default n
 
 config HISI_CLK_KIRIN
-        bool "970 and the version behind of boston clock spec"
+        bool "boston and the version behind of boston clock spec"
         default n
 
 config HISI_HI6250_CLK

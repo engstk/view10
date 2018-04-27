@@ -49,6 +49,7 @@
 #include <linux/syscalls.h>
 #include <linux/kernel.h> 
 #include <asm/string.h>
+#include "securec.h"
 #include "bsp_sram.h"
 #include "bsp_shared_ddr.h"
 #include "bsp_ddr.h"
@@ -81,7 +82,7 @@ void dump_save_mntn_bin(char* dir_name)
 
     if(cfg->file_list.file_bits.mdm_dump == 1  && (dump_get_product_type()== DUMP_PHONE))
     {
-        memset(file_name, 0, sizeof(file_name));
+        memset_s(file_name, sizeof(file_name),0, sizeof(file_name));
         /*coverity[secure_coding]*/
         snprintf(file_name, (sizeof(file_name) - 1), "%smodem_dump.bin", dir_name);
         ret = dump_get_global_info(&global_area);
@@ -113,7 +114,7 @@ void dump_save_mdm_sram_file(char* dir_name)
     DUMP_FILE_CFG_STRU* cfg = dump_get_file_cfg();
     if((cfg->file_list.file_bits.mdm_sram == 1)&&(EDITION_INTERNAL_BETA == dump_get_edition_type()))
     {
-        memset(file_name, 0, sizeof(file_name));
+        memset_s(file_name, sizeof(file_name),0, sizeof(file_name));
         /*coverity[secure_coding]*/
         snprintf(file_name, (sizeof(file_name)-1), "%smodem_sram.bin", dir_name);
         dump_save_file(file_name, (u8 *)g_mem_ctrl.sram_virt_addr, g_mem_ctrl.sram_mem_size);
@@ -143,14 +144,15 @@ void dump_save_mdm_secshare_file(char* dir_name)
     /*lint -save -e835*/
     if(cfg->file_list.file_bits.mdm_secshare == 1  
         && (dump_get_product_type()== DUMP_PHONE) 
-        && (EDITION_INTERNAL_BETA == dump_get_edition_type()))
+        && (EDITION_INTERNAL_BETA == dump_get_edition_type())
+        && (DUMP_ACCESS_MDD_DDR_NON_SEC== dump_get_access_mdmddr_type()))
     {
         addr = ioremap_wc((phys_addr_t)(MDDR_FAMA(DDR_SEC_SHARED_ADDR)),(size_t)(DDR_SEC_SHARED_SIZE));
         if(addr == NULL)
         {
             return;
         }
-        memset(file_name, 0, sizeof(file_name));
+        memset_s(file_name, sizeof(file_name),0, sizeof(file_name));
         /*coverity[secure_coding]*/
         snprintf(file_name, (sizeof(file_name)-1), "%smodem_secshared.bin", dir_name);
         dump_save_file(file_name, addr, DDR_SEC_SHARED_SIZE);
@@ -181,9 +183,10 @@ void dump_save_mdm_share_file(char* dir_name)
     u32 len = 0;
     if(cfg->file_list.file_bits.mdm_share == 1  
         && (dump_get_product_type()== DUMP_PHONE) 
-        && (EDITION_INTERNAL_BETA == dump_get_edition_type()))
+        && (EDITION_INTERNAL_BETA == dump_get_edition_type())
+        && (DUMP_ACCESS_MDD_DDR_NON_SEC== dump_get_access_mdmddr_type()))
     {
-        memset(file_name, 0, sizeof(file_name));
+        memset_s(file_name, sizeof(file_name),0, sizeof(file_name));
         /*coverity[secure_coding]*/
         snprintf(file_name, (sizeof(file_name)-1), "%smodem_share.bin", dir_name);
         if( BSP_OK == dump_get_load_info(&dump_load))
@@ -221,7 +224,8 @@ void dump_save_mdm_llram_file(char* dir_name)
 
     if(cfg->file_list.file_bits.llram_share == 1  
         && (dump_get_product_type()== DUMP_PHONE) 
-        && (EDITION_INTERNAL_BETA == dump_get_edition_type()))
+        && (EDITION_INTERNAL_BETA == dump_get_edition_type()
+        && (DUMP_ACCESS_MDD_DDR_NON_SEC== dump_get_access_mdmddr_type())))
     {
     
         addr = ioremap_wc((phys_addr_t)(MDDR_FAMA(CCPU_LLRAM_BASE_ADDR)),(size_t)(CCPU_LLRAM_BASE_SIZE));
@@ -229,7 +233,7 @@ void dump_save_mdm_llram_file(char* dir_name)
         {
             return;
         }
-        memset(file_name, 0, sizeof(file_name));
+        memset_s(file_name, sizeof(file_name),0, sizeof(file_name));
         /*coverity[secure_coding]*/
         snprintf(file_name, (sizeof(file_name)-1), "%smodem_llram.bin", dir_name);
         dump_save_file(file_name, (u8 *)addr, CCPU_LLRAM_BASE_SIZE);

@@ -84,6 +84,14 @@ extern struct huawei_log_tag __start_hwlog_tag, __stop_hwlog_tag;
 #define LOGGER_ENTRY_MAX_PAYLOAD	4076
 
 #define __LOGGERIO	0xAE
+#define CHECK_CODE	0x7BCDABCD
+
+enum CheckError {
+    EVecSeg = 1,
+    EVecLen,
+    EVecCopy,
+    EVecCode,
+};
 
 #define LOGGER_GET_LOG_BUF_SIZE		_IO(__LOGGERIO, 1)	/* size of log */
 #define LOGGER_GET_LOG_LEN		_IO(__LOGGERIO, 2)	/* used log len */

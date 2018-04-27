@@ -79,7 +79,20 @@ enum NV_FACTORY_CHECK_E
 *****************************************************************************/
 unsigned int mdrv_nv_check_factorynv(unsigned int mode);
 
-
+/*****************************************************************************
+* 函 数 名	: mdrv_nv_get_modem_num
+*
+* 功能描述	: 获取NV镜像支持的odem个数
+*
+* 输入参数	:
+* 输出参数	: 无
+*
+* 返 回 值	: modem个数
+*
+* 修改记录	: 
+*
+***************************************************************************/
+unsigned int mdrv_nv_get_modem_num(void);
 
 /*****************************************************************************
 * 函 数 名	: mdrv_nv_get_nvid_num
@@ -110,6 +123,22 @@ unsigned int mdrv_nv_get_nvid_num(void);
 *
 *****************************************************************************/
 unsigned int mdrv_nv_get_nvid_list(NV_LIST_INFO_STRU *pstNvIdList);
+
+/*****************************************************************************
+* 函 数 名  : mdrv_nv_get_nvauth_list
+*
+* 功能描述  : 获取鉴权NV列表
+*
+* 输入参数  :
+* 输出参数  : list_adr 列表地址
+*             list_num 列表NV个数  
+*
+* 返 回 值  : 无
+*
+* 修改记录  : wangwanqing create
+*
+*****************************************************************************/
+void mdrv_nv_get_nvauth_list(unsigned int ** list_adr, unsigned int * list_num);
 
 /*****************************************************************************
 * 函 数 名  : mdrv_nv_backup
@@ -148,17 +177,6 @@ unsigned int mdrv_nv_backup_factorynv(void);
 
 /*恢复出厂NV项*/
 unsigned int mdrv_nv_revert_factorynv(void);
-
-
-#define NV_GetNVIdListNum()		                    mdrv_nv_get_nvid_num()
-#define NV_GetNVIdList(list)		                mdrv_nv_get_nvid_list(list)
-#define NVM_BackUpFNV()                             mdrv_nv_backup_factorynv()
-#define NVM_RevertFNV()                             mdrv_nv_revert_factorynv()
-#define NVM_UpgradeBackup(uloption)	                mdrv_nv_backup()
-#define NVM_UpgradeRestore()	                    mdrv_nv_restore()
-
-
-
 
 #ifdef __cplusplus
 }

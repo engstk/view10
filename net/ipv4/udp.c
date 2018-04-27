@@ -267,6 +267,14 @@ int udp_lib_get_port(struct sock *sk, unsigned short snum,
 	} else {
 		hslot = udp_hashslot(udptable, net, snum);
 		spin_lock_bh(&hslot->lock);
+
+		if (inet_is_local_reserved_port(net, snum) &&
+			!sysctl_local_reserved_ports_bind_ctrl &&
+			(!sysctl_local_reserved_ports_bind_pid ||
+			 sysctl_local_reserved_ports_bind_pid != current->tgid)) {
+			goto fail_unlock;
+		}
+
 		if (hslot->count > 10) {
 			int exist;
 			unsigned int slot2 = udp_sk(sk)->udp_portaddr_hash ^ snum;

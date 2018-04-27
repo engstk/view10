@@ -62,6 +62,8 @@ void FUSB3601_PolicySinkSendPRSwap(struct Port *port);
 void FUSB3601_PolicySinkEvaluatePRSwap(struct Port *port);
 #endif /* FSC_HAVE_SNK */
 
+void FUSB3601_PolicyDfpCblVdmIdentityRequest(struct Port *port);
+
 void FUSB3601_UpdateCapabilitiesRx(struct Port *port, FSC_BOOL is_source_cap_update);
 
 
@@ -83,4 +85,5 @@ void FUSB3601_PolicyGiveVdm(struct Port *port);
 void FUSB3601_PolicySourceStartupHelper(struct Port *port);
 
 #endif /* FSCPM_POLICY_H_ */
-
+extern int pd_dpm_get_pd_reset_adapter(void);
+extern void pd_dpm_set_optional_max_power_status(bool status);

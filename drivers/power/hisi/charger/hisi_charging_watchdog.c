@@ -120,13 +120,13 @@ static int rdr_charge_syswdt_init(void)
 **********************************************************/
 static irqreturn_t charger_watchdog_interrupt(int irq, void *_di)
 {
+#ifdef CONFIG_HISI_BB
     u64 a_wdt_kick_time = rdr_get_last_wdt_kick_slice();
 
 	if (NULL == _di || 0 == irq ) {
 		hwlog_err("[charger_watchdog_interrupt]:di is null.\n");
 	}
 	hwlog_err("charge wdt timeout,last kick cpu[%d],time:%llu ns, a_wdt_kick_time:%llu s\n", watchdog_kick_cpu, watchdog_kick_time, (a_wdt_kick_time/32768));
-#ifdef CONFIG_HISI_BB
 	rdr_syserr_process_for_ap((u32)MODID_CHARGER_S_WDT, (u64)0, (u64)0);
 #endif
 	return IRQ_HANDLED;

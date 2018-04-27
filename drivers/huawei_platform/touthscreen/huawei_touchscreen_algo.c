@@ -537,6 +537,7 @@ int update_restrain_area(int y, int *point)
 			point[RES_ERF] = 1;											//error flag
 		}
 	}
+	return 0;
 }
 
 int ts_algo_t3(struct ts_device_data *dev_data, struct ts_fingers *in_info, struct ts_fingers *out_info)

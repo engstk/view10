@@ -18,4 +18,6 @@
 #define SHARP_2LANE_NT36870 	0x4
 
 extern uint32_t g_mipi_lcd_name;
+void get_vesa_dsc_para(struct hisi_panel_info *pinfo, uint8_t panel_mode);
+int switch_panel_mode(struct hisi_fb_data_type *hisifd, uint8_t mode_switch_to);
 #endif

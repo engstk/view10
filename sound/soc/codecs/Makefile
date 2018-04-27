@@ -2,7 +2,7 @@ ifeq ($(CONFIG_HI6402_MBHC_ANC),y)
 EXTRA_CFLAGS +=	-Idrivers/hisi/slimbus/
 EXTRA_CFLAGS +=	-DANC_HEADSET
 endif
-EXTRA_CFLAGS += -I$(src)/hs_auto_calib/
+EXTRA_CFLAGS += -I$(src)/hisi/hs_auto_calib/
 
 ifneq ($(TARGET_BUILD_VARIANT),user)
 EXTRA_CFLAGS += -DHI6XXX_FPGA_TEST
@@ -200,22 +200,25 @@ snd-soc-wm9712-objs := wm9712.o
 snd-soc-wm9713-objs := wm9713.o
 snd-soc-wm-hubs-objs := wm_hubs.o
 
-snd-soc-hi6402-objs := hi6402.o
-snd-soc-hi6403-objs := hi6403.o
-snd-soc-hi6403es-objs := hi6403es.o
-snd-soc-hi6402es-objs := hi6402es.o
-snd-soc-hdmi-audio-objs := hdmi-audio.o
-snd-soc-dp-audio-objs := dp_audio.o
+snd-soc-hi6402-objs := hisi/hi6402.o
+snd-soc-hi6403-objs := hisi/hi6403.o
+snd-soc-hi6403es-objs := hisi/hi6403es.o
+snd-soc-hi6402es-objs := hisi/hi6402es.o
+snd-soc-hdmi-audio-objs := hisi/hdmi-audio.o
+snd-soc-dp-audio-objs := hisi/dp_audio.o
 # hissc codec
-snd-soc-hissc-objs := hissc.o
+snd-soc-hissc-objs := hisi/hissc.o
 # hi6555c codec
-obj-y += hs_auto_calib/
-snd-soc-hi6555c-objs :=hi6555c.o
-snd-soc-hi6555c-debug-objs :=hi6555c_debug.o
+obj-y += hisi/hs_auto_calib/
+snd-soc-hi6555c-objs :=hisi/hi6555c.o
+snd-soc-hi6555c-debug-objs :=hisi/hi6555c_debug.o
 # Amp
 snd-soc-max9877-objs := max9877.o
 snd-soc-tpa6130a2-objs := tpa6130a2.o
 snd-soc-tas2552-objs := tas2552.o
+# hi6555v2 codec
+snd-soc-hi6555v2-objs :=hisi/hi6555v2.o
+snd-soc-hi6555v2_utility-objs :=hisi/hi6555v2_utility.o
 
 obj-$(CONFIG_SND_SOC_88PM860X)	+= snd-soc-88pm860x.o
 obj-$(CONFIG_SND_SOC_AB8500_CODEC)	+= snd-soc-ab8500-codec.o
@@ -417,4 +420,9 @@ obj-$(CONFIG_SND_SOC_HI6403)    += snd-soc-hi6403.o
 obj-$(CONFIG_SND_SOC_HI6403)    += snd-soc-hi6403es.o
 obj-$(CONFIG_HDMI_K3)           += snd-soc-hdmi-audio.o
 ccflags-$(CONFIG_SND_SOC_HI6403)  += -Idrivers/devkit/audiokit/
+ccflags-$(CONFIG_SND_SOC_CODEC_HI6555C)  += -Idrivers/devkit/audiokit/
 obj-$(CONFIG_SND_SOC_DP_AUDIO)    += snd-soc-dp-audio.o
+
+obj-$(CONFIG_SND_SOC_CODEC_HI6555V2) += snd-soc-hi6555v2.o
+obj-$(CONFIG_SND_SOC_CODEC_HI6555V2) += snd-soc-hi6555v2_utility.o
+obj-$(CONFIG_SND_SOC_HICODEC_DEBUG) += hisi/hicodec_debug.o

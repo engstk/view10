@@ -64,7 +64,7 @@
                          -1操作失败
 
 *****************************************************************************/
-int mdrv_misc_get_cbc_state(unsigned char *pusBcs,unsigned char *pucBcl)
+__weak int mdrv_misc_get_cbc_state(unsigned char *pusBcs,unsigned char *pucBcl)
 {
     return -1;
 }
@@ -79,7 +79,7 @@ int mdrv_misc_get_cbc_state(unsigned char *pusBcs,unsigned char *pucBcl)
                          -1操作失败
 
 *****************************************************************************/
-int mdrv_misc_get_battery_state(BATT_STATE_S *battery_state)
+__weak int mdrv_misc_get_battery_state(BATT_STATE_S *battery_state)
 {
     return -1;
 }
@@ -92,7 +92,7 @@ int mdrv_misc_get_battery_state(BATT_STATE_S *battery_state)
  返回值：   0 未充电
                           1 充电中
 *****************************************************************************/
-int mdrv_misc_get_charging_status(void)
+__weak int mdrv_misc_get_charging_status(void)
 {
     return -1;
 }
@@ -105,7 +105,7 @@ int mdrv_misc_get_charging_status(void)
  输出参数  :无
  返回值：    无
 *****************************************************************************/
-void mdrv_misc_set_charge_state(unsigned long ulState)
+__weak void mdrv_misc_set_charge_state(unsigned long ulState)
 {
 
 }
@@ -117,7 +117,7 @@ void mdrv_misc_set_charge_state(unsigned long ulState)
  输出参数  :无
  返回值：    无
 *****************************************************************************/
-int mdrv_misc_get_charge_state(void)
+__weak int mdrv_misc_get_charge_state(void)
 {
     return -1;
 }
@@ -129,7 +129,7 @@ int mdrv_misc_get_charge_state(void)
  输出参数  :无
  返回值：    无
 *****************************************************************************/
-int mdrv_misc_sply_battery(void)
+__weak int mdrv_misc_sply_battery(void)
 {
     return -1;
 }

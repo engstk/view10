@@ -191,7 +191,6 @@ static int hisi_get_ov_data_from_user(struct hisi_fb_data_type *hisifd,
 	}
 
 	pov_req->release_fence = -1;
-
 	if ((pov_req->ov_block_nums <= 0) ||
 		(pov_req->ov_block_nums > HISI_DSS_OV_BLOCK_NUMS)) {
 		HISI_FB_ERR("fb%d, ov_block_nums(%d) is out of range!\n",

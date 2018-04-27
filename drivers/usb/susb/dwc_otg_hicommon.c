@@ -326,6 +326,14 @@ int get_resource(struct otg_dev *dev)
 		ret = 0;
 	}
 
+	/*
+	 * get device usb support voltage check
+	 */
+	if(of_property_read_u32(base_dev->of_node, "usb_support_check_voltage", &(dev->check_voltage))){
+		usb_dbg("usb driver not usb_support_check_voltage!!!\n");
+		dev->check_voltage = 0;
+	}
+
 	if (!dev->usb_ahbif_base || !dev->pericrg_base || !dev->pctrl_reg_base) {
 		usb_err("get registers base address failed![a:%pK],[peri:%pK],[pctrl:%pK]\n", dev->usb_ahbif_base, dev->pericrg_base, dev->pctrl_reg_base);
 		return -ENXIO;
@@ -909,9 +917,13 @@ static inline bool sleep_allowed(struct otg_dev *dev)
 
 static inline bool bc_again_allowed(struct otg_dev *dev)
 {
-	return ((dev->charger_type == CHARGER_TYPE_SDP)
-			|| (dev->charger_type == CHARGER_TYPE_UNKNOWN)
-			|| (dev->charger_type == CHARGER_TYPE_CDP));
+	if (dev->bc_unknown_again_flag)
+		return ((dev->charger_type == CHARGER_TYPE_SDP)
+				|| (dev->charger_type == CHARGER_TYPE_UNKNOWN)
+				|| (dev->charger_type == CHARGER_TYPE_CDP));
+	else
+		return ((dev->charger_type == CHARGER_TYPE_SDP)
+				|| (dev->charger_type == CHARGER_TYPE_CDP));
 }
 
 int dwc_otg_hicommon_is_power_on(void)
@@ -1053,6 +1065,10 @@ static int off_to_device(struct otg_dev *p)
 	/* disable usb core interrupt */
 	dwc_otg_disable_global_interrupts(dwc_otg_dev->core_if);
 
+	/*if the platform support,it need check voltage*/
+	if(p->usb_phy_ops->check_voltage)
+		p->usb_phy_ops->check_voltage(p);
+
 	/* Get charger type. */
 	detect_charger_type(p);
 
@@ -1180,7 +1196,7 @@ void hisi_usb_otg_bc_again(void)
 		return;
 	}
 
-	if ((1 == p->bc_again_flag) && (0 == p->bc_unknown_again_flag)) {
+	if ((1 == p->bc_again_flag) && (BC_AGAIN_ONCE == p->bc_unknown_again_flag)) {
 		mutex_lock(&p->lock);
 		/* user triggered bc_again allowed only when charger type is unknown */
 		if (p->charger_type == CHARGER_TYPE_UNKNOWN) {
@@ -1230,7 +1246,7 @@ void schdule_bc_again(struct otg_dev *p)
 		return;
 
 	if ((p->charger_type == CHARGER_TYPE_UNKNOWN)
-		&& p->bc_unknown_again_flag)
+		&& (BC_AGAIN_TWICE == p->bc_unknown_again_flag))
 		p->bc_again_delay_time = BC_AGAIN_DELAY_TIME_1;
 	else
 		p->bc_again_delay_time = BC_AGAIN_DELAY_TIME_2;

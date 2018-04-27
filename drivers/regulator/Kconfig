@@ -791,23 +791,23 @@ config DRV_HISI_IP_REGULATOR
 	help
 	  This driver provides system interior bus switch support for the IP regulator on the HiSilicon system.
 
-config UPMARKET_CONCEPT_PRODUCT_PLATFORM
-	tristate "HiSilicon upmarket system interior bus control platform switch"
+config ATLA_IP_PLATFORM
+	tristate "HiSilicon ATLA system interior bus control platform switch"
 	depends on MFD_HISI_IP_CORE
 	help
-	  This driver provides system interior bus switch for the IP regulator on the upmarket HiSilicon system.
+	  This driver provides system interior bus switch for the IP regulator on the ATLA HiSilicon system.
 
-config KIRIN970_IP_PLATFORM
+config BOST_IP_PLATFORM
 	tristate "HiSilicon system interior bus control platform switch"
 	depends on MFD_HISI_IP_CORE
 	help
 	  This driver provides system interior bus switch for the IP regulator on the HiSilicon system.
 
-config LOW_END_CONCEPT_PRODUCT_PLATFORM
-	tristate "HiSilicon  system interior bus control platform switch"
+config MIA_IP_PLATFORM
+	tristate "HiSilicon MIA system interior bus control platform switch"
 	depends on MFD_HISI_IP_CORE
 	help
-	  This driver provides system interior bus switch for the IP regulator on the HiSilicon low end system.
+	  This driver provides system interior bus switch for the IP regulator on the HiSilicon MIA system.
 
 config HISI_IP_REGULATOR
 	tristate "HiSilicon system 950 interior voltage PMIC"

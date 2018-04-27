@@ -57,8 +57,6 @@
 
 
 
-
-
 /*****************************************************************************
     协议栈打印打点方式下的.C文件宏定义
 *****************************************************************************/
@@ -77,29 +75,7 @@
    4 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SndMsg
- 功能描述  : 发送PS域消息
- 输入参数  : VOS_UINT32                          ulTaskId
-             VOS_UINT32                          ulMsgId
-             VOS_VOID                           *pData
-             VOS_UINT32                          ulLen
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月8日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-  2.日    期   : 2012年12月21日
-    作    者   : l00227485
-    修改内容   : DSDA PhaseII
-  3.日    期   : 2016年02月19日
-    作    者   : w00316404
-    修改内容   : Modify for DTS2016021808321
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SndMsg(
     VOS_UINT16                          usModemId,
     VOS_UINT32                          ulMsgId,
@@ -155,29 +131,7 @@ VOS_UINT32 TAF_PS_SndMsg(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetPrimPdpContextInfo
- 功能描述  : 设置Primary PDP上下文信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstPdpContextInfo          - Primary PDP上下文信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-  2.日    期   : 2013年07月08日
-    作    者   : Y00213812
-    修改内容   : VoLTE_PhaseI 项目，结构名称修改，增加PID
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetPrimPdpContextInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -207,28 +161,7 @@ VOS_UINT32 TAF_PS_SetPrimPdpContextInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetPrimPdpContextInfo
- 功能描述  : 获取Primary PDP上下文信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-  2.日    期   : 2013年07月08日
-    作    者   : Y00213812
-    修改内容   : VoLTE_PhaseI 项目，结构名称修改，增加PID
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetPrimPdpContextInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -256,24 +189,7 @@ VOS_UINT32 TAF_PS_GetPrimPdpContextInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetPdpContextInfo
- 功能描述  : 获取主和从 PDP上下文信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年3月5日
-    作    者   : c00173809
-    修改内容   : DTS2012010604900
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetPdpContextInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -301,26 +217,7 @@ VOS_UINT32 TAF_PS_GetPdpContextInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetSecPdpContextInfo
- 功能描述  : 设置Secondary PDP上下文信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstPdpContextInfo          - Secondary PDP上下文信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetSecPdpContextInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -350,24 +247,7 @@ VOS_UINT32 TAF_PS_SetSecPdpContextInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetSecPdpContextInfo
- 功能描述  : 获取Secondary PDP上下文信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetSecPdpContextInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -395,26 +275,7 @@ VOS_UINT32 TAF_PS_GetSecPdpContextInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetTftInfo
- 功能描述  : 设置PDP TFT参数
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstTftInfo                 - TFT参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetTftInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -444,25 +305,7 @@ VOS_UINT32 TAF_PS_SetTftInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetTftInfo
- 功能描述  : 获取PDP TFT参数
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetTftInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -490,26 +333,7 @@ VOS_UINT32 TAF_PS_GetTftInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetUmtsQosInfo
- 功能描述  : 设置UMTS QOS参数信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstUmtsQosInfo             - UMTS QOS参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetUmtsQosInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -539,25 +363,7 @@ VOS_UINT32 TAF_PS_SetUmtsQosInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetUmtsQosInfo
- 功能描述  : 获取UMTS QOS参数信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetUmtsQosInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -585,26 +391,7 @@ VOS_UINT32 TAF_PS_GetUmtsQosInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetUmtsQosMinInfo
- 功能描述  : 设置UMTS MIN QOS参数信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstUmtsQosMinInfo          - UMTS MIN QOS参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetUmtsQosMinInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -634,25 +421,7 @@ VOS_UINT32 TAF_PS_SetUmtsQosMinInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetUmtsQosMinInfo
- 功能描述  : 获取UMTS MIN QOS参数信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetUmtsQosMinInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -680,26 +449,7 @@ VOS_UINT32 TAF_PS_GetUmtsQosMinInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDynamicUmtsQosInfo
- 功能描述  : 获取动态UMTS QOS参数信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstCidListInfo             - CID列表
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDynamicUmtsQosInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -729,26 +479,7 @@ VOS_UINT32 TAF_PS_GetDynamicUmtsQosInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetPdpContextState
- 功能描述  : 设置指定CID(表)对应的PDP的状态
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstCidListStateInfo        - CID列表状态
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetPdpContextState(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -778,25 +509,7 @@ VOS_UINT32 TAF_PS_SetPdpContextState(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetPdpContextState
- 功能描述  : 获取所有已定义CID对应的PDP的状态
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetPdpContextState(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -824,26 +537,7 @@ VOS_UINT32 TAF_PS_GetPdpContextState(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_CallModify
- 功能描述  : 修改PS CALL参数
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             TAF_CID_LIST_STRU          - CID列表
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_CallModify(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -873,26 +567,7 @@ VOS_UINT32 TAF_PS_CallModify(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_CallAnswer
- 功能描述  : 应答PS CALL
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstAnsInfo                 - PS CALL应答信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_CallAnswer(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -922,25 +597,7 @@ VOS_UINT32 TAF_PS_CallAnswer(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_CallHangup
- 功能描述  : 挂断PS CALL
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_CallHangup(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -968,30 +625,7 @@ VOS_UINT32 TAF_PS_CallHangup(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_CallOrig
- 功能描述  : 发起PS CALL
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstDialParaInfo            - PS CALL参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-  2.日    期   : 2016年02月19日
-    作    者   : w00316404
-    修改内容   : Modify for DTS2016021808321
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_CallOrig(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1025,31 +659,7 @@ VOS_UINT32 TAF_PS_CallOrig(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_CallEnd
- 功能描述  : 结束PS CALL
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-  2.日    期   : 2016年02月19日
-    作    者   : w00316404
-    修改内容   : Modify for DTS2016021808321
-  3.日    期   : 2017年02月05日
-    作    者   : w00316404
-    修改内容   : do recovery requirement
-*****************************************************************************/
 VOS_UINT32 TAF_PS_CallEnd(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1060,26 +670,7 @@ VOS_UINT32 TAF_PS_CallEnd(
     return TAF_PS_CallEndEx(ulModuleId, usExClientId, ucOpId, ucCid, TAF_PS_CALL_END_CAUSE_NORMAL);
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_CallEndEx
- 功能描述  : 结束PS CALL
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
-             enCause                    - 去激活的原因
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年02月06日
-    作    者   : w00316404
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_CallEndEx(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1111,26 +702,7 @@ VOS_UINT32 TAF_PS_CallEndEx(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetPdpIpAddrInfo
- 功能描述  : 获取指定CID(表)的PDP IP地址信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstCidListInfo             - CID列表
-输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetPdpIpAddrInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1160,26 +732,7 @@ VOS_UINT32 TAF_PS_GetPdpIpAddrInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetAnsModeInfo
- 功能描述  : 设置PS域呼叫应答模式信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ulAnsMode                  - 应答模式信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetAnsModeInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1209,25 +762,7 @@ VOS_UINT32 TAF_PS_SetAnsModeInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetAnsModeInfo
- 功能描述  : 获取PS域呼叫应答模式信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetAnsModeInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1255,26 +790,7 @@ VOS_UINT32 TAF_PS_GetAnsModeInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDynamicPrimPdpContextInfo
- 功能描述  : 获取指定的已定义CID的动态Primary PDP上下文信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDynamicPrimPdpContextInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1304,26 +820,7 @@ VOS_UINT32 TAF_PS_GetDynamicPrimPdpContextInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDynamicSecPdpContextInfo
- 功能描述  : 获取指定的已定义CID的动态Secondary PDP上下文信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDynamicSecPdpContextInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1353,26 +850,7 @@ VOS_UINT32 TAF_PS_GetDynamicSecPdpContextInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDynamicTftInfo
- 功能描述  : 获取指定的已定义CID的动态TFT信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDynamicTftInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1402,26 +880,7 @@ VOS_UINT32 TAF_PS_GetDynamicTftInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetEpsQosInfo
- 功能描述  : 设置指定CID的EPS QOS参数信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstEpsQosInfo              - EPS QOS参数信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetEpsQosInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1451,25 +910,7 @@ VOS_UINT32 TAF_PS_SetEpsQosInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetEpsQosInfo
- 功能描述  : 获取EPS QOS参数信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetEpsQosInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1497,26 +938,7 @@ VOS_UINT32 TAF_PS_GetEpsQosInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDynamicEpsQosInfo
- 功能描述  : 获取指定的已定义CID的动态EPS QOS参数
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDynamicEpsQosInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1546,26 +968,7 @@ VOS_UINT32 TAF_PS_GetDynamicEpsQosInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDsFlowInfo
- 功能描述  : 获取数据流量信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstQueryConfigInfo         - DSFLOW查询配置参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDsFlowInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1593,26 +996,7 @@ VOS_UINT32 TAF_PS_GetDsFlowInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_ClearDsFlowInfo
- 功能描述  : 清除数据流量信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstClearConfigInfo         - 流量清除配置参数信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_ClearDsFlowInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1642,26 +1026,7 @@ VOS_UINT32 TAF_PS_ClearDsFlowInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_ConfigDsFlowRpt
- 功能描述  : 配置流量上报模式
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstReportConfigInfo        - 流量上报配置参数信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_ConfigDsFlowRpt(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1691,26 +1056,7 @@ VOS_UINT32 TAF_PS_ConfigDsFlowRpt(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_ConfigVTFlowRpt
- 功能描述  : 配置VT流量上报模式
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstReportConfigInfo        - 流量上报配置参数信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年07月06日
-    作    者   : w00316404
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_ConfigVTFlowRpt(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1740,26 +1086,7 @@ VOS_UINT32 TAF_PS_ConfigVTFlowRpt(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetPdpDnsInfo
- 功能描述  : 设置PDP DNS信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstPdpDnsInfo              - PDP DNS信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetPdpDnsInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1789,25 +1116,7 @@ VOS_UINT32 TAF_PS_SetPdpDnsInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetPdpDnsInfo
- 功能描述  : 获取PDP DNS信息
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetPdpDnsInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1835,26 +1144,7 @@ VOS_UINT32 TAF_PS_GetPdpDnsInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_TrigGprsData
- 功能描述  : 发送上行GPRS数据
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstGprsDataInfo            - GPRS数据信息
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_TrigGprsData(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1884,26 +1174,7 @@ VOS_UINT32 TAF_PS_TrigGprsData(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_ConfigNbnsFunction
- 功能描述  : 配置NBNS功能
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ulEnabled                  - NBNS功能使能标记
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_ConfigNbnsFunction(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1933,29 +1204,8 @@ VOS_UINT32 TAF_PS_ConfigNbnsFunction(
     return ulResult;
 }
 
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, begin */
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, end */
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetAuthDataInfo
- 功能描述  : 设置鉴权参数信息(NDIS)
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstAuthDataInfo            - 鉴权参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetAuthDataInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -1985,25 +1235,7 @@ VOS_UINT32 TAF_PS_SetAuthDataInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetAuthDataInfo
- 功能描述  : 获取鉴权参数信息(NDIS)
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetAuthDataInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2031,26 +1263,7 @@ VOS_UINT32 TAF_PS_GetAuthDataInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetGprsActiveType
- 功能描述  : 获取D命令GPRS类型(PPP拨号)
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstAtdPara                 - D命令拨号参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetGprsActiveType(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2080,30 +1293,7 @@ VOS_UINT32 TAF_PS_GetGprsActiveType(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_PppDialOrig
- 功能描述  : 发起PPP拨号
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
-             pstPppReqConfigInfo        - PPP配置参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月5日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-  2.日    期   : 2014年5月16日
-    作    者   : A00165503
-    修改内容   : DTS2014050703206: PPP拨号接口调整
-*****************************************************************************/
 VOS_UINT32 TAF_PS_PppDialOrig(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2141,21 +1331,7 @@ VOS_UINT32 TAF_PS_PppDialOrig(
     return ulResult;
 }
 
-/*****************************************************************************
-函 数 名  : TAF_PS_GetLteCsInfo
-功能描述  : 获取LTE CS Info
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_OK                     - 发送消息成功
-            VOS_ERR                    - 发送消息失败
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2012年02月23日
-   作    者   : h00135900
-   修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetLteCsInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2186,21 +1362,7 @@ VOS_UINT32 TAF_PS_GetLteCsInfo(
     return ulResult;
 }
 
-/*****************************************************************************
-函 数 名  : TAF_PS_GetCemodeInfo
-功能描述  : 获取CEMODE Info
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_OK                     - 发送消息成功
-            VOS_ERR                    - 发送消息失败
-调用函数  :
-被调函数  :
 
-修改历史      :
- 1.日    期   : 2012年03月20日
-   作    者   : w00182550
-   修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetCemodeInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2232,26 +1394,7 @@ VOS_UINT32 TAF_PS_GetCemodeInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetPdpProfInfo
- 功能描述  : 设置PDP_Profile 参数
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             stPdpProfInfo            - PDP_Profile 参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
- 日    期   : 2012年3月12日
- 作    者   : x00126983
- 修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetPdpProfInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2281,27 +1424,8 @@ VOS_UINT32 TAF_PS_SetPdpProfInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetCidSdfParaInfo
- 功能描述  : 获取所有NV项中的SDF配置信息, 支持同步和异步两种方式
-             输出参数非空 --- 同步方式(目前仅支持C核)
-             输出参数为空 --- 异步方式
- 输入参数  : ulModuleId                 - 填写PID
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : pstSdfQueryInfo            - SDF配置信息
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
 
-修改历史  :
 
-1.日    期   : 2013年07月08日
-  作    者   : Y00213812
-  修改内容   : VoLTE_PhaseI 项目，新增API
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetCidSdfParaInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2311,8 +1435,10 @@ VOS_UINT32 TAF_PS_GetCidSdfParaInfo(
 {
     VOS_UINT32                          ulResult;
     TAF_PS_SDF_INFO_REQ_STRU            stSdfInfoReq;
+    VOS_UINT16                          usModemId;
 
     ulResult = VOS_ERR;
+    usModemId = TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId);
     TAF_MEM_SET_S(&stSdfInfoReq, sizeof(stSdfInfoReq), 0x00, sizeof(TAF_PS_SDF_INFO_REQ_STRU));
 
     /* 如果出参为空，则采用异步方式获取SDF信息 */
@@ -2324,7 +1450,7 @@ VOS_UINT32 TAF_PS_GetCidSdfParaInfo(
         stSdfInfoReq.stCtrl.ucOpId     = ucOpId;
 
         /* 发送消息 */
-        ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+        ulResult = TAF_PS_SndMsg(usModemId,
                                  ID_MSG_TAF_PS_GET_CID_SDF_REQ,
                                  &stSdfInfoReq,
                                  sizeof(TAF_PS_SDF_INFO_REQ_STRU));
@@ -2339,32 +1465,23 @@ VOS_UINT32 TAF_PS_GetCidSdfParaInfo(
 }
 
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetUnusedCid
- 功能描述  : 获取空闲未激活的CID
-             输出参数非空 --- 同步方式(目前仅支持C核)
-             输出参数为空 --- 异步方式
- 输入参数  : ulModuleId                 - 填写PID
-             usClientId                 - 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : puCid                      - 空闲未激活CID
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
-
- 修改历史  :
-
- 1.日    期   : 2013年07月08日
-   作    者   : Y00213812
-   修改内容   : VoLTE_PhaseI 项目，新增API
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetUnusedCid(
     VOS_UINT32                          ulModuleId,
-    VOS_UINT16                          usClientId,
+    VOS_UINT16                          usExClientId,
     VOS_UINT8                           ucOpId,
     VOS_UINT8                          *puCid
 )
 {
     VOS_UINT32                          ulResult;
+    MODEM_ID_ENUM_UINT16                enModemId;
+
+    enModemId = TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId);
+
+    if (enModemId >= MODEM_ID_BUTT)
+    {
+        PS_PRINTF("TAF_PS_GetUnusedCid: ModemId is Error!");
+        return VOS_ERR;
+    }
 
     ulResult = VOS_OK;
 
@@ -2379,26 +1496,7 @@ VOS_UINT32 TAF_PS_GetUnusedCid(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDynamicDnsInfo
- 功能描述  : 获取指定CID的DNS信息
- 输入参数  : ulModuleId                 - 填写PID
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucCid                      - CID
- 输出参数  : 无
 
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
- 修改历史  :
-
- 1.日    期   : 2013年07月08日
-   作    者   : Y00213812
-   修改内容   : VoLTE_PhaseI 项目，新增API
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDynamicDnsInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2427,25 +1525,7 @@ VOS_UINT32 TAF_PS_GetDynamicDnsInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetCqosPriInfo
- 功能描述  : 配置CDMA QOS 参数
- 输入参数  : VOS_UINT32                                      ulModuleId
-             usExClientId                                  - 扩展客户端ID
-                                                             A核 : ModemID(高四bit) + 客户端ID
-                                                             C核 : 客户端ID
-             TAF_PS_CDATA_1X_QOS_NON_ASSURED_PRI_ENUM_UINT8  enPri
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年10月16日
-    作    者   : y00218312
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetCqosPriInfo(
     VOS_UINT32                                      ulModuleId,
     VOS_UINT16                                      usExClientId,
@@ -2474,26 +1554,7 @@ VOS_UINT32 TAF_PS_SetCqosPriInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetApDsFlowRptCfg
- 功能描述  : 设置AP流量上报参数
- 输入参数  : ulModuleId                 - PID
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstRptCfg                  - 配置参数
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月2日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetApDsFlowRptCfg(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2525,25 +1586,7 @@ VOS_UINT32 TAF_PS_SetApDsFlowRptCfg(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetApDsFlowRptCfg
- 功能描述  : 获取AP流量上报参数
- 输入参数  : ulModuleId                 - PID
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月2日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetApDsFlowRptCfg(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2569,26 +1612,7 @@ VOS_UINT32 TAF_PS_GetApDsFlowRptCfg(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetDsFlowNvWriteCfg
- 功能描述  : 设置流量写NV配置
- 输入参数  : ulModuleId                 - PID
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstNvWriteCfg              - 流量写NV配置
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月12日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetDsFlowNvWriteCfg(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2620,26 +1644,7 @@ VOS_UINT32 TAF_PS_SetDsFlowNvWriteCfg(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetDsFlowNvWriteCfg
- 功能描述  : 获取流量写NV配置
- 输入参数  : ulModuleId                 - PID
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月12日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetDsFlowNvWriteCfg(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2665,27 +1670,7 @@ VOS_UINT32 TAF_PS_GetDsFlowNvWriteCfg(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetCtaInfo
- 功能描述  : 设置aps no data time len
- 输入参数  : VOS_UINT32                   ulModuleId,
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             VOS_UINT8                    ucOpId,
-             VOS_UINT8                    ucTimeLen
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年4月20日
-    作    者   : c00299063
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetCtaInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2715,26 +1700,7 @@ VOS_UINT32 TAF_PS_SetCtaInfo(
 
     return ulResult;
 }
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetCtaInfo
- 功能描述  : 获取aps no data time len
- 输入参数  : VOS_UINT32                   ulModuleId,
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             VOS_UINT8                    ucOpId,
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 成功
-             VOS_ERR                    - 失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年4月20日
-    作    者   : c00299063
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetCtaInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2760,69 +1726,8 @@ VOS_UINT32 TAF_PS_GetCtaInfo(
 }
 
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetCgmtuInfo
- 功能描述  : TAF PS Proc CGMTU AT Qry Command
- 输入参数  : VOS_UINT32                   ulModuleId
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             VOS_UINT8                    ucOpId
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年5月29日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-VOS_UINT32 TAF_PS_GetCgmtuInfo(
-    VOS_UINT32                          ulModuleId,
-    VOS_UINT16                          usExClientId,
-    VOS_UINT8                           ucOpId
-)
-{
-    TAF_PS_GET_CGMTU_VALUE_REQ_STRU     stGetCgmtuValueReq;
-    VOS_UINT32                          ulResult;
-
-    TAF_MEM_SET_S(&stGetCgmtuValueReq, sizeof(stGetCgmtuValueReq), 0x00, sizeof(stGetCgmtuValueReq));
-
-    stGetCgmtuValueReq.stCtrl.ulModuleId = ulModuleId;
-    stGetCgmtuValueReq.stCtrl.usClientId = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
-    stGetCgmtuValueReq.stCtrl.ucOpId     = ucOpId;
-
-    /* 发送消息 */
-    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
-                             ID_MSG_TAF_PS_GET_CGMTU_VALUE_REQ,
-                             &stGetCgmtuValueReq,
-                             sizeof(stGetCgmtuValueReq));
-
-    return ulResult;
-}
 
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetCdataDialModeInfo
- 功能描述  : 配置CDMA  PPP数据传输模式参数
- 输入参数  : VOS_UINT32                   ulModuleId
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             TAF_PS_CDATA_DIAL_MODE_ENUM_UINT32 enDialMode
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年04月02日
-    作    者   : y00314741
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetCdataDialModeInfo(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2851,25 +1756,7 @@ VOS_UINT32 TAF_PS_SetCdataDialModeInfo(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetImsPdpCfg
- 功能描述  : 设置IMS PDP
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             pstImsPdpCfg               - IMS PDP配置
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月30日
-    作    者   : z00301431
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetImsPdpCfg(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2899,25 +1786,7 @@ VOS_UINT32 TAF_PS_SetImsPdpCfg(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetCdmaDormantTimer
- 功能描述  : 设置DORMANT TIMER
- 输入参数  : usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             ucOpId                     - 操作码ID
-             ucDormantTimer             - 时长
- 输出参数  : 无
- 返 回 值  : VOS_OK                     - 发送消息成功
-             VOS_ERR                    - 发送消息失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年08月13日
-    作    者   : y00314741
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetCdmaDormantTimer(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2947,25 +1816,7 @@ VOS_UINT32 TAF_PS_SetCdmaDormantTimer(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_ProcCdmaDormTimerQryReq
- 功能描述  : TAF PS Proc CDORMTIMER AT Qry Command
- 输入参数  : VOS_UINT32                   ulModuleId
-             usExClientId               - 扩展客户端ID
-                                          A核 : ModemID(高四bit) + 客户端ID
-                                          C核 : 客户端ID
-             VOS_UINT8                    ucOpId
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年08月14日
-    作    者   : y00314741
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_ProcCdmaDormTimerQryReq(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -2993,20 +1844,7 @@ VOS_UINT32 TAF_PS_ProcCdmaDormTimerQryReq(
 
 
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetCdataBearStatus
- 功能描述  : 获取PPP的状态
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : APS_CDS_CDATA_BEAR_STATUS_ENUM_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月20日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_PS_CDATA_BEAR_STATUS_ENUM_UINT8 TAF_PS_GetCdataBearStatus(
     VOS_UINT8                                               ucPdpId
 )
@@ -3019,21 +1857,7 @@ TAF_PS_CDATA_BEAR_STATUS_ENUM_UINT8 TAF_PS_GetCdataBearStatus(
     return ucCdataBearStatus;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetPppStatus
- 功能描述  : 可谓可测查询当前PPP状态
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : APS_CDS_CDATA_BEAR_STATUS_ENUM_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月20日
-    作    者   : y00322978
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 TAF_PS_CDATA_BEAR_STATUS_ENUM_UINT8  TAF_PS_GetPppStatus( VOS_VOID )
 {
     VOS_UINT8                           ucPdpId;
@@ -3057,25 +1881,7 @@ TAF_PS_CDATA_BEAR_STATUS_ENUM_UINT8  TAF_PS_GetPppStatus( VOS_VOID )
 }
 
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
-/*****************************************************************************
- 函 数 名  : TAF_PS_SetMipMode
- 功能描述  : 设置MIP模式
- 输入参数  : VOS_UINT32                          ulModuleId
-             VOS_UINT16                          usExClientId
-             VOS_UINT8                           ucOpId
-             TAF_PS_MIP_MODE_ENUM_UINT8          enMipMode
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月25日
-    作    者   : Y00213812
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_SetMipMode(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -3102,23 +1908,7 @@ VOS_UINT32 TAF_PS_SetMipMode(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_PS_GetMipMode
- 功能描述  : 获取MIP的模式
- 输入参数  : VOS_UINT32                          ulModuleId
-             VOS_UINT16                          usExClientId
-             VOS_UINT8                           ucOpId
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月25日
-    作    者   : Y00213812
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_PS_GetMipMode(
     VOS_UINT32                          ulModuleId,
     VOS_UINT16                          usExClientId,
@@ -3143,5 +1933,205 @@ VOS_UINT32 TAF_PS_GetMipMode(
     return ulResult;
 }
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
+
+
+VOS_UINT32 TAF_PS_SetVzwApneInfo(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usExClientId,
+    VOS_UINT8                           ucOpId,
+    VOS_UINT8                           ucIsCustomCmd,
+    TAF_PS_VZWAPNE_INFO_STRU           *pstVzwapneInfo
+)
+{
+    TAF_PS_SET_VZWAPNE_REQ_STRU         stSetVzwApneReq;
+    VOS_UINT32                          ulResult;
+
+    TAF_MEM_SET_S(&stSetVzwApneReq, sizeof(stSetVzwApneReq), 0x00, sizeof(stSetVzwApneReq));
+
+    stSetVzwApneReq.stCtrl.ulModuleId   = ulModuleId;
+    stSetVzwApneReq.stCtrl.usClientId   = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
+    stSetVzwApneReq.stCtrl.ucOpId       = ucOpId;
+    stSetVzwApneReq.ucIsCustomCmd       = ucIsCustomCmd;
+
+    TAF_MEM_CPY_S(&stSetVzwApneReq.stVzwApneInfo,
+                  sizeof(TAF_PS_VZWAPNE_INFO_STRU),
+                  pstVzwapneInfo,
+                  sizeof(TAF_PS_VZWAPNE_INFO_STRU));
+
+    /* 发送消息 */
+    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+                             ID_MSG_TAF_PS_SET_VZWAPNE_REQ,
+                             &stSetVzwApneReq,
+                             sizeof(stSetVzwApneReq));
+
+    return ulResult;
+}
+
+
+VOS_UINT32 TAF_PS_GetVzwApneInfo(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usExClientId,
+    VOS_UINT8                           ucOpId,
+    VOS_UINT8                           ucIsCustomCmd
+)
+{
+    TAF_PS_GET_VZWAPNE_REQ_STRU         stGetVzwApneReq;
+    VOS_UINT32                          ulResult;
+
+    TAF_MEM_SET_S(&stGetVzwApneReq, sizeof(stGetVzwApneReq), 0x00, sizeof(stGetVzwApneReq));
+
+    stGetVzwApneReq.stCtrl.ulModuleId   = ulModuleId;
+    stGetVzwApneReq.stCtrl.usClientId   = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
+    stGetVzwApneReq.stCtrl.ucOpId       = ucOpId;
+    stGetVzwApneReq.ucIsCustomCmd       = ucIsCustomCmd;
+
+    /* 发送消息 */
+    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+                             ID_MSG_TAF_PS_GET_VZWAPNE_REQ,
+                             &stGetVzwApneReq,
+                             sizeof(stGetVzwApneReq));
+
+    return ulResult;
+}
+
+
+
+VOS_UINT32 TAF_PS_Set_DataSwitchStatus(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usExClientId,
+    VOS_UINT8                           ucOpId,
+    VOS_UINT8                           ucDataSwitch
+)
+{
+
+    TAF_PS_SET_DATA_SWITCH_REQ_STRU      stDataSwitchReq;
+    VOS_UINT32                           ulResult;
+
+    TAF_MEM_SET_S(&stDataSwitchReq, sizeof(stDataSwitchReq), 0x00, sizeof(stDataSwitchReq));
+
+    stDataSwitchReq.stCtrl.ulModuleId       = ulModuleId;
+    stDataSwitchReq.stCtrl.usClientId       = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
+    stDataSwitchReq.stCtrl.ucOpId           = ucOpId;
+    stDataSwitchReq.ucDataSwitch            = ucDataSwitch;
+
+    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+                             ID_MSG_TAF_PS_SET_DATA_SWITCH_REQ,
+                             &stDataSwitchReq,
+                             sizeof(stDataSwitchReq));
+
+
+    return ulResult;
+}
+
+
+VOS_UINT32 TAF_PS_Set_DataRoamSwitchStatus(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usExClientId,
+    VOS_UINT8                           ucOpId,
+    VOS_UINT8                           ucDataRoamSwitch
+)
+{
+
+    TAF_PS_SET_DATA_ROAM_SWITCH_REQ_STRU      stDataRoamSwitchReq;
+    VOS_UINT32                                ulResult;
+
+    TAF_MEM_SET_S(&stDataRoamSwitchReq, sizeof(stDataRoamSwitchReq), 0x00, sizeof(stDataRoamSwitchReq));
+
+    stDataRoamSwitchReq.stCtrl.ulModuleId       = ulModuleId;
+    stDataRoamSwitchReq.stCtrl.usClientId       = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
+    stDataRoamSwitchReq.stCtrl.ucOpId           = ucOpId;
+    stDataRoamSwitchReq.ucDataRoamSwitch        = ucDataRoamSwitch;
+
+    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+                             ID_MSG_TAF_PS_SET_DATA_ROAM_SWITCH_REQ,
+                             &stDataRoamSwitchReq,
+                             sizeof(stDataRoamSwitchReq));
+
+
+    return ulResult;
+}
+
+VOS_UINT32 TAF_PS_Get_DataSwitchStatus(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usExClientId,
+    VOS_UINT8                           ucOpId
+)
+{
+
+    TAF_PS_GET_DATA_SWITCH_REQ_STRU          stGetDataSwitchReq;
+    VOS_UINT32                               ulResult;
+
+    TAF_MEM_SET_S(&stGetDataSwitchReq, sizeof(stGetDataSwitchReq), 0x00, sizeof(stGetDataSwitchReq));
+
+    stGetDataSwitchReq.stCtrl.ulModuleId   = ulModuleId;
+    stGetDataSwitchReq.stCtrl.usClientId   = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
+    stGetDataSwitchReq.stCtrl.ucOpId       = ucOpId;
+
+    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+                             ID_MSG_TAF_PS_GET_DATA_SWITCH_REQ,
+                             &stGetDataSwitchReq,
+                             sizeof(stGetDataSwitchReq));
+
+
+    return ulResult;
+}
+
+
+VOS_UINT32 TAF_PS_Get_DataRoamSwitchStatus(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usExClientId,
+    VOS_UINT8                           ucOpId
+)
+{
+
+    TAF_PS_GET_DATA_ROAM_SWITCH_REQ_STRU          stGetDataRoamSwitchReq;
+    VOS_UINT32                                    ulResult;
+
+    TAF_MEM_SET_S(&stGetDataRoamSwitchReq, sizeof(stGetDataRoamSwitchReq), 0x00, sizeof(stGetDataRoamSwitchReq));
+
+    stGetDataRoamSwitchReq.stCtrl.ulModuleId   = ulModuleId;
+    stGetDataRoamSwitchReq.stCtrl.usClientId   = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
+    stGetDataRoamSwitchReq.stCtrl.ucOpId       = ucOpId;
+
+    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+                             ID_MSG_TAF_PS_GET_DATA_ROAM_SWITCH_REQ,
+                             &stGetDataRoamSwitchReq,
+                             sizeof(stGetDataRoamSwitchReq));
+
+
+    return ulResult;
+}
+
+
+VOS_UINT32 TAF_PS_SetApnThrotInfo(
+    VOS_UINT32                          ulModuleId,
+    VOS_UINT16                          usExClientId,
+    VOS_UINT8                           ucOpId,
+    TAF_PS_APN_THROT_INFO_STRU         *pstApnThrotInfo
+)
+{
+    TAF_PS_SET_APN_THROT_INFO_REQ_STRU      stSetApnThrotInfoReq;
+    VOS_UINT32                              ulResult;
+
+    TAF_MEM_SET_S(&stSetApnThrotInfoReq, sizeof(stSetApnThrotInfoReq), 0x00, sizeof(TAF_PS_SET_APN_THROT_INFO_REQ_STRU));
+
+    /* 填写消息内容 */
+    stSetApnThrotInfoReq.stCtrl.ulModuleId   = ulModuleId;
+    stSetApnThrotInfoReq.stCtrl.usClientId   = TAF_PS_GET_CLIENTID_FROM_EXCLIENTID(usExClientId);
+    stSetApnThrotInfoReq.stCtrl.ucOpId       = ucOpId;
+
+    TAF_MEM_CPY_S(&(stSetApnThrotInfoReq.stApnThrotInfo),
+                  sizeof(TAF_PS_APN_THROT_INFO_STRU),
+                  pstApnThrotInfo,
+                  sizeof(TAF_PS_APN_THROT_INFO_STRU));
+
+    /* 发送消息 */
+    ulResult = TAF_PS_SndMsg(TAF_PS_GET_MODEMID_FROM_EXCLIENTID(usExClientId),
+                             ID_MSG_TAF_PS_SET_APN_THROT_INFO_REQ,
+                             &stSetApnThrotInfoReq,
+                             sizeof(stSetApnThrotInfoReq));
+
+    return ulResult;
+}
+
 

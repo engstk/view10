@@ -1146,14 +1146,17 @@ static void himax_ts_flash_func(void)
 		
 		old_fs = get_fs();
 		set_fs(KERNEL_DS);
-		
+
 		fn = filp_open(FLASH_DUMP_FILE,O_CREAT | O_WRONLY ,0);
 		if (!IS_ERR(fn))
 		{
-			TS_LOG_INFO("%s create file and ready to write\n",__func__);	
+			TS_LOG_INFO("%s create file and ready to write\n",__func__);
 			fn->f_op->write(fn, flash_buffer, Flash_Size*sizeof(uint8_t), &fn->f_pos);
 			set_fs(old_fs);
 			filp_close(fn,NULL);
+		}
+		else{
+			set_fs(old_fs);
 		}
 	}
 
@@ -1162,7 +1165,6 @@ static void himax_ts_flash_func(void)
 
 	setFlashDumpComplete(1);
 	hx_nc_setSysOperation(0);
-	
 	return;
 
 }

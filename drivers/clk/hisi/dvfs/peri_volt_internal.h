@@ -25,6 +25,7 @@ struct peri_volt_ops {
 	unsigned int (*get_volt)(struct peri_volt_poll *pvp);
 	unsigned int (*recalc_volt)(struct peri_volt_poll *pvp);
 	unsigned int (*get_poll_stat)(struct peri_volt_poll *pvp);
+	int (*get_temperature)(struct peri_volt_poll *pvp);
 	void (*init)(struct peri_volt_poll *pvp, unsigned int en);
 };
 

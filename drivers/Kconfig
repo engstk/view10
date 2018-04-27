@@ -218,6 +218,8 @@ source "drivers/huawei_platform/Kconfig"
 
 source "drivers/dsm/Kconfig"
 
+source "drivers/log/Kconfig"
+
 source "drivers/connectivity/Kconfig"
 
 source "drivers/contexthub/Kconfig"
@@ -232,9 +234,9 @@ source "drivers/devkit/audiokit/Kconfig"
 source "drivers/spmi_hisi/Kconfig"
 source "drivers/devkit/lcdkit/Kconfig"
 source "drivers/devkit/tpkit/Kconfig"
-
+source "drivers/dubai/Kconfig"
 source "drivers/cpuload/Kconfig"
 
 source "drivers/mmonitor/Kconfig"
-source "drivers/abns/Kconfig"
+source "drivers/cfi/Kconfig"
 endmenu

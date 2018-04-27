@@ -43,22 +43,13 @@
 #include "ufshcd.h"
 
 extern const struct ufs_hba_variant_ops ufs_hba_kirin_vops;
-#ifdef CONFIG_SCSI_UFS_KIRIN_V21
-extern const struct ufs_hba_variant_ops ufs_hba_kirin_v21_vops;
-#endif
 
 static const struct of_device_id ufs_of_match[] = {
     {.compatible = "jedec,ufs-1.1"},
     {
 	.compatible = "hisilicon,kirin-ufs", .data = &ufs_hba_kirin_vops,
     },
-#ifdef CONFIG_SCSI_UFS_KIRIN_V21
-    {
-	.compatible = "hisilicon,kirin-ufs-v21", .data = &ufs_hba_kirin_v21_vops,
-    },
-#endif
     {}, /*lint !e785*/
-
 };
 
 static struct ufs_hba_variant_ops *get_variant_ops(struct device *dev)
@@ -351,16 +342,15 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
 	struct ufs_hba *hba;
 	void __iomem *mmio_base;
 	struct resource *mem_res;
-	int irq, err;
+	int irq, timer_irq = -1, err;
 	struct device *dev = &pdev->dev;
 	struct device_node *np = dev->of_node;
+	unsigned int timer_intr_index;
 
-#ifdef CONFIG_SCSI_UFS_KIRIN_V21
 	if (get_bootdevice_type() != BOOT_DEVICE_UFS) {
-		dev_err(dev, "system is't booted from UFS on BOSTON FPGA board\n");
+		dev_err(dev, "system is't booted from UFS on ARIES FPGA board\n");
 		return -ENODEV;
 	}
-#endif
 
 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	mmio_base = devm_ioremap_resource(dev, mem_res);
@@ -383,6 +373,13 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
 	}
 
 	hba->vops = get_variant_ops(&pdev->dev);
+
+	if (!of_property_read_u32(np, "timer-interrupt-index", &timer_intr_index)
+		&& !of_find_property(np, "ufs-kirin-repeated-idle-intr", NULL)) {
+		timer_irq = platform_get_irq(pdev, timer_intr_index);
+		if (timer_irq < 0)
+			dev_err(dev, "UFS timer interrupt is not available!\n");
+	}
 
 #if 0 // we now do not have a clock and regulator tree for FPGA
 	err = ufshcd_parse_clock_info(hba);
@@ -408,7 +405,7 @@ static int ufshcd_pltfrm_probe(struct platform_device *pdev)
 		pm_runtime_forbid(hba->dev);
 	pm_runtime_enable(&pdev->dev);
 
-	err = ufshcd_init(hba, mmio_base, irq);
+	err = ufshcd_init(hba, mmio_base, irq, timer_irq);
 	if (err) {
 		dev_err(dev, "Intialization failed\n");
 		goto out_disable_rpm;

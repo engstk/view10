@@ -73,19 +73,15 @@ struct blk_mq_tag_set {
 	int			numa_node;
 	unsigned int		timeout;
 	unsigned int		flags;		/* BLK_MQ_F_* */
-
 	unsigned int 		high_prio_tags;
 	unsigned int 		hisi_mq_flags;
-
 	void			*driver_data;
 
 	struct blk_mq_tags	**tags;
 
 	struct mutex		tag_list_lock;
 	struct list_head	tag_list;
-
 	struct blk_lld_func lld_func;
-
 };
 
 struct blk_mq_queue_data {

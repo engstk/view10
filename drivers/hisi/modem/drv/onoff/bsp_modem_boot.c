@@ -60,7 +60,7 @@
 #include <bsp_slice.h>
 #include <linux/ctype.h>
 #include "bsp_llt.h"
-
+#include <securec.h>
 
 
 struct balong_power_plat_data {
@@ -84,22 +84,7 @@ static int modem_power_off_flag = 0;
 static int modem_power_on_flag = 0;
 spinlock_t modem_power_spinlock;
 
-/*****************************************************************************
- 函 数 名  : modem_state_set
- 功能描述  : 提供ttf设置modem状态的API
- 输入参数  : unsigned int state
- 输出参数  : 无
- 返 回 值  : <0     failed,invalid state
-             =0     success
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年5月25日
-    作    者   : 陈易超
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int mdrv_set_modem_state(unsigned int state)
 {
     if (!balong_driver_plat_data){
@@ -135,11 +120,12 @@ static ssize_t balong_power_get(struct device *dev, struct device_attribute *att
         return 0;
     }
 
-    len = snprintf(buf, strlen(modem_state_str[balong_driver_plat_data->modem_state]) + 1,
+    len = snprintf_s(buf,strlen(modem_state_str[balong_driver_plat_data->modem_state]) + 2, strlen(modem_state_str[balong_driver_plat_data->modem_state]) + 1,
         "%s\n", modem_state_str[balong_driver_plat_data->modem_state]);
 
     return len;
 }
+EXPORT_SYMBOL_GPL(balong_power_get);
 
 ssize_t modem_reset_set(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
@@ -252,7 +238,6 @@ ssize_t modem_reset_set(struct device *dev, struct device_attribute *attr, const
     }
     spin_unlock_irqrestore(&modem_power_spinlock, lock_flag);
     return (ssize_t)count;
-
 }
 EXPORT_SYMBOL_GPL(modem_reset_set);
 
@@ -328,5 +313,4 @@ static int __init bsp_modem_boot_init(void)
 }
 
 module_init(bsp_modem_boot_init);
-
 

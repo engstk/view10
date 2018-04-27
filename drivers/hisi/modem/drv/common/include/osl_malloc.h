@@ -59,10 +59,7 @@ static inline void* osl_malloc(u32 size)
 	return kmalloc(size, GFP_KERNEL);
 }
 
-static inline void osl_free(const void *objp)
-{
-	return kfree(objp);
-}
+#define osl_free(objp) kfree(objp)
 
 #elif defined(__OS_VXWORKS__)
 /*#include <memLib.h>*/
@@ -154,6 +151,16 @@ static inline void * osl_cachedma_malloc ( unsigned int nBytes )
     return SRE_MemUncacheAlloc(nBytes,(OS_MEM_ALIGN_E)UNCACHE_MEM_ALIGN_BYTE);
     #endif
 }
+
+static inline void * osl_cachedma_malloc_debug( unsigned int nBytes, u32 cookis)
+{
+    #ifdef __OS_RTOSCK_SMP__
+    return SRE_MemAllocAlignDebug(0,1,nBytes,(OS_MEM_ALIGN_E)UNCACHE_MEM_ALIGN_BYTE,cookis);
+    #else
+    return SRE_MemUncacheAlloc(nBytes,(OS_MEM_ALIGN_E)UNCACHE_MEM_ALIGN_BYTE);
+    #endif
+}
+
 static inline void *osl_cachedma_malloc_align (unsigned int align_size,unsigned int nBytes )
 {
     int count = 2;

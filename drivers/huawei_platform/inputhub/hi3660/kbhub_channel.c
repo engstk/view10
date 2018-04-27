@@ -286,6 +286,16 @@ void kbhb_notify_mcu_state(sys_status_t status)
     }
 }
 
+
+extern volatile int hall_value;
+
+int kbhb_get_hall_value(void)
+{
+   int val = hall_value;
+   //hwlog_info("[HALL]%s  value = %d \n", __func__,val);
+   return val;
+}
+
 #ifdef USE_KBHB_DEVICE
 /*******************************************************************************************
 Function:       kbhb_read

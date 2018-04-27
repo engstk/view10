@@ -52,9 +52,7 @@
 
 #include "TafStdlib.h"
 #include "MnErrorCode.h"
-/* Added by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, begin */
 #include "MnMsgApi.h"
-/* Added by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, end */
 #include "MnMsgTs.h"
 
 
@@ -81,7 +79,6 @@ LOCAL TAF_ERROR_CODE_ENUM_UINT32 TAF_STD_DecodeUtf8CharacterFirstByte(
 /*****************************************************************************
   5 变量定义
 *****************************************************************************/
-/* Modified by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, begin */
 LOCAL VOS_UINT8 f_aucMsgAsciiSfxDefAlpha[TAF_STD_MAX_GSM7BITDEFALPHA_NUM] =
 {
     '@',  163,   '$',  165,  232,  233,  249,  236,  242,  199,  0x0a, 216,  248,  0x0d, 197,  229,
@@ -93,7 +90,6 @@ LOCAL VOS_UINT8 f_aucMsgAsciiSfxDefAlpha[TAF_STD_MAX_GSM7BITDEFALPHA_NUM] =
     191,  'a',   'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',  'l',  'm',  'n',  'o',
     'p',  'q',   'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z',  228,  246,  241,  252,  224
 };
-/* Modified by s00217060 for VoLTE_PhaseIII  项目, 2013-12-24, end */
 
 LOCAL VOS_UINT8 f_aucMsgAsciiSfxDefAlphaExt[TAF_STD_MAX_GSM7BITDEFALPHA_NUM] =
 {
@@ -156,23 +152,7 @@ LOCAL VOS_UINT16 g_ausTafStdLeapMonthTab[] = {
 /*****************************************************************************
   6 函数定义
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : TAF_STD_Itoa
- 功能描述  : 将整数转换为ASCII码, 将结果输出至字符串
- 输入参数  : VOS_UINT32                          ulDigit            - 待转换为ASCII码的整数
- 输出参数  : VOS_CHAR                           *pcDigitStr         - 输出结果的字符串
-             VOS_UINT32                         *pulDigitStrLength  - 输出结果的字符串长度
- 返 回 值  : VOS_FALSE  - 转换失败
-             VOS_TRUE   - 转换成功
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年5月06日
-    作    者   : f62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_Itoa(
     VOS_UINT32                          ulDigit,
     VOS_CHAR                           *pcDigitStr,
@@ -188,22 +168,7 @@ VOS_UINT32 TAF_STD_Itoa(
     return VOS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_AsciiNum2HexString
- 功能描述  : 完成16进制字符串转换功能
- 输入参数  : pucSrc                          - 待转换为ASCII码的整数
- 输出参数  : pucSrc                          - 转换后的数字
- 返 回 值  : VOS_FALSE  - 转换失败
-             VOS_TRUE   - 转换成功
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年5月06日
-    作    者   : f62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 VOS_UINT32 TAF_STD_AsciiNum2HexString(
     VOS_UINT8                          *pucSrc,
@@ -282,22 +247,7 @@ VOS_UINT32 TAF_STD_AsciiNum2HexString(
     return VOS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_HexAlpha2AsciiString
- 功能描述  : 完成16进制字符串转换功能
- 输入参数  : pucSrc                          - 待转换为ASCII码的数字
-             usSrcLen                        - 待转换为ASCII码的数字长度
- 输出参数  : pucDst                          - 转换后的ASCII码
- 返 回 值  : 转换后的ASCII码长度
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年5月06日
-    作    者   : f62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT16 TAF_STD_HexAlpha2AsciiString(
     VOS_UINT8                          *pucSrc,
     VOS_UINT16                          usSrcLen,
@@ -359,24 +309,7 @@ VOS_UINT16 TAF_STD_HexAlpha2AsciiString(
     return usLen;
 }
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-9-1, begin */
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertStrToDecInt
- 功能描述  : 字符串转成10进制数，例"123"-->123(一百二十三)
- 输入参数  : VOS_UINT8                          *pucSrc
-             VOS_UINT16                          usSrcLen
-             VOS_UINT32                         *pulDec
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月23日
-    作    者   : s00217060
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ConvertStrToDecInt(
     VOS_UINT8                          *pucSrc,
     VOS_UINT32                          ulSrcLen,
@@ -419,28 +352,12 @@ VOS_UINT32 TAF_STD_ConvertStrToDecInt(
     return VOS_TRUE;
 }
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-9-1, end */
 
 /* Added by f62575 for V9R1 STK升级, 2013-6-26, begin */
 /* MN_UnPack7Bit从MnMsgDecode.c移到本文件，更名为TAF_STD_UnPack7Bit */
 /* MN_Pack7Bit从MnMsgEncode.c移到本文件，更名为TAF_STD_Pack7Bit */
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_UnPack7Bit
- 功能描述  : 同步函数,将7bit编码方式的字符转换为8bit字符
- 输入参数  : pucOrgChar            - 指向需要转换的字符指针
-             ulLen                 - 需要转换的字符长度，7位位组个数
-             ucFillBit             - 需要填充的Bit个数
- 输出参数  : pucUnPackedChar       - 指向转换后的指针
- 返 回 值  : VOS_UINT32:函数返回的结果,成功以及失败的原因值
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级
-*****************************************************************************/
 VOS_UINT32  TAF_STD_UnPack7Bit(
     const VOS_UINT8                    *pucOrgChar,
     VOS_UINT32                          ulLen,
@@ -487,23 +404,7 @@ VOS_UINT32  TAF_STD_UnPack7Bit(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_Pack7Bit
- 功能描述  : 同步函数,将字符转换为7bit编码方式
- 输入参数  : pucOrgChar          - 指向需要转换的字符指针
-             ulLen               - 需要转换的字符长度，单位septet 注意:数组元素仅低7bit有效，仍然占用1OCTET的内存空间
-             ucFillBit           - 需要填充的Bit个数
- 输出参数  : pucPackedChar       - 指向转换后的指针
-             pulLen              - 指向转换后的字符长度，单位octet
- 返 回 值  : VOS_UINT32:函数返回的结果,成功以及失败的原因值
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级
-*****************************************************************************/
 VOS_UINT32  TAF_STD_Pack7Bit(
     const VOS_UINT8                     *pucOrgChar,
     VOS_UINT32                          ulLen,
@@ -558,23 +459,8 @@ VOS_UINT32  TAF_STD_Pack7Bit(
 }
 /* Added by f62575 for V9R1 STK升级, 2013-6-26, end */
 
-/* Added by s00217060 for VoLTE_PhaseIII  项目, 2013-12-16, begin */
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertBcdNumberToAscii
- 功能描述  : 将BCD编码的号码转换成Ascii编码的号码
- 输入参数  : pBcdNumber     - BCD号码
-             ucBcdLen       - BCD号码的长度
- 输出参数  : pcAsciiNumber  - 转换得到的ASCII号码(以'\0'结尾)
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2007年9月20日
-    作    者   : 丁庆 49431
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32  TAF_STD_ConvertBcdNumberToAscii(
     const VOS_UINT8                    *pucBcdNumber,
     VOS_UINT8                           ucBcdLen,
@@ -644,20 +530,7 @@ VOS_UINT32  TAF_STD_ConvertBcdNumberToAscii(
     return MN_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertBcdCodeToAscii
- 功能描述  : 将BCD编码的字符转换成Ascii码字符
- 输入参数  : ucBcdCode   - BCD编码的字符
- 输出参数  : pcAsciiCode - 转换得到的ASCII码字符
- 返 回 值  : VOS_UINT32:函数返回的结果,成功以及失败的原因值
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2007年9月20日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32  TAF_STD_ConvertBcdCodeToAscii(
     VOS_UINT8                           ucBcdCode,
     VOS_CHAR                           *pcAsciiCode
@@ -698,21 +571,7 @@ VOS_UINT32  TAF_STD_ConvertBcdCodeToAscii(
     return MN_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertAsciiNumberToBcd
- 功能描述  : 将Ascii编码的号码转换成BCD编码的号码
- 输入参数  : pcAsciiNumber - 以'\0'结尾的ASCII字符号码
- 输出参数  : pucBcdNumber   - 转换得到的BCD号码
-             pucBcdLen      - 转换得到的BCD号码的长度
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2007年9月20日
-    作    者   : 丁庆 49431
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32  TAF_STD_ConvertAsciiNumberToBcd(
     const VOS_CHAR                     *pcAsciiNumber,
     VOS_UINT8                          *pucBcdNumber,
@@ -756,21 +615,7 @@ VOS_UINT32  TAF_STD_ConvertAsciiNumberToBcd(
     return MN_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertAsciiAddrToBcd
- 功能描述  : 同步函数,将MN_MSG_ASCII_ADDR_STRU类型地址转换成MN_MSG_BCD_ADDR_STRU类型地址
- 输入参数  : pstAsciiAddr   - MN_MSG_ASCII_ADDR_STRU类型地址
- 输出参数  : pstBcdAddr     - MN_MSG_BCD_ADDR_STRU类型地址
- 返 回 值  : MN_ERR_NO_ERROR转换操作成功，否则失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年2月13日
-    作    者   : fuyingjun
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ConvertAsciiAddrToBcd(
     MN_MSG_ASCII_ADDR_STRU             *pstAsciiAddr,
     MN_MSG_BCD_ADDR_STRU               *pstBcdAddr
@@ -795,20 +640,7 @@ VOS_UINT32 TAF_STD_ConvertAsciiAddrToBcd(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertAsciiCodeToBcd
- 功能描述  : 将Ascii码字符转换成BCD码字符
- 输入参数  : ucAsciiCode  - ASCII字符
- 输出参数  : pucBcdCode   - 转换得到的BCD码
- 返 回 值  : VOS_UINT32:函数返回的结果,成功以及失败的原因值
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2007年9月20日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32  TAF_STD_ConvertAsciiCodeToBcd(
     VOS_CHAR                            cAsciiCode,
     VOS_UINT8                          *pucBcdCode
@@ -846,23 +678,7 @@ VOS_UINT32  TAF_STD_ConvertAsciiCodeToBcd(
     return MN_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertDeciDigitToBcd
- 功能描述  : 将十进制数字转换成BCD码
- 输入参数  : ucDeciDigit 十进制数字
-             bReverseOrder TAF_TRUE反序转换,即BCD码的高4BIT对应十进制的个位;
-                           TAF_FALSE顺序转换，即BCD码的高4BIT对应十进制的十位;
- 输出参数  : 无
- 返 回 值  : 十进制数字转换得到的BCD码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年1月15日
-    作    者   : fuyingjun
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT8 TAF_STD_ConvertDeciDigitToBcd(
     VOS_UINT8                           ucDeciDigit,
     VOS_BOOL                            bReverseOrder
@@ -888,23 +704,7 @@ VOS_UINT8 TAF_STD_ConvertDeciDigitToBcd(
     return ucBcd;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertBcdToDeciDigit
- 功能描述  : 将BCD编码的数字转换成十进制数字
- 输入参数  : ucBcdDigit BCD编码的数字
-             bReverseOrder MN_TRUE反序转换,即BCD码的高4BIT对应十进制的个位;
-                           MN_FALSE顺序转换，即BCD码的高4BIT对应十进制的十位;
- 输出参数  : pucDigit      转换后得到的十进制数字
- 返 回 值  : BCD码转换得到的十进制数字
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年1月15日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ConvertBcdToDeciDigit(
     VOS_UINT8                           ucBcdDigit,
     VOS_BOOL                            bReverseOrder,
@@ -938,24 +738,7 @@ VOS_UINT32 TAF_STD_ConvertBcdToDeciDigit(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_RemapAsciiToSelectTable
- 功能描述  : 根据提供的字符表将Ascii码转换到对应字符表给定的编码
- 输入参数  : ucAsciiChar                给定Ascii码
-            *pucAlphaTable              字符表
-             ulAlphaTableSize           字符表大小
-             pucAlphaChar               转换后编码
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月17日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_RemapAsciiToSelectTable(
     VOS_UINT8                           ucAsciiChar,
     VOS_UINT8                          *pucAlphaTable,
@@ -982,23 +765,7 @@ VOS_UINT32 TAF_STD_RemapAsciiToSelectTable(
     return VOS_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertAsciiToDefAlpha
- 功能描述  : 同步函数,将ASCII码的值转换为23038协议规定的Default Alphabet
- 输入参数  : pucAsciiChar          - 指向ASCII码的指针
-             ulLen                 - ASCII字符的长度
-             ulDefAlphaBuffLen     - Default Alphabet码缓存大小
- 输出参数  : pucDefAlpha           - 指向Default Alphabet的指针
-            *pulDefAlphaLen        - Default Alphabet实际长度
- 返 回 值  : VOS_UINT32:函数返回的结果,成功以及失败的原因值
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2007年10月8日
-    作    者   : z40661
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32  TAF_STD_ConvertAsciiToDefAlpha(
     const VOS_UINT8                    *pucAsciiChar,
     VOS_UINT32                          ulLen,
@@ -1084,35 +851,7 @@ VOS_UINT32  TAF_STD_ConvertAsciiToDefAlpha(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertDefAlphaToAscii
- 功能描述  : 同步函数,将23038协议规定的Default Alphabet转换为ASCII码的值
- 输入参数  : pucDefAlpha    - 指向Default Alphabet的指针
-             ulDefAlphaLen  - Default Alphabet的长度
- 输出参数  : pucAsciiChar   - 指向ASCII码的指针
- 			 pulDstLen      - 指向ASCII码字符串长度
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2007年10月8日
-    作    者   : z40661
-    修改内容   : 新生成函数
-  2.日    期   : 2009-09-08
-    作    者   : F62575
-    修改内容   : 问题单号:设置TE和MT的字符集类型为IRA，短信编码类型为7BIT编码，输入特殊字符@等短信内容，写入到SIM卡中的数据错误；
-  3.日    期   : 2009-09-24
-    作    者   : F62575
-    修改内容   : 问题单号AT2D14728:文本格式列表或读取短信异常
-  4.日    期   : 2010年04月10日
-    作    者   : f62575
-    修改内容   : 问题单号AT2D18035
-                 写PDU短信到SIM卡,BALONG对TP-SCTS的检查与标杆不一致；
-  5.日    期   : 2013年08月22日
-    作    者   : l65478
-    修改内容   : 问题单号DTS2013081408291,无法显示的字符没有显示为空格
-*****************************************************************************/
 VOS_VOID  TAF_STD_ConvertDefAlphaToAscii(
     const VOS_UINT8                     *pucDefAlpha,
     VOS_UINT32                           ulDefAlphaLen,
@@ -1178,24 +917,8 @@ VOS_VOID  TAF_STD_ConvertDefAlphaToAscii(
     return;
 }
 
-/* Added by s00217060 for VoLTE_PhaseIII  项目, 2013-12-16, end */
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertBcdCodeToDtmf
- 功能描述  : 把BCD码转换成3GPP2协议中的DTMF格式编码
- 输入参数  : VOS_UINT8                           ucBcdCode
-             VOS_UINT8                          *pucDtmfCode
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年9月30日
-    作    者   : y00218312
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  TAF_STD_ConvertBcdCodeToDtmf(
     VOS_UINT8                           ucBcdCode,
     VOS_UINT8                          *pucDtmfCode
@@ -1238,23 +961,7 @@ VOS_UINT32  TAF_STD_ConvertBcdCodeToDtmf(
     return MN_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertBcdNumberToDtmf
- 功能描述  : 把BCD格式的编码字符串转换为3GPP2协议定义的DTMF格式的字符串
- 输入参数  : const VOS_UINT8                    *pucBcdNumber
-             VOS_UINT8                           ucBcdLen
-             VOS_UINT8                          *pucDtmfNumber
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年9月30日
-    作    者   : y00218312
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  TAF_STD_ConvertBcdNumberToDtmf(
     const VOS_UINT8                    *pucBcdNumber,
     VOS_UINT8                           ucBcdLen,
@@ -1326,80 +1033,25 @@ VOS_UINT32  TAF_STD_ConvertBcdNumberToDtmf(
 
 
 
-/*****************************************************************************
- 函 数 名  :TAF_STD_GetDaysOfLeapMonthTabAddr
- 功能描述  :获取闰年各月的天数
- 输入参数  :无
- 输出参数  :无
- 返 回 值  :返回g_ausTafStdLeapMonthTab表的地址信息
- 调用函数  :无
 
- 修改历史      :
-  1.日    期   : 2014年12月26日
-    作    者   : x00314862
-    修改内容   : 新生成函数
-*****************************************************************************/
 LOCAL VOS_UINT16* TAF_STD_GetDaysOfLeapMonthTabAddr(VOS_VOID)
 {
     return g_ausTafStdLeapMonthTab;
 }
 
-/*****************************************************************************
- 函 数 名  :TAF_STD_GetDaysOfNormalMonthTabAddr
- 功能描述  :获取非闰年各月的天数表的地址
- 输入参数  :无
- 输出参数  :无
- 返 回 值  :返回g_ausTafStdNormMonthTab表的地址信息
- 调用函数  :无
 
- 修改历史      :
-  1.日    期   : 2014年12月26日
-    作    者   : x00314862
-    修改内容   : 新生成函数
-*****************************************************************************/
 LOCAL VOS_UINT16* TAF_STD_GetDaysOfNormalMonthTabAddr(VOS_VOID)
 {
     return g_ausTafStdNormMonthTab;
 }
 
-/*****************************************************************************
- 函 数 名  :TAF_STD_GetDaysElapsedOfALeapYearSet
- 功能描述  :获取g_ausTafStdDaysElapsedOfALeapYearSetTab表的地址信息
- 输入参数  :无
- 输出参数  :无
- 返 回 值  :返回g_ausTafStdDaysElapsedOfALeapYearSetTab表的地址信息
- 调用函数  :无
 
- 修改历史      :
-  1.日    期   : 2014年12月26日
-    作    者   : x00314862
-    修改内容   : 新生成函数
-*****************************************************************************/
 LOCAL VOS_UINT16* TAF_STD_GetDaysElapsedOfALeapYearSet(VOS_VOID)
 {
     return g_ausTafStdDaysElapsedOfALeapYearSetTab;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_64Add32
- 功能描述  : 一个64位的值加上一个32位的值
- 输入参数  :
-             ulHighAddend --被加数高位
-             ulLowAddend  --被加数低位
-             ulAddFactor
 
- 输出参数  :
-             pulHighRslt  --结果数高位
-             pulLowRslt   --结果数低位
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2014年12月26日
-    作    者   : x00314862
-    修改内容   :
-*****************************************************************************/
 VOS_UINT32 TAF_STD_64Add32
 (
     VOS_UINT32                          ulHighAddend,
@@ -1428,25 +1080,7 @@ VOS_UINT32 TAF_STD_64Add32
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_64Sub32
- 功能描述  : 一个64位的值减去一个32位的值
- 输入参数  :
-             ulHighMinuend  --被减数高位
-             ulLowMinuend   --被减数低位
-             ulAddFactor
- 输出参数  :
-             pulHighRslt    --结果数高位
-             pulLowRslt     --结果数低位
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年12月26日
-    作    者   : x00314862
-    修改内容   :
-*****************************************************************************/
 VOS_UINT32 TAF_STD_64Sub32
 (
     VOS_UINT32                          ulHighMinuend,
@@ -1473,23 +1107,69 @@ VOS_UINT32 TAF_STD_64Sub32
 
     return VOS_OK;
 }
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertTimeFromSecsToTimeZone
- 功能描述  : 把从1980.1.6开始的秒数转化为相应的年月日 时分秒
 
- 输入参数  : VOS_UINT32                          ulHighSystemTime,
-             VOS_UINT32                          ulLowSystemTime,
 
- 输出参数  : TAF_STD_TimeZoneType                 *pstUniversalTimeandLocalTimeZone
- 返 回 值  :
- 调用函数  :
- 被调函数  :
+VOS_VOID  TAF_STD_U64ToStr(
+    VOS_UINT64                         ullNum,
+    VOS_UINT8                         *pString
+)
+{
+    VOS_UINT32                          ulProductHigh;
+    VOS_UINT32                          ulProductLow;
+    VOS_UINT32                          ulQuotientHigh;
+    VOS_UINT32                          ulQuotientLow;
+    VOS_UINT32                          ulRemainder;
+    VOS_UINT32                          ulRst;
+    VOS_UINT64                         *pullTempNum;
+    VOS_UINT32                          aulTmpNum[2];
 
- 修改历史      :
-  1.日    期   : 2014年12月26日
-    作    者   : x00314862
-    修改内容   :
-*****************************************************************************/
+    VOS_UINT8                           ucStrLen;
+
+    pullTempNum                 = (VOS_UINT64 *)aulTmpNum;
+    *pullTempNum                = ullNum;
+
+    ucStrLen        = 0;
+
+    ulProductHigh   = aulTmpNum[1];
+    ulProductLow    = aulTmpNum[0];
+
+    while ((0 != ulProductHigh) || (0 != ulProductLow))
+    {
+        ulQuotientHigh  = 0;
+        ulQuotientLow   = 0;
+
+        ulRst = VOS_64Div32(ulProductHigh,
+                            ulProductLow,
+                            10,
+                            &ulQuotientHigh,
+                            &ulQuotientLow,
+                            &ulRemainder);
+        if (VOS_OK == ulRst)
+        {
+            ulProductHigh   = ulQuotientHigh;
+            ulProductLow    = ulQuotientLow;
+
+            if (0 == ucStrLen)
+            {
+                *pString = '0' + (VOS_UINT8)ulRemainder;
+                ucStrLen++;
+                continue;
+            }
+
+            TAF_MEM_MOVE_S((pString + 1), ucStrLen, pString, ucStrLen);
+            *pString = '0' + (VOS_UINT8)ulRemainder;
+            ucStrLen++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return;
+}
+
+
 VOS_UINT32 TAF_STD_ConvertTimeFromSecsToTimeZone
 (
     VOS_UINT32                          ulHighSystemTime,
@@ -1603,23 +1283,7 @@ VOS_UINT32 TAF_STD_ConvertTimeFromSecsToTimeZone
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertSystemTimeToHighLow
- 功能描述  : 把system time通过高低32来保存
- 输入参数  : VOS_UINT8                          *pucSysTimeByte
-             VOS_UINT32                         *pulHighSystemTime,
-             VOS_UINT32                         *pulLowSystemTime
 
- 输出参数  :
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2014年12月26日
-    作    者   : x00314862
-    修改内容   :
-*****************************************************************************/
 VOS_VOID TAF_STD_ConvertSystemTimeToHighLow(
     VOS_UINT8                          *pucSysTimeByte,
     VOS_UINT32                         *pulHighSystemTime,
@@ -1649,21 +1313,7 @@ VOS_VOID TAF_STD_ConvertSystemTimeToHighLow(
 }
 
 
-/*****************************************************************************
- 函 数 名  : TAF_XCALL_TransformBcdMccToDeciDigit
- 功能描述  : 转换BCD格式的MCC为十进制
- 输入参数  : VOS_UINT32                          ulBcdMcc
- 输出参数  : 无
- 返 回 值  : VOS_UINT16
 
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年4月14日
-    作    者   : c00299063
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT16 TAF_STD_TransformBcdMccToDeciDigit(
     VOS_UINT32                          ulBcdMcc
 )
@@ -1681,21 +1331,7 @@ VOS_UINT16 TAF_STD_TransformBcdMccToDeciDigit(
     return usMcc;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertBcdMncToDeciDigit
- 功能描述  : 转换BCD格式的MNC为十进制的格式
- 输入参数  : VOS_UINT32                          ulBcdMnc
- 输出参数  : 无
- 返 回 值  : VOS_UINT16
 
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2016年09月08日
-    作    者   : w00351686
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT16 TAF_STD_TransformBcdMncToDeciDigit(
     VOS_UINT32                          ulBcdMnc
 )
@@ -1727,21 +1363,7 @@ VOS_UINT16 TAF_STD_TransformBcdMncToDeciDigit(
 }
 
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_TransformBcdImsi1112ToDeciDigit
- 功能描述  : 转换IMSI11_12格式的MCC为十进制
- 输入参数  : VOS_UINT16                          usBcdImsi1112
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月7日
-    作    者   : l00301449
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT8 TAF_STD_TransformBcdImsi1112ToDeciDigit(
     VOS_UINT16                          usBcdImsi1112
 )
@@ -1760,21 +1382,6 @@ VOS_UINT8 TAF_STD_TransformBcdImsi1112ToDeciDigit(
 }
 
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_TransformCLBcdMncToDeciDigit
- 功能描述  : 转换CL模式下的BCD格式的MNC为十进制
- 输入参数  : VOS_UINT16                         usBcdMcc
- 输出参数  : 无
- 返 回 值  : VOS_UINT16
-
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年6月1日
-    作    者   : c00299063
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT16 TAF_STD_TransformCLBcdMncToDeciDigit(
     VOS_UINT16                          usBcdMnc
 )
@@ -1793,21 +1400,6 @@ VOS_UINT16 TAF_STD_TransformCLBcdMncToDeciDigit(
 }
 
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_TransformDeciDigitToBcdMcc
- 功能描述  : 十进制的MCC转换为BCD格式
- 输入参数  : VOS_UINT32                          ulDeciDigitMcc
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
-
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年12月28日
-    作    者   : l00324781
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 TAF_STD_TransformDeciDigitToBcdMcc(
     VOS_UINT32                          ulDeciDigitMcc
 )
@@ -1832,24 +1424,7 @@ VOS_UINT32 TAF_STD_TransformDeciDigitToBcdMcc(
 }
 
 
-/* Added by Y00213812 for Spirnt 定制, 2017-4-2, begin */
-/*****************************************************************************
- 函 数 名  : TAF_STD_ExtractBitStringToOctet
- 功能描述  : 由给定的字节流的开始地址，以及对应的bit偏移量，对应数据结构的bit长度，做数据的赋值
- 输入参数  : pucSrcAddr  -- 对应的bit字节流的地址
-             usOffsetPos -- 一个字节中的偏移位置
-             usBitLen    -- 需要赋值的bit长度
- 输出参数  : 无
- 返 回 值  : 转换后的字节内容
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月25日
-    作    者   : Y00213812
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 /*lint -e701*/
 VOS_UINT8  TAF_STD_ExtractBitStringToOctet(
     VOS_UINT8                          *pucSrcAddr,
@@ -1889,23 +1464,7 @@ VOS_UINT8  TAF_STD_ExtractBitStringToOctet(
 
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ExtractBitStringToDword
- 功能描述  : bit流转化为4字节
- 输入参数  : VOS_UINT8                          *pucSrcAddr
-             VOS_UINT8                           ucOffsetPos
-             VOS_UINT8                           ucBitLen
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月31日
-    作    者   : Y00213812
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ExtractBitStringToDword(
     VOS_UINT8                          *pucSrcAddr,
     VOS_UINT8                           ucOffsetPos,
@@ -1978,24 +1537,7 @@ VOS_UINT32 TAF_STD_ExtractBitStringToDword(
 }
 /*lint +e701*/
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ChangeEndian
- 功能描述  : 改变大小端
- 输入参数  :*pucSrcStr                  源串地址
-             ulStrLen                   串长度(默认目标串长度与源串长度相同)
-            *pucDstStr                  目标串地址
-             ulDataSize                 数据大小(字节数)
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月26日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ChangeEndian(
     VOS_UINT8                          *pucSrcStr,
     VOS_UINT32                          ulStrLen,
@@ -2037,22 +1579,7 @@ VOS_UINT32 TAF_STD_ChangeEndian(
     return TAF_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_EncodeUnicodeToUtf8
- 功能描述  : 单个字符Unicode转Utf8(大端序)
- 输入参数  : usUnicode                          Unicode码
-            *pucUtf8Len                         Utf8存储空间长度(字节数)
- 输出参数  :*pucUtf8Str                         Utf8存储地址
- 返 回 值  : VOS_UINT32                         Utf8解码实际长度(字节数)
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月12日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_EncodeUnicodeToUtf8(
     VOS_UINT16                          usUnicode,
     VOS_UINT8                          *pucUtf8Str,
@@ -2087,23 +1614,7 @@ VOS_UINT32 TAF_STD_EncodeUnicodeToUtf8(
         return 0;
     }
 }
-/*****************************************************************************
- 函 数 名  : TAF_STD_DecodeUtf8CharacterFirstByte
- 功能描述  : Utf8格式编码字符首字节解码，得到一个UTF8字符包含的字节数、和首字节中的数据bits内容
- 输入参数  :*pucUtf8Char                 -UTF-8字符的首个byte
- 输出参数  :*pusUtf8CharacterContent     -输出UTF-8字符首个byte解码出来的数据内容，
-                                          如果只想判断UTF8字符包含的字节数，此变量传入VOS_NULL_PTR
-            *pulUtf8CharacterByteNum     -UTF-8字符包含的字节数(包含首个字节)
- 返 回 值  : TAF_ERROR_CODE_ENUM_UINT32  -解码结果
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年7月6日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL TAF_ERROR_CODE_ENUM_UINT32 TAF_STD_DecodeUtf8CharacterFirstByte(
     VOS_UINT8                          *pucUtf8FirstByte,
     VOS_UINT16                         *pusUtf8CharacterContent,
@@ -2152,25 +1663,7 @@ LOCAL TAF_ERROR_CODE_ENUM_UINT32 TAF_STD_DecodeUtf8CharacterFirstByte(
     return TAF_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertUtf8ToUcs2
- 功能描述  : Utf8码流转Ucs2码流
-             大端序输入
- 输入参数  :*pucUtf8Str                 UTF-8码流
-             ulUtf8Len                  UTF-8码流长度(字节数)
-             ulUcs2BuffLen              UCS2码流缓存大小(编码个数)
- 输出参数  :*pucUcs2Str                 UCS2码流地址
-             VOS_UINT32                 UCS2长度(编码个数)
- 返 回 值  : VOS_UINT32                 编码结果
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月13日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ConvertUtf8ToUcs2(
     VOS_UINT8                          *pucUtf8Str,
     VOS_UINT32                          ulUtf8Len,
@@ -2246,24 +1739,7 @@ VOS_UINT32 TAF_STD_ConvertUtf8ToUcs2(
     return TAF_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertUcs2ToUtf8
- 功能描述  : Ucs2转Utf8编码
-             大端序输出
- 输入参数  :*pucUcs2Str                 UCS2码流
-             ulUcs2Len                  UCS2码流长度(编码个数)
-             ulUtf8BuffLen              UTF-8码流缓存大小(字节数)
- 输出参数  :*pucUtf8Str                 UTF-8码流
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月12日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ConvertUcs2ToUtf8(
     VOS_UINT16                         *pusUcs2Str,
     VOS_UINT32                          ulUcs2Len,
@@ -2297,23 +1773,7 @@ VOS_UINT32 TAF_STD_ConvertUcs2ToUtf8(
     return ulUtf8Idx;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertUcs2To8Bit
- 功能描述  : 强制将UCS2码流转8Bit码流
- 输入参数  :*pusUcs2Str                 UCS2码流
-             ulUcs2Len                  UCS2码流长度(编码个数)
-             ul8BitBuffLen              8Bit缓存大小(字节数)
- 输出参数  :*puc8BitStr                 8Bit码流
- 返 回 值  : VOS_UINT32                 8Bit码流长度(字节数)
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月15日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_ConvertUcs2To8Bit(
     VOS_UINT16                         *pusUcs2Str,
     VOS_UINT32                          ulUcs2Len,
@@ -2334,23 +1794,7 @@ VOS_UINT32 TAF_STD_ConvertUcs2To8Bit(
     return ul8BitLen;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_Convert8BitToUcs2
- 功能描述  : 8Bit转UCS2码流
- 输入参数  :*puc8BitStr                 8Bit码流
-             ul8BitLen                  8Bit码流长度(字节数)
-             ulUcs2BuffLen              UCS2码流缓存大小(编码个数)
- 输出参数  :*pusUcs2Str                 UCS2码流地址
- 返 回 值  : VOS_UINT32                 UCS2码流长度(编码个数)
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月15日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_Convert8BitToUcs2(
     VOS_UINT8                          *puc8BitStr,
     VOS_UINT32                          ul8BitLen,
@@ -2371,234 +1815,8 @@ VOS_UINT32 TAF_STD_Convert8BitToUcs2(
     return ulUcs2Len;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertStrToUcs2
- 功能描述  : 将码流转换成UCS2编码
-             大端序输入
- 输入参数  :*pstSrcStr                  输入码流结构
-             ulUcs2BuffLen              UCS2码流缓存大小(UCS2编码个数)
- 输出参数  :*pusUcs2Str                 UCS2码流
-            *pulUcs2Len                 UCS2码流实际长度(UCS2编码个数)
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月13日
-    作    者   : z00385378
-    修改内容   : 新生成函数
 
-*****************************************************************************/
-VOS_UINT32 TAF_STD_ConvertStrToUcs2(
-    TAF_STD_STR_WITH_ENCODING_TYPE_STRU            *pstSrcStr,
-    VOS_UINT16                                     *pusUcs2Str,
-    VOS_UINT32                                      ulUcs2BuffLen,
-    VOS_UINT32                                     *pulUcs2Len
-)
-{
-    VOS_UINT8                                      *pucUnpackBuff       = VOS_NULL_PTR;
-
-    if ((VOS_NULL_PTR == pstSrcStr )
-     || (VOS_NULL_PTR == pusUcs2Str)
-     || (VOS_NULL_PTR == pulUcs2Len)
-     || (VOS_NULL_PTR == pstSrcStr->pucStr))
-    {
-        return TAF_ERR_NULL_PTR;
-    }
-
-    MN_INFO_LOG1("TAF_STD_ConvertStrToUcs2: encoding", pstSrcStr->enCoding);
-
-    switch (pstSrcStr->enCoding)
-    {
-        case TAF_STD_ENCODING_7BIT:
-            /* 7bit: 先解码成8bit,再将8bit变为16bit的UCS2 */
-            pucUnpackBuff   = (VOS_UINT8*)PS_MEM_ALLOC(WUEPS_PID_TAF, ulUcs2BuffLen * sizeof(VOS_UINT8));
-
-            if (VOS_NULL_PTR == pucUnpackBuff)
-            {
-                return TAF_ERR_ERROR;
-            }
-
-            if (VOS_ERR == TAF_STD_UnPack7Bit(pstSrcStr->pucStr, ulUcs2BuffLen, 0, pucUnpackBuff))
-            {
-                PS_MEM_FREE(WUEPS_PID_TAF, pucUnpackBuff);
-                MN_ERR_LOG("TAF_STD_ConvertStrToUcs2: Unpack fail");
-                return TAF_ERR_ERROR;
-            }
-
-            *pulUcs2Len = ulUcs2BuffLen;
-
-            /* 去除7Bit压缩时填充位 */
-            if (0x0d == (pucUnpackBuff[*pulUcs2Len - 1]))
-            {
-                (*pulUcs2Len)--;
-            }
-
-            /* DefaultAlpha->Ascii */
-            TAF_STD_ConvertDefAlphaToAscii(pucUnpackBuff, *pulUcs2Len, pucUnpackBuff, pulUcs2Len);
-
-            /* 单字节转双字节 */
-            *pulUcs2Len = TAF_STD_Convert8BitToUcs2(pucUnpackBuff, *pulUcs2Len, pusUcs2Str, ulUcs2BuffLen);
-
-            PS_MEM_FREE(WUEPS_PID_TAF, pucUnpackBuff);
-            break;
-
-        case TAF_STD_ENCODING_8BIT:
-            TAF_STD_Convert8BitToUcs2(pstSrcStr->pucStr, ulUcs2BuffLen, pusUcs2Str, ulUcs2BuffLen);
-            *pulUcs2Len = pstSrcStr->ulLen;
-            break;
-
-        case TAF_STD_ENCODING_UCS2:
-            TAF_MEM_CPY_S(pusUcs2Str, ulUcs2BuffLen, pstSrcStr->pucStr, ulUcs2BuffLen);
-
-            /* 输入为大端 内部为小端，需要转换 */
-            (VOS_VOID)TAF_STD_ChangeEndian((VOS_UINT8*)pusUcs2Str, ulUcs2BuffLen, (VOS_UINT8*)pusUcs2Str, sizeof(VOS_UINT16));
-
-            /* Ucs2Len指UINT16的UCS2码的个数， pstSrcStr->ulLen指码流字节数 */
-            *pulUcs2Len = pstSrcStr->ulLen / 2;
-            break;
-
-        case TAF_STD_ENCODING_UTF8:
-            /* 增加编码转换失败原因值 */
-            return TAF_STD_ConvertUtf8ToUcs2(pstSrcStr->pucStr, pstSrcStr->ulLen, pusUcs2Str, ulUcs2BuffLen, pulUcs2Len);
-
-        default:
-            return TAF_ERR_ERROR;
-    }
-
-    return TAF_ERR_NO_ERROR;
-}
-
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertUcs2ToStr
- 功能描述  : Unicode转到目标格式
-             大端序输出
- 输入参数  :*pusUcs2Str                 UCS2码流
-             ulUcs2Len                  UCS2码流长度(编码个数)
-             ulDstStrBuffLen            目标串缓存空间大小(字节数)
- 输出参数  :*pstDstStr                  目标字符串
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年5月15日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-VOS_UINT32 TAF_STD_ConvertUcs2ToStr(
-    TAF_STD_STR_WITH_ENCODING_TYPE_STRU            *pstDstStr,
-    VOS_UINT16                                     *pusUcs2Str,
-    VOS_UINT32                                      ulUcs2Len,
-    VOS_UINT32                                      ulDstStrBuffLen
-)
-{
-    VOS_UINT8                          *pucBuffStr  = VOS_NULL_PTR;
-    VOS_UINT32                          ulUcs2BuffLen;
-    VOS_UINT32                          ulAllocBuffLen;
-    VOS_UINT32                          ul8BitLen;
-    VOS_UINT32                          ulRslt;
-
-    if ((VOS_NULL_PTR == pstDstStr )
-     || (VOS_NULL_PTR == pusUcs2Str)
-     || (VOS_NULL_PTR == pstDstStr->pucStr))
-    {
-        return TAF_ERR_NULL_PTR;
-    }
-
-    MN_INFO_LOG1("TAF_STD_ConvertUcs2ToStr: encoding", pstDstStr->enCoding);
-
-    pstDstStr->ulLen = 0;
-    TAF_MEM_SET_S(pstDstStr->pucStr, ulDstStrBuffLen, 0, ulDstStrBuffLen);
-
-    switch (pstDstStr->enCoding)
-    {
-        case TAF_STD_ENCODING_UCS2:
-            TAF_MEM_CPY_S(pstDstStr->pucStr, ulDstStrBuffLen, pusUcs2Str, ulUcs2Len * sizeof(VOS_UINT16));
-
-            /* 增加CHR上报 */
-            /* 内部是小端序，拷贝输出时候需要转成大端序 */
-            ulRslt = TAF_STD_ChangeEndian(pstDstStr->pucStr, ulUcs2Len * sizeof(VOS_UINT16), pstDstStr->pucStr, sizeof(VOS_UINT16));
-
-            pstDstStr->ulLen = ulUcs2Len * 2;
-
-            return ulRslt;
-
-        case TAF_STD_ENCODING_8BIT:
-            pstDstStr->ulLen = TAF_STD_ConvertUcs2To8Bit(pusUcs2Str, ulUcs2Len, pstDstStr->pucStr, ulDstStrBuffLen);
-            break;
-
-        case TAF_STD_ENCODING_7BIT:
-            /* 7Bit支持扩展表后最多用2个字节表示一个Unicode */
-            ul8BitLen      = 0;
-            ulUcs2BuffLen  = ulUcs2Len * 2;
-            ulAllocBuffLen = ulUcs2BuffLen * 2;
-
-            /* 申请2倍缓存分开使用 */
-            pucBuffStr    = (VOS_UINT8*)PS_MEM_ALLOC(WUEPS_PID_TAF, ulAllocBuffLen * sizeof(VOS_UINT8));
-            if (VOS_NULL_PTR == pucBuffStr)
-            {
-                return TAF_ERR_ERROR;
-            }
-            TAF_MEM_SET_S(pucBuffStr, ulUcs2BuffLen * sizeof(VOS_UINT8), 0, ulUcs2Len * sizeof(VOS_UINT8));
-
-            /* 先转成8Bit编码 */
-            ulUcs2Len = TAF_STD_ConvertUcs2To8Bit(pusUcs2Str, ulUcs2Len, pucBuffStr, ulUcs2BuffLen);
-
-            /* 转成DefaultAlpha，使用后半段缓存 */
-            if (MN_ERR_NO_ERROR != TAF_STD_ConvertAsciiToDefAlpha(pucBuffStr, ulUcs2Len, pucBuffStr + ulUcs2BuffLen, &ul8BitLen, ulUcs2BuffLen))
-            {
-                PS_MEM_FREE(WUEPS_PID_TAF, pucBuffStr);
-                MN_ERR_LOG("TAF_STD_ConvertUcs2ToStr: Ascii->DefAlpha fail");
-                return TAF_ERR_ERROR;
-            }
-
-            /* 压缩成7Bit编码 */
-            if (VOS_OK != TAF_STD_Pack7Bit(pucBuffStr + ulUcs2BuffLen, ul8BitLen, 0, pstDstStr->pucStr, &(pstDstStr->ulLen)))
-            {
-                PS_MEM_FREE(WUEPS_PID_TAF, pucBuffStr);
-                MN_ERR_LOG("TAF_STD_ConvertUcs2ToStr: pack fail");
-                return TAF_ERR_ERROR;
-            }
-
-            /* 23038 6.1.2.3.1，最后7Bit如果没有数据需要填CR以免被识别成@ */
-            if (7 == ul8BitLen % 8)
-            {
-                *(pstDstStr->pucStr + pstDstStr->ulLen - 1) |= 0x1A;
-            }
-
-            PS_MEM_FREE(WUEPS_PID_TAF, pucBuffStr);
-            break;
-
-        case TAF_STD_ENCODING_UTF8:
-            pstDstStr->ulLen = TAF_STD_ConvertUcs2ToUtf8(pusUcs2Str, ulUcs2Len, pstDstStr->pucStr, ulDstStrBuffLen);
-            break;
-
-        default:
-            return TAF_ERR_ERROR;
-    }
-
-    return TAF_ERR_NO_ERROR;
-}
-
-/*****************************************************************************
- 函 数 名  : TAF_STD_IsSuitableEncodeForUcs2
- 功能描述  : 判断目标码流是否是UCS2码流适合的编码
- 输入参数  :*pusUcs2                    UCS2码流
-             ulUcs2Len                  UCS2码流长度(编码个数)
-             enCoding                   目标编码类型
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年5月15日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 TAF_STD_IsSuitableEncodeForUcs2(
     VOS_UINT16                         *pusUcs2,
     VOS_UINT32                          ulUcs2Len,
@@ -2660,96 +1878,82 @@ VOS_UINT32 TAF_STD_IsSuitableEncodeForUcs2(
     return TAF_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_STD_ConvertStrEncodingType
- 功能描述  : 根据指定编码类型转换字符串，
-             先将源字符串(UINT8)转到中间态UCS2(UINT16)编码串，
-             再由UCS2转到目标编码(UINT8)
-             大端输入 大端输出
- 输入参数  : pstSrcStr           源字符串结构
-             enDstCoding         目标编码类型
-             ulDstBuffLen        目标字符串的缓存大小(字节数)
- 输出参数  : pstDstStr           目标编码字符串结构
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月11日
-    作    者   : z00385378
-    修改内容   : 新生成函数
 
-*****************************************************************************/
-VOS_UINT32 TAF_STD_ConvertStrEncodingType(
-    TAF_STD_STR_WITH_ENCODING_TYPE_STRU            *pstSrcStr,
-    TAF_STD_ENCODING_TYPE_ENUM_U8                   enDstCoding,
-    VOS_UINT32                                      ulDstBuffLen,
-    TAF_STD_STR_WITH_ENCODING_TYPE_STRU            *pstDstStr
+
+VOS_VOID TAF_STD_MemCpy_s(
+    VOS_VOID                           *pDestBuffer,
+    VOS_UINT32                          ulDestSize,
+    const VOS_VOID                     *pSrcBuffer,
+    VOS_UINT32                          ulCount,
+    VOS_INT32                           lFileIdAndLine
 )
 {
-    VOS_UINT16                                     *pusUcs2Str      = VOS_NULL_PTR;
-    VOS_UINT32                                      ulUcs2Len;
-    VOS_UINT32                                      ulUcs2BuffLen;
-    VOS_UINT32                                      ulRslt;
+    VOS_UINT32                          ulMemCpyLen;
 
-    if ((VOS_NULL_PTR == pstSrcStr)
-     || (VOS_NULL_PTR == pstDstStr)
-     || (VOS_NULL_PTR == pstSrcStr->pucStr)
-     || (VOS_NULL_PTR == pstDstStr->pucStr))
+    ulMemCpyLen = TAF_MIN(ulDestSize, ulCount);
+
+    if (VOS_NULL_PTR == VOS_MemCpy_s( pDestBuffer, ulDestSize, pSrcBuffer, ulCount ))
     {
-        return TAF_ERR_NULL_PTR;
+        if (VOS_NULL_PTR == VOS_MemCpy_s( pDestBuffer, ulMemCpyLen, pSrcBuffer, ulMemCpyLen ))
+        {
+            mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, lFileIdAndLine, 0, 0 );
+        }
     }
 
-    /* 计算申请Unicode内存大小 */
-    /* pstSrcStr->Len指字节数， ulUcs2Len指UCS2编码数， 前者UINT8 后者UINT16 */
-    if (TAF_STD_ENCODING_7BIT == pstSrcStr->enCoding)
-    {
-        ulUcs2Len = pstSrcStr->ulLen * 8 / 7;
-    }
-    else
-    {
-        ulUcs2Len = pstSrcStr->ulLen;
-    }
-    ulUcs2BuffLen = ulUcs2Len;
-
-    pusUcs2Str    = (VOS_UINT16*)PS_MEM_ALLOC(WUEPS_PID_TAF, ulUcs2BuffLen * sizeof(VOS_UINT16));
-    if (VOS_NULL_PTR == pusUcs2Str)
-    {
-        return TAF_ERR_ERROR;
-    }
-    TAF_MEM_SET_S(pusUcs2Str, ulUcs2BuffLen * sizeof(VOS_UINT16), 0, ulUcs2BuffLen * sizeof(VOS_UINT16));
-
-    /* 将输入码流转为Unicode(UCS2)格式 */
-    ulRslt = TAF_STD_ConvertStrToUcs2(pstSrcStr, pusUcs2Str, ulUcs2BuffLen, &ulUcs2Len);
-
-    if (TAF_ERR_NO_ERROR != ulRslt)
-    {
-        PS_MEM_FREE(WUEPS_PID_TAF, pusUcs2Str);/*lint !e516 */
-        return ulRslt;
-    }
-
-    /* 是否能转成目标编码 */
-    if (TAF_ERR_NO_ERROR != TAF_STD_IsSuitableEncodeForUcs2(pusUcs2Str, ulUcs2Len, enDstCoding))
-    {
-        PS_MEM_FREE(WUEPS_PID_TAF, pusUcs2Str);/*lint !e516 */
-        MN_INFO_LOG("TAF_STD_ConvertStrEncodingType Dst Encoding cannot be");
-        return TAF_ERR_PARA_ERROR;
-    }
-    pstDstStr->enCoding = enDstCoding;
-
-    /* 将Unicode(UCS2)码流转到指定格式 */
-    ulRslt = TAF_STD_ConvertUcs2ToStr(pstDstStr, pusUcs2Str, ulUcs2Len, ulDstBuffLen);
-
-    if (TAF_ERR_NO_ERROR != ulRslt)
-    {
-        PS_MEM_FREE(WUEPS_PID_TAF, pusUcs2Str);/*lint !e516 */
-        return ulRslt;
-    }
-
-    PS_MEM_FREE(WUEPS_PID_TAF, pusUcs2Str);/*lint !e516 */
-    return TAF_ERR_NO_ERROR;
+    return;
 }
 
-/* Added by Y00213812 for Spirnt 定制, 2017-4-2, end */
+/*lint -e429*/
+
+VOS_VOID TAF_STD_MemSet_s(
+    VOS_VOID                           *pDestBuffer,
+    VOS_UINT32                          ulDestSize,
+    VOS_CHAR                            ucChar,
+    VOS_UINT32                          ulCount,
+    VOS_INT32                           lFileIdAndLine
+)
+{
+    VOS_UINT32                          ulMemSetLen;
+
+    ulMemSetLen = TAF_MIN(ulDestSize, ulCount);
+
+    if (VOS_NULL_PTR == VOS_MemSet_s( pDestBuffer, ulDestSize, (VOS_CHAR)(ucChar), ulCount ))
+    {
+        if (VOS_NULL_PTR == VOS_MemSet_s( pDestBuffer, ulMemSetLen, (VOS_CHAR)(ucChar), ulMemSetLen ))
+        {
+            mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, lFileIdAndLine, 0, 0 );
+        }
+    }
+
+    return;
+}
+/*lint +e429*/
+
+VOS_VOID TAF_STD_MemMove_s(
+    VOS_VOID                           *pDestBuffer,
+    VOS_UINT32                          ulDestSize,
+    const VOS_VOID                     *pSrcBuffer,
+    VOS_UINT32                          ulCount,
+    VOS_INT32                           lFileIdAndLine
+)
+{
+    VOS_UINT32                          ulMemMoveLen;
+
+    ulMemMoveLen = TAF_MIN(ulDestSize, ulCount);
+
+    if (VOS_NULL_PTR == VOS_MemMove_s( pDestBuffer, ulDestSize, pSrcBuffer, ulCount ))
+    {
+        if (VOS_NULL_PTR == VOS_MemMove_s( pDestBuffer, ulMemMoveLen, pSrcBuffer, ulMemMoveLen ))
+        {
+            mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, lFileIdAndLine, 0, 0 );
+        }
+    }
+
+    return;
+}
+
+
+
 
 

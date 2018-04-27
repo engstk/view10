@@ -41,14 +41,15 @@ enum hw_device_type {
     DEV_I2C_BUCKBOOST_MAX77813,                     /* 34 */
     DEV_I2C_COUL,                                   /* 35 */
     DEV_I2C_DTV,                                    /* 36 */
-    DEV_I2C_MAX,                                    /* 37 */
+    DEV_I2C_AP_COLOR_SENSOR,                        /* 37 */
+    DEV_I2C_MAX,                                    /* 38 */
     DEV_CONNECTIVITY_START,
-    DEV_CONNECTIVITY_WIFI = DEV_CONNECTIVITY_START, /* 38 */
-    DEV_CONNECTIVITY_BT,                            /* 39 */
-    DEV_CONNECTIVITY_FM,                            /* 40 */
-    DEV_CONNECTIVITY_GPS,                           /* 41 */
-    DEV_CONNECTIVITY_GPU,                           /* 42 */
-    DEV_CONNECTIVITY_MAX,                           /* 43 */
+    DEV_CONNECTIVITY_WIFI = DEV_CONNECTIVITY_START, /* 39 */
+    DEV_CONNECTIVITY_BT,                            /* 40 */
+    DEV_CONNECTIVITY_FM,                            /* 41 */
+    DEV_CONNECTIVITY_GPS,                           /* 42 */
+    DEV_CONNECTIVITY_GPU,                           /* 43 */
+    DEV_CONNECTIVITY_MAX,                           /* 44 */
 };
 
 /* set a device flag as true */

@@ -1337,6 +1337,7 @@ static int ts_send_init_cmd(void)
 
 static int proc_init_cmd(void){
 	schedule_work(&tp_init_work);
+	return;
 }
 
 static void tp_init_work_fn(struct work_struct *work){

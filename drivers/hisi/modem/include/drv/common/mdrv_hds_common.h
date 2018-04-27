@@ -33,6 +33,11 @@ extern "C"
 #define DIAG_IND_MSGID_CPM_LTE1_WAKEUP_SLICE           (0x11002)
 #define DIAG_IND_MSGID_CPM_TDS_WAKEUP_SLICE            (0x1003)
 #define DIAG_IND_MSGID_CPM_COMMON_WAKEUP_SLICE         (0x1004)
+#define DIAG_IND_MSGID_CPM_1X_WAKEUP_SLICE             (0x1005)
+#define DIAG_IND_MSGID_SCI0_EVENT                      (0x1006)
+#define DIAG_IND_MSGID_SCI1_EVENT                      (0x1007)
+#define DIAG_IND_MSGID_SCI2_EVENT                      (0x1008)
+#define DIAG_IND_MSGID_SCI3_EVENT                      (0x1009)
 
 /* Board info ind */
 #define DIAG_CMD_BOARD_TRACE_IND_ACORE          (0x90000001)

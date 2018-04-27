@@ -17,6 +17,7 @@ EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/gu/nvim/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/gu/log/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/gu/acore/cbtcpm
 EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/gu/comm/om/
+EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/lt/ccore/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/gu/comm/si/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/gu/comm/usimm/
 EXTRA_CFLAGS += -I$(MODEM_DIR)/include/oam/comm/errno/

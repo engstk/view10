@@ -4090,7 +4090,7 @@ regulator_register(const struct regulator_desc *regulator_desc,
 		}
 	}
 
-#ifdef CONFIG_HISI_PMIC_DEBUG
+#if defined (CONFIG_HISI_PMIC_DEBUG) || defined(CONFIG_HISI_SR_DEBUG)
 	list_add(&rdev->list, &regulator_list);
 #endif
 

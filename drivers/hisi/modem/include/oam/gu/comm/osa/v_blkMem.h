@@ -167,7 +167,6 @@ typedef struct
     VOS_UINT32          ulSize;/* the total size of occupying Msg\Mem*/
 }VOS_MEM_OCCUPYING_INFO_ST;
 
-#if (OSA_CPU_CCPU == VOS_OSA_CPU)
 /* the type of info which come from task */
 enum VOS_EXC_DUMP_MEM_NUM_ENUM
 {
@@ -177,16 +176,6 @@ enum VOS_EXC_DUMP_MEM_NUM_ENUM
     VOS_EXC_DUMP_MEM_NUM_4,
     VOS_EXC_DUMP_MEM_NUM_BUTT
 };
-#else
-enum VOS_EXC_DUMP_MEM_NUM_ENUM
-{
-    VOS_EXC_DUMP_MEM_NUM_1,
-    VOS_EXC_DUMP_MEM_NUM_2,
-    VOS_EXC_DUMP_MEM_NUM_3,
-    VOS_EXC_DUMP_MEM_NUM_4,
-    VOS_EXC_DUMP_MEM_NUM_BUTT
-};
-#endif
 
 typedef VOS_UINT32      VOS_EXC_DUMP_MEM_NUM_ENUM_UINT32;
 
@@ -270,12 +259,10 @@ VOS_VOID VOS_ModifyMemBlkInfo(VOS_UINT_PTR ulAddr, VOS_PID PID);
 
 VOS_VOID *VOS_ExcDumpMemAlloc(VOS_UINT32 ulNumber);
 
-VOS_VOID *VOS_CacheMemAlloc(VOS_UINT32 ulSize);
 VOS_VOID *VOS_CacheMemAllocDebug(VOS_UINT32 ulSize, VOS_UINT32 uwCookie);
 
 VOS_UINT32 VOS_CacheMemFree(VOS_VOID *pAddr);
 
-VOS_VOID *VOS_UnCacheMemAlloc(VOS_UINT32 ulSize, VOS_UINT_PTR *pulRealAddr);
 VOS_VOID *VOS_UnCacheMemAllocDebug(VOS_UINT32 ulSize, VOS_UINT_PTR *pulRealAddr, VOS_UINT32 uwCookie);
 
 VOS_VOID VOS_UnCacheMemFree(VOS_VOID *pVirtAddr, VOS_VOID *pPhyAddr, VOS_UINT32 ulSize);

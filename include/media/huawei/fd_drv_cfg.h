@@ -97,7 +97,7 @@ If given parameter value is RESULT_TYPE_PRE, it waits for PRE to finish.
 If given parameter value is RESULT_TYPE_TME, it waits for TME to finish.
 If given parameter value is (RESULT_TYPE_PRE | RESULT_TYPE_TME), it waits for both PRE and TME to finish.
 */
-#define AHFD_WAIT_RESULT          _IO('v',  AHFD_BASE_IOC + 3)
+#define AHFD_WAIT_RESULT          _IOW('v',  AHFD_BASE_IOC + 3, int)
 
 /**
 Sets TME enable mode. It is recommended to call this before enabling PRE.
@@ -106,7 +106,7 @@ If given parameter value is MODE_AUTO_TME, TME will be enabled when PRE IRQ arri
 In this case, it is recommended that TME is configured before starting PRE.
 If given parameter value is MODE_MANUAL_TME, TME should be enabled from user space using AHFD_WRITE_REGS* IOCTL.
 */
-#define AHFD_SET_MODE             _IO('v',  AHFD_BASE_IOC + 6)
+#define AHFD_SET_MODE             _IOW('v',  AHFD_BASE_IOC + 6, int)
 
 typedef struct _IPU_MAPS_va
 {

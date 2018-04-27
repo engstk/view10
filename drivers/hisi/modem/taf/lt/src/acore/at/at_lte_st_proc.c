@@ -179,8 +179,7 @@ VOS_UINT32 atSetSRXPOWPara(VOS_UINT8 ucClientId)
         }
     }
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_SET_SRXPOW_REQ, ucClientId, (VOS_VOID*)(&stSetReq), sizeof(stSetReq));
 
     if(AT_SUCCESS == ulRst)
@@ -218,8 +217,7 @@ VOS_UINT32 atQrySRXPOWPara(VOS_UINT8 ucClientId)
     FTM_RD_SRXPOW_REQ_STRU stQryReq = {0};
     VOS_UINT32 ulRst;
 
-    /* lkf58113 @ 20110929 采用新的发送函数:atSendFtmDataMsg
- */
+    
     ulRst = atSendFtmDataMsg(I0_MSP_SYS_FTM_PID, ID_MSG_FTM_RD_SRXPOW_REQ, ucClientId, (VOS_VOID*)(&stQryReq), sizeof(stQryReq));
 
     if(AT_SUCCESS == ulRst)

@@ -27,6 +27,14 @@
 #include "qtaguid_pid_internal.h"
 #include "qtaguid_pid.h"
 
+#ifdef CONFIG_HUAWEI_DUBAI
+#include <log/log_usertype/log-usertype.h>
+#include <huawei_platform/log/hwlog_kernel.h>
+extern unsigned long get_wakeuptime(void);
+extern const char *get_sourcename(void);
+extern int get_gpio(void);
+unsigned long g_latt_wakeuptime_tmp = 0;
+#endif
 static LIST_HEAD(iface_pid_stat_list);
 static DEFINE_SPINLOCK(iface_pid_stat_list_lock);
 
@@ -692,6 +700,16 @@ void if_pid_stat_update(const char *ifname, uid_t uid,
 		"pid=%s sk=%p dir=%d proto=%d bytes=%d)\n",
 		 ifname, task_comm, sk, direction, proto, bytes);
 
+#ifdef CONFIG_HUAWEI_DUBAI
+        if (BETA_USER == get_logusertype_flag()) {
+                 unsigned long last_wakeup_time=0;
+                 last_wakeup_time = get_wakeuptime();
+                 if (last_wakeup_time > 0 && last_wakeup_time != g_latt_wakeuptime_tmp && ((hisi_getcurtime() / 1000000 - last_wakeup_time) < 500)){
+                          g_latt_wakeuptime_tmp = last_wakeup_time;
+                          HWDUBAI_LOGE("DUBAI_TAG_APP_WAKEUP", "procname=%s source=%s gpio=%d", task_comm, get_sourcename(), get_gpio());
+                 }
+        }
+#endif
 	spin_lock_bh(&iface_entry->pid_stat_list_lock);
 
 	pid_stat_entry = pid_stat_tree_search(&iface_entry->pid_stat_tree, tag);
@@ -819,7 +837,7 @@ static int pp_stats_line(struct seq_file *m, struct pid_stat *ps_entry,
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 4, 0))
 	return ret ?: 1;
 #else
-	seq_has_overflowed(m) ? -ENOSPC : 1;
+	return seq_has_overflowed(m) ? -ENOSPC : 1;
 #endif
 }
 

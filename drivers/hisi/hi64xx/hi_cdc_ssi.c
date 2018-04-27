@@ -331,13 +331,12 @@ static int hi_cdcssi_remove(struct platform_device *pdev)
 	iounmap(priv->ssi_base);
 	pinctrl_put(priv->pctrl);
 	clk_disable_unprepare(priv->codec_ssi_clk);
-	devm_kfree(dev, priv);
-
 	if (priv->pm_runtime_support) {
 		pm_runtime_set_suspended(dev);
 	}
 
 	mutex_destroy(&priv->sr_rw_lock);
+	devm_kfree(dev, priv);
 
 	return ret;
 }

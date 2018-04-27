@@ -13,6 +13,7 @@ struct usb_analog_hs_codec_ops {
 #define IOCTL_USB_ANA_HS_GET_MIC_SWITCH_STATE               _IOR('U', 0x01, __u32)
 #define IOCTL_USB_ANA_HS_GND_FB_CONNECT                     _IO('U', 0x02)
 #define IOCTL_USB_ANA_HS_GND_FB_DISCONNECT                  _IO('U', 0x03)
+#define IOCTL_USB_ANA_HS_GET_CONNECT_LINEIN_R_STATE         _IOR('U', 0x04, __u32)
 
 struct usb_analog_hs_dev {
     char *name;
@@ -20,8 +21,14 @@ struct usb_analog_hs_dev {
 };
 
 enum usb_analog_hs_plugin_state {
-	USB_ANA_HS_PLUG_OUT = 0,
-	USB_ANA_HS_PLUG_IN,
+    USB_ANA_HS_PLUG_OUT = 0,
+    USB_ANA_HS_PLUG_IN,
+    /** for aux switch in display port **/
+    DP_PLUG_IN,
+    DP_PLUG_IN_CROSS,
+    DP_PLUG_OUT,
+    DIRECT_CHARGE_IN,
+    DIRECT_CHARGE_OUT
 };
 
 

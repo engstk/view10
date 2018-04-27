@@ -5,8 +5,8 @@
 
 
 HI_U32 b_Regular_down_flag = HI_TRUE;
+HI_BOOL g_vencSmmuSetFlag = HI_FALSE;
 
-/* 外边复位vedu, 并设置时钟，撤销复位l00214825  */
 HI_S32 VENC_DRV_BoardInit(HI_VOID)
 {
 	HI_S32 ret = 0;
@@ -25,6 +25,7 @@ HI_S32 VENC_DRV_BoardInit(HI_VOID)
 HI_VOID VENC_DRV_BoardDeinit(HI_VOID)
 {
 	HI_DBG_VENC("enter %s ()\n", __func__);
+	g_vencSmmuSetFlag = HI_FALSE;
 	Venc_Regulator_Disable();
 	HI_DBG_VENC("exit %s ()\n", __func__);
 }

@@ -49,6 +49,7 @@
 #include "bsp_dump.h"
 #include "bsp_trace.h"
 #include "osl_irq.h"
+#include "securec.h"
 
 
 void mdrv_om_system_error(int mod_id, int arg1, int arg2, char * arg3, int arg3_len)
@@ -82,27 +83,12 @@ s32  mdrv_om_unregister_callback(dump_handle handle)
 
 }
 
-void mdrv_om_set_hsoflag(u32 flag)
-{
-    /*return bsp_om_set_hso_conn_flag(flag);*/
-}
-
-u32  mdrv_om_set_sysview_swt(u32 set_type, u32 set_swt, u32 period)
-{
-    return 0;
-}
-
-u32  mdrv_om_get_alltaskinfo(void * p_task_stru, u32 param_len)
-{
-    return 0;
-}
-
-s32  mdrv_om_get_rootfs(char * data, u32 len)
-{
-    /*coverity[secure_coding]*/
-    strncpy(data, "/modem_log", len);
-    return 0;
-}
+EXPORT_SYMBOL_GPL(mdrv_om_register_field);
+EXPORT_SYMBOL_GPL(mdrv_om_get_field_addr);
+EXPORT_SYMBOL_GPL(mdrv_om_get_field_phy_addr);
+EXPORT_SYMBOL_GPL(mdrv_om_register_callback);
+EXPORT_SYMBOL_GPL(mdrv_om_system_error);
+EXPORT_SYMBOL_GPL(mdrv_om_unregister_callback);
 
 
 

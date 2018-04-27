@@ -392,9 +392,18 @@ static int __init thp_bu21150_module_init(void)
 
 	return rc;
 err:
-	kfree(dev->tx_buff);
-	kfree(dev->rx_buff);
-	kfree(dev);
+	if(dev->tx_buff){
+		kfree(dev->tx_buff);
+		dev->tx_buff = NULL;
+	}
+	if(dev->rx_buff){
+		kfree(dev->rx_buff);
+		dev->rx_buff = NULL;
+	}
+	if(dev){
+		kfree(dev);
+		dev = NULL;
+	}
 	return rc;
 }
 static void __exit thp_bu21150_module_exit(void)

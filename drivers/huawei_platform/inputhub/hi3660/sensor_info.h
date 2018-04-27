@@ -526,6 +526,10 @@ struct magn_bracket_platform_data {
 	int mag_z_change_lower;
 	int mag_z_change_upper;
 };
+struct motion_platform_data {
+	int angle_gap;
+};
+
 struct rpc_platform_data {
 	uint16_t table[32];
 	uint16_t mask[32];

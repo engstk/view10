@@ -65,8 +65,17 @@ struct hisi_pmic {
 	int			irqarray;
 	struct irq_mask_info irq_mask_addr;
 	struct irq_info irq_addr;
+	int			irqnum1;
+	int			irqarray1;
+	struct irq_mask_info irq_mask_addr1;
+	struct irq_info irq_addr1;
 	struct write_lock normal_lock;
 	struct write_lock debug_lock;
+#if defined(CONFIG_HISI_DIEID)
+	char			*dieid_name;
+	unsigned int			dieid_reg_num;
+	unsigned int			*dieid_regs;
+#endif
 };
 
 /* 0:disable; 1:enable */
@@ -89,6 +98,7 @@ extern int hisi_pmic_get_vbus_status(void);
 #if defined(CONFIG_HISI_DIEID)
 u32 hisi_pmic_read_sub_pmu(u8 sid ,int reg);
 void hisi_pmic_write_sub_pmu(u8 sid ,int reg, u32 val);
+int hisi_pmic_get_dieid(char *dieid, unsigned int len);
 #endif
 #else
 static inline u32 hisi_pmic_read(struct hisi_pmic *pmic, int reg) { return 0; }
@@ -103,6 +113,7 @@ static inline int hisi_get_pmic_irq_byname(unsigned int pmic_irq_list) { return 
 static inline int hisi_pmic_get_vbus_status(void) { return 1; }
 static inline u32 hisi_pmic_read_sub_pmu(u8 sid ,int reg) { return 0; }
 static inline void hisi_pmic_write_sub_pmu(u8 sid ,int reg, u32 val) {}
+static inline int hisi_pmic_get_dieid(char *dieid){ return 0;}
 #endif
 
 #ifdef CONFIG_HISI_HI6421V500_PMU

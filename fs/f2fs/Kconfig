@@ -16,6 +16,19 @@ config F2FS_FS
 
 	  If unsure, say N.
 
+config F2FS_CLOSE_FUA
+	bool "F2FS closes FUA to improve performance for atomic write"
+	depends on F2FS_FS
+	default n
+	help
+	  Close FUA to make flush reduce work correctly, which can improve
+	  performance of atomic write. This should only be used in poor
+	  phone which requires performance more than stability. Otherwise,
+	  FUA should keep open to ensure stability of atomic write all the
+	  time.
+
+	  If unsure, say N.
+
 config F2FS_STAT_FS
 	bool "F2FS Status Information"
 	depends on F2FS_FS && DEBUG_FS
@@ -29,6 +42,16 @@ config F2FS_STAT_FS
 	    - average SIT information about whole segments
 	    - current memory footprint consumed by f2fs.
 
+config F2FS_OVP_RESERVED
+	bool "F2FS ovp reserved to save small-nand phone's life"
+	depends on F2FS_FS
+	default n
+	help
+	  Reserve space gradually, which can help to decrease nand flash's
+	  GC counts and save small-nand phone's life.
+
+	  If unsure, say N.
+
 config F2FS_FS_XATTR
 	bool "F2FS extended attributes"
 	depends on F2FS_FS
@@ -37,6 +60,16 @@ config F2FS_FS_XATTR
 	  Extended attributes are name:value pairs associated with inodes by
 	  the kernel or by users (see the attr(5) manual page, or visit
 	  <http://acl.bestbits.at/> for details).
+
+	  If unsure, say N.
+
+config F2FS_REMAP_GC
+	bool "F2FS remap garbage collection"
+	depends on F2FS_FS
+	default n
+	help
+	  Using remap block feature to avoid copying data during doing garbage
+	  collection.
 
 	  If unsure, say N.
 
@@ -84,6 +117,19 @@ config F2FS_FS_ENCRYPTION
 	  feature is similar to ecryptfs, but it is more memory
 	  efficient since it avoids caching the encrypted and
 	  decrypted pages in the page cache.
+
+config F2FS_HOTCOLD_DRIVER
+	bool "F2FS Passes Hot-Cold Separation Info to Driver"
+	depends on F2FS_FS
+	depends on HISI_SCSI_VENDOR_CMD_HOTCOLD
+	default n
+	help
+	  Pass hot-cold separation info (context id or say stream id) to
+	  block/scsi/ufs driver (now support hisi 1861). If there are more
+	  drivers supported in the future, should add them in Kconfig:
+	  depends on HISI_SCSI_VENDOR_CMD_HOTCOLD || Other_dirvers.
+
+	  If unsure, say N.
 
 config F2FS_IO_TRACE
 	bool "F2FS IO tracer"

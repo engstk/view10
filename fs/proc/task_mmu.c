@@ -351,11 +351,7 @@ show_map_vma(struct seq_file *m, struct vm_area_struct *vma, int is_pid)
 
 	/* We don't show the stack guard page in /proc/maps */
 	start = vma->vm_start;
-	if (stack_guard_page_start(vma, start))
-		start += PAGE_SIZE;
 	end = vma->vm_end;
-	if (stack_guard_page_end(vma, end))
-		end -= PAGE_SIZE;
 
 	seq_setwidth(m, 25 + sizeof(void *) * 6 - 1);
 	seq_printf(m, "%08lx-%08lx %c%c%c%c %08llx %02x:%02x %lu ",
@@ -1560,6 +1556,10 @@ static int reclaim_pte_range(pmd_t *pmd, unsigned long addr,
 	if (pmd_trans_unstable(pmd))
 		return 0;
 cont:
+#ifdef CONFIG_HISI_SWAP_ZDATA
+	if (process_reclaim_need_abort(walk))
+		return -EINTR;
+#endif
 	isolated = 0;
 	pte = pte_offset_map_lock(vma->vm_mm, pmd, addr, &ptl);
 	for (; addr != end; pte++, addr += PAGE_SIZE) {
@@ -1625,6 +1625,7 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	unsigned long start = 0;
 	unsigned long end = 0;
 #ifdef CONFIG_HISI_SWAP_ZDATA
+	int walk_ret;
 	struct timeval start_time = {0,0};
 	struct timeval stop_time;
 	s64 elapsed_centisecs64;
@@ -1759,14 +1760,17 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 			if (is_vm_hugetlb_page(vma))
 				continue;
 
-#ifdef CONFIG_HISI_SWAP_ZDATA
-			if (reclaim_walk.hiber && reclaim_sigusr_pending(current))
-				break;
-#endif
 			walk_data.vma = vma;
 			reclaim_walk.private = &walk_data;
+#ifdef CONFIG_HISI_SWAP_ZDATA
+			walk_ret = walk_page_range(vma->vm_start, vma->vm_end,
+				&reclaim_walk);
+			if ((walk_ret == -EINTR) && reclaim_walk.hiber)
+				break;
+#else
 			walk_page_range(vma->vm_start, vma->vm_end,
 				&reclaim_walk);
+#endif
 		}
 	}
 	flush_tlb_mm(mm);

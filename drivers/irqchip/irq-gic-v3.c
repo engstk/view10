@@ -34,6 +34,7 @@
 #include <asm/virt.h>
 
 #include "irq-gic-common.h"
+#include <linux/io.h>
 
 struct redist_region {
 	void __iomem		*redist_base;
@@ -60,6 +61,8 @@ static struct static_key supports_deactivate = STATIC_KEY_INIT_TRUE;
 /* Our default, arbitrary priority value. Linux only uses one anyway. */
 #define DEFAULT_PMR_VALUE	0xf0
 
+u32 gic_bugfix_flag = 0;
+
 static inline unsigned int gic_irq(struct irq_data *d)
 {
 	return d->hwirq;
@@ -72,12 +75,13 @@ static inline int gic_irq_in_rdist(struct irq_data *d)
 
 static inline void __iomem *gic_dist_base(struct irq_data *d)
 {
-	if (gic_irq_in_rdist(d))	/* SGI+PPI -> SGI_base for this CPU */
+	if (gic_irq_in_rdist(d)) {	/* SGI+PPI -> SGI_base for this CPU */
 		return gic_data_rdist_sgi_base();
+	}
 
-	if (d->hwirq <= 1023)		/* SPI -> dist_base */
+	if (d->hwirq <= 1023) {		/* SPI -> dist_base */
 		return gic_data.dist_base;
-
+	}
 	return NULL;
 }
 
@@ -127,7 +131,6 @@ static void gic_enable_redist(bool enable)
 	u32 val;
 
 	rbase = gic_data_rdist_rd_base();
-
 	val = readl_relaxed(rbase + GICR_WAKER);
 	if (enable)
 		/* Wake up this CPU redistributor */
@@ -142,7 +145,7 @@ static void gic_enable_redist(bool enable)
 			return;	/* No PM support in this redistributor */
 	}
 
-	while (count--) {
+	while (--count) {
 		val = readl_relaxed(rbase + GICR_WAKER);
 		if (enable ^ (val & GICR_WAKER_ChildrenAsleep))
 			break;
@@ -162,11 +165,12 @@ static int gic_peek_irq(struct irq_data *d, u32 offset)
 	u32 mask = 1 << (gic_irq(d) % 32);
 	void __iomem *base;
 
-	if (gic_irq_in_rdist(d))
+	if (gic_irq_in_rdist(d)) {
 		base = gic_data_rdist_sgi_base();
-	else
-		base = gic_data.dist_base;
-
+	}
+	else {
+		base =  gic_data.dist_base;
+	}
 	return !!(readl_relaxed(base + offset + (gic_irq(d) / 32) * 4) & mask);
 }
 
@@ -178,6 +182,7 @@ static void gic_poke_irq(struct irq_data *d, u32 offset)
 
 	if (gic_irq_in_rdist(d)) {
 		base = gic_data_rdist_sgi_base();
+
 		rwp_wait = gic_redist_wait_for_rwp;
 	} else {
 		base = gic_data.dist_base;
@@ -381,27 +386,33 @@ static void __init gic_dist_init(void)
 {
 	unsigned int i;
 	u64 affinity;
-	void __iomem *base = gic_data.dist_base;
+	void __iomem *base ;
+
+	base = gic_data.dist_base;
 
 	/* Disable the distributor */
 	writel_relaxed(0, base + GICD_CTLR);
 	gic_dist_wait_for_rwp();
 
-	/*
-	 * Configure SPIs as non-secure Group-1. This will only matter
-	 * if the GIC only has a single security state. This will not
-	 * do the right thing if the kernel is running in secure mode,
-	 * but that's not the intended use case anyway.
-	 */
-	for (i = 32; i < gic_data.irq_nr; i += 32)
-		writel_relaxed(~0, base + GICD_IGROUPR + i / 8);
+	if (!gic_bugfix_flag) {
+		/*
+		 * Configure SPIs as non-secure Group-1. This will only matter
+		 * if the GIC only has a single security state. This will not
+		 * do the right thing if the kernel is running in secure mode,
+		 * but that's not the intended use case anyway.
+		 */
+		for (i = 32; i < gic_data.irq_nr; i += 32)
+			writel_relaxed(~0, base + GICD_IGROUPR + i / 8);
+	}
 
 	gic_dist_config(base, gic_data.irq_nr, gic_dist_wait_for_rwp);
-
 	/* Enable distributor with ARE, Group1 */
-	writel_relaxed(GICD_CTLR_ARE_NS | GICD_CTLR_ENABLE_G1A | GICD_CTLR_ENABLE_G1,
+	if (!gic_bugfix_flag) {
+		writel_relaxed(GICD_CTLR_ARE_NS | GICD_CTLR_ENABLE_G1A | GICD_CTLR_ENABLE_G1,
 		       base + GICD_CTLR);
-
+	} else {
+		writel_relaxed(GICD_CTLR_ARE_NS | GICD_CTLR_ENABLE_G1A | GICD_CTLR_ENABLE_G1| (0X1<<2),base + GICD_CTLR);
+	}
 	/*
 	 * Set all global interrupts to the boot CPU only. ARE must be
 	 * enabled.
@@ -544,7 +555,7 @@ static struct notifier_block gic_cpu_notifier = {
 static u16 gic_compute_target_list(int *base_cpu, const struct cpumask *mask,
 				   unsigned long cluster_id)
 {
-	int cpu = *base_cpu;
+	int next_cpu, cpu = *base_cpu;
 	unsigned long mpidr = cpu_logical_map(cpu);
 	u16 tlist = 0;
 
@@ -558,9 +569,10 @@ static u16 gic_compute_target_list(int *base_cpu, const struct cpumask *mask,
 
 		tlist |= 1 << (mpidr & 0xf);
 
-		cpu = cpumask_next(cpu, mask);
-		if (cpu >= nr_cpu_ids)
+		next_cpu = cpumask_next(cpu, mask);
+		if (next_cpu >= nr_cpu_ids)
 			goto out;
+		cpu = next_cpu;
 
 		mpidr = cpu_logical_map(cpu);
 
@@ -643,6 +655,7 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 		gic_mask_irq(d);
 
 	reg = gic_dist_base(d) + GICD_IROUTER + (gic_irq(d) * 8);
+
 	val = gic_mpidr_to_affinity(cpu_logical_map(cpu));
 
 	gic_write_irouter(val, reg);
@@ -845,6 +858,9 @@ static int __init gic_of_init(struct device_node *node, struct device_node *pare
 	int err;
 	int i;
 
+	if (of_property_read_u32(node, "gic_bugfix", &gic_bugfix_flag))
+		gic_bugfix_flag = 0;
+
 	dist_base = of_iomap(node, 0);
 	if (!dist_base) {
 		pr_err("%s: unable to map gic dist registers\n",
@@ -924,7 +940,6 @@ static int __init gic_of_init(struct device_node *node, struct device_node *pare
 
 	if (IS_ENABLED(CONFIG_ARM_GIC_V3_ITS) && gic_dist_supports_lpis())
 		its_init(node, &gic_data.rdists, gic_data.domain);
-
 	gic_smp_init();
 	gic_dist_init();
 	gic_cpu_init();
@@ -943,6 +958,7 @@ out_unmap_rdist:
 	kfree(rdist_regs);
 out_unmap_dist:
 	iounmap(dist_base);
+
 	return err;
 }
 

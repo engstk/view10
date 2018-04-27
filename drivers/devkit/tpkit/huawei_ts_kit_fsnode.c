@@ -31,6 +31,11 @@
 #define MAX_LOTUS_NUM   6
 #define DEC_BASE_DATA   10
 #define RAWDATA_DEBUG_HEAD_TEXT   "*************touch debug data*************\n"
+#define NUM_OF_ROW 16
+#define FORCEKEY_STR_LEN 50
+#define FORCEKEY_DATA_LEN 10
+
+
 enum ts_offset_bit
 {
     TS_OFFSET_0BIT = 0,
@@ -1334,6 +1339,7 @@ out:
     return error;
 }
 /*lint -save -e* */
+
 static ssize_t ts_rawdata_debug_test_show(struct device* dev, struct device_attribute* attr, char* buf)
 {
     int index = 0;
@@ -1341,14 +1347,15 @@ static ssize_t ts_rawdata_debug_test_show(struct device* dev, struct device_attr
     int count = 0;
     short row_size = 0;
     int range_size = 0;
+	int size = 0;
+	int len = 0;
     int error = NO_ERR;
     struct ts_cmd_node* cmd = NULL;
     struct ts_diff_data_info* info = NULL;
-    char buffer1[6] = {0};
-    char buffer2[50] = {0};
+    char buffer1[FORCEKEY_DATA_LEN] = {0};
+    char buffer2[FORCEKEY_STR_LEN] = {0};
 
     TS_LOG_INFO("ts_rawdata_debug_test_show called\n");
-
     cmd = (struct ts_cmd_node*)kzalloc(sizeof(struct ts_cmd_node), GFP_KERNEL);
     if (!cmd)
     {
@@ -1383,35 +1390,58 @@ static ssize_t ts_rawdata_debug_test_show(struct device* dev, struct device_attr
         error = -EIO;
         goto out;
     }
+	if(info->debug_type  == READ_FORCE_DATA)
+	{
+		size = info->buff[0];
+		if(size < 0||size > TS_RAWDATA_BUFF_MAX - 1)
+		{
+			TS_LOG_ERR("buff size error :%d\n",size);
+			return -EINVAL;
+		}
+		for(index = 1 ;  index < size; index++)
+		{
+			len = snprintf(buf+count,FORCEKEY_DATA_LEN , "%6d",info->buff[index]);
+			count = count + len;
+			if(index % NUM_OF_ROW == 0)
+			{
+				len = snprintf(buf+count,FORCEKEY_DATA_LEN , "\n ");
+				count = count + len;
+			}
+		}
+		len = snprintf(buf+count,FORCEKEY_DATA_LEN , "\n ");
+		count = count + len;
+		error = count;
+	}
+	else
+	{
+		sprintf(buf, RAWDATA_DEBUG_HEAD_TEXT);
+		count = count + strlen(RAWDATA_DEBUG_HEAD_TEXT);
 
-    sprintf(buf, RAWDATA_DEBUG_HEAD_TEXT);
-    count = count + strlen(RAWDATA_DEBUG_HEAD_TEXT);
+		row_size = info->buff[0];
+		range_size = info->buff[1];
+		sprintf(buffer2, "rx: %d, tx : %d\n ", row_size, range_size);
+		strncat(buf, buffer2 , strlen(buffer2));
+		count = count + strlen(buffer2);
 
-    row_size = info->buff[0];
-    range_size = info->buff[1];
-    sprintf(buffer2, "rx: %d, tx : %d\n ", row_size, range_size);
-    strncat(buf, buffer2 , strlen(buffer2));
-    count = count + strlen(buffer2);
+		TS_LOG_INFO("info->used+size = %d\n", info->used_size);
 
-    TS_LOG_INFO("info->used+size = %d\n", info->used_size);
+		for (index = 0; row_size * index + 2 < info->used_size; index++)
+		{
+			for (index1 = 0; index1 < row_size; index1++)
+			{
+				sprintf(buffer1, "%d,", info->buff[2 + row_size * index + index1]);
+				strncat(buf, buffer1 , strlen(buffer1));
+				count = count + strlen(buffer1);
+			}
+			sprintf(buffer1, "\n ");
+			strncat(buf, buffer1 , strlen(buffer1));
+			count = count + strlen(buffer1);
+		}
 
-    for (index = 0; row_size * index + 2 < info->used_size; index++)
-    {
-        for (index1 = 0; index1 < row_size; index1++)
-        {
-            sprintf(buffer1, "%d,", info->buff[2 + row_size * index + index1]);
-            strncat(buf, buffer1 , strlen(buffer1));
-            count = count + strlen(buffer1);
-        }
-        sprintf(buffer1, "\n ");
-        strncat(buf, buffer1 , strlen(buffer1));
-        count = count + strlen(buffer1);
-    }
-
-    strcat(buf, "noisedata end\n");
-    count = count + sizeof("noisedata end\n");
-    error = count;
-
+		strcat(buf, "noisedata end\n");
+		count = count + sizeof("noisedata end\n");
+		error = count;
+	}
 out:
     if (info)
     { kfree(info); }
@@ -2300,6 +2330,31 @@ out:
 	TS_LOG_INFO("-\n");
 	return count;
 }
+
+static ssize_t udfp_enable_show(struct device *dev,struct device_attribute *attr, char *buf)
+{
+	int error = -1;
+	TS_LOG_INFO("%s,0x%x\n",__func__,g_ts_kit_platform_data.udfp_enable_flag);
+	error = snprintf(buf, MAX_STR_LEN, "%d\n", g_ts_kit_platform_data.udfp_enable_flag);
+
+	return error;
+}
+
+static ssize_t udfp_enable_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	unsigned int value = 0;
+	int error = 0;
+	error = sscanf(buf, "%d", &value);
+	TS_LOG_DEBUG("%s,value  = %d   |error = %d\n",__func__,value,error);
+
+	g_ts_kit_platform_data.udfp_enable_flag = value ;
+	TS_LOG_INFO("[%s] -> %d\n",__func__,g_ts_kit_platform_data.udfp_enable_flag);
+
+	error = count;
+
+	return error;
+}
+
 /*lint -restore*/
 static DEVICE_ATTR(touch_chip_info, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH), ts_chip_info_show, ts_chip_info_store);
 static DEVICE_ATTR(calibrate, S_IRUSR, ts_calibrate_show, NULL);
@@ -2334,6 +2389,8 @@ static DEVICE_ATTR(calibration_info, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH),ts_
 static DEVICE_ATTR(tp_capacitance_test_config, (S_IRUSR), ts_capacitance_test_config_show, NULL);
 static DEVICE_ATTR(touch_switch, (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP),
 		   ts_touch_switch_show, ts_touch_switch_store);
+static DEVICE_ATTR(udfp_enable, (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP),
+		   udfp_enable_show, udfp_enable_store);
 
 static struct attribute* ts_attributes[] =
 {
@@ -2369,6 +2426,7 @@ static struct attribute* ts_attributes[] =
 	&dev_attr_touch_tui_enable.attr,
 #endif
     &dev_attr_touch_switch.attr,
+    &dev_attr_udfp_enable.attr,
     NULL
 };
 

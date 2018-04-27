@@ -727,7 +727,7 @@ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
 #endif
 
 /*-------------------------------------------------------------------------*/
-
+/*lint -save -e593 */
 static int spidev_probe(struct spi_device *spi)
 {
 	struct spidev_data	*spidev;
@@ -791,6 +791,7 @@ static int spidev_probe(struct spi_device *spi)
 
 	return status;
 }
+/*lint -restore */
 
 static int spidev_remove(struct spi_device *spi)
 {
@@ -906,6 +907,74 @@ static struct spi_driver spidev_spi_driver10 = {
 	 */
 };
 
+static const struct of_device_id spidev11_dt_ids[] = {
+	{ .compatible = "spi_dev11"},/*lint !e785 */
+	{},/*lint !e785 */
+};
+
+MODULE_DEVICE_TABLE(of, spidev11_dt_ids);
+
+static struct spi_driver spidev_spi_driver11 = {
+	.driver = {
+		.name =         "spi_dev11",
+		.owner =        THIS_MODULE,/*lint !e64 */
+		.of_match_table = of_match_ptr(spidev11_dt_ids),
+	},/*lint !e785 */
+	.probe =        spidev_probe,
+	.remove =       spidev_remove,
+
+       /* NOTE:  suspend/resume methods are not necessary here.
+	* We don't do anything except pass the requests to/from
+	* the underlying controller.  The refrigerator handles
+	* most issues; the controller driver handles the rest.
+	*/
+};
+
+static const struct of_device_id spidev12_dt_ids[] = {
+	{ .compatible = "spi_dev12"},/*lint !e785 */
+	{},/*lint !e785 */
+};
+
+MODULE_DEVICE_TABLE(of, spidev12_dt_ids);
+
+static struct spi_driver spidev_spi_driver12 = {
+	.driver = {
+		.name =         "spi_dev12",
+		.owner =        THIS_MODULE,/*lint !e64 */
+		.of_match_table = of_match_ptr(spidev12_dt_ids),
+	},/*lint !e785 */
+	.probe =        spidev_probe,
+	.remove =       spidev_remove,
+
+	/* NOTE:  suspend/resume methods are not necessary here.
+	 * We don't do anything except pass the requests to/from
+	 * the underlying controller.  The refrigerator handles
+	 * most issues; the controller driver handles the rest.
+	 */
+};
+
+static const struct of_device_id spidev13_dt_ids[] = {
+	{ .compatible = "spi_dev13"},/*lint !e785 */
+	{},/*lint !e785 */
+};
+
+MODULE_DEVICE_TABLE(of, spidev13_dt_ids);
+
+static struct spi_driver spidev_spi_driver13 = {
+	.driver = {
+		.name =         "spi_dev13",
+		.owner =        THIS_MODULE,/*lint !e64 */
+		.of_match_table = of_match_ptr(spidev13_dt_ids),
+	},/*lint !e785 */
+	.probe =        spidev_probe,
+	.remove =       spidev_remove,
+
+	/* NOTE:  suspend/resume methods are not necessary here.
+	 * We don't do anything except pass the requests to/from
+	 * the underlying controller.  The refrigerator handles
+	 * most issues; the controller driver handles the rest.
+	 */
+};
 static const struct of_device_id spidev21_dt_ids[] = {
 	{ .compatible = "spi_dev21"},/*lint !e785 */
 	{},/*lint !e785 */
@@ -1162,6 +1231,24 @@ static int __init spidev_init(void)
 		unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver10.driver.name);
 	}
 
+	status = spi_register_driver(&spidev_spi_driver11);
+	if (status < 0) {
+		class_destroy(spidev_class);
+		unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver11.driver.name);
+	}
+
+	status = spi_register_driver(&spidev_spi_driver12);
+	if (status < 0) {
+		class_destroy(spidev_class);
+		unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver12.driver.name);
+	 }
+
+	status = spi_register_driver(&spidev_spi_driver13);
+	if (status < 0) {
+		class_destroy(spidev_class);
+		unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver13.driver.name);
+	 }
+
 	status = spi_register_driver(&spidev_spi_driver21);
 	if (status < 0) {
 		class_destroy(spidev_class);
@@ -1236,6 +1323,9 @@ static void __exit spidev_exit(void)
 	spi_unregister_driver(&spidev_spi_driver2);
 	spi_unregister_driver(&spidev_spi_driver3);
 	spi_unregister_driver(&spidev_spi_driver10);
+	spi_unregister_driver(&spidev_spi_driver11);
+	spi_unregister_driver(&spidev_spi_driver12);
+	spi_unregister_driver(&spidev_spi_driver13);
 	spi_unregister_driver(&spidev_spi_driver21);
 	spi_unregister_driver(&spidev_spi_driver30);
 	spi_unregister_driver(&spidev_spi_driver31);
@@ -1250,6 +1340,9 @@ static void __exit spidev_exit(void)
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver2.driver.name);
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver3.driver.name);
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver10.driver.name);
+	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver11.driver.name);
+	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver12.driver.name);
+	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver13.driver.name);
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver21.driver.name);
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver30.driver.name);
 	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver31.driver.name);

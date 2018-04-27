@@ -53,7 +53,7 @@ static const uint8_t edid_v1_header[8] = {0x00, 0xff, 0xff, 0xff,
 
 #define DETAILED_TIMING_DESCRIPTIONS_START  0x36
 #define DETAILED_TIMING_DESCRIPTION_SIZE    18
-#define MONTIOR_NAME_DESCRIPTION_SIZE    10
+#define MONTIOR_NAME_DESCRIPTION_SIZE    11
 #define DETAILED_TIMING_DESCRIPTION_COUNT   4
 
 #define PIXEL_CLOCK_LO  (uint8_t)dtd[0]
@@ -156,13 +156,18 @@ static const uint8_t edid_v1_header[8] = {0x00, 0xff, 0xff, 0xff,
 
 #define EXTEN_SPEAKER			   (0x7F & cDblock[0])
 
+#define Latency_Present	(Latency_Fields_Present + I_Latency_Fields_Present)
+#define Present_None		0
+#define Present_One		1
+#define Present_Both		2
+
 int parse_edid(struct dp_ctrl *dptx, uint16_t len);
 
 int parse_main(struct dp_ctrl *dptx);
 
 int parse_extension(struct dp_ctrl *dptx, uint8_t* exten);
 
-int parse_timing_description(struct dp_ctrl *dptx, uint8_t* dtd, bool preferred);
+int parse_timing_description(struct dp_ctrl *dptx, uint8_t* dtd);
 
 int parse_cea_data_block(struct dp_ctrl *dptx, uint8_t* ceaData, uint8_t dtdStart);
 

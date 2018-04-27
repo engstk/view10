@@ -2,8 +2,8 @@
 	<PanelEntry>
 
 	<!-- Panel Infomation -->
-	<PanelCompatible>"auo_otm1901a_5p2_1080p_video_default"</PanelCompatible>
-	<PanelName>"AUO_OTM1901A 5.2' VIDEO TFT 1080 x 1920 DEFAULT-2"</PanelName>
+	<PanelCompatible>"auo_otm1901a_5p2_1080p_video_default_2"</PanelCompatible>
+	<PanelName>"AUO_OTM1901A 5.2' VIDEO TFT 1080 x 1920 DEFAULT2"</PanelName>
 	<PanelType>0x01</PanelType>
 	<PanelXres>1080</PanelXres>
 	<PanelYres>1920</PanelYres>

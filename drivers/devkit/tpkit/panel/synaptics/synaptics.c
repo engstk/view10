@@ -83,6 +83,9 @@
 #define S3320_F54_CMD_BASE_ADDR 0x015C
 
 #define SYNAPTIC_DEFAULT_I2C_ADDR 0x70
+#define MULTI_PROTOCAL_1 1
+#define MULTI_PROTOCAL_2 2
+#define SIZE_OF_QUERY8 3 
 
 #ifndef SYNA_UPP
 #define SYNA_UPP
@@ -267,6 +270,7 @@ __attribute__((weak)) void preread_fingersense_data(void)
 #define CSVFILE_USE_PRODUCT_SYSTEM_TYPE "huawei,csvfile_use_product_system"
 #define TRX_SHORT_CIRCUIT "huawei,short_circuit_array"
 #define SUPPORT_SHORT_TEST "huawei,support_s3320_short_test"
+#define SUPPORT_S3706_SHORT_TEST "huawei,support_s3706_short_test"
 #define NOT_DELAY_ACT "delay_for_fw_update"
 #define CRC_ERR_DO_RESET "crc_err_do_reset"
 #define SUPPORT_CRC_ERR_DO_RESET 1
@@ -528,7 +532,7 @@ static int synaptics_vci_enable(void)
 
 	vol_vlaue = rmi4_data->synaptics_chip_data->regulator_ctr.vci_value;
 	if (!IS_ERR(rmi4_data->tp_vci)) {
-		if(g_tskit_ic_type == ONCELL)
+		if(g_tskit_ic_type == ONCELL || g_tskit_ic_type == AMOLED )
 		{
 			TS_LOG_INFO("set vci voltage to %d\n", vol_vlaue);
 			retval =
@@ -1731,6 +1735,7 @@ static int synaptics_get_oem_info(struct ts_oem_info_param *info)
 	int latest_index = 0;
 	int i;
 	int count = 0;
+	int infolength = 0;
 	
 	TS_LOG_INFO("%s called\n", __func__);
 	memset(info->data, 0x0, TS_CHIP_TYPE_MAX_SIZE);
@@ -1782,7 +1787,8 @@ static int synaptics_get_oem_info(struct ts_oem_info_param *info)
 
 		if (latest_index) {
 			TS_LOG_INFO("%s type data find. len = %d\n", __func__, info->length);
-			memcpy(info->data, &(info->buff[latest_index*16]), info->length*16 );
+			infolength = min(TS_CHIP_TYPE_MAX_SIZE,info->length*16+1);
+			memcpy(info->data, &(info->buff[latest_index*16]), infolength-1);
 		} else {
 			info->data[0] = 0x1;
 			TS_LOG_INFO("%s No type data find. info->data[0] = %2x\n", __func__, info->data[0]);
@@ -1802,7 +1808,8 @@ static int synaptics_get_oem_info(struct ts_oem_info_param *info)
 
 		if (latest_index) {
 			TS_LOG_INFO("%s type data find. len = %d\n", __func__, info->buff[latest_index*16+1]*16);
-			memcpy(info->data, &(info->buff[latest_index*16]), info->buff[latest_index*16+1]*16 );
+			infolength = min(TS_CHIP_TYPE_MAX_SIZE,info->buff[latest_index*16+1]*16+1);
+			memcpy(info->data, &(info->buff[latest_index*16]), infolength-1);
 		} else {
 			info->data[0] = 0x1;
 			TS_LOG_INFO("%s No type data find. info->data[0] = %2x\n", __func__, info->data[0]);
@@ -1860,7 +1867,8 @@ static int synaptics_chip_get_info(struct ts_chip_info_param *info)
 	}
 
 	memset(buf, 0, sizeof(buf));
-	TS_LOG_INFO("rmi4_data->synaptics_chip_data->ts_platform_data->get_info_flag=%d\n", rmi4_data->synaptics_chip_data->ts_platform_data->get_info_flag);
+	TS_LOG_INFO("rmi4_data->synaptics_chip_data->ts_platform_data->get_info_flag=%d\n",
+				rmi4_data->synaptics_chip_data->ts_platform_data->get_info_flag);
 	if (unlikely
 	    ((atomic_read(&rmi4_data->synaptics_chip_data->ts_platform_data->state) == TS_SLEEP)
 	     || (atomic_read(&rmi4_data->synaptics_chip_data->ts_platform_data->state) == TS_WORK_IN_SLEEP))) {
@@ -1870,7 +1878,8 @@ static int synaptics_chip_get_info(struct ts_chip_info_param *info)
 		if (!rmi4_data->synaptics_chip_data->ts_platform_data->get_info_flag) {
 			if (SYNAPTICS_S3718 != rmi4_data->synaptics_chip_data->ic_type
 				&& SYNAPTICS_TD4322 != rmi4_data->synaptics_chip_data->ic_type
-				&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type) {
+				&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type
+				&& SYNAPTICS_S3706 != rmi4_data->synaptics_chip_data->ic_type){
 				retval =
 				    synap_fw_configid(rmi4_data, buf,
 							  sizeof(buf));
@@ -2501,6 +2510,14 @@ static void synap_parse_touch_switch_reg(struct ts_kit_device_data *chip_data, s
 		TS_LOG_INFO("get device self_cap_test:%02x\n", chip_data->self_cap_test);
 	}
 
+	retval = of_property_read_u32(device, SUPPORT_S3706_SHORT_TEST, &chip_data->support_trex_short_test);
+	if (retval) {
+		TS_LOG_ERR("%s: support_s3706_short_test has NOT been set\n", __func__);
+		chip_data->support_trex_short_test = 0;
+	}
+	TS_LOG_INFO("%s: support_s3706_short_test = %d\n", __func__, chip_data->support_trex_short_test);
+
+
 	TS_LOG_INFO("chip_data->should_check_tp_calibration_info=%d\n", chip_data->should_check_tp_calibration_info);
 
 	synap_parse_touch_switch_reg(chip_data, device);
@@ -2542,6 +2559,7 @@ static int synaptics_parse_dts(struct device_node *device,
 	retval =
 	    of_property_read_u32(device, SYNAPTICS_IC_TYPES,
 				 &chip_data->ic_type);
+	TS_LOG_INFO("get chip specific ic_type = %d\n", chip_data->ic_type);
 	if (retval) {
 		TS_LOG_ERR("get device ic_type failed\n");
 	}
@@ -2845,6 +2863,24 @@ static int synaptics_parse_dts(struct device_node *device,
 		TS_LOG_INFO("get device support aft: %d\n", chip_data->support_aft);
 	}
 
+	if (!of_property_read_u32(device, "use_lcdkit_power_notify", &value))
+		chip_data->use_lcdkit_power_notify = value;
+	else
+		chip_data->use_lcdkit_power_notify = 0;
+
+	TS_LOG_INFO("%s:use_lcdkit_power_notify = %d\n", __func__,
+				chip_data->use_lcdkit_power_notify);
+
+	//fp_tp_report_touch_minor_event
+	retval = of_property_read_u32(device, FP_TP_REPORT_MINOR_FLAG, &value);
+	if (retval) {
+		chip_data->fp_tp_report_touch_minor_event = 0;
+		TS_LOG_ERR("get device fp_tp_report_touch_minor_event failed\n");
+	}else{
+		chip_data->fp_tp_report_touch_minor_event = value;
+		TS_LOG_INFO("get device fp_tp_report_touch_minor_event =%d,\n",chip_data->fp_tp_report_touch_minor_event );
+	}
+
 	TS_LOG_INFO
 	    ("irq_config = %d, algo_id = %d, ic_type = %d, x_max = %d, y_max = %d, x_mt = %d,y_mt = %d, bootloader_update_enable = %d\n",
 	     chip_data->irq_config,
@@ -2950,7 +2986,10 @@ static void synaptics_vddio_on(void)
 static void synaptics_power_on(void)
 {
 	TS_LOG_INFO("synaptics_power_on called\n");
-	if(g_tskit_ic_type < TDDI)
+
+	TS_LOG_INFO("g_tskit_ic_type = %d\n", g_tskit_ic_type);
+	
+	if(g_tskit_ic_type < TDDI || g_tskit_ic_type == AMOLED)
 	{
 		synaptics_vci_on();
 		mdelay(5);
@@ -2965,13 +3004,15 @@ static void synaptics_power_off_gpio_set(void)
 	TS_LOG_INFO("suspend RST out L\n");
 	if ((SYNAPTICS_S3718 == rmi4_data->synaptics_chip_data->ic_type
 		|| SYNAPTICS_TD4322 == rmi4_data->synaptics_chip_data->ic_type
-		|| SYNAPTICS_TD4310== rmi4_data->synaptics_chip_data->ic_type)
+		|| SYNAPTICS_TD4310== rmi4_data->synaptics_chip_data->ic_type
+		|| SYNAPTICS_S3706== rmi4_data->synaptics_chip_data->ic_type)
 		&& rmi4_data->synaptics_chip_data->ts_platform_data->reset_gpio)
 		gpio_direction_output(rmi4_data->synaptics_chip_data->ts_platform_data->reset_gpio, 0);
 	synaptics_pinctrl_select_lowpower();
 	if (SYNAPTICS_S3718 != rmi4_data->synaptics_chip_data->ic_type
 		&& SYNAPTICS_TD4322 != rmi4_data->synaptics_chip_data->ic_type
 		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type
+		&& SYNAPTICS_S3706  != rmi4_data->synaptics_chip_data->ic_type
 		&& rmi4_data->synaptics_chip_data->ts_platform_data->reset_gpio)
 		gpio_direction_input(rmi4_data->synaptics_chip_data->ts_platform_data->reset_gpio);
 	mdelay(1);
@@ -3009,7 +3050,7 @@ static void synatpics_vci_off(void)
 static void synaptics_power_off(void)
 {
 	synaptics_power_off_gpio_set();
-	if(g_tskit_ic_type < TDDI)
+	if(g_tskit_ic_type < TDDI || g_tskit_ic_type == AMOLED)
 	{
 		synatpics_vddio_off();
 		mdelay(12);
@@ -3435,7 +3476,8 @@ static int synaptics_fw_update_boot(char *file_name)
 
 	if (SYNAPTICS_S3718 != rmi4_data->synaptics_chip_data->ic_type
 		&& SYNAPTICS_TD4322 != rmi4_data->synaptics_chip_data->ic_type
-		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type) {
+		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type
+		&& SYNAPTICS_S3706 != rmi4_data->synaptics_chip_data->ic_type) {
 		retval = synap_fw_data_init(rmi4_data);
 		if (retval) {
 			TS_LOG_ERR("synaptics_fw_data_init failed\n");
@@ -3521,7 +3563,8 @@ static int synaptics_fw_update_boot(char *file_name)
 data_release:
 	if (SYNAPTICS_S3718 != rmi4_data->synaptics_chip_data->ic_type
 		&& SYNAPTICS_TD4322 != rmi4_data->synaptics_chip_data->ic_type
-		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type)
+		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type
+		&& SYNAPTICS_S3706 != rmi4_data->synaptics_chip_data->ic_type)
 		synap_fw_data_release();
 	else
 		synap_fw_data_s3718_release();
@@ -3548,7 +3591,8 @@ static int synaptics_fw_update_sd(void)
 
 	if (SYNAPTICS_S3718 != rmi4_data->synaptics_chip_data->ic_type
 		&& SYNAPTICS_TD4322 != rmi4_data->synaptics_chip_data->ic_type
-		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type) {
+		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type
+		&& SYNAPTICS_S3706 != rmi4_data->synaptics_chip_data->ic_type) {
 		retval = synap_fw_data_init(rmi4_data);
 		if (retval) {
 			TS_LOG_ERR("synaptics_fw_data_init failed\n");
@@ -3603,7 +3647,8 @@ static int synaptics_fw_update_sd(void)
 data_release:
 	if (SYNAPTICS_S3718 != rmi4_data->synaptics_chip_data->ic_type
 		&& SYNAPTICS_TD4322 != rmi4_data->synaptics_chip_data->ic_type
-		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type)
+		&& SYNAPTICS_TD4310 != rmi4_data->synaptics_chip_data->ic_type
+		&& SYNAPTICS_S3706 != rmi4_data->synaptics_chip_data->ic_type)
 		synap_fw_data_release();
 	else
 		synap_fw_data_s3718_release();
@@ -4694,7 +4739,8 @@ static void synaptics_sensor_sleep(struct synaptics_rmi4_data *rmi4_data)
 	}
 
 	if (!strcmp(rmi4_data->synaptics_chip_data->ts_platform_data->product_name, "venus")
-		|| !strcmp(rmi4_data->synaptics_chip_data->ts_platform_data->product_name, "victoria")) {
+		|| !strcmp(rmi4_data->synaptics_chip_data->ts_platform_data->product_name, "victoria")
+		||rmi4_data->synaptics_chip_data->ic_type == SYNAPTICS_S3706) {
 		TS_LOG_INFO("%s enter sensor_sleep\n", rmi4_data->synaptics_chip_data->ts_platform_data->product_name);
 		device_ctrl = (device_ctrl & ~MASK_3BIT);
 		device_ctrl = (device_ctrl | NO_SLEEP_OFF | SENSOR_SLEEP_BIT0);
@@ -5002,6 +5048,10 @@ static void synaptics_rmi4_empty_fn_list(struct synaptics_rmi4_data *rmi4_data)
 				if (fhandler->extra) {
 					kfree(fhandler->extra);
 					fhandler->extra = NULL;
+				}
+				if (fhandler->eratio_data) {
+					kfree(fhandler->eratio_data);
+					fhandler->eratio_data = NULL;
 				}
 			}
 			kfree(fhandler);
@@ -5747,9 +5797,11 @@ static bool synaptics_rmi4_crc_in_progress(struct synaptics_rmi4_data
 	int retval;
 	int times = 0;
 	bool rescan = false;
-
-	if (rmi4_data->synaptics_chip_data->delay_for_fw_update)
-		msleep(200);
+	if(SYNAPTICS_S3706 != rmi4_data->synaptics_chip_data->ic_type)
+	{
+		if (rmi4_data->synaptics_chip_data->delay_for_fw_update)
+			msleep(200);
+	}
 
 	while (1) {
 		retval = synaptics_rmi4_i2c_read(rmi4_data,
@@ -6055,6 +6107,7 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 	unsigned char data_04_offset;
 	unsigned char f12_2d_data[F12_2D_CTRL_LEN] = { 0 };
 	struct synaptics_rmi4_f12_extra_data *extra_data;
+	struct synaptics_rmi4_f12_eratio_data *eratio_data;
 	struct synaptics_rmi4_f12_query_5 query_5;
 	struct synaptics_rmi4_f12_query_8 query_8;
 	struct synaptics_rmi4_f12_ctrl_8 ctrl_8;
@@ -6068,6 +6121,12 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		TS_LOG_ERR("Failed to alloc memory for fhandler->extra\n");
 		retval = -ENOMEM;
 		return retval;
+	}
+	fhandler->eratio_data = kmalloc(sizeof(*eratio_data), GFP_KERNEL);
+	if (fhandler->eratio_data == NULL) {
+		TS_LOG_ERR("Failed to alloc memory for fhandler->eratio_data\n");
+		retval = -ENOMEM;
+		goto eratio_data_error_free_mem;
 	}
 	TS_LOG_DEBUG
 	    ("fhandler->num_of_data_sources = %d, fhandler->fn_number = %d\n",
@@ -6087,7 +6146,7 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 					 query_5.data, sizeof(query_5.data));
 	if (retval < 0) {
 		TS_LOG_ERR("Failed to read f12->full_addr.query_base\n");
-		return retval;
+		goto error_free_mem;
 	}
 
 	ctrl_8_offset = query_5.ctrl0_is_present +
@@ -6105,7 +6164,7 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 				    F12_2D_CTRL_LEN);
 	if (retval < 0) {
 		TS_LOG_ERR("Failed to read f12_ctrl_base\n");
-		return retval;
+		goto error_free_mem;
 	}
 	TS_LOG_INFO("rx = %d, tx = %d, f12init\n",
 		    f12_2d_data[F12_RX_NUM_OFFSET],
@@ -6152,7 +6211,7 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		TS_LOG_ERR
 		    ("Failed to read f12 ->full_addr.ctrl_base = %d + ctrl_23_offset = %d\n",
 		     fhandler->full_addr.ctrl_base, ctrl_23_offset);
-		return retval;
+		goto error_free_mem;
 	}
 
 	/* Maximum number of fingers supported */
@@ -6171,9 +6230,12 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		TS_LOG_ERR
 		    ("Failed to read f12 ->full_addr.query_base = %d,here is +7\n",
 		     fhandler->full_addr.query_base);
-		return retval;
+		goto error_free_mem;
 	}
-
+	if(size_of_query8 > SYNAPTICS_RMI4_F12_QUERY_8_MAX){
+		size_of_query8 = SYNAPTICS_RMI4_F12_QUERY_8_MAX;
+		TS_LOG_ERR("size_of_query8 out of bounds = %d\n",size_of_query8);
+	}
 	retval = synaptics_rmi4_i2c_read(rmi4_data,
 					 fhandler->full_addr.query_base + 8,
 					 query_8.data, size_of_query8);
@@ -6181,13 +6243,13 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		TS_LOG_ERR
 		    ("Failed to read f12 ->full_addr.query_base = %d,here is +8\n",
 		     fhandler->full_addr.query_base);
-		return retval;
+		goto error_free_mem;
 	}
 
 	/* Determine the presence of the Data0 register */
 	extra_data->data1_offset = query_8.data0_is_present;
 
-	if ((size_of_query8 >= 3) && (query_8.data15_is_present)) {
+	if ((size_of_query8 >= SIZE_OF_QUERY8) && (query_8.data15_is_present)) {
 		extra_data->data15_offset = query_8.data0_is_present +
 		    query_8.data1_is_present +
 		    query_8.data2_is_present +
@@ -6202,9 +6264,37 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		    query_8.data11_is_present +
 		    query_8.data12_is_present +
 		    query_8.data13_is_present + query_8.data14_is_present;
+		if(num_of_fingers > F12_FINGERS_TO_SUPPORT){
+			TS_LOG_ERR("num_of_fingers too big  %d\n",num_of_fingers);
+			num_of_fingers = F12_FINGERS_TO_SUPPORT;
+		}
 		extra_data->data15_size = (num_of_fingers + 7) / 8;
 	} else {
 		extra_data->data15_size = 0;
+	}
+	if ((size_of_query8 >= SIZE_OF_QUERY8) && (query_8.data36_is_present)) {
+			TS_LOG_INFO("data36_is_present\n");
+		extra_data->data36_offset = extra_data->data15_offset +
+		    query_8.data15_is_present +
+		    query_8.data16_is_present +
+		    query_8.data17_is_present +
+		    query_8.data18_is_present +
+		    query_8.data19_is_present +
+		    query_8.data20_is_present +
+		    query_8.data21_is_present +
+		    query_8.data22_is_present +
+		    query_8.data23_is_present +
+		    query_8.data24_is_present +
+		    query_8.data25_is_present +
+		    query_8.data26_is_present +
+		    query_8.data27_is_present +
+		    query_8.data28_is_present +
+		    query_8.data29_is_present +
+		    query_8.data30_is_present +
+		    query_8.data31_is_present +
+		    query_8.data32_is_present +
+		    query_8.data33_is_present +
+		    query_8.data34_is_present + query_8.data35_is_present;
 	}
 
 	data_04_offset = query_8.data0_is_present +
@@ -6231,7 +6321,7 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		TS_LOG_ERR
 		    ("Failed to set enable f12,fhandler->full_addr.ctrl_base =%d, ctrl_28_offset = %d\n",
 		     fhandler->full_addr.ctrl_base, ctrl_28_offset);
-		return retval;
+		goto error_free_mem;
 	}
 
 	retval = synaptics_rmi4_i2c_read(rmi4_data,
@@ -6242,7 +6332,7 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		TS_LOG_ERR
 		    ("Failed to set enable f12,fhandler->full_addr.ctrl_base =%d, ctrl_8_offset = %d\n",
 		     fhandler->full_addr.ctrl_base, ctrl_8_offset);
-		return retval;
+		goto error_free_mem;
 	}
 
 	/* Maximum x and y */
@@ -6266,7 +6356,8 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 		fhandler->intr_reg_num = 0;
 		fhandler->num_of_data_sources = 0;
 		fhandler->intr_mask = 0;
-		return -EINVAL;
+		retval = -EINVAL;
+		goto error_free_mem;
 	}
 	if (fhandler->intr_reg_num != 0)
 		fhandler->intr_reg_num -= 1;
@@ -6284,9 +6375,22 @@ static int synaptics_rmi4_f12_init(struct synaptics_rmi4_data *rmi4_data,
 	if (fhandler->data == NULL) {
 		TS_LOG_ERR("Failed to alloc memory for fhandler->data\n");
 		retval = -ENOMEM;
-		return retval;
+		goto error_free_mem;
 	}
 
+	return retval;
+error_free_mem:
+	if(fhandler->eratio_data != NULL)
+	{
+		kfree(fhandler->eratio_data);
+		fhandler->eratio_data = NULL;
+	}
+eratio_data_error_free_mem:
+	if(fhandler->extra != NULL)
+	{
+		kfree(fhandler->extra);
+		fhandler->extra = NULL;
+	}
 	return retval;
 }
 
@@ -6425,6 +6529,7 @@ static int synaptics_rmi4_f51_init(struct synaptics_rmi4_data *rmi4_data,
 	fhandler->num_of_data_sources = fd->intr_src_count;
 	fhandler->data = NULL;
 	fhandler->extra = NULL;
+	fhandler->eratio_data = NULL;
 
 	fhandler->intr_reg_num = (intr_count + 7) / 8;
 	if (fhandler->intr_reg_num >= MAX_INTR_REGISTERS) {
@@ -6509,6 +6614,11 @@ static int synaptics_input_config(struct input_dev *input_dev)
 #ifdef REPORT_2D_W
 	input_set_abs_params(input_dev, ABS_MT_TOUCH_MAJOR, 0,
 			     MAX_ABS_MT_TOUCH_MAJOR, 0, 0);
+	if(rmi4_data->synaptics_chip_data->fp_tp_report_touch_minor_event)
+	{
+		input_set_abs_params(input_dev, ABS_MT_TOUCH_MINOR, 0,
+			     MAX_ABS_MT_TOUCH_MAJOR, 0, 0);
+	}
 #endif
 
 #ifdef TYPE_B_PROTOCOL
@@ -7099,6 +7209,8 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 	unsigned char fingers_to_process= 0;
 	unsigned char finger_status = 0;
 	unsigned char size_of_2d_data = 0;
+	unsigned char size_of_query8 = 0;
+	unsigned char size_of_eratio_data = 0;
 	unsigned short data_addr = 0;
 	unsigned short temp_finger_status = 0;
 	unsigned short roi_data_addr = 0;
@@ -7117,6 +7229,7 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 	int temp_wx = 0;
 	int temp_wy = 0;
 	int temp_sg = 0; //syna_wx_wy
+	int new_sg = 0;
 #ifdef USE_F12_DATA_15
 	int temp = 0;
 #endif
@@ -7130,11 +7243,25 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 	struct synaptics_rmi4_f12_extra_data *extra_data = NULL;
 	struct synaptics_rmi4_f12_finger_data *data = NULL;
 	struct synaptics_rmi4_f12_finger_data *finger_data = NULL;
+	struct synaptics_rmi4_f12_eratio_data *eratio_data = NULL;
+	struct synaptics_rmi4_f12_eratio_data *finger_ratio_data = NULL;
+	struct synaptics_rmi4_f12_query_8 query_8;
+	if((unsigned char *)fhandler == NULL)
+	{
+		TS_LOG_ERR("fhandler is null return\n");
+		return;
+	}
+	if ( (unsigned char *)fhandler->eratio_data == NULL)
+	{
+		TS_LOG_ERR("fhandler eratio data is null return\n");
+		return;
+	}
 
 	fingers_to_process = fhandler->num_of_data_points;
 	data_addr = fhandler->full_addr.data_base;
 	extra_data = (struct synaptics_rmi4_f12_extra_data *)fhandler->extra;
 	size_of_2d_data = sizeof(struct synaptics_rmi4_f12_finger_data);
+	size_of_eratio_data = sizeof(struct synaptics_rmi4_f12_eratio_data);
 
 #ifdef USE_F12_DATA_15
 	/* Determine the total number of fingers to process */
@@ -7188,6 +7315,45 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 			   retval, extra_data->data1_offset);
 		return;
 	}
+	if (rmi4_data->synaptics_chip_data->ts_platform_data->chip_data->is_multi_protocal == MULTI_PROTOCAL_2)
+	{
+		retval = synaptics_rmi4_i2c_read(rmi4_data,
+							 fhandler->full_addr.query_base + 7,
+							 &size_of_query8,
+							 sizeof(size_of_query8));
+		if (retval < 0) {
+			TS_LOG_ERR
+				("Failed to read f12 ->full_addr.query_base = %d,here is +7\n",
+				 fhandler->full_addr.query_base);
+			return;
+		}
+		if(size_of_query8 > SYNAPTICS_RMI4_F12_QUERY_8_MAX){
+			size_of_query8 = SYNAPTICS_RMI4_F12_QUERY_8_MAX;
+			TS_LOG_ERR("size_of_query8 too big = %d\n",size_of_query8);
+		}
+		retval = synaptics_rmi4_i2c_read(rmi4_data,
+						 fhandler->full_addr.query_base + 8,
+						 query_8.data, size_of_query8);
+		if (retval < 0) {
+			TS_LOG_ERR
+			    ("Failed to read f12 ->full_addr.query_base = %d,here is +8\n",
+			     fhandler->full_addr.query_base);
+			return;
+		}
+
+		if(query_8.data36_is_present)
+		{
+			retval = synaptics_rmi4_i2c_read(rmi4_data,
+							 data_addr + extra_data->data36_offset,
+							 (unsigned char *)fhandler->eratio_data,
+							 fingers_to_process * size_of_eratio_data);
+			if (retval < 0) {
+				TS_LOG_ERR("Failed to read eratio data: %d, read data offset is %d \n",
+					   retval, extra_data->data1_offset);
+				return;
+			}
+		}
+	}
 	if (rmi4_data->synaptics_chip_data->support_aft) {
 		retval = synaptics_rmi4_i2c_read(rmi4_data,
 			rmi4_data->synaptics_chip_data->aft_data_addr,
@@ -7199,12 +7365,13 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 	}
 
 	data = (struct synaptics_rmi4_f12_finger_data *)fhandler->data;
-
+	eratio_data = (struct synaptics_rmi4_f12_finger_data *)fhandler->eratio_data;
 	TS_LOG_DEBUG("Number of fingers = %d\n", fingers_to_process);
 
 	for (finger = 0; finger < fingers_to_process; finger++) {
 		finger_data = data + finger;
 		finger_status = finger_data->object_type_and_status;
+		finger_ratio_data = eratio_data + finger;
 		if (rmi4_data->synaptics_chip_data->support_aft &&
 			finger < MAX_FINGER_NUM &&
 			!grip_data_flag) {
@@ -7228,7 +7395,7 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 #ifdef REPORT_2D_W
 			/* syna_wx_wy */
 
-			if (rmi4_data->synaptics_chip_data->ts_platform_data->chip_data->is_multi_protocal
+			if (rmi4_data->synaptics_chip_data->ts_platform_data->chip_data->is_multi_protocal == MULTI_PROTOCAL_1
 				&& rmi4_data->new_wx_wy) {
 				temp_wx = ((finger_data->wx) & MASK_4BIT);
 				temp_wy = ((finger_data->wx >> 4) & MASK_4BIT);/*get hight 4bit number*/
@@ -7237,6 +7404,14 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 				wy = temp_wy;
 				sg = temp_sg;
 				TS_LOG_DEBUG("new protocol\n");
+			} else if (rmi4_data->synaptics_chip_data->ts_platform_data->chip_data->is_multi_protocal == MULTI_PROTOCAL_2) {
+				TS_LOG_DEBUG("new protocol 2\n");
+				ewx = ((finger_data->new_ew) & MASK_4BIT);
+				ewy = ((finger_data->new_ew>> 4) & MASK_4BIT);/*get hight 4bit number*/
+				wx = ((finger_data->new_w) & MASK_4BIT);
+				wy = ((finger_data->new_w >> 4) & MASK_4BIT);/*get hight 4bit number*/
+				xer = finger_ratio_data->eratio_y;
+				yer = finger_ratio_data->eratio_x;
 			} else {
 				wx = finger_data->wx;
 				wy = finger_data->wy;
@@ -7306,8 +7481,33 @@ static void synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 						finger_grip_data->xer,
 						finger_grip_data->yer);
 			} else {
-				info->fingers[finger].ewx = wx;
-				info->fingers[finger].ewy = wy;
+
+				if (rmi4_data->synaptics_chip_data->ts_platform_data->chip_data->is_multi_protocal == MULTI_PROTOCAL_2)
+				{
+					info->fingers[finger].xer = xer ;
+					info->fingers[finger].yer = yer ;
+					info->fingers[finger].ewx = ewx;
+					info->fingers[finger].ewy = ewy;
+					info->fingers[finger].wx = wx;
+					info->fingers[finger].wy = wy;
+					if(rmi4_data->synaptics_chip_data->fp_tp_report_touch_minor_event)
+					{
+						info->fingers[finger].major = 1;
+						info->fingers[finger].minor = 1;
+					}
+					TS_LOG_DEBUG("xer = %d|yer = %d|ewx = %d|ewy = %d|wx = %d|wy= %d\n",
+										 info->fingers[finger].xer,
+										info->fingers[finger].yer,
+										info->fingers[finger].ewx,
+										info->fingers[finger].ewy ,
+										info->fingers[finger].wx ,
+										info->fingers[finger].wy );
+				}
+				else
+				{
+					info->fingers[finger].ewx = wx;
+					info->fingers[finger].ewy = wy;
+				}
 			}
 			touch_count++;
 			temp_finger_status |= (1 << finger);

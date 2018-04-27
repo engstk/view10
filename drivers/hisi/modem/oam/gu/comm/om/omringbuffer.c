@@ -84,20 +84,7 @@ VOS_UINT32 g_ulOmRingBufSuffix = 0;
 /* Comes from v_blkmem.c */
 extern VOS_SPINLOCK             g_stVosStaticMemSpinLock;
 
-/*****************************************************************************
-函 数 名  :OM_RealMemCopy
-功能描述  :copy one buffer to another
-输入参数  :source:源buffer地址
-           destination:目的buffer地址
-           nbytes:拷贝的字节数
-输出参数  :无
-返 回 值  :无
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 void OM_RealMemCopy( const char *source, char *destination, int nbytes )
 {
     char *dstend;
@@ -186,606 +173,8 @@ byte_copy_bwd:
     }
 }
 
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferCreate
- 功能描述  : 创建CHR使用的环形缓存
- 输入参数  : PTM_RING_ID ptmringId
-             char *pdata
-             int nbytes
- 输出参数  : 无
- 返 回 值  : VOS_INT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
 
-*****************************************************************************/
-VOS_INT32 PTM_RingBufferCreate(PTM_RING_ID ptmringId, char *pdata, int nbytes )
-{
-    if (VOS_NULL_PTR == ptmringId)
-    {
-        return VOS_ERR;
-    }
-
-    if ((VOS_NULL_PTR == pdata)||(OM_RING_BUFF_EX_MAX_LEN < nbytes))
-    {
-        return VOS_ERR;
-    }
-
-    ptmringId->stOmringId.bufSize  = nbytes;
-    ptmringId->stOmringId.buf      = pdata;
-    ptmringId->stOmringId.pToBuf   = 0;
-    ptmringId->stOmringId.pFromBuf = 0;
-
-    VOS_SpinLockInit(&ptmringId->stSpinLock);
-
-    return VOS_OK;
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferFlush
- 功能描述  : 对CHR使用的环形缓存进行Flush操作
- 输入参数  : PTM_RING_ID ptmringId
- 输出参数  : 无
- 返 回 值  : VOS_INT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-void PTM_RingBufferFlush(PTM_RING_ID ptmringId)
-{
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    OM_RingBufferFlush(&ptmringId->stOmringId);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return;
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferGet
- 功能描述  : 对CHR使用的环形缓存进行Get操作
- 输入参数  : PTM_RING_ID ptmringId
-             char *buffer
-             int maxbytes
- 输出参数  : 无
- 返 回 值  : int
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-int PTM_RingBufferGet(PTM_RING_ID ptmringId, char *buffer, int maxbytes)
-{
-    int bytesgot;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    bytesgot = OM_RingBufferGet(&ptmringId->stOmringId, buffer, maxbytes);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return (bytesgot);
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferRemove
- 功能描述  : 对CHR使用的环形缓存进行Remove操作
- 输入参数  : PTM_RING_ID ptmringId
-             int maxbytes
- 输出参数  : 无
- 返 回 值  : int
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-int PTM_RingBufferRemove(PTM_RING_ID ptmringId, int maxbytes)
-{
-    int bytesgot;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    bytesgot = OM_RingBufferRemove(&ptmringId->stOmringId, maxbytes);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return (bytesgot);
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferGetReserve
- 功能描述  : 对CHR使用的环形缓存进行GetReserve操作
- 输入参数  : PTM_RING_ID ptmringId
-             char *buffer
-             int maxbytes
- 输出参数  : 无
- 返 回 值  : int
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-int PTM_RingBufferGetReserve( PTM_RING_ID ptmringId, char *buffer, int maxbytes )
-{
-    int bytesgot;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    bytesgot = OM_RingBufferGetReserve(&ptmringId->stOmringId, buffer, maxbytes);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return (bytesgot);
-}
-
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferPut
- 功能描述  : 对CHR使用的环形缓存进行Put操作
- 输入参数  : PTM_RING_ID ptmringId
-             char *buffer
-             int nbytes
- 输出参数  : 无
- 返 回 值  : int
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-int PTM_RingBufferPut( PTM_RING_ID ptmringId, char *buffer, int nbytes )
-{
-    int bytesput;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    bytesput = OM_RingBufferPut(&ptmringId->stOmringId, buffer, nbytes);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return (bytesput);
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferIsEmpty
- 功能描述  : 对CHR使用的环形缓存进行IsEmpty判断
- 输入参数  : PTM_RING_ID ptmringId
- 输出参数  : 无
- 返 回 值  : VOS_BOOL
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-VOS_BOOL PTM_RingBufferIsEmpty( PTM_RING_ID ptmringId )
-{
-    VOS_BOOL ulret;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    ulret = OM_RingBufferIsEmpty(&ptmringId->stOmringId);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return ulret;
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferIsFull
- 功能描述  : 对CHR使用的环形缓存进行IsFull判断
- 输入参数  : PTM_RING_ID ptmringId
- 输出参数  : 无
- 返 回 值  : VOS_BOOL
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-VOS_BOOL PTM_RingBufferIsFull( PTM_RING_ID ptmringId )
-{
-    VOS_BOOL ulret;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    ulret = OM_RingBufferIsFull(&ptmringId->stOmringId);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return ulret;
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferFreeBytes
- 功能描述  : 对CHR使用的环形缓存进行FreeBytes判断
- 输入参数  : PTM_RING_ID ptmringId
- 输出参数  : 无
- 返 回 值  : int
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-int PTM_RingBufferFreeBytes( PTM_RING_ID ptmringId)
-{
-    int bytesfree;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    bytesfree = OM_RingBufferFreeBytes(&ptmringId->stOmringId);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return (bytesfree);
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferNBytes
- 功能描述  : 对CHR使用的环形缓存进行FreeNBytes判断
- 输入参数  : PTM_RING_ID ptmringId
- 输出参数  : 无
- 返 回 值  : int
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月26日
-    作    者   : lixiao 00246515
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-int PTM_RingBufferNBytes( PTM_RING_ID ptmringId )
-{
-    int bytes;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    bytes = OM_RingBufferNBytes(&ptmringId->stOmringId);
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return (bytes);
-}
-
-/*****************************************************************************
- 函 数 名  : PTM_RingBufferGetByAlarmID
- 功能描述  : 通过alarm id取出所有相关CHR,查找失败清空环形buffer
- 输入参数  : ringId         : 环形buff ID
-             buffer         : Alarm ID相关Errlog存放地址
-             ulmaxbytes     : Alarm ID相关Errlog存放空间长度
-             pulAlarmBuff   : Alarm ID
-             ulAlarmIdCount : Alarm ID个数
-
- 输出参数  : ulAlarmbytes    : 获取到的Errlog大小
-
- 返 回 值  : VOS_OK / VOS_ERR
-
- 修改历史      :
-  1.日    期   : 2017年07月26日
-    作    者   : l00246515
-    修改内容   : CHR环形buffer修改新增
-*****************************************************************************/
-VOS_UINT32 PTM_RingBufferGetByAlarmID(
-    PTM_RING_ID                         ptmringId,
-    char                               *pucbuf,
-    VOS_UINT32                          ulmaxbytes,
-    VOS_UINT32                         *pulAlarmBuff,
-    VOS_UINT32                          ulAlarmIdCount,
-    VOS_UINT32                         *pulAlarmbytes
-)
-{
-    VOS_UINT32 ulRet;
-
-    VOS_SpinLock(&ptmringId->stSpinLock);
-
-    ulRet = OM_RingBufferGetByAlarmID(  &ptmringId->stOmringId,
-                                        pucbuf,
-                                        ulmaxbytes,
-                                        pulAlarmBuff,
-                                        ulAlarmIdCount,
-                                        pulAlarmbytes );
-
-    VOS_SpinUnlock(&ptmringId->stSpinLock);
-
-    return ulRet;
-}
-
-/*******************************************************************************
-*
-* OM_RingBufferCreateEx - create an empty ring buffer in exist buffer  --> 该接口不再使用,需使用:OM_ErrLogRingBufferCreate
-*
-* This routine creates a ring buffer of size <nbytes>, and initializes
-* it.  Memory for the buffer is allocated by user.
-*
-* RETURNS
-* The ID of the ring buffer, or NULL if memory cannot be allocated.
-*
-* ERRNO: N/A.
-************************************************************************/
-OM_RING_ID OM_RingBufferCreateEx(char *pdata, int nbytes )
-{
-    OM_RING_ID   ringId;
-    VOS_INT      i;
-    VOS_INT      lTempSufffix = VOS_NULL_WORD;
-    VOS_ULONG    ulLockLevel;
-
-    if ((VOS_NULL_PTR == pdata)||(OM_RING_BUFF_EX_MAX_LEN < nbytes))
-    {
-        return VOS_NULL_PTR;
-    }
-
-    /*lLockLevel = VOS_SplIMP();*/
-    VOS_SpinLockIntLock(&g_stVosStaticMemSpinLock, ulLockLevel);
-
-    for ( i=OM_MAX_RING_BUFFER_NUM -1; i>=0; i-- )
-    {
-        if ( VOS_FALSE == g_ucOMBufferOccupiedFlag[i] )
-        {
-            lTempSufffix = i;
-            g_ucOMBufferOccupiedFlag[i] = VOS_TRUE;
-            break;
-        }
-    }
-
-    /*VOS_Splx(lLockLevel);*/
-    VOS_SpinUnlockIntUnlock(&g_stVosStaticMemSpinLock, ulLockLevel);
-
-    if ( VOS_NULL_WORD == lTempSufffix )
-    {
-        return VOS_NULL_PTR;
-    }
-
-    /*
-     * bump number of bytes requested because ring buffer algorithm
-     * always leaves at least one empty byte in buffer
-     */
-
-    ringId = &(g_stOMControlBlock[lTempSufffix]);
-
-    ringId->bufSize = nbytes;
-    ringId->buf     = pdata;
-
-    OM_RingBufferFlush (ringId);
-
-    return (ringId);
-
-}
-
-/*****************************************************************************
- 函 数 名  : OM_ErrLogRingBufferCreate --> 新提供接口
- 功能描述  : 已有内存中创建一个空环形buff
- 输入参数  : ringId : buff 控制块地址
-             pdata  : 已有内存地址
-             nbytes : 内存地址长度
-
- 输出参数  : ringId : 初始化后的环形buffer ID
-
- 返 回 值  : VOS_OK / VOS_ERR
-
- 修改历史      :
-  1.日    期   : 2017年04月19日
-    作    者   : d00212987
-    修改内容   : Err Log环形buffer修改新增
-*****************************************************************************/
-VOS_INT32 OM_ErrLogRingBufferCreate(OM_RING_ID   ringId, char *pdata, int nbytes )
-{
-    if ((VOS_NULL_PTR == pdata)||(OM_RING_BUFF_EX_MAX_LEN < nbytes))
-    {
-        return VOS_ERR;
-    }
-
-    if (VOS_NULL_PTR == ringId)
-    {
-        return VOS_ERR;
-    }
-
-    /*
-     * bump number of bytes requested because ring buffer algorithm
-     * always leaves at least one empty byte in buffer
-     */
-
-    ringId->bufSize = nbytes;
-    ringId->buf     = pdata;
-
-    OM_RingBufferFlush (ringId);
-
-    return VOS_OK;
-}
-
-/*****************************************************************************
- 函 数 名  : OM_RingBufferchFindArmID
- 功能描述  : 通过alarm id取出所有相关Errlog
- 输入参数  : ringId         : 环形buff ID
-             buffer         : Alarm ID相关Errlog存放地址
-             ulmaxbytes     : Alarm ID相关Errlog存放空间长度
-             pulAlarmBuff   : Alarm ID
-             ulAlarmIdCount : Alarm ID个数
-
- 输出参数  : ulAlarmbytes    : 获取到的Errlog大小
-
- 返 回 值  : VOS_OK / VOS_ERR
-
- 修改历史      :
-  1.日    期   : 2017年04月19日
-    作    者   : d00212987
-    修改内容   : Err Log环形buffer修改新增
-*****************************************************************************/
-VOS_UINT32 OM_RingBufferchFindArmID(
-    VOS_UINT32                         *pulAlarmBuff,
-    VOS_UINT32                          ulAlarmIdCount,
-    VOS_UINT32                          ulFindAlarmId
-)
-{
-    VOS_UINT32                           i;
-
-    for (i= 0; i<ulAlarmIdCount; i++)
-    {
-        if (ulFindAlarmId == pulAlarmBuff[i])
-        {
-            return VOS_OK;
-        }
-    }
-
-    return VOS_ERR;
-}
-
-
-/*****************************************************************************
- 函 数 名  : OM_RingBufferGetByAlarmID
- 功能描述  : 通过alarm id取出所有相关Errlog,查找失败清空环形buffer
- 输入参数  : ringId         : 环形buff ID
-             buffer         : Alarm ID相关Errlog存放地址
-             ulmaxbytes     : Alarm ID相关Errlog存放空间长度
-             pulAlarmBuff   : Alarm ID
-             ulAlarmIdCount : Alarm ID个数
-
- 输出参数  : ulAlarmbytes    : 获取到的Errlog大小
-
- 返 回 值  : VOS_OK / VOS_ERR
-
- 修改历史      :
-  1.日    期   : 2017年04月19日
-    作    者   : d00212987
-    修改内容   : Err Log环形buffer修改新增
-*****************************************************************************/
-VOS_UINT32 OM_RingBufferGetByAlarmID(
-    OM_RING_ID                          rngId,
-    char                               *buffer,
-    VOS_UINT32                          ulmaxbytes,
-    VOS_UINT32                         *pulAlarmBuff,
-    VOS_UINT32                          ulAlarmIdCount,
-    VOS_UINT32                         *pulAlarmbytes
-)
-{
-    int                                 bytesgot;
-    int                                 bytesgottemp;
-    VOS_UINT32                          ulErrlogLen;
-    OM_ERR_LOG_HEADER_STRU             *pstErrlogPayload;
-    VOS_UINT32                          ulReadCount = 0;
-    VOS_UINT32                          ulIndex     = 0;
-
-    /* 参数检查 */
-    if (VOS_NULL_PTR == rngId)
-    {
-        return VOS_ERR;
-    }
-
-    /* 参数检查 */
-    if (  (VOS_NULL_PTR == buffer)
-       || (VOS_NULL_PTR == pulAlarmBuff)
-       || (VOS_NULL_PTR == pulAlarmbytes))
-    {
-        return VOS_ERR;
-    }
-
-    bytesgot = OM_RingBufferNBytes(rngId);
-
-    if (((VOS_INT32)ulmaxbytes < bytesgot) || (0 == ulAlarmIdCount))
-    {
-        return VOS_ERR;
-    }
-
-    while ((VOS_INT32)ulReadCount < bytesgot)
-    {
-        /* 读取全部环形buffer内容到 */
-        /*lint -e613*/
-        bytesgottemp = OM_RingBufferGet(rngId, &buffer[ulIndex], sizeof(OM_ERR_LOG_HEADER_STRU));
-        /*lint +e613*/
-        if (bytesgottemp != sizeof(OM_ERR_LOG_HEADER_STRU))
-        {
-            OM_RingBufferFlush(rngId);
-
-            return VOS_ERR;
-        }
-
-        ulReadCount += bytesgottemp;
-
-        pstErrlogPayload = (OM_ERR_LOG_HEADER_STRU*)&buffer[ulIndex];
-        /*lint -e679 */
-        bytesgottemp = OM_RingBufferGet(rngId, &buffer[ulIndex + bytesgottemp], (VOS_INT32)pstErrlogPayload->ulAlmLength);
-        /*lint +e679 */
-        if (bytesgottemp != pstErrlogPayload->ulAlmLength)
-        {
-            OM_RingBufferFlush(rngId);
-
-            return VOS_ERR;
-        }
-
-        ulReadCount += bytesgottemp;
-
-        ulErrlogLen = (sizeof(OM_ERR_LOG_HEADER_STRU) + pstErrlogPayload->ulAlmLength);
-
-        /* 是否是查找Alarm ID */
-        if (VOS_OK != OM_RingBufferchFindArmID(pulAlarmBuff, ulAlarmIdCount, pstErrlogPayload->usAlmId))
-        {
-            if (ulErrlogLen != OM_RingBufferPut(rngId, &buffer[ulIndex], (VOS_INT32)ulErrlogLen))
-            {
-                OM_RingBufferFlush(rngId);
-
-                return VOS_ERR;
-            }
-        }
-        else
-        {
-            ulIndex += ulErrlogLen;
-        }
-    }
-
-    *pulAlarmbytes = ulIndex;
-
-    return VOS_OK;
-}
-
-
-/*****************************************************************************
-函 数 名  :OM_RingBufferCreate
-功能描述  :create an empty ring buffer
-输入参数  :nbytes:拷贝的字节数
-输出参数  :无
-返 回 值  :ID:分配成功返回ring buffer的ID
-           NULL:分配失败
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
 OM_RING_ID OM_RingBufferCreate( int nbytes )
 {
     char         *buffer;
@@ -821,7 +210,7 @@ OM_RING_ID OM_RingBufferCreate( int nbytes )
      */
 
     /* buffer = (char *) malloc ((unsigned) ++nbytes); */
-    buffer = (char *) VOS_CacheMemAllocDebug((unsigned) ++nbytes, OM_RNG_BUFFER_ALLOC);
+    buffer = (char *) VOS_CacheMemAllocDebug((unsigned) ++nbytes, (VOS_UINT32)OM_RNG_BUFFER_ALLOC);
 
     if ( VOS_NULL_PTR == buffer )
     {
@@ -848,38 +237,15 @@ OM_RING_ID OM_RingBufferCreate( int nbytes )
     return (ringId);
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferFlush
-功能描述  :make a ring buffer empty
-输入参数  :ringId:ring buffer的ID
-输出参数  :无
-返 回 值  :无
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 void OM_RingBufferFlush( OM_RING_ID ringId )
 {
     ringId->pToBuf   = 0;
     ringId->pFromBuf = 0;
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferGet
-功能描述  :get characters from a ring buffer
-输入参数  :ringId:ring buffer的ID
-           buffer:存放拷贝数据的buffer
-           maxbytes:拷贝数据的字节数
-输出参数  :无
-返 回 值  :真正拷贝的字节数
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
+/*lint -efunc(613,OM_RingBufferGet) */
 int OM_RingBufferGet( OM_RING_ID rngId, char *buffer, int maxbytes )
 {
     int bytesgot;
@@ -918,6 +284,7 @@ int OM_RingBufferGet( OM_RING_ID rngId, char *buffer, int maxbytes )
             bytes2 = OM_MIN(maxbytes - bytesgot, pToBuf);
             /*lint +e613*/
             OM_RealMemCopy (rngId->buf, buffer + bytesgot, bytes2);
+
             rngId->pFromBuf = bytes2;
             bytesgot += bytes2;
         }
@@ -931,20 +298,9 @@ int OM_RingBufferGet( OM_RING_ID rngId, char *buffer, int maxbytes )
 
     return (bytesgot);
 }
+/*lint +efunc(613,OM_RingBufferGet) */
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferRemove
-功能描述  :remove characters from a ring buffer
-输入参数  :ringId:ring buffer的ID
-           maxbytes:移除的字节数
-输出参数  :无
-返 回 值  :真正移除的字节数
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 int OM_RingBufferRemove( OM_RING_ID rngId, int maxbytes )
 {
     int bytesgot;
@@ -990,20 +346,7 @@ int OM_RingBufferRemove( OM_RING_ID rngId, int maxbytes )
     return (bytesgot);
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferGetReserve
-功能描述  :get characters from a ring buffer
-输入参数  :rngId:ring buffer的ID
-           buffer:存放拷贝数据的buffer
-           maxbytes:拷贝数据的字节数
-输出参数  :无
-返 回 值  :真正拷贝的字节数
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 int OM_RingBufferGetReserve( OM_RING_ID rngId, char *buffer, int maxbytes )
 {
     int bytesgot;
@@ -1046,20 +389,7 @@ int OM_RingBufferGetReserve( OM_RING_ID rngId, char *buffer, int maxbytes )
     return (bytesgot);
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferPut
-功能描述  :put bytes into a ring buffer
-输入参数  :rngId:ring buffer的ID
-           buffer:存放源数据的buffer
-           maxbytes:源数据的字节数
-输出参数  :无
-返 回 值  :真正拷贝的字节数
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 int OM_RingBufferPut( OM_RING_ID rngId, char *buffer, int nbytes )
 {
     int bytesput;
@@ -1116,35 +446,13 @@ int OM_RingBufferPut( OM_RING_ID rngId, char *buffer, int nbytes )
     return (bytesput);
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferIsEmpty
-功能描述  :test if a ring buffer is empty
-输入参数  :rngId:ring buffer的ID
-输出参数  :无
-返 回 值  :true:ring buffer为空；false:ring buffer不为空
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 VOS_BOOL OM_RingBufferIsEmpty( OM_RING_ID ringId )
 {
     return (ringId->pToBuf == ringId->pFromBuf);
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferIsFull
-功能描述  :test if a ring buffer is full (no more room)
-输入参数  :rngId:ring buffer的ID
-输出参数  :无
-返 回 值  :true:ring buffer满；false:ring buffer不满
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 VOS_BOOL OM_RingBufferIsFull( OM_RING_ID ringId )
 {
     int n = ringId->pToBuf - ringId->pFromBuf + 1;
@@ -1152,18 +460,7 @@ VOS_BOOL OM_RingBufferIsFull( OM_RING_ID ringId )
     return ((n == 0) || (n == ringId->bufSize)); /* [false alarm]: 屏蔽Fortify 错误 */
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferFreeBytes
-功能描述  :determine the number of free bytes in a ring buffer
-输入参数  :rngId:ring buffer的ID
-输出参数  :无
-返 回 值  :ring buffer中空闲空间的大小
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 int OM_RingBufferFreeBytes( OM_RING_ID ringId)
 {
     int n = ringId->pFromBuf - ringId->pToBuf - 1;
@@ -1176,18 +473,7 @@ int OM_RingBufferFreeBytes( OM_RING_ID ringId)
     return (n);
 }
 
-/*****************************************************************************
-函 数 名  :OM_RingBufferNBytes
-功能描述  :determine the number of bytes in a ring buffer
-输入参数  :rngId:ring buffer的ID
-输出参数  :无
-返 回 值  :ring buffer中已使用空间的大小
-调用函数  :无
-修订记录  :
-1.  日    期   : 2008-06
-    作    者   :
-    修改内容   : Creat
-*****************************************************************************/
+
 int OM_RingBufferNBytes( OM_RING_ID ringId )
 {
     int n = ringId->pToBuf - ringId->pFromBuf;

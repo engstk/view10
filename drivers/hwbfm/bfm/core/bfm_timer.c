@@ -42,7 +42,7 @@
 #define BOOT_TIMER_COUNT_STEP ((unsigned int)5000) /* unit: msec */
 #define BFMR_TIMEOUT_VALUE_FOR_SHORT_TIMER ((u32)(1000 * 60 * 10)) /* unit: msec */
 #define BFMR_TIMEOUT_VALUE_FOR_LONG_TIMER ((u32)(1000 * 60 * 30)) /* unit: msec */
-#define BFMR_MAX_TIMEOUT_VALUE_FOR_ACTION_TIMER ((u32)(1000 * 60 * 10)) /* unit: msec */
+#define BFMR_MAX_TIMEOUT_VALUE_FOR_ACTION_TIMER ((u32)(1000 * 60 * 30)) /* unit: msec */
 
 
 /*----local prototypes---------------------------------------------------------------*/

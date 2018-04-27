@@ -1,4 +1,5 @@
 source "drivers/huawei_platform/power/charger/Kconfig"
+source "drivers/huawei_platform/power/battery/Kconfig"
 source "drivers/huawei_platform/power/coul/Kconfig"
 source "drivers/huawei_platform/power/hw_kstate/Kconfig"
 source "drivers/huawei_platform/power/hw_ptm/Kconfig"
@@ -11,5 +12,4 @@ source "drivers/huawei_platform/power/water_check/Kconfig"
 source "drivers/huawei_platform/power/buckboost/Kconfig"
 source "drivers/huawei_platform/power/pid_socket/Kconfig"
 source "drivers/huawei_platform/power/wifi_filter/Kconfig"
-source "drivers/huawei_platform/power/dubai/Kconfig"
 

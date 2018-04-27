@@ -52,12 +52,11 @@ config HISI_CAMERA_VL53L0_STF
         vl53l0 camera laser driver for STF
 
 config HISI_CAMERA_VL53L0_970
-    tristate "vl53l0 970 camera laser driver"
+    tristate "st vl53lx & sharp 970 camera laser driver"
     depends on HISI_CAMERA_LASER
     default n
     ---help---
-        vl53l0 970 camera laser driver
-
+        vl53lx 970 camera laser driver
 endmenu
 
 menu "sharp camera laser driver support"

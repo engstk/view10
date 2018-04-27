@@ -82,7 +82,7 @@ VOS_UINT32 At_GetNvRevertState(VOS_VOID)
     VOS_UINT32 ret = (VOS_UINT32)-1;
     VOS_UINT16 resume_flag = 0;
 
-    ret = NVM_Read(NV_ID_DRV_RESUME_FLAG,&resume_flag,sizeof(VOS_UINT16)); /*to do*/
+    ret = TAF_ACORE_NV_READ(MODEM_ID_0, NV_ID_DRV_RESUME_FLAG,&resume_flag,sizeof(VOS_UINT16)); /*to do*/
     if(ret)
     {
         return ret;
@@ -103,7 +103,7 @@ VOS_UINT32 At_GetNvAuthorityVer(VOS_UINT32 * pdata)
         return ((VOS_UINT32)-1);
     }
 
-    ulRst = NVM_Read(NV_ID_MSP_AUTHORITY_VER, pdata, sizeof(VOS_UINT32));
+    ulRst = TAF_ACORE_NV_READ(MODEM_ID_0, NV_ID_MSP_AUTHORITY_VER, pdata, sizeof(VOS_UINT32));
 
     if(ulRst != 0)
     {
@@ -125,7 +125,7 @@ VOS_UINT32 At_GetImei(VOS_CHAR szimei [ 16 ])
 
     uslen = AT_NV_IMEI_LEN+1;
 
-    ret = NVM_Read(0, auctemp, uslen);
+    ret = TAF_ACORE_NV_READ(MODEM_ID_0, 0, auctemp, uslen);
 
     if(ret != 0)
     {
@@ -227,7 +227,7 @@ VOS_UINT32 atSetNVBackup(VOS_UINT8 ucClientId)
 {
     VOS_UINT32 ulRst = AT_OK;
     gstAtSendData.usBufLen = 0;
-    ulRst = NVM_UpgradeBackup(EN_NVM_BACKUP_FILE);
+    ulRst = TAF_ACORE_NV_UPGRADE_BACKUP(EN_NVM_BACKUP_FILE);
     if(ulRst != ERR_MSP_SUCCESS)
     {
         CmdErrProc(ucClientId, ulRst, 0, NULL);
@@ -251,7 +251,7 @@ VOS_UINT32 atSetNVRestore(VOS_UINT8 ucClientId)
     gstAtSendData.usBufLen = 0;
 
 
-    ulRst = NVM_UpgradeRestore();
+    ulRst = TAF_ACORE_NV_UPGRADE_RESTORE();
     if(ulRst != ERR_MSP_SUCCESS)
     {
         CmdErrProc(ucClientId, ulRst, 0, NULL);
@@ -356,10 +356,8 @@ VOS_UINT32 atSetGodLoad(VOS_UINT8 ucClientId)
 //
 // 调用要求: TODO: ...
 // 调用举例: TODO: ...
-// 作    者: 岑雪青/c00172979 [2010-11-29]
 
 //  2.日    期   : 2015年01月26日
-//    修改内容   : 修改问题单DTS2015011307352，AT^RESET命令打印OK
 
 // *****************************************************************************
 VOS_UINT32 atSetReset(VOS_UINT8 ucClientId)
@@ -410,7 +408,7 @@ VOS_UINT32 atSetNVFactoryRestore(VOS_UINT8 ucClientId)
         return AT_OK;
     }
 
-    ulRst = NVM_RevertFNV();
+    ulRst = TAF_ACORE_NV_FREVERT_FNV();
     if(ulRst != ERR_MSP_SUCCESS)
     {
         CmdErrProc(ucClientId, ulRst, 0, NULL);
@@ -427,12 +425,11 @@ VOS_UINT32 atSetNVFactoryRestore(VOS_UINT8 ucClientId)
 }
 
 
-
 VOS_UINT32 atSetNVFactoryBack(VOS_UINT8 ucClientId)
 {
     VOS_UINT32                          ulRst;
 
-    ulRst = NVM_BackUpFNV();
+    ulRst = TAF_ACORE_NV_BACKUP_FNV();
     if(ulRst != ERR_MSP_SUCCESS)
     {
         printk("atSetNVFactoryBack:nv Backup faile! %d", ulRst);
@@ -442,8 +439,6 @@ VOS_UINT32 atSetNVFactoryBack(VOS_UINT8 ucClientId)
         return AT_ERROR;
     }
 
-    /* Added by d00212987 在该AT命令中增加SC的备份。 2015-08-10, begin */
-    /* Added by d00212987 在该AT命令中增加SC的备份。 2015-08-10, end */
 
     gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf( AT_CMD_MAX_LEN,
                                            (VOS_CHAR *)pgucAtSndCodeAddr,

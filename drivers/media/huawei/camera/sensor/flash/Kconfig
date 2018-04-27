@@ -71,6 +71,13 @@ config HISI_CAMERA_MP3336_MIX
     ---help---
         MP3336 mix camera flash driver
 
+config HISI_CAMERA_MP3336_MIX_IR
+    bool "MP3336 mix camera flash driver with IR"
+    default n
+    depends on HISI_CAMERA_FLASH
+    ---help---
+        MP3336 mix camera flash driver with IR
+
 config HISI_CAMERA_PMU_LED
     tristate "PMU LED camera flash driver"
     depends on HISI_CAMERA_FLASH

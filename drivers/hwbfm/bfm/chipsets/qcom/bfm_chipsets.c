@@ -32,7 +32,7 @@
 /*----local macroes------------------------------------------------------------------*/
 
 #define BFM_QCOM_LOG_PART_MOUINT_POINT "/log"
-#define BFM_QCOM_LOG_ROOT_PATH "/log/boot_fail"
+#define BFM_QCOM_LOG_ROOT_PATH "/log/reliability/boot_fail"
 #define BFM_QCOM_LOG_UPLOADING_PATH BFM_QCOM_LOG_ROOT_PATH "/" BFM_UPLOADING_DIR_NAME
 #define BFM_QCOM_BL1_BOOTFAIL_LOG_NAME "sbl1.log"
 #define BFM_QCOM_BL2_BOOTFAIL_LOG_NAME "lk.log"
@@ -92,6 +92,7 @@ int bfm_set_boot_stage(bfmr_detail_boot_stage_e bfmr_bootstage)
     qcom_set_boot_stage(bfmr_bootstage);
     return 0;
 }
+
 
 unsigned int bfmr_capture_log_from_src_file(char *buf, unsigned int buf_len, char *src_log_path)
 {
@@ -925,7 +926,7 @@ void bfmr_update_raw_log_info(bfmr_log_src_t *psrc, bfmr_log_dst_t *pdst, unsign
             strncpy(brit->log_name[psrc->log_type], BFM_QCOM_BL2_BOOTFAIL_LOG_NAME, BFMR_SIZE_128-1);
             break;
         }
-    case LOG_TYPE_KMSG:
+    case LOG_TYPE_TEXT_KMSG:
         {
             strncpy(brit->log_name[psrc->log_type], BFM_QCOM_KERNEL_BOOTFAIL_LOG_NAME, BFMR_SIZE_128-1);
             break;

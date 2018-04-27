@@ -29,6 +29,7 @@
 #include <linux/notifier.h>
 #include <linux/mutex.h>
 #include <linux/hisi/usb/hisi_usb.h>
+#include <linux/mfd/hisi_pmic.h>
 #include <huawei_platform/log/hw_log.h>
 #include <huawei_platform/usb/switch/switch_ap/switch_usb_class.h>
 #include <linux/delay.h>
@@ -59,6 +60,10 @@
 #endif
 #ifdef  CONFIG_HUAWEI_USB_SHORT_CIRCUIT_PROTECT
 #include <huawei_platform/power/usb_short_circuit_protect.h>
+#endif
+#ifdef CONFIG_WIRELESS_CHARGER
+#include <huawei_platform/power/wireless_charger.h>
+#include <huawei_platform/power/wired_channel_switch.h>
 #endif
 #ifdef CONFIG_HUAWEI_TYPEC
 #include <huawei_platform/usb/hw_typec_dev.h>
@@ -95,7 +100,11 @@ static bool ts_flag = FALSE;
 static bool otg_flag = FALSE;
 static bool cancel_work_flag = FALSE;
 static int pd_charge_flag = false;
+static bool term_err_chrg_en_flag = TRUE;
+static int term_err_cnt = 0;
 
+static int pd_reset_adapter = ADAPTER_9V;
+static int last_vset = 0;
 #ifdef CONFIG_TCPC_CLASS
 static u32 charger_pd_support = 0;
 static u32 charger_pd_cur_trans_ratio = 0;
@@ -119,6 +128,10 @@ extern void charge_stop_sys_wdt(void);
 extern void charge_feed_sys_wdt(unsigned int timeout);
 #endif
 
+static int input_current_step;
+static int input_current_delay;
+static int input_current_now;
+static int iin_set_complete_flag;
 #define CHARGER_BASE_ADDR 512
 #define VBUS_REPORT_NUM 4
 #define WORK_DELAY_5000MS 5000
@@ -133,6 +146,11 @@ static int ico_enable;
 static int nonstand_detect_times;
 static int usb_continuous_notify_times;
 static bool charger_type_update = FALSE;
+
+#if defined CONFIG_HUAWEI_DSM
+static int non_standard_charger_dsm_flag = 0;
+static int charger_removed_dsm_flag = 0;
+#endif
 
 static void fcp_reg_dump(char* pstr);
 static void batt_info_dump(char* pstr);
@@ -164,7 +182,300 @@ static struct charger_dsm err_count[] = {
 	{ERROR_IBAS_OVER_SETCURRENT, true, false, NULL, "ibias over set current"},
 	{ERROR_VBUS_VOL_OVER_13400MV, true, false, NULL, "vbus over 13400 mv"},
 };
+
+static struct charger_dsm chargemonitor_err_count[] = {
+	{ERROR_NON_STANDARD_CHARGER_PLUGGED, true, false, NULL, "Incompatible charger plugged"},
+	{ERROR_CHARGER_REMOVED, true, false, NULL, "charger removed"},
+};
 #endif
+static void charge_wake_lock(void);
+static void charge_start_charging(struct charge_device_info *di);
+static void charge_stop_charging(struct charge_device_info *di);
+static void charge_start_usb_otg(struct charge_device_info *di);
+static void charge_send_uevent(struct charge_device_info *di);
+static void charger_type_handler(enum usb_charger_type type, void*data);
+int pmic_vbus_irq_is_enabled(void);
+enum charger_event_type pd_dpm_get_source_sink_state(void);
+/* event queue imlementation
+ */
+bool get_stop_charge_sync_flag(void)
+{
+	return cancel_work_flag;
+}
+static const char *charger_event_type_string(enum charger_event_type event)
+{
+	static const char *const charger_event_strings[] = {
+		[START_SINK]          = "START_SINK",
+		[STOP_SINK]           = "STOP_SINK",
+		[START_SOURCE]        = "START_SOURCE",
+		[STOP_SOURCE]         = "STOP_SOURCE",
+		[START_SINK_WIRELESS] = "START_SINK_WIRELESS",
+		[STOP_SINK_WIRELESS]  = "STOP_SINK_WIRELESS",
+		[CHARGER_MAX_EVENT]   = "CHARGER_MAX_EVENT",
+	};
+
+	if (event < START_SINK || event > CHARGER_MAX_EVENT)
+		return "illegal event";
+
+	return charger_event_strings[event];
+}
+static int charger_event_queue_create(struct charger_event_queue *event_queue, unsigned int count)
+{
+	if (!event_queue) {
+		hwlog_err("%s:bad argument (0x%pK)\n", __func__, event_queue);
+		return -EINVAL;
+	}
+
+	count = (count >= MAX_EVENT_COUNT ? MAX_EVENT_COUNT : count);
+	event_queue->max_event = count;
+	event_queue->num_event = (count >= EVENT_QUEUE_UNIT ? EVENT_QUEUE_UNIT : count);
+
+	event_queue->event = kzalloc(event_queue->num_event * sizeof(enum otg_dev_event_type), GFP_KERNEL);
+	if (!event_queue->event) {
+		hwlog_err("%s:Can't alloc space:%d!\n", __func__, event_queue->num_event);
+		return -ENOMEM;
+	}
+
+	event_queue->enpos = 0;
+	event_queue->depos = 0;
+	event_queue->overlay = 0;
+	event_queue->overlay_index = 0;
+
+	return 0;
+}
+
+static void charger_event_queue_destroy(struct charger_event_queue *event_queue)
+{
+	if (!event_queue) {
+		return ;
+	}
+
+	kfree(event_queue->event);
+	event_queue->event = NULL;
+	event_queue->enpos = 0;
+	event_queue->depos = 0;
+	event_queue->num_event = 0;
+	event_queue->max_event = 0;
+	event_queue->overlay = 0;
+	event_queue->overlay_index = 0;
+}
+
+static int charger_event_queue_isfull(struct charger_event_queue *event_queue)
+{
+	if (!event_queue) {
+		return -EINVAL;
+	}
+
+	return (((event_queue->enpos + 1) % event_queue->num_event) == (event_queue->depos));
+}
+
+static int charger_event_queue_isempty(struct charger_event_queue *event_queue)
+{
+	if (!event_queue) {
+		return -EINVAL;
+	}
+
+	return (event_queue->enpos == event_queue->depos);
+}
+
+static inline void charger_event_queue_set_overlay(struct charger_event_queue *event_queue)
+{
+	if (event_queue->overlay) {
+		return;
+	}
+	event_queue->overlay = 1;
+	event_queue->overlay_index = event_queue->enpos;
+}
+
+static inline void charger_event_queue_clear_overlay(struct charger_event_queue *event_queue)
+{
+	event_queue->overlay = 0;
+	event_queue->overlay_index = 0;
+}
+
+static int charger_event_enqueue(struct charger_event_queue *event_queue, enum charger_event_type event)
+{
+	/* no need verify argument, isfull will check it */
+	if (charger_event_queue_isfull(event_queue)) {
+		hwlog_err("event queue full!\n");
+		return -ENOSPC;
+	}
+
+	if (event_queue->overlay) {
+		if (event_queue->overlay_index == event_queue->enpos) {
+			event_queue->enpos = ((event_queue->enpos + 1) % event_queue->num_event);
+		}
+
+		if (charger_event_queue_isempty(event_queue)) {
+			hwlog_info("queue is empty, just enqueue!\n");
+			event_queue->overlay_index = ((event_queue->overlay_index + 1) % event_queue->num_event);
+			event_queue->enpos = ((event_queue->enpos + 1) % event_queue->num_event);
+			event_queue->overlay = 0;
+		}
+
+		event_queue->event[event_queue->overlay_index] = event;
+	} else {
+		event_queue->event[event_queue->enpos] = event;
+		event_queue->enpos = ((event_queue->enpos + 1) % event_queue->num_event);
+	}
+
+	return 0;
+}
+
+static enum charger_event_type charger_event_dequeue(struct charger_event_queue *event_queue)
+{
+	enum charger_event_type event;
+
+	/* no need verify argument, isempty will check it */
+	if (charger_event_queue_isempty(event_queue)) {
+		return CHARGER_MAX_EVENT;
+	}
+
+	event = event_queue->event[event_queue->depos];
+	event_queue->depos = ((event_queue->depos + 1) % event_queue->num_event);
+
+	return event;
+}
+
+static int charger_event_check(enum charger_event_type new_event)
+{
+	int ret = 0;
+	struct charge_device_info *di = g_di;
+
+	if (di->event == CHARGER_MAX_EVENT)
+		return 1;
+	switch (new_event) {
+	case START_SINK:
+		if (di->event == STOP_SINK || di->event == STOP_SOURCE ||
+			di->event == START_SINK_WIRELESS || di->event == STOP_SINK_WIRELESS)
+			ret = 1;
+		break;
+	case STOP_SINK:
+		if (di->event == START_SINK)
+			ret = 1;
+		break;
+	case START_SOURCE:
+		if (di->event == STOP_SINK || di->event == STOP_SOURCE ||
+			di->event == START_SINK_WIRELESS || di->event == STOP_SINK_WIRELESS)
+			ret = 1;
+		break;
+	case STOP_SOURCE:
+		if ( di->event == START_SOURCE ||
+			di->event == START_SINK_WIRELESS || di->event == STOP_SINK_WIRELESS)
+			ret = 1;
+		break;
+	case START_SINK_WIRELESS:
+		if (di->event == START_SOURCE || di->event == STOP_SOURCE ||
+			di->event == STOP_SINK || di->event == STOP_SINK_WIRELESS)
+			ret = 1;
+		break;
+	case STOP_SINK_WIRELESS:
+		if (di->event == START_SINK_WIRELESS ||
+			di->event == START_SOURCE || di->event == STOP_SOURCE)
+			ret = 1;
+		break;
+	default:
+		hwlog_err("%s: error event:%d\n", __func__, new_event);
+		break;
+	}
+	return ret;
+}
+static void charger_handle_event(struct charge_device_info* di, enum charger_event_type event)
+{
+	mutex_lock(&di->event_type_lock);
+	switch (event) {
+	case START_SINK:
+		charger_type_handler(CHARGER_TYPE_SDP, NULL);
+		charge_start_charging(di);
+		break;
+	case START_SINK_WIRELESS:
+		di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+		di->charger_type = CHARGER_TYPE_WIRELESS;
+		charge_send_uevent(di);
+		charge_start_charging(di);
+		break;
+	case STOP_SINK:
+	case STOP_SINK_WIRELESS:
+		di->charger_source = POWER_SUPPLY_TYPE_BATTERY;
+		di->charger_type = CHARGER_REMOVED;
+		charge_stop_charging(di);
+		charge_send_uevent(di);
+		break;
+	case START_SOURCE:
+		charge_start_usb_otg(di);
+		break;
+	case STOP_SOURCE:
+		charge_stop_charging(di);
+		break;
+	default:
+		hwlog_err("%s: error event:%d\n", __func__, event);
+		break;
+	}
+	mutex_unlock(&di->event_type_lock);
+}
+static void charger_event_work(struct work_struct *work)
+{
+	unsigned long flags;
+	enum charger_event_type event;
+	unsigned long timeout;
+	unsigned long flag;
+	struct charge_device_info *di = g_di;
+
+	hwlog_info("%s+\n", __func__);
+
+	while (!charger_event_queue_isempty(&di->event_queue)) {
+		spin_lock_irqsave(&(di->event_spin_lock), flags);
+		event = charger_event_dequeue(&di->event_queue);
+		spin_unlock_irqrestore(&(di->event_spin_lock), flags);
+
+		charger_handle_event(di, event);
+	}
+
+	spin_lock_irqsave(&(di->event_spin_lock), flags);
+	charger_event_queue_clear_overlay(&di->event_queue);
+	spin_unlock_irqrestore(&(di->event_spin_lock), flags);
+	hwlog_info("%s-\n", __func__);
+}
+
+void charger_source_sink_event(enum charger_event_type event)
+{
+	unsigned long flags;
+	struct charge_device_info *di = g_di;
+
+	if (pmic_vbus_irq_is_enabled()) {
+		return;
+	}
+	if (NULL == di) {
+		hwlog_info("%s di is NULL\n", __func__);
+		return;
+	}
+	spin_lock_irqsave(&(di->event_spin_lock), flags);
+
+	if (charger_event_check(event)) {
+		hwlog_info("case = %s\n", charger_event_type_string(event));
+		di->event = event;
+
+		if (!charger_event_enqueue(&di->event_queue, event)) {
+			if (!queue_work(system_power_efficient_wq,
+					&di->event_work)) {
+				hwlog_err("schedule event_work wait:%d\n", event);
+			}
+			charge_wake_lock();
+		} else {
+			hwlog_err("%s: can't enqueue event:%d\n", __func__, event);
+		}
+
+		if ((STOP_SOURCE == event) || (STOP_SINK == event) ||(STOP_SINK_WIRELESS == event)) {
+			charger_event_queue_set_overlay(&di->event_queue);
+		}
+	} else {
+		hwlog_err("last event: [%s], event [%s] was rejected.\n",
+				charger_event_type_string(di->event), charger_event_type_string(event));
+	}
+
+	spin_unlock_irqrestore(&(di->event_spin_lock), flags);
+}
+
 int water_detect_ops_register(struct water_detect_ops *ops)
 {
 	int ret = 0;
@@ -176,6 +487,18 @@ int water_detect_ops_register(struct water_detect_ops *ops)
 		ret = -EPERM;
 	}
 	return ret;
+}
+void send_water_intrused_event(bool flag)
+{
+	struct charge_device_info *di = g_di;
+	if (NULL == di)
+		return;
+	if (flag) {
+		di->sysfs_data.water_intrused = 1;
+	} else{
+		di->sysfs_data.water_intrused = 0;
+	}
+	hisi_coul_charger_event_rcv(VCHRG_STATE_WATER_INTRUSED);
 }
 void water_detect(void)
 {
@@ -346,6 +669,33 @@ int dsm_report(int err_no, void *buf)
 
 	return 0;
 }
+
+/**********************************************************
+*  Function:       chargemonitor_dsm_report
+*  Description:    dsm report interface
+*  Parameters:     err_no buf
+*  return value:  0 :succ -1:fail
+**********************************************************/
+int chargemonitor_dsm_report(int err_no, void *buf)
+{
+#if defined CONFIG_HUAWEI_DSM
+	if (NULL == buf || NULL == get_chargemonitor_dclient()) {
+		hwlog_info("buf is NULL or chargemonitor_dclient is NULL!\n");
+		return -1;
+	}
+
+	if (!dsm_client_ocuppy(get_chargemonitor_dclient())) {
+		dsm_client_record(get_chargemonitor_dclient(), "%s", buf);
+		dsm_client_notify(get_chargemonitor_dclient(), err_no);
+		hwlog_info("chargemonitor dsm report err_no:%d\n", err_no);
+		return 0;
+	}
+	hwlog_info("chargemonitor dsm is busy!\n");
+	return -1;
+#endif
+
+	return 0;
+}
 /*lint -restore*/
 
 /**********************************************************
@@ -377,6 +727,45 @@ int charger_dsm_report(int err_no, int *val)
 				/*when it be set 1,it will not report */
 				if(false == err_count[i].notify_always){
 					err_count[i].notify_enable = false;
+				}
+				ret = 0;
+				break;
+			}
+		}
+	}
+#endif
+	return ret;
+}
+
+/**********************************************************
+*  Function:       chargermonitor_dsm_report
+*  Description:    chargermonitor dsm report
+*  Parameters:   err_no val
+*  return value:  0:succ ;-1 :fail
+**********************************************************/
+int chargermonitor_dsm_report(int err_no, int *val)
+{
+	int ret = -1;
+#if defined CONFIG_HUAWEI_DSM
+	char dsm_buff[CHARGE_DMDLOG_SIZE] = { 0 };
+	char buf[ERR_NO_STRING_SIZE] = { 0 };
+	int i;
+	int err_count_size = sizeof(chargemonitor_err_count)/sizeof(struct charger_dsm);
+
+	for (i = 0; i < err_count_size; i++) {
+		if ((err_no == chargemonitor_err_count[i].error_no) &&
+			(true == chargemonitor_err_count[i].notify_enable)) {/*every err_no report one times */
+			strncat(dsm_buff, chargemonitor_err_count[i].buf, ERR_NO_STRING_SIZE - 1);
+			if (val) {  /*need report reg */
+				snprintf(buf, sizeof(buf), "val= %d\n", *val);
+				strncat(dsm_buff, buf, strlen(buf));
+			}
+			if (chargemonitor_err_count[i].dump)
+				chargemonitor_err_count[i].dump(dsm_buff);
+			if (!chargemonitor_dsm_report(err_no, dsm_buff)) {
+				/*when it be set 1,it will not report */
+				if(false == chargemonitor_err_count[i].notify_always){
+					chargemonitor_err_count[i].notify_enable = false;
 				}
 				ret = 0;
 				break;
@@ -510,34 +899,103 @@ static void fcp_check_adapter_status(struct charge_device_info *di)
 
 ATOMIC_NOTIFIER_HEAD(fault_notifier_list);
 /*lint -restore*/
-int charge_set_input_current(int iset)
+#ifdef CONFIG_WIRELESS_CHARGER
+void charge_set_input_current_prop(int iin_step, int iin_delay)
+{
+	input_current_delay = iin_delay;
+	input_current_step = iin_step;
+	input_current_now = CHARGE_CURRENT_0100_MA;
+
+	hwlog_info("[%s] iin_delay = %d iin_step = %d\n",
+		__func__, input_current_delay, input_current_step);
+}
+static void charge_set_iin_step_by_step(struct charge_device_info *di, int iin)
+{
+	int ret;
+	int iin_tmp = input_current_now;
+	iin_set_complete_flag = 0;
+
+	if (iin > input_current_now) {
+		do {
+			ret = di->ops->set_input_current(iin_tmp);
+			if (ret)
+				hwlog_err("set input current %d fail!\n", iin_tmp);
+			input_current_now = iin_tmp;
+			iin_tmp += input_current_step;
+			if (!iin_set_complete_flag)
+				msleep(input_current_delay);
+		} while (iin_tmp < iin && !iin_set_complete_flag
+				&&input_current_delay && input_current_step);
+	}
+	if (iin < input_current_now) {
+		do {
+			ret = di->ops->set_input_current(iin_tmp);
+			if (ret)
+				hwlog_err("set input current %d fail!\n", iin_tmp);
+			input_current_now = iin_tmp;
+			iin_tmp -= input_current_step;
+			if (!iin_set_complete_flag)
+				msleep(input_current_delay);
+		} while (iin_tmp > iin && !iin_set_complete_flag
+				&& input_current_delay && input_current_step);
+	}
+	if (!iin_set_complete_flag) {
+		input_current_now = iin;
+		ret = di->ops->set_input_current(iin);
+		if (ret)
+			hwlog_err("set input current %d fail!\n", iin);
+		iin_set_complete_flag = 1;
+	}
+}
+#endif
+int charge_set_input_current(int iin)
 {
 	struct charge_device_info *di = g_di;
 	int ret;
 
-	if (NULL == di || NULL == di->ops || NULL == di->ops->set_input_current)
-	{
-		hwlog_err("%s:set_input_current fail!\n",__func__);
+	if (NULL == di || NULL == di->ops || NULL == di->ops->set_input_current) {
+		hwlog_err("%s:di ops null!\n",__func__);
 		return -1;
 	}
-	if (1 == vbat_ovp_set_input_current_flag)
-	{
+	if (1 == vbat_ovp_set_input_current_flag) {
 		di->ops->set_input_current(di->core_data->iin_max);
-		hwlog_info("%s:vbat_ovp set_input_current = %d,vbat_ovp in process!\n",__func__,di->core_data->iin_max);
-	} else
-	{
-		ret = di->ops->set_input_current(iset);
-		if (ret > 0)
-		{
-			hwlog_info("input current is out of range:%dmA!!\n", ret);
-			di->ops->set_input_current(ret);
-		} else if (ret < 0)
-		{
-			hwlog_err("set input current fail!\n");
-		}
-		hwlog_info("%s:set_input_current = %d!\n",__func__,iset);
+		iin = di->core_data->iin_max;
+		hwlog_info("%s:vbat_ovp set_input_current = %d,vbat_ovp in process!\n",
+			__func__,di->core_data->iin_max);
+	} else {
+		iin = min(iin, di->input_current);
 	}
+#ifdef CONFIG_WIRELESS_CHARGER
+	if (input_current_delay && input_current_step) {
+		iin = min(iin, wireless_charge_get_rx_iout_limit());
+		if (!iin_set_complete_flag) {
+			iin_set_complete_flag = 1;
+			msleep(2*input_current_delay); //double time, only used here
+		}
+		charge_set_iin_step_by_step(di, iin);
+	} else {
+#endif
+		hwlog_info("%s:set_input_current = %d!\n",__func__,iin);
+		ret = di->ops->set_input_current(iin);
+		if (ret) {
+			hwlog_err("set input current %d fail!\n", iin);
+			return ret;
+		}
+#ifdef CONFIG_WIRELESS_CHARGER
+	}
+#endif
+
 	return 0;
+}
+int charge_get_charger_iinlim_regval(void)
+{
+	struct charge_device_info *di = g_di;
+
+	if (NULL == di || NULL == di->ops || NULL == di->ops->get_iin_set) {
+		hwlog_err("%s:di ops null!\n",__func__);
+		return CHARGE_CURRENT_0500_MA;
+	}
+	return di->ops->get_iin_set();
 }
 /**********************************************************
 *  Function:       charge_rename_charger_type
@@ -550,11 +1008,12 @@ int charge_set_input_current(int iset)
 static int charge_rename_charger_type(enum hisi_charger_type type,
 				       struct charge_device_info *di ,bool update_flag)
 {
-	bool ret = TRUE;
+	int ret = TRUE;
+	hwlog_info("%s:type = %d, last di->charger_type = %d\n",__func__,type, di->charger_type);
 	switch (type) {
 	case CHARGER_TYPE_SDP:
 		if(CHARGER_REMOVED == di->charger_type || CHARGER_TYPE_NON_STANDARD == di->charger_type
-			|| CHARGER_TYPE_USB == di->charger_type)
+			|| CHARGER_TYPE_USB == di->charger_type ||CHARGER_TYPE_WIRELESS == di->charger_type)
 		{
 			di->charger_type = CHARGER_TYPE_USB;
 			di->charger_source = POWER_SUPPLY_TYPE_USB;
@@ -564,7 +1023,7 @@ static int charge_rename_charger_type(enum hisi_charger_type type,
 		break;
 	case CHARGER_TYPE_CDP:
 		if(CHARGER_REMOVED == di->charger_type || CHARGER_TYPE_NON_STANDARD == di->charger_type
-			|| charger_type_update)
+			||CHARGER_TYPE_WIRELESS == di->charger_type || charger_type_update)
 		{
 			di->charger_type = CHARGER_TYPE_BC_USB;
 			di->charger_source = POWER_SUPPLY_TYPE_USB;
@@ -573,16 +1032,19 @@ static int charge_rename_charger_type(enum hisi_charger_type type,
 		}
 		break;
 	case CHARGER_TYPE_DCP:
-		di->charger_type = CHARGER_TYPE_STANDARD;
-		di->charger_source = POWER_SUPPLY_TYPE_MAINS;
-		if (1 == di->support_standard_ico)
-			ico_enable = 1;
-		else
-			ico_enable = 0;
-		ret = FALSE;
+		if (CHARGER_TYPE_STANDARD != di->charger_type) {
+			di->charger_type = CHARGER_TYPE_STANDARD;
+			di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+			if (1 == di->support_standard_ico)
+				ico_enable = 1;
+			else
+				ico_enable = 0;
+			ret = FALSE;
+		}
 		break;
 	case CHARGER_TYPE_UNKNOWN:
-		if(CHARGER_REMOVED == di->charger_type || charger_type_update)
+		if(CHARGER_REMOVED == di->charger_type ||CHARGER_TYPE_WIRELESS == di->charger_type || CHARGER_TYPE_USB == di->charger_type
+			|| charger_type_update)
 		{
 			di->charger_type = CHARGER_TYPE_NON_STANDARD;
 			di->charger_source = POWER_SUPPLY_TYPE_MAINS;
@@ -595,8 +1057,8 @@ static int charge_rename_charger_type(enum hisi_charger_type type,
 		{
 			di->charger_type = CHARGER_REMOVED;
 			di->charger_source = POWER_SUPPLY_TYPE_BATTERY;
-			ret = FALSE;
 		}
+		ret = FALSE;
 		break;
 	case PLEASE_PROVIDE_POWER:
 		if(CHARGER_REMOVED == di->charger_type)
@@ -605,6 +1067,11 @@ static int charge_rename_charger_type(enum hisi_charger_type type,
 			di->charger_source = POWER_SUPPLY_TYPE_BATTERY;
 			ret = FALSE;
 		}
+		break;
+	case CHARGER_TYPE_WIRELESS:
+		di->charger_type = CHARGER_TYPE_WIRELESS;
+		di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+		ret = FALSE;
 		break;
 	default:
 		di->charger_type = CHARGER_REMOVED;
@@ -660,6 +1127,7 @@ static void charge_send_uevent(struct charge_device_info *di)
 {
 	/*send events */
 	enum charge_status_event events;
+	static bool wired_vbus_flag = false;
 	if (di == NULL) {
 		hwlog_err("[%s]di is NULL!\n", __func__);
 		return;
@@ -678,6 +1146,16 @@ static void charge_send_uevent(struct charge_device_info *di)
 		hwlog_err("[%s]error charger source!\n", __func__);
 		/*do nothing*/
 	}
+#ifdef CONFIG_WIRELESS_CHARGER
+	if (di->charger_type == CHARGER_REMOVED) {
+		if (true == wired_vbus_flag)
+			wireless_charge_wired_vbus_disconnect_handler();
+		wired_vbus_flag = false;
+	} else if (di->charger_type != CHARGER_TYPE_WIRELESS) {
+		wireless_charge_wired_vbus_connect_handler();
+		wired_vbus_flag = true;
+	}
+#endif
 }
 void vbat_ovp_send_uevent(void)
 {
@@ -932,19 +1410,33 @@ static void charge_vbus_voltage_check(struct charge_device_info *di)
 		charger_dsm_report(ERROR_VBUS_VOL_OVER_13400MV, &vbus_vol);
 	}
 
-	if(CHARGER_TYPE_PD == di->charger_type) {
+	if (CHARGER_TYPE_PD == di->charger_type) {
 #ifdef CONFIG_TCPC_CLASS
-		if (pd_charge_flag && pd_dpm_get_high_power_charging_status()) {
-			if (vbus_vol < VBUS_VOLTAGE_7000_MV) {
-				pd_dpm_hard_reset();
-				hwlog_err("[%s]pd hard reset \n", __func__);
-				pd_charge_flag = false;
+		if (!pd_charge_flag)
+			return;
+		if (pd_dpm_get_high_power_charging_status()
+				&& vbus_vol > VBUS_VOLTAGE_7000_MV
+				&& pd_reset_adapter == ADAPTER_9V) {
+			last_vset = ADAPTER_9V;
+			return;
+		}
+		if (!pd_dpm_get_high_power_charging_status()
+				&& vbus_vol < VBUS_VOLTAGE_7000_MV) {
+			if (!pd_dpm_get_optional_max_power_status()
+				|| pd_reset_adapter == ADAPTER_5V) {
+				last_vset = ADAPTER_5V;
+				return;
 			}
 		}
+		pd_dpm_hard_reset();
 		return;
 #endif
 	}
-
+#ifdef CONFIG_WIRELESS_CHARGER
+	if (di->charger_type == CHARGER_TYPE_WIRELESS) {
+		return;
+	}
+#endif
 	if (FCP_STAGE_SUCESS == fcp_get_stage_status()) {
 		/* fcp stage : vbus must be higher than 7000 mV */
 		if (vbus_vol < VBUS_VOLTAGE_7000_MV) {
@@ -961,7 +1453,7 @@ static void charge_vbus_voltage_check(struct charge_device_info *di)
 			fcp_check_adapter_status(di);
 			fcp_set_stage_status(FCP_STAGE_DEFAUTL);
 			di->charger_type = CHARGER_TYPE_STANDARD;
-			if (di->fcp_ops->fcp_adapter_reset()) {
+			if (di->fcp_ops->fcp_adapter_reset && di->fcp_ops->fcp_adapter_reset()) {
 				hwlog_err("adapter reset failed \n");
 			}
 			if (di->ops->set_vbus_vset) {
@@ -1012,14 +1504,17 @@ static void pd_charge_check(struct charge_device_info *di)
 	int ret = 0, i = 0;
 	if (pd_charge_flag)
 		return;
-	if (true == cancel_work_flag)
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
 		return;
+	}
+
 	if (di->charger_type != CHARGER_TYPE_PD
 	    || !(is_hisi_battery_exist())) {
 		return;
 	}
 
-	if(true == pd_dpm_get_high_power_charging_status())
+	if (true == pd_dpm_get_high_power_charging_status())
 	{
 		di->ops->fcp_chip_init();
 	}
@@ -1028,10 +1523,8 @@ static void pd_charge_check(struct charge_device_info *di)
 		di->ops->chip_init();
 	}
 
-	di->ops->set_charge_enable(FALSE);
-
 	if (di->ops->set_vbus_vset) {
-		if(true == pd_dpm_get_high_power_charging_status())
+		if (true == pd_dpm_get_high_power_charging_status())
 			ret = di->ops->set_vbus_vset(ADAPTER_9V);
 		else
 			ret = di->ops->set_vbus_vset(ADAPTER_5V);
@@ -1041,7 +1534,6 @@ static void pd_charge_check(struct charge_device_info *di)
 		}
 	}
 
-	di->ops->set_charge_enable(TRUE);
 	hwlog_info("%s :  ok \n", __func__);
 	pd_charge_flag = true;
 #endif
@@ -1061,8 +1553,10 @@ static void fcp_charge_check(struct charge_device_info *di)
 	if (!di->ops->fcp_chip_init)
 		return;
 
-	if (true == cancel_work_flag)
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
 		return;
+	}
 
 	if (FCP_STAGE_SUCESS == fcp_get_stage_status())
 		fcp_check_switch_status(di);
@@ -1143,8 +1637,8 @@ static void fcp_charge_check(struct charge_device_info *di)
 			if(ret)
 				hwlog_err("set vbus_vset fail!\n");
 		}
-		msleep(CHIP_RESP_TIME);
 		di->charger_type = CHARGER_TYPE_STANDARD;
+		msleep(CHIP_RESP_TIME);
 	}
 }
 /****************************************************************************
@@ -1409,6 +1903,11 @@ static void charge_select_charging_current(struct charge_device_info *di)
 {
 	static unsigned int first_in = 1;
 
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
+		return;
+	}
+
 	switch (di->charger_type) {
 	case CHARGER_TYPE_USB:
 		di->input_current = di->core_data->iin_usb;
@@ -1437,10 +1936,17 @@ static void charge_select_charging_current(struct charge_device_info *di)
 	case CHARGER_TYPE_PD:
 		di->input_current = di->pd_input_current;
 		di->charge_current = di->pd_charge_current;
-		pr_info("CHARGER_TYPE_PD input_current %d  charge_current = %d", di->input_current, di->charge_current);
+		hwlog_info("CHARGER_TYPE_PD input_current %d  charge_current = %d",
+			di->input_current, di->charge_current);
 		if(di->charge_current > di->core_data->ichg_max)
 			di->charge_current = di->core_data->ichg_max;
 		break;
+#ifdef CONFIG_WIRELESS_CHARGER
+	case CHARGER_TYPE_WIRELESS:
+		di->input_current = di->core_data->iin_wireless;
+		di->charge_current = di->core_data->ichg_wireless;
+		break;
+#endif
 	default:
 		di->input_current = CHARGE_CURRENT_0500_MA;
 		di->charge_current = CHARGE_CURRENT_0500_MA;
@@ -1467,6 +1973,7 @@ static void charge_select_charging_current(struct charge_device_info *di)
 #endif
 
 	if((1 == di->sysfs_data.support_ico)
+		&& (1 == di->sysfs_data.charge_enable)
 		&& (1 == ico_enable))
 		select_ico_current(di);
 
@@ -1518,6 +2025,25 @@ static void charge_select_charging_current(struct charge_device_info *di)
 		di->input_current = CHARGE_CURRENT_2000_MA;
 }
 
+static int charge_update_vbus_voltage_check(struct charge_device_info *di)
+{
+	int ret = 0;
+	int vbus_vol_disable_flag = FALSE;
+	unsigned int vbus_vol = 0;
+
+	ret = di->ops->get_vbus(&vbus_vol);
+	if (ret) {
+		vbus_vol_disable_flag = TRUE;
+		hwlog_err("[%s]vbus vol read fail.\n",__func__);
+	}
+
+	if (vbus_vol > VBUS_VOLTAGE_7000_MV || vbus_vol_disable_flag)
+	{
+		return TRUE;
+	}
+	return FALSE;
+}
+
 /**********************************************************
 *  Function:       charge_update_vindpm
 *  Description:    update the input dpm voltage setting by battery capacity
@@ -1529,11 +2055,17 @@ static void charge_update_vindpm(struct charge_device_info *di)
 	int ret = 0;
 	int vindpm = CHARGE_VOLTAGE_4520_MV;
 
-	if (FCP_STAGE_SUCESS == fcp_get_stage_status()
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
+		return;
+	}
+
+	if ((FCP_STAGE_SUCESS == fcp_get_stage_status()
 #ifdef CONFIG_TCPC_CLASS
 		|| true == pd_dpm_get_high_power_charging_status()
 #endif
-	) {
+		) && charge_update_vbus_voltage_check(di))
+	{
 		vindpm = di->fcp_vindpm;
 	} else if (POWER_SUPPLY_TYPE_MAINS == di->charger_source) {
 		vindpm = di->core_data->vdpm;
@@ -1568,6 +2100,11 @@ static void charge_update_external_setting(struct charge_device_info *di)
 	int ret = 0;
 	unsigned int batfet_disable = FALSE;
 	unsigned int watchdog_timer = WATCHDOG_TIMER_80_S;
+
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
+		return;
+	}
 
 	/*update batfet setting */
 	if (di->sysfs_data.batfet_disable == TRUE) {
@@ -1625,7 +2162,33 @@ static int charge_is_charging_full(struct charge_device_info *di)
 
 	return val;
 }
+static void charge_check_termination(struct charge_device_info *di, int full_flag)
+{
+	int ret;
+	unsigned int state = CHAGRE_STATE_NORMAL;
+	int soc = hisi_battery_capacity();
+	ret = di->ops->get_charge_state(&state);
+	if (ret < 0) {
+		hwlog_err("get_charge_state fail!!ret = 0x%x\n", ret);
+		return;
+	}
 
+	if (soc < CAPACITY_FULL) {
+		term_err_chrg_en_flag = TRUE;
+		term_err_cnt = 0;
+	} else if (full_flag && soc >= CAPACITY_FULL
+		&& !(state & CHAGRE_STATE_CHRG_DONE)
+		&& term_err_chrg_en_flag == TRUE) {
+		term_err_cnt++;
+		if (term_err_cnt >= TERM_ERR_CNT) {
+			term_err_cnt = TERM_ERR_CNT;
+			term_err_chrg_en_flag = FALSE;
+			hwlog_err("%s err, stop charging\n", __func__);
+		}
+	} else {
+		term_err_cnt = 0;
+	}
+}
 /**********************************************************
 *  Function:       charge_full_handle
 *  Description:    set term enable flag by charge current is lower than iterm
@@ -1636,6 +2199,11 @@ static void charge_full_handle(struct charge_device_info *di)
 {
 	int ret = 0;
 	int is_battery_full = charge_is_charging_full(di);
+
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
+		return;
+	}
 
 	if (di->ops->set_term_enable) {
 		ret = di->ops->set_term_enable(is_battery_full);
@@ -1649,6 +2217,7 @@ static void charge_full_handle(struct charge_device_info *di)
 	} else if (ret < 0) {
 		hwlog_err("set terminal current fail!\n");
 	}
+
 	/* reset adapter to 5v after fcp charge done,avoid long-term at high voltage */
 	if (is_battery_full && hisi_battery_capacity() == 100
 		&& NULL != di->fcp_ops
@@ -1673,6 +2242,7 @@ static void charge_full_handle(struct charge_device_info *di)
 			}
 		}
 	}
+	charge_check_termination(di, is_battery_full);
 }
 
 static int set_charge_state(int state)
@@ -1761,6 +2331,8 @@ static void charge_start_charging(struct charge_device_info *di)
 	if (!strstr(saved_command_line, "androidboot.swtype=factory")) {
 		di->sysfs_data.charge_enable = TRUE;
 	}
+	term_err_chrg_en_flag = TRUE;
+	term_err_cnt = 0;
 	di->check_full_count = 0;
 	di->start_attemp_ico = 1;
 	/*chip init */
@@ -1771,6 +2343,9 @@ static void charge_start_charging(struct charge_device_info *di)
 	charge_enable_sys_wdt();
 #endif
 	mod_delayed_work(system_wq, &di->charge_work, msecs_to_jiffies(0));
+
+	schedule_delayed_work(&di->vbus_valid_check_work,
+			      msecs_to_jiffies(VBUS_VALID_CHECK_WORK_TIMEOUT));
 }
 
 /**********************************************************
@@ -1796,15 +2371,24 @@ static void charge_stop_charging(struct charge_device_info *di)
 	di->sysfs_data.adc_conv_rate = 0;
 	di->sysfs_data.water_intrused = 0;
 	di->sysfs_data.charge_done_status = CHARGE_DONE_NON;
+	di->weaksource_cnt = 0;
 #ifdef CONFIG_TCPC_CLASS
 	di->pd_input_current = 0;
 	di->pd_charge_current = 0;
+#endif
+
+#ifdef CONFIG_DIRECT_CHARGER
+	if (!direct_charge_get_cutoff_normal_flag())
+	{
+		direct_charge_set_scp_stage_default();
+	}
 #endif
 	charger_type_update = FALSE;
 	output_num = 0;
 	detect_num = 0;
 	vbus_flag = 0;
 	fcp_vbus_lower_count = 0;
+
 	if (di->ops->set_adc_conv_rate)
 		di->ops->set_adc_conv_rate(di->sysfs_data.adc_conv_rate);
 	di->check_full_count = 0;
@@ -1854,6 +2438,13 @@ static void charge_stop_charging(struct charge_device_info *di)
 #ifdef CONFIG_HISI_CHARGER_SYS_WDG
 	charge_stop_sys_wdt();
 #endif
+
+#if defined CONFIG_HUAWEI_DSM
+	if (1 == charger_removed_dsm_flag)
+	{
+		chargermonitor_dsm_report(ERROR_CHARGER_REMOVED, NULL);
+	}
+#endif
 }
 extern void hisi_usb_otg_bc_again(void);
 /**********************************************************
@@ -1867,7 +2458,15 @@ void charge_type_dcp_detected_notify(void)
 	if (g_di && (CHARGER_TYPE_NON_STANDARD == g_di->charger_type)) {
 		hisi_usb_otg_bc_again();
 		hwlog_info(" stop phy enter! \n");
-		mod_delayed_work(system_wq, &g_di->charge_work, 0);
+		if (!pmic_vbus_irq_is_enabled()) {
+			mutex_lock(&g_di->event_type_lock);
+			if (g_di->event == START_SINK) {
+				mod_delayed_work(system_wq, &g_di->charge_work, msecs_to_jiffies(0));
+			}
+			mutex_unlock(&g_di->event_type_lock);
+		} else {
+			mod_delayed_work(system_wq, &g_di->charge_work, msecs_to_jiffies(0));
+		}
 	}
 }
 
@@ -1917,6 +2516,11 @@ static void charge_otg_work(struct work_struct *work)
 {
 	struct charge_device_info *di =
 	    container_of(work, struct charge_device_info, otg_work.work);
+	int ret = 0;
+
+	ret = di->ops->set_otg_enable(TRUE);
+	if (ret)
+		hwlog_err("[%s]set otg enable fail!\n", __func__);
 
 	charge_kick_watchdog(di);
 	schedule_delayed_work(&di->otg_work,
@@ -2005,6 +2609,63 @@ static void charge_fault_work(struct work_struct *work)
 	}
 }
 
+
+static void vbus_valid_check_update_status(void)
+{
+	/*send events */
+	enum charge_status_event events;
+	static int vbus_off_continuous_cnt = 0;
+
+	/* powerdown charging mode */
+	#ifdef CONFIG_DIRECT_CHARGER
+	if (NOT_IN_SCP_CHARGING_STAGE == is_in_scp_charging_stage())
+	{
+	#endif
+		if (0 == hisi_pmic_get_vbus_status())
+		{
+		    hwlog_err("%s vbus is absent(%d)\n", __func__,vbus_off_continuous_cnt);
+
+		    if (vbus_off_continuous_cnt++ < 2)
+		    {
+		        return;
+		    }
+
+		    events = VCHRG_STOP_CHARGING_EVENT;
+		    hisi_coul_charger_event_rcv(events);
+
+		    return;
+		}
+		else
+		{
+		    vbus_off_continuous_cnt = 0;
+		}
+	#ifdef CONFIG_DIRECT_CHARGER
+	}
+	#endif
+
+	return;
+}
+
+/**********************************************************
+*  Function:       vbus_valid_check_work
+*  Description:    handler the vbus remove event on the powerdown charging
+*  Parameters:   work:vbus_valid_check_work workqueue
+*  return value:  NULL
+**********************************************************/
+static void vbus_valid_check_work(struct work_struct *work)
+{
+	struct charge_device_info *di =
+	    container_of(work, struct charge_device_info, vbus_valid_check_work.work);
+
+	if (strstr(saved_command_line, "androidboot.mode=charger"))
+	{
+		vbus_valid_check_update_status();
+
+		schedule_delayed_work(&di->vbus_valid_check_work,
+			      msecs_to_jiffies(VBUS_VALID_CHECK_WORK_TIMEOUT));
+	}
+}
+
 static void check_ibias_current_safe(struct charge_device_info *di)
 {
 	int ichg_coul = 0;
@@ -2052,9 +2713,8 @@ static void charge_update_status(struct charge_device_info *di)
 	int ret = 0;
 	static bool last_warm_triggered;
 
-	if (cancel_work_flag)
-	{
-		hwlog_info("charge already stop\n");
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
 		return;
 	}
 #ifdef CONFIG_DIRECT_CHARGER
@@ -2071,7 +2731,7 @@ static void charge_update_status(struct charge_device_info *di)
 	}
 	/*check status charger not power good state */
 	if(CHARGER_TYPE_PD != di->charger_type) {
-		if (state & CHAGRE_STATE_NOT_PG) {
+		if ((state & CHAGRE_STATE_NOT_PG) && (di->weaksource_cnt > WEAKSOURCE_CNT)) {
 			hwlog_err("VCHRG_POWER_SUPPLY_WEAKSOURCE\n");
 			events = VCHRG_POWER_SUPPLY_WEAKSOURCE;
 			hisi_coul_charger_event_rcv(events);
@@ -2110,7 +2770,7 @@ static void charge_update_status(struct charge_device_info *di)
 			last_warm_triggered = di->core_data->warm_triggered;
 			ret = di->ops->set_charge_enable(FALSE);
 			msleep(100);
-			ret |= di->ops->set_charge_enable(TRUE);
+			ret |= di->ops->set_charge_enable(TRUE & di->sysfs_data.charge_enable);
 			if (ret)
 				hwlog_err("[%s]set charge enable fail!\n", __func__);
 			hwlog_info("warm status changed, resume charging\n");
@@ -2139,10 +2799,14 @@ static void charge_update_status(struct charge_device_info *di)
 					    ("charge wake unlock while charging done\n");
 				}
 			}
-		} else if (di->charger_source == POWER_SUPPLY_TYPE_MAINS)
+		}else if (di->charger_source == POWER_SUPPLY_TYPE_MAINS) {
 			events = VCHRG_START_AC_CHARGING_EVENT;
-		else
+		}else if (di->charger_source == POWER_SUPPLY_TYPE_BATTERY) {
+			events = VCHRG_NOT_CHARGING_EVENT;
+			hwlog_info("VCHRG_NOT_CHARGING_EVENT, power_supply: BATTERY\n");
+		}else {
 			events = VCHRG_START_USB_CHARGING_EVENT;
+		}
 	} else {
 		events = VCHRG_NOT_CHARGING_EVENT;
 		hwlog_info("VCHRG_NOT_CHARGING_EVENT\n");
@@ -2162,6 +2826,11 @@ static void charge_turn_on_charging(struct charge_device_info *di)
 {
 	int ret = 0;
 	unsigned int vterm = 0;
+
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
+		return;
+	}
 
 	di->charge_enable = TRUE;
 	/* check vbus voltage ,if vbus is abnormal disable charge or abort from fcp */
@@ -2201,6 +2870,7 @@ static void charge_turn_on_charging(struct charge_device_info *di)
 	}
 	/*enable/disable charge */
 	di->charge_enable &= di->sysfs_data.charge_enable;
+	di->charge_enable &= term_err_chrg_en_flag;
 	ret = di->ops->set_charge_enable(di->charge_enable);
 	if (ret)
 		hwlog_err("set charge enable fail!!\n");
@@ -2255,6 +2925,10 @@ static void charge_safe_protect(struct charge_device_info *di)
 {
 	if (NULL == di) {
 		hwlog_err("%s:NULL pointer!!\n", __func__);
+		return;
+	}
+	if (cancel_work_flag) {
+		hwlog_info("[%s] charge already stop\n", __func__);
 		return;
 	}
 	/*do soft ovp protect for 5V/9V charge*/
@@ -2319,6 +2993,14 @@ static void charge_monitor_work(struct work_struct *work)
 #ifdef CONFIG_DIRECT_CHARGER
 	}
 #endif
+
+#if defined CONFIG_HUAWEI_DSM
+	if ((1 == non_standard_charger_dsm_flag) && (di->charger_type == CHARGER_TYPE_NON_STANDARD))
+	{
+		chargermonitor_dsm_report(ERROR_NON_STANDARD_CHARGER_PLUGGED, NULL);
+	}
+#endif
+
 	schedule_delayed_work(&di->charge_work,
 			      msecs_to_jiffies(CHARGING_WORK_TIMEOUT));
 }
@@ -2368,6 +3050,11 @@ static void charge_usb_work(struct work_struct *work)
 	case CHARGER_TYPE_PD:
 		hwlog_info("case = CHARGER_TYPE_PD-> \n");
 		charge_start_charging(di);
+		break;
+	case CHARGER_TYPE_WIRELESS:
+		hwlog_info("case = CHARGER_TYPE_WIRELESS-> \n");
+		charge_start_charging(di);
+		break;
 	default:
 		break;
 	}
@@ -2488,7 +3175,42 @@ static void charge_uevent_process(struct charge_device_info *di, unsigned long e
 #endif
 }
 /*lint -restore*/
+#ifdef CONFIG_WIRELESS_CHARGER
+static int wireless_charger_vbus_notifier_call(struct notifier_block *wireless_nb,
+				    unsigned long event, void *data)
+{
+	int* vbus = (int *)data;
+	struct charge_device_info *di =
+	    container_of(wireless_nb, struct charge_device_info, wireless_nb);
+	if (!vbus || !di) {
+		hwlog_err("%s para null\n", __func__);
+		return NOTIFY_OK;
+	}
 
+	hwlog_info("%s recevied wireless_charge type = %d, vbus =  %d\n", __func__, event, *vbus);
+
+	if (WIRED_CHANNEL_ON == wireless_charge_get_wired_channel_state()) {
+		hwlog_info("%s in wired charging\n", __func__);
+		return NOTIFY_OK;
+	}
+	if (event == CHARGER_TYPE_WIRELESS) {
+		charger_source_sink_event(START_SINK_WIRELESS);
+		hwlog_info("case = CHARGER_TYPE_WIRELESS\n");
+	} else if (event == CHARGER_TYPE_NONE){
+		charger_source_sink_event(STOP_SINK_WIRELESS);
+	}
+
+	di->wireless_vbus = *vbus;
+	if (!pmic_vbus_irq_is_enabled()) {
+		return NOTIFY_OK;
+	}
+	charge_rename_charger_type(event, di,FALSE);
+	charge_send_uevent(di);
+	schedule_work(&di->usb_work);
+
+	return NOTIFY_OK;
+}
+#endif
 /**********************************************************
 *  Function:       charge_usb_notifier_call
 *  Description:    respond the charger_type events from USB PHY
@@ -2504,7 +3226,7 @@ static int charge_usb_notifier_call(struct notifier_block *usb_nb,
 {
 	struct charge_device_info *di =
 	    container_of(usb_nb, struct charge_device_info, usb_nb);
-	bool filter_flag = TRUE;
+	int filter_flag = TRUE;
 	int ret = 0;
 
 	charger_type_ever_notify = true;
@@ -2536,6 +3258,21 @@ enum usb_charger_type charge_get_charger_type(void)
 	}
 	return di->charger_type;
 }
+#ifdef CONFIG_WIRELESS_CHARGER
+void wireless_charge_connect_send_uevent(void)
+{
+	struct charge_device_info *di = g_di;
+
+	if (NULL == di) {
+		hwlog_err("[%s]di is NULL!\n", __func__);
+		return ;
+	}
+	di->charger_type = CHARGER_TYPE_WIRELESS;
+	di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+	charge_send_uevent(di);
+}
+#endif
+
 #ifdef CONFIG_DIRECT_CHARGER
 void direct_charger_connect_send_uevent(void)
 {
@@ -2611,6 +3348,11 @@ static int huawei_get_charge_current_max(void)
 	return di->charge_current;
 }
 
+int huawei_charger_get_dieid(char *dieid, unsigned int len)
+{
+    return -1;
+}
+EXPORT_SYMBOL(huawei_charger_get_dieid);
 /**********************************************************
 *  Function:       charge_fault_notifier_call
 *  Description:    respond the fault events from chargerIC
@@ -2668,6 +3410,90 @@ static void pd_typec_current_handler(void)
 	hwlog_info("%s input_current %u", __func__, di->input_current);
 	charge_set_input_current(di->input_current);
 }
+static void charger_type_handler(enum usb_charger_type type, void*data)
+{
+	struct charge_device_info *di = g_di;
+	struct pd_dpm_vbus_state *vbus_state;
+	int need_resched_work = 0;
+	static bool first_in = true;
+	if (NULL == di)
+		return;
+	switch (type) {
+	case CHARGER_TYPE_SDP:
+		if(CHARGER_TYPE_USB == di->charger_type ||CHARGER_TYPE_WIRELESS == di->charger_type || CHARGER_REMOVED == di->charger_type)
+		{
+			di->charger_type = CHARGER_TYPE_USB;
+			di->charger_source = POWER_SUPPLY_TYPE_USB;
+			if (!first_in)
+				usb_continuous_notify_times++;
+			hwlog_info("%s case = CHARGER_TYPE_SDP\n", __func__);
+			need_resched_work = 1;
+		}
+		break;
+	case CHARGER_TYPE_CDP:
+		if(CHARGER_TYPE_NON_STANDARD == di->charger_type || CHARGER_TYPE_WIRELESS == di->charger_type || CHARGER_REMOVED == di->charger_type)
+		{
+			di->charger_type = CHARGER_TYPE_BC_USB;
+			di->charger_source = POWER_SUPPLY_TYPE_USB;
+			hwlog_info("%s case = CHARGER_TYPE_CDP\n", __func__);
+			need_resched_work = 1;
+		}
+		break;
+	case CHARGER_TYPE_DCP:
+		if (CHARGER_TYPE_STANDARD != di->charger_type && CHARGER_TYPE_PD != di->charger_type && CHARGER_TYPE_FCP != di->charger_type) {
+			di->charger_type = CHARGER_TYPE_STANDARD;
+			di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+			if (1 == di->support_standard_ico)
+				ico_enable = 1;
+			else
+				ico_enable = 0;
+			need_resched_work = 1;
+			hwlog_info("%s case = CHARGER_TYPE_DCP\n", __func__);
+		}
+		break;
+	case CHARGER_TYPE_UNKNOWN:
+		if (CHARGER_TYPE_WIRELESS == di->charger_type || CHARGER_TYPE_USB == di->charger_type || CHARGER_REMOVED == di->charger_type)
+		{
+			di->charger_type = CHARGER_TYPE_NON_STANDARD;
+			di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+			charger_type_update = FALSE;
+			need_resched_work = 1;
+			hwlog_info("%s case = CHARGER_TYPE_NONSTANDARD\n", __func__);
+		}
+		break;
+	case PD_DPM_VBUS_TYPE_TYPEC:
+		hwlog_debug("%s case = CHARGER_TYPE_TYPEC\n", __func__);
+		pd_typec_current_handler();
+		return;
+	case PD_DPM_VBUS_TYPE_PD:
+		vbus_state = (struct pd_dpm_vbus_state *) data;
+		di->charger_type = CHARGER_TYPE_PD;
+		di->pd_input_current = vbus_state->ma;
+		di->pd_charge_current = (vbus_state->mv * vbus_state->ma * charger_pd_cur_trans_ratio) / (100 * di->core_data->vterm);
+		if (vbus_state->ext_power)
+			di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+		else
+			di->charger_source = POWER_SUPPLY_TYPE_USB;
+		need_resched_work = 1;
+		hwlog_info("%s case = CHARGER_TYPE_PD\n", __func__);
+		break;
+	case CHARGER_TYPE_WIRELESS:
+		di->charger_type = CHARGER_TYPE_WIRELESS;
+		di->charger_source = POWER_SUPPLY_TYPE_MAINS;
+		need_resched_work = 1;
+		hwlog_info("%s case = CHARGER_TYPE_WIRELESS\n", __func__);
+		break;
+	default:
+		hwlog_info("%s ignore type = %d\n", __func__, type);
+		return;
+	}
+	charge_send_uevent(di);
+	first_in = false;
+	if ((USB_ICO_CNT == usb_continuous_notify_times) && (1 == di->support_usb_nonstandard_ico))
+		ico_enable = 1;
+	if (need_resched_work)
+		mod_delayed_work(system_wq, &di->charge_work, msecs_to_jiffies(0));
+}
 /**********************************************************
 *  Function:       tcpc_notifier_call
 *  Description:    respond the Type C port event from TCPC
@@ -2680,19 +3506,30 @@ static void pd_typec_current_handler(void)
 **********************************************************/
 static int pd_dpm_notifier_call(struct notifier_block *tcpc_nb, unsigned long event, void *data)
 {
+	bool ret;
 	struct pd_dpm_vbus_state *vbus_state;
 	struct charge_device_info *di = container_of(tcpc_nb, struct charge_device_info, tcpc_nb);
-
+	hwlog_info("%s ++ , event = %d\n", __func__, event);
 	charger_type_ever_notify = true;
-	if(PD_DPM_VBUS_TYPE_TYPEC == event) {
+
+	if (PD_DPM_VBUS_TYPE_PD == event)
+		pd_charge_flag = false;
+	if (!pmic_vbus_irq_is_enabled())
+	{
+		mutex_lock(&di->event_type_lock);
+		if (di->event == START_SINK) {
+			charger_type_handler(event,data);
+		}
+		mutex_unlock(&di->event_type_lock);
+		return NOTIFY_OK;
+	}
+	if (PD_DPM_VBUS_TYPE_TYPEC == event) {
 		hwlog_info("%s typec_notify\n", __func__);
 		pd_typec_current_handler();
 		return NOTIFY_OK;
 	}
 
-	charge_wake_lock();
-
-	if(PD_DPM_VBUS_TYPE_PD == event)
+	if (PD_DPM_VBUS_TYPE_PD == event)
 	{
 		vbus_state = (struct pd_dpm_vbus_state *) data;
 		di->pd_input_current = vbus_state->ma;
@@ -2701,8 +3538,13 @@ static int pd_dpm_notifier_call(struct notifier_block *tcpc_nb, unsigned long ev
 	}
 	else
 	{
-		charge_rename_charger_type(event, di,FALSE);
+		ret = charge_rename_charger_type(event, di,FALSE);
+		if (ret) {
+			hwlog_info("unbalanced charger type notify\n");
+			return NOTIFY_OK;
+		}
 	}
+	charge_wake_lock();
 
 	charge_uevent_process(di, event);
 
@@ -2812,6 +3654,7 @@ static struct charge_sysfs_field_info charge_sysfs_field_tbl[] = {
 	/*lint -restore*/
 	CHARGE_SYSFS_FIELD_RW(adaptor_test, ADAPTOR_TEST),
 	CHARGE_SYSFS_FIELD_RW(adaptor_voltage, ADAPTOR_VOLTAGE),
+	CHARGE_SYSFS_FIELD_RW(plugusb, PLUGUSB),
 };
 
 static struct attribute *charge_sysfs_attrs[ARRAY_SIZE(charge_sysfs_field_tbl) + 1];
@@ -2975,7 +3818,7 @@ static ssize_t charge_sysfs_show(struct device *dev,
 		return snprintf(buf,PAGE_SIZE, "%d\n", di->sysfs_data.support_ico);
 	case CHARGE_SYSFS_WATER_INTRUSED:
 		ret = snprintf(buf,PAGE_SIZE, "%d\n", di->sysfs_data.water_intrused);
-		if(1 == di->sysfs_data.water_intrused)
+		if(1 == di->sysfs_data.water_intrused && 1 == di->clear_water_intrused_flag_after_read)
 			di->sysfs_data.water_intrused = 0;
 		return ret;
 	case CHARGE_SYSFS_VOLTAGE_SYS:
@@ -3027,6 +3870,9 @@ static ssize_t charge_sysfs_show(struct device *dev,
 			return snprintf(buf, PAGE_SIZE, "%d\n", ADAPTER_5V);
 		else
 			return snprintf(buf, PAGE_SIZE, "%d\n", ADAPTER_9V);
+	case CHARGE_SYSFS_PLUGUSB:
+		return scnprintf(buf, PAGE_SIZE, "current state: %s\n" "usage: %s\n",
+		charger_event_type_string(di->event), "echo startsink/stopsink/startsource/stopsource > plugusb\n");
 	default:
 		hwlog_err("(%s)NODE ERR!!HAVE NO THIS NODE:(%d)\n", __func__, info->name);
 		break;
@@ -3034,6 +3880,26 @@ static ssize_t charge_sysfs_show(struct device *dev,
 	return 0;
 }
 /*lint -restore*/
+
+static void pd_dpm_process_reset_adapter(struct charge_device_info *di, long val)
+{
+	int ret = 0;
+
+	if (ADAPTER_5V == val) {
+		pd_reset_adapter = ADAPTER_5V;
+	} else {
+		pd_reset_adapter = ADAPTER_9V;
+	}
+
+	pd_dpm_set_pd_reset_adapter(pd_reset_adapter);
+
+	if (di->charger_type == CHARGER_TYPE_PD && (pd_reset_adapter != last_vset)) {
+		ret = pd_dpm_set_voltage();
+		if (!ret) {
+			hwlog_err("[%s]set voltage failed \n", __func__);
+		}
+	}
+}
 
 /**********************************************************
 *  Function:       charge_sysfs_store
@@ -3055,6 +3921,7 @@ static ssize_t charge_sysfs_store(struct device *dev,
 	long val = 0;
 	enum charge_status_event events = VCHRG_POWER_NONE_EVENT;
 	int ret;
+	int batt_temp = DEFAULT_NORMAL_TEMP;
 
 	info = charge_sysfs_field_lookup(attr->attr.name);
 	if (!info)
@@ -3085,10 +3952,10 @@ static ssize_t charge_sysfs_store(struct device *dev,
 				di->sysfs_data.iin_thl = 100;
 			else
 				di->sysfs_data.iin_thl = val;
-
-			if (di->input_current > di->sysfs_data.iin_thl)
-				charge_set_input_current(di->sysfs_data.
-							   iin_thl);
+			if (di->input_current > di->sysfs_data.iin_thl) {
+				di->input_current = di->sysfs_data.iin_thl;
+				charge_set_input_current(di->input_current);
+			}
 			hwlog_info("THERMAL set input current = %d\n",
 				   di->sysfs_data.iin_thl);
 		} else {
@@ -3101,7 +3968,6 @@ static ssize_t charge_sysfs_store(struct device *dev,
 
 			di->sysfs_data.iin_thl =
 				di->sysfs_data.iin_thl_main + di->sysfs_data.iin_thl_aux;
-
 			di->ops->set_input_current_thermal(di->sysfs_data.iin_thl_main,
 							   di->sysfs_data.iin_thl_aux);
 			hwlog_info("THERMAL set input current main = %d\n",
@@ -3210,8 +4076,10 @@ static ssize_t charge_sysfs_store(struct device *dev,
 		else
 			di->sysfs_data.iin_rt = val;
 
-		if (di->input_current > di->sysfs_data.iin_rt)
-			charge_set_input_current(di->sysfs_data.iin_rt);
+		if (di->input_current > di->sysfs_data.iin_rt) {
+			di->input_current = di->sysfs_data.iin_rt;
+			charge_set_input_current(di->input_current);
+		}
 		hwlog_info("RUNNINGTEST set input current = %d\n",
 			   di->sysfs_data.iin_rt);
 		break;
@@ -3239,21 +4107,32 @@ static ssize_t charge_sysfs_store(struct device *dev,
 		   because it will get the /sys/class/power_supply/Battery/status immediately
 		   to check if the enable/disable command set successfully or not in some product line station
 		 */
-		if (di->sysfs_data.charge_enable)
-			events = VCHRG_START_CHARGING_EVENT;
-		else
-			events = VCHRG_NOT_CHARGING_EVENT;
-#ifdef CONFIG_DIRECT_CHARGER
-		if (di->ignore_pluggin_and_plugout_flag)
-		{
-			hwlog_info("ignore RUNNINGTEST set charge enable = %d\n", di->sysfs_data.charge_enable);
+		hwlog_info("RUNNINGTEST set charge enable = %d\n", di->sysfs_data.charge_enable);
+		batt_temp = hisi_battery_temperature_for_charger();
+		if(batt_temp <= NO_CHG_TEMP_LOW || batt_temp >= NO_CHG_TEMP_HIGH){
+			hwlog_err("battery temp is %d, abandon enable_charge.\n", batt_temp);
+			break;
 		}
-		else
+		enum hisi_charger_type type = hisi_get_charger_type();
+		if(PLEASE_PROVIDE_POWER == type &&
+			CHARGER_TYPE_WIRELESS != di->charger_type)
 		{
+			hwlog_err("hisi charge type:%d,charger_type: %d, abandon enable_charge.\n",
+                        type,di->charger_type);
+			break;
+		}
+		di->ops->set_charge_enable(di->sysfs_data.charge_enable);
+#ifdef CONFIG_DIRECT_CHARGER
+		if (NOT_IN_SCP_CHARGING_STAGE == is_in_scp_charging_stage()) {
 #endif
-			di->ops->set_charge_enable(di->sysfs_data.charge_enable);
-			hisi_coul_charger_event_rcv(events);
-			hwlog_info("RUNNINGTEST set charge enable = %d\n", di->sysfs_data.charge_enable);
+			if (hisi_pmic_get_vbus_status() &&
+				CHARGER_REMOVED != di->charger_type) {
+				if (di->sysfs_data.charge_enable)
+					events = VCHRG_START_CHARGING_EVENT;
+				else
+					events = VCHRG_NOT_CHARGING_EVENT;
+				hisi_coul_charger_event_rcv(events);
+			}
 #ifdef CONFIG_DIRECT_CHARGER
 		}
 #endif
@@ -3277,8 +4156,11 @@ static ssize_t charge_sysfs_store(struct device *dev,
 		if ((strict_strtol(buf, 10, &val) < 0) || (val < 0) || (val > 1))
 			return -EINVAL;
 		di->sysfs_data.batfet_disable = val;
-		if (1 == val)
-			charge_set_input_current(CHARGE_CURRENT_2000_MA);
+		if (1 == val) {
+			di->input_current = CHARGE_CURRENT_2000_MA;
+			charge_set_input_current(di->input_current);
+		}
+
 		di->ops->set_batfet_disable(di->sysfs_data.batfet_disable);
 		hwlog_info("RUNNINGTEST set batfet disable = %d\n",
 			   di->sysfs_data.batfet_disable);
@@ -3315,7 +4197,8 @@ static ssize_t charge_sysfs_store(struct device *dev,
 		if ((strict_strtol(buf, 10, &val) < 0) || (val < 100) || (val > 2000))
 			return -EINVAL;
 		di->sysfs_data.inputcurrent = val;
-		charge_set_input_current(di->sysfs_data.inputcurrent);
+		di->input_current = di->sysfs_data.inputcurrent;
+		charge_set_input_current(di->input_current);
 		hwlog_info("set input currrent is: %ld\n", val);
 		break;
 	case CHARGE_SYSFS_SUPPORT_ICO:
@@ -3367,11 +4250,40 @@ static ssize_t charge_sysfs_store(struct device *dev,
 			hwlog_info("Restore adaptor to 9V\n");
 			di->reset_adapter = FALSE;
 		}
+
 		if(di->charger_type == CHARGER_TYPE_FCP
 			|| di->charger_type == CHARGER_TYPE_STANDARD) {
-			mod_delayed_work(system_wq, &di->charge_work, msecs_to_jiffies(0));
+			if (!pmic_vbus_irq_is_enabled()) {
+				mutex_lock(&di->event_type_lock);
+				if (di->event == START_SINK) {
+					mod_delayed_work(system_wq, &di->charge_work, msecs_to_jiffies(0));
+				}
+				mutex_unlock(&di->event_type_lock);
+			} else {
+				mod_delayed_work(system_wq, &di->charge_work, msecs_to_jiffies(0));
+			}
 		}
+#ifdef CONFIG_PD_9V_5V_VOLTAGE_CHANGE
+		pd_dpm_process_reset_adapter(di, val);
+#endif
 		break;
+	case CHARGE_SYSFS_PLUGUSB:
+		if (!strncmp(buf, "startsink", strlen("startsink"))) {
+			hwlog_info("%s:start sink\n", __func__);
+			charger_source_sink_event(START_SINK);
+		} else if (!strncmp(buf, "stopsink", strlen("stopsink"))) {
+			hwlog_info("%s:stop sink\n", __func__);
+			charger_source_sink_event(STOP_SINK);
+		} else if (!strncmp(buf, "startsource", strlen("startsource"))) {
+			hwlog_info("%s:stop sink\n", __func__);
+			charger_source_sink_event(START_SOURCE);
+		} else if (!strncmp(buf, "stopsource", strlen("stopsource"))) {
+			hwlog_info("%s:stop source\n", __func__);
+			charger_source_sink_event(STOP_SOURCE);
+		} else {
+			hwlog_info("%s:error param\n", __func__);
+		}
+
 	default:
 		hwlog_err("(%s)NODE ERR!!HAVE NO THIS NODE:(%d)\n", __func__, info->name);
 		break;
@@ -3536,6 +4448,29 @@ static void charge_parse_dts(struct charge_device_info *di)
                 hwlog_err("get charger_pd_cur_trans_ratio fail!\n");
         }
 #endif
+
+#if defined CONFIG_HUAWEI_DSM
+	ret = of_property_read_u32(of_find_compatible_node(NULL, NULL, "huawei,charger"), \
+			"non_standard_charger_dsm", &non_standard_charger_dsm_flag);
+	if (ret) {
+		hwlog_err("get non_standard_charger_dsm fail!\n");
+		non_standard_charger_dsm_flag = 0;
+	}
+
+	ret = of_property_read_u32(of_find_compatible_node(NULL, NULL, "huawei,charger"), \
+			"charger_removed_dsm", &charger_removed_dsm_flag);
+	if (ret) {
+		hwlog_err("get charger_removed_dsm fail!\n");
+		charger_removed_dsm_flag = 0;
+	}
+#endif
+	ret = of_property_read_u32(of_find_compatible_node(NULL, NULL, "huawei,charger"), \
+			"clear_water_intrused_flag_after_read", &di->clear_water_intrused_flag_after_read);
+	if (ret) {
+		hwlog_err("get clear_water_intrused_flag_after_read fail!\n");
+		di->clear_water_intrused_flag_after_read = 1;/*default is clear*/
+	}
+	hwlog_info("clear_water_intrused_flag_after_read = %d\n", di->clear_water_intrused_flag_after_read);
 }
 
 static struct charge_extra_ops huawei_charge_extra_ops = {
@@ -3614,6 +4549,7 @@ static int charge_probe(struct platform_device *pdev)
 {
 	int ret = 0;
 	struct charge_device_info *di;
+	struct device_node *np;
 	enum hisi_charger_type type = hisi_get_charger_type();
 	struct class *power_class = NULL;
 #ifdef CONFIG_TCPC_CLASS
@@ -3626,7 +4562,6 @@ static int charge_probe(struct platform_device *pdev)
 		hwlog_err("alloc di failed\n");
 		return -ENOMEM;
 	}
-	g_di = di;
 	di->core_data = charge_core_get_params();
 	if (NULL == di->core_data){
 	    hwlog_err("di->core_data is NULL\n");
@@ -3634,6 +4569,7 @@ static int charge_probe(struct platform_device *pdev)
 	    goto charge_fail_0;
 	}
 	di->dev = &pdev->dev;
+	np = di->dev->of_node;
 	di->ops = g_ops;
 	di->sw_ops = g_sw_ops;
 	di->fcp_ops = g_fcp_ops;
@@ -3661,6 +4597,12 @@ static int charge_probe(struct platform_device *pdev)
 	wake_lock_init(&stop_charge_lock, WAKE_LOCK_SUSPEND, "stop_charge_wakelock");
 
 	di->vbat_ovp_handle_wq = create_singlethread_workqueue("vbat_ovp_handle_wq");
+	if(charger_event_queue_create(&di->event_queue, MAX_EVENT_COUNT))
+		goto charge_fail_1;
+	spin_lock_init(&di->event_spin_lock);
+	di->event = CHARGER_MAX_EVENT;
+	mutex_init(&di->event_type_lock);
+	INIT_WORK(&di->event_work, charger_event_work);
 	INIT_WORK(&di->vbat_ovp_work, vbat_ovp_detect_work);
 	INIT_DELAYED_WORK(&di->charge_work, charge_monitor_work);
 	INIT_DELAYED_WORK(&di->otg_work, charge_otg_work);
@@ -3670,6 +4612,8 @@ static int charge_probe(struct platform_device *pdev)
 #ifdef  CONFIG_HUAWEI_USB_SHORT_CIRCUIT_PROTECT
 	INIT_DELAYED_WORK(&di->plugout_uscp_work, uscp_plugout_send_uevent);
 #endif
+
+	INIT_DELAYED_WORK(&di->vbus_valid_check_work, vbus_valid_check_work);
 
 #ifdef CONFIG_TCPC_CLASS
 
@@ -3773,33 +4717,57 @@ static int charge_probe(struct platform_device *pdev)
 
 	di->charge_fault = CHARGE_FAULT_NON;
 	di->check_full_count = 0;
+	g_di = di;
 
-	charge_wake_lock();
-	if (!charger_type_ever_notify)
+	if (!charger_type_ever_notify && pmic_vbus_irq_is_enabled())
 	{
 #ifdef CONFIG_TCPC_CLASS
-		if(charger_pd_support)
-		{
-			pd_dpm_get_charge_event(&local_event, &local_state);
-			pd_dpm_notifier_call(&(di->tcpc_nb), local_event, &local_state);
-		}
-		else
-		{
+			if(charger_pd_support)
+			{
+				pd_dpm_get_charge_event(&local_event, &local_state);
+				pd_dpm_notifier_call(&(di->tcpc_nb), local_event, &local_state);
+			}
+			else
+			{
+				charge_rename_charger_type(type, di,FALSE);
+				charge_send_uevent(di);
+				schedule_work(&di->usb_work);
+			}
+			if(CHARGER_TYPE_USB == di->charger_type)
+			{
+				charger_type_update = TRUE;
+				hwlog_info("get charger type: usb!\n");
+			}
+#else
 			charge_rename_charger_type(type, di,FALSE);
 			charge_send_uevent(di);
 			schedule_work(&di->usb_work);
-		}
-		if(CHARGER_TYPE_USB == di->charger_type)
-		{
-			charger_type_update = TRUE;
-			hwlog_info("get charger type: usb!\n");
-		}
-#else
-		charge_rename_charger_type(type, di,FALSE);
-		charge_send_uevent(di);
-		schedule_work(&di->usb_work);
 #endif
 	}
+	if (!pmic_vbus_irq_is_enabled()) {
+		if (di->event == CHARGER_MAX_EVENT) {
+#ifdef CONFIG_WIRELESS_CHARGER
+			if (wireless_charge_check_tx_exist()) {
+				charger_source_sink_event(START_SINK_WIRELESS);
+			} else {
+#endif
+				if(charger_pd_support) {
+					charger_source_sink_event(pd_dpm_get_source_sink_state());
+					pd_dpm_get_charge_event(&local_event, &local_state);
+					pd_dpm_notifier_call(&(di->tcpc_nb), local_event, &local_state);
+				}
+#ifdef CONFIG_WIRELESS_CHARGER
+			}
+#endif
+		}
+	}
+#ifdef CONFIG_WIRELESS_CHARGER
+	di->wireless_nb.notifier_call = wireless_charger_vbus_notifier_call;
+	ret = register_wireless_charger_vbus_notifier(&di->wireless_nb);
+	if (ret < 0) {
+		hwlog_err("register_wireless_charger_notifier failed\n");
+	}
+#endif
 
 #ifdef CONFIG_HUAWEI_HW_DEV_DCT
 	/* detect current device successful, set the flag as present */
@@ -3843,6 +4811,7 @@ charge_fail_3:
 charge_fail_2:
 	wake_lock_destroy(&charge_lock);
 	wake_lock_destroy(&stop_charge_lock);
+	charger_event_queue_destroy(&di->event_queue);
 charge_fail_1:
 	di->ops = NULL;
 charge_fail_0:
@@ -3918,7 +4887,6 @@ static void charge_shutdown(struct platform_device *pdev)
 		}
 	}
 
-	hisi_charger_type_notifier_unregister(&di->usb_nb);
 	atomic_notifier_chain_unregister(&fault_notifier_list, &di->fault_nb);
 
 	cancel_delayed_work(&di->charge_work);
@@ -3954,6 +4922,7 @@ static int charge_suspend(struct platform_device *pdev, pm_message_t state)
 	     di->sysfs_data.charge_done_sleep_status)
 	    || charge_done_sleep_dts) {
 		charge_disable_watchdog(di);
+		charge_set_input_current(di->input_current);
 	}
 
 	if (USB_EVENT_OTG_ID == di->charger_type) {
@@ -3992,31 +4961,6 @@ static int charge_resume(struct platform_device *pdev)
 	return 0;
 }
 #endif /* CONFIG_PM */
-
-#ifdef CONFIG_LLT_TEST
-struct charge_static_ops charge_ops = {
-	.charge_wake_lock = charge_wake_lock,
-	.charge_wake_unlock = charge_wake_unlock,
-	.charge_rename_charger_type = charge_rename_charger_type,
-	.charge_update_charger_type = charge_update_charger_type,
-	.charge_send_uevent = charge_send_uevent,
-	.fcp_start_charging = fcp_start_charging,
-	.charge_vbus_voltage_check = charge_vbus_voltage_check,
-	.charge_update_vindpm = charge_update_vindpm,
-	.charge_typec_current = charge_typec_current,
-	.charge_select_charging_current = charge_select_charging_current,
-	.charge_is_charging_full = charge_is_charging_full,
-	.charge_update_status = charge_update_status,
-	.charge_turn_on_charging = charge_turn_on_charging,
-	.charge_suspend = charge_suspend,
-	.charge_resume = charge_resume,
-	.charge_lock = &charge_lock,
-	.fcp_stage = &fcp_stage,
-	.g_di = &g_di,
-	.charge_done_sleep_dts = &charge_done_sleep_dts,
-	.charge_lock_flag = &charge_lock_flag,
-};
-#endif
 
 static struct of_device_id charge_match_table[] = {
 	{

@@ -104,21 +104,7 @@ static const struct file_operations g_stDialEventReportFileOps =
 /*****************************************************************************
   3 函数实现
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : RNIC_TransferStringToInt
- 功能描述  : 将app输入的字串转换为数字
- 输入参数  : VOS_CHAR *pcString
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年2月10日
-    作    者   : w00199382
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_TransferStringToInt(VOS_CHAR *pcString)
 {
     VOS_UINT32                          ulStrLen;
@@ -142,21 +128,7 @@ VOS_UINT32 RNIC_TransferStringToInt(VOS_CHAR *pcString)
     return ulRst;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ReadOnDemandFile
- 功能描述  : OnDemand虚拟文件读实现
- 输入参数  : file --- 文件句柄
-             buf  --- 用户空间
-             ppos --- 文件偏移，参数未使用
- 输出参数  : 无
- 返 回 值  : 成功或失败
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 ssize_t RNIC_ReadOnDemandFile(
     struct file                        *file,
     char __user                        *buf,
@@ -200,24 +172,7 @@ ssize_t RNIC_ReadOnDemandFile(
 }
 
 
-/*****************************************************************************
- 函 数 名  : RNIC_WriteOnDemandFile
- 功能描述  : OnDemand虚拟文件写实现
- 输入参数  : file ----- 文件句柄
-             buf  ----- 用户空间数据
-             lLength -- 用户数据长度
-             ppos - ----文件偏移，参数未使用
- 输出参数  : 无
- 返 回 值  : 成功或失败
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-  2.日    期   : 2012年8月10日
-    作    者   : y00213812
-    修改内容   : DTS2012082204471, TQE清理，代码冗余
-*****************************************************************************/
 ssize_t RNIC_WriteOnDemandFile(
     struct file                        *file,
     const char __user                  *buf,
@@ -278,19 +233,7 @@ ssize_t RNIC_WriteOnDemandFile(
     return (ssize_t)len;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_InitOnDemandFile
- 功能描述  : OnDemand虚拟文件初始化
- 输入参数  : proc_dir_entry *pstParentFileDirEntry -- 父目录的入口
- 输出参数  : 无
- 返 回 值  : 初始化结果
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_InitOnDemandFile(struct proc_dir_entry *pstParentFileDirEntry)
 {
     struct proc_dir_entry              *pstOnDemandEntry;
@@ -331,21 +274,7 @@ VOS_UINT32 RNIC_InitOnDemandFile(struct proc_dir_entry *pstParentFileDirEntry)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ReadIdleTimerOutFile
- 功能描述  : ideltimerout虚拟文件读实现
- 输入参数  : file --- 文件句柄
-             buf  --- 用户空间
-             ppos --- 文件偏移，参数未使用
- 输出参数  : 无
- 返 回 值  : 成功或失败
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 ssize_t RNIC_ReadIdleTimerOutFile(
     struct file                        *file,
     char __user                        *buf,
@@ -390,24 +319,7 @@ ssize_t RNIC_ReadIdleTimerOutFile(
 }
 
 
-/*****************************************************************************
- 函 数 名  : RNIC_WriteIdleTimerOutFile
- 功能描述  : idel_timerout虚拟文件写实现
- 输入参数  : file ----- 文件句柄
-             buf  ----- 用户空间数据
-             lLength -- 用户数据长度
-             ppos - ----文件偏移，参数未使用
- 输出参数  : 无
- 返 回 值  : 成功或失败
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-  2.日    期   : 2012年8月10日
-    作    者   : y00213812
-    修改内容   : DTS2012082204471, TQE清理，代码冗余
-*****************************************************************************/
 ssize_t RNIC_WriteIdleTimerOutFile(
     struct file                        *file,
     const char __user                  *buf,
@@ -466,19 +378,7 @@ ssize_t RNIC_WriteIdleTimerOutFile(
     return (ssize_t)len;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_InitIdleTimerOutFile
- 功能描述  : ideltimerout虚拟文件初始化
- 输入参数  : proc_dir_entry *pstParentFileDirEntry -- 父目录的入口
- 输出参数  : 无
- 返 回 值  : 初始化结果
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_InitIdleTimerOutFile(struct proc_dir_entry *pstParentFileDirEntry)
 {
     struct proc_dir_entry              *pstIdleTimeOutEntry;
@@ -517,21 +417,7 @@ VOS_UINT32 RNIC_InitIdleTimerOutFile(struct proc_dir_entry *pstParentFileDirEntr
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ReadDialEventReportFile
- 功能描述  : dial_event_report虚拟文件读实现
- 输入参数  : file --- 文件句柄
-             buf  --- 用户空间
-             ppos --- 文件偏移，参数未使用
- 输出参数  : 无
- 返 回 值  : 成功或失败
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 ssize_t RNIC_ReadDialEventReportFile(
     struct file                        *file,
     char __user                        *buf,
@@ -577,24 +463,7 @@ ssize_t RNIC_ReadDialEventReportFile(
 }
 
 
-/*****************************************************************************
- 函 数 名  : RNIC_WriteDialEventReportFile
- 功能描述  : dialeventreport虚拟文件写实现
- 输入参数  : file ----- 文件句柄
-             buf  ----- 用户空间数据
-             lLength -- 用户数据长度
-             ppos - ----文件偏移，参数未使用
- 输出参数  : 无
- 返 回 值  : 成功或失败
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-  2.日    期   : 2012年8月10日
-    作    者   : y00213812
-    修改内容   : DTS2012082204471, TQE清理，代码冗余
-*****************************************************************************/
 ssize_t RNIC_WriteDialEventReportFile(
     struct file                        *file,
     const char __user                  *buf,
@@ -643,19 +512,7 @@ ssize_t RNIC_WriteDialEventReportFile(
 
     return (ssize_t)len;
 }
-/*****************************************************************************
- 函 数 名  : RNIC_InitDialEventReportFiles
- 功能描述  : proc_dir_entry *pstParentFileDirEntry -- 父目录的入口
- 输入参数  : proc_dir_entry *pstParentFileDirEntry
- 输出参数  : 无
- 返 回 值  : 初始化结果
 
- 修改历史      :
-  1.日    期   : 2012年01月30日
-    作    者   : S62952
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_InitDialEventReportFile(struct proc_dir_entry *pstParentFileDirEntry)
 {
     struct proc_dir_entry              *pstDialEventReportEntry;
@@ -696,21 +553,7 @@ VOS_UINT32 RNIC_InitDialEventReportFile(struct proc_dir_entry *pstParentFileDirE
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_InitDemandDialFile
- 功能描述  : 初始化按需拨文件
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年2月1日
-    作    者   : w00199382
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_InitDemandDialFile(VOS_VOID)
 {
     struct proc_dir_entry              *stProcDemandDialDir;

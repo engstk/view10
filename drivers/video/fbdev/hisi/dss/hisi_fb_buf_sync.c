@@ -12,10 +12,7 @@
 */
 
 #include "hisi_fb.h"
-
-
-#define HISI_DSS_LAYERBUF_FREE	"hisi-dss-layerbuf-free"
-
+#define HISI_DSS_LAYERBUF_FREE	"hisifb%d-layerbuf-free"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -268,14 +265,15 @@ static void hisifb_layerbuf_unlock_work(struct work_struct *work)
 
 	INIT_LIST_HEAD(&free_list);
 	spin_lock_irqsave(&pbuf_sync->layerbuf_spinlock, flags);
+	down(&pbuf_sync->layerbuf_sem);
 	list_for_each_entry_safe(node, _node_, &pbuf_sync->layerbuf_list, list_node) {
 		if (node->timeline >= 2) {
 			list_del(&node->list_node);
 			list_add_tail(&node->list_node, &free_list);
 		}
 	}
+	up(&pbuf_sync->layerbuf_sem);
 	spin_unlock_irqrestore(&pbuf_sync->layerbuf_spinlock, flags);
-
 	hisifb_layerbuf_unlock(hisifd, &free_list);
 }
 
@@ -285,43 +283,114 @@ static void hisifb_layerbuf_unlock_work(struct work_struct *work)
 // buf sync fence
 //
 #define BUF_SYNC_TIMEOUT_MSEC	(10 * MSEC_PER_SEC)
-#define BUF_SYNC_FENCE_NAME	"hisi-dss-fence"
-#define BUF_SYNC_TIMELINE_NAME	"hisi-dss-timeline"
+#define BUF_SYNC_RELEASE_FENCE_NAME	"hisifb%d-release-fence"
+#define BUF_SYNC_RETIRE_FENCE_NAME	"hisifb%d-retire-fence"
+#define BUF_SYNC_TIMELINE_NAME	"hisifb%d-timeline"
 
-
-int hisifb_buf_sync_create_fence(struct hisi_fb_data_type *hisifd, unsigned value)
+int hisifb_buf_sync_create_fence(struct hisi_fb_data_type *hisifd, dss_overlay_t *pov_req)
 {
-	int fd = -1;
-	struct sync_fence *fence = NULL;
-	struct sync_pt *pt = NULL;
+	char fence_name[256] = {0};
+	int release_fence_fd = -1;
+	struct sync_fence *release_fence = NULL;
+	struct sync_pt *release_fence_pt = NULL;
+	unsigned int release_fence_val = 0;
 
-	if (NULL == hisifd) {
-		HISI_FB_ERR("hisifd is NULL");
+	int retire_fence_fd = -1;
+	struct sync_fence *retire_fence = NULL;
+	struct sync_pt *retire_fence_pt = NULL;
+	unsigned int retire_fence_val = 0;
+
+	if (!hisifd) {
+		HISI_FB_ERR("hisifd is NULL!\n");
 		return -EINVAL;
 	}
 
-	fd = get_unused_fd_flags(0);
-	if (fd < 0) {
-		HISI_FB_ERR("get_unused_fd failed!\n");
-		return fd;
+	if (!pov_req) {
+		HISI_FB_ERR("pov_req is NULL!\n");
+		return -EINVAL;
+	}
+	pov_req->release_fence = -1;
+	pov_req->retire_fence = -1;
+
+	/* create release fence */
+	release_fence_fd = get_unused_fd_flags(0);
+	if (release_fence_fd < 0) {
+		HISI_FB_ERR("failed to get_unused_fd for release_fence_fd!\n");
+		return release_fence_fd;
 	}
 
-	pt = sw_sync_pt_create(hisifd->buf_sync_ctrl.timeline, value);
-	if (pt == NULL) {
-		put_unused_fd((unsigned int)fd);
+	release_fence_val = hisifd->buf_sync_ctrl.timeline_max + hisifd->buf_sync_ctrl.threshold + 1;
+	release_fence_pt = sw_sync_pt_create(hisifd->buf_sync_ctrl.timeline, release_fence_val);
+	if (release_fence_pt == NULL) {
+		HISI_FB_ERR("failed to create release_fence_pt!\n");
+		put_unused_fd((unsigned int)release_fence_fd);
 		return -ENOMEM;
 	}
 
-	fence = sync_fence_create(BUF_SYNC_FENCE_NAME, pt);
-	if (fence == NULL) {
-		sync_pt_free(pt);
-		put_unused_fd((unsigned int)fd);
+	snprintf(fence_name, sizeof(fence_name), BUF_SYNC_RELEASE_FENCE_NAME, hisifd->index);
+	release_fence = sync_fence_create(fence_name, release_fence_pt);
+	if (release_fence == NULL) {
+		HISI_FB_ERR("failed to create release_fence!\n");
+		sync_pt_free(release_fence_pt);
+		put_unused_fd((unsigned int)release_fence_fd);
+		return -ENOMEM;
+	}
+	sync_fence_install(release_fence, release_fence_fd);
+	pov_req->release_fence = release_fence_fd;
+
+	/* create retire fence */
+	retire_fence_fd = get_unused_fd_flags(0);
+	if (retire_fence_fd < 0) {
+		HISI_FB_ERR("failed to get_unused_fd for retire_fence_fd!\n");
+		return retire_fence_fd;
+	}
+
+	retire_fence_val = release_fence_val + hisifd->buf_sync_ctrl.retire_threshold;
+	retire_fence_pt = sw_sync_pt_create(hisifd->buf_sync_ctrl.timeline, retire_fence_val);
+	if (retire_fence_pt == NULL) {
+		HISI_FB_INFO("failed to create retire_fence_pt!\n");
+		put_unused_fd((unsigned int)retire_fence_fd);
 		return -ENOMEM;
 	}
 
-	sync_fence_install(fence, fd);
+	snprintf(fence_name, sizeof(fence_name), BUF_SYNC_RETIRE_FENCE_NAME, hisifd->index);
+	retire_fence = sync_fence_create(fence_name, retire_fence_pt);
+	if (retire_fence == NULL) {
+		HISI_FB_ERR("failed to create retire_fence!\n");
+		sync_pt_free(retire_fence_pt);
+		put_unused_fd((unsigned int)retire_fence_fd);
+		return -ENOMEM;
+	}
+	sync_fence_install(retire_fence, retire_fence_fd);
+	pov_req->retire_fence = retire_fence_fd;
 
-	return fd;
+	if (g_debug_fence_timeline) {
+		HISI_FB_INFO("hisifb%d frame_no(%d) timeline_max(%d), release(%d),"
+			"retire(%d), timeline(%d)!\n",
+			hisifd->index, hisifd->ov_req.frame_no,
+			hisifd->buf_sync_ctrl.timeline_max, release_fence_val,
+			retire_fence_val, hisifd->buf_sync_ctrl.timeline->value);
+	}
+
+	return 0;
+}
+
+void hisifb_buf_sync_close_fence(dss_overlay_t *pov_req)
+{
+	if (!pov_req) {
+		HISI_FB_ERR("pov_req is NULL!\n");
+		return;
+	}
+
+	if (pov_req->release_fence >= 0) {
+		sys_close(pov_req->release_fence);
+		pov_req->release_fence = -1;
+	}
+
+	if (pov_req->retire_fence >= 0) {
+		sys_close(pov_req->retire_fence);
+		pov_req->retire_fence = -1;
+	}
 }
 
 int hisifb_buf_sync_wait(int fence_fd)
@@ -431,17 +500,18 @@ void hisifb_buf_sync_signal(struct hisi_fb_data_type *hisifd)
 {
 	struct hisifb_layerbuf *node = NULL;
 	struct hisifb_layerbuf *_node_ = NULL;
+	int val = 0;
 
 	if (NULL == hisifd) {
 		HISI_FB_ERR("hisifd is NULL");
 		return;
 	}
 
-	//HISI_FB_DEBUG("fb%d, +.\n", hisifd->index);
-
 	spin_lock(&hisifd->buf_sync_ctrl.refresh_lock);
 	if (hisifd->buf_sync_ctrl.refresh) {
-		sw_sync_timeline_inc(hisifd->buf_sync_ctrl.timeline, hisifd->buf_sync_ctrl.refresh);
+		val = hisifd->buf_sync_ctrl.threshold + hisifd->buf_sync_ctrl.refresh;
+		sw_sync_timeline_inc(hisifd->buf_sync_ctrl.timeline, val);
+		hisifd->buf_sync_ctrl.timeline_max += val;
 		hisifd->buf_sync_ctrl.refresh = 0;
 	}
 	spin_unlock(&hisifd->buf_sync_ctrl.refresh_lock);
@@ -457,23 +527,30 @@ void hisifb_buf_sync_signal(struct hisi_fb_data_type *hisifd)
 
 	queue_work(hisifd->buf_sync_ctrl.free_layerbuf_queue, &(hisifd->buf_sync_ctrl.free_layerbuf_work));
 
-	//HISI_FB_DEBUG("fb%d, -.\n", hisifd->index);
+	if (g_debug_fence_timeline) {
+		HISI_FB_INFO("hisifb%d frame_no(%d) timeline_max(%d), timeline(%d)!\n",
+			hisifd->index, hisifd->ov_req.frame_no, hisifd->buf_sync_ctrl.timeline_max,
+			hisifd->buf_sync_ctrl.timeline->value);
+	}
 }
 
 void hisifb_buf_sync_suspend(struct hisi_fb_data_type *hisifd)
 {
 	unsigned long flags;
+	int val = 0;
 
 	spin_lock_irqsave(&hisifd->buf_sync_ctrl.refresh_lock,flags);
-	sw_sync_timeline_inc(hisifd->buf_sync_ctrl.timeline, hisifd->buf_sync_ctrl.refresh + 1);
+	val = hisifd->buf_sync_ctrl.refresh + 1;
+	sw_sync_timeline_inc(hisifd->buf_sync_ctrl.timeline, val);
+	hisifd->buf_sync_ctrl.timeline_max += val;
 	hisifd->buf_sync_ctrl.refresh = 0;
-	hisifd->buf_sync_ctrl.timeline_max++;
 	spin_unlock_irqrestore(&hisifd->buf_sync_ctrl.refresh_lock,flags);
 }
 
 void hisifb_buf_sync_register(struct platform_device *pdev)
 {
 	struct hisi_fb_data_type *hisifd = NULL;
+	char tmp_name[256] = {0};
 
 	if (NULL == pdev) {
 		HISI_FB_ERR("pdev is NULL");
@@ -487,11 +564,17 @@ void hisifb_buf_sync_register(struct platform_device *pdev)
 
 	HISI_FB_DEBUG("fb%d, +.\n", hisifd->index);
 
-	spin_lock_init(&hisifd->buf_sync_ctrl.refresh_lock);
+	hisifd->buf_sync_ctrl.fence_name = "dss-fence";
+
+	hisifd->buf_sync_ctrl.threshold = 0;
+	hisifd->buf_sync_ctrl.retire_threshold = 0;
+
 	hisifd->buf_sync_ctrl.refresh = 0;
 	hisifd->buf_sync_ctrl.timeline_max = 1;
-	hisifd->buf_sync_ctrl.timeline =
-		sw_sync_timeline_create(BUF_SYNC_TIMELINE_NAME);
+	spin_lock_init(&hisifd->buf_sync_ctrl.refresh_lock);
+
+	snprintf(tmp_name, sizeof(tmp_name), BUF_SYNC_TIMELINE_NAME, hisifd->index);
+	hisifd->buf_sync_ctrl.timeline = sw_sync_timeline_create(tmp_name);
 	if (hisifd->buf_sync_ctrl.timeline == NULL) {
 		HISI_FB_ERR("cannot create time line!");
 		return ; /* -ENOMEM */
@@ -501,9 +584,11 @@ void hisifb_buf_sync_register(struct platform_device *pdev)
 	spin_lock_init(&(hisifd->buf_sync_ctrl.layerbuf_spinlock));
 	INIT_LIST_HEAD(&(hisifd->buf_sync_ctrl.layerbuf_list));
 	hisifd->buf_sync_ctrl.layerbuf_flushed = false;
+	sema_init(&(hisifd->buf_sync_ctrl.layerbuf_sem), 1);
 
+	snprintf(tmp_name, sizeof(tmp_name), HISI_DSS_LAYERBUF_FREE, hisifd->index);
 	INIT_WORK(&(hisifd->buf_sync_ctrl.free_layerbuf_work), hisifb_layerbuf_unlock_work);
-	hisifd->buf_sync_ctrl.free_layerbuf_queue = create_singlethread_workqueue(HISI_DSS_LAYERBUF_FREE);
+	hisifd->buf_sync_ctrl.free_layerbuf_queue = create_singlethread_workqueue(tmp_name);
 	if (!hisifd->buf_sync_ctrl.free_layerbuf_queue) {
 		HISI_FB_ERR("failed to create free_layerbuf_queue!\n");
 		return ;

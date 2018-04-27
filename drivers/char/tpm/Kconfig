@@ -122,5 +122,12 @@ config TCG_CRB
 	  from within Linux.  To compile this driver as a module, choose
 	  M here; the module will be called tpm_crb.
 
+config TCG_TEE
+       tristate "TPM TA"
+       ---help---
+       Software TPM implementation utilizing TrustedCore Trusted Execution
+       Environment.
+
+
 source "drivers/char/tpm/st33zp24/Kconfig"
 endif # TCG_TPM

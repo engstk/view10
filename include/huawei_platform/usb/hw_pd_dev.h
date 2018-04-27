@@ -20,7 +20,7 @@
 #endif
 #define PD_DPM_HW_DOCK_SVID 0x12d1
 #define PD_DPM_CC_CHANGE_COUNTER_THRESHOLD 50
-#define PD_DPM_CC_CHANGE_INTERVAL 300 /*ms*/
+#define PD_DPM_CC_CHANGE_INTERVAL 500 /*ms*/
 
 /* type-c inserted plug orientation */
 enum pd_cc_orient{
@@ -101,13 +101,17 @@ enum pd_typec_attach_type {
 #ifdef CONFIG_DPM_TYPEC_CAP_CUSTOM_SRC
 	PD_DPM_TYPEC_ATTACHED_CUSTOM_SRC,		/* Same Rp */
 #endif	/* CONFIG_TYPEC_CAP_CUSTOM_SRC */
+    PD_DPM_TYPEC_ATTACHED_VBUS_ONLY,
+    PD_DPM_TYPEC_UNATTACHED_VBUS_ONLY,
 };
 
 enum pd_dpm_cable_event_type {
     USB31_CABLE_IN_EVENT = 0,
     DP_CABLE_IN_EVENT,
+    ANA_AUDIO_IN_EVENT,
     USB31_CABLE_OUT_EVENT,
     DP_CABLE_OUT_EVENT,
+    ANA_AUDIO_OUT_EVENT,
 };
 
 enum pd_dpm_charger_event_type {
@@ -147,8 +151,9 @@ struct pd_dpm_typec_state {
 struct pd_dpm_ops {
 	void (*pd_dpm_hard_reset)(void*);
 	bool (*pd_dpm_get_hw_dock_svid_exist)(void*);
-	void (*pd_dpm_set_cc_mode)(int mode);
 	int (*pd_dpm_notify_direct_charge_status)(void*, bool mode);
+	void (*pd_dpm_set_cc_mode)(int mode);
+	bool (*pd_dpm_set_voltage)(void);
 };
 struct pd_dpm_pd_state {
 	uint8_t connected;
@@ -213,7 +218,6 @@ struct pd_dpm_info{
 
     enum pd_dpm_uevent_type uevent_type;
     struct work_struct pd_work;
-    struct work_struct recovery_work;
 
     const char *tcpc_name;
     int uart_use_sbu;
@@ -263,16 +267,22 @@ extern int pd_dpm_handle_pe_event(unsigned long event, void *data);
 extern bool pd_dpm_get_pd_finish_flag(void);
 extern bool pd_dpm_get_pd_source_vbus(void);
 extern void pd_dpm_get_typec_state(int *typec_detach);
+int pd_dpm_get_analog_hs_state(void);
 extern void pd_dpm_get_charge_event(unsigned long *event, struct pd_dpm_vbus_state *state);
 extern bool pd_dpm_get_high_power_charging_status(void);
+extern bool pd_dpm_get_optional_max_power_status(void);
 extern bool pd_dpm_get_cc_orientation(void);
+#ifdef CONFIG_CONTEXTHUB_PD
 extern int pd_dpm_handle_combphy_event(struct pd_dpm_combphy_event event);
+#endif
 extern int pd_dpm_vboost_enable(bool enable, enum PD_DPM_VBOOST_CONTROL_SOURCE_TYPE type);
 void pd_dpm_set_cc_voltage(int type);
 enum pd_dpm_cc_voltage_type pd_dpm_get_cc_voltage(void);
 int pd_dpm_ops_register(struct pd_dpm_ops *ops, void*client);
 void pd_dpm_hard_reset(void);
 bool pd_dpm_get_hw_dock_svid_exist(void);
+int pd_dpm_get_pd_reset_adapter(void);
+void pd_dpm_set_pd_reset_adapter(int ra);
 
 #ifdef CONFIG_TCPC_CLASS
 extern void pd_dpm_wakelock_ctrl(unsigned long event);/*PD_WAKE_LOCK,PD_WAKE_UNLOCK*/

@@ -416,12 +416,10 @@ static int ufsdbg_host_regs_show(struct seq_file *file, void *data)
 {
 	struct ufs_hba *hba = (struct ufs_hba *)file->private;
 
-	ufshcd_hold(hba, false);
 	pm_runtime_get_sync(hba->dev);
 	ufsdbg_pr_buf_to_std(hba, 0, REG_SPACE_SIZE / sizeof(u32),
 			     "host regs", file);
 	pm_runtime_put_sync(hba->dev);
-	ufshcd_release(hba);
 	return 0;
 }
 
@@ -527,8 +525,6 @@ static int ufsdbg_show_hba_show(struct seq_file *file, void *data)
 		   hba->auto_bkops_enabled);
 
 	seq_printf(file, "hba->ufshcd_state = 0x%x\n", hba->ufshcd_state);
-	seq_printf(file, "hba->clk_gating.state = 0x%x\n",
-		   hba->clk_gating.state);
 	seq_printf(file, "hba->eh_flags = 0x%x\n", hba->eh_flags);
 	seq_printf(file, "hba->intr_mask = 0x%x\n", hba->intr_mask);
 	seq_printf(file, "hba->ee_ctrl_mask = 0x%x\n", hba->ee_ctrl_mask);
@@ -538,6 +534,9 @@ static int ufsdbg_show_hba_show(struct seq_file *file, void *data)
 	seq_printf(file, "hba->uic_error = 0x%x\n", hba->uic_error);
 	seq_printf(file, "hba->saved_err = 0x%x\n", hba->saved_err);
 	seq_printf(file, "hba->saved_uic_err = 0x%x\n", hba->saved_uic_err);
+
+	hba->vops->dbg_hci_dump(hba);
+	hba->vops->dbg_uic_dump(hba);
 
 	return 0;
 }
@@ -944,11 +943,240 @@ static const struct file_operations ufsdbg_req_stats_desc = {
 	.write = ufsdbg_req_stats_write,
 };
 
+#ifdef CONFIG_HISI_DEBUG_FS
+static int ufsdbg_idle_intr_verify_show(struct seq_file *file, void *data)
+{
+	struct ufs_hba *hba = (struct ufs_hba *)file->private;
+	unsigned long flags;
+
+	if (!hba)
+		goto exit;
+
+	spin_lock_irqsave(hba->host->host_lock, flags);
+	seq_printf(file, "%d\n", hba->ufs_idle_intr_verify);
+	spin_unlock_irqrestore(hba->host->host_lock, flags);
+
+exit:
+	return 0;
+}
+
+static int ufsdbg_idle_intr_verify_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ufsdbg_idle_intr_verify_show, inode->i_private);
+}
+
+static ssize_t ufsdbg_idle_intr_verify_write(struct file *filp,
+				      const char __user *ubuf, size_t cnt,
+				      loff_t *ppos)
+{
+	struct ufs_hba *hba = filp->f_mapping->host->i_private;
+	int val;
+	int ret;
+	unsigned long flags;
+
+	ret = kstrtoint_from_user(ubuf, cnt, 0, &val);
+	if (ret) {
+		dev_err(hba->dev, "%s: Invalid argument\n", __func__);
+		return ret;
+	}
+
+	spin_lock_irqsave(hba->host->host_lock, flags);
+	hba->ufs_idle_intr_verify = val;
+	spin_unlock_irqrestore(hba->host->host_lock, flags);
+	return cnt;
+}
+
+static const struct file_operations ufsdbg_idle_intr_verify_desc = {
+	.open = ufsdbg_idle_intr_verify_open,
+	.read = seq_read,
+	.write = ufsdbg_idle_intr_verify_write,
+};
+
+static int ufsdbg_idle_timeout_val_show(struct seq_file *file, void *data)
+{
+	struct ufs_hba *hba = (struct ufs_hba *)file->private;
+	unsigned long flags;
+
+	if (!hba)
+		goto exit;
+
+	spin_lock_irqsave(hba->host->host_lock, flags);
+	seq_printf(file, "%dms\n", hba->idle_timeout_val / 1000);
+	spin_unlock_irqrestore(hba->host->host_lock, flags);
+
+exit:
+	return 0;
+}
+
+static int ufsdbg_idle_timeout_val_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ufsdbg_idle_timeout_val_show, inode->i_private);
+}
+
+extern void ufs_idle_intr_toggle(struct ufs_hba *hba, int enable);
+static ssize_t ufsdbg_idle_timeout_val_write(struct file *filp,
+				      const char __user *ubuf, size_t cnt,
+				      loff_t *ppos)
+{
+	struct ufs_hba *hba = filp->f_mapping->host->i_private;
+	unsigned long flags;
+	int val;
+	int ret;
+	struct blk_lld_func *lld = &(hba->host->tag_set.lld_func);
+
+	ret = kstrtoint_from_user(ubuf, cnt, 0, &val);
+	if (ret) {
+		dev_err(hba->dev, "%s: Invalid argument\n", __func__);
+		return ret;
+	}
+
+	if (val <= 0) {
+		dev_err(hba->dev, "%s: Invalid argument: %d\n", __func__, val);
+		return cnt;
+	}
+
+	hba->idle_timeout_val = val * 1000;
+	spin_lock_irqsave(hba->host->host_lock, flags);
+	ufs_idle_intr_toggle(hba, atomic_read(&lld->hw_idle_en));
+	spin_unlock_irqrestore(hba->host->host_lock, flags);
+
+	return cnt;
+}
+
+static const struct file_operations ufsdbg_idle_timeout_val_desc = {
+	.open = ufsdbg_idle_timeout_val_open,
+	.read = seq_read,
+	.write = ufsdbg_idle_timeout_val_write,
+};
+
+static int ufsdbg_idle_intr_check_timer_threshold_show(struct seq_file *file, void *data)
+{
+	struct ufs_hba *hba = (struct ufs_hba *)file->private;
+
+	if (!hba)
+		goto exit;
+
+	seq_printf(file, "%ds\n", hba->idle_intr_check_timer_threshold / 1000);
+
+exit:
+	return 0;
+}
+
+static int ufsdbg_idle_intr_check_timer_threshold_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, ufsdbg_idle_intr_check_timer_threshold_show, inode->i_private);
+}
+
+static ssize_t ufsdbg_idle_intr_check_timer_threshold_write(struct file *filp,
+				      const char __user *ubuf, size_t cnt,
+				      loff_t *ppos)
+{
+	struct ufs_hba *hba = filp->f_mapping->host->i_private;
+	int val;
+	int ret;
+
+	ret = kstrtoint_from_user(ubuf, cnt, 0, &val);
+	if (ret) {
+		dev_err(hba->dev, "%s: Invalid argument\n", __func__);
+		return ret;
+	}
+
+	if (val <= 0) {
+		dev_err(hba->dev, "%s: Invalid argument: %d\n", __func__, val);
+		return cnt;
+	}
+
+	hba->idle_intr_check_timer_threshold = val * 1000;
+
+	return cnt;
+}
+
+static const struct file_operations ufsdbg_idle_intr_check_timer_threshold_desc = {
+	.open = ufsdbg_idle_intr_check_timer_threshold_open,
+	.read = seq_read,
+	.write = ufsdbg_idle_intr_check_timer_threshold_write,
+};
+
+static int ufsdbg_add_timer_intr_debugfs(struct ufs_hba *hba)
+{
+	if (hba->ufs_idle_intr_en) {
+		hba->debugfs_files.idle_intr_verify =
+			debugfs_create_file("idle_intr_verify", S_IRUSR | S_IWUSR,
+					hba->debugfs_files.debugfs_root, hba,
+					&ufsdbg_idle_intr_verify_desc);
+		if (!hba->debugfs_files.idle_intr_verify) {
+			dev_err(hba->dev,
+				"%s:  failed create idle_intr_verify debugfs entry\n",
+				__func__);
+			return -EFAULT;
+		}
+
+		hba->debugfs_files.idle_timeout_val =
+			debugfs_create_file("idle_timeout_val", S_IRUSR | S_IWUSR,
+					hba->debugfs_files.debugfs_root, hba,
+					&ufsdbg_idle_timeout_val_desc);
+		if (!hba->debugfs_files.idle_timeout_val) {
+			dev_err(hba->dev,
+				"%s:  failed create idle_timeout_val debugfs entry\n",
+				__func__);
+			return -EFAULT;
+		}
+
+		hba->debugfs_files.idle_intr_check_timer_threshold =
+			debugfs_create_file("idle_intr_check_timer_threshold", S_IRUSR | S_IWUSR,
+					hba->debugfs_files.debugfs_root, hba,
+					&ufsdbg_idle_intr_check_timer_threshold_desc);
+		if (!hba->debugfs_files.idle_intr_check_timer_threshold) {
+			dev_err(hba->dev,
+				"%s:  failed create idle_intr_check_timer_threshold debugfs entry\n",
+				__func__);
+			return -EFAULT;
+		}
+	}
+
+	return 0;
+}
+#endif /* CONFIG_HISI_DEBUG_FS */
+
+static int ufsdbg_add_stats_debugfs(struct ufs_hba *hba)
+{
+	hba->debugfs_files.tag_stats =
+	    debugfs_create_file("tag_stats", S_IRUSR | S_IWUSR,
+				hba->debugfs_files.debugfs_root, hba,
+				&ufsdbg_tag_stats_fops);
+	if (!hba->debugfs_files.tag_stats) {
+		dev_err(hba->dev, "%s:  NULL tag stats file, exiting",
+			__func__);
+		return -EFAULT;
+	}
+	hba->debugfs_files.err_stats =
+	    debugfs_create_file("err_stats", S_IRUSR | S_IWUSR,
+				hba->debugfs_files.debugfs_root, hba,
+				&ufsdbg_err_stats_fops);
+	if (!hba->debugfs_files.err_stats) {
+		dev_err(hba->dev, "%s:  NULL err stats file, exiting",
+			__func__);
+		return -EFAULT;
+	}
+
+	hba->debugfs_files.req_stats =
+	    debugfs_create_file("req_stats", S_IRUSR | S_IWUSR,
+				hba->debugfs_files.debugfs_root, hba,
+				&ufsdbg_req_stats_desc);
+	if (!hba->debugfs_files.req_stats) {
+		dev_err(hba->dev,
+			"%s:  failed create req_stats debugfs entry\n",
+			__func__);
+		return -EFAULT;
+	}
+
+	return 0;
+}
+
 struct ufs_hba *hba_addr;
 EXPORT_SYMBOL(hba_addr);
 void ufsdbg_add_debugfs(struct ufs_hba *hba)
 {
-
 	if (!hba) {
 		pr_err("%s: NULL hba, exiting\n", __func__);
 		return;
@@ -967,25 +1195,6 @@ void ufsdbg_add_debugfs(struct ufs_hba *hba)
 		dev_err(hba->dev,
 			"%s: NULL debugfs root directory, exiting", __func__);
 		goto err_no_root;
-	}
-
-	hba->debugfs_files.tag_stats =
-	    debugfs_create_file("tag_stats", S_IRUSR | S_IWUSR,
-				hba->debugfs_files.debugfs_root, hba,
-				&ufsdbg_tag_stats_fops);
-	if (!hba->debugfs_files.tag_stats) {
-		dev_err(hba->dev, "%s:  NULL tag stats file, exiting",
-			__func__);
-		goto err;
-	}
-	hba->debugfs_files.err_stats =
-	    debugfs_create_file("err_stats", S_IRUSR | S_IWUSR,
-				hba->debugfs_files.debugfs_root, hba,
-				&ufsdbg_err_stats_fops);
-	if (!hba->debugfs_files.err_stats) {
-		dev_err(hba->dev, "%s:  NULL err stats file, exiting",
-			__func__);
-		goto err;
 	}
 
 	if (ufshcd_init_statistics(hba)) {
@@ -1054,16 +1263,13 @@ void ufsdbg_add_debugfs(struct ufs_hba *hba)
 		goto err;
 	}
 
-	hba->debugfs_files.req_stats =
-	    debugfs_create_file("req_stats", S_IRUSR | S_IWUSR,
-				hba->debugfs_files.debugfs_root, hba,
-				&ufsdbg_req_stats_desc);
-	if (!hba->debugfs_files.req_stats) {
-		dev_err(hba->dev,
-			"%s:  failed create req_stats debugfs entry\n",
-			__func__);
+	if (ufsdbg_add_stats_debugfs(hba))
 		goto err;
-	}
+
+#ifdef CONFIG_HISI_DEBUG_FS
+	if (ufsdbg_add_timer_intr_debugfs(hba))
+		goto err;
+#endif /* CONFIG_HISI_DEBUG_FS */
 
 	if (hba->vops && hba->vops->add_debugfs)
 		hba->vops->add_debugfs(hba, hba->debugfs_files.debugfs_root);

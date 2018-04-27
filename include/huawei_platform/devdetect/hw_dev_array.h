@@ -46,12 +46,13 @@ static hw_dec_struct hw_dec_device_array[] =
     { DEV_I2C_BUCKBOOST_MAX77813,"max77813"},   /* id : 34    order number 35 */
     { DEV_I2C_COUL,"coul"},                     /* id : 35    order number 36 */
     { DEV_I2C_DTV,"dtv"},                       /* id : 36    order number 37 */
-    { DEV_I2C_MAX,"NULL" },                     /* id : 37    order number 38 */
-    { DEV_CONNECTIVITY_WIFI,"wifi" },           /* id : 38    order number 39 */
-    { DEV_CONNECTIVITY_BT,"bt" },               /* id : 39    order number 40 */
-    { DEV_CONNECTIVITY_FM,"fm" },               /* id : 40    order number 41 */
-    { DEV_CONNECTIVITY_GPS,"gps" },             /* id : 41    order number 42 */
-    { DEV_CONNECTIVITY_GPU,"gpu" },             /* id : 42    order number 43 */
+    { DEV_I2C_AP_COLOR_SENSOR,"ap_color"},      /* id : 37    order number 38 */
+    { DEV_I2C_MAX,"NULL" },                     /* id : 38    order number 39 */
+    { DEV_CONNECTIVITY_WIFI,"wifi" },           /* id : 39    order number 40 */
+    { DEV_CONNECTIVITY_BT,"bt" },               /* id : 40    order number 41 */
+    { DEV_CONNECTIVITY_FM,"fm" },               /* id : 41    order number 42 */
+    { DEV_CONNECTIVITY_GPS,"gps" },             /* id : 42    order number 43 */
+    { DEV_CONNECTIVITY_GPU,"gpu" },             /* id : 43    order number 44 */
 };
 
 #endif

@@ -4,6 +4,7 @@
 #define INIT_DELAY_MS 500   /* Time to wait before init'ing the device (ms) */
 #define RETRIES_I2C   3     /* Number of retries for I2C reads/writes */
 
+int get_dpd_enable(void);
 /*******************************************************************************
 * Function:        fusb_InitializeGPIO
 * Input:           none
@@ -126,6 +127,7 @@ FSC_BOOL FUSB3601_fusb_IsDeviceValid(void);
 * Description:     reset fusb3601 by assert SW_RES
 *******************************************************************************/
 FSC_BOOL FUSB3601_fusb_reset(void);
+FSC_BOOL FUSB3601_fusb_reset_with_adc_reset(void);
 
 /*******************************************************************************
 * Function:        fusb_InitChipData
@@ -146,6 +148,11 @@ void FUSB3601_fusb_InitChipData(void);
 *                  this function.
 *******************************************************************************/
 FSC_S32 FUSB3601_fusb_EnableInterrupts(void);
-
+void FUSB3601_ConfigurePortType(FSC_U8, struct Port *port);
+void FUSB3601_core_set_try_snk(struct Port *port);
+void FUSB3601_set_driver_shutdown_flag(int flag);
+#ifdef CONFIG_DUAL_ROLE_USB_INTF
+FSC_S32 FUSB3601_dual_role_phy_init(void);
+#endif
 #endif /* __FUSB_PLATFORM_HELPERS_H_ */
 

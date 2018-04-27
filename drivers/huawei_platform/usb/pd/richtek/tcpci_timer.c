@@ -91,6 +91,9 @@ static inline void tcpc_clear_timer_enable_mask(
 	down(&tcpc->timer_enable_mask_lock);
 	raw_local_irq_save(flags);
 	tcpc->timer_enable_mask &= ~RT_MASK64(nr);
+	spin_lock(&tcpc->timer_tick_lock);
+	tcpc->timer_tick &= ~RT_MASK64(nr);
+	spin_unlock(&tcpc->timer_tick_lock);
 	raw_local_irq_restore(flags);
 	up(&tcpc->timer_enable_mask_lock);
 }
@@ -183,6 +186,7 @@ const char *tcpc_timer_name[] = {
 
 	"TYPEC_TIMER_CCDEBOUNCE",
 	"TYPEC_TIMER_PDDEBOUNCE",
+	"TYPEC_TIMER_TRYSRCDEBOUNCE",
 	"TYPEC_TIMER_ERROR_RECOVERY",
 	"TYPEC_TIMER_WAKEUP_TOUT",
 	"TYPEC_TIMER_DRP_SRC_TOGGLE",
@@ -205,6 +209,7 @@ const char *tcpc_timer_name[] = {
 
 	"TYPEC_TIMER_CCDEBOUNCE",
 	"TYPEC_TIMER_PDDEBOUNCE",
+	"TYPEC_TIMER_TRYSRCDEBOUNCE",
 	"TYPEC_TIMER_WAKEUP_TOUT",
 	"TYPEC_TIMER_DRP_SRC_TOGGLE",
 #endif /* CONFIG_USB_POWER_DELIVERY */
@@ -285,6 +290,7 @@ static const uint32_t tcpc_timer_timeout[PD_TIMER_NR] = {
 	/* TYPEC-DEBOUNCE-TIMER */
 	TIMEOUT_RANGE(100, 200),	/* TYPEC_TIMER_CCDEBOUNCE */
 	TIMEOUT_RANGE(10, 10),		/* TYPEC_TIMER_PDDEBOUNCE */
+	TIMEOUT_RANGE(20, 20),		/* TYPEC_TIMER_TRYSRCDEBOUNCE */
 	TIMEOUT_RANGE(25, 25),		/* TYPEC_TIMER_ERROR_RECOVERY */
 
 	TIMEOUT_VAL(300*1000),	/* TYPEC_TIMER_WAKEUP_TOUT (out of spec) */
@@ -311,6 +317,7 @@ static const uint32_t tcpc_timer_timeout[PD_TIMER_NR] = {
 
 	TIMEOUT_RANGE(100, 200),	/* TYPEC_TIMER_CCDEBOUNCE */
 	TIMEOUT_RANGE(10, 10),		/* TYPEC_TIMER_PDDEBOUNCE */
+	TIMEOUT_RANGE(20, 20),		/* TYPEC_TIMER_TRYSRCDEBOUNCE */
 
 	TIMEOUT_VAL(300*1000),	/* TYPEC_TIMER_WAKEUP_TOUT (out of spec) */
 	TIMEOUT_VAL(60),			/* TYPEC_TIMER_DRP_SRC_TOGGLE */
@@ -857,6 +864,14 @@ static enum hrtimer_restart tcpc_timer_pddebounce(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
+static enum hrtimer_restart tcpc_timer_trysrcdebounce(struct hrtimer *timer)
+{
+	int index = TYPEC_TIMER_TRYSRCDEBOUNCE;
+	struct tcpc_device *tcpc_dev =
+		container_of(timer, struct tcpc_device, tcpc_timer[index]);
+	TCPC_TIMER_TRIGGER();
+	return HRTIMER_NORESTART;
+}
 static enum hrtimer_restart tcpc_timer_wakeup(struct hrtimer *timer)
 {
 	int index = TYPEC_TIMER_WAKEUP;
@@ -930,13 +945,14 @@ static tcpc_hrtimer_call tcpc_timer_call[PD_TIMER_NR] = {
 
 	[TYPEC_TIMER_CCDEBOUNCE] = tcpc_timer_ccdebounce,
 	[TYPEC_TIMER_PDDEBOUNCE] = tcpc_timer_pddebounce,
+	[TYPEC_TIMER_TRYSRCDEBOUNCE] = tcpc_timer_trysrcdebounce,
 	[TYPEC_TIMER_ERROR_RECOVERY] = tcpc_timer_error_recovery,
 	[TYPEC_TIMER_WAKEUP] = tcpc_timer_wakeup,
 	[TYPEC_TIMER_DRP_SRC_TOGGLE] = tcpc_timer_drp_src_toggle,
 #else
 	[TYPEC_RT_TIMER_SAFE0V_DELAY] = tcpc_timer_rt_vsafe0v_delay,
 	[TYPEC_RT_TIMER_SAFE0V_TOUT] = tcpc_timer_rt_vsafe0v_tout,
-	[TYPEC_RT_TIMER_SAFE5V_TOUT] = tcpc_timer_rt_vsafe5v_tout,	
+	[TYPEC_RT_TIMER_SAFE5V_TOUT] = tcpc_timer_rt_vsafe5v_tout,
 	[TYPEC_RT_TIMER_ROLE_SWAP_START] = tcpc_timer_rt_role_swap_start,
 	[TYPEC_RT_TIMER_ROLE_SWAP_STOP] = tcpc_timer_rt_role_swap_stop,
 	[TYPEC_RT_TIMER_LEGACY] = tcpc_timer_rt_legacy,
@@ -952,7 +968,8 @@ static tcpc_hrtimer_call tcpc_timer_call[PD_TIMER_NR] = {
 
 	[TYPEC_TIMER_CCDEBOUNCE] = tcpc_timer_ccdebounce,
 	[TYPEC_TIMER_PDDEBOUNCE] = tcpc_timer_pddebounce,
-	[TYPEC_TIMER_WAKEUP] = tcpc_timer_wakup,
+	[TYPEC_TIMER_TRYSRCDEBOUNCE] = tcpc_timer_trysrcdebounce,
+	[TYPEC_TIMER_WAKEUP] = tcpc_timer_wakeup,
 	[TYPEC_TIMER_DRP_SRC_TOGGLE] = tcpc_timer_drp_src_toggle,
 #endif /* CONFIG_USB_POWER_DELIVERY */
 };
@@ -1081,15 +1098,18 @@ void tcpc_reset_typec_try_timer(struct tcpc_device *tcpc)
 
 static void tcpc_handle_timer_triggered(struct tcpc_device *tcpc_dev)
 {
+	uint64_t enable_mask;
 	uint64_t triggered_timer;
 	int i = 0;
 
 	triggered_timer = tcpc_get_timer_tick(tcpc_dev);
+	enable_mask = tcpc_get_timer_enable_mask(tcpc_dev);
 
 #ifdef CONFIG_USB_POWER_DELIVERY
 	for (i = 0; i < PD_PE_TIMER_END_ID; i++) {
 		if (triggered_timer & RT_MASK64(i)) {
 			TCPC_TIMER_DBG(tcpc_dev, i);
+			if (enable_mask & RT_MASK64(i))
 			on_pe_timer_timeout(tcpc_dev, i);
 			tcpc_clear_timer_tick(tcpc_dev, i);
 		}
@@ -1100,6 +1120,7 @@ static void tcpc_handle_timer_triggered(struct tcpc_device *tcpc_dev)
 	for (; i < PD_TIMER_NR; i++) {
 		if (triggered_timer & RT_MASK64(i)) {
 			TCPC_TIMER_DBG(tcpc_dev, i);
+			if (enable_mask & RT_MASK64(i))
 			tcpc_typec_handle_timeout(tcpc_dev, i);
 			tcpc_clear_timer_tick(tcpc_dev, i);
 		}

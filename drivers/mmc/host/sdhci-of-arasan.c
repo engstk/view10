@@ -817,7 +817,7 @@ static int sdhci_of_arasan_tuning_soft(struct sdhci_host *host,
 		tuning_blk_pattern = tuning_blk_pattern_4bit;
 		blksz = 64;
 	}
-	tuning_blk = kmalloc(blksz, GFP_KERNEL);
+	tuning_blk = kzalloc(blksz, GFP_KERNEL);
 	if (!tuning_blk) {
 		ret = -ENOMEM;
 		goto err;

@@ -128,10 +128,7 @@ int dsm_ufs_update_ocs_info(struct ufs_hba *hba, int err_code, int ocs)
 
 int dsm_ufs_update_fastboot_info(struct ufs_hba *hba)
 {
-	char *pstr, *dstr;
-	char tmp[64];
-	int err;
-	long tmp_code;
+	char *pstr;
 	unsigned int err_code;
 
 	if (!dsm_ufs_enable)
@@ -142,22 +139,11 @@ int dsm_ufs_update_fastboot_info(struct ufs_hba *hba)
 		pr_err("No fastboot dmd info\n");
 		return -EINVAL;
 	}
-	pstr += strlen("fastbootdmd=");
-	dstr = strstr(pstr, " ");
-	if (!dstr) {
-		pr_err("No find the fastboot dmd end\n");
+	if (1 != sscanf(pstr, "fastbootdmd=%d", &err_code)) {
+		pr_err("Failed to get err_code\n");
 		return -EINVAL;
 	}
 
-	memcpy(tmp, pstr, (unsigned long)(dstr - pstr));
-	tmp[dstr - pstr] = '\0';
-	err = kstrtol(tmp, 10, &tmp_code);
-	if (err) {
-		pr_info("Dsm_fastboot_dmd: kstrtol failed, err: %d\n",
-			err);
-		return err;
-	}
-	err_code = (unsigned int)tmp_code;
 	if (err_code) {
 		if (err_code & FASTBOOTDMD_PWR_ERR) {
 			if (test_and_set_bit_lock(UFS_FASTBOOT_PWMODE_ERR,
@@ -817,8 +803,8 @@ void dsm_ufs_handle_work(struct work_struct *work)
 		DSM_UFS_LOG(hba, DSM_UFS_DEV_INTERNEL_ERR, "UFS_DEV_INTERNEL_ERR");
 		clear_bit_unlock(UFS_DEV_INTERNEL_ERR, &g_ufs_dsm_adaptor.err_type);
 	}
-	if (g_ufs_dsm_adaptor.err_type & (1 << UFS_HIVV_INTERNEL_ERR)) {
-		DSM_UFS_LOG(hba, DSM_UFS_HIVV_INTERNEL_ERR, "DSM_UFS_HIVV_INTERNEL_ERR");
+	if (g_ufs_dsm_adaptor.err_type & (1 << UFS_HI1861_INTERNEL_ERR)) {
+		DSM_UFS_LOG(hba, DSM_UFS_HI1861_INTERNEL_ERR, "DSM_UFS_HI1861_INTERNEL_ERR");
 		clear_bit_unlock(UFS_DEV_INTERNEL_ERR, &g_ufs_dsm_adaptor.err_type);
 	}
 	if (g_ufs_dsm_adaptor.err_type & (1 << UFS_VOLT_GPIO_ERR)) {

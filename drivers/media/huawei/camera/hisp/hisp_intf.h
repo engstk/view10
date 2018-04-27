@@ -92,7 +92,7 @@ hisp_notify_intf_rpmsg_cb(hisp_notify_intf_t *i, hisp_event_t *isp_ev)
 		return;
 	}
 	hisp_assert(NULL != i->vtbl->rpmsg_cb);
-	return i->vtbl->rpmsg_cb(i, isp_ev);
+	i->vtbl->rpmsg_cb(i, isp_ev);
 }
 
 static inline char  *hisp_intf_get_name(hisp_intf_t *i)

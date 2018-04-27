@@ -74,8 +74,6 @@ enum GUCNAS_ACORE_NV_ID_ENUM
 /*  2336 */     en_NV_Item_Ipv6_Address_Test_Mode_Cfg       = 2336,     /* TAF_NVIM_IPV6_ADDR_TEST_MODE_CFG_STRU        IPV6地址测试模式配置，0x55AA55AA为测试模式，其他值为正常模式 */
 /*  2337 */     en_NV_Item_ADS_IPF_MODE_CFG                 = 2337,     /* TAF_NV_ADS_IPF_MODE_CFG_STRU                 IPF处理ADS下行数据的模式配置 */
 
-/*  2351 */     en_NV_Item_ManufactureInfo                  = 2351,     /* OM_MANUFACTUREINFO_STRU */
-
 /*  2354 */     en_NV_Item_ADS_WAKE_LOCK_CFG                = 2354,     /* TAF_NV_ADS_WAKE_LOCK_CFG_STRU ADS WAKELOCK 配置 */
 
 /*  2361 */     en_NV_Item_Print_Modem_Log_Type             = 2361,     /* TAF_NV_PRINT_MODEM_LOG_TYPE_STRU             控制是否输出modem log的类型 */
@@ -152,6 +150,9 @@ enum GUCNAS_ACORE_NV_ID_ENUM
 /*  9113 */     en_NV_Item_AT_ABORT_CMD_PARA                = 9113,     /* AT_NVIM_ABORT_CMD_PARA_STRU */
 /*  9128 */     en_NV_Item_CIMI_PORT_CFG                    = 9128,     /* TAF_AT_NVIM_CIMI_PORT_CFG_STRU */
 /*  9269 */     en_NV_Item_DMS_DEBUG_CFG                    = 9269,     /* TAF_NV_PORT_DEBUG_CFG_STRU */
+
+/* 32768 */     en_NV_Item_ManufactureInfo                  = 32768,    /* OM_MANUFACTUREINFO_STRU */
+
 /* 50014 */     en_NV_Item_WIFI_MAC_ADDR                    = 50014,    /* OM_MAC_ADDR_STRU */
 /* 50061 */     en_NV_Item_PPP_DIAL_ERR_CODE                = 50061,    /* NAS_NV_PPP_DIAL_ERR_CODE_STRU */
 /* 50091 */     en_NV_Item_Huawei_Dynamic_PID_Type          = 50091,    /* AT_DYNAMIC_PID_TYPE_STRU */

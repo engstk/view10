@@ -128,7 +128,7 @@ typedef struct _tag_hwlaser_customer_nvm_managed {
     uint8_t   global_config__ref_en_start_select;
     uint8_t   ref_spad_man__num_requested_ref_spads;
     uint8_t   ref_spad_man__ref_location;
-    uint16_t  algo__crosstalk_compensation_plane_offset_kcps;
+    uint32_t  algo__crosstalk_compensation_plane_offset_kcps;
     int16_t   algo__crosstalk_compensation_x_plane_gradient_kcps;
     int16_t   algo__crosstalk_compensation_y_plane_gradient_kcps;
     uint16_t  ref_spad_char__total_rate_target_mcps;
@@ -145,27 +145,146 @@ typedef struct _tag_hwlaser_dmax_calibration_data {
     uint16_t   coverglass_transmission;
 } hwlaser_dmax_calibration_data_t;
 
+
+/****************************************************************/
+/**               hwlaser_xtalk_histogram_data_t                                      *********/
+/****************************************************************/
+#define HWLASER_MAX_BIN_SEQUENCE_LENGTH  6
+#define HWLASER_HISTOGRAM_BUFFER_SIZE   24
 #define HWLASER_XTALK_HISTO_BINS 12
-typedef struct _tag_hwlaser_xtalk_histogram_data {
+typedef struct _tag_hwlaser_xtalk_histogram_shape{
     uint8_t  zone_id;
     uint32_t time_stamp;
-    uint8_t  PRM_00011;
-    uint8_t  PRM_00012;
-    uint8_t  PRM_00013;
+    uint8_t  PRM_00019;
+    uint8_t  PRM_00020;
+    uint8_t  PRM_00021;
     uint32_t bin_data[HWLASER_XTALK_HISTO_BINS];
     uint16_t phasecal_result__reference_phase;
     uint8_t  phasecal_result__vcsel_start;
     uint8_t  cal_config__vcsel_start;
     uint16_t vcsel_width;
-    uint16_t PRM_00014;
+    uint16_t PRM_00022;
     uint16_t zero_distance_phase;
+} hwlaser_xtalk_histogram_shape_t;
+
+typedef struct _tag_hwlaser_histogram_bin_data{
+    uint8_t     cfg_device_state;
+    uint8_t     rd_device_state;
+    uint8_t  zone_id;
+    uint32_t time_stamp;
+    uint8_t  PRM_00019;
+    uint8_t  PRM_00020;
+    uint8_t  PRM_00021;
+    uint8_t  number_of_ambient_bins;
+    uint8_t  bin_seq[HWLASER_MAX_BIN_SEQUENCE_LENGTH];
+    uint8_t  bin_rep[HWLASER_MAX_BIN_SEQUENCE_LENGTH];
+    int32_t  bin_data[HWLASER_HISTOGRAM_BUFFER_SIZE];
+    uint8_t  result__interrupt_status;
+    uint8_t  result__range_status;
+    uint8_t  result__report_status;
+    uint8_t  result__stream_count;
+    uint16_t result__dss_actual_effective_spads;
+    uint16_t phasecal_result__reference_phase;
+    uint8_t  phasecal_result__vcsel_start;
+    uint8_t  cal_config__vcsel_start;
+    uint16_t vcsel_width;
+    uint8_t  PRM_00008;
+    uint16_t PRM_00022;
+    uint32_t total_periods_elapsed;
+    uint32_t peak_duration_us;
+    uint32_t woi_duration_us;
+    int32_t  min_bin_value;
+    int32_t  max_bin_value;
+    uint16_t zero_distance_phase;
+    uint8_t  number_of_ambient_samples;
+    int32_t  ambient_events_sum;
+    int32_t  PRM_00028;
+    uint8_t  roi_config__user_roi_centre_spad;
+    uint8_t  roi_config__user_roi_requested_global_xy_size;
+} hwlaser_histogram_bin_data_t;
+
+typedef struct _tag_hwlaser_xtalk_histogram_data {
+	hwlaser_xtalk_histogram_shape_t  xtalk_shape;
+	hwlaser_histogram_bin_data_t     xtalk_hist_removed;
 } hwlaser_xtalk_histogram_data_t;
 
+
+/****************************************************************/
+/**               hwlaser_additional_offset_cal_data_t                               *********/
+/****************************************************************/
+typedef struct _tag_hwlaser_additional_offset_cal_data{
+    uint16_t  result__mm_inner_actual_effective_spads;
+    uint16_t  result__mm_outer_actual_effective_spads;
+    uint16_t  result__mm_inner_peak_signal_count_rtn_mcps;
+    uint16_t  result__mm_outer_peak_signal_count_rtn_mcps;
+}hwlaser_additional_offset_cal_data_t;
+
+
+/*****************************************************************/
+/**               hwlaser_optical_centre_t                                                 *********/
+/*****************************************************************/
+/*L3 does not have lens, need to delete or comment out*/
+typedef struct _tag_hwlaser_optical_centre{
+    uint8_t   x_centre;
+    uint8_t   y_centre;
+} hwlaser_optical_centre_t;
+
+
+/*****************************************************************/
+/**               hwlaser_gain_calibration_data_t                                        *********/
+/*****************************************************************/
+typedef struct _tag_hwlaser_gain_calibration_data{
+    uint16_t   standard_ranging_gain_factor;
+    uint16_t   histogram_ranging_gain_factor;
+} hwlaser_gain_calibration_data_t;
+
+
+/*****************************************************************/
+/**               hwlaser_cal_peak_rate_map_t                                          *********/
+/*****************************************************************/
+/*maybe need to delete or comment out*/
+#define HWLASER_NVM_PEAK_RATE_MAP_SAMPLES  25
+typedef struct _tag_hwlaser_cal_peak_rate_map{
+    int16_t     cal_distance_mm;
+    uint16_t    cal_reflectance_pc;
+    uint16_t    max_samples;
+    uint16_t    width;
+    uint16_t    height;
+    uint16_t    peak_rate_mcps[HWLASER_NVM_PEAK_RATE_MAP_SAMPLES];
+} hwlaser_cal_peak_rate_map_t;
+
+
+/*****************************************************************/
+/**                                                                                                 *********/
+/**               NEW CALIBRATION datastruct::                                        *********/
+/**                                                                                                 *********/
+/**               hwlaser_calibration_data                                                 *********/
+/**                                                                                                 *********/
+/*****************************************************************/
 typedef struct _tag_hwlaser_calibration_data {
-    hwlaser_customer_nvm_managed_t  Customer;
-    hwlaser_dmax_calibration_data_t DmaxCal;
-    hwlaser_xtalk_histogram_data_t  XtalkHisto;
+    uint32_t                              struct_version;//maybe need to delete or comment out
+    hwlaser_customer_nvm_managed_t        customer;
+    hwlaser_dmax_calibration_data_t       fmt_dmax_cal;//maybe need to delete or comment out
+    hwlaser_dmax_calibration_data_t       cust_dmax_cal;
+    hwlaser_additional_offset_cal_data_t  add_off_cal_data;
+    hwlaser_optical_centre_t              optical_centre;//maybe need to delete or comment out
+    hwlaser_xtalk_histogram_data_t        xtalkhisto;
+    hwlaser_gain_calibration_data_t       gain_cal;
+    hwlaser_cal_peak_rate_map_t           cal_peak_rate_map;//maybe need to delete or comment out
 } hwlaser_calibration_data;
+
+typedef struct _tag_hwlaser_calibration_FOV {
+    float x;
+    float y;
+    float width;
+    float height;
+    float angle;
+}hwlaser_calibration_FOV;
+
+typedef struct _tag_hwlaser_calibration_data_L1 {
+    hwlaser_calibration_FOV               HW_FOV;
+    hwlaser_calibration_data              RAW_CalibData;
+} hwlaser_calibration_data_L1;
 
 typedef uint32_t FixPoint1616_t;
 
@@ -197,7 +316,7 @@ typedef struct __tag_hwlaser_calibration_data {
     hw_cal_mode_e mode;
     union laser_calibration_data{
         hwlaser_calibration_data_L0  dataL0;
-        hwlaser_calibration_data     data;
+        hwlaser_calibration_data_L1  dataL1;
     }u;
 } hwlaser_calibration_data_t;
 
@@ -221,7 +340,7 @@ typedef uint8_t HWLASER_PresetModes;
 
 
 
-typedef enum _hwlaser_parameter_name_e 
+typedef enum _hwlaser_parameter_name_e
 {
 	OFFSET_PAR = 0,
 	XTALKRATE_PAR = 1,
@@ -334,49 +453,43 @@ typedef uint32_t FixPoint1616_t;
 
 
 typedef struct _tag_hwlaser_ranging_measurement_data {
-    uint32_t TimeStamp;
-    /*!< 32-bit time stamp.
-     ** @warning Not yet implemented */
 
-    uint8_t StreamCount;            /*!< 8-bit Stream Count. */
+    uint8_t RangeQualityLevel;
+        /*!< indicate a quality level in percentage from 0 to 100
+         * @warning Not yet implemented
+         */
 
-    uint8_t ConfidenceLevel;
-        /*!< indicate a confidance level in percentage from 0 to 100
-         ** @warning Not yet implemented  */
+    int16_t RangeMaxMilliMeter;
+        /*!< Tells what is the maximum detection distance of the object
+         * in current setup and environment conditions (Filled when
+         *  applicable)
+         */
 
-    uint16_t DmaxMilliMeter;
-        /*!< range Dmax distance in millimeter.
-         ** @warning Not yet implemented  */
-
-    uint16_t RangeMaxMilliMeter;
-        /*!< Tells what is the maximum detection distance of the device
-         ** in current setup and environment conditions (Filled when
-         **  applicable) */
-
-    uint16_t RangeMinMilliMeter;
-        /*!< Tells what is the minimum detection distance of the device
-         ** in current setup and environment conditions (Filled when
-         **  applicable) */
+    int16_t RangeMinMilliMeter;
+        /*!< Tells what is the minimum detection distance of the object
+         * in current setup and environment conditions (Filled when
+         *  applicable)
+         */
 
     FixPoint1616_t SignalRateRtnMegaCps;
         /*!< Return signal rate (MCPS)\n these is a 16.16 fix point
-         **  value, which is effectively a measure of target
-         **   reflectance.*/
+         *  value, which is effectively a measure of target
+         *   reflectance.
+         */
 
     FixPoint1616_t AmbientRateRtnMegaCps;
         /*!< Return ambient rate (MCPS)\n these is a 16.16 fix point
-         **  value, which is effectively a measure of the ambien
-         **  t light.*/
-
-    uint16_t EffectiveSpadRtnCount;
-        /*!< Return the effective SPAD count for the return signal.
-         **  To obtain Real value it should be divided by 256 */
+         *  value, which is effectively a measure of the ambien
+         *  t light.
+         */
 
     FixPoint1616_t SigmaMilliMeter;
         /*!< Return the Sigma value in millimeter */
 
-    uint16_t RangeMilliMeter;         /*!< range distance in millimeter. */
-
+    int16_t RangeMilliMeter;
+        /*!< range distance in millimeter. This should be between
+         *  RangeMinMilliMeter and RangeMaxMilliMeter
+         */
 
     uint8_t RangeFractionalPart;
         /*!< Fractional part of range distance. Final value is a
@@ -402,6 +515,14 @@ typedef struct _tag_hwlaser_ranging_measurement_data {
 
 typedef struct _tag_hwlaser_multi_ranging_data{
 
+    uint32_t TimeStamp;
+        /*!< 32-bit time stamp.
+         * @warning Not yet implemented
+         */
+
+    uint8_t StreamCount;
+        /*!< 8-bit Stream Count. */
+
     uint8_t RoiNumber;
         /*!< Denotes on which ROI the range data is related to. */
     uint8_t NumberOfObjectsFound;
@@ -417,6 +538,27 @@ typedef struct _tag_hwlaser_multi_ranging_data{
     hwlaser_RangingMeasurementData_t RangeData[HWLASER_MAX_RANGE_RESULTS];
         /*!< Range data each target distance */
 
+    uint8_t HasXtalkValueChanged;
+        /*!< set to 1 if a new Xtalk value has been computed whilst
+         * smudge correction mode enable by with
+         * hwlaser_SmudgeCorrectionEnable() function is either
+         * hwlaser_SMUDGE_CORRECTION_CONTINUOUS or
+         * hwlaser_SMUDGE_CORRECTION_SINGLE.
+         */
+
+    uint16_t EffectiveSpadRtnCount;
+        /*!< Return the effective SPAD count for the return signal.
+         *  To obtain Real value it should be divided by 256
+         */
+
+    int16_t DmaxMilliMeter;
+        /*!< range Dmax distance in millimeter.
+         */
+
+    hwlaser_RangingMeasurementData_t RecommendedDistanceMode;
+        /*!< suggestion for a better distance mode choice to improve
+         *  range accuracy.
+         */
 } hwlaser_multiRangingData_t;
 
 typedef struct _tag_hwlaser_ranging_data_L0{
@@ -449,7 +591,19 @@ typedef struct _tag_hwlaser_ranging_data
     }v;
 }hwlaser_RangingData_t;
 
+typedef struct _tag_hwlaser_legacy_ranging_data_L0 {
+    unsigned int   status;
+    unsigned int   Xtalk;
+    unsigned int   SigmaLimitValue;
+    unsigned int   SignalLimitValue;
+    unsigned int   TimingBudget;
+    unsigned int   RangeIgonreThreshold;
+} hwlaser_LegacyRangingData_L0_t;
 
+typedef struct _tag_hwlaser_fusion_data {
+        hwlaser_RangingData_t rData;
+        hwlaser_LegacyRangingData_L0_t legacyData;
+} hwlaser_FusionData_t;
 
 /** Select reference spad calibration in @ref HWLASER_IOCTL_PERFORM_CALIBRATION.
  *
@@ -481,6 +635,18 @@ typedef struct _tag_hwlaser_ranging_data
  */
 #define HWLASER_CALIBRATION_SPAD            4
 
+/** @defgroup HWLASER_define_OffsetCal_group Defines Offset Calibration modes
+*  Defines all possible Offset Calibration modes for the device
+*  @{
+*/
+typedef uint8_t HWLASER_OffsetCalibrationModes;
+
+#define HWLASER_OFFSETCALIBRATIONMODE_STANDARD \
+	((HWLASER_OffsetCalibrationModes)  1)
+#define HWLASER_OFFSETCALIBRATIONMODE_PRERANGE_ONLY  \
+	((HWLASER_OffsetCalibrationModes)  2)
+#define HWLASER_OFFSETCALIBRATIONMODE_MULTI_ZONE    \
+	((HWLASER_OffsetCalibrationModes)  3)
 
 typedef struct _tag_hwlaser_ioctl_perform_calibration {
     uint32_t calibration_type;
@@ -533,6 +699,7 @@ typedef struct _tag_hw_laser_fn_t {
 typedef struct _tag_hw_laser_ctrl {
     hw_laser_fn_t *func_tbl;
     void *data;
+    struct v4l2_fh *fh;
 }hw_laser_ctrl_t;
 
 //extern int laser_probe(struct i2c_client *client, const struct i2c_device_id *id);

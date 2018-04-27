@@ -77,6 +77,7 @@ typedef enum {
     POWER_OFF_REASON_RM_CHARGE     = 0x504F4235,
     POWER_OFF_REASON_UPDATE         = 0x504F4F55,
     POWER_OFF_REASON_RESET          = 0x504F4D56,
+    POWER_OFF_REASON_BY_CHARGE     = 0x5046424C,  /*reset and entry power off charging*/
     POWER_OFF_REASON_INVALID        = 0xFFFFFFFF
 }power_off_reboot_flag;
 

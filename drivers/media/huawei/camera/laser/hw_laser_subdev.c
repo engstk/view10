@@ -44,7 +44,7 @@
 #include <media/huawei/laser_cfg.h>
 
 
-//lint -save -e826 -e715 -e785 -e64 -e528 -e551 -e753 -e551 -e753 -esym(528,*) -e750 -esym(753,*) -esym(750,*)
+//lint -save -e826 -e715 -e785 -e64 -e528 -e551 -e753 -e551 -e753 -e429 -esym(528,*) -e750 -esym(753,*) -esym(750,*)
 
 
 /* -----------------------------------------------------------------------------
@@ -65,10 +65,11 @@
     do { \
             pr_dbg("[klaser]" "DBG: " fmt "\n", ##__VA_ARGS__); \
     }while (0)
+
 typedef struct vl53lx_laser {
-	struct v4l2_subdev sd;
-	struct mutex lock;
-	struct i2c_client *client;
+    struct v4l2_subdev sd;
+    struct mutex lock;
+    struct i2c_client *client;
     hw_laser_ctrl_t *ctrl;
 }laser_t;
 
@@ -103,7 +104,18 @@ hw_laser_subdev_ioctl(
 
 static int laser_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
-    return 0;
+    int rc = 0;
+    laser_t* s = SD2Laser(sd);
+    if (s == NULL || s->ctrl == NULL)
+    {
+        cam_err("can't register event queue");
+        return rc;
+    }
+
+    s->ctrl->fh = &fh->vfh;
+    cam_info("open laser device success");
+
+    return rc;
 }
 
 static int laser_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
@@ -111,10 +123,23 @@ static int laser_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
     return 0;
 }
 
+static int laser_subdev_subscribe_event(struct v4l2_subdev *sd,
+                                        struct v4l2_fh *fh,
+                                        struct v4l2_event_subscription *sub)
+{
+    return v4l2_event_subscribe(fh, sub, 128, NULL);
+}
+
+static int laser_subdev_unsubscribe(struct v4l2_subdev *sd,
+                                    struct v4l2_fh *fh,
+                                    struct v4l2_event_subscription *sub)
+{
+    return v4l2_event_unsubscribe(fh, sub);
+}
 
 static const struct v4l2_subdev_core_ops laser_subdev_core_ops = {
-    .subscribe_event = v4l2_ctrl_subdev_subscribe_event,
-    .unsubscribe_event = v4l2_event_subdev_unsubscribe,
+    .subscribe_event = laser_subdev_subscribe_event,
+    .unsubscribe_event = laser_subdev_unsubscribe,
     .ioctl = hw_laser_subdev_ioctl,
 };
 
@@ -129,12 +154,26 @@ static const struct v4l2_subdev_internal_ops laser_subdev_internal_ops = {
 };
 
 
+void laser_notify_data_event(hw_laser_ctrl_t *ctrl, const struct v4l2_event *ev)
+{
+    if (ctrl == NULL || ctrl->fh == NULL)
+    {
+        cam_err("get laser_t fail");
+        return;
+    }
+
+#if 0 /* fix panic */
+    v4l2_event_queue_fh(ctrl->fh, ev);
+#endif
+}
+EXPORT_SYMBOL(laser_notify_data_event);
+
 //#define DT_TREE_DBG
 
 int laser_probe(struct i2c_client *client,
     const struct i2c_device_id *id)
 {
-    int ret; 
+    int ret = 0;
     struct v4l2_subdev *sd;
     laser_t *laser;
     hw_laser_ctrl_t *ctrl;
@@ -180,6 +219,7 @@ error:
     mutex_destroy(&laser->lock);
     return ret;
 }
+EXPORT_SYMBOL(laser_probe);
 
 int laser_remove(struct i2c_client *client)
 {
@@ -204,9 +244,6 @@ int laser_remove(struct i2c_client *client)
     kfree(laser);
     return 0;
 }
-
-
-
-
+EXPORT_SYMBOL(laser_remove);
 
 //lint -restore

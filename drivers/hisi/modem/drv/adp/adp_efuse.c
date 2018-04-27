@@ -54,6 +54,7 @@
 #include "hi_efuse.h"
 #include "bsp_efuse.h"
 
+#include "securec.h"
 #include "bsp_trace.h"
 #include "bsp_shared_ddr.h"
 
@@ -65,50 +66,14 @@
 #include <soc_onchiprom.h>
 
 
-/*************************************************
- 函 数 名   : DRV_GET_DIEID
- 功能描述   : DRV_GET_DIEID
- 输入参数   : buf: data buffer
-              len: length of the group
- 输出参数   :
- 返 回 值   : OK                (0)
-              BUF_ERROR         (-55)
-              LEN_ERROR         (-56)
-              READ_EFUSE_ERROR  (-57)
- 调用函数   :
- 被调函数   :
 
- 修改历史   :
-   日    期 : 2013年8月12日
-   作    者 : l00225826
-   修改内容 : 新生成函数
-
-*************************************************/
 int mdrv_efuse_get_dieid(unsigned char* buf,int length)
 {
     return get_efuse_dieid_value(buf, (unsigned int)length, 0);
 }
 EXPORT_SYMBOL(mdrv_efuse_get_dieid);
 
-/*************************************************
- 函 数 名   : DRV_GET_CHIPID
- 功能描述   : DRV_GET_CHIPID
- 输入参数   : buf: data buffer
-              len: length of the group
- 输出参数   :
- 返 回 值   : OK                (0)
-              BUF_ERROR         (-55)
-              LEN_ERROR         (-56)
-              READ_EFUSE_ERROR  (-57)
- 调用函数   :
- 被调函数   :
 
- 修改历史   :
-   日    期 : 2013年8月12日
-   作    者 : l00225826
-   修改内容 : 新生成函数
-
-*************************************************/
 int mdrv_efuse_get_chipid(unsigned char* buf,int length)
 {
     return get_efuse_chipid_value(buf, (unsigned int)length, 0);

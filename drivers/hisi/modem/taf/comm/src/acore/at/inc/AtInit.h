@@ -101,14 +101,7 @@ extern "C" {
   3 枚举定义
 *****************************************************************************/
 
-/*****************************************************************************
- 枚举名    : AT_GAS_HIGH_MULTISLOT_CLASS_ENUM
- 枚举说明  : High multislot class等级
- 修改历史  :
- 1.日    期    : 2011年12月13日
-   作    者    : C00173809
-   修改内容    : 新建枚举类型, for V7R1 GTL PhaseI
-*****************************************************************************/
+
 enum AT_GAS_HIGH_MULTISLOT_CLASS_ENUM
 {
     AT_GAS_HIGH_MULTISLOT_CLASS_0,
@@ -166,8 +159,6 @@ typedef struct
 
 } AT_NV_UE_CAPABILITY_STRU;
 
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-10, begin */
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-10, end */
 
 
 /*****************************************************************************
@@ -198,8 +189,6 @@ extern VOS_VOID AT_ReadSmsMeStorageInfoNV(VOS_VOID);
 extern VOS_VOID AT_ReadSmsClass0TailorNV(VOS_VOID);
 extern VOS_VOID AT_ReadSmsNV(VOS_VOID);
 
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, begin */
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, end */
 
 extern VOS_VOID  AT_ReadRoamCapaNV(VOS_VOID);
 extern VOS_VOID AT_ReadPrivacyFilterCfgNv(VOS_VOID);
@@ -297,7 +286,9 @@ VOS_VOID AT_ReadMtCustomizeInfo(VOS_VOID);
 
 VOS_VOID AT_ReadRedialNwCauseFlagNV( VOS_VOID );
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_VOID AT_ReadCdmaModemSwitchNotResetCfgNv(VOS_VOID);
+#endif
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

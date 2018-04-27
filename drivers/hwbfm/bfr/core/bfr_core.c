@@ -169,6 +169,33 @@ static bfr_recovery_policy_e s_fixed_recovery_policy[] =
             {1, FRM_GOTO_ERECOVERY_DOWNLOAD_RECOVERY},
         },
     },
+    {
+        FRK_USER_DATA_DAMAGED, 1,
+        {
+            {1, FRM_REBOOT},
+            {1, FRM_GOTO_ERECOVERY_LOWLEVEL_FORMAT_DATA},
+            {1, FRM_GOTO_ERECOVERY_LOWLEVEL_FORMAT_DATA},
+            {1, FRM_GOTO_ERECOVERY_LOWLEVEL_FORMAT_DATA},
+        },
+    },
+    {
+        KERNEL_BOOT_TIMEOUT, 1,
+        {
+            {1, FRM_REBOOT},
+            {1, FRM_GOTO_ERECOVERY_FACTORY_RESET},
+            {1, FRM_GOTO_ERECOVERY_DOWNLOAD_RECOVERY},
+            {1, FRM_GOTO_ERECOVERY_DOWNLOAD_RECOVERY},
+        },
+    },
+    {
+        FRK_USER_DATA_DAMAGED, 1,
+        {
+            {1, FRM_REBOOT},
+            {1, FRM_GOTO_ERECOVERY_LOWLEVEL_FORMAT_DATA},
+            {1, FRM_GOTO_ERECOVERY_LOWLEVEL_FORMAT_DATA},
+            {1, FRM_GOTO_ERECOVERY_LOWLEVEL_FORMAT_DATA},
+        },
+    },
 };
 #endif
 
@@ -228,8 +255,6 @@ static int bfr_select_recovery_method_without_safe_mode(
 static bfr_boot_fail_stage_e bfr_get_main_boot_fail_stage(unsigned int boot_fail_stage);
 static int bfr_run_recovery_method(bfr_recovery_method_select_param_t *pselect_param);
 static int bfr_set_misc_msg_for_erecovery(void);
-static int bfr_set_misc_msg_for_recovery(void);
-static int bfr_save_bfr_rrecord_misc_msg(bfr_rrecord_misc_msg_param_t *pparam);
 static int bfr_init_local_recovery_record_param(void);
 static int bfr_release_local_recovery_record_param(void);
 static int bfr_read_recovery_record_to_local_buf(void);
@@ -243,6 +268,7 @@ static int bfr_create_recovery_record(bfr_recovery_record_t *precord);
 static int bfr_renew_recovery_record(bfr_recovery_record_t *precord);
 static bool bfr_bootfail_has_safe_mode_recovery_method(unsigned int bootfail_errno);
 static bool bfr_need_factory_reset_after_download_recovery(bfr_recovery_method_select_param_t *pselect_param);
+static unsigned int bfr_get_bootfail_uptime(void);
 
 
 /*----function definitions--------------------------------------------------------------*/
@@ -354,42 +380,6 @@ static unsigned int bfr_get_enter_erecovery_reason(unsigned int boot_fail_no)
 }
 
 
-static int bfr_save_bfr_rrecord_misc_msg(bfr_rrecord_misc_msg_param_t *pparam)
-{
-    int ret = -1;
-    char *dev_path = NULL;
-
-    if (NULL == pparam)
-    {
-        BFMR_PRINT_INVALID_PARAMS("reason_param:%p!\n", pparam);
-        return -1;
-    }
-
-    ret = bfr_get_full_path_of_rrecord_part(&dev_path);
-    if (0 != ret)
-    {
-        BFMR_PRINT_ERR("find the full path of rrecord part failed!\n");
-        goto __out;
-    }
-
-    ret = bfmr_write_emmc_raw_part(dev_path, BFR_ENTER_ERECOVERY_REASON_OFFSET,
-        (char *)pparam, (unsigned long long)sizeof(bfr_rrecord_misc_msg_param_t));
-    if (0 != ret)
-    {
-        BFMR_PRINT_ERR("write enter erecovery reason to [%s] failed!\n", dev_path);
-        goto __out;
-    }
-
-__out:
-    if (NULL != dev_path)
-    {
-        bfmr_free(dev_path);
-    }
-
-    return ret;
-}
-
-
 static int bfr_set_misc_msg(bfr_misc_cmd_e cmd_type)
 {
     int ret = -1;
@@ -465,12 +455,6 @@ __out:
 static int bfr_set_misc_msg_for_erecovery(void)
 {
     return bfr_set_misc_msg(BFR_MISC_CMD_ERECOVERY);
-}
-
-
-static int bfr_set_misc_msg_for_recovery(void)
-{
-    return bfr_set_misc_msg(BFR_MISC_CMD_RECOVERY);
 }
 
 
@@ -846,8 +830,9 @@ static int bfr_run_recovery_method(bfr_recovery_method_select_param_t *pselect_p
     case FRM_GOTO_ERECOVERY_DOWNLOAD_RECOVERY_AND_FACTORY_RESET:
     case FRM_GOTO_ERECOVERY_DOWNLOAD_RECOVERY:
     case FRM_GOTO_ERECOVERY_LOWLEVEL_FORMAT_DATA:
+    case FRM_FACTORY_RESET_AFTER_DOWNLOAD_RECOVERY:
         {
-            bfr_rrecord_misc_msg_param_t reason_param;
+            bfmr_rrecord_misc_msg_param_t reason_param;
 
             memset((void *)&reason_param, 0, sizeof(reason_param));
             memcpy((void *)reason_param.command, (void *)BFR_ENTER_ERECOVERY_CMD,
@@ -857,7 +842,7 @@ static int bfr_run_recovery_method(bfr_recovery_method_select_param_t *pselect_p
             reason_param.boot_fail_stage_for_erecovery = bfr_get_main_boot_fail_stage(pselect_param->cur_boot_fail_stage);
             reason_param.recovery_method = (unsigned int)pselect_param->recovery_method;
             reason_param.boot_fail_no = (unsigned int)pselect_param->cur_boot_fail_no;
-            (void)bfr_save_bfr_rrecord_misc_msg(&reason_param);
+            (void)bfmr_write_rrecord_misc_msg(&reason_param);
             (void)bfr_set_misc_msg_for_erecovery();
             break;
         }
@@ -867,18 +852,13 @@ static int bfr_run_recovery_method(bfr_recovery_method_select_param_t *pselect_p
         }
     case FRM_ENTER_SAFE_MODE:
         {
-            bfr_rrecord_misc_msg_param_t misc_msg;
+            bfmr_rrecord_misc_msg_param_t misc_msg;
 
             BFMR_PRINT_KEY_INFO("FRM_ENTER_SAFE_MODE!\n");
             memset((void *)&misc_msg, 0, sizeof(misc_msg));
             memcpy((void *)misc_msg.command, (void *)BFR_ENTER_SAFE_MODE_CMD,
                 strlen(BFR_ENTER_SAFE_MODE_CMD));/*[false alarm]:strlen*/
-            (void)bfr_save_bfr_rrecord_misc_msg(&misc_msg);
-            break;
-        }
-    case FRM_FACTORY_RESET_AFTER_DOWNLOAD_RECOVERY:
-        {
-            (void)bfr_set_misc_msg_for_recovery();
+            (void)bfmr_write_rrecord_misc_msg(&misc_msg);
             break;
         }
     default:
@@ -1231,33 +1211,24 @@ static int bfr_read_recovery_record(bfr_recovery_record_t *precord,
 
     /* 3. read recovery record */
     precord_header = (bfr_recovery_record_header_t *)s_rrecord_param[0].buf;
-    *record_count_actually_read = (precord_header->boot_fail_count <= record_count_to_read)
-        ? (precord_header->boot_fail_count) : (record_count_to_read);
+    *record_count_actually_read = BFMR_MIN(precord_header->boot_fail_count,
+        BFMR_MIN(precord_header->record_count, record_count_to_read));
     buf_size = (*record_count_actually_read) * sizeof(bfr_recovery_record_t);
     if (precord_header->next_record_idx >= *record_count_actually_read)
     {
         memcpy((void *)precord, (void *)(s_rrecord_param[0].buf
             + header_size + (precord_header->next_record_idx
-            - *record_count_actually_read) * record_size), buf_size);
+            - *record_count_actually_read) * record_size), buf_size);/*lint !e679 */
     }
     else
     {
-        if (precord_header->boot_fail_count > precord_header->record_count)
-        {
-            unsigned int count_in_the_end = *record_count_actually_read - precord_header->next_record_idx;
-            unsigned int count_in_the_begin = precord_header->next_record_idx;
+        unsigned int count_in_the_end = *record_count_actually_read - precord_header->next_record_idx;
+        unsigned int count_in_the_begin = precord_header->next_record_idx;
 
-            memcpy((void *)precord, (void *)(s_rrecord_param[0].buf + header_size
-                + (precord_header->record_count - count_in_the_end)* record_size), count_in_the_end * record_size);
-            memcpy((void *)((char *)precord + count_in_the_end * record_size),
-                (void *)(s_rrecord_param[0].buf + header_size), count_in_the_begin * record_size);
-        }
-        else
-        {
-            memcpy((void *)precord, (void *)(s_rrecord_param[0].buf
-                + header_size + (precord_header->next_record_idx
-                - *record_count_actually_read) * record_size), buf_size);
-        }
+        memcpy((void *)precord, (void *)(s_rrecord_param[0].buf + header_size
+            + (precord_header->record_count - count_in_the_end) * record_size), count_in_the_end * record_size); /*lint !e647 !e679 */
+        memcpy((void *)((char *)precord + count_in_the_end * record_size),
+            (void *)(s_rrecord_param[0].buf + header_size), count_in_the_begin * record_size);
     }
 
     return 0;
@@ -1301,7 +1272,7 @@ static int bfr_create_recovery_record(bfr_recovery_record_t *precord)
         pheader->crc32 = bfmr_get_crc32(s_rrecord_param[i].buf + (unsigned int)sizeof(pheader->crc32),
             s_rrecord_param[i].buf_size - (unsigned int)sizeof(pheader->crc32));
 
-        /* 1. write herder */
+        /* 1. write header */
         ret = bfmr_write_emmc_raw_part(dev_path, (unsigned long long)s_rrecord_param[i].part_offset,
             (char *)pheader, (unsigned long long)header_size);
         if (0 != ret)
@@ -1312,7 +1283,7 @@ static int bfr_create_recovery_record(bfr_recovery_record_t *precord)
 
         /* 2. write record */
         ret = bfmr_write_emmc_raw_part(dev_path, (unsigned long long)((unsigned long long)s_rrecord_param[i].part_offset
-            + (unsigned long long)header_size + ((unsigned long long)pheader->boot_fail_count - 1) * (unsigned long long)record_size),
+            + (unsigned long long)header_size + pheader->last_record_idx * (unsigned long long)record_size),
             (char *)precord, (unsigned long long)record_size);
         if (0 != ret)
         {
@@ -1378,6 +1349,11 @@ int bfr_get_real_recovery_info(bfr_real_recovery_info_t *preal_recovery_info)
     for (i = 0; i < preal_recovery_info->record_count; i++)
     {
         preal_recovery_info->recovery_method[i] = precovery_record[i + offset].recovery_method;
+        preal_recovery_info->recovery_method_original[i] = precovery_record[i + offset].recovery_method_original;/*lint !e679 */
+        preal_recovery_info->boot_fail_no[i] = precovery_record[i + offset].boot_fail_no;/*lint !e679 */
+        preal_recovery_info->boot_fail_stage[i] = precovery_record[i + offset].boot_fail_stage;/*lint !e679 */
+        preal_recovery_info->boot_fail_time[i] = precovery_record[i + offset].boot_fail_time;/*lint !e679 */
+        preal_recovery_info->boot_fail_rtc_time[i] = precovery_record[i + offset].boot_fail_detected_time;
     }
     BFMR_PRINT_KEY_INFO("There're %d recovery record\n", preal_recovery_info->record_count);
 
@@ -1441,7 +1417,7 @@ static int bfr_renew_recovery_record(bfr_recovery_record_t *precord)
 
         memset((void *)&recovery_record, 0, record_size);
         memcpy((void *)&recovery_record, (void *)(s_rrecord_param[i].buf + header_size
-            + pheader->last_record_idx * record_size), record_size);
+            + pheader->last_record_idx * record_size), record_size);/*lint !e679 */
         if (BOOT_FAIL_RECOVERY_SUCCESS != recovery_record.recovery_result)
         {
             system_boot_fail_last_time = true;
@@ -1523,6 +1499,14 @@ void boot_status_notify(int boot_success)
 }
 
 
+static unsigned int bfr_get_bootfail_uptime(void)
+{
+    long boottime = bfmr_get_bootup_time();
+
+    return (0L == boottime) ? ((unsigned int)(-1)) : (unsigned int)boottime;
+}
+
+
 /**
     @function: bfr_recovery_method_e try_to_recovery(
         unsigned long long boot_fail_detected_time,
@@ -1601,6 +1585,8 @@ bfr_recovery_method_e try_to_recovery(
     cur_recovery_record.running_status_code = bfr_init_recovery_method_running_status(pselect_param->recovery_method);
     cur_recovery_record.method_run_result = bfr_init_recovery_method_run_result(pselect_param->recovery_method);
     cur_recovery_record.recovery_result = BOOT_FAIL_RECOVERY_FAILURE;
+    cur_recovery_record.recovery_method_original = pselect_param->recovery_method;
+    cur_recovery_record.boot_fail_time = bfr_get_bootfail_uptime();
     ret = bfr_create_recovery_record(&cur_recovery_record);
     if (0 != ret)
     {

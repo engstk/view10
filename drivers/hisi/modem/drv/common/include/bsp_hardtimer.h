@@ -77,10 +77,7 @@ struct bsp_hardtimer_control
 	unsigned long irq_flags;
 };
 
-
-
 #ifdef CONFIG_MODULE_TIMER
-
 /*****************************************************************************
 * º¯ Êý Ãû  :bsp_hardtimer_load_value
 *
@@ -262,8 +259,9 @@ u32 bsp_get_timer_current_value(u32 timer_id);
 int bsp_get_timer_rest_time(u32 timer_id, DRV_TIMER_UNIT_E unit,unsigned int *rest);
 
 u32 get_next_schedule_time(u32 *min_timer_id);
+#ifndef __CMSIS_RTOS
 u32 bsp_hardtimer_irq_get(DRV_TIMER_ID timer_id);
-
+#endif
 
 #else
 static inline void bsp_hardtimer_load_value(u32 timer_id, u32 value){}
@@ -280,9 +278,10 @@ static inline u32 bsp_get_timer_current_value(u32 timer_id) {return 0;}
 static inline int bsp_get_timer_rest_time(u32 timer_id, DRV_TIMER_UNIT_E unit,unsigned int *rest) {return 0;}
 static inline u32 get_next_schedule_time(u32 *min_timer_id){return 0;}
 static inline void bsp_timer_init(void){return;}
+#ifndef __CMSIS_RTOS
 static inline u32 bsp_hardtimer_irq_get(DRV_TIMER_ID timer_id){return 0;}
+#endif
 #endif/*CONFIG_MODULE_TIMER*/
-
 #endif /*__ASSEMBLY__*/
 
 #endif /*__BSP_HARDTIMER_H__*/

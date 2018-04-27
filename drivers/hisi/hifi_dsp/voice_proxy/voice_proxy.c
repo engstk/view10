@@ -675,7 +675,7 @@ void voice_proxy_mailbox_cb_register(mailbox_send_msg_cb send_cb,
 		register_cb((mb_msg_cb)handle_mail);
 }
 
-int32_t voice_proxy_mailbox_cb_init(void)
+static int32_t voice_proxy_mailbox_cb_init(void)
 {
 	int32_t ret;
 
@@ -684,6 +684,14 @@ int32_t voice_proxy_mailbox_cb_init(void)
 	ret = register_mailbox_msg_cb((mb_msg_cb)handle_mail);
 
 	return ret;
+}
+
+static void voice_proxy_mailbox_cb_deinit(void)
+{
+	priv.send_mailbox_msg = NULL;
+	priv.read_mailbox_msg = NULL;
+
+	register_mailbox_msg_cb(NULL);
 }
 
 static void destory_thread(void)
@@ -755,11 +763,12 @@ static int voice_proxy_probe(struct platform_device *pdev)
 	return ret;
 
 ERR1:
-	voice_proxy_mailbox_cb_register(NULL, NULL, NULL);
+	voice_proxy_mailbox_cb_deinit();
 ERR:
 	if(priv.send_mailbox_cnf_wq) {
 		flush_workqueue(priv.send_mailbox_cnf_wq);
 		destroy_workqueue(priv.send_mailbox_cnf_wq);
+		priv.send_mailbox_cnf_wq = NULL;
 	}
 
 	return ret;
@@ -770,11 +779,12 @@ static int voice_proxy_remove(struct platform_device *pdev)
 	UNUSED_PARAMETER(pdev);
 
 	destory_thread();
-	voice_proxy_mailbox_cb_register(NULL, NULL, NULL);
+	voice_proxy_mailbox_cb_deinit();
 
 	if(priv.send_mailbox_cnf_wq) {
 		flush_workqueue(priv.send_mailbox_cnf_wq);
 		destroy_workqueue(priv.send_mailbox_cnf_wq);
+		priv.send_mailbox_cnf_wq = NULL;
 	}
 
 	return 0;

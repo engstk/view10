@@ -2114,19 +2114,6 @@ VOS_VOID *VOS_ExcDumpMemAlloc(VOS_UINT32 ulNumber)
 /*****************************************************************************
  Function   : VOS_CacheMemAlloc
  Description: allocate cached memory.
- Input      : size & real address
-            :
- Return     : null or vir address
- Other      :
- *****************************************************************************/
-VOS_VOID *VOS_CacheMemAlloc(VOS_UINT32 ulSize)
-{
-    return kmalloc(ulSize, GFP_KERNEL);
-}
-
-/*****************************************************************************
- Function   : VOS_CacheMemAlloc
- Description: allocate cached memory.
  Input      : size & real address & Cookie
             :
  Return     : null or vir address
@@ -2150,52 +2137,6 @@ VOS_UINT32 VOS_CacheMemFree(VOS_VOID *pAddr)
 {
         kfree(pAddr);
         return VOS_OK;
-}
-
-/*****************************************************************************
- Function   : VOS_UnCacheMemAlloc
- Description: allocate uncached memory.
- Input      : size & real address
-            :
- Return     : null or vir address
- Other      :
- *****************************************************************************/
-VOS_VOID *VOS_UnCacheMemAlloc(VOS_UINT32 ulSize, VOS_UINT_PTR *pulRealAddr)
-{
-    VOS_VOID                           *pVirtAdd;
-
-    dma_addr_t                          ulAddress = 0;
-
-    struct device                       dev;
-
-
-    if ( 0 == ulSize )
-    {
-        return VOS_NULL_PTR;
-    }
-
-    if ( VOS_NULL_PTR == pulRealAddr )
-    {
-        return VOS_NULL_PTR;
-    }
-
-    /* keep lint happy */
-    *pulRealAddr = VOS_NULL;
-    pVirtAdd     = VOS_NULL_PTR;
-
-
-
-
-    if ( VOS_NULL_PTR == VOS_MemSet_s(&dev, sizeof(dev), 0, sizeof(dev)) )
-    {
-        mdrv_om_system_error(VOS_REBOOT_MEMSET_MEM, 0, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__), 0, 0);
-    }
-    pVirtAdd = dma_alloc_coherent(&dev, ulSize, &ulAddress, GFP_KERNEL);
-
-    *pulRealAddr = (VOS_UINT_PTR)ulAddress;
-
-
-    return pVirtAdd;
 }
 
 /*****************************************************************************
@@ -2276,22 +2217,7 @@ VOS_VOID VOS_UnCacheMemFree(VOS_VOID *pVirtAddr, VOS_VOID *pPhyAddr, VOS_UINT32 
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : VOS_UncacheMemPhyToVirt
- 功能描述  : 根据输入的实地址，计算对应的虚地址
- 输入参数  : pucCurPhyAddr:  当前实地址
-             pucPhyStart: 通道配置内存起始的实地址
-             pucVirtStart:通道配置内存起始的虚地址
-             ulBufLen:    通道内存空间大小
- 输出参数  : 无
- 返 回 值  : VOS_NULL: 转换失败/other: 虚地址的值
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 VOS_UINT_PTR VOS_UncacheMemPhyToVirt(VOS_UINT8 *pucCurPhyAddr, VOS_UINT8 *pucPhyStart, VOS_UINT8 *pucVirtStart, VOS_UINT32 ulBufLen)
 {
     if((pucCurPhyAddr < pucPhyStart) || (pucCurPhyAddr >= (pucPhyStart+ulBufLen)))
@@ -2308,22 +2234,7 @@ VOS_UINT_PTR VOS_UncacheMemPhyToVirt(VOS_UINT8 *pucCurPhyAddr, VOS_UINT8 *pucPhy
     return (VOS_UINT_PTR)((pucCurPhyAddr - pucPhyStart) + pucVirtStart);
 }
 
-/*****************************************************************************
- 函 数 名  : VOS_UncacheMemVirtToPhy
- 功能描述  : 根据输入的虚地址，计算对应的实地址
- 输入参数  : pucCurVirtAddr:  当前虚地址
-             pucPhyStart: 通道配置内存起始的实地址
-             pucVirtStart:通道配置内存起始的虚地址
-             ulBufLen:    通道内存空间大小
- 输出参数  : 无
- 返 回 值  : VOS_NULL: 转换失败/other: 虚地址的值
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 VOS_UINT_PTR VOS_UncacheMemVirtToPhy(VOS_UINT8 *pucCurVirtAddr, VOS_UINT8 *pucPhyStart, VOS_UINT8 *pucVirtStart, VOS_UINT32 ulBufLen)
 {
     if((pucCurVirtAddr < pucVirtStart) || (pucCurVirtAddr >= (pucVirtStart+ulBufLen)))
@@ -2340,19 +2251,7 @@ VOS_UINT_PTR VOS_UncacheMemVirtToPhy(VOS_UINT8 *pucCurVirtAddr, VOS_UINT8 *pucPh
     return (VOS_UINT_PTR)((pucCurVirtAddr - pucVirtStart) + pucPhyStart);
 }
 
-/*****************************************************************************
- 函 数 名  : VOS_FlushCpuWriteBuf
- 功能描述  : 刷CPU Write buffer
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年6月8日
-     作    者  : j00174725
-     修改内容  : Creat Function
-**************************************************************************** */
+
 /*lint -e522*/
 VOS_VOID VOS_FlushCpuWriteBuf(VOS_VOID)
 {
@@ -2364,38 +2263,12 @@ VOS_VOID VOS_FlushCpuWriteBuf(VOS_VOID)
 }
 /*lint +e522*/
 
-/*****************************************************************************
- 函 数 名  : VOS_FlushCpuCache
- 功能描述  : 刷CPU Cache
- 输入参数  : VOS_VOID *pAddress
-             VOS_INT lSize
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2014年9月16日
-     作    者  : s00207770
-     修改内容  : Creat Function
-**************************************************************************** */
+
 VOS_VOID VOS_FlushCpuCache( VOS_VOID *pAddress, VOS_UINT ulSize )
 {
 }
 
-/*****************************************************************************
- 函 数 名  : VOS_InvalidCpuCache
- 功能描述  : 刷CPU Cache
- 输入参数  : VOS_VOID *pAddress
-             VOS_INT lSize
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2014年9月16日
-     作    者  : s00207770
-     修改内容  : Creat Function
-**************************************************************************** */
+
 VOS_VOID VOS_InvalidCpuCache( VOS_VOID *pAddress, VOS_INT lSize )
 {
 }

@@ -501,18 +501,57 @@ int hisijpu_clk_enable(struct hisi_jpu_data_type *hisijd)
 		return -EINVAL;
 	}
 
-	if (hisijd->jpg_func_clk) {
-		ret = jpeg_dec_set_rate(hisijd->jpg_func_clk, JPG_FUNC_CLK_DEFAULT_RATE);
-		if (ret) {
-			HISI_JPU_ERR("jpg_func_clk set clk failed, error=%d!\n", ret);
-			return -EINVAL;
-		}
+	if (!hisijd->jpg_func_clk) {
+		HISI_JPU_ERR("jpg_func_clk is NULL!\n");
+		return -EINVAL;
+	}
 
-		ret = jpeg_dec_clk_prepare_enable(hisijd->jpg_func_clk);
-		if (ret) {
-			HISI_JPU_ERR("jpg_func_clk clk_prepare failed, error=%d!\n", ret);
-			return -EINVAL;
-		}
+	if (hisijd->jpu_support_platform == HISI_KIRIN_970) {
+		ret = jpeg_dec_set_rate(hisijd->jpg_func_clk, JPG_FUNC_CLK_DEFAULT_RATE);
+	}else if (hisijd->jpu_support_platform == HISI_DSS_V501) {
+		HISI_JPU_DEBUG("jpg func clk default rate is: %ld.\n", JPG_FUNC_CLK_DEFAULT_RATE_V501);
+		ret = jpeg_dec_set_rate(hisijd->jpg_func_clk, JPG_FUNC_CLK_DEFAULT_RATE_V501);
+	}else {
+		HISI_JPU_ERR("jpg_func_clk set clk failed, unsupport platform!\n");
+		return -EINVAL;
+	}
+
+	if (ret) {
+		HISI_JPU_ERR("jpg_func_clk set clk failed, error=%d!\n", ret);
+		goto TRY_LOW_FREQ;
+	}
+
+	ret = jpeg_dec_clk_prepare_enable(hisijd->jpg_func_clk);
+	if (ret) {
+		HISI_JPU_ERR("jpg_func_clk clk_prepare failed, error=%d!\n", ret);
+		goto TRY_LOW_FREQ;
+	}
+
+	HISI_JPU_DEBUG("-.\n");
+
+	return 0;
+
+TRY_LOW_FREQ:
+
+	if (hisijd->jpu_support_platform == HISI_KIRIN_970) {
+		HISI_JPU_DEBUG("jpg func clk low freq rate is: %ld.\n", JPG_FUNC_CLK_PD_RATE);
+		ret = jpeg_dec_set_rate(hisijd->jpg_func_clk, JPG_FUNC_CLK_PD_RATE);
+	}else if (hisijd->jpu_support_platform == HISI_DSS_V501) {
+		HISI_JPU_DEBUG("jpg func clk low freq rate is: %ld.\n", JPG_FUNC_CLK_PD_RATE_V501);
+		ret = jpeg_dec_set_rate(hisijd->jpg_func_clk, JPG_FUNC_CLK_PD_RATE_V501);
+	}else {
+		HISI_JPU_ERR("jpg_func_clk set clk failed, unsupport platform!\n");
+	}
+
+	if (ret) {
+		HISI_JPU_ERR("jpg_func_clk set clk failed, error=%d!\n", ret);
+		return -EINVAL;
+	}
+
+	ret = jpeg_dec_clk_prepare_enable(hisijd->jpg_func_clk);
+	if (ret) {
+		HISI_JPU_ERR("jpg_func_clk clk_prepare failed, error=%d!\n", ret);
+		return -EINVAL;
 	}
 
 	HISI_JPU_DEBUG("-.\n");
@@ -529,16 +568,27 @@ int hisijpu_clk_disable(struct hisi_jpu_data_type *hisijd)
 		return -EINVAL;
 	}
 
+	if (!hisijd->jpg_func_clk) {
+		HISI_JPU_ERR("jpg_func_clk is NULL!\n");
+		return -EINVAL;
+	}
+
 	HISI_JPU_DEBUG("+.\n");
 
-	if (hisijd->jpg_func_clk) {
-		jpeg_dec_clk_disable_unprepare(hisijd->jpg_func_clk);
+	jpeg_dec_clk_disable_unprepare(hisijd->jpg_func_clk);
 
+	if (hisijd->jpu_support_platform == HISI_KIRIN_970) {
 		ret = jpeg_dec_set_rate(hisijd->jpg_func_clk, JPG_FUNC_CLK_PD_RATE);
-		if (ret != 0) {
-		    HISI_JPU_ERR("fail to set power down rate, ret=%d!\n", ret);
-		    return -EINVAL;
-		}
+	}else if (hisijd->jpu_support_platform == HISI_DSS_V501) {
+		ret = jpeg_dec_set_rate(hisijd->jpg_func_clk, JPG_FUNC_CLK_PD_RATE_V501);
+	}else {
+		HISI_JPU_ERR("jpg_func_clk set clk failed, unsupport platform!\n");
+		return -EINVAL;
+	}
+
+	if (ret != 0) {
+	    HISI_JPU_ERR("fail to set power down rate, ret=%d!\n", ret);
+	    return -EINVAL;
 	}
 
 	HISI_JPU_DEBUG("-.\n");
@@ -935,7 +985,9 @@ int hisi_jpu_on(struct hisi_jpu_data_type *hisijd)
 	/* step 4 jpeg decoder inside clock enable */
 	outp32(hisijd->jpu_top_base + JPGDEC_CRG_CFG0, 0x1);
 
-	outp32(hisijd->jpu_top_base + JPGDEC_MEM_CFG, 0x02605550);
+	if (hisijd->jpu_support_platform == HISI_KIRIN_970) {
+		outp32(hisijd->jpu_top_base + JPGDEC_MEM_CFG, 0x02605550);
+	}
 
 	hisijpu_smmu_on(hisijd);
 
@@ -1100,8 +1152,13 @@ static int hisi_jpu_dec_set_cvdr(struct hisi_jpu_data_type *hisijd)
 
 	outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_CVDR_CFG, 0x070f2000);
 
-	outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_NR_WR_CFG_0, 0x80000000);
-	outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_NR_WR_CFG_1, 0x80000000);
+	if (hisijd->jpu_support_platform == HISI_KIRIN_970) {
+		outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_NR_WR_CFG_0, 0x80000000);
+		outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_NR_WR_CFG_1, 0x80000000);
+	}else if (hisijd->jpu_support_platform == HISI_DSS_V501) {
+		outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_NR_WR_CFG_0, 0x80060000);
+		outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_NR_WR_CFG_1, 0x80060000);
+	}
 
 	/* Wr_qos_max:0x1;wr_qos_threshold_01_start:0x1;wr_qos_threshold_01_stop:0x1,WR_QOS&RD_QOS encode will also set this */
 	outp32(hisijd->jpu_cvdr_base + JPGDEC_CVDR_AXI_JPEG_CVDR_WR_QOS_CFG, 0x10333311);

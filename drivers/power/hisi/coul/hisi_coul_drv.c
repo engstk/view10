@@ -623,6 +623,24 @@ int hisi_battery_vbat_max(void)
 	HISI_EXEC_COUL_OP(battery_vbat_max);
 	return -EPERM;
 }
+
+/****************************************************************************
+  Function:     hisi_battery_get_limit_fcc
+  Description:  get the battery limit fcc
+  Input:         NA
+  Output:       NA
+  Return:       limit fcc
+****************************************************************************/
+int hisi_battery_get_limit_fcc(void)
+{
+	/*declare the local variable of struct hisi_coul_ops */
+	LOCAL_HISI_COUL_OPS();
+
+	/*execute the operation of coul module */
+	HISI_EXEC_COUL_OP(get_battery_limit_fcc);
+	return -EPERM;
+}
+
 /****************************************************************************
   Function:     hisi_battery_aging_safe_policy
   Description:  get the battery aging safe policy

@@ -601,9 +601,10 @@ int ap_hall_report(int value)
 bool ap_sensor_enable(int tag, bool enable)
 {
 	bool work_on_ap = false;
-	if (tag >= TAG_SENSOR_END)
+	if (tag >= TAG_SENSOR_END){
 		return false;
- 
+		}
+
 	work_on_ap = all_ap_sensor_operations[tag].work_on_ap;
 
 	if (work_on_ap) {	/*leave this code for furture use*/
@@ -2700,7 +2701,7 @@ void inputhub_process_sensor_report(const pkt_header_t* head)
         }
         else if (sensor_event->cnt > 1)
         {
-            delta = sensor_event->sample_rate * 1000000;
+            delta = (uint64_t)(sensor_event->sample_rate) * 1000000;
             head_timestamp =
                 timestamp - (sensor_event->cnt - 1) * (int64_t)delta;
             //hwlog_info("head_timestamp is %llu delta is %lu\n",
@@ -2798,8 +2799,6 @@ void inputhub_process_sensor_report(const pkt_header_t* head)
             if (sensor_event->xyz[0].y == 1 && ps_value != 0)
             {
                 hwlog_info("ps don't get the point!\n");
-                __dmd_log_report(DSM_SHB_ERR_MCU_PS, __func__,
-                                 "gesture worked\n");
             }
         }
 
@@ -3000,7 +2999,7 @@ int inputhub_route_recv_mcu_data(const char *buf, unsigned int length)
     {
         char* motion_data = (char*)head + sizeof(pkt_header_t);
 
-        if (((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF)
+        if ((((int)motion_data[0]) == MOTIONHUB_TYPE_TAKE_OFF) || (((int)motion_data[0]) == MOTIONHUB_TYPE_PICKUP))
         {
             wake_lock_timeout(&wlock, HZ);
             hwlog_err("%s weaklock HZ motiontype = %d \n", __func__,
@@ -3399,6 +3398,7 @@ static int shb_recovery_notifier(struct notifier_block *nb, unsigned long foo,
 		wake_up_all(&iom3_rec_wq);
 		break;
 	default:
+	    mutex_unlock(&mutex_write_cmd);
 		hwlog_err("%s -unknow state %ld\n", __func__, foo);
 		break;
 	}

@@ -27,7 +27,8 @@
 #include <linux/semaphore.h>
 
 #include <huawei_platform/usb/pd/richtek/rt-regmap.h>
-
+#define RT_REGMAP_MAX_ARRAY_SIZE_64 64
+#define RT_REGMAP_MAX_ARRAY_SIZE_128 128
 struct rt_regmap_ops {
 	int (*regmap_block_write)(struct rt_regmap_device *rd, u32 reg,
 			 int bytes, const void *data);
@@ -97,6 +98,7 @@ struct rt_regmap_device {
 };
 
 struct dentry *rt_regmap_dir;
+static void rt_release_every_debug(struct rt_regmap_device *rd);
 
 static int get_parameters(char *buf, long int *param1, int num_of_par)
 {
@@ -321,13 +323,17 @@ static int rt_cache_block_write(struct rt_regmap_device *rd, u32 reg,
 {
 	int i, j, reg_base = 0, count = 0, ret = 0, size = 0;
 	struct reg_index_offset rio;
-	unsigned char wdata[64];
-	unsigned char wri_data[128];
+	unsigned char wdata[RT_REGMAP_MAX_ARRAY_SIZE_64] = {0};
+	unsigned char wri_data[RT_REGMAP_MAX_ARRAY_SIZE_128] = {0};
 	unsigned char blk_index;
 	rt_register_map_t rm;
-
-	memcpy(wdata, data, bytes);
-
+	if (bytes > 0) {
+		if (bytes > RT_REGMAP_MAX_ARRAY_SIZE_64)
+			bytes = RT_REGMAP_MAX_ARRAY_SIZE_64;
+		memcpy(wdata, data, bytes);
+	} else {
+		goto ERR;
+	}
 	rio = find_register_index(rd, reg);
 	if (rio.index < 0) {
 		dev_err(&rd->dev, "reg 0x%02x is out of range\n", reg);
@@ -390,13 +396,17 @@ static int rt_asyn_cache_block_write(struct rt_regmap_device *rd, u32 reg,
 {
 	int i, j, reg_base, count = 0, ret = 0, size = 0;
 	struct reg_index_offset rio;
-	unsigned char wdata[64];
-	unsigned char wri_data[128];
+	unsigned char wdata[RT_REGMAP_MAX_ARRAY_SIZE_64] = {0};
+	unsigned char wri_data[RT_REGMAP_MAX_ARRAY_SIZE_128] = {0};
 	unsigned char blk_index;
 	rt_register_map_t rm;
-
-	memcpy(wdata, data, bytes);
-
+	if (bytes > 0) {
+		if (bytes > RT_REGMAP_MAX_ARRAY_SIZE_64)
+			bytes = RT_REGMAP_MAX_ARRAY_SIZE_64;
+		memcpy(wdata, data, bytes);
+	} else {
+		goto ERR;
+	}
 	cancel_delayed_work_sync(&rd->rt_work);
 
 	rio = find_register_index(rd, reg);
@@ -1069,10 +1079,17 @@ int rt_regmap_cache_init(struct rt_regmap_device *rd)
 	down(&rd->semaphore);
 	rd->cache_flag = devm_kzalloc(&rd->dev,
 		rd->props.register_num * sizeof(int), GFP_KERNEL);
-
+	if(!rd->cache_flag){
+		pr_info("cache_flag memory allocate fail\n");
+		goto mem_err;
+	}
 	if (rd->props.group == NULL) {
 		rd->props.group = devm_kzalloc(&rd->dev,
 				sizeof(*rd->props.group), GFP_KERNEL);
+		if(!rd->props.group){
+			pr_info("props group memory allocate fail\n");
+			goto mem_err;
+		}
 		rd->props.group[0].start = 0x00;
 		rd->props.group[0].end = 0xffff;
 		rd->props.group[0].mode = RT_1BYTE_MODE;
@@ -1835,17 +1852,32 @@ static void rt_create_every_debug(struct rt_regmap_device *rd,
 
 	rd->rt_reg_file = devm_kzalloc(&rd->dev,
 		rd->props.register_num*sizeof(struct dentry *), GFP_KERNEL);
+	if(!rd->rt_reg_file){
+		pr_info("rt_reg_file memory allocate fail\n");
+		goto mem_err;
+	}
 	rd->reg_st = devm_kzalloc(&rd->dev,
 		rd->props.register_num*sizeof(struct rt_debug_st *),
 								GFP_KERNEL);
+	if(!rd->reg_st){
+		pr_info("reg_st memory allocate fail\n");
+		goto mem_err;
+	}
 	for (i = 0; i < rd->props.register_num; i++) {
 		sprintf(buf, "reg0x%02x", (rd->props.rm[i])->addr);
 		rd->rt_reg_file[i] = devm_kzalloc(&rd->dev,
 						  sizeof(rd->rt_reg_file[i]),
 						  GFP_KERNEL);
+		if(!rd->rt_reg_file[i]){
+			pr_info("rt_reg_file memory allocate fail\n");
+			goto mem_err;
+		}
 		rd->reg_st[i] =
 		    devm_kzalloc(&rd->dev, sizeof(rd->reg_st[i]), GFP_KERNEL);
-
+		if(!rd->reg_st[i]){
+			pr_info("reg_st memory allocate fail\n");
+			goto mem_err;
+		}
 		rd->reg_st[i]->info = rd;
 		rd->reg_st[i]->id = i;
 		rd->rt_reg_file[i] = debugfs_create_file(buf,
@@ -1853,6 +1885,9 @@ static void rt_create_every_debug(struct rt_regmap_device *rd,
 							 (void *)rd->reg_st[i],
 							 &eachreg_ops);
 	}
+	return;
+mem_err:
+	rt_release_every_debug(rd);
 }
 
 static void rt_release_every_debug(struct rt_regmap_device *rd)
@@ -1861,11 +1896,15 @@ static void rt_release_every_debug(struct rt_regmap_device *rd)
 	int i;
 
 	for (i = 0; i < num; i++) {
-		devm_kfree(&rd->dev, rd->rt_reg_file[i]);
-		devm_kfree(&rd->dev, rd->reg_st[i]);
+		if(rd->rt_reg_file[i])
+			devm_kfree(&rd->dev, rd->rt_reg_file[i]);
+		if(rd->reg_st[i])
+			devm_kfree(&rd->dev, rd->reg_st[i]);
 	}
-	devm_kfree(&rd->dev, rd->rt_reg_file);
-	devm_kfree(&rd->dev, rd->reg_st);
+	if(rd->rt_reg_file)
+		devm_kfree(&rd->dev, rd->rt_reg_file);
+	if(rd->reg_st)
+		devm_kfree(&rd->dev, rd->reg_st);
 }
 #endif /* CONFIG_DEBUG_FS */
 

@@ -17,9 +17,24 @@ static const umode_t FILE_CREAT_RO_MODE = 0440;
 static const kuid_t ROOT_UID =  KUIDT_INIT((uid_t)0);
 static const kgid_t SYSTEM_GID = KGIDT_INIT((gid_t)1000);
 
+#ifdef CONFIG_HUAWEI_EIMA
+static int has_trigger_flag = 0;
+extern int eima_baselining_trigger(void);
+#endif
+
 static int rscan_proc_show(struct seq_file *m, void *v)
 {
 	int ret = 0;
+
+#ifdef CONFIG_HUAWEI_EIMA
+	/* EIMA baselineling trigger */
+	if( 0 == has_trigger_flag) {
+		ret = eima_baselining_trigger();
+		if(0 == ret ) {
+			has_trigger_flag = 1;
+		}
+	}
+#endif
 
 	ret = rscan_trigger();
 	seq_printf(m, "%d", ret);

@@ -35,6 +35,10 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/f2fs.h>
 
+#ifdef CONFIG_F2FS_REMAP_GC
+struct bio_set *f2fs_bioset;
+#endif
+
 #ifdef CONFIG_HUAWEI_F2FS_DSM
 #include <dsm/dsm_pub.h>
 struct dsm_dev dsm_f2fs = {
@@ -131,6 +135,8 @@ enum {
 	Opt_verify_encrypt,
 	Opt_noverify_encrypt,
 	Opt_inline_encrypt,
+	Opt_sdp_encrypt,
+	Opt_nosdp_encrypt,
 	Opt_err,
 };
 
@@ -169,6 +175,8 @@ static match_table_t f2fs_tokens = {
 	{Opt_verify_encrypt, "verify_encrypt"},
 	{Opt_noverify_encrypt, "noverify_encrypt"},
 	{Opt_inline_encrypt, "inline_encrypt"},
+	{Opt_sdp_encrypt, "sdp_encrypt"},
+	{Opt_nosdp_encrypt, "nosdp_encrypt"},
 	{Opt_err, NULL},
 };
 
@@ -182,6 +190,10 @@ enum {
 #ifdef CONFIG_F2FS_FAULT_INJECTION
 	FAULT_INFO_RATE,	/* struct f2fs_fault_info */
 	FAULT_INFO_TYPE,	/* struct f2fs_fault_info */
+#endif
+	RESERVED_BLOCKS,	/* struct f2fs_sb_info */
+#ifdef CONFIG_F2FS_OVP_RESERVED
+	OVP_RESERVED_BLOCKS,	/* struct f2fs_sb_info */
 #endif
 };
 
@@ -223,7 +235,12 @@ static unsigned char *__struct_ptr(struct f2fs_sb_info *sbi, int struct_type)
 		return (unsigned char *)SM_I(sbi)->dcc_info;
 	else if (struct_type == NM_INFO)
 		return (unsigned char *)NM_I(sbi);
-	else if (struct_type == F2FS_SBI)
+#ifdef CONFIG_F2FS_OVP_RESERVED
+	else if (struct_type == F2FS_SBI || struct_type == RESERVED_BLOCKS ||
+		struct_type == OVP_RESERVED_BLOCKS)
+#else
+	else if (struct_type == F2FS_SBI || struct_type == RESERVED_BLOCKS)
+#endif
 		return (unsigned char *)sbi;
 #ifdef CONFIG_F2FS_FAULT_INJECTION
 	else if (struct_type == FAULT_INFO_RATE ||
@@ -253,6 +270,21 @@ static ssize_t last_discard_policy_show(struct f2fs_attr *a,
 
 	return snprintf(buf, PAGE_SIZE, "%u\n", dcc->last_discard_policy);
 }
+
+static ssize_t current_reserved_blocks_show(struct f2fs_attr *a,
+					struct f2fs_sb_info *sbi, char *buf)
+{
+	return snprintf(buf, PAGE_SIZE, "%u\n", sbi->current_reserved_blocks);
+}
+
+#ifdef CONFIG_F2FS_OVP_RESERVED
+static ssize_t ovp_current_reserved_blocks_show(struct f2fs_attr *a,
+					struct f2fs_sb_info *sbi, char *buf)
+{
+	return snprintf(buf, PAGE_SIZE, "%u\n", OVP_CUR_RSVD_BLOCKS(sbi));
+}
+#endif
+
 static ssize_t f2fs_sbi_show(struct f2fs_attr *a,
 			struct f2fs_sb_info *sbi, char *buf)
 {
@@ -289,6 +321,37 @@ static ssize_t f2fs_sbi_store(struct f2fs_attr *a,
 #ifdef CONFIG_F2FS_FAULT_INJECTION
 	if (a->struct_type == FAULT_INFO_TYPE && t >= (1 << FAULT_MAX))
 		return -EINVAL;
+#endif
+	if (a->struct_type == RESERVED_BLOCKS) {
+		spin_lock(&sbi->stat_lock);
+		if (t > (unsigned long)sbi->user_block_count) {
+			spin_unlock(&sbi->stat_lock);
+			return -EINVAL;
+		}
+		*ui = t;
+		sbi->current_reserved_blocks = min(sbi->reserved_blocks,
+				sbi->user_block_count - valid_user_blocks(sbi));/*lint !e666*/
+#ifdef CONFIG_F2FS_OVP_RESERVED
+		update_ovp_rsvd_max_blocks(sbi);
+		update_ovp_cur_rsvd_blocks(sbi);
+#endif
+		spin_unlock(&sbi->stat_lock);
+		return count;
+	}
+#ifdef CONFIG_F2FS_OVP_RESERVED
+	if (a->struct_type == OVP_RESERVED_BLOCKS) {
+		spin_lock(&sbi->stat_lock);
+		if (t > (unsigned long)sbi->ovp_rsvd_end_free) {
+			spin_unlock(&sbi->stat_lock);
+			return -EINVAL;
+		}
+		*ui = t;
+		update_ovp_rsvd_max_blocks(sbi);
+		update_ovp_cur_rsvd_blocks(sbi);
+
+		spin_unlock(&sbi->stat_lock);
+		return count;
+	}
 #endif
 	*ui = t;
 	return count;
@@ -345,6 +408,10 @@ F2FS_RW_ATTR(GC_THREAD, f2fs_gc_kthread, gc_idle, gc_idle);
 F2FS_RW_ATTR(GC_THREAD, f2fs_gc_kthread, gc_preference, gc_preference);
 F2FS_RW_ATTR(SM_INFO, f2fs_sm_info, reclaim_segments, rec_prefree_segments);
 F2FS_RW_ATTR(DCC_INFO, discard_cmd_control, max_small_discards, max_discards);
+F2FS_RW_ATTR(RESERVED_BLOCKS, f2fs_sb_info, reserved_blocks, reserved_blocks);
+#ifdef CONFIG_F2FS_OVP_RESERVED
+F2FS_RW_ATTR(OVP_RESERVED_BLOCKS, f2fs_sb_info, ovp_reserved_blocks, ovp_reserved_blocks);
+#endif
 //F2FS_RW_ATTR(DCC_INFO, discard_cmd_control, is_idle, is_idle);
 F2FS_RW_ATTR(SM_INFO, f2fs_sm_info, batched_trim_sections, trim_sections);
 F2FS_RW_ATTR(SM_INFO, f2fs_sm_info, ipu_policy, ipu_policy);
@@ -364,6 +431,10 @@ F2FS_RW_ATTR(FAULT_INFO_TYPE, f2fs_fault_info, inject_type, inject_type);
 #endif
 F2FS_GENERAL_RO_ATTR(lifetime_write_kbytes);
 F2FS_GENERAL_RO_ATTR(last_discard_policy);
+F2FS_GENERAL_RO_ATTR(current_reserved_blocks);
+#ifdef CONFIG_F2FS_OVP_RESERVED
+F2FS_GENERAL_RO_ATTR(ovp_current_reserved_blocks);
+#endif
 
 #define ATTR_LIST(name) (&f2fs_attr_##name.attr)
 static struct attribute *f2fs_attrs[] = {
@@ -393,6 +464,12 @@ static struct attribute *f2fs_attrs[] = {
 #endif
 	ATTR_LIST(lifetime_write_kbytes),
 	ATTR_LIST(last_discard_policy),
+	ATTR_LIST(reserved_blocks),
+	ATTR_LIST(current_reserved_blocks),
+#ifdef CONFIG_F2FS_OVP_RESERVED
+	ATTR_LIST(ovp_reserved_blocks),
+	ATTR_LIST(ovp_current_reserved_blocks),
+#endif
 	NULL,
 };
 
@@ -876,7 +953,6 @@ static void f2fs_build_bd_stat(struct f2fs_sb_info *sbi)
 {
 	struct super_block *sb = sbi->sb;
 
-	mutex_init(&sbi->bd_mutex);
 	proc_create_data("bd_base_info", S_IRUGO | S_IWUGO, sbi->s_proc,
 				&f2fs_bd_base_info_fops, sb);
 	proc_create_data("bd_discard_info", S_IRUGO | S_IWUGO, sbi->s_proc,
@@ -1137,25 +1213,35 @@ static int parse_options(struct super_block *sb, char *options)
 			sb->s_flags &= ~MS_LAZYTIME;
 			break;
 		case Opt_force_crc:
-			set_opt(sbi, FORCE_CRC);
+			set_hw_opt(sbi, FORCE_CRC);
 			break;
 		case Opt_verify_encrypt:
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
-			set_opt(sbi, VERIFY_ENCRYPT);
+			set_hw_opt(sbi, VERIFY_ENCRYPT);
 #else
 			f2fs_msg(sb, KERN_INFO,
 				"verify_encrypt option not supported");
 #endif
 			break;
 		case Opt_noverify_encrypt:
-			clear_opt(sbi, VERIFY_ENCRYPT);
+			clear_hw_opt(sbi, VERIFY_ENCRYPT);
 			break;
 		case Opt_inline_encrypt:
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
-			set_opt(sbi, INLINE_ENCRYPT);
+			set_hw_opt(sbi, INLINE_ENCRYPT);
 #else
 			f2fs_msg(sb, KERN_INFO,
 				"inline_encrypt option not supported");
+#endif
+			break;
+		case Opt_sdp_encrypt:
+#ifdef DEFINE_F2FS_FS_SDP_ENCRYPTION
+			set_hw_opt(sbi, SDP_ENCRYPT);
+#endif
+			break;
+		case Opt_nosdp_encrypt:
+#ifdef DEFINE_F2FS_FS_SDP_ENCRYPTION
+			clear_hw_opt(sbi, SDP_ENCRYPT);
 #endif
 			break;
 		default:
@@ -1313,6 +1399,10 @@ static void f2fs_dirty_inode(struct inode *inode, int flags)
 static void f2fs_i_callback(struct rcu_head *head)
 {
 	struct inode *inode = container_of(head, struct inode, i_rcu);
+
+	if (unlikely(F2FS_I(inode)->last_ci_name != NULL))
+		kfree(F2FS_I(inode)->last_ci_name);
+
 	kmem_cache_free(f2fs_inode_cachep, F2FS_I(inode));
 }
 
@@ -1480,7 +1570,14 @@ static int f2fs_statfs(struct dentry *dentry, struct kstatfs *buf)
 
 	buf->f_blocks = total_count - start_count;
 	buf->f_bfree = user_block_count - valid_user_blocks(sbi) + ovp_count;
-	buf->f_bavail = user_block_count - valid_user_blocks(sbi);
+#ifdef CONFIG_F2FS_OVP_RESERVED
+	buf->f_bavail = user_block_count - valid_user_blocks(sbi) -
+						sbi->current_reserved_blocks -
+						sbi->ovp_current_reserved_blocks;
+#else
+	buf->f_bavail = user_block_count - valid_user_blocks(sbi) -
+						sbi->current_reserved_blocks;
+#endif
 
 	buf->f_files = sbi->total_node_count - F2FS_RESERVED_NODE_NUM;
 	buf->f_ffree = min(buf->f_files - valid_node_count(sbi),
@@ -1556,10 +1653,14 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
 	else if (test_opt(sbi, LFS))
 		seq_puts(seq, "lfs");
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
-	if (test_opt(sbi, VERIFY_ENCRYPT))
+	if (test_hw_opt(sbi, VERIFY_ENCRYPT))
 		seq_puts(seq, ",verify_encrypt");
-	if (test_opt(sbi, INLINE_ENCRYPT))
+	if (test_hw_opt(sbi, INLINE_ENCRYPT))
 		seq_puts(seq, ",inline_encrypt");
+	if (test_hw_opt(sbi, SDP_ENCRYPT))
+		seq_puts(seq, ",sdp_encrypt");
+	else
+		seq_puts(seq, ",nosdp_encrypt");
 #endif
 	seq_printf(seq, ",active_logs=%u", sbi->active_logs);
 	if (F2FS_IO_SIZE_BITS(sbi))
@@ -1568,8 +1669,12 @@ static int f2fs_show_options(struct seq_file *seq, struct dentry *root)
 	if (test_opt(sbi, FAULT_INJECTION))
 		seq_puts(seq, ",fault_injection");
 #endif
-	if (test_opt(sbi, FORCE_CRC))
+	if (test_hw_opt(sbi, FORCE_CRC))
 		seq_puts(seq, ",force_crc");
+#ifdef CONFIG_F2FS_REMAP_GC
+	if (test_hw_opt(sbi, REMAP_GC))
+		seq_puts(seq, ",remap_gc");
+#endif
 
 	return 0;
 }
@@ -1741,7 +1846,8 @@ static void default_options(struct f2fs_sb_info *sbi)
 	f2fs_build_fault_attr(sbi, 0);
 #endif
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
-	set_opt(sbi, VERIFY_ENCRYPT);
+	set_hw_opt(sbi, VERIFY_ENCRYPT);
+	set_hw_opt(sbi, SDP_ENCRYPT);
 #endif
 }
 
@@ -1874,6 +1980,7 @@ static struct super_operations f2fs_sops = {
 	.unfreeze_fs	= f2fs_unfreeze,
 	.statfs		= f2fs_statfs,
 	.remount_fs	= f2fs_remount,
+	.find_entry_ci = f2fs_find_entry_ci,
 };
 
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
@@ -1914,7 +2021,7 @@ static int f2fs_get_verify_context(struct inode *inode, void *ctx, size_t len)
 	u32 ctx_crc;
 	int err;
 
-	if (!test_opt(sbi, VERIFY_ENCRYPT))
+	if (!test_hw_opt(sbi, VERIFY_ENCRYPT))
 		return 0;
 
 	ctx_crc = f2fs_crc32(sbi, ctx, (unsigned int)len);
@@ -1951,7 +2058,7 @@ static int f2fs_set_verify_context(struct inode *inode, const void *ctx,
 	u32 crc32;
 	int err;
 
-	if (!test_opt(sbi, VERIFY_ENCRYPT))
+	if (!test_hw_opt(sbi, VERIFY_ENCRYPT))
 		return 0;
 
 	if (!create_crc)
@@ -1980,6 +2087,10 @@ static const struct fscrypt_operations f2fs_cryptops = {
 	.is_encrypted_fixed	= f2fs_encrypted_fixed_inode,
 	.empty_dir		= f2fs_empty_dir,
 	.max_namelen		= f2fs_max_namelen,
+#if DEFINE_F2FS_FS_SDP_ENCRYPTION
+	.get_keyinfo          = f2fs_get_crypt_keyinfo,
+	.is_permitted_context = f2fs_is_permitted_context,
+#endif
 };
 #else
 static const struct fscrypt_operations f2fs_cryptops = {
@@ -2182,7 +2293,7 @@ static int raw_super_checksum_invalid(struct f2fs_sb_info *sbi, struct f2fs_supe
 		}
 	} else {
 		/* force to check crc if the partition is mounted with force_crc */
-		if (test_opt(sbi, FORCE_CRC)) {
+		if (test_hw_opt(sbi, FORCE_CRC)) {
 			f2fs_msg(sbi->sb, KERN_WARNING, "current kernel force to check CRC");
 			return 1;
 		}
@@ -2374,6 +2485,10 @@ static void init_sb_info(struct f2fs_sb_info *sbi)
 	memcpy(sbi->key_prefix, F2FS_KEY_DESC_PREFIX,
 				F2FS_KEY_DESC_PREFIX_SIZE);
 	sbi->key_prefix_size = F2FS_KEY_DESC_PREFIX_SIZE;
+#endif
+
+#if DEFINE_F2FS_FS_SDP_ENCRYPTION
+	sbi->s_sdp_cop = &f2fs_sdp_cryptops;
 #endif
 }
 
@@ -2688,6 +2803,7 @@ try_onemore:
 		goto free_sbi;
 	}
 	sbi->bd_info->ssr_last_jiffies = jiffies;
+	mutex_init(&sbi->bd_mutex);
 #endif
 
 	sbi->sb = sb;
@@ -2739,11 +2855,20 @@ try_onemore:
 	if (err)
 		goto free_options;
 
-	if (test_opt(sbi, FORCE_CRC) && !le32_to_cpu(raw_super->crc)) {
+	if (test_hw_opt(sbi, FORCE_CRC) && !le32_to_cpu(raw_super->crc)) {
 		err = -EINVAL;
 		f2fs_msg(sb, KERN_WARNING, "current kernel force to check CRC");
 		goto free_options;
 	}
+
+	/*
+	 * We simulate and estimate remap gc feature now, so turn on
+	 * this feature by default.
+	 */
+#ifdef CONFIG_F2FS_REMAP_GC
+	set_hw_opt(sbi, REMAP_GC);
+#endif
+	f2fs_init_remap_gc(sbi);
 
 	sbi->max_file_blocks = max_file_blocks();
 	sb->s_maxbytes = sbi->max_file_blocks <<
@@ -2784,6 +2909,7 @@ try_onemore:
 		sbi->write_io[i].bio = NULL;
 	}
 
+	spin_lock_init(&sbi->cp_rwsem_lock);
 	init_rwsem(&sbi->cp_rwsem);
 	init_waitqueue_head(&sbi->cp_wait);
 	init_sb_info(sbi);
@@ -2828,6 +2954,16 @@ try_onemore:
 	sbi->total_valid_block_count =
 				le64_to_cpu(sbi->ckpt->valid_block_count);
 	sbi->last_valid_block_count = sbi->total_valid_block_count;
+	sbi->reserved_blocks = 0;
+	sbi->current_reserved_blocks = 0;
+#ifdef CONFIG_F2FS_OVP_RESERVED
+	sbi->ovp_reserved_blocks = 0;
+	sbi->ovp_current_reserved_blocks = 0;
+	sbi->ovp_rsvd_want_blocks = 0;
+	sbi->ovp_rsvd_max_blocks = 0;
+	init_ovp_threshold(sbi);
+#endif
+	init_f2fs_gc_loop(sbi);
 
 	for (i = 0; i < NR_INODE_TYPE; i++) {
 		INIT_LIST_HEAD(&sbi->inode_list[i]);
@@ -3108,6 +3244,32 @@ static void destroy_inodecache(void)
 	kmem_cache_destroy(f2fs_inode_cachep);
 }
 
+#ifdef CONFIG_F2FS_REMAP_GC
+static int __init init_f2fs_bioset(void)
+{
+	f2fs_bioset = bioset_create(BIO_POOL_SIZE,
+				    offsetof(struct f2fs_bio, bio));
+	return f2fs_bioset ? 0 : -ENOMEM;
+}
+
+static void destroy_f2fs_bioset(void)
+{
+	if (f2fs_bioset) {
+		bioset_free(f2fs_bioset);
+		f2fs_bioset = NULL;
+	}
+}
+#else
+static inline int init_f2fs_bioset(void)
+{
+	return 0;
+}
+
+static inline void destroy_f2fs_bioset(void)
+{
+}
+#endif
+
 static int __init init_f2fs_fs(void)
 {
 	int err;
@@ -3121,9 +3283,12 @@ static int __init init_f2fs_fs(void)
 		return -ENOMEM;
 	INIT_WORK(&f2fs_work, f2fs_reboot);
 
-	err = init_inodecache();
+	err = init_f2fs_bioset();
 	if (err)
 		goto fail;
+	err = init_inodecache();
+	if (err)
+		goto free_f2fs_bioset;
 	err = create_node_manager_caches();
 	if (err)
 		goto free_inodecache;
@@ -3178,6 +3343,8 @@ free_node_manager_caches:
 	destroy_node_manager_caches();
 free_inodecache:
 	destroy_inodecache();
+free_f2fs_bioset:
+	destroy_f2fs_bioset();
 fail:
 	return err;
 }
@@ -3194,6 +3361,7 @@ static void __exit exit_f2fs_fs(void)
 	destroy_segment_manager_caches();
 	destroy_node_manager_caches();
 	destroy_inodecache();
+	destroy_f2fs_bioset();
 	f2fs_destroy_trace_ios();
 	destroy_workqueue(f2fs_wq);
 }

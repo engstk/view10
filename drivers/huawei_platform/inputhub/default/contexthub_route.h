@@ -79,6 +79,7 @@ enum port {
 	ROUTE_MOTION_PORT = 0x02,
 	ROUTE_CA_PORT = 0x03,
 	ROUTE_FHB_PORT = 0x04,
+	ROUTE_FHB_UD_PORT = 0x05,
 };
 
 /* value lenght increase to 16 */

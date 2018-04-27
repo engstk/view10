@@ -17,6 +17,7 @@
 #ifdef FSC_DEBUG
 #include <linux/debugfs.h>
 #endif /* FSC_DEBUG */
+#include <linux/kthread.h>
 
 struct fusb3601_chip
 {
@@ -56,6 +57,7 @@ struct fusb3601_chip
 
     /* Timers */
     struct hrtimer sm_timer;                /* High-res timer for the SM */
+    struct hrtimer timer_force_timeout;
 
     /* Work struct for bottom half state machine processing */
 	struct workqueue_struct *highpri_wq;
@@ -65,6 +67,15 @@ struct fusb3601_chip
     /* Port structure */
     struct Port port;
     struct work_struct fusb3601_probe_work;
+    struct work_struct fusb3601_set_cc_mode_work;
+    CCOrientation orientation;
+#ifdef CONFIG_DUAL_ROLE_USB_INTF
+    struct dual_role_phy_desc *dual_desc;
+    struct dual_role_phy_instance *dual_role;
+#endif
+    struct kthread_worker set_drp_worker;
+    struct kthread_work set_drp_work;
+    struct task_struct *set_drp_worker_task;
 };
 
 extern struct fusb3601_chip* get_chip;

@@ -46,18 +46,7 @@
  *
  */
 
-/************************************************************************
-  Copyright   : 2005-2007, Huawei Tech. Co., Ltd.
-  File name   : UsimPsInterface_comm.h
-  Author      : zhuli 00100318
-  Version     : V200R001
-  Date        : 2008-09-23
-  Description : 该头文件定义了---usim模块对外的接口定义
-  History     :
-  1. Date:2008-09-23
-     Author: zhuli
-     Modification:Create
-************************************************************************/
+
 
 #ifndef _USIMM_USIMMPSINTERFACE_COMM_H_
 #define _USIMM_USIMMPSINTERFACE_COMM_H_
@@ -143,7 +132,8 @@ extern "C" {
 #define CMD_INS_INCREASE                        (0x32)
 #define CMD_INS_ACTIVATE_FILE                   (0x44)
 #define CMD_INS_MANAGE_CHANNEL                  (0x70)
-#define CMD_INS_MANAGE_SECURE_CHANNEL           (0x72)
+#define CMD_INS_MANAGE_UIM_FOR_USER             (0x72)
+#define CMD_INS_MANAGE_SECURE_CHANNEL           (0x73)
 #define CMD_INS_TRANSACT_DATA                   (0x75)
 #define CMD_INS_GET_CHALLENGE                   (0x84)
 #define CMD_INS_AUTHENTICATE                    (0x88)
@@ -289,31 +279,6 @@ extern "C" {
 /*数据定位*/
 #define USIMM_TAGNOTFOUND                       (0xFFFFFFFF)
 #define USIMM_BITNOFOUNE                        (0xFFFFFFFF)
-
-#define VSIM_XML_FILE_NAME                      "vsim.xml"
-#define VSIM_XML_TEMP_NAME                      "vsim.temp"
-
-#if(VOS_WIN32 == VOS_OS_VER)
-#define VSIM_XML_DIR_PATH                       ".\\vsim0"
-#define VSIM_XML_FILE_PATH                      ".\\vsim0\\vsim.xml"
-#define VSIM_XML_TEMP_PATH                      ".\\vsim0\\vsim.temp"
-#else
-
-#if defined (INSTANCE_1)
-#define VSIM_XML_DIR_PATH                       "/mnvm2:0/vsim1"
-#define VSIM_XML_FILE_PATH                      "/mnvm2:0/vsim1/vsim.xml"
-#define VSIM_XML_TEMP_PATH                      "/mnvm2:0/vsim1/vsim.temp"
-#elif defined (INSTANCE_2)
-#define VSIM_XML_DIR_PATH                       "/mnvm2:0/vsim2"
-#define VSIM_XML_FILE_PATH                      "/mnvm2:0/vsim2/vsim.xml"
-#define VSIM_XML_TEMP_PATH                      "/mnvm2:0/vsim2/vsim.temp"
-#else
-#define VSIM_XML_DIR_PATH                       "/mnvm2:0/vsim0"
-#define VSIM_XML_FILE_PATH                      "/mnvm2:0/vsim0/vsim.xml"
-#define VSIM_XML_TEMP_PATH                      "/mnvm2:0/vsim0/vsim.temp"
-#endif
-
-#endif  /*(VOS_WIN32 == VOS_OS_VER)*/
 
 #define USIMM_FILE_OPEN_MODE_R                  "rb"            /* open binary file for reading */
 #define USIMM_FILE_OPEN_MODE_W                  "wb"            /* open binary file for writing */
@@ -876,6 +841,10 @@ extern "C" {
 #define USIMM_ISIM_EFSMSR_STR                "3F007FFF6F47"
 #define USIMM_ISIM_EFSMSP_STR                "3F007FFF6F42"
 
+#define    USIMM_SLOT_SIZE                  (3)
+
+
+
 /*******************************************************************************
 3 枚举定义
 *******************************************************************************/
@@ -918,6 +887,8 @@ enum USIMM_CMDTYPE_REQ_ENUM
 
     USIMM_CARDTYPEEX_REQ        = 34,
 
+    USIMM_SILENTPINHANDLE_REQ   = 35,
+
     USIMM_CMDTYPE_REQ_BUTT
 };
 typedef VOS_UINT32 USIMM_CMDTYPE_REQ_ENUM_UINT32;
@@ -954,6 +925,7 @@ enum USIMM_CMDTYPE_CNF_ENUM
     USIMM_QUERYVOLTAGE_CNF      = 27,
     USIMM_PRIVATECGLAHANDLE_CNF = 28,
     USIMM_CARDTYPEEX_CNF        = 29,
+    USIMM_SILENTPINHANDLE_CNF   = 30,
 
     USIMM_CARDSTATUS_IND        = 100,
     USIMM_STKREFRESH_IND        = 101,
@@ -1021,9 +993,10 @@ enum USIMM_SWCHECK_ENUM
     USIMM_SW_UNHANDLE_ERROR     ,   /*= 41,   状态字与协议定义的INS字段不符 */
     USIMM_SW_CDMA_AUTN_ERROR    ,   /*= 42,   CDMA鉴权过程错误 */
     USIMM_SW_MSGCHECK_ERROR     ,   /*= 43,   参数检查错误 */
-    USIMM_SW_INVALID_BAKID      ,   /*= 43,   BCMCS特殊错误 */
-    USIMM_SW_INVALID_BCMCSFID   ,   /*= 43,   BCMCS特殊错误 */
-    USIMM_SW_DFPATH_ERROR       ,   /*= 44, Status路径不匹配 */
+    USIMM_SW_INVALID_BAKID      ,   /*= 44,   BCMCS特殊错误 */
+    USIMM_SW_INVALID_BCMCSFID   ,   /*= 45,   BCMCS特殊错误 */
+    USIMM_SW_DFPATH_ERROR       ,   /*= 46, Status路径不匹配 */
+    USIMM_SW_CLA_NOT_SUPPORT    ,   /*= 47,  CLA错误,需往ICC切*/
 
     USIMM_SW_BUTT
 };
@@ -2066,14 +2039,7 @@ enum USIMM_EFSTATUS_ENUM
 };
 typedef VOS_UINT8      USIMM_EFSTATUS_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : USIMM_AID_TYPE_ENUM_UINT32
- 结构说明  : AID类型枚举值
- 修改历史      :
-  1.日    期   : 2013年12月19日
-    作    者   : h59254
-    修改内容   :
-*****************************************************************************/
+
 enum USIMM_AID_TYPE_ENUM
 {
     USIMM_AID_TYPE_USIM                 = USIMM_GUTL_APP,    /* USIM的AID */
@@ -2083,14 +2049,7 @@ enum USIMM_AID_TYPE_ENUM
 };
 typedef VOS_UINT32  USIMM_AID_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 结构名    : USIMM_TR_PARA_ENUM_32
- 结构说明  : TERMINAL RESPONSE透传参数
- 修改历史      :
-  1.日    期   : 2014年02月15日
-    作    者   : h59254
-    修改内容   :
-*****************************************************************************/
+
 enum USIMM_TR_PARA_ENUM
 {
     USIMM_TR_TYPE_BALONG    = 0,
@@ -2305,6 +2264,15 @@ enum USIMM_CARD_FETCH_TYPE
 };
 typedef VOS_UINT32 USIMM_CARD_FETCH_TYPE_ENUM_UINT32;
 
+enum SI_PIH_CARD_SLOT_ENUM
+{
+    SI_PIH_CARD_SLOT_0      = 0, /*SCI_ID_0*/
+    SI_PIH_CARD_SLOT_1      = 1, /*SCI_ID_1*/
+    SI_PIH_CARD_SLOT_2      = 2, /*SCI_ID_2*/
+    SI_PIH_CARD_SLOT_BUTT
+};
+typedef VOS_UINT32  SI_PIH_CARD_SLOT_ENUM_UINT32;
+
 /*******************************************************************************
 4 struct定义
 *******************************************************************************/
@@ -2481,7 +2449,7 @@ typedef union
     USIMM_WLAN_AUTH_STRU                stWlanAuth;
 }USIMM_AUTH_DATA_UNION;
 
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 typedef struct
 {
     VOS_UINT8                           aucAuthBS[USIMM_CDMA_AUTHBS_LEN];
@@ -2507,7 +2475,7 @@ typedef struct
     USIMM_MANAGESSD_TYPE_ENUM_UINT32    enCmdType;
     USIMM_MANAGESSD_DATA_UNION          uSSDData;
 }USIMM_MANAGESSD_DATA_STRU;
-
+#endif
 /*****************************************************************************
  结构名    : USIM_REFRESH_FILE_STRU
  结构说明  : USIMM REFRESH主动上报的文件信息
@@ -3088,6 +3056,7 @@ typedef struct
     USIMM_TPDU_DATA_STRU                stTPDUData;
 } USIMM_SENDTPDUDATA_REQ_STRU;
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 /*****************************************************************************
  结构名    : USIMM_BSCHALLENGE_REQ_STRU
  结构说明  : BASE STATION CHALLENGE请求消息结构
@@ -3119,6 +3088,7 @@ typedef struct
     USIMM_CMDHEADER_REQ_STRU        stMsgHeader;
     USIMM_MANAGESSD_DATA_STRU       stSsdData;
 } USIMM_MANAGESSD_REQ_STRU;
+#endif
 
 /*****************************************************************************
  结构名    : USIMM_TERMINALRESPONSE_REQ_STRU
@@ -3195,12 +3165,14 @@ typedef struct
     USIMM_MUTILFILE_DATA_STRU           stFileData[USIMM_SETMUTILFILE_MAX];/*最多14个文件*/
 }USIMM_SETMUTILFILE_REQ_STRU;
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 typedef struct
 {
     USIMM_CMDHEADER_REQ_STRU            stMsgHeader;
     USIMM_CDMASPEC_AUTHTYPE_ENUM_UINT32 enAuthType;
     USIMM_CDMASPECAUTH_UNION            uAuthData;
 }USIMM_CDMASPECAUTH_REQ_STRU;
+#endif
 
 #if ((FEATURE_VSIM == FEATURE_ON) && (FEATURE_ON == FEATURE_VSIM_ICC_SEC_CHANNEL))
 typedef struct
@@ -3246,7 +3218,9 @@ typedef struct
     USIMM_REALISIM_STATE_ENUM_UINT32    enISIMState;
     VOS_UINT8                           ucHasCModule;
     VOS_UINT8                           ucHasWGModule;
-    VOS_UINT8                           aucRev[2];
+    VOS_UINT8                           aucICCID[USIMM_ICCID_FILE_LEN];
+    VOS_UINT8                           ucIsICCIDValid;
+    VOS_UINT8                           aucRev[3];
 }USIMM_CARDSTATUS_ADDINFO_STRU;
 
 typedef struct
@@ -3304,6 +3278,15 @@ typedef struct
     USIMM_PIN_TYPE_ENUM_UINT32          enPinType;
     USIMM_PIN_INFO_STRU                 stPinInfo;
 } USIMM_PINHANDLE_CNF_STRU;
+
+typedef struct
+{
+    USIMM_CMDHEADER_CNF_STRU            stCmdResult;
+    USIMM_PIN_CMD_TYPE_ENUM_UINT32      enCmdType;
+    USIMM_PIN_TYPE_ENUM_UINT32          enPinType;
+    USIMM_PIN_INFO_STRU                 stPinInfo;
+    VOS_UINT8                           aucOldPIN[USIMM_PINNUMBER_LEN];
+} USIMM_SILENT_PINHANDLE_CNF_STRU;
 
 typedef struct
 {
@@ -3615,6 +3598,7 @@ typedef struct
     USIMM_APP_SESSION_INFO_STRU         astSessionInfo[USIMM_CARDAPP_BUTT];
 }USIMM_CARDSESSION_CNF_STRU;
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 /*****************************************************************************
  结构名    : USIMM_XECCNUMBER_IND_STRU
  结构说明  : XECC号码上报消息结构
@@ -3710,6 +3694,7 @@ typedef struct
     USIMM_CDMASPEC_AUTHTYPE_ENUM_UINT32 enAuthType;
     USIMM_CDMASPECAUTH_DATA_UNION       uAuthCnf;         /* 返回Data*/
 }USIMM_CDMASPECAUTH_CNF_STRU;
+#endif
 
 typedef struct
 {

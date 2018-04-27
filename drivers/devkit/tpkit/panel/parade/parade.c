@@ -1727,6 +1727,12 @@ static int parade_get_brightness_info(void)
 	int rc = NO_ERR;
 	struct ts_oem_info_param *info =NULL;
 	TS_LOG_INFO("%s: Enter\n", __func__);
+	if((tskit_parade_data->need_provide_projectID_for_sensor) && (tskit_parade_data->create_project_id_flag == 1)){//To generate projectiD for shutdown charging
+		rc = parade_create_project_id();
+		if (rc < 0) {
+			TS_LOG_ERR("%s: create project id failed!\n", __func__);
+		}
+	}
 
 	if(g_ts_kit_platform_data.chip_data->get_brightness_info_flag == 0)
 		return rc; //some ic (cs448) no this function.
@@ -3007,20 +3013,25 @@ static ssize_t parade_hw_reset_store(struct device *dev,
 
 static DEVICE_ATTR(hw_reset, S_IWUSR, NULL, parade_hw_reset_store);
 
-
+#define PARADE_BOOTLOADER_COMMAND_RESPONSE_LOW_CRC 3
+#define PARADE_HID_OUTPUT_VALIDATE_BL_RESPONSE_COUNT 7
 static int parade_hid_output_validate_bl_response(
 		struct parade_core_data *cd,
 		struct parade_hid_output *hid_output)
 {
-	u16 size;
-	u16 crc;
-	u8 status;
+	u16 size = 0;
+	u16 crc = 0;
+	u8 status = 0;
 
 	size = get_unaligned_le16(&cd->response_buf[0]);
 
 	if (hid_output->reset_expected && !size)
 		return 0;
 
+	if(size -PARADE_BOOTLOADER_COMMAND_RESPONSE_LOW_CRC >= CY_MAX_INPUT || size <= PARADE_HID_OUTPUT_VALIDATE_BL_RESPONSE_COUNT ){
+		TS_LOG_ERR("%s: HID output response, wrong size\n",__func__);
+		return -EPROTO;
+	}
 	if (cd->response_buf[HID_OUTPUT_RESPONSE_REPORT_OFFSET]
 			!= HID_BL_RESPONSE_REPORT_ID) {
 		TS_LOG_ERR("%s: HID output response, wrong report_id\n",
@@ -3040,8 +3051,8 @@ static int parade_hid_output_validate_bl_response(
 		return -EPROTO;
 	}
 
-	crc = _parade_compute_crc(&cd->response_buf[4], size - 7);
-	if (cd->response_buf[size - 3] != LOW_BYTE(crc)
+	crc = _parade_compute_crc(&cd->response_buf[4], size - PARADE_HID_OUTPUT_VALIDATE_BL_RESPONSE_COUNT);
+	if (cd->response_buf[size - PARADE_BOOTLOADER_COMMAND_RESPONSE_LOW_CRC] != LOW_BYTE(crc)
 			|| cd->response_buf[size - 2] != HI_BYTE(crc)) {
 		TS_LOG_ERR("%s: HID output response, wrong CRC 0x%X\n",
 			__func__, crc);
@@ -5428,8 +5439,8 @@ static int parade_init_chip(void)
 	cd->force_wait = false;
 	rc = parade_startup(cd, true);
 	if(rc){
-		TS_LOG_DEBUG("%s: startup failed\n", __func__);
-		return rc;
+		TS_LOG_ERR("%s: startup failed\n", __func__);
+		//return rc; don't  return error ,wait fw update to recovery.
 	}
 	if(tskit_parade_data->support_get_tp_color == true){
 		parade_get_color_info(cd);
@@ -5439,7 +5450,7 @@ static int parade_init_chip(void)
 	/*provide panel_id for sensor*/
 	g_ts_kit_platform_data.panel_id = tskit_parade_data->panel_id;
 	TS_LOG_INFO("%s: call parade_init_chip end\n", __func__);
-	return rc;
+	return NO_ERR;
 }
 
 static s16 *create_and_get_u16_array(struct device_node *dev_node,
@@ -5639,7 +5650,7 @@ static int  get_lcd_module_name(void)
 	char temp[LCD_PANEL_INFO_MAX_LEN] = {0};
 	int i = 0;
 	strncpy(temp, tskit_parade_data->lcd_panel_info, LCD_PANEL_INFO_MAX_LEN-1);
-	for(i=0;i<LCD_PANEL_INFO_MAX_LEN-1;i++)
+	for(i=0;i<(LCD_PANEL_INFO_MAX_LEN -1) && (i < (MAX_STR_LEN -1));i++)
 	{
 		if(temp[i] == '_')
 		{
@@ -5881,6 +5892,25 @@ static int hw_get_dts_value(struct device_node *core_node, char *name)
 	return retval;
 }
 
+void provide_projectID_for_sensor(struct device_node *core_node, struct ts_kit_device_data *chip_data)
+{
+	int value = 0;
+
+	if(NULL == core_node || NULL == chip_data) {
+		TS_LOG_ERR("%s, core_node or chip_data is NULL\n", __func__);
+		return;
+	}
+
+	/*  need provoid projectid for sensor or not  flag */
+	value = parade_get_dts_value(core_node , "need_provide_projectID_for_sensor");
+	if (value < 0) {
+		TS_LOG_INFO("%s, get device need_provide_projectID_for_sensor failed\n",__func__);
+		value = 0; //default
+	}
+	tskit_parade_data->need_provide_projectID_for_sensor= value;
+	TS_LOG_INFO("%s, need_provide_projectID_for_sensor = %d \n", __func__, tskit_parade_data->need_provide_projectID_for_sensor);
+}
+
 void parse_need_check_report_descriptor_flag(struct device_node *core_node, struct ts_kit_device_data *chip_data)
 {
 	 int value = 0;
@@ -5900,6 +5930,25 @@ void parse_need_check_report_descriptor_flag(struct device_node *core_node, stru
 	 TS_LOG_INFO("%s, need_check_report_descriptor_flag = %d \n", __func__, tskit_parade_data->need_check_report_descriptor_flag);
  }
 
+void parade_parse_fw_need_depend_on_lcd(struct device_node *core_node, struct ts_kit_device_data *chip_data)
+{
+	int value = 0;
+
+	if(NULL == core_node || NULL == chip_data || !tskit_parade_data) {
+		TS_LOG_ERR("%s, core_node or chip_data is NULL\n", __func__);
+		return;
+	}
+
+	/*  fw need depend on lcd module */
+	value = parade_get_dts_value(core_node , "fw_need_depend_on_lcd");
+	if (value < 0) {
+		TS_LOG_INFO("%s, get device fw_need_depend_on_lcd failed\n",__func__);
+		value = 0; //default
+	}
+	tskit_parade_data->fw_need_depend_on_lcd = value;
+	TS_LOG_INFO("%s, fw_need_depend_on_lcd = %d \n", __func__, tskit_parade_data->fw_need_depend_on_lcd);
+}
+
  int parade_parse_dts(struct device_node *device, struct ts_kit_device_data *chip_data)
  {
 	if(NULL == device || NULL == chip_data) {
@@ -5918,17 +5967,17 @@ void parse_need_check_report_descriptor_flag(struct device_node *core_node, stru
 	core_pdata = kzalloc(sizeof(*core_pdata), GFP_KERNEL);
 	if (!core_pdata) {
 		rc = -ENOMEM;
-		goto fail;
+		goto fail_free;
 	}
 	mt_pdata = kzalloc(sizeof(*mt_pdata), GFP_KERNEL);
 	if (!mt_pdata) {
 		rc = -ENOMEM;
-		goto fail;
+		goto fail_free;
 	}
 	loader_pdata = kzalloc(sizeof(*loader_pdata), GFP_KERNEL);
 	if (!loader_pdata) {
 		rc = -ENOMEM;
-		goto fail;
+		goto fail_free;
 	}
 
 	tskit_parade_data->core_pdata = core_pdata;
@@ -6141,6 +6190,7 @@ void parse_need_check_report_descriptor_flag(struct device_node *core_node, stru
 	parse_check_irq_state(core_node);
 	parse_before_suspend_flag(core_node);
 	parse_need_set_rst_after_iovcc_flag(core_node);
+	parade_parse_fw_need_depend_on_lcd(core_node, chip_data);
 
 	/*read is parade solution*/
 	value = 0;
@@ -6368,6 +6418,7 @@ void parse_need_check_report_descriptor_flag(struct device_node *core_node, stru
 	tskit_parade_data->create_project_id_flag = retval;
 	TS_LOG_INFO("%s, create_project_id_flag = %d \n", __func__, tskit_parade_data->create_project_id_flag);
 
+	provide_projectID_for_sensor(core_node,chip_data);
 	parse_need_check_report_descriptor_flag(core_node,chip_data);
 
 	/* TX/RX delta lattice flag */
@@ -6448,8 +6499,6 @@ fail_free:
 		kfree(mt_pdata);
 	if(loader_pdata)
 		kfree(loader_pdata);
-
-fail:
 	return rc;
  }
 
@@ -7487,7 +7536,7 @@ static int parade_load_app_(struct device *dev, const u8 *fw, int fw_size)
 			goto _parade_load_app_exit;
 		}
 		TS_LOG_INFO("%s: Chip is in bootloader now\n", __func__);
-		tskit_parade_data->mode == CY_MODE_BOOTLOADER;/*2016.12.22: Bug Fix, if we do not do this, the retry will not take effect*/
+		tskit_parade_data->mode = CY_MODE_BOOTLOADER;/*2016.12.22: Bug Fix, if we do not do this, the retry will not take effect*/
 	}
 	else{
 		TS_LOG_INFO("%s: In Bootloader mode, no need to enter\n", __func__);
@@ -7582,9 +7631,18 @@ static int parade_load_app_(struct device *dev, const u8 *fw, int fw_size)
 
 
 _parade_load_app_exit:
-	kfree(row_buf);
-	kfree(row_image);
-	kfree(dev_id);
+	if(row_buf){
+		kfree(row_buf);
+		row_buf = NULL;
+	}
+	if(row_image){
+		kfree(row_image);
+		row_image = NULL;
+	}
+	if(dev_id){
+		kfree(dev_id);
+		dev_id = NULL;
+	}
 _parade_load_app_error:
 	return rc;
 
@@ -7782,6 +7840,9 @@ static int parade_create_project_id(void)
 			case MODULE_TOPTOUCH_ID:
 				strncpy(tskit_parade_data->module_vendor, "toptouch", MAX_STR_LEN);
 				break;
+			case MODULE_LENSONE_ID:
+				strncpy(tskit_parade_data->module_vendor, "lensone", MAX_STR_LEN);
+				break;
 			case MODULE_JUNDA_ID:
 				strncpy(tskit_parade_data->module_vendor, "junda", MAX_STR_LEN);
 				break;
@@ -7807,6 +7868,9 @@ static int parade_create_project_id(void)
 		snprintf(tskit_parade_data->parade_chip_data->module_name, MAX_STR_LEN -1, "%s",
 					tskit_parade_data->module_vendor);
 		already_get_flag = true;
+		if(tskit_parade_data->need_provide_projectID_for_sensor){
+			memcpy(tskit_parade_data->parade_chip_data->project_id, tskit_parade_data->project_id,MAX_STR_LEN -1);//proviod TP's project id for other module.
+		}
 		TS_LOG_INFO("%s: create project id successful: %s!\n", __func__, tskit_parade_data->project_id);
 	}
 out:
@@ -7826,6 +7890,17 @@ static void parade_get_fw_name(char *file_name)
 		strncat(file_name, tskit_parade_data->project_id, MAX_STR_LEN);
 		strncat(file_name, "_", 1);
 		strncat(file_name, tskit_parade_data->module_vendor, MAX_STR_LEN);
+	}
+	if(tskit_parade_data->fw_need_depend_on_lcd && !tskit_parade_data->is_firmware_broken){
+		ret = parade_get_lcd_panel_info();
+		if(ret){
+			TS_LOG_ERR("%s: get lcd panel info faile!\n ",__func__);
+		}
+		ret = get_lcd_module_name();
+		if(!ret){
+			strncat(file_name, "_", 1);
+			strncat(file_name, tskit_parade_data->lcd_module_name, strlen(tskit_parade_data->lcd_module_name));
+		}
 	}
 	if(tskit_parade_data->need_distinguish_lcd){
 		if (get_panel_name_flag_adapter()){
@@ -8889,8 +8964,13 @@ static int parade_cmcp_parse_threshold_file(void)
 	char  tmp_filename[4*MAX_STR_LEN] = {0};
 	TS_LOG_INFO("%s enter\n", __func__);
 
-	snprintf(tmp_filename, sizeof(tmp_filename), "ts/%s_%s_%s_%s_limits.csv",g_ts_kit_platform_data.product_name,
-		PARADE_VENDER_NAME,tskit_parade_data->project_id,tskit_parade_data->module_vendor);
+	if(tskit_parade_data->fw_need_depend_on_lcd) {//limit depen on lcd module name
+		snprintf(tmp_filename, sizeof(tmp_filename) -1, "ts/%s_%s_%s_%s_%s_limits.csv",g_ts_kit_platform_data.product_name,
+			PARADE_VENDER_NAME,tskit_parade_data->project_id,tskit_parade_data->module_vendor, tskit_parade_data->lcd_module_name);
+	} else {
+		snprintf(tmp_filename, sizeof(tmp_filename) -1, "ts/%s_%s_%s_%s_limits.csv",g_ts_kit_platform_data.product_name,
+			PARADE_VENDER_NAME,tskit_parade_data->project_id,tskit_parade_data->module_vendor);
+	}
 	TS_LOG_INFO("%s request threshold %s start\n", __func__,tmp_filename );
 
 	retval = request_firmware(&fw_entry, tmp_filename, cd->dev);
@@ -10522,7 +10602,10 @@ static int parade_power_on(void)
 	}else{
 		TS_LOG_INFO("%s, power control by LCD, nothing to do\n",__func__);
 	}
-
+	if(true== tskit_parade_data->need_set_rst_after_iovcc_flag) {
+        	mdelay(1);	/*make sure iovcc power on success*/
+        	TS_LOG_INFO("%s, set rst & int after iovcc sleep 1ms\n", __func__);
+        }
 	parade_power_on_gpio_set();
 	return 0;
 

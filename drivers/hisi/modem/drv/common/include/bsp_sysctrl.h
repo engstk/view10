@@ -53,16 +53,16 @@
 
 typedef enum tagBSP_SYSCTRL_INDEX
 {
-    sysctrl_ao = 0x0,
+    sysctrl_ao = 0x0,/* sysctrl_ao(V722/V711/V765)、sctrl(phone/M535/M533) */
     sysctrl_pd,
     sysctrl_mdm,
-    sysctrl_ap_peri, /*pctrl*/
+    sysctrl_ap_peri, /* peri_sysctrl(V765)  pctrl (phone/M535/M533)*/
     sysctrl_ap_pericrg,
-    sysctrl_reservel,/*预留系统控制器*/
+    crg_modem5g,
+    sysctrl_modem5g,
+    sysctrl_ccpu5g,
+    sysctrl_reserve1,/*预留系统控制器*/
     sysctrl_reserve2,
-    sysctrl_reserve3,
-    sysctrl_reserve4,
-    sysctrl_reserve5,
     
     sysctrl_max
 }BSP_SYSCTRL_INDEX;
@@ -76,11 +76,11 @@ typedef enum tagBSP_SYSCTRL_INDEX
 #define  sc_pr_err(fmt, ...)      \
     (bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_SYSCTRL, "[sc]: <%s> "fmt, __FUNCTION__, ##__VA_ARGS__))
 
-#ifdef CONFIG_OF
+#ifdef CONFIG_SYSCTRL
 extern void* bsp_sysctrl_addr_get(void* phy_addr);
 extern void* bsp_sysctrl_addr_byindex(BSP_SYSCTRL_INDEX index);
 extern void* bsp_sysctrl_addr_phy_byindex(BSP_SYSCTRL_INDEX index);
-#else /* CONFIG_OF */
+#else /* CONFIG_SYSCTRL */
 static inline void* bsp_sysctrl_addr_get(void* phy_addr){
     return 0;
 }
@@ -106,10 +106,10 @@ void system_status_init(void);
 int get_system_status(void);
 
 #ifndef __KERNEL__
-#ifdef CONFIG_OF
-extern int dt_sysctrl_init(void);
-#else /* CONFIG_OF */
-static inline int dt_sysctrl_init(void) {return 0;}
+#ifdef CONFIG_SYSCTRL
+extern int sysctrl_init(void);
+#else /* CONFIG_SYSCTRL */
+static inline int sysctrl_init(void) {return 0;}
 #endif
 #endif
 

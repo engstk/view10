@@ -732,7 +732,7 @@ mmc_send_bus_test(struct mmc_card *card, struct mmc_host *host, u8 opcode,
 	/* dma onto stack is unsafe/nonportable, but callers to this
 	 * routine normally provide temporary on-stack buffers ...
 	 */
-	data_buf = kmalloc(len, GFP_KERNEL);
+	data_buf = kzalloc(len, GFP_KERNEL);
 	if (!data_buf)
 		return -ENOMEM;
 

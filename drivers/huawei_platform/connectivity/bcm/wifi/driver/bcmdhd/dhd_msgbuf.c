@@ -3387,8 +3387,12 @@ int BCMFASTPATH dhd_prot_txstatus_wakelock_timeout(dhd_pub_t *dhd)
 
 	DHD_GENERAL_LOCK(dhd, flags);
 	if (prot->active_tx_count) {
-		timeout = prot->active_tx_last_jiffies +
-			(dhd->op_mode & DHD_FLAG_HOSTAP_MODE)? TX_WAKE_TIMEOUT_IN_JIFFIES*2:TX_WAKE_TIMEOUT_IN_JIFFIES;
+		if (dhd->op_mode & DHD_FLAG_HOSTAP_MODE) {
+			timeout = prot->active_tx_last_jiffies + (TX_WAKE_TIMEOUT_IN_JIFFIES*2);
+		} else {
+			timeout = prot->active_tx_last_jiffies + TX_WAKE_TIMEOUT_IN_JIFFIES;
+		}
+
 		if (time_after(jiffies, timeout)) {
 			DHD_ERROR(("%s: Tx wake timeout. active_tx_count %d (%lu/%lu)\n", __FUNCTION__,
 				prot->active_tx_count, prot->active_tx_last_jiffies, timeout));

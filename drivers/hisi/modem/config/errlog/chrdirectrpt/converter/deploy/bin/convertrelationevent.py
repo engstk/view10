@@ -29,26 +29,9 @@ def Output(path):
 	file = open(path, 'w')
 	s = ''
 	for r in result:
-		s += 'typedef struct\n'
-		s += '{\n'
 		for f in r.subevents:
-			s += '	' + f + ' st' + f + ';\n'
-		s += '} ' + r.event + ';\n'
-		s += r.event + ' g_st' + r.event + ';\n'
+			s += r.event + '	' + f + '\n'
 	file.write(s)
-	file.close()
-	
-def ConvertRelationEvent(path):
-	file = open(path, 'r')
-	data = file.read()
-	m = '#define[\s]+RELATION_EVENT_DEFINITION([\s\S]*)#undef[\s]+RELATION_EVENT_DEFINITION'
-	text = re.findall(m, data)
-	print text
-	for r in text:
-		m = '\{[\s]*([^\s,]*)[\s]*,[\s]*([^\s,]*)[\s]*,[\s]*([^\s,]*)[\s]*\}'
-		items = re.findall(m, r)
-		for i in items:
-			AddSubItem(i[0][:i[0].index('_FAULTID')], i[2][:i[2].index('_ALARMID')])
 	file.close()
 	
 def ConvertAbsoluteEvent(path):
@@ -63,6 +46,5 @@ def ConvertAbsoluteEvent(path):
 			AddSubItem(i[0][:i[0].index('_EVENTID')], i[1][:i[1].index('_ALARMID')])
 	file.close()
 
-ConvertRelationEvent('../../../inc/ChrRelationEvent_cfg.h')
 ConvertAbsoluteEvent('../../../src/ChrAbsoluteEvent_cfg.c')
-Output('./ChrRelationEvent.c')
+Output('./ChrEvent.c')

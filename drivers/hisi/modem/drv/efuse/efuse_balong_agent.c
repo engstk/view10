@@ -77,6 +77,8 @@
 #include "bsp_trace.h"
 #include "bsp_efuse.h"
 
+#include "securec.h"
+
 #include <mdrv.h>
 #include "../../adrv/adrv.h"
 
@@ -173,7 +175,7 @@ static int __init bsp_efuse_agent_init(void)
 
     INIT_WORK(&efuse_work, efuse_handle_work);
 
-    memset((void*)&efuse_debug_info, 0, sizeof(efuse_debug_info));
+    memset_s((void*)&efuse_debug_info, sizeof(efuse_debug_info), 0, sizeof(efuse_debug_info));
 
     ret = bsp_icc_event_register(chan_id, (read_cb_func)bsp_efuse_data_receive, NULL, NULL, NULL);
     if (ret) {

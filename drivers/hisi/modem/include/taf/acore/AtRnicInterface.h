@@ -85,12 +85,12 @@ extern "C" {
 #define RNICITF_MIN_RAB_ID              (5)
 #define RNICITF_MAX_RAB_ID              (15)
 
-/* Added by m00217266 for L-C互操作项目, 2014-2-11, begin */
 #define RNIC_MODEM_0_RMNET_ID_IS_VALID(ucRmNetId)\
     (((ucRmNetId) == RNIC_RMNET_ID_0)\
   || ((ucRmNetId) == RNIC_RMNET_ID_1)\
   || ((ucRmNetId) == RNIC_RMNET_ID_2))
-/* Added by m00217266 for L-C互操作项目, 2014-2-11, end */
+
+#define RNIC_RMNET_NAME_MAX_LEN         (16)
 
 /*================================================*/
 /* 功能函数宏定义 */
@@ -99,6 +99,14 @@ extern "C" {
 /*******************************************************************************
   3 枚举定义
 *******************************************************************************/
+
+enum AT_RNIC_USB_TETHER_CONN_ENUM
+{
+    AT_RNIC_USB_TETHER_DISCONNECT       = 0x00,                                 /* USB tethering未连接 */
+    AT_RNIC_USB_TETHER_CONNECTED        = 0x01,                                 /* USB tethering已连接 */
+    AT_RNIC_USB_TETHER_CONN_BUTT
+};
+typedef VOS_UINT8 AT_RNIC_USB_TETHER_CONN_ENUM_UINT8;
 
 /*****************************************************************************
   4 全局变量声明
@@ -111,13 +119,7 @@ extern "C" {
 /*****************************************************************************
   6 消息定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : AT_RNIC_MSG_ID_ENUM
- 枚举说明  : AT与RNIC的消息定义
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum AT_RNIC_MSG_ID_ENUM
 {
     /* AT发给RNIC的消息枚举 */
@@ -133,6 +135,7 @@ enum AT_RNIC_MSG_ID_ENUM
     ID_AT_RNIC_PDN_INFO_CFG_IND         = 0x0009,   /* Share-PDP配置指示 */      /* _H2ASN_MsgChoice AT_RNIC_PDN_INFO_CFG_IND_STRU */
     ID_AT_RNIC_PDN_INFO_REL_IND         = 0x000A,   /* Share-PDP释放指示 */      /* _H2ASN_MsgChoice AT_RNIC_PDN_INFO_REL_IND_STRU */
     /* Added by L47619 for V3R3 Share-PDP Project, 2013-6-3, end */
+    ID_AT_RNIC_USB_TETHER_INFO_IND      = 0x000B,   /* USB Tethering信息指示 */ /* _H2ASN_MsgChoice AT_RNIC_USB_TETHER_INFO_IND_STRU */
 
     /* RNIC发给AT的消息枚举 */
     ID_RNIC_AT_PDP_OPERATE_IND          = 0x1001,   /* PDP激活或者去激活指示 */ /* _H2ASN_MsgChoice RNIC_AT_PDP_OPERATE_IND_STRU */
@@ -147,13 +150,7 @@ typedef VOS_UINT32 AT_RNIC_MSG_ID_ENUM_UINT32;
   7 STRUCT定义
 *****************************************************************************/
 
-/*****************************************************************************
- 结构名    : AT_RNIC_DSFLOW_IND_STRU
- 结构说明  : AT给RNIC发送流量查询请求
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                                  /* _H2ASN_Skip */
@@ -162,13 +159,7 @@ typedef struct
     VOS_UINT8                           aucRsv[2];                  /* 保留 */
 }AT_RNIC_DIAL_MODE_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_AT_DIAL_MODE_CNF_STRU
- 结构说明  : RNIC给AT拨号模式查询回复
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                                  /* _H2ASN_Skip */
@@ -180,13 +171,7 @@ typedef struct
     VOS_UINT32                          ulEventReportFlag;          /*是否给应用上报标识*/
 }RNIC_AT_DIAL_MODE_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : AT_RNIC_DSFLOW_IND_STRU
- 结构说明  : AT给RNIC发送流量上报指示
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                                  /* _H2ASN_Skip */
@@ -198,13 +183,7 @@ typedef struct
     /* Modified by l60609 for V9R1 IPv6&TAF/SM Project, 2013-4-27, end */
 }AT_RNIC_DSFLOW_IND_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_DATA_RATE_STRU
- 结构说明  : RNIC统计的流量速率
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct RNIC_DATA_RATE_STRU
 {
     VOS_UINT32                          ulDLDataRate;                           /* 当前下行速率 */
@@ -213,13 +192,7 @@ typedef struct RNIC_DATA_RATE_STRU
 
 
 
-/*****************************************************************************
- 结构名    : RNIC_AT_DSFLOW_RSP_STRU
- 结构说明  : RNIC给AT发送流量数据结构
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                  /* 消息头 */    /* _H2ASN_Skip */
@@ -229,13 +202,7 @@ typedef struct
     RNIC_DATA_RATE_STRU                 stRnicDataRate;             /* 当前流量速率 */
 }RNIC_AT_DSFLOW_RSP_STRU;
 
-/*****************************************************************************
- 结构名    : AT_RNIC_IPV4_PDP_ACT_IND_STRU
- 结构说明  : AT给RNIC的IPV4类型的PDP激活指示
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                  /* 消息头 */    /* _H2ASN_Skip */
@@ -260,13 +227,7 @@ typedef struct
     VOS_UINT32                          ulSecWINNS;                 /* IPV4的副WINNS，主机序 */
 }AT_RNIC_IPV4_PDP_ACT_IND_STRU;
 
-/*****************************************************************************
- 结构名    : AT_RNIC_IPV6_PDP_ACT_IND_STRU
- 结构说明  : AT给RNIC的IPV6类型的PDP激活指示
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
@@ -285,13 +246,7 @@ typedef struct
     VOS_UINT8                           aucSecDNS[RNICITF_MAX_IPV6_ADDR_LEN];   /* 从 PDP上下文带来的IPV6副DNS长度，不包括":" */
 }AT_RNIC_IPV6_PDP_ACT_IND_STRU;
 
-/*****************************************************************************
- 结构名    : AT_RNIC_IPV4V6_PDP_ACT_IND_STRU
- 结构说明  : AT给RNIC的IPV4类型的PDP激活指示
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
@@ -325,13 +280,7 @@ typedef struct
 
 }AT_RNIC_IPV4V6_PDP_ACT_IND_STRU;
 
-/*****************************************************************************
- 结构名    : AT_RNIC_PDP_DEACT_IND_STRU
- 结构说明  : AT给RNIC的PDP去激活指示
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
@@ -341,13 +290,7 @@ typedef struct
     VOS_UINT8                           aucRsv[2];
 }AT_RNIC_PDP_DEACT_IND_STRU;
 
-/*****************************************************************************
- 结构名    : AT_RNIC_MTU_CHANGE_IND_STRU
- 结构说明  : AT给RNIC发送MTU更改指示
- 1.日    期   : 2012年11月28日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
@@ -359,13 +302,7 @@ typedef struct
 
 
 /* Added by L47619 for V3R3 Share-PDP Project, 2013-6-3, begin */
-/*****************************************************************************
- 结构名  : AT_RNIC_IPV4_PDN_INFO_STRU
- 结构说明: IPv4配置信息结构, 地址全0为无效
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulPdnAddr;                              /* IP地址 */
@@ -380,13 +317,7 @@ typedef struct
     VOS_UINT32                          ulPcscfThiAddr;                         /* 第三P-CSCF地址 */
 }AT_RNIC_IPV4_PDN_INFO_STRU;
 
-/*****************************************************************************
- 结构名  : AT_RNIC_IPV6_PDN_INFO_STRU
- 结构说明: IPv6配置信息结构, 地址全0为无效
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucPdnAddr[RNICITF_MAX_IPV6_ADDR_LEN];      /* IP地址 */
@@ -397,13 +328,7 @@ typedef struct
     VOS_UINT8                           aucPcscfThiAddr[RNICITF_MAX_IPV6_ADDR_LEN]; /* 第三P-CSCF地址 */
 } AT_RNIC_IPV6_PDN_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : AT_RNIC_PDN_INFO_CFG_IND_STRU
- 结构说明  : PDN配置请求消息
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头   */      /* _H2ASN_Skip */
@@ -422,13 +347,7 @@ typedef struct
 
 } AT_RNIC_PDN_INFO_CFG_IND_STRU;
 
-/*****************************************************************************
- 结构名  : AT_RNIC_PDN_INFO_REL_IND_STRU
- 结构说明: PDN释放请求消息
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头   */      /* _H2ASN_Skip */
@@ -440,6 +359,18 @@ typedef struct
 
 } AT_RNIC_PDN_INFO_REL_IND_STRU;
 /* Added by L47619 for V3R3 Share-PDP Project, 2013-6-3, end */
+
+
+typedef struct
+{
+    VOS_MSG_HEADER                                                              /* 消息头   */      /* _H2ASN_Skip */
+    AT_RNIC_MSG_ID_ENUM_UINT32          enMsgId;                                /* 消息类型 */      /* _H2ASN_Skip */
+
+    VOS_UINT8                           aucRmnetName[RNIC_RMNET_NAME_MAX_LEN];  /* Rmnet网卡名 */
+    AT_RNIC_USB_TETHER_CONN_ENUM_UINT8  enTetherConnStat;                       /* USB Tethering连接状态 */
+    VOS_UINT8                           aucRsv[3];
+
+} AT_RNIC_USB_TETHER_INFO_IND_STRU;
 
 /*****************************************************************************
   8 UNION定义

@@ -6,7 +6,7 @@
  * apply:
  *
  * * This program is free software; you can redistribute it and/or modify
- * * it under the terms of the GNU General Public License version 2 and 
+ * * it under the terms of the GNU General Public License version 2 and
  * * only version 2 as published by the Free Software Foundation.
  * *
  * * This program is distributed in the hope that it will be useful,
@@ -28,10 +28,10 @@
  * * 2) Redistributions in binary form must reproduce the above copyright
  * *    notice, this list of conditions and the following disclaimer in the
  * *    documentation and/or other materials provided with the distribution.
- * * 3) Neither the name of Huawei nor the names of its contributors may 
- * *    be used to endorse or promote products derived from this software 
+ * * 3) Neither the name of Huawei nor the names of its contributors may
+ * *    be used to endorse or promote products derived from this software
  * *    without specific prior written permission.
- * 
+ *
  * * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -46,24 +46,7 @@
  *
  */
 
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : VosTaskPrioDef.h
-  版 本 号   : 初稿
-  作    者   :
-  生成日期   : 2013年10月28日
-  最近修改   :
-  功能描述   : 公共头文件, 定义VOS全系统的任务优先级
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2013年10月28日
-    作    者   :
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 /*****************************************************************************
   1 其他头文件包含
@@ -86,6 +69,7 @@ extern "C" {
 #define GUPHY_RCM_TASK_PRIO             (0)
 #define GUPHY_GPHY_TASK_PRIO            (1)
 #define COMM_BBPDBG_SELFTASK_PRIO       (1)
+#define GUPHY_GPHYLOW_TASK_PRIO         (2)
 #define GUPHY_UPA_TASK_PRIO             (2)
 #define GUPHY_WPHY_TASK_PRIO            (3)
 #define COMM_HPA_SELFTASK_PRIO          (3)
@@ -98,6 +82,8 @@ extern "C" {
 #define CPROC_1X_TASK_PRIO              (4)
 #define CPROC_RM_TASK_PRIO              (4)
 #define PHY_COM_TASK_PRIO               (5)
+#define PHY_RFM_TASK_PRIO               (5)
+#define PHY_MNTN_TASK_PRIO              (5)
 #define COMM_TIMER_TASK_PRIO            (74)
 #define COMM_RTC_TIMER_TASK_PRIO        (74)
 #define COMM_NOSIG_TASK_PRIO            (75)
@@ -159,6 +145,7 @@ extern "C" {
 #define GUPHY_RCM_TASK_PRIO             (0)
 #define GUPHY_GPHY_TASK_PRIO            (1)
 #define COMM_BBPDBG_SELFTASK_PRIO       (1)
+#define GUPHY_GPHYLOW_TASK_PRIO         (2)
 #define GUPHY_UPA_TASK_PRIO             (2)
 #define GUPHY_WPHY_TASK_PRIO            (3)
 #define COMM_HPA_SELFTASK_PRIO          (3)
@@ -171,6 +158,8 @@ extern "C" {
 #define CPROC_1X_TASK_PRIO              (4)
 #define CPROC_RM_TASK_PRIO              (4)
 #define PHY_COM_TASK_PRIO               (5)
+#define PHY_RFM_TASK_PRIO               (5)
+#define PHY_MNTN_TASK_PRIO              (5)
 #define COMM_TIMER_TASK_PRIO            (16)
 #define COMM_RTC_TIMER_TASK_PRIO        (16)
 #define COMM_NOSIG_TASK_PRIO            (17)
@@ -203,6 +192,7 @@ extern "C" {
 #define GUPHY_APM_TASK_PRIO             (0)
 #define GUPHY_RCM_TASK_PRIO             (0)
 #define GUPHY_GPHY_TASK_PRIO            (1)
+#define GUPHY_GPHYLOW_TASK_PRIO         (2)
 #define GUPHY_UPA_TASK_PRIO             (2)
 #define GUPHY_WPHY_TASK_PRIO            (3)
 #define GUPHY_DRX_TASK_PRIO             (4)
@@ -210,6 +200,8 @@ extern "C" {
 #define CPROC_HRPD_TASK_PRIO            (4)
 #define CPROC_1X_TASK_PRIO              (4)
 #define CPROC_RM_TASK_PRIO              (4)
+#define PHY_RFM_TASK_PRIO               (5)
+#define PHY_MNTN_TASK_PRIO              (5)
 #define SOCP_ENCDST_SELFTASK_PRIO       (69)
 #define SOCP_DECDST_SELFTASK_PRIO       (69)
 #define SOCP_ENCSRC_SELFTASK_PRIO       (73)

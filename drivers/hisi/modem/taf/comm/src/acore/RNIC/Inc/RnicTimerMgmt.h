@@ -77,7 +77,7 @@ extern "C" {
 #define TI_RNIC_DEMAND_DIAL_DISCONNECT_LEN      (10000)                         /* 10秒拨号断开定时器 */
 #define TI_RNIC_DEMAND_DIAL_PROTECT_LEN         (1000)                          /* 1秒拨号保护定时器 */
 
-#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#if (MULTI_MODEM_NUMBER >= 2)
 #if  (MULTI_MODEM_NUMBER == 3)
 #define RNIC_IS_DSFLOW_TIMER_ID(enTimerId)          \
             ((TI_RNIC_DSFLOW_STATS_0 == (enTimerId))   \
@@ -106,19 +106,7 @@ extern "C" {
   3 枚举定义
 *****************************************************************************/
 
-/*****************************************************************************
- 枚举名    : RNIC_TIMER_ID_TYPE_ENUM
- 枚举说明  : RNIC内部定时器类型
-  1.日    期   : 2011年12月08日
-    作    者   : f00179208
-    修改内容   : 新建
-  2.日    期   : 2012年11月23日
-    作    者   : f00179208
-    修改内容   : DSDA Phase I: RNIC多实例
-  3.日    期   : 2015年5月28日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
+
 enum RNIC_TIMER_ID_TYPE_ENUM
 {
     TI_RNIC_DEMAND_DIAL_DISCONNECT,                                             /* 按需拨号断开定时器 */
@@ -126,7 +114,7 @@ enum RNIC_TIMER_ID_TYPE_ENUM
     TI_RNIC_DSFLOW_STATS_0,                                                     /* 网卡0的2秒的流量统计定时器 */
     TI_RNIC_DSFLOW_STATS_1,                                                     /* 网卡1的2秒的流量统计定时器 */
     TI_RNIC_DSFLOW_STATS_2,                                                     /* 网卡2的2秒的流量统计定时器 */
-#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#if (MULTI_MODEM_NUMBER >= 2)
     TI_RNIC_DSFLOW_STATS_3,                                                     /* 网卡3的2秒的流量统计定时器 */
     TI_RNIC_DSFLOW_STATS_4,                                                     /* 网卡4的2秒的流量统计定时器 */
 #if  (MULTI_MODEM_NUMBER == 3)
@@ -138,14 +126,7 @@ enum RNIC_TIMER_ID_TYPE_ENUM
 };
 typedef VOS_UINT16 RNIC_TIMER_ID_ENUM_UINT16;
 
-/*****************************************************************************
- 枚举名    : RNIC_TIMER_STATUS_ENUM
- 结构说明  : RNIC定时器状态,停止或运行
 
- 1.日    期   : 2011年12月12日
-   作    者   : 范晶/f00179208
-   修改内容   : 定义RNIC定时器状态
-*****************************************************************************/
 enum RNIC_TIMER_STATUS_ENUM
 {
     RNIC_TIMER_STATUS_STOP,                                                     /* 定时器停止状态 */
@@ -154,14 +135,7 @@ enum RNIC_TIMER_STATUS_ENUM
 };
 typedef VOS_UINT8 RNIC_TIMER_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : RNIC_TIMER_OPERATION_TYPE_ENUM
- 结构说明  : RNIC定时器操作的取值
 
- 1.日    期   : 2011年12月12日
-   作    者   : 范晶/f00179208
-   修改内容   : RNIC定时器操作的取值,用于SDT的显示
-*****************************************************************************/
 enum RNIC_TIMER_OPERATION_TYPE_ENUM
 {
     RNIC_TIMER_OPERATION_START,                                                 /* 启动定时器 */
@@ -189,14 +163,7 @@ typedef VOS_UINT8  RNIC_TIMER_OPERATION_TYPE_ENUM_UINT8;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*****************************************************************************
- 结构名    : RNIC_TIMER_CTX_STRU
- 结构说明  : RNIC定时器运行上下文
 
- 1.日    期   : 2011年12月12日
-   作    者   : 范晶/f00179208
-   修改内容   : 定义RNIC定时器运行上下文
-*****************************************************************************/
 typedef struct
 {
     HTIMER                              hTimer;                                 /* 定时器的运行指针 */
@@ -205,14 +172,7 @@ typedef struct
 } RNIC_TIMER_CTX_STRU;
 
 
-/*****************************************************************************
- 结构名    : RNIC_TIMER_INFO_STRU
- 结构说明  : RNIC定时器信息结构，用于SDT中显示
 
- 1.日    期   : 2011年12月12日
-   作    者   : 范晶/f00179208
-   修改内容   : 定义RNIC定时器信息结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER

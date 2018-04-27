@@ -90,7 +90,10 @@ enum hisi_peripheral_temp_chanel {
 	DETECT_PA_1_CHANEL,
 	DETECT_DCXO0_CHANEL,
 	DETECT_SHELL_CHANEL,
-	DETECT_CHARGER1_CHANEL
+	DETECT_CHARGER1_CHANEL,
+	DETECT_RFBOARD_CHANEL,
+	DETECT_USB_CHANEL,
+	DETECT_WIRELESS_CHANEL
 };
 
 char *hisi_peripheral_chanel[] = {
@@ -102,6 +105,9 @@ char *hisi_peripheral_chanel[] = {
 	[DETECT_DCXO0_CHANEL] = "dcxo0",
 	[DETECT_SHELL_CHANEL] = "shell",
 	[DETECT_CHARGER1_CHANEL] = "charger1",
+	[DETECT_RFBOARD_CHANEL] = "rfboard",
+	[DETECT_USB_CHANEL] = "usb",
+	[DETECT_WIRELESS_CHANEL] = "wireless",
 };
 
 static struct hisi_peripheral_tm_chip *gtm_dev;
@@ -136,6 +142,7 @@ static int hisi_peripheral_get_highres_temp(struct thermal_zone_device *thermal,
 	return 0;
 }
 
+#ifndef CONFIG_HISI_THERMAL_PERIPHERAL_HIGHRESTEMP
 static int hisi_peripheral_tm_get_temp(struct thermal_zone_device *thermal,
 			int *temp)
 {
@@ -154,6 +161,7 @@ static int hisi_peripheral_tm_get_temp(struct thermal_zone_device *thermal,
 
 	return 0;
 }
+#endif
 
 static int hisi_peripheral_tm_get_mode(struct thermal_zone_device *thermal,
 			enum thermal_device_mode *mode)
@@ -400,7 +408,11 @@ static int hisi_peripheral_tm_activate_trip_type(struct thermal_zone_device *the
 
 
 static struct thermal_zone_device_ops hisi_peripheral_thermal_zone_ops = {
+#ifdef CONFIG_HISI_THERMAL_PERIPHERAL_HIGHRESTEMP
+	.get_temp = hisi_peripheral_get_highres_temp,
+#else
 	.get_temp = hisi_peripheral_tm_get_temp,
+#endif
 	.get_mode = hisi_peripheral_tm_get_mode,
 	.get_trip_type = hisi_peripheral_tm_trip_type,
 	.activate_trip_type = hisi_peripheral_tm_activate_trip_type,

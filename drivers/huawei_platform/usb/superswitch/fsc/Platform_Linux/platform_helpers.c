@@ -23,7 +23,17 @@
 #include "../core/PDTypes.h"     /* State Log states */
 #include "../core/TypeCTypes.h"  /* State Log states */
 #endif /* FSC_DEBUG */
+#include "../core/port.h"
 
+#ifdef CONFIG_DUAL_ROLE_USB_INTF
+#include <linux/usb/class-dual-role.h>
+#endif
+#include <huawei_platform/log/hw_log.h>
+#define HWLOG_TAG FUSB3601_TAG
+HWLOG_REGIST();
+#define IN_FUNCTION hwlog_info("%s ++\n", __func__);
+#define OUT_FUNCTION hwlog_info("%s --\n", __func__);
+#define LINE_FUNCTION hwlog_info("%s %d++\n", __func__,__LINE__);
 /* *** GPIO Interface *** */
 
 /* Device Tree names */
@@ -35,8 +45,8 @@ const char* FUSB3601_DT_INTERRUPT_INTN =    "fsc_interrupt_int_n";
 #ifdef FSC_DEBUG
 #define FUSB_DT_GPIO_DEBUG_SM_TOGGLE    "fairchild,dbg_sm"
 #endif  /* FSC_DEBUG */
-
 extern struct workqueue_struct *system_highpri_wq;
+extern int state_machine_need_resched;
 
 /* Internal forward declarations */
 static irqreturn_t FUSB3601__fusb_isr_intn(int irq, void *dev_id);
@@ -44,6 +54,256 @@ static irqreturn_t FUSB3601__fusb_isr_intn(int irq, void *dev_id);
 static void FUSB3601_work_function(struct work_struct *work);
 
 static enum hrtimer_restart FUSB3601_fusb_sm_timer_callback(struct hrtimer *timer);
+
+static int driver_shutdown_start = 0;
+void FUSB3601_set_driver_shutdown_flag(int flag)
+{
+	driver_shutdown_start = flag;
+}
+static void FUSB3601_set_drp_work_handler(struct kthread_work *work)
+{
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+
+	if (!chip) {
+		hwlog_err("FUSB %s - Error: Chip structure is NULL!\n", __func__);
+		return;
+	}
+
+	hwlog_info("FUSB - %s\n", __func__);
+	FUSB3601_core_set_try_snk(&chip->port);
+}
+void FUSB3601_fusb_StartTimer(struct hrtimer *timer, FSC_U32 time_us);
+enum hrtimer_restart FUSB3601_force_state_timeout(struct hrtimer* timer)
+{
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+
+	if (!chip) {
+		hwlog_err("FUSB  %s - Error: Chip structure is NULL!\n", __func__);
+		return HRTIMER_NORESTART;
+	}
+	if (!timer) {
+		hwlog_err("FUSB  %s - Error: High-resolution timer is NULL!\n", __func__);
+		return HRTIMER_NORESTART;
+	}
+
+	hwlog_info("FUSB %s - Force State Timeout\n", __func__);
+	queue_kthread_work(&chip->set_drp_worker, &chip->set_drp_work);
+	return HRTIMER_NORESTART;
+}
+static void FUSB3601_force_source(struct dual_role_phy_instance *dual_role)
+{
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	if (!chip) {
+		hwlog_err("FUSB  %s - Error: Chip structure is NULL!\n", __func__);
+		return;
+	}
+	hwlog_info("FUSB  %s - Force State Source\n",__func__);
+	FUSB3601_ConfigurePortType(0x95,&chip->port);
+	FUSB3601_fusb_StartTimer(&chip->timer_force_timeout, 1500*1000);
+
+	if(dual_role){
+		dual_role_instance_changed(dual_role);
+	}
+}
+
+static void FUSB3601_force_sink(struct dual_role_phy_instance *dual_role)
+{
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+
+	if (!chip) {
+		hwlog_err("FUSB  %s - Error: Chip structure is NULL!\n", __func__);
+		return;
+	}
+	hwlog_info("FUSB  %s - Force State Sink\n",__func__);
+	FUSB3601_ConfigurePortType(0x90,&chip->port);
+	FUSB3601_fusb_StartTimer(&chip->timer_force_timeout, 1500*1000);
+	if(dual_role){
+		dual_role_instance_changed(dual_role);
+	}
+}
+
+#ifdef CONFIG_DUAL_ROLE_USB_INTF
+static enum dual_role_property FUSB3601_dual_role_props[] = {
+		DUAL_ROLE_PROP_SUPPORTED_MODES,
+		DUAL_ROLE_PROP_MODE,
+		DUAL_ROLE_PROP_PR,
+		DUAL_ROLE_PROP_DR,
+		DUAL_ROLE_PROP_VCONN_SUPPLY,
+};
+
+static int FUSB3601_get_dual_role_mode(void)
+{
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	int mode = DUAL_ROLE_PROP_MODE_NONE;
+	hwlog_info("%s +\n",__func__);
+
+	if(chip->orientation !=NONE) {
+		if(chip->port.source_or_sink_ == Source) {
+			mode = DUAL_ROLE_PROP_MODE_DFP;
+		} else {
+			mode = DUAL_ROLE_PROP_MODE_UFP;
+		}
+	} else if(chip->orientation == NONE) {
+			mode = DUAL_ROLE_PROP_MODE_NONE;
+	}
+	hwlog_info("%s - orientation %d, mode %d\n",__func__,chip->orientation, mode);
+	return mode;
+}
+
+static int FUSB3601_dual_role_get_prop(struct dual_role_phy_instance *dual_role,
+	enum dual_role_property prop, unsigned int *val)
+ {
+	int ret =0;
+	int mode = FUSB3601_get_dual_role_mode();
+
+	hwlog_info("%s + prop =  %d, mode = %d\n",__func__,prop,mode);
+	switch(prop){
+	case DUAL_ROLE_PROP_SUPPORTED_MODES:
+		*val = DUAL_ROLE_SUPPORTED_MODES_DFP_AND_UFP;
+		break;
+	case DUAL_ROLE_PROP_MODE:
+		*val = mode;
+		break;
+	case DUAL_ROLE_PROP_PR:
+		switch(mode)
+		{
+		case DUAL_ROLE_PROP_MODE_DFP:
+			*val = DUAL_ROLE_PROP_PR_SRC;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_PR_SRC\n",__func__,prop);
+			break;
+		case DUAL_ROLE_PROP_MODE_UFP:
+			*val = DUAL_ROLE_PROP_PR_SNK;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_PR_SNK\n",__func__,prop);
+			break;
+		default:
+			*val = DUAL_ROLE_PROP_PR_NONE;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_PR_NONE\n",__func__,prop);
+			 break;
+		}
+		break;
+	case DUAL_ROLE_PROP_DR:
+		switch(mode)
+		{
+		case DUAL_ROLE_PROP_MODE_DFP:
+			*val = DUAL_ROLE_PROP_DR_HOST;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_DR_HOST\n",__func__,prop);
+			break;
+		case DUAL_ROLE_PROP_MODE_UFP:
+			*val = DUAL_ROLE_PROP_DR_DEVICE;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_DR_DEVICE\n",__func__,prop);
+			break;
+		default:
+			*val = DUAL_ROLE_PROP_DR_NONE;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_DR_NONE\n",__func__,prop);
+			break;
+		}
+		break;
+	case DUAL_ROLE_PROP_VCONN_SUPPLY:
+		switch(mode)
+		{
+		case DUAL_ROLE_PROP_MODE_DFP:
+			*val = DUAL_ROLE_PROP_VCONN_SUPPLY_YES;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_DR_HOST\n",__func__,prop);
+			break;
+		case DUAL_ROLE_PROP_MODE_UFP:
+			*val = DUAL_ROLE_PROP_VCONN_SUPPLY_NO;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_DR_DEVICE\n",__func__,prop);
+			break;
+		default:
+			*val = DUAL_ROLE_PROP_VCONN_SUPPLY_NO;
+			hwlog_info("%s + prop =  %d, mode = DUAL_ROLE_PROP_DR_NONE\n",__func__,prop);
+		break;
+		}
+		break;
+	default:
+		ret = -EINVAL;
+		break;
+	}
+	hwlog_info("%s - %d\n",__func__,ret);
+	return ret;
+}
+
+static int FUSB3601_dual_role_prop_is_writeable(
+       struct dual_role_phy_instance *dual_role, enum dual_role_property prop)
+{
+	hwlog_info("%s +\n",__func__);
+	switch(prop)
+	{
+	case DUAL_ROLE_PROP_PR:
+	case DUAL_ROLE_PROP_DR:
+		return 0;
+	}
+	return 1;
+}
+
+static int FUSB3601_dual_role_set_prop(struct dual_role_phy_instance *dual_role,
+       enum dual_role_property prop, const unsigned int *val)
+{
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	int mode = DUAL_ROLE_PROP_MODE_NONE;
+	mode = FUSB3601_get_dual_role_mode();
+
+	hwlog_info("%s +  prop= %d   val=  %d   mode = %d\n",__func__,prop,*val,mode);
+
+	switch(prop) {
+	case DUAL_ROLE_PROP_MODE:
+		if(*val != mode) {
+			if(DUAL_ROLE_PROP_MODE_UFP  == mode)
+				FUSB3601_force_source(dual_role);
+			else if(DUAL_ROLE_PROP_MODE_DFP  == mode)
+				FUSB3601_force_sink(dual_role);
+		}
+		break;
+	case DUAL_ROLE_PROP_PR:
+		hwlog_info("%s DUAL_ROLE_PROP_PR\n",__func__);
+   		break;
+	case DUAL_ROLE_PROP_DR:
+		hwlog_info("%s DUAL_ROLE_PROP_DR\n",__func__);
+		break;
+	default:
+		hwlog_err("%s default case\n",__func__);
+		break;
+	}
+   	hwlog_info("%s -\n",__func__);
+	return 0;
+}
+
+FSC_S32 FUSB3601_dual_role_phy_init(void)
+{
+	hwlog_info("%s +\n",__func__);
+	struct dual_role_phy_desc *dual_desc;
+	struct dual_role_phy_instance *dual_role;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	dual_desc = devm_kzalloc(&chip->client->dev,sizeof(struct dual_role_phy_desc),GFP_KERNEL);
+
+	if (!dual_desc) {
+		hwlog_err("unable to allocate dual role descriptor\n");
+		return -ENOMEM;
+	}
+	dual_role = devm_kzalloc(&chip->client->dev,sizeof(struct dual_role_phy_instance),GFP_KERNEL);
+	if (!dual_role){
+		devm_kfree(&chip->client->dev, dual_desc);
+		pr_err("unable to allocate dual role phy instance\n");
+		return -ENOMEM;
+	}
+	dual_desc->name = "otg_default";
+	dual_desc->supported_modes = DUAL_ROLE_SUPPORTED_MODES_DFP_AND_UFP;
+	dual_desc->properties = FUSB3601_dual_role_props;
+	dual_desc->num_properties = ARRAY_SIZE(FUSB3601_dual_role_props);
+	dual_desc->get_property = FUSB3601_dual_role_get_prop;
+	dual_desc->set_property = FUSB3601_dual_role_set_prop;
+	dual_desc->property_is_writeable = FUSB3601_dual_role_prop_is_writeable;
+	dual_role = devm_dual_role_instance_register(&chip->client->dev,dual_desc);
+	if(IS_ERR(dual_role)) {
+		hwlog_err("fusb fail to register dual role usb\n");
+		return -EINVAL;
+	}
+	chip->dual_desc = dual_desc;
+	chip->dual_role = dual_role;
+	hwlog_info("%s -\n",__func__);
+	return 0;
+}
+#endif
 
 FSC_S32 FUSB3601_fusb_InitializeGPIO(void)
 {
@@ -161,7 +421,7 @@ FSC_BOOL FUSB3601_fusb_GPIO_Get_VBus5v(void)
     return FALSE;
 }
 
-void FUSB3601_vfusb_GPIO_Set_Vconn(FSC_BOOL set)
+void FUSB3601_fusb_GPIO_Set_Vconn(FSC_BOOL set)
 {
 	struct fusb3601_chip* chip = fusb3601_GetChip();
     if (!chip)
@@ -808,7 +1068,7 @@ static ssize_t FUSB3601__fusb_Sysfs_Hostcomm_store(struct device* dev,
             }
 
             /* Add a null terminator and move past the space */
-            temp[++j] = 0;
+            temp[j++] = 0;
 
             /* We have a hex digit (hopefully), now convert it */
             ret = kstrtou8(temp, 16, &tempByte);
@@ -1014,7 +1274,6 @@ void FUSB3601_fusb_Sysfs_Init(void)
         pr_err("%s - Chip structure is null!\n", __func__);
         return;
     }
-
     /* create attribute group for accessing the FUSB3601 */
     ret = sysfs_create_group(&chip->client->dev.kobj, &fusb3601_sysfs_attr_grp);
     if (ret)
@@ -1075,6 +1334,28 @@ FSC_BOOL FUSB3601_fusb_reset(void)
         return FALSE;
     }
 
+    if (!FUSB3601_fusb_I2C_WriteData((FSC_U8)0x80, 1, &val))
+    {
+        pr_err("FUSB  %s - Could not communicate with device over I2C!\n",
+            __func__);
+        return FALSE;
+    }
+    /* TODO need to reset stored port config */
+
+    return TRUE;
+
+}
+FSC_BOOL FUSB3601_fusb_reset_with_adc_reset(void)
+{
+    FSC_U8 val = 0x40;
+    struct fusb3601_chip* chip = fusb3601_GetChip();
+
+    if (!chip)
+    {
+        pr_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+        return FALSE;
+    }
+
     /* Reset the FUSB3601 and including the I2C registers to their defaults. */
     if (!FUSB3601_fusb_I2C_WriteData((FSC_U8)0x80, 1, &val))
     {
@@ -1082,7 +1363,14 @@ FSC_BOOL FUSB3601_fusb_reset(void)
             __func__);
         return FALSE;
     }
+    reset_adc(&chip->port);
 
+    if (!FUSB3601_fusb_I2C_WriteData((FSC_U8)0x80, 1, &val))
+    {
+        pr_err("FUSB  %s - Could not communicate with device over I2C!\n",
+            __func__);
+        return FALSE;
+    }
     /* TODO need to reset stored port config */
 
     return TRUE;
@@ -1137,6 +1425,8 @@ void FUSB3601_fusb_InitChipData(void)
     /* HRTimer Setup */
     hrtimer_init(&chip->sm_timer, CLOCK_MONOTONIC, HRTIMER_MODE_ABS);
     chip->sm_timer.function = FUSB3601_fusb_sm_timer_callback;
+    hrtimer_init(&chip->timer_force_timeout, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+    chip->timer_force_timeout.function = FUSB3601_force_state_timeout;
 
     /* Initialize latency values */
 
@@ -1147,6 +1437,7 @@ FSC_S32 FUSB3601_fusb_EnableInterrupts(void)
 {
     FSC_S32 ret = 0;
     struct fusb3601_chip* chip = fusb3601_GetChip();
+    struct sched_param param = { .sched_priority = MAX_RT_PRIO - 1 };
 
     if (!chip)
     {
@@ -1197,6 +1488,11 @@ FSC_S32 FUSB3601_fusb_EnableInterrupts(void)
     /* Run the state machines to initialize everything. */
     wake_lock(&chip->fusb3601_wakelock);
     queue_work(chip->highpri_wq, &chip->sm_worker);
+    init_kthread_worker(&chip->set_drp_worker);
+    chip->set_drp_worker_task = kthread_run(kthread_worker_fn,
+        &chip->set_drp_worker, "fusb3601 set drp worker");
+    sched_setscheduler(chip->set_drp_worker_task, SCHED_FIFO, &param);
+    init_kthread_work(&chip->set_drp_work, FUSB3601_set_drp_work_handler);
 
     return 0;
 }
@@ -1306,12 +1602,18 @@ static void FUSB3601_work_function(struct work_struct *work)
 {
     FSC_U32 timeout = 0;
 
+    struct Port *port;
     struct fusb3601_chip* chip =
         container_of(work, struct fusb3601_chip, sm_worker);
 
     if (!chip)
     {
         pr_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+        return;
+    }
+    port = &chip->port;
+    if (!port) {
+        pr_err("FUSB  %s - Port structure is NULL!\n", __func__);
         return;
     }
 
@@ -1326,8 +1628,10 @@ static void FUSB3601_work_function(struct work_struct *work)
     /* Run the state machine */
     do
     {
-	    FUSB3601_core_state_machine(&chip->port);
-    } while(FUSB3601_platform_get_device_irq_state(chip->port.port_id_));
+        pr_err("FUSB CALLING CORE STATE MACHINE\n");
+        FUSB3601_core_state_machine(&chip->port);
+        pr_err("FUSB driver_shutdown_start: %d, irq state: %d\n", driver_shutdown_start, FUSB3601_fusb_GPIO_Get_IntN());
+    } while(!driver_shutdown_start && FUSB3601_platform_get_device_irq_state(chip->port.port_id_));
 
 //#ifdef FSC_DEBUG
     /* Toggle debug GPIO when SM is called to measure thread tick rate */
@@ -1343,12 +1647,11 @@ static void FUSB3601_work_function(struct work_struct *work)
     /* Scan through the timers to see if we need a timer callback */
     timeout = FUSB3601_core_get_next_timeout(&chip->port);
     //pr_err("FUSB %s Queueing Timeout: %d\n",__func__,timeout);
-    if (timeout > 0)
-    {
+    if (timeout > 0) {
         FUSB3601_fusb_StartTimer(&chip->sm_timer, timeout * 1000);
-    }
-    else
-    {
+    } else if (state_machine_need_resched || (port->tc_state_ == AttachedSource && FUSB3601_TimerExpired(&port->cc_debounce_timer_))) {
+        FUSB3601_core_state_machine(&chip->port);
+    } else {
         FUSB3601_fusb_StopTimer(&chip->sm_timer);
     }
 	//}

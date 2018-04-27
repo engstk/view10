@@ -21,6 +21,7 @@
 		// jpg_func_clk, jpeg_axim_clk and jpg_axis_clk cann't set
 		clocks =  <&clk_gate_jpg_func>;
 		clock-names = "clk_jpg_func";
+		platform-names = "kirin_970";
 		status = "ok";
 	};
 };

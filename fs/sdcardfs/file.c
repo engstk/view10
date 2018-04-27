@@ -108,17 +108,18 @@ static long sdcardfs_unlocked_ioctl(struct file *file, unsigned int cmd,
 				  unsigned long arg)
 {
 	long err = -ENOTTY;
-	struct file *lower_file;
-
-	lower_file = sdcardfs_lower_file(file);
+	struct file *lower_file = sdcardfs_lower_file(file);
 
 	/* XXX: use vfs_ioctl if/when VFS exports it */
-	if (!lower_file || !lower_file->f_op)
-		goto out;
-	if (lower_file->f_op->unlocked_ioctl)
-		err = lower_file->f_op->unlocked_ioctl(lower_file, cmd, arg);
+	if (lower_file != NULL && lower_file->f_op != NULL
+		&& lower_file->f_op->unlocked_ioctl != NULL) {
+		const struct cred *saved_cred =
+			override_creds(lower_file->f_cred);
 
-out:
+		err = lower_file->f_op->unlocked_ioctl(lower_file, cmd, arg);
+		revert_creds(saved_cred);
+	}
+
 	return err;
 }
 
@@ -127,17 +128,18 @@ static long sdcardfs_compat_ioctl(struct file *file, unsigned int cmd,
 				unsigned long arg)
 {
 	long err = -ENOTTY;
-	struct file *lower_file;
-
-	lower_file = sdcardfs_lower_file(file);
+	struct file *lower_file = sdcardfs_lower_file(file);
 
 	/* XXX: use vfs_ioctl if/when VFS exports it */
-	if (!lower_file || !lower_file->f_op)
-		goto out;
-	if (lower_file->f_op->compat_ioctl)
-		err = lower_file->f_op->compat_ioctl(lower_file, cmd, arg);
+	if (lower_file != NULL && lower_file->f_op != NULL
+		&& lower_file->f_op->compat_ioctl != NULL) {
+		const struct cred *saved_cred =
+			override_creds(lower_file->f_cred);
 
-out:
+		err = lower_file->f_op->compat_ioctl(lower_file, cmd, arg);
+		revert_creds(saved_cred);
+	}
+
 	return err;
 }
 #endif
@@ -218,11 +220,6 @@ static int sdcardfs_open(struct inode *inode, struct file *file)
 		goto out_err;
 	}
 
-	if (!check_caller_access_to_name(parent, dentry->d_name.name)) {
-		err = -EACCES;
-		goto out_err;
-	}
-
 	/* save current_cred and override it */
 	OVERRIDE_CRED(sbi, saved_cred);
 	if (IS_ERR(saved_cred)) {
@@ -291,23 +288,19 @@ static int sdcardfs_fsync(struct file *file, loff_t start, loff_t end,
 			int datasync)
 {
 	int err;
-	struct file *lower_file;
-	struct path lower_path;
-	struct dentry *dentry = file->f_path.dentry;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 16, 0))
 	err = __generic_file_fsync(file, start, end, datasync);
 #else
 	err = generic_file_fsync(file, start, end, datasync);
 #endif
-	if (err)
-		goto out;
+	if (!err) {
+		struct file *lower_file = sdcardfs_lower_file(file);
 
-	lower_file = sdcardfs_lower_file(file);
-	sdcardfs_get_lower_path(dentry, &lower_path);
-	err = vfs_fsync_range(lower_file, start, end, datasync);
-	_path_put(&lower_path);
-out:
+		/* call data & metadata sync of underlayfs */
+		err = vfs_fsync_range(lower_file, start, end, datasync);
+	}
+
 	return err;
 }
 
@@ -317,7 +310,8 @@ static int sdcardfs_fasync(int fd, struct file *file, int flag)
 	struct file *lower_file = NULL;
 
 	lower_file = sdcardfs_lower_file(file);
-	if (lower_file->f_op && lower_file->f_op->fasync)
+	if (lower_file != NULL && lower_file->f_op != NULL
+		&& lower_file->f_op->fasync != NULL)
 		err = lower_file->f_op->fasync(fd, lower_file, flag);
 
 	return err;

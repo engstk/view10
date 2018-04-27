@@ -153,6 +153,10 @@ struct dw_mci_dma_slave {
  * using barriers.
  */
 struct dw_mci {
+	unsigned int sdio_rst;
+	unsigned int bit_sdcard_o_sel18;
+	unsigned int scperctrls;
+	unsigned int odio_sd_mask_bit;
 	int wifi_sdio_sdr104_160M;
 	int wifi_sdio_sdr104_177M;
 	spinlock_t		lock;

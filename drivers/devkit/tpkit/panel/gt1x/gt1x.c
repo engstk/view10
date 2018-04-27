@@ -26,6 +26,10 @@
 #include "gt1x_dts.h"
 #include <linux/completion.h>
 
+#if defined (CONFIG_TEE_TUI)
+#include "tui.h"
+#endif
+
 #define INDEX_0					0
 #define INDEX_1 				1
 #define I2C_RETRY_SLEEP_TIME	50
@@ -49,6 +53,9 @@
 #define GT1X_BIT_AND_0x0F		0x0f
 #define GT1X_BIT_AND_0x40		0x40
 extern u8 cypress_ts_kit_color[GOODIX_TP_COLOR_SIZE];
+#if defined (CONFIG_TEE_TUI)
+extern struct ts_tui_data tee_tui_data;
+#endif
 extern void gt1x_test_free(void);
 static struct completion roi_data_done;
 struct gt1x_ts_data *gt1x_ts = NULL;
@@ -623,7 +630,7 @@ static int gt1x_cache_roidata_device(struct gt1x_ts_roi *roi)
 	memset(&dst_mat, 0, sizeof(dst_mat));
 
 	if (!ts->dev_data->ts_platform_data->feature_info.roi_info.roi_supported
-			|| !roi || !roi->enabled) {
+			|| !roi || !roi->enabled || !roi->rawdata) {
 		TS_LOG_ERR("%s:roi is not support or invalid parameter\n", __func__);
 		return -EINVAL;
 	}
@@ -735,7 +742,7 @@ static int gt1x_cache_roidata_fw(struct gt1x_ts_roi *roi)
 	struct gt1x_ts_data *ts = gt1x_ts;
 	
 	if (!ts->dev_data->ts_platform_data->feature_info.roi_info.roi_supported
-			|| !roi || !roi->enabled){
+			|| !roi || !roi->enabled || !roi->rawdata){
 		TS_LOG_ERR("%s:roi is not support or invalid parameter\n", __func__);
 		return -EINVAL;
 	}
@@ -876,6 +883,7 @@ static int gt1x_touch_evt_handler(struct gt1x_ts_data  *ts,
 	int ret = -1;
 	int res = 0;
 	u8 touch_ewxy[GT1X_EDGE_DATA_SIZE] = {0};
+	u8 touch_wxy[GT1X_EDGE_DATA_SIZE] = {0};
 
 	ret = gt1x_i2c_read(GTP_READ_COOR_ADDR, &touch_data[0], 1 + 8 + 2);
 	if (unlikely(ret))
@@ -897,6 +905,12 @@ static int gt1x_touch_evt_handler(struct gt1x_ts_data  *ts,
 
 	if ((ts->gt1x_edge_add != 0) && (touch_num > 0)) {
 		ret = ts->ops.i2c_read(ts->gt1x_edge_add,touch_ewxy,GT1X_EDGE_DATA_SIZE);
+		if (ret) {
+			goto exit;
+		}
+	}
+	if((touch_num > 0) && (0 != ts->gt1x_support_wxy) && (0 != ts->gt1x_wxy_data_add)) {
+		ret = ts->ops.i2c_read(ts->gt1x_wxy_data_add, touch_wxy, GT1X_EDGE_DATA_SIZE);
 		if (ret) {
 			goto exit;
 		}
@@ -970,11 +984,15 @@ static int gt1x_touch_evt_handler(struct gt1x_ts_data  *ts,
 
 		info->fingers[id].ewx = touch_ewxy[2 * id];
 		info->fingers[id].ewy = touch_ewxy[2 * id + 1];
+		if(ts->gt1x_support_wxy) {
+			info->fingers[id].wx = touch_wxy[2 * id];
+			info->fingers[id].wy = touch_wxy[2 * id + 1];
+		}
 		info->fingers[id].pressure = w;
 		info->fingers[id].status = TP_FINGER;
 		cur_index |= 1 << id;
-		TS_LOG_DEBUG("%s:[%d](%d, %d, %d,ewx = %d, ewy =  %d, xer=%d,yer=%d)\n", __func__,
-			id, x, y, w, info->fingers[id].ewx, info->fingers[id].ewy,xer,yer);
+		TS_LOG_DEBUG("%s:[%d](%d, %d, %d,ewx = %d, ewy =  %d, xer=%d, yer=%d, wx=%d, wy=%d)\n", __func__,
+			id, x, y, w, info->fingers[id].ewx, info->fingers[id].ewy, xer, yer,touch_wxy[2 * id], touch_wxy[2 * id + 1]);
 	}
 	info->cur_finger_number = touch_num;
 exit:
@@ -1687,6 +1705,14 @@ static int gt1x_prepar_parse_dts(struct ts_kit_platform_data *pdata)
 		TS_LOG_INFO("%s: Use default vddio voltage:1.8v\n", __func__);
 	}
 
+	ret = of_property_read_u32(pdata->chip_data->cnode, "rawdata_newformatflag",&value);
+	if (ret) {
+		chip_data->rawdata_newformatflag = 0; /* 0 old format */
+		TS_LOG_INFO("%s: Use default raw data format:1.8v\n", __func__);
+	}else{
+		chip_data->rawdata_newformatflag = value;
+	}	
+
 	TS_LOG_INFO("%s :power_ctrl=%d,vci_power_type=%d,vddio_power_type=%d,vddio_ldo_need=%d\n", 
 		__func__, ts->power_self_ctrl,ts->vci_power_type, ts->vddio_power_type,
 		chip_data->regulator_ctr.need_set_vddio_value);
@@ -1839,6 +1865,24 @@ static int gt1x_parse_dts(void)
 	}
 	ts->gt1x_edge_support_xyer= value;
 	TS_LOG_INFO("%s:gt1x_edge_support_xyer value: %d\n", __func__, ts->gt1x_edge_support_xyer);
+
+	ret = of_property_read_u32(device, GTP_SUPPORT_WXY, &value);
+	if (ret) {
+		TS_LOG_ERR("%s:support wx wy read failed, Use default value: 0\n", __func__);
+		value = 0;
+	}
+	ts->gt1x_support_wxy = value;
+	TS_LOG_INFO("%s:gt1x_support_wxy value: [%d]\n", __func__, ts->gt1x_support_wxy);
+
+	if(ts->gt1x_support_wxy) {
+		ret = of_property_read_u32(device, GTP_WXY_DATA_ADD, &value);
+		if (ret) {
+			TS_LOG_ERR("%s:gt1x_wxy_data_add read failed, Use default value: 0\n", __func__);
+			value = 0;
+		}
+		ts->gt1x_wxy_data_add = value;
+		TS_LOG_INFO("%s:gt1x_wxy_data_add value: [%x]\n", __func__, ts->gt1x_wxy_data_add);
+	}
 
 	ret = of_property_read_u32(device, GTP_ROI_DATA_ADD, &value);
 	if (ret) {
@@ -2099,6 +2143,8 @@ static int gt1x_parse_specific_dts(void)
 		config_status = 6;
 	else if(!strncmp(cfg_type, GT1X_NOISE_TEST_CONFIG, strlen(GT1X_NOISE_TEST_CONFIG)))
 		config_status = 7;
+	else if (!strncmp(cfg_type, GT1X_GAME_SCENE_CONFIG, strlen(GT1X_GAME_SCENE_CONFIG)))
+		config_status = 8;
 	else{
 		TS_LOG_ERR("%s: invalid config text field\n", __func__);
 		goto exit;
@@ -2243,6 +2289,14 @@ static int gt1x_get_cfg_parms(struct gt1x_ts_data *ts, const char *filename)
 		} 
 	}
 
+	/* parse game scene config data */
+	if (TS_SWITCH_TYPE_GAME == (ts->dev_data->touch_switch_flag & TS_SWITCH_TYPE_GAME)){
+		ret = gt1x_get_cfg_data(cfg_bin, GT1X_GAME_SCENE_CONFIG, &ts->game_scene_config);
+		if (ret < 0) {
+			TS_LOG_ERR("%s: Failed to parse game scene data:%d\n", __func__, ret);
+		}
+	}
+
 exit:
 	if(cfg_bin != NULL){
 		release_firmware(cfg_bin);
@@ -2367,6 +2421,11 @@ static int gt1x_chip_init(void)
 	int ret = -1;
 	u8 reg_val[1] = {0};
 	cypress_ts_kit_color[0]= 0xFF;
+
+#if defined (CONFIG_TEE_TUI)
+	strncpy(tee_tui_data.device_name, "gt1x", strlen("gt1x"));
+	tee_tui_data.device_name[strlen("gt1x")] = '\0';
+#endif
 
 	/* check main system firmware */
 	ret = gt1x_i2c_read_dbl_check(GTP_REG_FW_CHK_MAINSYS,
@@ -2621,18 +2680,25 @@ static int gt1x_chip_get_info(struct ts_chip_info_param *info)
 	struct gt1x_ts_data *ts = gt1x_ts;
 	int len = 0;
 
-	if (!info){
-		TS_LOG_ERR("%s: info is null\n", __func__);
+	TS_LOG_INFO("%s: enter\n", __func__);
+	if (!info || !ts || !ts->dev_data || !ts->dev_data->ts_platform_data){
+		TS_LOG_ERR("%s: info or ts is null\n", __func__);
 		return -EINVAL;
 	}
-	TS_LOG_INFO("%s: enter\n", __func__);
+
 	memset(info->ic_vendor, 0, sizeof(info->ic_vendor));
 	memset(info->mod_vendor, 0, sizeof(info->mod_vendor));
 	memset(info->fw_vendor, 0, sizeof(info->fw_vendor));
 
-	len = (sizeof(info->ic_vendor) -1 ) > sizeof(GT1X_OF_NAME)? 
-			sizeof(GT1X_OF_NAME) :(sizeof(info->ic_vendor) -1 );
-	strncpy(info->ic_vendor, GT1X_OF_NAME, len);
+	if(!ts->dev_data->ts_platform_data->hide_plain_id) {
+		len = (sizeof(info->ic_vendor) - 1) > sizeof(GT1X_OF_NAME) ?
+				sizeof(GT1X_OF_NAME) : (sizeof(info->ic_vendor) - 1);
+		strncpy(info->ic_vendor, GT1X_OF_NAME, len);
+	} else {
+		len = (sizeof(info->ic_vendor) - 1) > strlen(ts->project_id) ?
+			strlen(ts->project_id) : (sizeof(info->ic_vendor) - 1);
+		strncpy(info->ic_vendor, ts->project_id, len);
+	}
 
 	len = (sizeof(info->mod_vendor) -1 ) > strlen(ts->project_id)? 
 		strlen(ts->project_id): (sizeof(info->mod_vendor) -1 );
@@ -2867,8 +2933,8 @@ static u8* gt1x_roi_rawdata(void)
 	u8 *rawdata_ptr = NULL;
 	struct gt1x_ts_data *ts = gt1x_ts;
 
-	if (!ts->dev_data->ts_platform_data->feature_info.roi_info.roi_supported){
-		TS_LOG_ERR("%s : Not supported roi mode\n", __func__);
+	if (!ts->dev_data->ts_platform_data->feature_info.roi_info.roi_supported || !ts->roi.rawdata){
+		TS_LOG_ERR("%s : Not supported roi mode or rawadta is null.\n", __func__);
 		return NULL;
 	}
 	if (wait_for_completion_interruptible_timeout(&roi_data_done, msecs_to_jiffies(30))) {
@@ -3145,6 +3211,8 @@ static void gt1x_chip_touch_switch(void)
 	int error = 0;
 	unsigned int i = 0, cnt = 0;
 	struct gt1x_ts_data *ts = gt1x_ts;
+	struct ts_feature_info *info = &ts->dev_data->ts_platform_data->feature_info;
+	struct gt1x_ts_config *config = NULL;
 
 	TS_LOG_INFO("%s enter\n", __func__);
 
@@ -3153,10 +3221,6 @@ static void gt1x_chip_touch_switch(void)
 		goto out;
 	}
 
-	if (TS_SWITCH_TYPE_DOZE != (ts->dev_data->touch_switch_flag & TS_SWITCH_TYPE_DOZE)){
-		TS_LOG_ERR("%s, doze mode does not suppored by this chip\n",__func__);
-		goto out;
-	}
 	/* SWITCH_OPER,ENABLE_DISABLE,PARAM */
 	memcpy(in_data, ts->dev_data->touch_switch_info, MAX_STR_LEN -1);
 	TS_LOG_INFO("%s, in_data:%s\n",__func__, in_data);
@@ -3185,29 +3249,75 @@ static void gt1x_chip_touch_switch(void)
 	**/
 	param = (u8)time;
 
-	if (TS_SWITCH_TYPE_DOZE != (stype & TS_SWITCH_TYPE_DOZE)){
-		TS_LOG_ERR("%s stype not TS_SWITCH_TYPE_DOZE:%d, invalid\n",__func__, stype);
-		goto out;
-	}
+	switch (stype) {
+		case TS_SWITCH_TYPE_DOZE:
+			if (TS_SWITCH_TYPE_DOZE != (ts->dev_data->touch_switch_flag & TS_SWITCH_TYPE_DOZE)){
+				TS_LOG_ERR("%s, doze mode does not suppored by this chip\n",__func__);
+				goto out;
+			}
 
-	switch (soper){
-		case TS_SWITCH_DOZE_ENABLE:
-			TS_LOG_INFO("%s:enter doze_mode[param:%d]\n", __func__, param);
-			error = gt1x_send_cmd(GTP_CMD_DOZE_CONFIG, param, 1);
-			if (error) {
-				TS_LOG_ERR("%s: Failed send doze enable cmd: error%d\n", __func__, error);
+			switch (soper){
+				case TS_SWITCH_DOZE_ENABLE:
+					TS_LOG_INFO("%s:enter doze_mode[param:%d]\n", __func__, param);
+					error = gt1x_send_cmd(GTP_CMD_DOZE_CONFIG, param, 1);
+					if (error) {
+						TS_LOG_ERR("%s: Failed send doze enable cmd: error%d\n", __func__, error);
+					}
+					break;
+				case TS_SWITCH_DOZE_DISABLE:
+					TS_LOG_INFO("%s:exit doze_mode\n", __func__);
+					/*holdoff > 100 means always at active status*/
+					error = gt1x_send_cmd(GTP_CMD_DOZE_CONFIG, 0xFF, 1);
+					if (error) {
+						TS_LOG_ERR("%s: Failed send doze disable cmd: error%d\n", __func__, error);
+					}
+					break;
+				default:
+					TS_LOG_ERR("%s: soper unknown:%u, invalid\n", __func__, soper);
+					break;
 			}
 			break;
-		case TS_SWITCH_DOZE_DISABLE:
-			TS_LOG_INFO("%s:exit doze_mode\n", __func__);
-			/*holdoff > 100 means always at active status*/
-			error = gt1x_send_cmd(GTP_CMD_DOZE_CONFIG, 0xFF, 1);
-			if (error) {
-				TS_LOG_ERR("%s: Failed send doze disable cmd: error%d\n", __func__, error);
+		case TS_SWITCH_TYPE_GAME:
+			if (TS_SWITCH_TYPE_GAME != (ts->dev_data->touch_switch_flag & TS_SWITCH_TYPE_GAME)){
+				TS_LOG_ERR("%s, game mode does not suppored by this chip\n",__func__);
+				goto out;
+			}
+
+			switch (soper){
+				case TS_SWITCH_GAME_ENABLE:
+					TS_LOG_INFO("%s: enter game_mode\n", __func__);
+					error = gt1x_send_cfg(&ts->game_scene_config);
+					if (error) {
+						TS_LOG_ERR("%s: Send game ENABLE config error\n", __func__);
+					}
+					break;
+				case TS_SWITCH_GAME_DISABLE:
+					if (!info) {
+						TS_LOG_ERR("%s, error info data\n",__func__);
+						goto out;
+					}
+
+					TS_LOG_INFO("%s: exit game_mode to [holster_switch:%d][glove_switch:%d]\n", __func__,
+						info->holster_info.holster_switch,info->glove_info.glove_switch);
+					if (info->holster_info.holster_switch)
+						config = &ts->holster_config;
+					else if (info->glove_info.glove_switch)
+						config = &ts->glove_config;
+					else
+						config = &ts->normal_config;
+
+					error = gt1x_send_cfg(config);
+					if (error) {
+						TS_LOG_ERR("%s: Send DISABLE config error\n", __func__);
+					}
+					break;
+				default:
+					TS_LOG_ERR("%s: soper unknown:%u, invalid\n", __func__, soper);
+					break;
 			}
 			break;
 		default:
-			TS_LOG_ERR("%s: soper unknown:%u, invalid\n", __func__, soper);
+			TS_LOG_ERR("%s: stype unknown:%u, invalid\n", __func__, stype);
 			break;
 	}
 
@@ -3316,6 +3426,10 @@ static void __exit gt1x_ts_module_exit(void)
 	if(NULL != gt1x_ts->dev_data){
 		kfree(gt1x_ts->dev_data);
 		gt1x_ts->dev_data = NULL;
+	}
+	if(NULL != gt1x_ts->roi.rawdata) {
+		kfree(gt1x_ts->roi.rawdata);
+		gt1x_ts->roi.rawdata = NULL;
 	}
 	if(NULL != gt1x_ts){
 		kfree(gt1x_ts);

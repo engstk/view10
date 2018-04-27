@@ -76,10 +76,13 @@ extern "C" {
 #define HW_VER_UDP_UNMASK			(BSP_U32)(~HW_VER_UDP_MASK) /*MBB UDP掩码取反*/
 #define MODEMID_VENDOR_MASK			(~(BSP_U32)0x3FF)           /*PHONE UDP单板掩码*/
 
+#define HW_VER_HIONE_UDP_MAGIC      (BSP_U32)0X13245768
+
 #define HW_VER_V711_UDP             (BSP_U32)0X71000000 /*V711 UDP*/
 #define HW_VER_V750_UDP             (BSP_U32)0X75000000 /*V7R5 UDP*/
 #define HW_VER_V722_UDP             (BSP_U32)0X72000000 /*V722 UDP*/
 #define HW_VER_V765_UDP             (BSP_U32)0X76000000 /*V722 UDP*/
+#define HW_VER_V5000_UDP            (BSP_U32)0X77000000 /*V5000 UDP*/
 #define HW_VER_P532                 (BSP_U32)0XFF000000 /*P532*/
 #define HW_VER_P533                 (BSP_U32)0XFE000000 /*P533*/
 #define HW_VER_P535                 (BSP_U32)0XFD000000 /*P535*/
@@ -88,24 +91,8 @@ extern "C" {
 
 typedef enum
 {
-	CHIP_P531 = 0x0530,
-	CHIP_P532 = 0x0532,
-	CHIP_P533 = 0x0533,
-	CHIP_P535 = 0x0535,
-	CHIP_K3V3 = 0x3630,
-	CHIP_K3V5 = 0x3650,
-	CHIP_K3V6 = 0x3660,
-	CHIP_K970 = 0x3670,
-	CHIP_V8R5 = 0x6250,
-	CHIP_V711 = 0x6921,
-	CHIP_V722 = 0x6932,
-	CHIP_V750 = 0x6950,
-	CHIP_V765 = 0x6965
-}VERSION_CHIP_TYPE_E;
-
-typedef enum
-{
 	PLAT_ASIC= 0x0,
+	PLAT_ESL = 0x1,
 	PLAT_FPGA = 0xa,
 	PLAT_EMU = 0xe
 }VERSION_PLAT_TYPE_E;
@@ -116,20 +103,9 @@ typedef enum{
 	 BSP_BOARD_TYPE_ASIC,
 	 BSP_BOARD_TYPE_SOC,
 	 BSP_BOARD_TYPE_PORTING,
+	 BSP_BOARD_TYPE_ESL,
 	 BSP_BOARD_TYPE_MAX
 }VERSION_BOARD_TYPE_E;
-
-typedef enum
-{
-	NOT_BBIT = 0x0,
-	DALLAS_BBIT = 0x1,
-	V722_BBIT = 0x2,
-	CHICAGO_BBIT = 0x3,
-	BOSTON_BBIT = 0x4,
-	MIAMI_BBIT = 0x5,
-	ATLANDA_BBIT = 0x6,
-	V765_BBIT   =0x7
-}VERSION_BBIT_TYPE_E;
 
 typedef enum{
 	PRODUCT_MBB= 0x0,
@@ -139,23 +115,8 @@ typedef enum{
 
 typedef enum
 {
-	PRODUCT_P532 = 0x0532,
-	PRODUCT_M533 = 0x0533,
-	PRODUCT_M535 = 0x0535,
-	PRODUCT_AUSTIN = 0x3650,
-	PRODUCT_CHICAGO = 0x3660,
-	PRODUCT_BOSTON = 0x3670,
-	PRODUCT_ATLANDA = 0x3680,
-	PRODUCT_DALLAS = 0x6250,
-	PRODUCT_MIAMI = 0x6260,
-	PRODUCT_722 = 0x6932,
-	PRODUCT_750 = 0x6950,
-	PRODUCT_765 = 0x6965,
-	PRODUCT_NOT_SUPPORT = 0xFFFF
-}VERSION_PRODUCT_NAME_E;
-
-typedef enum
-{
+	TYPE_VDK = 0x000,
+	TYPE_VDK_ZEBU = 0x010,
 	TYPE_ES = 0x100,
 	TYPE_CS = 0x110,
 	TYPE_ERR = 0xFFF
@@ -174,6 +135,7 @@ typedef struct
 	u16 product_name;			/*平台名称，如PRODUCT_722，将722 porting/bbit/sft/udp统一归类为722*/
 	u16 cses_type;				/*从boston起，芯片第一版逻辑为es(100)，第二版为cs(110)*/
 	u16 version_magic;			/*0x2017*/
+	u32 udp_flag;               /* udp or phone,if udp = 0x13245768 */
 }BSP_VERSION_INFO_S;
 
 
@@ -284,7 +246,6 @@ int bsp_version_ccore_init(void);
 void bsp_version_ddr_init(void);
 void mdrv_ver_init(void);
 
-VERSION_CHIP_TYPE_E bsp_version_get_chip_type(void);
 const BSP_VERSION_INFO_S* bsp_get_version_info(void);
 const BSP_VERSION_INFO_S* bsp_get_version_info_early(void);
 

@@ -52,7 +52,9 @@
 extern "C"
 {
 #endif
+#include <product_config.h>
 #include <osl_types.h>
+
 
 /* DIAG_SERVICE_HEAD_STRU:ssid4b */
 typedef enum _diag_frame_ssid_type
@@ -161,6 +163,13 @@ typedef enum _diag_frame_sid_type
     DIAG_FRAME_MSP_SID_BUTT
 }diag_frame_sid_type;
 
+enum _diag_frame_ver_type
+{
+    DIAG_FRAME_MSP_VER_4G = 0,
+    DIAG_FRAME_MSP_VER_5G = 1,
+    DIAG_FRAME_MSP_VER_BUTT
+};
+
 typedef struct
 {
     u32 u32module;                        /* 打印信息所在的模块ID */
@@ -176,8 +185,28 @@ typedef struct
     u32 ulNo;         /* 序号*/
     u8  aucDta[0];    /* 用户数据缓存区*/
 } diag_trans_head_stru;
-/* 描述 :一级头: service头 */
 
+#ifdef DIAG_SYSTEM_5G
+/* 描述 :5G 一级头: service头 */
+typedef struct
+{
+    u32    sid4b       :4;   /* service id, value:DIAG_SID_TYPE */
+    u32    ver4b       :4;   /* version , value:DIAG_SERVICE_HEAD_VER_TYPE */
+    u32    mdmid3b     :3;   /* modem id dfd*/
+    u32    rsv5b       :5;
+    u32    ssid8b      :8;   /* sub system id , DIAG_SSID_TYPE, CCPU/ACPU/BBE NX/Audio Dsp/LTE-V DSP..... */
+    u32    mt2b        :2;
+    u32    index4b     :4;
+    u32    eof1b       :1;
+    u32    ff1b        :1;
+
+    u16    MsgTransId;
+    u16    srcCounter;      /* SOCP填写 */
+
+    u8     aucTimeStamp[4];
+}diag_service_head_stru;
+#else
+/* 描述 :一级头: service头 */
 typedef struct
 {
     u32    sid8b       :8;
@@ -192,7 +221,7 @@ typedef struct
     u32    MsgTransId;
     u8     aucTimeStamp[8];
 }diag_service_head_stru;
-
+#endif
 /* 描述 :二级头: DIAG消息头 */
 typedef struct
 {

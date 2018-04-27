@@ -68,6 +68,8 @@
 #include "load_image.h"
 #include "modem_dtb.h"
 
+#include "securec.h"
+
 /* Dalls之后手机和MBB融合代码 */
 
 #define SECBOOT_BUFLEN  (0x100000)      /*1MB*/
@@ -139,7 +141,7 @@ static int get_file_size(const char *filename)
 {
     struct rfile_stat_stru st;
     s32 ret;
-    memset(&st,0x00,sizeof (struct rfile_stat_stru));
+    memset_s(&st, sizeof(st), 0x00, sizeof (st));
     ret = bsp_stat((s8*)filename, (void *)&st);
     if(ret)
     {
@@ -407,7 +409,7 @@ static int verify_soc_image(enum SVC_SECBOOT_IMG_TYPE  image,
     int ret;
     paddr = MDDR_FAMA(run_addr);
 
-    ret = bsp_efuse_ops_prepare();
+    ret = bsp_efuse_write_prepare();
     if(ret)
     {
         return ret;
@@ -430,7 +432,7 @@ static int verify_soc_image(enum SVC_SECBOOT_IMG_TYPE  image,
         sec_print_err("start  failed, result is 0x%x!\n", result);
         /* cov_verified_stop */
     }
-    bsp_efuse_ops_complete();
+    bsp_efuse_write_complete();
     return (int)result;
 }
 
@@ -455,12 +457,7 @@ static int load_data_to_secos(const char* file_name, u32 offset, u32 size,
     u32 file_offset = 0;
     u32 skip_offset = 0;
     u32 load_position_offset = 0;
-    u32 is_compress_check_need = 0;
 
-      if(image->etype == MODEM_DTB)
-      {
-          is_compress_check_need = 1;
-      }
     /* 读取指定偏移的指定大小 */
     if(0 != offset)
     {
@@ -469,7 +466,6 @@ static int load_data_to_secos(const char* file_name, u32 offset, u32 size,
     }
     else    /* 读取整个文件 */
     {
-        is_compress_check_need = 1; /* 只有从起始位置加载需要检查是否有gzip的头 */
         remain_bytes = get_file_size(file_name);
         if (remain_bytes <=0)
         {
@@ -513,17 +509,18 @@ static int load_data_to_secos(const char* file_name, u32 offset, u32 size,
             return readed_bytes;
         }
 
-        if ((is_compress_check_need) && (readed_bytes >= 10)) {
-            is_compress_check_need = 0;
-            if (gzip_header_check((unsigned char*)SECBOOT_BUFFER)) {
-                /* 将整个gzip格式的压缩镜像放在DDR空间结束位置 */
-                load_position_offset = (u32)(image->ddr_size - (u32)remain_bytes);
-            }
+        if ((!load_position_offset) && (image->etype == MODEM)) {
+            /* 将整个gzip格式的压缩镜像放在DDR空间结束位置 */
+            load_position_offset = (u32)(image->ddr_size - (u32)remain_bytes);
+        }
+        if ((!load_position_offset) && (image->etype == MODEM_DTB)) {
+            /* 将整个gzip格式的压缩镜像放在DDR空间结束位置 */
+            load_position_offset = (u32)(image->ddr_size - (u32)remain_bytes);
         }
 
         ret = trans_data_to_os(image->etype, image->run_addr,  (void *)(SECBOOT_BUFFER), load_position_offset+file_offset, (u32)read_bytes);
-        sec_print_info("trans data ot os: etype 0x%x ,run_addr 0x%x, to secos file_offset 0x%x, bytes 0x%x success\n",
-            image->etype, image->run_addr, file_offset, read_bytes);
+        sec_print_info("trans data ot os: etype 0x%x ,load_offset 0x%x, to secos file_offset 0x%x, bytes 0x%x success\n",
+            image->etype, load_position_offset+file_offset, file_offset, read_bytes);
 
         if (ret)
         {
@@ -671,7 +668,7 @@ static int get_dtb_entry(unsigned int modemid, unsigned int num, struct modem_dt
             sec_print_info("[%d],modemid(0x%x, 0x%x, 0x%x, 0x%x)\n",
                 i, dt_entry_ptr->boardid[0], dt_entry_ptr->boardid[1], dt_entry_ptr->boardid[2], dt_entry_ptr->boardid[3]);
 
-            memcpy((void *)dt_entry_ccore, (void *)dt_entry_ptr, sizeof(modem_dt_entry_t));
+            memcpy_s((void *)dt_entry_ccore, sizeof(*dt_entry_ccore), (void *)dt_entry_ptr, sizeof(*dt_entry_ptr));
             break;
         }
         dt_entry_ptr++;
@@ -689,9 +686,9 @@ static s32 load_and_verify_dtb_data(void)
     s32 ret;
     u32 modem_id = 0;
     struct modem_dt_table_t *header;
-      struct modem_dt_table_t dt_table;
+    struct modem_dt_table_t dt_table;
     struct modem_dt_entry_t *dt_entry;
-      struct modem_dt_entry_t dt_entry_ptr = {{0}};
+    struct modem_dt_entry_t dt_entry_ptr = {{0}};
 
 
 
@@ -701,7 +698,7 @@ static s32 load_and_verify_dtb_data(void)
     u32 offset = 0;
     int readed_bytes;
 
-      header = &dt_table;
+    header = &dt_table;
     ret = get_image(&image, MODEM_DTB,0,0);
     if(ret)
     {
@@ -717,7 +714,7 @@ static s32 load_and_verify_dtb_data(void)
     }
     sec_print_info("find file %s, is_sec: %d\n", file_name, is_sec);
 
-       /* 安全版本跳过sec VRL头 */
+    /* 安全版本跳过sec VRL头 */
     if(is_sec)
     {
         offset = VRL_SIZE;
@@ -733,15 +730,14 @@ static s32 load_and_verify_dtb_data(void)
     }
 
     /*get the entry*/
-    dt_entry  = (struct modem_dt_entry_t *)kmalloc((size_t)((sizeof(struct modem_dt_entry_t)*(header->num_entries))), GFP_KERNEL);
+    dt_entry  = (struct modem_dt_entry_t *)kzalloc((size_t)((sizeof(struct modem_dt_entry_t)*(header->num_entries))), GFP_KERNEL);
     if(NULL == dt_entry)
     {
        sec_print_err("dtb header malloc fail\n");
        return -ENOMEM;
     }
-    memset((void*)dt_entry, 0, (size_t)((sizeof(struct modem_dt_entry_t)*(header->num_entries))));
 
-      offset += sizeof(struct modem_dt_table_t);
+    offset += sizeof(struct modem_dt_table_t);
 
     readed_bytes = read_file(file_name, offset, (unsigned int)(sizeof(struct modem_dt_entry_t)*(header->num_entries)), (char*)dt_entry);
     if (readed_bytes < 0 || readed_bytes != (int)(sizeof(struct modem_dt_entry_t)*(header->num_entries)))
@@ -755,8 +751,7 @@ static s32 load_and_verify_dtb_data(void)
     modem_id = bsp_get_version_info()->board_id_udp_masked;
     sec_print_err("modem_id 0x%x \n", modem_id);
 
-      memset((void *)&dt_entry_ptr, 0, sizeof(modem_dt_entry_t));
-
+    memset_s((void *)&dt_entry_ptr, sizeof(dt_entry_ptr), 0, sizeof(dt_entry_ptr));
     ret = get_dtb_entry(modem_id, header->num_entries, dt_entry,  &dt_entry_ptr);
     if (ret)
     {

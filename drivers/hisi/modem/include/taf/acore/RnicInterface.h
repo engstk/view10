@@ -76,34 +76,29 @@ extern "C" {
 /*******************************************************************************
   3 枚举定义
 *******************************************************************************/
-/*********************************************
- 枚举名   : RNIC_RMNET_ID_ENUM
- 枚举说明 : RNIC网卡的ID
- 1.日    期   : 2012年11月24日
-   作    者   : f00179208
-   修改内容   : 新建
-*********************************************/
+
 enum RNIC_RMNET_ID_ENUM
 {
     RNIC_RMNET_ID_0,                                                            /* 网卡0 */
     RNIC_RMNET_ID_1,                                                            /* 网卡1 */
     RNIC_RMNET_ID_2,                                                            /* 网卡2 */
-#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#if (MULTI_MODEM_NUMBER > 1)
     RNIC_RMNET_ID_3,                                                            /* 网卡3 */
     RNIC_RMNET_ID_4,                                                            /* 网卡4 */
-#if (MULTI_MODEM_NUMBER == 3)
+#if (MULTI_MODEM_NUMBER > 2)
     RNIC_RMNET_ID_5,                                                            /* 网卡5 */
     RNIC_RMNET_ID_6,                                                            /* 网卡6 */
 #endif
 #endif
 
-    /* Added by m00217266 for 双VoWiFi项目, 2017-2-25, begin */
     RNIC_RMNET_ID_IMS00,                                                        /* 主卡的VT网卡 */
     RNIC_RMNET_ID_R_IMS00,                                                      /* 主卡VoWiFi信令转发网卡 */
+    RNIC_RMNET_ID_R_IMS01,                                                      /* 主卡VoWiFi紧急承载信令转发网卡 */
 
-#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#if (MULTI_MODEM_NUMBER > 1)
     RNIC_RMNET_ID_IMS10,                                                        /* 副卡的VT网卡 */
     RNIC_RMNET_ID_R_IMS10,                                                      /* 副卡VoWiFi信令转发网卡 */
+    RNIC_RMNET_ID_R_IMS11,                                                      /* 副卡VoWiFi紧急承载信令转发网卡 */
 #endif
 
     /* 当前只有mbb产品使用spe */
@@ -122,7 +117,6 @@ enum RNIC_RMNET_ID_ENUM
     RNIC_RMNET_ID_TUN13,
     RNIC_RMNET_ID_TUN14,
 #endif
-    /* Added by m00217266 for 双VoWiFi项目, 2017-2-25, end */
 
     RNIC_RMNET_ID_EMC0,
 

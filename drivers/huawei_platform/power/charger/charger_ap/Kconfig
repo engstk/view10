@@ -1,9 +1,13 @@
 source "drivers/huawei_platform/power/charger/charger_ap/direct_charger/Kconfig"
+source "drivers/huawei_platform/power/charger/charger_ap/wireless_charger/Kconfig"
 config HUAWEI_CHARGER_AP
 	bool "huawei charger ap"
 	default n
 config BQ2419X_CHARGER
 	bool "bq2419x charger"
+	default n
+config BQ2560X_CHARGER
+	bool "bq2560x charger"
 	default n
 config BQ2429X_CHARGER
 	bool "bq2429x charger"
@@ -16,4 +20,7 @@ config DUAL_CHARGER
 	default n
 config DIRECT_CHARGER
 	bool "direct charger"
+	default n
+config WIRELESS_CHARGER
+	bool "wireless charger"
 	default n

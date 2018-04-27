@@ -69,20 +69,7 @@
 /* 解码目的通道回调函数 */
 SCM_DECODERDESTFUCN         g_astSCMDecoderCbFunc[SOCP_DECODER_DST_CB_BUTT]={NULL, NULL, NULL};
 
-/* ****************************************************************************
- 函 数 名  : SCM_RegDecoderDestProc
- 功能描述  : ACPU的解码目的通道的回调函数注册接口
- 输入参数  : enChanlID: 解码目的通道ID
-             func: 回调函数指针
- 输出参数  :
- 返 回 值  : ERR_MSP_FAILURE/BSP_OK
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 
 u32 SCM_RegDecoderDestProc(SOCP_DECODER_DST_ENUM_U32 enChanlID, SCM_DECODERDESTFUCN func)
 {
@@ -120,19 +107,7 @@ u32 SCM_RegDecoderDestProc(SOCP_DECODER_DST_ENUM_U32 enChanlID, SCM_DECODERDESTF
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : SCM_RcvDataDispatch
- 功能描述  : OM逻辑通道的分发
- 输入参数  : ulTaskId:   任务ID
-             pstHdlcCtrl:HDLC控制结构
-             ucDataType:GU/TL数据类型
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-   1.日    期  : 2014年5月24日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 void SCM_RcvDataDispatch(
     OM_HDLC_STRU                       *pstHdlcCtrl,
     u8                           ucDataType)

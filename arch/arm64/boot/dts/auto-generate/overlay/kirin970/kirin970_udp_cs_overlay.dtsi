@@ -584,7 +584,7 @@
 				&gpio192_cfg_idle
 				&gpio193_cfg_idle>;
 		asp_power_state_offset = <0x06c>;
-		slimbusclk_io_driver = <0xa0>;
+		slimbusclk_io_driver = <0xa8>;
 		slimbusdata_io_driver = <0xa3>;
 		slimbusclk_offset = <0x038>;
 		slimbusdata_offset = <0x03c>;
@@ -759,7 +759,6 @@
 	ufs-kirin-use-rate-B;
 	ufs-kirin-broken-fastauto;
 	/*ufs-kirin-use-one-line;*/
-	ufs-kirin-since-boston-cs;
 	ufs-kirin-use-HS-GEAR3;
 	/*ufs-kirin-use-HS-GEAR2;*/
 	/*ufs-kirin-use-HS-GEAR1;*/
@@ -767,7 +766,7 @@
 	/*ufs-kirin-unipro-scrambing;*/
 	/*ufs-kirin-disable-pm-runtime;*/
 	/*ufs-kirin-use-auto-H8*/
-	ufs-kirin-broken-clk-gate-pypass;
+	ufs-kirin-broken-clk-gate-bypass;
 	status = "ok";
 };
 
@@ -944,7 +943,8 @@
 	clocks = <&clk_gate_jpg_func>;
 	clock-names = "clk_jpg_func";
 	clock-value = <554000000>;
-	clock-low-frequency = <238000000>;
+	clock-low-frequency = <277000000>;
+	power-off-frequency = <238000000>;
 	reg = <0 0xE8300000 0 0x1000>;
 	interrupts = <0 299 4>;
 	hjpeg-srt-supply = <&ispsubsys>;

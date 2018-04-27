@@ -432,7 +432,7 @@ static void blk_mq_ipi_complete_request(struct request *rq)
 	put_cpu();
 }
 #ifdef CONFIG_WBT
-static void blk_mq_stat_add(struct request *rq)
+void blk_mq_stat_add(struct request *rq)
 {
 	struct blk_rq_stat *stat;
 
@@ -476,9 +476,6 @@ void blk_mq_complete_request(struct request *rq, int error)
 #ifdef CONFIG_FAIL_IO_TIMEOUT
 	if (unlikely(blk_should_fake_timeout(q)))
 		return;
-#endif
-#ifdef CONFIG_HISI_IO_LATENCY_TRACE
-	req_latency_check(rq,REQ_PROC_STAGE_COMPLETE);
 #endif
 	if (likely(!blk_mark_rq_complete(rq))) {
 		rq->errors = error;
@@ -703,10 +700,6 @@ void blk_mq_rq_timed_out(struct request *req, bool reserved)
 	if (!test_bit(REQ_ATOM_STARTED, &req->atomic_flags))
 		return;
 
-#ifdef CONFIG_HISI_BLK_MQ
-	hisi_blk_mq_rq_timed_out(req,req->q);
-#endif
-
 	if (ops->timeout)
 		ret = ops->timeout(req, false);
 
@@ -714,10 +707,6 @@ void blk_mq_rq_timed_out(struct request *req, bool reserved)
 	case BLK_EH_HANDLED:
 	#ifdef CONFIG_WBT
 		blk_mq_stat_add(req);
-	#endif
-	#ifdef CONFIG_HISI_BLK_MQ
-		if(likely(hisi_blk_mq_complete_request(req,req->q,false)))
-			break;
 	#endif
 		__blk_mq_complete_request(req);
 		break;
@@ -753,8 +742,13 @@ static void blk_mq_check_expired(struct blk_mq_hw_ctx *hctx,
 		return;
 
 	if (time_after_eq(jiffies, rq->deadline)) {
-		if (!blk_mark_rq_complete(rq))
-			blk_mq_rq_timed_out(rq, false);
+		if (!blk_mark_rq_complete(rq)) {
+		#ifdef CONFIG_HISI_MQ_DISPATCH_DECISION
+			hisi_blk_mq_rq_timed_out(rq, reserved);
+		#else
+			blk_mq_rq_timed_out(rq, reserved);
+		#endif
+		}
 	} else if (!data->next_set || time_after(data->next, rq->deadline)) {
 		data->next = rq->deadline;
 		data->next_set = 1;
@@ -1742,7 +1736,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
 		int to_do;
 		void *p;
 
-		while (left < order_to_size(this_order - 1) && this_order)
+		while (this_order && left < order_to_size(this_order - 1))
 			this_order--;
 
 		do {

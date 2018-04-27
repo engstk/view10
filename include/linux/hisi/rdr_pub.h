@@ -131,8 +131,9 @@ struct rdr_exception_info_s {
 	u64	e_reset_core_mask;
 	u64	e_from_core;
 	u32	e_reentrant;
-    u32 e_exce_type;
-    u32 e_upload_flag;
+	u32	e_exce_type;
+	u32	e_exce_subtype;
+	u32	e_upload_flag;
 	u8	e_from_module[MODULE_NAME_LEN];
 	u8	e_desc[STR_EXCEPTIONDESC_MAXLEN];
 	u32	e_reserve_u32;
@@ -166,7 +167,7 @@ typedef void (*pfn_cb_dump_done)( u32 modid, u64 coreid);
  * return       mask bitmap.
  */
 typedef void (*pfn_dump)( u32 modid, u32 etype, u64 coreid,
-                char* logpath, pfn_cb_dump_done fndone);
+	char* logpath, pfn_cb_dump_done fndone);
 /*
  * func name: pfn_reset
  * func args:
@@ -179,6 +180,23 @@ typedef void (*pfn_dump)( u32 modid, u32 etype, u64 coreid,
  * return value		null
  */
 typedef void (*pfn_reset)( u32 modid, u32 etype, u64 coreid);
+
+/*
+ * func name: pfn_cleartext_ops
+ * func args:
+ *   log_dir_path: the direcotory path of the file to be written in clear text format
+ *   u64 log_addr: the start address of the reserved memory for each core
+ *   u32 log_len: the length of the reserved memory for each core
+ *
+ * Attention:
+ * the user can't dump through it's saved dump address but must in use of the log_addr
+ *
+ * return value
+ *     < 0 error
+ *     >=0 success
+ */
+typedef int (*pfn_cleartext_ops)(char *log_dir_path, u64 log_addr, u32 log_len);
+
 
 struct rdr_module_ops_pub {
     pfn_dump    ops_dump;
@@ -234,9 +252,9 @@ void hisi_bbox_unmap(const void *vaddr);
  * func name: rdr_register_module_ops
  * func args:
  *   u32 coreid,       core id;
- *      .
  *   struct rdr_module_ops_pub* ops;
  *   struct rdr_register_module_result* retinfo
+ *
  * return value		e_modid
  *	< 0 error
  *	>=0 success
@@ -244,8 +262,7 @@ void hisi_bbox_unmap(const void *vaddr);
 int rdr_register_module_ops(
         u64 coreid,
         struct rdr_module_ops_pub* ops,
-        struct rdr_register_module_result* retinfo
-		);
+        struct rdr_register_module_result* retinfo);
 
 /*
  * func name: rdr_unregister_module_ops
@@ -272,6 +289,68 @@ void rdr_system_error(u32 modid, u32 arg1, u32 arg2);
 void rdr_syserr_process_for_ap(u32 modid, u64 arg1, u64 arg2);
 
 /*
+ * func name: rdr_cleartext_print
+ *
+ * append(save) data to path.
+ * func args:
+ *  struct file *fp: the pointer of file which to save the clear text.
+ *  bool *error: to fast the cpu process when there is error happened before nowadays print, please
+ *              refer the function bbox_head_cleartext_print to get the use of this parameter.
+ *
+ * return
+ */
+void rdr_cleartext_print(struct file *fp, bool *error, const char *format, ...);
+
+/*
+ * func name: rdr_register_cleartext_ops
+ * func args:
+ *   u64 core_id: the same with the parameter coreid of function rdr_register_module_ops
+ *   pfn_cleartext_ops ops_fn: the function to write the content of reserved memory in clear text format
+ *
+ * return value
+ *	< 0 error
+ *	0 success
+ */
+int rdr_register_cleartext_ops(u64 coreid, pfn_cleartext_ops ops_fn);
+
+/*
+ * func name: bbox_cleartext_get_filep
+ *
+ * Get the file descriptor pointer whose abosolute path composed by the dir_path&file_name
+ * and initialize it.
+ *
+ * func args:
+ *  char *dir_path: the directory path about the specified file.
+ *  char *file_name:the name of the specified file.
+ *
+ * return
+ * file descriptor pointer when success, otherwise NULL.
+ *
+ * attention
+ * the function bbox_cleartext_get_filep shall be used
+ * in paired with function bbox_cleartext_end_filep.
+ */
+struct file *bbox_cleartext_get_filep(char *dir_path, char *file_name);
+
+/*
+ * func name: bbox_cleartext_end_filep
+ *
+ * cleaning of the specified file
+ *
+ * func args:
+ *  struct file *fp: the file descriptor pointer .
+ *  char *dir_path: the directory path about the specified file.
+ *  char *file_name:the name of the specified file.
+ *
+ * return
+ *
+ * attention
+ * the function bbox_cleartext_end_filep shall be used
+ * in paired with function bbox_cleartext_get_filep.
+ */
+void bbox_cleartext_end_filep(struct file *fp, char *dir_path, char *file_name);
+
+/*
  * 函数名: bbox_check_edition
  * 函数参数:
  *     void
@@ -287,12 +366,16 @@ void rdr_syserr_process_for_ap(u32 modid, u64 arg1, u64 arg2);
  */
 unsigned int bbox_check_edition(void);
 int rdr_wait_partition(char *path, int timeouts);
-void rdr_set_wdt_kick_slice(void);
+void rdr_set_wdt_kick_slice(u64 kickslice);
 u64 rdr_get_last_wdt_kick_slice(void);
 u64 get_32k_abs_timer_value(void);
 void save_log_to_dfx_tempbuffer(u32 reboot_type);
 void clear_dfx_tempbuffer(void);
 void systemerror_save_log2dfx(u32 reboot_type);
+u64 rdr_get_logsize(void);
+char *rdr_get_timestamp(void);
+void *bbox_vmap(phys_addr_t paddr, size_t size);
+int rdr_dir_size(char *path, bool recursion);
 #else
 static inline void *hisi_bbox_map(phys_addr_t paddr, size_t size){ return NULL; }
 static inline u32 rdr_register_exception(struct rdr_exception_info_s* e){ return 0;}
@@ -300,19 +383,24 @@ static inline int rdr_unregister_exception(u32 modid){ return 0; }
 static inline int rdr_register_module_ops(
         u64 coreid,
         struct rdr_module_ops_pub* ops,
-        struct rdr_register_module_result* retinfo
-		){ return -1; }
+        struct rdr_register_module_result* retinfo){ return -1; }
 static inline int rdr_unregister_module_ops(u64 coreid){ return 0; }
 static inline void rdr_system_error(u32 modid, u32 arg1, u32 arg2){}
 static inline void rdr_syserr_process_for_ap(u32 modid, u64 arg1, u64 arg2){}
 
 static inline unsigned int bbox_check_edition(void){return EDITION_USER;}
 static inline int rdr_wait_partition(char *path, int timeouts) { return 0; }
-static inline void rdr_set_wdt_kick_slice(void){ return; }
+static inline void rdr_set_wdt_kick_slice(u64 kickslice){ return; }
 static inline u64 rdr_get_last_wdt_kick_slice(void){ return 0; }
 static inline u64 get_32k_abs_timer_value(void) { return 0; }
 static inline void save_log_to_dfx_tempbuffer(u32 reboot_type){return;};
 static inline void clear_dfx_tempbuffer(void){return;};
+static inline void systemerror_save_log2dfx(u32 reboot_type){return;}
+static inline void hisi_bbox_unmap(const void *vaddr){return;}
+static inline u64 rdr_get_logsize(void){return 0;}
+static inline char *rdr_get_timestamp(void){return NULL;}
+static inline void *bbox_vmap(phys_addr_t paddr, size_t size){return NULL;}
+static inline int rdr_dir_size(char *path, bool recursion){return 0;}
 #endif
 
 void get_exception_info(unsigned long *buf, unsigned long *buf_len);

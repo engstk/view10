@@ -10,6 +10,8 @@
 
 #include <linux/version.h>
 #include <linux/i2c.h>
+#include <linux/spi/spi.h>
+#include <linux/amba/pl022.h>
 #include <linux/input.h>
 #include <linux/completion.h>
 #include <linux/kernel.h>
@@ -22,6 +24,8 @@
 #include <huawei_platform/log/hw_log.h>
 #include <linux/wakelock.h>
 #include <linux/semaphore.h>
+
+
 #include "../lcdkit/include/lcdkit_ext.h"
 #define HUAWEI_CHARGER_FB	/*define HUAWEI_CHARGER_FB here to enable charger notify callback*/
 #if defined(HUAWEI_CHARGER_FB)
@@ -55,6 +59,7 @@
 
 #define ANTI_FALSE_TOUCH_USE_PARAM_MAJOR_MINOR 1
 
+#define FP_TP_REPORT_MINOR_FLAG "fp_tp_report_touch_minor_event"
 //#define ANTI_FALSE_TOUCH_STRING_NUM 27
 #define ANTI_FALSE_TOUCH_FEATURE_ALL "feature_all"
 #define ANTI_FALSE_TOUCH_FEATURE_RESEND_POINT "feature_resend_point"
@@ -112,7 +117,14 @@
 
 #define TS_ERR_NEST_LEVEL  5
 #define TS_RAWDATA_BUFF_MAX 5000
-#define TS_RAWDATA_RESULT_MAX	100
+
+#define TS_RAWDATA_FAILED_REASON_LEN	20
+#define TS_RAWDATA_STATISTICS_DATA_LEN  32
+#define TS_RAWDATA_TEST_NAME_LEN		50
+#define TS_RAWDATA_RESULT_CODE_LEN		4
+
+#define TS_RAWDATA_DEVINFO_MAX	50
+#define TS_RAWDATA_RESULT_MAX	200
 #define TS_FB_LOOP_COUNTS 100
 #define TS_FB_WAIT_TIME 5
 #define MAX_CAP_DATA_SIZE 6
@@ -214,7 +226,7 @@
 #define TD43XX_EE_SHORT_TEST_PASS "-5P"
 
 #define CHIP_INFO_LENGTH	16
-#define RAWDATA_NUM 8
+#define RAWDATA_NUM 16
 #define MAX_POSITON_NUMS 6
 #ifndef CONFIG_OF
 #define SUPPORT_IC_NUM 4
@@ -234,6 +246,8 @@
 #define VIRTUAL_KEY_ELEMENT_SIZE	5
 #define MAX_PRBUF_SIZE	PIPE_BUF
 #define CALIBRATION_DATA_SIZE 6144
+#define TP_I2C_HWSPIN_LOCK_CODE   28
+#define GET_HARDWARE_TIMEOUT 100000
 extern u8 g_ts_kit_log_cfg;
 
 #define HWLOG_TAG	TS_KIT
@@ -255,6 +269,7 @@ HWLOG_REGIST();
 #define FINGER_REL_TIME     300  //the time pen checked after finger released shouldn't less than this value(ms)
 
 #define TP_3320_SHORT_ARRAY_NUM	4
+#define GPIO_HIGH        1
 
 enum TP_ic_type
 {
@@ -343,6 +358,7 @@ enum ts_cmd
     TS_TOUCH_SWITCH,
     TS_CHIP_DETECT,
     TS_REPORT_PEN,
+    TS_FREEBUFF,
     TS_INVAILD_CMD = 255,
 };
 
@@ -453,6 +469,7 @@ enum ts_rawdata_debug_type
     READ_DIFF_DATA = 0,
     READ_RAW_DATA,
     READ_CB_DATA,
+    READ_FORCE_DATA,
 };
 #if defined (CONFIG_TEE_TUI)
 struct ts_tui_data {
@@ -560,6 +577,56 @@ struct fw_param
     char fw_name[MAX_STR_LEN * 4]; //firmware name contain 4 parts
 };
 
+/*
+ New data format for rawdata
+*/
+#define RAWDATA_TEST_FAIL_CHAR 'F'
+#define RAWDATA_TEST_PASS_CHAR 'P'
+
+enum ts_rawdata_formattype
+{
+    TS_RAWDATA_OLDFORMAT = 0,
+    TS_RAWDATA_NEWFORMAT,
+};
+enum ts_raw_data_type
+{
+    RAW_DATA_TYPE_IC = 0,
+    RAW_DATA_TYPE_CAPRAWDATA,
+    RAW_DATA_TYPE_TrxDelta,
+    RAW_DATA_TYPE_Noise,
+	RAW_DATA_TYPE_FreShift,
+	RAW_DATA_TYPE_OpenShort,
+	RAW_DATA_TYPE_SelfCap,
+	RAW_DATA_TYPE_CbCctest,
+	RAW_DATA_TYPE_highResistance,
+	RAW_DATA_TYPE_SelfNoisetest,
+	RAW_DATA_END,
+};
+struct ts_rawdata_newnodeinfo
+{    
+    struct list_head node;
+	u8 typeindex;       /* enum ts_raw_data_type */
+	char testresult;    /* 'P' o 'F' */
+	int *values;
+	size_t size;
+	char test_name[TS_RAWDATA_TEST_NAME_LEN];	
+	char statistics_data[TS_RAWDATA_STATISTICS_DATA_LEN];   /* [%d,%d,%d] */
+	char tptestfailedreason[TS_RAWDATA_FAILED_REASON_LEN];  /* "-panel_reason" o "-software reason" */
+};
+
+struct ts_rawdata_info_new
+{
+    int status;
+	int rx;
+	int tx;
+    ktime_t time_stamp;
+    char deviceinfo[TS_RAWDATA_DEVINFO_MAX];       /* ic info */
+	char i2cinfo[TS_RAWDATA_RESULT_CODE_LEN];      /* i2c test result:0P or 0F */
+	char i2cerrinfo[TS_RAWDATA_FAILED_REASON_LEN]; /* i2c test fail reason*/
+	int listnodenum;
+	struct list_head rawdata_head;//ts_rawdata_newnodeinfo  list
+};
+
 struct ts_rawdata_info
 {
     int status;
@@ -571,7 +638,8 @@ struct ts_rawdata_info
     int used_sharp_selcap_touch_delta_size;
     ktime_t time_stamp;
     int buff[TS_RAWDATA_BUFF_MAX];
-    int  hybrid_buff[TS_RAWDATA_BUFF_MAX];
+    int hybrid_buff[TS_RAWDATA_BUFF_MAX];
+    int hybrid_buff_used_size;
     int buff_3d[TS_RAWDATA_BUFF_MAX];
     char result[TS_RAWDATA_RESULT_MAX];
 	int *tx_delta_buf;
@@ -792,6 +860,7 @@ struct ts_cmd_param
         struct ts_kit_device_data *chip_data;
     } pub_params;
     void* prv_params;
+	void (*ts_cmd_freehook)(void*);
 };
 
 enum ts_timeout_flag
@@ -965,6 +1034,7 @@ struct ts_kit_device_data
 	bool is_parade_solution;
 	bool is_direct_proc_cmd;
 	bool support_s3320_short_test;
+	unsigned int support_trex_short_test;
     bool is_i2c_one_byte;
     bool is_new_oem_structure;
     bool disable_reset;
@@ -981,6 +1051,7 @@ struct ts_kit_device_data
     char chip_name[MAX_STR_LEN];
     char module_name[MAX_STR_LEN];
     char version_name[MAX_STR_LEN];
+    char project_id[MAX_STR_LEN];
     char tp_test_type[TS_CAP_TEST_TYPE_LEN];
     struct device_node* cnode;
     struct ts_device_ops* ops;
@@ -1041,6 +1112,7 @@ struct ts_kit_device_data
 	int test_capacitance_via_csvfile;
 	int csvfile_use_product_system;
 	int trx_delta_test_support;
+	int forcekey_test_support;
 	int td43xx_ee_short_test_support;
 	int tddi_ee_short_test_partone_limit;
 	int tddi_ee_short_test_parttwo_limit;
@@ -1073,7 +1145,9 @@ struct ts_kit_device_data
 	unsigned int get_brightness_info_flag;
 	int check_fw_right_flag;
 	int use_lcdkit_power_notify;
+	int fp_tp_report_touch_minor_event;
 	int support_crc_err_do_reset;
+	u8 rawdata_newformatflag;   // 0 - old format   1 - new format
 };
 
 struct ts_bus_info
@@ -1090,6 +1164,11 @@ struct ts_aft_algo_param
     int lcd_width;
     int lcd_height;
 };
+struct tp_i2c_hwlock
+{
+    int  tp_i2c_hwlock_flag;
+    struct hwspinlock * hwspin_lock;
+};
 
 struct ts_kit_platform_data
 {
@@ -1102,15 +1181,24 @@ struct ts_kit_platform_data
     int irq_id;
     int edge_wideth;
     int irq_gpio;
+    int cs_gpio;
     int reset_gpio;
     int fpga_flag;
     u32 fp_tp_enable;
     u32 register_charger_notifier;
     u32 hide_plain_id;
     u8 panel_id;
+    unsigned int udfp_enable_flag;
+    unsigned int spi_max_frequency;
+    unsigned int spi_mode;
+    unsigned int cs_reset_low_delay;
+    unsigned int cs_reset_high_delay;
     struct device_node* node;
     struct i2c_client* client;
+    struct spi_device *spi;
+    struct pl022_config_chip spidev0_chip_info;
     struct ts_bus_info* bops;
+    struct tp_i2c_hwlock  i2c_hwlock;
     struct task_struct* ts_task;
     struct task_struct* ts_init_task;
     struct platform_device* ts_dev;

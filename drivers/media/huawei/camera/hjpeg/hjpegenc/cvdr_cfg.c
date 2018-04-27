@@ -36,27 +36,51 @@ static int dump_cvdr_reg(hjpeg_hw_ctl_t *hw_ctl)
     }
 
     if (hw_ctl->cvdr_prop.wr_port == WR_PORT_25) {
-        cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
-            CVDR_SRT_VP_WR_CFG_25_OFFSET,
-            get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_CFG_25_OFFSET)));
-        cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
-            CVDR_SRT_VP_WR_AXI_FS_25_OFFSET,
-            get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_AXI_FS_25_OFFSET)));
-        cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
-            CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET,
-            get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET)));
-        cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
-            CVDR_SRT_VP_WR_IF_CFG_25_OFFSET,
-            get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_IF_CFG_25_OFFSET)));
-        cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
-            CVDR_SRT_NR_RD_CFG_1_OFFSET,
-            get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_NR_RD_CFG_1_OFFSET)));
-        cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
-            CVDR_SRT_LIMITER_NR_RD_1_OFFSET,
-            get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_LIMITER_NR_RD_1_OFFSET)));
-        cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
-            CVDR_SRT_LIMITER_VP_WR_25_OFFSET,
-            get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_LIMITER_VP_WR_25_OFFSET)));
+        if (is_hjpeg_wr_port_addr_update()) {
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_CFG_25_OFFSET_UPDATE,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_CFG_25_OFFSET_UPDATE)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_AXI_FS_25_OFFSET_UPDATE,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_AXI_FS_25_OFFSET_UPDATE)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET_UPDATE,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET_UPDATE)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_IF_CFG_25_OFFSET_UPDATE,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_IF_CFG_25_OFFSET_UPDATE)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_AXI_JPEG_NR_RD_CFG_4,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_AXI_JPEG_NR_RD_CFG_4)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_AXI_JPEG_LIMITER_NR_RD_4,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_AXI_JPEG_LIMITER_NR_RD_4)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_AXI_JPEG_LIMITER_VP_WR_25_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_AXI_JPEG_LIMITER_VP_WR_25_OFFSET)));
+        } else {
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_CFG_25_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_CFG_25_OFFSET)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_AXI_FS_25_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_AXI_FS_25_OFFSET)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_VP_WR_IF_CFG_25_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_VP_WR_IF_CFG_25_OFFSET)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_NR_RD_CFG_1_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_NR_RD_CFG_1_OFFSET)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_LIMITER_NR_RD_1_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_LIMITER_NR_RD_1_OFFSET)));
+            cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
+                CVDR_SRT_LIMITER_VP_WR_25_OFFSET,
+                get_reg_val((void __iomem*)((char*)viraddr+CVDR_SRT_LIMITER_VP_WR_25_OFFSET)));
+        }
     } else if (hw_ctl->cvdr_prop.wr_port == WR_PORT_0) {
         cam_debug("%s: CVDR reg: 0x%08x=0x%08x", __func__,
             CVDR_AXI_JPEG_VP_WR_CFG_0_OFFSET,
@@ -109,6 +133,7 @@ static int cvdr_fmt_desc_vp_wr(u32 wr_port, jpgenc_config_t* config, cvdr_wr_fmt
 
     width    = config->buffer.width;
     height   = config->buffer.height;
+
     buf_addr = config->buffer.output_buffer + JPGENC_HEAD_SIZE;
     buf_size = config->buffer.output_size - JPGENC_HEAD_SIZE;
 
@@ -135,8 +160,14 @@ static int cvdr_fmt_desc_vp_wr(u32 wr_port, jpgenc_config_t* config, cvdr_wr_fmt
         }
         case WR_PORT_25:
         {
-            desc->line_stride = (unsigned short)((width * 2) / 16 - 1);
-            desc->line_wrap   = (unsigned short)height;
+            if (is_hjpeg_wr_port_addr_update()) {
+                desc->access_limiter = ACCESS_LIMITER_VP_WR_0;
+                desc->line_stride = 0x3F;
+                desc->line_wrap   = 0x3FFF;
+            } else {
+                desc->line_stride = (unsigned short)((width * 2) / 16 - 1);
+                desc->line_wrap   = (unsigned short)height;
+            }
             break;
         }
         default:
@@ -154,6 +185,7 @@ static int set_vp_wr_ready(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config)
 {
     int ret;
     U_VP_WR_CFG tmp_cfg;
+    U_VP_WR_CFG_UPDATE tmp_cfg_update;
     U_VP_WR_AXI_LINE tmp_line;
     U_VP_WR_AXI_FS tmp_fs;
     U_CVDR_SRT_LIMITER_VP_WR_0 lmt;
@@ -196,11 +228,26 @@ static int set_vp_wr_ready(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config)
         }
         case WR_PORT_25:
         {
-            vp_wr_cfg_offset      = CVDR_SRT_VP_WR_CFG_25_OFFSET;
-            vp_wr_axi_line_offset = CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET;
-            vp_wr_axi_fs_offset   = CVDR_SRT_VP_WR_AXI_FS_25_OFFSET;
-            // for smmu bypass
-            vp_wr_if_cfg_offset   = CVDR_SRT_VP_WR_IF_CFG_25_OFFSET;
+            if (is_hjpeg_wr_port_addr_update()) {
+                vp_wr_cfg_offset      = CVDR_SRT_VP_WR_CFG_25_OFFSET_UPDATE;
+                vp_wr_axi_line_offset = CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET_UPDATE;
+                vp_wr_axi_fs_offset   = CVDR_SRT_VP_WR_AXI_FS_25_OFFSET_UPDATE;
+                // for smmu bypass
+                vp_wr_if_cfg_offset   = CVDR_SRT_VP_WR_IF_CFG_25_OFFSET_UPDATE;
+            } else {
+                vp_wr_cfg_offset      = CVDR_SRT_VP_WR_CFG_25_OFFSET;
+                vp_wr_axi_line_offset = CVDR_SRT_VP_WR_AXI_LINE_25_OFFSET;
+                vp_wr_axi_fs_offset   = CVDR_SRT_VP_WR_AXI_FS_25_OFFSET;
+                // for smmu bypass
+                vp_wr_if_cfg_offset   = CVDR_SRT_VP_WR_IF_CFG_25_OFFSET;
+            }
+
+            lmt.reg32 = get_reg_val((void __iomem*)((char*)cvdr_srt_base + CVDR_AXI_JPEG_LIMITER_VP_WR_25_OFFSET));
+            lmt.bits.vpwr_access_limiter_0_0 = desc.access_limiter;
+            lmt.bits.vpwr_access_limiter_1_0 = desc.access_limiter;
+            lmt.bits.vpwr_access_limiter_2_0 = desc.access_limiter;
+            lmt.bits.vpwr_access_limiter_3_0 = desc.access_limiter;
+            set_reg_val((void __iomem*)((char*)cvdr_srt_base + CVDR_AXI_JPEG_LIMITER_VP_WR_25_OFFSET), lmt.reg32);
 
             break;
         }
@@ -209,15 +256,28 @@ static int set_vp_wr_ready(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config)
             return -1;
     }
     // config vp wr cfg
-    tmp_cfg.reg32 = get_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_cfg_offset));
-    tmp_cfg.bits.vpwr_pixel_format    = desc.pix_fmt;
-    tmp_cfg.bits.vpwr_pixel_expansion = desc.pix_expan;
-    tmp_cfg.bits.vpwr_last_page       = desc.last_page;
-    if (WR_PORT_25 == wr_port) {
-        // FIXME:no vpwr_access_limiter in register table ON ES
-        tmp_cfg.bits.vpwr_access_limiter = desc.access_limiter;
-    }
-    set_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_cfg_offset), tmp_cfg.reg32);
+    if (is_hjpeg_iova_update()) {
+        tmp_cfg_update.reg32 = get_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_cfg_offset));
+        tmp_cfg_update.bits.vpwr_pixel_format    = desc.pix_fmt;
+        tmp_cfg_update.bits.vpwr_pixel_expansion = desc.pix_expan;
+        tmp_cfg_update.bits.vpwr_last_page       = desc.last_page;
+        tmp_cfg_update.bits.reserved_1 = 0x0;
+        if (WR_PORT_25 == wr_port) {
+           // FIXME:no vpwr_access_limiter in register table ON ES
+           tmp_cfg_update.bits.vpwr_access_limiter = desc.access_limiter;
+       }
+        set_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_cfg_offset), tmp_cfg_update.reg32);
+    } else {
+        tmp_cfg.reg32 = get_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_cfg_offset));
+        tmp_cfg.bits.vpwr_pixel_format    = desc.pix_fmt;
+        tmp_cfg.bits.vpwr_pixel_expansion = desc.pix_expan;
+        tmp_cfg.bits.vpwr_last_page       = desc.last_page;
+        if (WR_PORT_25 == wr_port) {
+            // FIXME:no vpwr_access_limiter in register table ON ES
+            tmp_cfg.bits.vpwr_access_limiter = desc.access_limiter;
+        }
+        set_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_cfg_offset), tmp_cfg.reg32);
+   }
 
     // config vp wr axi line
     tmp_line.reg32 = get_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_axi_line_offset));
@@ -235,8 +295,15 @@ static int set_vp_wr_ready(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config)
     buf_addr = config->buffer.output_buffer + JPGENC_HEAD_SIZE;
     // config vp wr axi fs
     tmp_fs.reg32 = get_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_axi_fs_offset));
+
     tmp_fs.bits.vpwr_address_frame_start = buf_addr >> 4;
-    set_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_axi_fs_offset), tmp_fs.reg32);
+
+    if (is_hjpeg_iova_update()) {
+        set_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_axi_fs_offset), tmp_fs.reg32 >> 2);
+    } else {
+        set_reg_val((void __iomem*)((char*)cvdr_srt_base + vp_wr_axi_fs_offset), tmp_fs.reg32);
+    }
+
     return 0;
 }
 
@@ -258,7 +325,12 @@ static int set_nr_rd_config(hjpeg_hw_ctl_t *hw_ctl)
         case RD_PORT_0:
         {
             access_limiter = ACCESS_LIMITER_NR_RD_0;
-            allocated_du   = ALLOCATED_DU_NR_RD_0;
+
+            if (is_hjpeg_qos_update()) {
+                allocated_du   = ALLOCATED_DU_NR_RD_0_UPDATE;
+            } else {
+                allocated_du   = ALLOCATED_DU_NR_RD_0;
+            }
 
             nr_rd_cfg_offset     = CVDR_AXI_JPEG_NR_RD_CFG_0_OFFSET;
             limiter_nr_rd_offset = CVDR_AXI_JPEG_LIMITER_NR_RD_0_OFFSET;
@@ -268,6 +340,20 @@ static int set_nr_rd_config(hjpeg_hw_ctl_t *hw_ctl)
         {
             nr_rd_cfg_offset     = CVDR_SRT_NR_RD_CFG_1_OFFSET;
             limiter_nr_rd_offset = CVDR_SRT_LIMITER_NR_RD_1_OFFSET;
+            break;
+        }
+        case RD_PORT_4:
+        {
+            access_limiter = ACCESS_LIMITER_NR_RD_0;
+
+            if (is_hjpeg_qos_update()) {
+                allocated_du   = ALLOCATED_DU_NR_RD_0_UPDATE;
+            } else {
+                allocated_du   = ALLOCATED_DU_NR_RD_0;
+            }
+
+            nr_rd_cfg_offset     = CVDR_AXI_JPEG_NR_RD_CFG_4;
+            limiter_nr_rd_offset = CVDR_AXI_JPEG_LIMITER_NR_RD_4;
             break;
         }
         default:
@@ -342,6 +428,9 @@ void hjpeg_config_cvdr(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config)
         wr_qos.bits.wr_qos_threshold_11_stop = 0x3;
         wr_qos.bits.wr_qos_threshold_10_start = 0x3;
         wr_qos.bits.wr_qos_threshold_10_stop = 0x3;
+        if (is_hjpeg_qos_update()) {
+            wr_qos.bits.wr_qos_sr = 0x0;
+        }
         set_reg_val((void __iomem*)((char*)cvdr_base_addr+CVDR_AXI_JPEG_CVDR_WR_QOS_CFG), wr_qos.reg32);
         cam_info("%s: CVDR reg: 0x%08x=0x%08x", __func__,
                 CVDR_AXI_JPEG_CVDR_WR_QOS_CFG,
@@ -354,6 +443,9 @@ void hjpeg_config_cvdr(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config)
         rd_qos.bits.rd_qos_threshold_10_stop = 0x3;
         rd_qos.bits.rd_qos_threshold_01_start = 0x1;
         rd_qos.bits.rd_qos_threshold_01_stop = 0x1;
+        if (is_hjpeg_qos_update()) {
+            rd_qos.bits.rd_qos_sr = 0x0;
+        }
         set_reg_val((void __iomem*)((char*)cvdr_base_addr+CVDR_AXI_JPEG_CVDR_RD_QOS_CFG), rd_qos.reg32);
         cam_info("%s: CVDR reg: 0x%08x=0x%08x", __func__,
                 CVDR_AXI_JPEG_CVDR_RD_QOS_CFG,
@@ -374,8 +466,6 @@ void hjpeg_config_cvdr(hjpeg_hw_ctl_t *hw_ctl, jpgenc_config_t* config)
 
     dump_cvdr_reg(hw_ctl);
 }
-
-
 
 
 

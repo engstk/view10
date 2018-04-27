@@ -366,11 +366,8 @@ int  softtimer_task_func(void* data)
 		if (!list_empty(&(ptimer_control->timer_list_head)))/*如果还有未超时定时器*/
 		{
 			p=list_first_entry(&(ptimer_control->timer_list_head),struct softtimer_list,entry);
-			if(p->is_running == TIMER_FALSE)
-			{
-				p->is_running = TIMER_TRUE;
-				start_hard_timer(ptimer_control,calculate_timer_start_value(p->expect_cb_slice , now_slice));
-			}
+			p->is_running = TIMER_TRUE;
+			start_hard_timer(ptimer_control,calculate_timer_start_value(p->expect_cb_slice , now_slice));
 		}
 		else
 		{

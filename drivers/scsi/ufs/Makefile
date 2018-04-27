@@ -1,5 +1,10 @@
 # UFSHCD makefile
 obj-$(CONFIG_SCSI_UFS_KIRIN) += ufs-kirin.o
+obj-$(CONFIG_SCSI_UFS_KIRIN) += ufs-kirin-hisi-mphy.o
+obj-$(CONFIG_SCSI_UFS_GEMINI) += ufs-gemini.o
+obj-$(CONFIG_SCSI_UFS_ARIES) += ufs-aries.o
+obj-$(CONFIG_SCSI_UFS_CANCER) += ufs-cancer.o
+obj-$(CONFIG_SCSI_UFS_LIBRA) += ufs-libra.o
 obj-$(CONFIG_SCSI_UFS_QCOM) += ufs-qcom.o
 obj-$(CONFIG_SCSI_UFSHCD) += ufshcd.o ufs_quirks.o
 obj-$(CONFIG_HISI_BOOTDEVICE) += ufs-rpmb.o

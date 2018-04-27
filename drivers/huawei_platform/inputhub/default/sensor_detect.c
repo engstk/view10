@@ -26,6 +26,10 @@
 #include <sensor_config.h>
 #include <sensor_detect.h>
 #include "contexthub_debug.h"
+#include <linux/mtd/hisi_nve_interface.h>
+#include <linux/switch.h>
+#include <linux/hisi/hw_cmdline_parse.h>
+
 #ifdef CONFIG_HUAWEI_HW_DEV_DCT
 #include <huawei_platform/devdetect/hw_dev_dec.h>
 #endif
@@ -47,12 +51,14 @@ static pkt_sys_dynload_req_t *dyn_req = (pkt_sys_dynload_req_t *) buf;
 struct sleeve_detect_pare sleeve_detect_paremeter[MAX_PHONE_COLOR_NUM] = {{0,0},};
 struct sensorlist_info sensorlist_info[SENSOR_MAX];
 
+uint8_t gyro_cali_way = 0;
+uint8_t acc_cali_way = 0;
 int mag_threshold_for_als_calibrate = 0;
-int ltr578_flag = 0;
-int apds9922_flag = 0;
+extern int ltr578_flag;
+extern int apds9922_flag;
 int akm_cal_algo;
-int tmd2745_flag = 0;
-int rohm_rpr531_flag = 0;
+extern int tmd2745_flag;
+extern int rpr531_flag;
 uint8_t gyro_position;
 extern u8 phone_color;
 extern uint16_t sensorlist[SENSOR_LIST_NUM] ;
@@ -61,18 +67,25 @@ extern int rohm_rgb_flag;
 extern int avago_rgb_flag;
 extern int  ams_tmd3725_rgb_flag;
 extern int  ams_tmd3725_ps_flag;
+extern int liteon_ltr582_ps_flag;
+extern int liteon_ltr582_rgb_flag;
 extern int txc_ps_flag;
 extern int ams_tmd2620_ps_flag;
 extern int avago_apds9110_ps_flag;
 extern int g_iom3_state;
 extern int iom3_power_state;
 extern char *sar_calibrate_order;
+extern int is_cali_supported;
 extern int send_para_flag;
+extern int gyro_range;
 extern struct charge_device_ops *g_ops;
 extern uint8_t sens_name;
 extern int hifi_supported;
 extern void select_als_para(struct device_node *dn);
 extern int iom3_need_recovery(int modid, exp_source_t f);
+
+static int _device_detect(struct device_node *dn, int index, struct sensor_combo_cfg *p_succ_ret);
+
 
 #define DEF_SENSOR_COM_SETTING \
 {\
@@ -83,7 +96,7 @@ extern int iom3_need_recovery(int modid, exp_source_t f);
 }
 
 /*lint -e785*/
-static struct gyro_platform_data gyro_data = {
+struct gyro_platform_data gyro_data = {
 	.cfg = DEF_SENSOR_COM_SETTING,
 	.poll_interval = 10,
 	.position = 1,//gyro position for OIS
@@ -98,9 +111,12 @@ static struct gyro_platform_data gyro_data = {
 	.gpio_int2_sh = 0,
 	.fac_fix_offset_Y = 100,//100 times than real value
 	.still_calibrate_threshold = 5,
+	.calibrate_way = 0,
+	.calibrate_thredhold = 572,// 40 dps
+	.gyro_range = 2000,// 2000 dps
 };
 
-static struct g_sensor_platform_data gsensor_data = {
+struct g_sensor_platform_data gsensor_data = {
 	.cfg = DEF_SENSOR_COM_SETTING,
 	.poll_interval = 10,
 	.axis_map_x = 1,
@@ -109,10 +125,16 @@ static struct g_sensor_platform_data gsensor_data = {
 	.negate_x = 0,
 	.negate_y = 1,
 	.negate_z = 0,
+	.used_int_pin = 2,
 	.gpio_int1 = 208,
 	.gpio_int2 = 0,
 	.gpio_int2_sh = 0,
+	.device_type = 0,
 	.calibrate_style = 0,
+	.calibrate_way = 0,
+	.x_calibrate_thredhold = 250,// 250 mg
+	.y_calibrate_thredhold = 250,// 250 mg
+	.z_calibrate_thredhold = 320,// 320 mg
 	.wakeup_duration = 0x60,// /*default set up 3 duration*/
 };
 
@@ -146,7 +168,7 @@ struct als_platform_data als_data = {
 	.als_phone_version = 0,
 };
 
-static struct ps_platform_data ps_data = {
+struct ps_platform_data ps_data = {
 	.cfg = DEF_SENSOR_COM_SETTING,
 	.min_proximity_value = 750,
 	.pwindows_value = 100,
@@ -233,8 +255,28 @@ static struct fingerprint_platform_data fingerprint_data =
 	.gpio_irq =207,
 	.gpio_irq_sh =236,
 	.gpio_reset = 149,
+	.gpio_reset_sh = 1013,
 	.gpio_cs = 218,
 	.poll_interval =50,
+};
+
+static struct fingerprint_platform_data fingerprint_ud_data =
+{
+	.cfg = {
+		.bus_type = TAG_SPI,
+		.bus_num = 2,
+		.disable_sample_thread = 1,
+		{.ctrl = {.data = 218}},
+	},
+	.reg = 0xF1,
+	.chip_id =0x1204,
+	.product_id = 35,
+	.gpio_irq =147,
+	.gpio_irq_sh =1020,
+	.gpio_reset = 211,
+	.gpio_cs = 216,
+	.poll_interval = 50,
+	.tp_hover_support = 0,
 };
 
 static struct key_platform_data key_data = {
@@ -247,7 +289,17 @@ static struct key_platform_data key_data = {
 	.i2c_address_bootloader = 0x28,
 	.poll_interval = 30,
 };
-
+struct vibrator_paltform_data vibrator_data = {
+	.cfg = {
+		.bus_type = TAG_I2C,
+		.bus_num = 0,
+		.disable_sample_thread = 0,
+		{.i2c_address = 0x5A},
+	},
+	.max_timeout_ms = 10000,
+	.reduce_timeout_ms = 0,
+	.skip_lra_autocal =1,
+};
 struct magn_bracket_platform_data magn_bracket_data = {
 	.cfg = DEF_SENSOR_COM_SETTING, /*donot use, just give it a value*/
 	.mag_x_change_lower = 0,
@@ -294,6 +346,8 @@ struct sensor_detect_manager sensor_manager[SENSOR_MAX] = {
     {"key", KEY, DET_INIT, TAG_KEY, &key_data, sizeof(key_data)},
     {"hw_magn_bracket", MAGN_BRACKET, DET_INIT,TAG_MAGN_BRACKET,&magn_bracket_data,sizeof(magn_bracket_data)},
     {"rpc", RPC, DET_INIT,TAG_RPC, &rpc_data, sizeof(rpc_data)},
+    {"vibrator", VIBRATOR, DET_INIT,TAG_VIBRATOR, &vibrator_data, sizeof(vibrator_data)},
+    {"fingerprint_ud", FINGERPRINT_UD, DET_INIT, TAG_FP_UD, &fingerprint_ud_data, sizeof(fingerprint_ud_data)},
 };
 
 SENSOR_DETECT_LIST get_id_by_sensor_tag(int tag)
@@ -416,6 +470,11 @@ static void read_acc_data_from_dts(struct device_node *dn)
 
 	read_chip_info(dn, ACC);
 
+	if(of_property_read_u32(dn, "used_int_pin", &temp))
+		hwlog_err("%s:read used_int_pin fail\n", __func__);
+	else
+		gsensor_data.used_int_pin = (uint8_t) temp;
+
 	temp = of_get_named_gpio(dn, "gpio_int1", 0);
 	if (temp < 0)
 		hwlog_err("%s:read gpio_int1 fail\n", __func__);
@@ -473,13 +532,33 @@ static void read_acc_data_from_dts(struct device_node *dn)
 	else
 		gsensor_data.negate_z = (uint8_t) temp;
 
+        if (of_property_read_u32(dn, "device_type", &temp))
+                hwlog_err("%s:read acc device_type fail\n", __func__);
+        else
+                gsensor_data.device_type = (uint8_t) temp;
+
+	if (of_property_read_u32(dn, "x_calibrate_thredhold", &temp))
+		hwlog_err("%s:read acc x_calibrate_thredhold fail\n", __func__);
+	else
+		gsensor_data.x_calibrate_thredhold = (uint16_t) temp;
+
+	if (of_property_read_u32(dn, "y_calibrate_thredhold", &temp))
+		hwlog_err("%s:read acc y_calibrate_thredhold fail\n", __func__);
+	else
+		gsensor_data.y_calibrate_thredhold = (uint16_t) temp;
+
+	if (of_property_read_u32(dn, "z_calibrate_thredhold", &temp))
+		hwlog_err("%s:read acc z_calibrate_thredhold fail\n", __func__);
+	else
+		gsensor_data.z_calibrate_thredhold = (uint16_t) temp;
+
+
 /* i2c_address should be set when detect success! not here
 	if (of_property_read_u32(dn, "reg", &temp))
 		hwlog_warn("%s:read acc reg fail\n", __func__);
 	else
 		gsensor_data.cfg.i2c_address = (uint8_t) temp;
 */
-
 	if (of_property_read_u32(dn, "file_id", &temp))
 		hwlog_err("%s:read acc file_id fail\n", __func__);
 	else
@@ -490,11 +569,19 @@ static void read_acc_data_from_dts(struct device_node *dn)
 		hwlog_err("%s:read acc sensor_list_info_id fail\n", __func__);
 	else
 		sensorlist[++sensorlist[0]] = (uint16_t) temp;
+	if (of_property_read_u32(dn, "calibrate_way", &temp))
+		hwlog_err("%s:read acc calibrate_way fail\n", __func__);
+	else {
+		gsensor_data.calibrate_way = (uint8_t) temp;
+		acc_cali_way = (uint8_t) temp;
+	}
+
 	if (of_property_read_u32(dn, "wakeup_duration", &temp))
 		hwlog_err("%s:read acc wakeup_duration fail\n", __func__);
 	else {
 		gsensor_data.wakeup_duration = (uint8_t) temp;
 	}
+
 	read_sensorlist_info(dn, ACC);
 }
 
@@ -681,6 +768,28 @@ static void read_gyro_data_from_dts(struct device_node *dn)
 		gyro_data.fac_fix_offset_Y = (uint8_t) temp;
 		hwlog_debug("%s:read acc fac_fix_offset_Y %d\n", __func__, temp);
 	}
+	if (of_property_read_u32(dn, "calibrate_way", &temp))
+		hwlog_err("%s:read gyro calibrate_way fail\n", __func__);
+	else {
+		gyro_data.calibrate_way = (uint8_t) temp;
+		gyro_cali_way = (uint8_t) temp;
+	}
+
+	if (of_property_read_u32(dn, "calibrate_thredhold", &temp))
+		hwlog_info("%s:read calibrate_thredhold fail\n", __func__);
+	else{
+		gyro_data.calibrate_thredhold = (uint16_t) temp;
+		hwlog_debug("%s:read gyro calibrate_thredhold %d\n", __func__, temp);
+	}
+
+	if (of_property_read_u32(dn, "gyro_range", &temp)){
+		hwlog_debug("%s:read gyro_range fail\n", __func__);
+	}
+	else{
+		gyro_data.gyro_range = (uint16_t) temp;
+		gyro_range = gyro_data.gyro_range;
+		hwlog_info("%s:read gyro gyro_range %d\n", __func__, temp);
+	}
 	read_sensorlist_info(dn, GYRO);
 }
 
@@ -713,6 +822,12 @@ void read_als_data_from_dts(struct device_node *dn)
 		hwlog_err("%s:ams_tmd3725 i2c_address suc,%d \n", __func__,temp);
 	}
 
+	if (!strncmp(chip_info, "huawei,liteon_ltr582",sizeof("huawei,liteon_ltr582"))) {
+		liteon_ltr582_rgb_flag = 1;
+		hwlog_err("%s:liteon_ltr582_als i2c_address suc,%d \n", __func__,temp);
+	}
+
+
 	if (!strncmp(chip_info, "huawei,ltr578_als", sizeof("huawei,ltr578_als"))) {
 		sens_name = LTR578;
 		ltr578_flag = 1;
@@ -730,11 +845,9 @@ void read_als_data_from_dts(struct device_node *dn)
 		hwlog_err("%s:tmd2745_als i2c_address suc,%d \n", __func__, temp);
 	}
 
-	if (!strncmp(chip_info, "huawei,rohm_rpr531_als",
-	     sizeof("huawei,rohm_rpr531_als"))) {
-		rohm_rpr531_flag= true;
-		hwlog_info("%s:rpr531_als i2c_address suc,%d \n", __func__,
-			  temp);
+	if (!strncmp(chip_info, "huawei,rohm_rpr531_als", sizeof("huawei,rohm_rpr531_als"))) {
+		rpr531_flag= true;
+		hwlog_info("%s:rpr531_als i2c_address suc,%d \n", __func__, temp);
 	}
 
 	temp = of_get_named_gpio(dn, "gpio_int1", 0);
@@ -789,6 +902,11 @@ void read_als_data_from_dts(struct device_node *dn)
 	else
 		als_data.again = (uint8_t) temp;
 
+	if (of_property_read_u32(dn, "is_cali_supported", &temp))
+		hwlog_err("%s:read als is_cali_supported fail\n", __func__);
+	else
+		is_cali_supported = (int)temp;
+
 	if (of_property_read_u32(dn, "file_id", &temp))
 		hwlog_err("%s:read als file_id fail\n", __func__);
 	else
@@ -840,6 +958,10 @@ static void read_ps_data_from_dts(struct device_node *dn)
 		hwlog_err("%s:ams-tmd3725_ps i2c_address suc,%d \n", __func__, temp);
 	}
 
+       if (!strncmp(sensor_chip_info[PS], "huawei,liteon-ltr582",sizeof("huawei,liteon-ltr582"))) {
+		liteon_ltr582_ps_flag = 1;
+		hwlog_err("%s:liteon-ltr582_ps i2c_address suc,%d \n", __func__, temp);
+	}
 
 	temp = of_get_named_gpio(dn, "gpio_int1", 0);
 	if (temp < 0)
@@ -1058,6 +1180,7 @@ static void read_handpress_data_from_dts(struct device_node *dn)
 static void read_capprox_data_from_dts(struct device_node *dn)
 {
 	uint16_t threshold_to_ap = 0;
+	uint16_t semtech_phone_type = 0;
 	uint32_t ph = 0;
 	int temp = 0;
 	int i = 0;
@@ -1170,6 +1293,15 @@ static void read_capprox_data_from_dts(struct device_node *dn)
 		}
 		hwlog_info("init_reg_val[0]:%8x init_reg_val[%d]%8x\n", *init_reg_val, SEMTECH_REGS_NEED_INITIATED_NUM-1,*(init_reg_val+SEMTECH_REGS_NEED_INITIATED_NUM-1));
 
+		if (of_property_read_u16(dn, "phone_type", &semtech_phone_type)) {
+			sar_pdata.sar_datas.semteck_data.phone_type = 0;
+			hwlog_err("%s:read phone_type fail.\n", __func__);
+		}
+		else {
+			sar_pdata.sar_datas.semteck_data.phone_type = semtech_phone_type;
+			hwlog_info("%s:read phone_type:0x%x\n",__func__,sar_pdata.sar_datas.semteck_data.phone_type);
+		}
+
 		if (of_property_read_u32(dn, "ph", &ph))
 		{
 			sar_pdata.sar_datas.semteck_data.ph= 0x2f;
@@ -1243,6 +1375,80 @@ static void read_gps_4774_i2c_data_from_dts(struct device_node *dn)
 		sensorlist[++sensorlist[0]] = (uint16_t) temp;
 }
 //read gpio reg chip id;
+
+static void read_vibrator_from_dts(struct devce_node* dn)
+{
+	int temp = 0, rc = 0;
+	read_chip_info(dn, VIBRATOR);
+	if (of_property_read_u32(dn, "file_id", &temp)){
+		hwlog_err("%s:read read_vibrator_from_dts file_id fail\n", __func__);
+	}
+	else
+	{
+		dyn_req->file_list[dyn_req->file_count] = (uint16_t) temp;
+	}
+	dyn_req->file_count++;
+	hwlog_err("read_vibrator_from_dts  file id is %d\n", temp);
+
+	rc = of_property_read_u32(dn, "ti,max-timeout-ms", &temp);
+	/* configure minimum idle timeout */
+	if (rc < 0) {
+		vibrator_data.max_timeout_ms = HUB_MAX_TIMEOUT;
+	} else {
+		vibrator_data.max_timeout_ms = (int)temp;
+	}
+	hwlog_err("vibrator max_timeout_ms:%d.\n", vibrator_data.max_timeout_ms);
+
+	rc = of_property_read_u32(dn, "ti,reduce-timeout-ms", &temp);
+	/* configure reduce timeout */
+	if (rc < 0) {
+		vibrator_data.reduce_timeout_ms = 0;
+	} else {
+		vibrator_data.reduce_timeout_ms = (int )temp;
+	}
+	hwlog_err("vibrator reduce timedout_ms:%d.\n", vibrator_data.reduce_timeout_ms);
+
+	rc = of_property_read_u32(dn, "lra_rated_voltage", &temp);
+	if (rc < 0) {
+		vibrator_data.lra_rated_voltage =HUB_LRA_RATED_VOLTAGE;
+	} else {
+		vibrator_data.lra_rated_voltage = (char)temp;
+	}
+	hwlog_err("vibrator lra_rated_voltage:0x%x.\n", vibrator_data.lra_rated_voltage);
+
+	rc = of_property_read_u32(dn, "lra_overdriver_voltage", &temp);
+	if (rc < 0) {
+		vibrator_data.lra_overdriver_voltage = HUB_LRA_OVERDRIVE_CLAMP_VOLTAGE;
+	} else {
+		vibrator_data.lra_overdriver_voltage = (char)temp;
+	}
+	hwlog_err("vibrator lra_overdriver_voltage:0x%x.\n", vibrator_data.lra_overdriver_voltage);
+	if(runmode_is_factory()){
+		vibrator_data.lra_overdriver_voltage = VIB_FAC_LRALVILTAGE;
+	}
+
+	rc = of_property_read_u32(dn, "lra_rtp_strength", &temp);
+	if (rc < 0) {
+		vibrator_data.lra_rtp_strength = HUB_REAL_TIME_PLAYBACK_STRENGTH;
+	} else {
+		vibrator_data.lra_rtp_strength = (char)temp;
+	}
+	hwlog_err("vibrator lra_rtp_strength:0x%x.\n", vibrator_data.lra_rtp_strength);
+
+	rc = of_property_read_u32(dn, "support_amplitude_control", &temp);
+	if(rc < 0) {
+		vibrator_data.support_amplitude_control = 0;
+	}else {
+		vibrator_data.support_amplitude_control = (char)temp;
+	}
+	hwlog_err("vibrator support_amplitude_control:%d.\n", vibrator_data.support_amplitude_control);
+
+	vibrator_data.gpio_enable = of_get_named_gpio(dn, "gpio-enable", 0);
+	hwlog_err("vibrator gpio_enable:%d.\n", vibrator_data.gpio_enable);
+	gpio_direction_output(vibrator_data.gpio_enable, 1);
+	udelay(30);
+}
+
 static void read_fingerprint_from_dts(struct device_node* dn)
 {
     int temp = 0;
@@ -1286,12 +1492,73 @@ static void read_fingerprint_from_dts(struct device_node* dn)
     else
     { fingerprint_data.gpio_reset = (GPIO_NUM_TYPE) temp; }
 
+    if (of_property_read_u32(dn, "gpio_reset_sh", &temp))
+    { hwlog_err("%s:read gpio_reset_sh fail\n", __func__); }
+    else
+    { fingerprint_data.gpio_reset_sh = (GPIO_NUM_TYPE) temp;}
+
     if (of_property_read_u32(dn, "gpio_cs", &temp))
     { hwlog_err("%s:read gpio_cs fail\n", __func__); }
     else
     { fingerprint_data.gpio_cs = (GPIO_NUM_TYPE) temp; }
 
 }
+
+static void read_fingerprint_ud_from_dts(struct device_node* dn)
+{
+    int temp = 0;
+    read_chip_info(dn, FINGERPRINT_UD);
+
+    if (of_property_read_u32(dn, "file_id", &temp))
+    { hwlog_err("%s:read fingerprint file_id fail\n", __func__); }
+    else
+    { dyn_req->file_list[dyn_req->file_count] = (uint16_t) temp; }
+
+    dyn_req->file_count++;
+    hwlog_err("fingerprint  file id is %d\n", temp);
+
+    if (of_property_read_u32(dn, "chip_id_register", &temp))
+    { hwlog_err("%s:read chip_id_register fail\n", __func__); }
+    else
+    { fingerprint_ud_data.reg = (uint16_t) temp; }
+
+    if (of_property_read_u32(dn, "chip_id_value", &temp))
+    { hwlog_err("%s:read chip_id_value fail\n", __func__); }
+    else
+    { fingerprint_ud_data.chip_id= (uint16_t) temp; }
+
+    if (of_property_read_u32(dn, "product_id_value", &temp))
+    { hwlog_err("%s:read product_id_value fail\n", __func__); }
+    else
+    { fingerprint_ud_data.product_id= (uint16_t) temp; }
+
+    if (of_property_read_u32(dn, "gpio_irq", &temp))
+    { hwlog_err("%s:read gpio_irq fail\n", __func__); }
+    else
+    { fingerprint_ud_data.gpio_irq = (GPIO_NUM_TYPE) temp; }
+
+    if (of_property_read_u32(dn, "gpio_irq_sh", &temp))
+    { hwlog_err("%s:read gpio_irq_sh fail\n", __func__); }
+    else
+    { fingerprint_ud_data.gpio_irq_sh = (GPIO_NUM_TYPE) temp; }
+
+    if (of_property_read_u32(dn, "gpio_reset", &temp))
+    { hwlog_err("%s:read gpio_reset fail\n", __func__); }
+    else
+    { fingerprint_ud_data.gpio_reset = (GPIO_NUM_TYPE) temp; }
+
+    if (of_property_read_u32(dn, "gpio_cs", &temp))
+    { hwlog_err("%s:read gpio_cs fail\n", __func__); }
+    else
+    { fingerprint_ud_data.gpio_cs = (GPIO_NUM_TYPE) temp; }
+
+    if (of_property_read_u32(dn, "tp_hover_support", &temp))
+    { hwlog_warn("%s:read tp_hover_support fail\n", __func__); }
+    else
+    { fingerprint_ud_data.tp_hover_support= (uint16_t) temp; }
+
+}
+
 
 static void read_key_i2c_data_from_dts(struct device_node *dn)
 {
@@ -1633,7 +1900,7 @@ static int get_adapt_id_and_send(void)
 	}
 	dyn_req->file_count = check_file_list(dyn_req->file_count, dyn_req->file_list);
 
-	transfer_for_akm(dyn_req->file_count, dyn_req->file_list);
+	//transfer_for_akm(dyn_req->file_count, dyn_req->file_list);
 
 	if (dyn_req->file_count) {
 		hwlog_info("sensorhub after check, get dynload file id number = %d, fild id", dyn_req->file_count);
@@ -1763,6 +2030,10 @@ static int key_sensor_detect(struct device_node *dn)
 		return -1;
 	}
 	ret = of_property_read_u32(dn, "reg_bootloader", &bootloader_reg);
+	if (ret < 0){
+		hwlog_err("read reg_bootloader err. ret:%d\n", ret);
+		return -1;
+	}
 	hwlog_info("[%s] debug key reg:%d, btld reg:%d\n", __func__, reg, bootloader_reg);
 	msleep(50);
 	ret = mcu_i2c_rw(0, (uint8_t)bootloader_reg, NULL, 0, values, (uint32_t)(sizeof(values)/sizeof(values[0])));
@@ -1783,7 +2054,129 @@ static int key_sensor_detect(struct device_node *dn)
 	return 0;
 }
 
+#define FINGERPRINT_SENSOR_DETECT_SUCCESS 10
+#define FINGERPRINT_WRITE_CMD_LEN 7
+#define FINGERPRINT_READ_CONTENT_LEN 2
 static int fingerprint_sensor_detect(struct device_node *dn, int index, struct sensor_combo_cfg *cfg)
+{
+	int ret = 0;
+	int temp = 0;
+	char *sensor_vendor = NULL;
+	uint8_t tx[FINGERPRINT_WRITE_CMD_LEN] = {0, 0, 0, 0, 0, 0, 0};
+	uint8_t rx[FINGERPRINT_READ_CONTENT_LEN] = {0, 0};
+	uint32_t tx_len = 0;
+	uint32_t rx_len = 0;
+	union SPI_CTRL ctrl;
+	GPIO_NUM_TYPE gpio_reset = 0;
+	GPIO_NUM_TYPE gpio_cs = 0;
+	GPIO_NUM_TYPE gpio_irq = 0;
+
+	int irq_value = 0;
+	int reset_value = 0;
+
+	if (of_property_read_u32(dn, "gpio_reset", &temp))
+		hwlog_err("%s:read gpio_reset fail\n", __func__);
+	else
+		gpio_reset = (GPIO_NUM_TYPE)temp;
+	if (of_property_read_u32(dn, "gpio_cs", &temp))
+		hwlog_err("%s:read gpio_cs fail\n", __func__);
+	else
+		gpio_cs = (GPIO_NUM_TYPE)temp;
+
+	if (of_property_read_u32(dn, "gpio_irq", &temp))
+	{ hwlog_err("%s:read gpio_irq fail\n", __func__); }
+	else
+	{ gpio_irq = (GPIO_NUM_TYPE)temp; }
+
+	if (sensor_manager[index].detect_result == DET_FAIL)
+	{
+		reset_value = gpio_get_value(gpio_reset);
+		irq_value   = gpio_get_value(gpio_irq);
+	}
+
+	ret = of_property_read_string(dn, "compatible", (const char **)&sensor_vendor);
+	if (!ret) {
+		if (!strncmp(sensor_vendor, "fpc", 3)) {
+			gpio_direction_output(gpio_reset, 1);
+			msleep(10);
+		} else if(!strncmp(sensor_vendor, "goodix", 6)) {
+			gpio_direction_output(gpio_reset, 1);
+			msleep(10);
+			gpio_direction_output(gpio_reset, 0);
+			msleep(10);
+			gpio_direction_output(gpio_reset, 1);
+
+			ctrl.data = gpio_cs;
+
+			tx[0] = 0xC0;
+			tx_len = 1;
+			ret = mcu_spi_rw(2, ctrl, tx, tx_len, NULL, 0); //set sensor to idle mode
+
+			tx[0] = 0xF0;
+			tx[1] = 0x01;
+			tx[2] = 0x26;
+			tx_len = 3;
+			ret = mcu_spi_rw(2, ctrl, tx, tx_len, NULL, 0); //write cmd 0xF0 & address 0x0126
+
+			tx[0] = 0xF1;
+			tx_len = 1;
+			rx_len = 2;
+			ret = mcu_spi_rw(2, ctrl, tx, tx_len, rx, rx_len); //read cmd 0xF1
+			if ((0x00 != rx[0]) || (0x00 != rx[1])) {
+				tx[0] = 0xF0;
+				tx[1] = 0x01;
+				tx[2] = 0x24;
+				tx[3] = 0x00;
+				tx[4] = 0x01;
+				tx[5] = rx[0];  //after reset, bit10 is 1, such as 0x04;
+				tx[6] = rx[1];
+				tx_len = 7;
+				ret = mcu_spi_rw(2, ctrl, tx, tx_len, NULL, 0); //write cmd 0xF0 & address 0x0124, clear irq
+			}
+
+			tx[0] = 0xC0;
+			tx_len = 1;
+			ret = mcu_spi_rw(2, ctrl, tx, tx_len, NULL, 0); //set sensor to idle mode
+
+			tx[0] = 0xF0;
+			tx[1] = 0x00;
+			tx[2] = 0x00;
+			tx_len = 3;
+			ret = mcu_spi_rw(2, ctrl, tx, tx_len, NULL, 0); //write cmd & address
+		} else if(!strncmp(sensor_vendor, "silead", 6)) {
+			gpio_direction_output(gpio_reset, 1);
+			msleep(10);
+			gpio_direction_output(gpio_reset, 0);
+			msleep(10);
+			gpio_direction_output(gpio_reset, 1);
+			msleep(5);
+		} else if(!strncmp(sensor_vendor, "qfp", 3)) {
+			_device_detect(dn, index, cfg);
+			hwlog_info("%s: fingerprint device %s detect bypass\n", __func__, sensor_vendor);
+			return FINGERPRINT_SENSOR_DETECT_SUCCESS;
+		}
+		hwlog_info("%s: fingerprint device %s\n", __func__, sensor_vendor);
+		ret = 0;
+	} else {
+		hwlog_err("%s: get sensor_vendor err!\n", __func__);
+		ret = -1;
+	}
+
+	if (sensor_manager[index].detect_result == DET_FAIL)
+	{
+		if (1 == irq_value)
+		{
+			gpio_direction_output(gpio_reset, reset_value);
+			gpio_direction_output(gpio_irq, irq_value);
+		}
+
+		hwlog_info("%s: fingerprint device after irq_value = %d, reset_value = %d\n", __func__, irq_value, reset_value);
+	}
+
+	return ret;
+}
+
+static int fingerprint_ud_sensor_detect(struct device_node *dn, int index, struct sensor_combo_cfg *cfg)
 {
 	int ret = 0;
 	int temp = 0;
@@ -1820,11 +2213,7 @@ static int fingerprint_sensor_detect(struct device_node *dn, int index, struct s
 
 	ret = of_property_read_string(dn, "compatible", (const char **)&sensor_vendor);
 	if (!ret) {
-		if (!strncmp(sensor_vendor, "fpc", 3)) {
-			gpio_direction_output(gpio_reset, 1);
-			msleep(10);
-			hwlog_info("%s: fingerprint device %s\n", __func__, sensor_vendor);
-		} else if(!strncmp(sensor_vendor, "goodix", 6)) {
+		if(!strncmp(sensor_vendor, "goodix", 6)) {
 			gpio_direction_output(gpio_reset, 1);
 			msleep(10);
 			gpio_direction_output(gpio_reset, 0);
@@ -1836,21 +2225,19 @@ static int fingerprint_sensor_detect(struct device_node *dn, int index, struct s
 			tx[0] = 0xC0;
 			tx_len = 1;
 			ret = mcu_spi_rw(2, ctrl, tx, tx_len, NULL, 0); //set sensor to idle mode
+
+			msleep(100);
 			tx[0] = 0xF0;
 			tx[1] = 0x00;
-			tx[2] = 0x00;
+			tx[2] = 0x04;
 			tx_len = 3;
 			ret = mcu_spi_rw(2, ctrl, tx, tx_len, NULL, 0); //write cmd & address
-			hwlog_info("%s: fingerprint device %s\n", __func__, sensor_vendor);
-		} else if(!strncmp(sensor_vendor, "silead", 6)) {
-			gpio_direction_output(gpio_reset, 1);
-			msleep(10);
-			gpio_direction_output(gpio_reset, 0);
-			msleep(10);
-			gpio_direction_output(gpio_reset, 1);
-			msleep(5);
-			hwlog_info("%s: fingerprint device %s\n", __func__, sensor_vendor);
+		} else if(!strncmp(sensor_vendor, "qfp", 3)) {
+			_device_detect(dn, index, cfg);
+			hwlog_info("%s: fingerprint device %s detect bypass\n", __func__, sensor_vendor);
+			return FINGERPRINT_SENSOR_DETECT_SUCCESS;
 		}
+		hwlog_info("%s: fingerprint device %s\n", __func__, sensor_vendor);
 		ret = 0;
 	} else {
 		hwlog_err("%s: get sensor_vendor err!\n", __func__);
@@ -2010,6 +2397,10 @@ static int detect_i2c_device(struct device_node *dn, char *device_name)
 		hwlog_err("%s:detect_i2c_device:send i2c read cmd to mcu fail,ret=%d\n", device_name, ret);
 		return -1;
 	}
+	if(!strncmp(device_name, "vibrator", strlen("vibrator"))){
+		hwlog_info("virbator temp i2c detect success,chip_value:0x%x,len:%d!\n", detected_device_id, len);
+		return 0;
+	}
 	for (i = 0; i < len; i++) {
 		if (detected_device_id == (char)wia[i]) {
 			hwlog_info("%s:i2c detect  suc!chip_value:0x%x\n", device_name, detected_device_id);
@@ -2108,10 +2499,24 @@ static int device_detect(struct device_node *dn, int index)
 	if (HANDPRESS == sensor_manager[index].sensor_id) {
 		ret = handpress_sensor_detect(dn, &handpress_data);
 		goto out;
-	} else  if (FINGERPRINT == sensor_manager[index].sensor_id){
+	} else if (FINGERPRINT == sensor_manager[index].sensor_id){
 		ret = fingerprint_sensor_detect(dn, index, &cfg);
-		if(ret)
+		if (FINGERPRINT_SENSOR_DETECT_SUCCESS == ret) {
+			ret = 0;
+			memcpy((void*)sensor_manager[index].spara, (void*)&cfg, sizeof(cfg));
 			goto out;
+		} else if(ret) {
+			goto out;
+		}
+	} else if (FINGERPRINT_UD == sensor_manager[index].sensor_id){
+		ret = fingerprint_ud_sensor_detect(dn, index, &cfg);
+		if (FINGERPRINT_SENSOR_DETECT_SUCCESS == ret) {
+			ret = 0;
+			memcpy((void*)sensor_manager[index].spara, (void*)&cfg, sizeof(cfg));
+			goto out;
+		} else if(ret) {
+			goto out;
+		}
 	} else if (CAP_PROX == sensor_manager[index].sensor_id){
 		ret = is_cap_prox_shared_with_sar(dn);
 		if(!ret)
@@ -2186,6 +2591,9 @@ static void __set_hw_dev_flag(SENSOR_DETECT_LIST s_id)
 			break;
 		case HANDPRESS:
 			set_hw_dev_flag(DEV_I2C_HANDPRESS);
+			break;
+		case VIBRATOR:
+			set_hw_dev_flag(DEV_I2C_VIBRATOR_LRA);
 			break;
 		case CAP_PROX:
 		case FINGERPRINT:
@@ -2268,6 +2676,12 @@ static void extend_config_after_sensor_detect(struct device_node *dn, int index)
 			break;
 		case FINGERPRINT:
 			read_fingerprint_from_dts(dn);
+			break;
+		case VIBRATOR:
+			read_vibrator_from_dts(dn);
+			break;
+		case FINGERPRINT_UD:
+			read_fingerprint_ud_from_dts(dn);
 			break;
 		default:
 			hwlog_err("%s:err id =%d\n",__func__, s_id);
@@ -2534,6 +2948,12 @@ int init_sensors_cfg_data_from_dts(void)
 	#endif
 
 		extend_config_after_sensor_detect(dn,index);
+	}
+
+	if (sensor_manager[FINGERPRINT].detect_result != DET_SUCC)
+	{
+		hwlog_warn("fingerprint detect fail, bypass.\n");
+		sensor_manager[FINGERPRINT].detect_result = DET_SUCC;
 	}
 
 	sensor_detect_result = check_detect_result(BOOT_DETECT);

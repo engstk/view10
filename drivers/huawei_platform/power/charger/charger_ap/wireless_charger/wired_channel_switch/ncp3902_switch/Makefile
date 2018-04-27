@@ -1,0 +1,1 @@
+obj-$(CONFIG_WIRELESS_CHARGER) += ncp3902_channel_switch.o

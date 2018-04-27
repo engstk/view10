@@ -9,7 +9,10 @@
 *function:lcd_panel_info init
 *@pinfo:lcd panel info
 */
+/* set global variables of td4336 */
+extern uint32_t g_read_value_td4336[19];
 
+int lcdkit_check_mipi_fifo_empty(char __iomem *dsi_base);
 //lint -save -e144 -e578 -e647
 void lcdkit_info_init(void* pdata)
 {
@@ -23,6 +26,7 @@ void lcdkit_info_init(void* pdata)
     pinfo->esd_enable = lcdkit_info.panel_infos.esd_support;
     pinfo->bl_min = lcdkit_info.panel_infos.bl_level_min;
     pinfo->bl_max = lcdkit_info.panel_infos.bl_level_max;
+    pinfo->bl_def = lcdkit_info.panel_infos.bl_level_def;
 
     pinfo->pxl_clk_rate *= 1000000UL;
     pinfo->mipi.max_tx_esc_clk *= 1000000;
@@ -33,7 +37,7 @@ void lcdkit_info_init(void* pdata)
         pinfo->fps_updt = 60;
     }
 
-    if (pinfo->bl_set_type == BL_SET_BY_BLPWM)
+    if (pinfo->bl_set_type == BL_SET_BY_BLPWM && !pinfo->blpwm_input_disable)
     {
         pinfo->blpwm_input_ena = 1;
     }
@@ -298,8 +302,13 @@ void lcdkit_info_init(void* pdata)
 		pinfo->vesa_dsc.bits_per_pixel = 8;
 		pinfo->vesa_dsc.initial_xmit_delay = 512;
 
-		pinfo->vesa_dsc.slice_width = 719;//1439
-		pinfo->vesa_dsc.slice_height = 7;//31;
+		if(lcdkit_info.panel_infos.ifbc_vesa3x_set == 1){
+		    pinfo->vesa_dsc.slice_width = 719;
+		    pinfo->vesa_dsc.slice_height = 719;
+		}else {
+		    pinfo->vesa_dsc.slice_width = 719;
+		    pinfo->vesa_dsc.slice_height = 7;
+		}
 
 		pinfo->vesa_dsc.first_line_bpg_offset = 12;
 		pinfo->vesa_dsc.mux_word_size = 48;
@@ -495,6 +504,7 @@ int lcdkit_dsi_rx(void* pdata, uint32_t* out, int len, struct lcdkit_dsi_panel_c
 {
     struct hisi_fb_data_type* hisifd = NULL;
     char __iomem* mipi_dsi0_base = NULL;
+    struct dsi_cmd_desc packet_size_cmd_set;
     int ret = 0;
     struct dsi_cmd_desc* cmd;
     cmd = kzalloc(sizeof(struct dsi_cmd_desc) * cmds->cmd_cnt, GFP_KERNEL);
@@ -510,8 +520,18 @@ int lcdkit_dsi_rx(void* pdata, uint32_t* out, int len, struct lcdkit_dsi_panel_c
 
     hisifd = (struct hisi_fb_data_type*) pdata;
     mipi_dsi0_base = hisifd->mipi_dsi0_base;
-
-    ret = mipi_dsi_cmds_rx(out, cmd, cmds->cmd_cnt, mipi_dsi0_base);
+    if(lcdkit_check_mipi_fifo_empty(mipi_dsi0_base))
+    {
+        ret = -1;
+    }
+    else
+    {
+        packet_size_cmd_set.dtype = DTYPE_MAX_PKTSIZE;
+        packet_size_cmd_set.vc = 0;
+        packet_size_cmd_set.dlen = len;
+        mipi_dsi_max_return_packet_size(&packet_size_cmd_set, mipi_dsi0_base);
+        ret = mipi_dsi_cmds_rx(out, cmd, cmds->cmd_cnt, mipi_dsi0_base);
+    }
     if(ret)
     {
         LCDKIT_INFO("lcdkit_dsi_rx failed!\n");
@@ -727,7 +747,10 @@ void lcdkit_effect_switch_ctrl(void* pdata, bool ctrl)
     char __iomem* dpp_base = NULL;
     char __iomem* lcp_base = NULL;
     char __iomem* gamma_base = NULL;
-
+#if defined (CONFIG_HISI_FB_V320)
+	char __iomem *gmp_base = NULL;
+	char __iomem *degamma_base = NULL;
+#endif
     hisifd = (struct hisi_fb_data_type*) pdata;
 
     if ( NULL == hisifd )
@@ -738,18 +761,28 @@ void lcdkit_effect_switch_ctrl(void* pdata, bool ctrl)
 
     mipi_dsi0_base = hisifd->mipi_dsi0_base;
     dpp_base = hisifd->dss_base + DSS_DPP_OFFSET;
+    #if !defined (CONFIG_HISI_FB_V501)
     lcp_base = hisifd->dss_base + DSS_DPP_LCP_OFFSET;
+    #endif
     gamma_base = hisifd->dss_base + DSS_DPP_GAMA_OFFSET;
-
+#if defined (CONFIG_HISI_FB_V320)
+	degamma_base = hisifd->dss_base + DSS_DPP_DEGAMMA_OFFSET;
+	gmp_base = hisifd->dss_base + DSS_DPP_GMP_OFFSET;
+#endif
     pinfo = &(hisifd->panel_info);
 
     if (ctrl)
     {
         if (pinfo->gamma_support == 1){
             HISI_FB_INFO("disable gamma\n");
-            /* disable de-gamma */
-            set_reg(lcp_base + LCP_DEGAMA_EN, 0x0, 1, 0);
-            /* disable gamma */
+			#if defined (CONFIG_HISI_FB_V320)
+			//Disable De-Gamma
+			set_reg(degamma_base + DEGAMA_EN, 0x0, 1, 0);
+			#elif !defined (CONFIG_HISI_FB_V501)
+			/* disable de-gamma */
+			set_reg(lcp_base + LCP_DEGAMA_EN, 0x0, 1, 0);
+			#endif
+			/* disable gamma */
             set_reg(gamma_base + GAMA_EN, 0x0, 1, 0);
         }
         if (pinfo->gmp_support == 1) {
@@ -757,7 +790,9 @@ void lcdkit_effect_switch_ctrl(void* pdata, bool ctrl)
             /* disable gmp */
         #if defined (CONFIG_HISI_FB_970)
             set_reg(dpp_base + LCP_GMP_BYPASS_EN, 0x0, 1, 0);
-        #else
+        #elif defined (CONFIG_HISI_FB_V320)
+			set_reg(gmp_base + GMP_EN, 0x0, 1, 0);
+		#elif !defined (CONFIG_HISI_FB_V501)
             set_reg(dpp_base + LCP_GMP_BYPASS_EN, 0x1, 1, 0);
         #endif
         }
@@ -766,21 +801,26 @@ void lcdkit_effect_switch_ctrl(void* pdata, bool ctrl)
             /* disable xcc */
         #if defined (CONFIG_HISI_FB_970)
             set_reg(lcp_base + LCP_XCC_BYPASS_EN, 0x0, 2, 0);
-        #else
+        #elif !defined (CONFIG_HISI_FB_V501)
             set_reg(lcp_base + LCP_XCC_BYPASS_EN, 0x1, 1, 0);
         #endif
         }
 
-        #if !defined (CONFIG_HISI_FB_970) //kirin970 delete bittext function
+        #if !defined (CONFIG_HISI_FB_970) && !defined (CONFIG_HISI_FB_V320) && !defined (CONFIG_HISI_FB_V501)//kirin970 delete bittext function
         /* disable bittext */
         set_reg(hisifd->dss_base + DSS_DPP_BITEXT0_OFFSET + BIT_EXT0_CTL, 0x0, 1, 0);
         #endif
     } else {
         if (pinfo->gamma_support == 1) {
             HISI_FB_INFO("enable gamma\n");
-            /* enable de-gamma */
-            set_reg(lcp_base + LCP_DEGAMA_EN, 0x1, 1, 0);
-            /* enable gamma */
+			#if defined (CONFIG_HISI_FB_V320)
+			//enable degamma
+			set_reg(degamma_base + DEGAMA_EN, 0x1, 1, 0);
+			#elif !defined (CONFIG_HISI_FB_V501)
+			/* enable de-gamma */
+			set_reg(lcp_base + LCP_DEGAMA_EN, 0x1, 1, 0);
+			#endif
+			/* enable gamma */
             set_reg(gamma_base + GAMA_EN, 0x1, 1, 0);
         }
         if (pinfo->gmp_support == 1) {
@@ -788,7 +828,9 @@ void lcdkit_effect_switch_ctrl(void* pdata, bool ctrl)
             /* enable gmp */
         #if defined (CONFIG_HISI_FB_970)
             set_reg(dpp_base + LCP_GMP_BYPASS_EN, 0x3, 2, 0);
-        #else
+		#elif defined (CONFIG_HISI_FB_V320)
+			set_reg(gmp_base + GMP_EN, 0x1, 1, 0);
+		#elif !defined (CONFIG_HISI_FB_V501)
             set_reg(dpp_base + LCP_GMP_BYPASS_EN, 0x0, 1, 0);
         #endif
         }
@@ -797,12 +839,12 @@ void lcdkit_effect_switch_ctrl(void* pdata, bool ctrl)
             /* enable xcc */
         #if defined (CONFIG_HISI_FB_970)
             set_reg(lcp_base + LCP_XCC_BYPASS_EN, 0x1, 1, 0);
-        #else
+        #elif !defined (CONFIG_HISI_FB_V501)
             set_reg(lcp_base + LCP_XCC_BYPASS_EN, 0x0, 1, 0);
         #endif
         }
         /* enable bittext */
-        #if !defined (CONFIG_HISI_FB_970) //kirin970 delete bittext function
+        #if !defined (CONFIG_HISI_FB_970) && !defined (CONFIG_HISI_FB_V320) && !defined (CONFIG_HISI_FB_V501)//kirin970 delete bittext function
         set_reg(hisifd->dss_base + DSS_DPP_BITEXT0_OFFSET + BIT_EXT0_CTL, 0x1, 1, 0);
         #endif
     }
@@ -1221,235 +1263,278 @@ void lcdkit_fps_updt_adaptor_handle(void* pdata)
     return;
 }
 
+static void set_rgbw_saturation_control(struct hisi_fb_data_type* hisifd)
+{
+	int index = 0;
+	uint32_t rgbw_saturation_control = 0;
+	int rgbw_mode = 0;
+
+	rgbw_mode = hisifd->de_info.ddic_rgbw_mode;
+	if ((lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds) && (lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmd_cnt>0))
+	{
+		//These numbers just caculate index of array and have no specfic meanings!
+		index = (rgbw_mode - 1) * 4 + 1; //mode1: 1,2,3,4 mode2: 5,6,7,8 mode3: 9,10,11,12 mode4: 13,14,15,16
+		rgbw_saturation_control = (uint32_t)hisifd->de_info.rgbw_saturation_control;
+		lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[index] = (rgbw_saturation_control >> 24) & 0xff;
+		lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[index + 1] = (rgbw_saturation_control >> 16) & 0xff;
+		lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[index + 2] = (rgbw_saturation_control >> 8) & 0xff;
+		lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[index + 3] = rgbw_saturation_control & 0xff;
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_saturation_control_cmds);
+		LCDKIT_DEBUG("[RGBW] rgbw_saturation_control=%d, rgbw_mode = %d!\n", rgbw_saturation_control, rgbw_mode);
+	}
+}
+
+static void set_rgbw_color_distortion_allowance(struct hisi_fb_data_type* hisifd)
+{
+	int allowance_index = 0;
+	int limit_index = 0;
+	uint32_t color_distortion_allowance = 0;
+	uint32_t pixel_gain_limit = 0;
+	int rgbw_mode = 0;
+
+	rgbw_mode = hisifd->de_info.ddic_rgbw_mode;
+	if ((lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds) && (lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmd_cnt>0))
+	{
+		//These numbers just caculate index of array and have no specfic meanings!
+		allowance_index = (rgbw_mode - 1) * 2 + 4; //mode1: 4, 5 mode2: 6, 7 mode3: 8, 9 mode4: 10, 11
+		limit_index = (rgbw_mode - 1) * 2 + 12; //mode1: 12, 13 mode2: 14, 15 mode3: 16, 17 mode4: 16, 17
+		if (RGBW_SET4_MODE == rgbw_mode)
+		{
+			limit_index = 16;
+		}
+		color_distortion_allowance = (uint32_t)hisifd->de_info.color_distortion_allowance;
+		pixel_gain_limit = (uint32_t)hisifd->de_info.pixel_gain_limit;
+		lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[allowance_index] = (color_distortion_allowance >> 8) & 0x3f;
+		lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[allowance_index + 1] = color_distortion_allowance & 0xff;
+		LCDKIT_DEBUG("[RGBW] color_distortion_allowance=%d!\n",color_distortion_allowance);
+		lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[limit_index] = (pixel_gain_limit >> 8) & 0x3f;
+		lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[limit_index + 1] = pixel_gain_limit & 0xff;
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_distortion_allowance_cmds);
+		LCDKIT_DEBUG("[RGBW] pixel_gain_limit=%d!\n",pixel_gain_limit);
+	}
+}
+
+static void set_rgbw_pwm_duty_gain(struct hisi_fb_data_type* hisifd)
+{
+	int index = 0;
+	uint32_t pwm_duty_gain = 0;
+	int rgbw_mode = 0;
+
+	rgbw_mode = hisifd->de_info.ddic_rgbw_mode;
+	if ((lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds) && (lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmd_cnt>0))
+	{
+		//These numbers just caculate index of array and have no specfic meanings!
+		index = rgbw_mode * 2 + 5; //mode1:7,8  mode2: 9, 10 mode3: 11, 12 mode4: 13, 14
+		pwm_duty_gain = (uint32_t)hisifd->de_info.pwm_duty_gain;
+		lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[index] = (pwm_duty_gain >> 8) & 0x3f;
+		lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[index + 1] = pwm_duty_gain & 0xff;
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.pwm_duty_gain_cmds);
+		LCDKIT_DEBUG("[RGBW] pwm_duty_gain=%d!\n",pwm_duty_gain);
+	}
+}
+
+static void set_rgbw_backlight(struct hisi_fb_data_type* hisifd)
+{
+	uint32_t rgbw_bl_level = 0;
+	uint32_t rgbw_backlight = 0;
+	static uint32_t rgbw_backlight_old = 0;
+
+	rgbw_backlight = (uint32_t)hisifd->de_info.ddic_rgbw_backlight;
+	if ((hisifd->bl_level && (hisifd->backlight.bl_level_old != 0)) && (rgbw_backlight != rgbw_backlight_old))
+	{
+		rgbw_bl_level = rgbw_backlight * 4095 / hisifd->panel_info.bl_max;
+		lcdkit_info.panel_infos.rgbw_backlight_cmds.cmds[0].payload[1] = (rgbw_bl_level >> 8) & 0x0f;
+		lcdkit_info.panel_infos.rgbw_backlight_cmds.cmds[0].payload[2] = rgbw_bl_level & 0xff;
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_backlight_cmds);
+		LCDKIT_DEBUG("[RGBW] rgbw_backlight=%d,rgbw_bl_level=%d,rgbw_backlight_old=%d!\n",rgbw_backlight,rgbw_bl_level,rgbw_backlight_old);
+	}
+	rgbw_backlight_old = rgbw_backlight;
+}
+
+static void set_rgbw_pixel_gain_limit(struct hisi_fb_data_type* hisifd)
+{
+	uint32_t pixel_gain_limit = 0;
+	static uint32_t rgbw_pgl_old = 0;
+	int rgbw_mode = 0;
+
+	rgbw_mode = hisifd->de_info.ddic_rgbw_mode;
+	pixel_gain_limit = (uint32_t)hisifd->de_info.pixel_gain_limit;
+	if ((pixel_gain_limit != rgbw_pgl_old) && (rgbw_mode == RGBW_SET4_MODE))
+	{
+		lcdkit_info.panel_infos.pixel_gain_limit_cmds.cmds[0].payload[1] = pixel_gain_limit;
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.pixel_gain_limit_cmds);
+		LCDKIT_DEBUG("[RGBW] pixel_gain_limit=%d,rgbw_pgl_old=%d!\n",pixel_gain_limit,rgbw_pgl_old);
+		rgbw_pgl_old = pixel_gain_limit;
+	}
+}
+
+static void set_rgbw_mode(struct hisi_fb_data_type* hisifd)
+{
+	int rgbw_mode = 0;
+	static uint32_t rgbw_mode_old = 0;
+
+	rgbw_mode = hisifd->de_info.ddic_rgbw_mode;
+	if(rgbw_mode != rgbw_mode_old)
+	{
+		switch (rgbw_mode)
+		{
+			case RGBW_SET1_MODE :
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set1_cmds);
+				break;
+			case RGBW_SET2_MODE :
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set2_cmds);
+				break;
+			case RGBW_SET3_MODE :
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set3_cmds);
+				break;
+			case RGBW_SET4_MODE :
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set4_cmds);
+				break;
+			default:
+				break;
+		}
+		LCDKIT_DEBUG("[RGBW] rgbw_mode=%d,rgbw_mode_old=%d!\n",rgbw_mode,rgbw_mode_old);
+		rgbw_mode_old = rgbw_mode;
+	}
+}
+
+static void lg_nt36772a_rgbw_setting(struct hisi_fb_data_type* hisifd, struct lcdkit_dsi_panel_cmds* rgbw_cmds)
+{
+	uint32_t rgbw_saturation_control;
+	uint32_t frame_gain_limit;
+	uint32_t color_distortion_allowance;
+	uint32_t pixel_gain_limit;
+	uint32_t pwm_duty_gain;
+	static uint32_t rgbw_saturation_control_old = 0;
+	static uint32_t frame_gain_limit_old = 0;
+	static uint32_t color_distortion_allowance_old = 0;
+	static uint32_t pixel_gain_limit_old = 0;
+	static uint32_t pwm_duty_gain_old = 0;
+
+	if ((rgbw_cmds->cmds) && (rgbw_cmds->cmd_cnt>0))
+	{
+		LCDKIT_DEBUG("[RGBW] rgbw_mode = %d!\n", hisifd->de_info.ddic_rgbw_mode);
+		rgbw_saturation_control = (uint32_t)hisifd->de_info.rgbw_saturation_control;
+		frame_gain_limit = (uint32_t)hisifd->de_info.frame_gain_limit;
+		color_distortion_allowance = (uint32_t)hisifd->de_info.color_distortion_allowance;
+		pwm_duty_gain = (uint32_t)hisifd->de_info.pwm_duty_gain;
+		pixel_gain_limit = (uint32_t)hisifd->de_info.pixel_gain_limit;
+		if ((rgbw_saturation_control_old != rgbw_saturation_control) || (frame_gain_limit_old != frame_gain_limit) || \
+					(color_distortion_allowance_old != color_distortion_allowance) || (pixel_gain_limit_old != pixel_gain_limit) || \
+					(pwm_duty_gain_old != pwm_duty_gain))
+		{
+			//rgbw_saturation_control setting
+			rgbw_cmds->cmds[1].payload[1] = (rgbw_saturation_control >> 24) & 0xff;
+			rgbw_cmds->cmds[1].payload[2] = (rgbw_saturation_control >> 16) & 0xff;
+			rgbw_cmds->cmds[1].payload[3] = (rgbw_saturation_control >> 8) & 0xff;
+			rgbw_cmds->cmds[1].payload[4] = rgbw_saturation_control & 0xff;
+			LCDKIT_DEBUG("[RGBW] rgbw_saturation_control=%d, rgbw_saturation_control_old = %d!\n", rgbw_saturation_control, rgbw_saturation_control_old);
+			//frame_gain_limit
+			rgbw_cmds->cmds[1].payload[5] = (frame_gain_limit >> 8) & 0x3f;
+			rgbw_cmds->cmds[1].payload[6] = frame_gain_limit & 0xff;
+			LCDKIT_ERR("[RGBW] frame_gain_limit=%d frame_gain_limit_old = %d!\n", frame_gain_limit, frame_gain_limit_old);
+			//color_distortion_allowance
+			rgbw_cmds->cmds[1].payload[9] = (color_distortion_allowance >> 8) & 0x3f;
+			rgbw_cmds->cmds[1].payload[10] = color_distortion_allowance & 0xff;
+			LCDKIT_DEBUG("[RGBW] color_distortion_allowance=%d color_distortion_allowance_old = %d!\n", color_distortion_allowance, color_distortion_allowance_old);
+			//pixel_gain_limit
+			rgbw_cmds->cmds[1].payload[11] = (pixel_gain_limit >> 8) & 0x3f;
+			rgbw_cmds->cmds[1].payload[12] = pixel_gain_limit & 0xff;
+			LCDKIT_DEBUG("[LG-NT36772A-RGBW] pixel_gain_limit=%d pixel_gain_limit_old = %d!\n", pixel_gain_limit, pixel_gain_limit_old);
+			//pwm_duty_gain
+			rgbw_cmds->cmds[1].payload[15] = (pwm_duty_gain >> 8) & 0x3f;
+			rgbw_cmds->cmds[1].payload[16] = pwm_duty_gain & 0xff;
+			LCDKIT_DEBUG("[RGBW] pwm_duty_gain=%d pwm_duty_gain_old = %d!\n", pwm_duty_gain, pwm_duty_gain_old);
+
+			lcdkit_dsi_tx(hisifd, rgbw_cmds);
+		}
+		rgbw_saturation_control_old = rgbw_saturation_control;
+		frame_gain_limit_old = frame_gain_limit;
+		color_distortion_allowance_old = color_distortion_allowance;
+		pixel_gain_limit_old = pixel_gain_limit;
+		pwm_duty_gain_old = pwm_duty_gain;
+	}
+}
+
+static void lg_nt36772a_rgbw(struct hisi_fb_data_type* hisifd)
+{
+	int rgbw_mode = 0;
+
+	rgbw_mode = hisifd->de_info.ddic_rgbw_mode;
+	switch (rgbw_mode)
+	{
+		case RGBW_SET1_MODE :
+			lg_nt36772a_rgbw_setting(hisifd, &lcdkit_info.panel_infos.rgbw_set1_cmds);
+			break;
+		case RGBW_SET2_MODE :
+			lg_nt36772a_rgbw_setting(hisifd, &lcdkit_info.panel_infos.rgbw_set2_cmds);
+			break;
+		case RGBW_SET3_MODE :
+			lg_nt36772a_rgbw_setting(hisifd, &lcdkit_info.panel_infos.rgbw_set3_cmds);
+			break;
+		case RGBW_SET4_MODE :
+			lg_nt36772a_rgbw_setting(hisifd, &lcdkit_info.panel_infos.rgbw_set4_cmds);
+			break;
+		default:
+			break;
+	}
+}
+
 int lcdkit_rgbw_set_handle(struct hisi_fb_data_type* hisifd)
 {
 	int ret = 0;
 	int panel_id = 0;
 	int rgbw_mode = 0;
-	uint32_t rgbw_backlight = 0;
-	uint32_t rgbw_bl_level = 0;
-	uint32_t rgbw_saturation_control = 0;
-	uint32_t frame_gain_limit = 0;
-	uint32_t frame_gain_speed = 0;
-	uint32_t color_distortion_allowance = 0;
-	uint32_t pixel_gain_limit = 0;
-	uint32_t pixel_gain_speed = 0;
-	uint32_t pwm_duty_gain = 0;
 
-	static uint32_t rgbw_mode_old = 0;
-	static uint32_t rgbw_backlight_old = 0;
-	static uint32_t rgbw_pgl_old = 0;
 	BUG_ON(hisifd == NULL);
 	panel_id = hisifd->de_info.ddic_panel_id;
 	rgbw_mode = hisifd->de_info.ddic_rgbw_mode;
-	rgbw_backlight = (uint32_t)hisifd->de_info.ddic_rgbw_backlight;
-	rgbw_saturation_control = (uint32_t)hisifd->de_info.rgbw_saturation_control;
-	frame_gain_limit = (uint32_t)hisifd->de_info.frame_gain_limit;
-	frame_gain_speed = (uint32_t)hisifd->de_info.frame_gain_speed;
-	color_distortion_allowance = (uint32_t)hisifd->de_info.color_distortion_allowance;
-	pixel_gain_limit = (uint32_t)hisifd->de_info.pixel_gain_limit;
-	pixel_gain_speed = (uint32_t)hisifd->de_info.pixel_gain_speed;
-	pwm_duty_gain = (uint32_t)hisifd->de_info.pwm_duty_gain;
-	LCDKIT_DEBUG("rgbw_mode=%d!\n",rgbw_mode);
 
 	down(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
 	if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
-		HISI_FB_ERR("rgbw mode cmd send fail!\n");
+		HISI_FB_ERR("[RGBW] rgbw mode cmd send fail!\n");
 
-	if((1 == panel_id)||(3 == panel_id))
+	if(panel_id > RGBW_PANEL_ID_MIN && panel_id < RGBW_PANEL_ID_MAX)
 	{
-		if(rgbw_mode != rgbw_mode_old)
+		if (rgbw_mode < RGBW_SET1_MODE || rgbw_mode > RGBW_SET4_MODE)
 		{
-			switch (rgbw_mode)
-			{
-				case RGBW_SET1_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set1_cmds);
-					break;
-				case RGBW_SET2_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set2_cmds);
-					break;
-				case RGBW_SET3_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set3_cmds);
-					break;
-				case RGBW_SET4_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set4_cmds);
-					break;
-				default:
-					up(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
-					return -EINVAL;
-			}
-			LCDKIT_DEBUG("update rgbw_mode:rgbw_mode=%d,rgbw_mode_old=%d!\n",rgbw_mode,rgbw_mode_old);
-			rgbw_mode_old = rgbw_mode;
+			LCDKIT_ERR("[RGBW] this is an unknowned rgbw mode for panel!\n");
+			up(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
+			return -EINVAL;
 		}
-		if ((hisifd->bl_level && hisifd->backlight.bl_level_old != 0) && (rgbw_backlight != rgbw_backlight_old))
+		LCDKIT_DEBUG("[RGBW] panel_id = %d!\n", panel_id);
+		switch(panel_id)
 		{
-			rgbw_bl_level = rgbw_backlight * 4095 / hisifd->panel_info.bl_max;
-			lcdkit_info.panel_infos.rgbw_backlight_cmds.cmds[0].payload[1] = (rgbw_bl_level >> 8) & 0x0f;
-			lcdkit_info.panel_infos.rgbw_backlight_cmds.cmds[0].payload[2] = rgbw_bl_level & 0xff;
-			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_backlight_cmds);
-			LCDKIT_DEBUG("update rgbw_backlight:rgbw_backlight=%d,rgbw_bl_level=%d,rgbw_backlight_old=%d!\n",rgbw_backlight,rgbw_bl_level,rgbw_backlight_old);
-		}
-		rgbw_backlight_old = rgbw_backlight;
-		if ((pixel_gain_limit != rgbw_pgl_old) && (rgbw_mode == RGBW_SET4_MODE))
-		{
-			lcdkit_info.panel_infos.pixel_gain_limit_cmds.cmds[0].payload[1] = pixel_gain_limit;
-			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.pixel_gain_limit_cmds);
-			LCDKIT_DEBUG("update pixel_gain_limit:pixel_gain_limit=%d,rgbw_pgl_old=%d!\n",pixel_gain_limit,rgbw_pgl_old);
-			rgbw_pgl_old = pixel_gain_limit;
-		}
-		LCDKIT_DEBUG("END:update params:rgbw_mode=%d,rgbw_backlight=%d,pixel_gain_limit=%d!\n",rgbw_mode,rgbw_backlight,pixel_gain_limit);
-	}
-	else if(2 == panel_id)
-	{
-		if(rgbw_mode != rgbw_mode_old)
-		{
-			switch (rgbw_mode)
-			{
-				case RGBW_SET1_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set1_cmds);
-					break;
-				case RGBW_SET2_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set2_cmds);
-					break;
-				case RGBW_SET3_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set3_cmds);
-					break;
-				case RGBW_SET4_MODE :
-					lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_set4_cmds);
-					break;
-				default:
-					up(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
-					return -EINVAL;
-			}
-			LCDKIT_DEBUG("update rgbw_mode:rgbw_mode=%d,rgbw_mode_old=%d!\n",rgbw_mode,rgbw_mode_old);
-			rgbw_mode_old = rgbw_mode;
-		}
-		if ((lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds) && (lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmd_cnt>0))
-		{
-			if(rgbw_mode == 1)
-			{
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[1] = (rgbw_saturation_control >> 24) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[2] = (rgbw_saturation_control >> 16) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[3] = (rgbw_saturation_control >> 8) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[4] = rgbw_saturation_control & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_saturation_control_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:rgbw_saturation_control=%d!\n",rgbw_saturation_control);
-			}
-			else if(rgbw_mode == 2)
-			{
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[5] = (rgbw_saturation_control >> 24) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[6] = (rgbw_saturation_control >> 16) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[7] = (rgbw_saturation_control >> 8) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[8] = rgbw_saturation_control & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_saturation_control_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:rgbw_saturation_control=%d!\n",rgbw_saturation_control);
-			}
-			else if(rgbw_mode == 3)
-			{
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[9] = (rgbw_saturation_control >> 24) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[10] = (rgbw_saturation_control >> 16) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[11] = (rgbw_saturation_control >> 8) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[12] = rgbw_saturation_control & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_saturation_control_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:rgbw_saturation_control=%d!\n",rgbw_saturation_control);
-
-			}
-			else if(rgbw_mode == 4)
-			{
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[13] = (rgbw_saturation_control >> 24) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[14] = (rgbw_saturation_control >> 16) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[15] = (rgbw_saturation_control >> 8) & 0xff;
-				lcdkit_info.panel_infos.rgbw_saturation_control_cmds.cmds[2].payload[16] = rgbw_saturation_control & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_saturation_control_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:rgbw_saturation_control=%d!\n",rgbw_saturation_control);
-
-			}
-			else
-				LCDKIT_INFO("this is an unknowned rgbw mode for LG panel!\n");
-		}
-		if ((lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds) && (lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmd_cnt>0))
-		{
-			if(rgbw_mode == 1)
-			{
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[4] = (color_distortion_allowance >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[5] = color_distortion_allowance& 0xff;
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:color_distortion_allowance=%d!\n",color_distortion_allowance);
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[12] = (pixel_gain_limit >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[13] = pixel_gain_limit & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_distortion_allowance_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:pixel_gain_limit=%d!\n",pixel_gain_limit);
-			}
-			else if(rgbw_mode == 2)
-			{
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[6] = (color_distortion_allowance >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[7] = color_distortion_allowance& 0xff;
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:color_distortion_allowance=%d!\n",color_distortion_allowance);
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[14] = (pixel_gain_limit >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[15] = pixel_gain_limit & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_distortion_allowance_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:pixel_gain_limit=%d!\n",pixel_gain_limit);
-			}
-			else if(rgbw_mode == 3)
-			{
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[8] = (color_distortion_allowance >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[9] = color_distortion_allowance & 0xff;
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:color_distortion_allowance=%d!\n",color_distortion_allowance);
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[16] = (pixel_gain_limit >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[17] = pixel_gain_limit & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_distortion_allowance_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:pixel_gain_limit=%d!\n",pixel_gain_limit);
-			}
-			else if(rgbw_mode == 4)
-			{
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[10] = (color_distortion_allowance >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[11] = color_distortion_allowance & 0xff;
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:color_distortion_allowance=%d!\n",color_distortion_allowance);
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[16] = (pixel_gain_limit >> 8) & 0x3f;
-				lcdkit_info.panel_infos.color_distortion_allowance_cmds.cmds[2].payload[17] = pixel_gain_limit & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_distortion_allowance_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:pixel_gain_limit=%d!\n",pixel_gain_limit);
-			}
-			else
-				LCDKIT_INFO("this is an unknowned rgbw mode for LG panel!\n");
-			}
-
-		if ((lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds) && (lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmd_cnt>0))
-		{
-			if(rgbw_mode == 1)
-			{
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[7] = (pwm_duty_gain >> 8) & 0x3f;
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[8] = pwm_duty_gain & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.pwm_duty_gain_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:pwm_duty_gain=%d!\n",pwm_duty_gain);
-			}
-			else if(rgbw_mode == 2)
-			{
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[9] = (pwm_duty_gain >> 8) & 0x3f;
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[10] = pwm_duty_gain & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.pwm_duty_gain_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:pwm_duty_gain=%d!\n",pwm_duty_gain);
-			}
-			else if(rgbw_mode == 3)
-			{
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[11] = (pwm_duty_gain >> 8) & 0x3f;
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[12] = pwm_duty_gain & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.pwm_duty_gain_cmds);
-				LCDKIT_DEBUG("lcdkit_rgbw_set_handle:pwm_duty_gain=%d!\n",pwm_duty_gain);
-
-			}
-			else if(rgbw_mode == 4)
-			{
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[13] = (pwm_duty_gain >> 8) & 0x3f;
-				lcdkit_info.panel_infos.pwm_duty_gain_cmds.cmds[2].payload[14] = pwm_duty_gain & 0xff;
-				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.pwm_duty_gain_cmds);
-				LCDKIT_INFO("lcdkit_rgbw_set_handle:pwm_duty_gain=%d!\n",pwm_duty_gain);
-			}
-			else
-				LCDKIT_INFO("this is an unknowned rgbw mode for LG panel!\n");
+			case JDI_NT36860C_PANEL_ID:
+			case SHARP_NT36870_PANEL_ID:
+			case JDI_HX83112C_PANLE_ID:
+			case SHARP_HX83112C_PANEL_ID:
+			case JDI_TD4336_PANEL_ID:
+			case SHARP_TD4336_PANEL_ID:
+				set_rgbw_mode(hisifd);
+				set_rgbw_backlight(hisifd);
+				set_rgbw_pixel_gain_limit(hisifd);
+				break;
+			case LG_NT36870_PANEL_ID:
+				set_rgbw_mode(hisifd);
+				set_rgbw_saturation_control(hisifd);
+				set_rgbw_color_distortion_allowance(hisifd);
+				set_rgbw_pwm_duty_gain(hisifd);
+				break;
+			case LG_NT36772A_PANEL_ID:
+				lg_nt36772a_rgbw(hisifd);
+				break;
+			default:
+				LCDKIT_ERR("[RGBW] This panel is not supported rgbw!\n");
+				ret = -EINVAL;
+				break;
 		}
 	}
 	else
-		LCDKIT_INFO("this is an unknowned panel!\n");
+	{
+		LCDKIT_DEBUG("[RGBW] This panel id does not support rgbw.[Panel id = %d]!\n", panel_id);
+		ret = -EINVAL;
+	}
 	up(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
 	return ret;
 }
@@ -1457,6 +1542,7 @@ int lcdkit_rgbw_set_handle(struct hisi_fb_data_type* hisifd)
 
 int lcdkit_hbm_set_handle(struct hisi_fb_data_type* hisifd)
 {
+	static int count = 0;
 	int ret = 0;
 
 	BUG_ON(hisifd == NULL);
@@ -1466,19 +1552,48 @@ int lcdkit_hbm_set_handle(struct hisi_fb_data_type* hisifd)
 	if(hisifd->de_info.hbm_level != 0)
 	{
 		// Enter hbm mode and set brightness level.
-		LCDKIT_DEBUG("lcdkit_hbm_set_handle:  hbm_level=%d!\n", hisifd->de_info.hbm_level);
-		lcdkit_info.panel_infos.enter_hbm_cmds.cmds[4].payload[1] = (hisifd->de_info.hbm_level >> 8) & 0xf;
-		lcdkit_info.panel_infos.enter_hbm_cmds.cmds[4].payload[2] = hisifd->de_info.hbm_level & 0xff;
-		if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base) ==0) {
-			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.enter_hbm_cmds);
+		if (hisifd->de_info.last_hbm_level == 0) {
+			LCDKIT_INFO("[hbm on]hbm_level=%d!\n", hisifd->de_info.hbm_level);
+			lcdkit_info.panel_infos.enter_hbm_cmds.cmds[4].payload[1] = (hisifd->de_info.hbm_level >> 8) & 0xf;
+			lcdkit_info.panel_infos.enter_hbm_cmds.cmds[4].payload[2] = hisifd->de_info.hbm_level & 0xff;
+			if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base) ==0) {
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.enter_hbm_cmds);
+			}
+		} else {
+			if (abs(hisifd->de_info.hbm_level - hisifd->de_info.last_hbm_level) > 60) {
+				if (count == 0) {
+					LCDKIT_INFO("last hbm_level=%d!\n", hisifd->de_info.last_hbm_level);
+				}
+				count = 5;
+			}
+			if (count > 0) {
+				count--;
+				LCDKIT_INFO("hbm_level=%d!\n", hisifd->de_info.hbm_level);
+			} else {
+				LCDKIT_DEBUG("hbm_level=%d!\n", hisifd->de_info.hbm_level);
+			}
+			lcdkit_info.panel_infos.hbm_level_cmds.cmds[1].payload[1] = (hisifd->de_info.hbm_level >> 8) & 0xf;
+			lcdkit_info.panel_infos.hbm_level_cmds.cmds[1].payload[2] = hisifd->de_info.hbm_level & 0xff;
+			if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base) ==0) {
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.hbm_level_cmds);
+			}
 		}
 	}
 	else
-	{	//Exit hbm
-		if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base) ==0) {
-			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.exit_hbm_cmds);
+	{
+		if (hisifd->de_info.last_hbm_level == 0) {
+			if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base) ==0) {
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.hbm_mode_cmds);
+			}
+			LCDKIT_INFO("[hbm clear]hbm_level=%d! %02X=%02X\n", hisifd->de_info.hbm_level, lcdkit_info.panel_infos.hbm_mode_cmds.cmds[0].payload[0], lcdkit_info.panel_infos.hbm_mode_cmds.cmds[0].payload[1]);
+		} else {
+			//Exit hbm
+			lcdkit_info.panel_infos.exit_hbm_cmds.cmds[1].payload[1] = hisifd->de_info.hbm_dimming ? 0x28 : 0x20;
+			if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base) ==0) {
+				lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.exit_hbm_cmds);
+			}
+			LCDKIT_INFO("[hbm off]hbm_level=%d! %02X=%02X\n", hisifd->de_info.hbm_level, lcdkit_info.panel_infos.exit_hbm_cmds.cmds[1].payload[0], lcdkit_info.panel_infos.exit_hbm_cmds.cmds[1].payload[1]);
 		}
-		LCDKIT_DEBUG("lcdkit_hbm_set_handle:  hbm_level=%d!\n", hisifd->de_info.hbm_level);
 	}
 
 	up(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
@@ -1531,6 +1646,62 @@ static int __init early_parse_ddic_oem_cmdline(char *arg)
 }
 
 early_param("DDIC_INFO", early_parse_ddic_oem_cmdline);
+
+
+int read_ddic_reg_interface(uint8_t *out, struct lcdkit_dsi_panel_cmds *cmds, struct hisi_fb_data_type *hisifd, int max_out_size)
+{
+    int i = 0, ret = 0, dlen = 0, cnt = 0;
+    struct lcdkit_dsi_cmd_desc *cm;
+    uint32_t tmp_value[LCD_DDIC_INFO_LEN] = {0};
+    int read_start_index = 0;
+
+    if ((NULL == hisifd) || (NULL == cmds) || (NULL == out)) {
+        LCDKIT_ERR("NULL pointer\n");
+        return;
+    }
+    cm = cmds->cmds;
+    for (i = 0; i < cmds->cmd_cnt; i++) {
+        ret = lcdkit_lread_reg(hisifd, tmp_value, cm, cm->dlen);
+        if (ret) {
+            LCDKIT_ERR("read reg error\n");
+            return ret;
+        }
+        /* get invalid value start index*/
+        read_start_index = 0;
+        if (cm->dlen > 1) {
+            read_start_index = (int)cm->payload[1];
+        }
+        for (dlen = 0; dlen < cm->dlen; dlen++) {
+            if (dlen < read_start_index){
+                continue;
+            }
+            switch (dlen % 4) {
+            case 0:
+                out[cnt] = (uint8_t)(tmp_value[dlen / 4] & 0xFF);
+                break;
+            case 1:
+                out[cnt] = (uint8_t)((tmp_value[dlen / 4] >> 8) & 0xFF);
+                break;
+            case 2:
+                out[cnt] = (uint8_t)((tmp_value[dlen / 4] >> 16) & 0xFF);
+                break;
+            case 3:
+                out[cnt] = (uint8_t)((tmp_value[dlen / 4] >> 24) & 0xFF);
+                break;
+            default:
+                break;
+            }
+            cnt++;
+            if (cnt >= max_out_size)
+            {
+                return 0;
+            }
+        }
+        cm++;
+    }
+    return 0;
+
+}
 
 int hostprocessing_read_ddic(uint8_t *out, struct lcdkit_dsi_panel_cmds *cmds, struct hisi_fb_data_type *hisifd, int max_out_size)
 {
@@ -1637,9 +1808,20 @@ static void hostprocessing_get_ddic_product_id(char *oem_data, struct hisi_fb_da
 	oem_data[1] = LCD_OEM_BLOCK_NUM;
 
 	if (lcdkit_info.panel_infos.host_info_all_in_ddic) {
-		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_enter_cmds);
-		hostprocessing_read_ddic(read_value, &lcdkit_info.panel_infos.host_project_id_cmds, hisifd, LCD_DDIC_INFO_LEN);
-		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_exit_cmds);
+
+        LCDKIT_INFO("eml_read_reg_flag = %d!\n",lcdkit_info.panel_infos.eml_read_reg_flag);
+
+        if(lcdkit_info.panel_infos.eml_read_reg_flag == Hx83112A || lcdkit_info.panel_infos.eml_read_reg_flag == Hx83112C){
+            read_himax83112_project_id(hisifd, read_value);
+            }
+        else if(lcdkit_info.panel_infos.eml_read_reg_flag == TD4336){
+            read_td4336_project_id(hisifd, read_value, PROJECT_ID_START_POSITION_TD4336, PROJECT_ID_LENGTH);
+            }else {
+			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_enter_cmds);
+			hostprocessing_read_ddic(read_value, &lcdkit_info.panel_infos.host_project_id_cmds, hisifd, LCD_DDIC_INFO_LEN);
+			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_exit_cmds);
+		}
+
 		for (i = 0; i < DDIC_PRODUCT_ID_OFFSET; i++) {
 			oem_data[i + 2] = read_value[i];
 		}
@@ -1654,6 +1836,114 @@ static void hostprocessing_get_ddic_product_id(char *oem_data, struct hisi_fb_da
 	LCDKIT_INFO("finished\n");
 }
 
+#define BARCODE_LENGTH_HIMAX83112 46
+static void hostprocessing_read_ddic_2d_barcode_hx83112(struct hisi_fb_data_type* hisifd,uint8_t  out[] )
+{
+	char __iomem *mipi_dsi0_base = NULL;
+	uint32_t read_value[2] = {0};
+	int i = 0;
+	char project_id_reg[] = {0xbb};
+	char project_addr[BARCODE_LENGTH_HIMAX83112] =
+					{ 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4,\
+					 0xB5, 0xB6, 0xB7, 0xB8, 0xB9, 0xBA, 0xBB,\
+					 0xBC, 0xBD, 0xBE, 0xBF, 0xC0, 0xC1, 0xC2,\
+					 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9,\
+					 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0,\
+					 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,\
+					 0xD8, 0xD9, 0xDA, 0xDB};
+	char playload1_enter1[] = {0xbb, 0x07, 0xAE, 0x00, 0x80, 0xff};
+	char playload1_enter2[] = {0xbb, 0x07, 0xAE, 0x00, 0x00, 0xff};
+
+	char otp_poweron_offset1[] = {0xe9, 0xcd};
+	char otp_poweron_offset2[] = {0xe9, 0x00};
+	char otp_poweron1[] = {0xbb, 0x22};
+	char otp_poweron2[] = {0xbb, 0x23};
+	char otp_poweroff[] = {0xbb, 0x20};
+
+	if(NULL == hisifd || NULL == out){
+		LCDKIT_ERR("NULL pointer! \n");
+		return;
+	}
+	mipi_dsi0_base = hisifd->mipi_dsi0_base;
+
+	LCDKIT_INFO(" read hx83112 2d barcode enter.\n");
+	struct dsi_cmd_desc otp_poweron1_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron1), otp_poweron1},
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_MS, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+	struct dsi_cmd_desc otp_poweron2_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron2), otp_poweron2},
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_MS, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+	struct dsi_cmd_desc otp_poweroff_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweroff), otp_poweroff},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+
+	struct dsi_cmd_desc playload1_enter_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_US, sizeof(playload1_enter1), playload1_enter1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(playload1_enter2), playload1_enter2},
+	};
+	struct dsi_cmd_desc project_id_cmd[] =
+	{
+		{DTYPE_GEN_READ, 0, 100, WAIT_TYPE_US, sizeof(project_id_reg), project_id_reg},
+	};
+
+	if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
+	{
+		HISI_FB_ERR("The fifo is full causing timeout when read hx83112's porjectid!\n");
+	}
+	/* send otp power on cmds for hx83112*/
+	mipi_dsi_cmds_tx(otp_poweron1_cmds, ARRAY_SIZE(otp_poweron1_cmds), mipi_dsi0_base);
+	mipi_dsi_cmds_tx(otp_poweron2_cmds, ARRAY_SIZE(otp_poweron2_cmds), mipi_dsi0_base);
+	for(i = 0; i<BARCODE_LENGTH_HIMAX83112; i++)
+	{
+		playload1_enter1[2] =  project_addr[i];
+		playload1_enter2[2] =  project_addr[i];
+		if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
+		{
+			HISI_FB_ERR("The fifo is full causing timeout when read hx83112's porjectid!\n");
+		}
+		mipi_dsi_cmds_tx(playload1_enter_cmds, ARRAY_SIZE(playload1_enter_cmds), mipi_dsi0_base);
+		/*Here number "5" means to read five paramaters.*/
+		mipi_dsi_lread_reg(read_value, project_id_cmd, 5, mipi_dsi0_base);
+
+		out[i] = read_value[1];
+		memset(read_value,0,sizeof(read_value));
+	}
+	/* send otp power off cmds for hx83112*/
+	mipi_dsi_cmds_tx(otp_poweroff_cmds, ARRAY_SIZE(otp_poweroff_cmds), mipi_dsi0_base);
+	LCDKIT_INFO(" read hx83112 2d barcode exit.\n");
+	return;
+
+}
+void hostprocessing_read_ddic_2d_barcode_td4336( uint8_t barcode_id[], uint8_t start_position, uint8_t length)
+{
+	int i;
+
+	if (NULL == barcode_id || ((start_position + length) > READ_REG_TD4336_NUM))
+	{
+		LCDKIT_ERR("NULL Pointer!\n");
+		return ;
+	}
+
+	//parse uint32_t array(g_read_value_td4336) to uint8_t array(barcode_id),
+	// and the digits "4" and "8" have no specfic meanings, just for index computing
+	for (i = 0; i < length; i++, start_position++)
+	{
+		barcode_id[i] = (uint8_t)((g_read_value_td4336[start_position/4] >> (start_position%4) * 8) & 0xFF);
+		LCDKIT_INFO("barcode_id[%d]=0x%x \n ",i,barcode_id[i]);
+	}
+	return;
+}
+
 static void hostprocessing_get_2d_barcode(char *oem_data,struct hisi_fb_data_type *hisifd)
 {
 	uint8_t i = 0;
@@ -1666,23 +1956,48 @@ static void hostprocessing_get_2d_barcode(char *oem_data,struct hisi_fb_data_typ
 	for (i = 0; i < LCD_OEM_2DBLOCK_NUM*LCD_OEM_BLOCK_LEN; i ++) {
 		oem_data[i] = 0;
 	}
-
+	LCDKIT_INFO(" get 2d barcode enter.\n");
 	oem_data[0] = HOST_OEM_2D_BARCODE_TYPE;
 	oem_data[1] = LCD_OEM_2DBLOCK_NUM;
 
-	if (lcdkit_info.panel_infos.host_info_all_in_ddic) {
+	if (lcdkit_info.panel_infos.host_info_all_in_ddic)
+	{
+		LCDKIT_INFO("eml_read_reg_flag = %d!\n",lcdkit_info.panel_infos.eml_read_reg_flag);
+		if(lcdkit_info.panel_infos.eml_read_reg_flag==Hx83112C || lcdkit_info.panel_infos.eml_read_reg_flag==TD4336 || lcdkit_info.panel_infos.eml_read_reg_flag==Hx83112A )
+		{
+			switch(lcdkit_info.panel_infos.eml_read_reg_flag)
+			{
+				case Hx83112C:
+					hostprocessing_read_ddic_2d_barcode_hx83112(hisifd,read_value);
+					break;
+				case TD4336:
+					hostprocessing_read_ddic_2d_barcode_td4336(read_value, BARCODE_START_POSITION_TD4336, BARCODE_LENGTH);
+					break;
+				default:
+					LCDKIT_INFO("This panel doesn't support reading 2d barcode.\n");
+					break;
+			}
+		}
+		else
+		{
+			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_2d_barcode_enter_cmds);
+			read_ddic_reg_interface(read_value, &lcdkit_info.panel_infos.host_2d_barcode_cmds, hisifd, LCD_DDIC_INFO_LEN);
+			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_2d_barcode_exit_cmds);
+		}
 
-		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_2d_barcode_enter_cmds);
-		hostprocessing_read_ddic(read_value, &lcdkit_info.panel_infos.host_2d_barcode_cmds, hisifd, LCD_DDIC_INFO_LEN);
-		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_2d_barcode_exit_cmds);
-		for (i = 0; i < LCD_OEM_2DBLOCK_NUM*LCD_OEM_BLOCK_LEN - 2; i++) {
+		for (i = 0; i < LCD_OEM_2DBLOCK_NUM*LCD_OEM_BLOCK_LEN - 2; i++)
+		{
+			LCDKIT_INFO("read_value[%d]=[0x%x]  ",i,read_value[i]);
 			oem_data[i + 2] = read_value[i];
 		}
-		LCDKIT_INFO("host 2d barcode end!\n");
+		LCDKIT_INFO("\n get host 2d barcode exit!\n");
 		return ;
 	}
+
 #ifdef CONFIG_JDI_HOST_TS_KIT
-	tp_thp_ops->thp_otp_read(cmd_tpic_oem_info);
+	if((tp_thp_ops)&&(tp_thp_ops->thp_otp_read)) {
+		tp_thp_ops->thp_otp_read(cmd_tpic_oem_info);
+	}
 #endif
 
 	for (i = 0; i < DDIC_HW_PART_NUM_OFFSET; i ++) {
@@ -1725,6 +2040,31 @@ static void hostprocessing_get_2d_barcode(char *oem_data,struct hisi_fb_data_typ
 	oem_data[47] = cmd_ddic_oem_info[31];
 
 	LCDKIT_INFO("finished\n");
+}
+#define  RGBW_WHITE_PIXEL_ON_FLAG   1
+#define  RGBW_RGB_PIXEL_ON_FLAG  2
+static void lcd_set_rgbw_white_picture_type(char *oem_data,struct hisi_fb_data_type *hisifd)
+{
+	char __iomem *mipi_dsi0_base = NULL;
+	if ((NULL == hisifd) || (NULL == oem_data)) {
+		LCDKIT_ERR("NULL pointer\n");
+		return;
+	}
+
+	mipi_dsi0_base = hisifd->mipi_dsi0_base;
+
+	if (oem_data[2]==RGBW_WHITE_PIXEL_ON_FLAG){
+		LCDKIT_INFO("set rgbw_rgb_pixel_on_cmds  !\n");
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_white_pixel_on_cmds);
+	}
+	else if(oem_data[2]==RGBW_RGB_PIXEL_ON_FLAG){
+		LCDKIT_INFO("set rgbw_rgb_pixel_on_cmds  !\n");
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.rgbw_rgb_pixel_on_cmds);
+	}
+	else{
+		LCDKIT_INFO("The value of rgbw white picture type is error from AT cmds!\n");
+	}
+	return;
 }
 
 static void hostprocessing_read_wc(uint32_t *read_data, struct hisi_fb_data_type *hisifd)
@@ -1835,7 +2175,102 @@ static void hostprocessing_get_rework(char *oem_data, struct hisi_fb_data_type *
 
 	LCDKIT_INFO("finished\n");
 }
+#define COLORPOINT_LENGTH_HIMAX83112 6
+static void hostprocessing_read_brightness_colorpoint_hx83112(struct hisi_fb_data_type* hisifd,uint8_t  out[] )
+{
+	char __iomem *mipi_dsi0_base = NULL;
+	uint32_t read_value[2] = {0};
+	int i = 0;
+	char project_id_reg[] = {0xbb};
+	char project_addr[COLORPOINT_LENGTH_HIMAX83112] ={0xDC,0xDD,0xDE,0xDF,0XE0,0XE1};
 
+	char playload1_enter1[] = {0xbb, 0x07, 0xDC, 0x00, 0x80, 0xff};
+	char playload1_enter2[] = {0xbb, 0x07, 0xDC, 0x00, 0x00, 0xff};
+
+	char otp_poweron_offset1[] = {0xe9, 0xcd};
+	char otp_poweron_offset2[] = {0xe9, 0x00};
+	char otp_poweron1[] = {0xbb, 0x22};
+	char otp_poweron2[] = {0xbb, 0x23};
+	char otp_poweroff[] = {0xbb, 0x20};
+
+	if(NULL == hisifd || NULL == out){
+		LCDKIT_ERR("NULL pointer! \n");
+		return;
+	}
+	mipi_dsi0_base = hisifd->mipi_dsi0_base;
+
+	LCDKIT_INFO(" read hx83112 read_colorpoint_of_white enter.\n");
+	struct dsi_cmd_desc otp_poweron1_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron1), otp_poweron1},
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_MS, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+	struct dsi_cmd_desc otp_poweron2_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron2), otp_poweron2},
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_MS, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+	struct dsi_cmd_desc otp_poweroff_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweroff), otp_poweroff},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+
+	struct dsi_cmd_desc playload1_enter_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_US, sizeof(playload1_enter1), playload1_enter1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(playload1_enter2), playload1_enter2},
+	};
+	struct dsi_cmd_desc project_id_cmd[] =
+	{
+		{DTYPE_GEN_READ, 0, 100, WAIT_TYPE_US, sizeof(project_id_reg), project_id_reg},
+	};
+
+	if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
+	{
+		HISI_FB_ERR("The fifo is full causing timeout when read hx83112's otp parameters!\n");
+	}
+	/* send otp power on cmds for hx83112*/
+	mipi_dsi_cmds_tx(otp_poweron1_cmds, ARRAY_SIZE(otp_poweron1_cmds), mipi_dsi0_base);
+	mipi_dsi_cmds_tx(otp_poweron2_cmds, ARRAY_SIZE(otp_poweron2_cmds), mipi_dsi0_base);
+	for(i = 0; i<COLORPOINT_LENGTH_HIMAX83112; i++)
+	{
+		playload1_enter1[2] =  project_addr[i];
+		playload1_enter2[2] =  project_addr[i];
+		if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
+		{
+			HISI_FB_ERR("The fifo is full causing timeout when read hx83112's otp parameters!\n");
+		}
+		mipi_dsi_cmds_tx(playload1_enter_cmds, ARRAY_SIZE(playload1_enter_cmds), mipi_dsi0_base);
+		/*Here number "5" means to read five paramaters.*/
+		mipi_dsi_lread_reg(read_value, project_id_cmd, 5, mipi_dsi0_base);
+
+		if(read_value[1] == 0)
+			read_value[1]+= '0';
+		out[i] = read_value[1];
+		LCDKIT_INFO(" read out[%d]=%x.\n",i,out[i]);
+		memset(read_value,0,sizeof(read_value));
+	}
+	/* send otp power off cmds for hx83112*/
+	mipi_dsi_cmds_tx(otp_poweroff_cmds, ARRAY_SIZE(otp_poweroff_cmds), mipi_dsi0_base);
+	LCDKIT_INFO(" read hx83112 read_colorpoint_of_white exit.\n");
+	return;
+}
+
+hostprocessing_read_brightness_colorpoint_td4336(uint8_t color_point_id[],uint8_t start_position,uint8_t length)
+{
+
+	if (NULL == color_point_id)
+	{
+		LCDKIT_ERR("NULL Pointer!\n");
+		return ;
+	}
+	read_ddic_reg_parse(g_read_value_td4336,READ_REG_TD4336_NUM,color_point_id, start_position, length);
+	return;
+}
 static void lcd_get_brightness_colorpoint_id(char *oem_data ,struct hisi_fb_data_type *hisifd)
 {
 	uint8_t read_color_value[LCDKIT_COLOR_INFO_SIZE] = {0};
@@ -1848,17 +2283,26 @@ static void lcd_get_brightness_colorpoint_id(char *oem_data ,struct hisi_fb_data
 	}
 
 	if (!lcdkit_info.panel_infos.lcd_brightness_color_uniform_support) {
-		LCDKIT_INFO("not support\n");
+		LCDKIT_INFO("Don't support brightness and white point color calibration\n");
 		return;
 	}
 
 	oem_data[0] = HOST_OEM_BRIGHTNESS_COLOROFWHITE_TYPE;
 	oem_data[1] = LCD_OEM_BLOCK_NUM*2;
+    LCDKIT_INFO("Enter: Getting brightness and colorpoint info! \n");
 
-	/* get color coordinate value*/
-	lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_coordinate_enter_cmds);
-	hostprocessing_read_ddic(read_color_value, &lcdkit_info.panel_infos.color_coordinate_cmds, hisifd, LCDKIT_COLOR_INFO_SIZE);
-	lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_coordinate_exit_cmds);
+	if(lcdkit_info.panel_infos.eml_read_reg_flag == Hx83112C){
+		hostprocessing_read_brightness_colorpoint_hx83112(hisifd,read_color_value);
+	}else if(lcdkit_info.panel_infos.eml_read_reg_flag == TD4336){
+		hostprocessing_read_brightness_colorpoint_td4336(read_color_value, COLOR_POINT_START_POSITION_TD4336, COLOR_POINT_LENGTH);
+	}
+	else
+	{
+		/* get color coordinate value*/
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_coordinate_enter_cmds);
+		hostprocessing_read_ddic(read_color_value, &lcdkit_info.panel_infos.color_coordinate_cmds, hisifd, LCDKIT_COLOR_INFO_SIZE);
+		lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.color_coordinate_exit_cmds);
+	}
 
 	/* Brightness data (2Bytes)*/
     oem_data[2] = 0x00;
@@ -1913,7 +2357,7 @@ static void lcd_get_brightness_colorpoint_id(char *oem_data ,struct hisi_fb_data
     oem_data[28] = (uint8_t)((value_temp >> 8) & 0xFF);
     oem_data[29] = (uint8_t)(value_temp & 0xFF);
 
-    LCDKIT_INFO("finished\n");
+    LCDKIT_INFO("Exit: Getting brightness and colorpoint info! \n");
     return;
 }
 
@@ -2228,6 +2672,7 @@ static struct ddic_oem_cmd write_cmds[] = {
 	{HOST_OEM_BRIGHTNESSANDCOLOR_TYPE, hostprocessing_set_bright_colorpoint_of_white},
 	{HOST_OEM_REWORK_TYPE, hostprocessing_set_rework},
 	{HOST_OEM_BRIGHTNESS_COLOROFWHITE_TYPE, lcd_set_brightness_xcc_rgbw},
+	{HOST_OEM_RGBW_WHITE_TYPE, lcd_set_rgbw_white_picture_type},
 };
 
 ssize_t host_panel_oem_info_show(void* pdata, char *buf)
@@ -2326,7 +2771,7 @@ ssize_t host_panel_oem_info_store(void* pdata, char *buf)
 		}
 	}
 
-    if(ddic_oem_type == HOST_OEM_BRIGHTNESS_COLOROFWHITE_TYPE)
+    if((ddic_oem_type == HOST_OEM_BRIGHTNESS_COLOROFWHITE_TYPE) || (ddic_oem_type == HOST_OEM_RGBW_WHITE_TYPE))
     {
         goto out;
     }
@@ -2458,7 +2903,9 @@ ssize_t lcdkit_get_bl_resume_timmer(int *pdata)
 {
     ssize_t error = -1;
 	if (pdata){
+        #if !defined (CONFIG_HISI_FB_V501)
 		error = lm36274_get_bl_resume_timmer(pdata);
+        #endif
 	    LCDKIT_INFO("End error %d, data=%ums \n", error, *pdata);
 	}
     return error;
@@ -2471,7 +2918,9 @@ ssize_t lcdkit_set_bl_normal_mode_reg(void* pdata)
     hisifd = (struct hisi_fb_data_type*) pdata;
     if (I2C_ONLY_MODE == hisifd->panel_info.bl_ic_ctrl_mode)
     {
+        #if !defined (CONFIG_HISI_FB_V501)
         error = blkit_set_normal_work_mode();
+        #endif
         if (error)
         {
             LCDKIT_ERR("blkit_set_normal_work_mode return error: %d \n", error);
@@ -2494,7 +2943,9 @@ ssize_t lcdkit_set_bl_enhance_mode_reg(void* pdata)
     hisifd = (struct hisi_fb_data_type*) pdata;
     if (I2C_ONLY_MODE == hisifd->panel_info.bl_ic_ctrl_mode)
     {
+        #if !defined (CONFIG_HISI_FB_V501)
         error = blkit_set_enhance_work_mode();
+        #endif
         if (error)
         {
             LCDKIT_ERR("blkit_set_normal_work_mode return error: %d \n", error);
@@ -2536,15 +2987,16 @@ ssize_t lcdkit_ldo_check_hs_show(char* buf)
     int i,j = 0;
     int cur_val = 0;
     int sum_current = 0;
-	struct lcd_ldo *pinfo_lcd_ldo = NULL;
-	int buflen = sizeof(struct lcd_ldo);
-	int temp_max_value = 0;
+    struct lcd_ldo *pinfo_lcd_ldo = NULL;
+    int buflen = sizeof(struct lcd_ldo);
+    int temp_max_value = 0;
 
     LCDKIT_DEBUG("Enter: %s!\n", __func__);
 
-	for(i=0; i<g_lcd_ldo_info.lcd_ldo_num; i++)
+    for(i=0; i<g_lcd_ldo_info.lcd_ldo_num; i++)
     {
         sum_current = 0;
+        temp_max_value = 0;
         for(j=0; j< LDO_CHECK_COUNT; j++)
         {
             cur_val = hisi_adc_get_current(g_lcd_ldo_info.lcd_ldo_channel[i]);

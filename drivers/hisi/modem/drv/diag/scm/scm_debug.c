@@ -72,19 +72,7 @@ extern SCM_CODER_SRC_CFG_STRU      g_astSCMCnfCoderSrcCfg;
 extern SCM_CODER_DEST_CFG_STRU g_astSCMIndCoderDstCfg;
 extern SCM_CODER_DEST_CFG_STRU g_astSCMCnfCoderDstCfg;
 
-/*****************************************************************************
- 函 数 名  : SCM_ChannelInfoShow
- 功能描述  : 将SOCP通道的信息打印到串口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-*****************************************************************************/
+
 void SCM_ChannelInfoShow(void)
 {
     scm_printf("ind\n");
@@ -97,20 +85,9 @@ void SCM_ChannelInfoShow(void)
 
     return;
 }
+EXPORT_SYMBOL(SCM_ChannelInfoShow);
 
-/*****************************************************************************
- 函 数 名  : SCM_CoderSrcCHShow
- 功能描述  : 将SOCP 编码源通道的信息打印到串口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-*****************************************************************************/
+
 
 void SCM_CoderSrcCHShow(u32 ulCfgNum)
 {
@@ -177,21 +154,9 @@ void SCM_CoderSrcCHShow(u32 ulCfgNum)
 
     return;
 }
+EXPORT_SYMBOL(SCM_CoderSrcCHShow);
 
 
-/*****************************************************************************
- 函 数 名  : SCM_CoderDstCHShow
- 功能描述  : 将SOCP 编码源通道的信息打印到串口
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-*****************************************************************************/
 void SCM_CoderDstCHShow(u32 ulCfgNum)
 {
     scm_printf("\r\n CH id         is 0x%x", g_astSCMIndCoderDstCfg.enChannelID);
@@ -212,59 +177,23 @@ void SCM_CoderDstCHShow(u32 ulCfgNum)
 
     return;
 }
+EXPORT_SYMBOL(SCM_CoderDstCHShow);
 
-/*****************************************************************************
- 函 数 名  : SCM_GetDebugLogInfo
- 功能描述  : 获取调测信息结构体地址
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : VOS_UINT8*
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年7月19日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
+
 SCM_INFODATA_STRU* SCM_GetDebugLogInfo(void)
 {
     return &g_stSCMInfoData;
 }
+EXPORT_SYMBOL(SCM_GetDebugLogInfo);
 
-/*****************************************************************************
- 函 数 名  : SCM_GetDebugLogInfoLen
- 功能描述  : 获取调测信息结构体长度
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : VOS_UINT8*
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年7月19日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
+
 u32 SCM_GetDebugLogInfoLen(void)
 {
     return (u32)sizeof(g_stSCMInfoData);
 }
+EXPORT_SYMBOL(SCM_GetDebugLogInfoLen);
 
 
-/*****************************************************************************
- 函 数 名  : SCM_SocpSendDataToUDISucc
- 功能描述  : 把数据从SOCP通道的缓冲中发送到指定的端口执行成功
- 输入参数  : enChanID       目的通道号
-             enPhyport      物理端口号
-             pstDebugInfo   可维可测信息结构指针
-             pulSendDataLen 预期发送的长度
- 输出参数  : pulSendDataLen 实际发送的长度
- 返 回 值  : void
-
- 修改历史      :
-  1.日    期   : 2014年5月25日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 void SCM_SocpSendDataToUDISucc(
     SOCP_CODER_DST_ENUM_U32             enChanID,
     CPM_PHY_PORT_ENUM_UINT32            enPhyport,

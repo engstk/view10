@@ -64,7 +64,6 @@ extern "C" {
 #include  "msp_errno.h"
 #include  "diag_cfg.h"
 #include  "blist.h"
-
 /*****************************************************************************
   2 macro
 *****************************************************************************/
@@ -89,15 +88,6 @@ extern "C" {
 /*****************************************************************************
    5 STRUCT
 *****************************************************************************/
-
-/* 建链核间通信结构体 */
-typedef struct
-{
-     VOS_MSG_HEADER                     /*VOS头 */
-     VOS_UINT32                     ulMsgId;
-     VOS_UINT32                     ulCmdId;
-     DIAG_CMD_HOST_CONNECT_CNF_STRU stConnInfo;
-}DIAG_MSG_MSP_CONN_STRU;
 
 
 /* 核间透传通信结构体 */
@@ -197,6 +187,7 @@ extern VOS_UINT32 diag_AppTransMspProc(MsgBlock* pMsgBlock);
 extern VOS_UINT32 diag_PsProcEntry (VOS_UINT8 * pData);
 extern VOS_UINT32 diag_GtrProcEntry(VOS_UINT8* pstReq);
 extern VOS_UINT32 diag_GuGtrProcEntry(VOS_UINT8* pstReq);
+VOS_UINT32 diag_MspMsgProc(DIAG_FRAME_INFO_STRU *pData);
 
 #ifdef __cplusplus
     #if __cplusplus

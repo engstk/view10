@@ -34,7 +34,7 @@
 #define	DSM_UFS_HARDWARE_ERR		928008018
 #define	DSM_UFS_LINE_RESET_ERR		928008019
 #define	DSM_UFS_TEMP_LOW_ERR		928008020
-#define	DSM_UFS_HIVV_INTERNEL_ERR	    928008021
+#define	DSM_UFS_HI1861_INTERNEL_ERR	    928008021
 
 #define FASTBOOTDMD_PWR_ERR  BIT(4) /*Power mode change err ,set bit4*/
 #define FASTBOOTDMD_RW_ERR  BIT(15) /*read and write err, set bit15*/
@@ -114,7 +114,7 @@ struct ufs_dsm_adaptor {
 #define	UFS_HARDWARE_ERR		18
 #define	UFS_LINE_RESET_ERR		19
 #define	UFS_TEMP_LOW_ERR		20
-#define	UFS_HIVV_INTERNEL_ERR	21
+#define	UFS_HI1861_INTERNEL_ERR	21
 
 	struct ufs_reg_dump dump;
 	/*for UIC Transfer Error*/

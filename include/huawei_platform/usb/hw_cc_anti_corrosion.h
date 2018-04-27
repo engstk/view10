@@ -24,6 +24,7 @@ struct cc_anti_corrosion_dev {
 	struct pinctrl* pctrl;
 	struct pinctrl_state *pins_default;
 	int pre_gpio_val;
+	unsigned int gpio_mode;
 };
 
 void cc_corrosion_register_ops(struct cc_corrosion_ops *ops);

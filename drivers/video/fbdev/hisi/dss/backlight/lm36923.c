@@ -27,6 +27,30 @@ struct class *lm36923_class;
 struct lm36923_chip_data *g_pchip;
 static int lcd_fake_panel_enable_reg = 0x3;
 static bool lm36923_init_status = false;
+static unsigned int g_reg_val[LM36923_RW_REG_MAX] = {0,0,0xf,0x85,0xa3,0x79,0,0,0,0,0,0,4,0};
+static int lm36923_hw_en_gpio = 0;
+#define GPIO_LM36923_EN_NAME "lm36923_hw_en"
+static struct gpio_desc lm36923_hw_en_on_cmds[] = {
+	{DTYPE_GPIO_REQUEST, WAIT_TYPE_US, 0,
+		GPIO_LM36923_EN_NAME, &lm36923_hw_en_gpio, 0},
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_US, 10,
+		GPIO_LM36923_EN_NAME, &lm36923_hw_en_gpio, 1},
+};
+
+static struct gpio_desc lm36923_hw_en_disable_cmds[] =
+{
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_US, 0,
+		GPIO_LM36923_EN_NAME, &lm36923_hw_en_gpio, 0},
+	{DTYPE_GPIO_INPUT, WAIT_TYPE_US, 10,
+		GPIO_LM36923_EN_NAME, &lm36923_hw_en_gpio, 0},
+};
+
+static struct gpio_desc lm36923_hw_en_free_cmds[] =
+{
+	{DTYPE_GPIO_FREE, WAIT_TYPE_US, 50,
+		GPIO_LM36923_EN_NAME, &lm36923_hw_en_gpio, 0},
+};
+
 
 /*
 ** for debug, S_IRUGO
@@ -42,6 +66,7 @@ static int lm36923_led_num = 0;
 static int lm36923_chip_init(struct lm36923_chip_data *pchip)
 {
 	int ret = -1;
+	int reten = -1;
 	struct device_node *np = NULL;
 	uint32_t lm36923_ctrl_mode = 0;
 	int enable_reg = 0xF;
@@ -96,6 +121,7 @@ static int lm36923_chip_init(struct lm36923_chip_data *pchip)
 				enable_reg = 0xF;
 				break;
 		}
+		g_reg_val[2] = enable_reg;
 		LM36923_INFO("lm36923 led enable  =  0x%x\n", enable_reg);
 	}
 
@@ -117,6 +143,7 @@ static int lm36923_chip_init(struct lm36923_chip_data *pchip)
 			}
 		}
 		LM36923_INFO("get lm36923 REG_BOOST_CTR1 = 0x%x\n", lm36923_boost_ctrl_value);
+		g_reg_val[5] = lm36923_boost_ctrl_value;
 		ret = regmap_write(pchip->regmap, REG_BOOST_CTR1, lm36923_boost_ctrl_value);
 		if (ret < 0)
 			goto out;
@@ -154,6 +181,7 @@ static int lm36923_chip_init(struct lm36923_chip_data *pchip)
 	}
 
 	ret = of_property_read_u32(np, TI_LM36923_FAULT_CTRL, &fault_ctrl);
+	g_reg_val[12] = fault_ctrl;
 	LM36923_INFO("lm36923 fault ctrl = 0x%x, ret = %d.\n", fault_ctrl, ret);
 	if (ret == 0) {
 		ret = regmap_write(pchip->regmap, REG_FAULT_CTR, fault_ctrl);
@@ -164,11 +192,13 @@ static int lm36923_chip_init(struct lm36923_chip_data *pchip)
 		LM36923_INFO("lm36923 use default fault config\n");
 		ret = 0;
 	}
-
+	reten = of_property_read_u32(np, "lm36923_hw_en_gpio", &lm36923_hw_en_gpio);
+	if (reten < 0) {
+		LM36923_INFO("get lm36923 hw en false\n");
+	}
 	LM36923_INFO("ok!\n");
 
 	return ret;
-
 out:
 	dev_err(pchip->dev, "i2c failed to access register\n");
 	return ret;
@@ -218,6 +248,84 @@ i2c_error:
 }
 EXPORT_SYMBOL(lm36923_set_backlight_mode);
 
+ssize_t lm36923_resume_init(struct lm36923_chip_data *pchip)
+{
+	int ret = 0;
+
+	ret = regmap_write(pchip->regmap, REG_BRT_CTR, g_reg_val[3]);
+	if (ret < 0)
+		goto out;
+
+	ret = regmap_write(pchip->regmap, REG_BOOST_CTR1, g_reg_val[5]);
+	if (ret < 0)
+		goto out;
+
+	ret = regmap_write(pchip->regmap, REG_ENABLE, g_reg_val[2]);
+	if (ret < 0)
+		goto out;
+
+	ret = regmap_write(pchip->regmap, REG_PWM_CTR, g_reg_val[4]);
+	if (ret < 0)
+		goto out;
+
+	ret = regmap_write(pchip->regmap, REG_FAULT_CTR, g_reg_val[12]);
+	if (ret < 0)
+		goto out;
+
+	return ret;
+
+out:
+	dev_err(pchip->dev, "i2c failed to access register\n");
+	return ret;
+}
+
+/**
+ * lm36923_set_backlight_init(): initial ic working mode
+ *
+ * @bl_level: value for backlight ,range from 0 to ~
+ *
+ * A value of zero will be returned on success, a negative errno will
+ * be returned in error cases.
+ */
+
+ssize_t lm36923_set_backlight_init(uint32_t bl_level)
+{
+	int ret = 0;
+	struct device_node *np = NULL;
+	if (g_fake_lcd_flag) {
+		LM36923_INFO("is fake lcd!\n");
+		return ret;
+	}
+	if (down_trylock(&(g_pchip->test_sem))) {
+		LM36923_INFO("Now in test mode\n");
+		return 0;
+	}
+	if (false == lm36923_init_status && bl_level > 0) {
+		LM36923_INFO("get lm36923 hw en %d, enable hw en\n", lm36923_hw_en_gpio);
+		gpio_cmds_tx(lm36923_hw_en_on_cmds, \
+		ARRAY_SIZE(lm36923_hw_en_on_cmds));
+		/* chip resume initialize */
+		LM36923_INFO("resume in!\n");
+		ret = lm36923_resume_init(g_pchip);
+		if (ret < 0) {
+			LM36923_INFO( "fail : chip init\n");
+			goto out;
+		}
+		LM36923_INFO("resume ok!\n");
+		lm36923_init_status = true;
+	} else if (true == lm36923_init_status && 0 == bl_level) {
+		gpio_cmds_tx(lm36923_hw_en_disable_cmds, ARRAY_SIZE(lm36923_hw_en_disable_cmds));
+		gpio_cmds_tx(lm36923_hw_en_free_cmds, ARRAY_SIZE(lm36923_hw_en_free_cmds));
+
+		lm36923_init_status = false;
+	} else {
+		LM36923_DEBUG("lm36923_chip_init %u, 0: already off; else : already init!\n", bl_level);
+	}
+
+out:
+	up(&(g_pchip->test_sem));
+	return ret;
+}
 /**
  * lm36923_set_backlight_reg(): Set Backlight working mode
  *
@@ -544,18 +652,20 @@ static ssize_t lm36923_reg_show(struct device *dev,
 	client = pchip->client;
 	if(!client)
 		return snprintf(buf, PAGE_SIZE, "client is null\n");
-
-	ret = regmap_bulk_read(pchip->regmap, REG_REVISION, &val[0], 2);
-	if (ret < 0)
-		goto i2c_error;
-
-	ret = regmap_bulk_read(pchip->regmap, REG_ENABLE, &val[2], 10);
-	if (ret < 0)
-		goto i2c_error;
-
-	ret = regmap_bulk_read(pchip->regmap, REG_FAULT_CTR, &val[12], 2);
-	if (ret < 0)
-		goto i2c_error;
+	ret = regmap_read(pchip->regmap, 0x00, &val[0]);
+	ret = regmap_read(pchip->regmap, 0x01, &val[1]);
+	ret = regmap_read(pchip->regmap, 0x10, &val[2]);
+	ret = regmap_read(pchip->regmap, 0x11, &val[3]);
+	ret = regmap_read(pchip->regmap, 0x12, &val[4]);
+	ret = regmap_read(pchip->regmap, 0x13, &val[5]);
+	ret = regmap_read(pchip->regmap, 0x14, &val[6]);
+	ret = regmap_read(pchip->regmap, 0x15, &val[7]);
+	ret = regmap_read(pchip->regmap, 0x16, &val[8]);
+	ret = regmap_read(pchip->regmap, 0x17, &val[9]);
+	ret = regmap_read(pchip->regmap, 0x18, &val[10]);
+	ret = regmap_read(pchip->regmap, 0x19, &val[11]);
+	ret = regmap_read(pchip->regmap, 0x1E, &val[12]);
+	ret = regmap_read(pchip->regmap, 0x1F, &val[13]);
 
 	return snprintf(buf, PAGE_SIZE, "Revision(0x00)= 0x%x\nSoftware Reset(0x01)= 0x%x\n \
 			\rEnable(0x10) = 0x%x\nBrightness Control(0x11) = 0x%x\n \

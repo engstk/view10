@@ -63,6 +63,8 @@ typedef enum {
     TAG_CAP_PROX,
     TAG_MAGN_BRACKET,
     TAG_AGT,
+	TAG_COLOR,
+	TAG_ACCEL_UNCALIBRATED,/*0x1e = 30*/
     TAG_SENSOR_END,//sensor end should < 45
     TAG_HW_PRIVATE_APP_START = 45,/*0x2d=45*/
     TAG_AR = TAG_HW_PRIVATE_APP_START,
@@ -76,6 +78,8 @@ typedef enum {
     TAG_FLP,
     TAG_ENVIRONMENT,
     TAG_LOADMONITOR,/*0x37=55*/
+    TAG_APP_CHRE,
+    TAG_FP_UD,
     TAG_HW_PRIVATE_APP_END,//APP_END should < 64, because power log used bitmap
     TAG_MODEM = 128,/*0x80=128*/
     TAG_TP,
@@ -96,6 +100,9 @@ typedef enum {
     TAG_SHELL_DBG,
     TAG_PD,/*0x91=145*/
     TAG_DATA_PLAYBACK,
+    TAG_CHRE,
+    TAG_SENSOR_CALI,
+    TAG_CELL,
     TAG_END = 0xFF
 }obj_tag_t;
 
@@ -159,6 +166,8 @@ typedef enum {
 	/* tag modem for cell info*/
 	CMD_MODEM_CELL_INFO_REQ,
 	CMD_MODEM_CELL_INFO_RESP,
+	CMD_MODEM_REBOOT_NOTIFY_REQ,
+	CMD_MODEM_REBOOT_NOTIFY_RESP,
 
 	/* SHELL_DBG */
 	CMD_SHELL_DBG_REQ,
@@ -173,6 +182,12 @@ typedef enum {
 	CMD_DATA_PLAYBACK_DATA_READY_RESP,
 	CMD_DATA_PLAYBACK_BUF_READY_REQ,        /*RECORD*/
 	CMD_DATA_PLAYBACK_BUF_READY_RESP,
+
+	/* CHRE */
+	CMD_CHRE_AP_SEND_TO_MCU,
+	CMD_CHRE_AP_SEND_TO_MCU_RESP,
+	CMD_CHRE_MCU_SEND_TO_AP,
+	CMD_CHRE_MCU_SEND_TO_AP_RESP,
 
 	/*log buff*/
 	CMD_LOG_SER_REQ = 0xf1,
@@ -200,6 +215,8 @@ typedef enum{
 	SUB_CMD_FW_DLOAD_REQ,
 	SUB_CMD_FLUSH_REQ,
 	SUB_CMD_SET_ADD_DATA_REQ,//11
+	SUB_CMD_SET_DATA_TYPE_REQ,//12
+	SUB_CMD_SET_DATA_MODE = 0x0d,//13
 
 	/*motion*/
 	SUB_CMD_MOTION_ATTR_ENABLE_REQ = 0x20,
@@ -262,12 +279,28 @@ typedef enum{
 	SUB_CMD_FLP_RESET_REQ,
 	SUB_CMD_FLP_RESET_RESP,
 	SUB_CMD_FLP_GET_BATCH_SIZE_REQ,
+	SUB_CMD_FLP_BATCH_PUSH_GNSS_REQ,
+
 	SUB_CMD_FLP_ADD_GEOF_REQ,
 	SUB_CMD_FLP_REMOVE_GEOF_REQ,
 	SUB_CMD_FLP_MODIFY_GEOF_REQ,
 	SUB_CMD_FLP_LOCATION_UPDATE_REQ,
 	SUB_CMD_FLP_GEOF_TRANSITION_REQ,
 	SUB_CMD_FLP_GEOF_MONITOR_STATUS_REQ,
+
+	SUB_CMD_FLP_GEOF_GET_TRANSITION_REQ,
+
+	SUB_CMD_FLP_CELLFENCE_ADD_REQ,
+	SUB_CMD_FLP_CELLFENCE_OPT_REQ,
+	SUB_CMD_FLP_CELLFENCE_TRANSITION_REQ,
+	SUB_CMD_FLP_CELLFENCE_INJECT_RESULT_REQ,
+
+	SUB_CMD_FLP_CELLTRAJECTORY_CFG_REQ,
+	SUB_CMD_FLP_CELLTRAJECTORY_REQUEST_REQ,
+	SUB_CMD_FLP_CELLTRAJECTORY_REPORT_REQ,
+
+	SUB_CMD_FLP_COMMON_STOP_SERVICE_REQ,
+	SUB_CMD_FLP_COMMON_WIFI_CFG_REQ,
 
 	//Always On Display
 	SUB_CMD_AOD_START_REQ = 0x20,
@@ -277,6 +310,8 @@ typedef enum{
 	SUB_CMD_AOD_SET_TIME_REQ,
 	SUB_CMD_AOD_SET_DISPLAY_SPACE_REQ,
 	SUB_CMD_AOD_SETUP_REQ,
+	SUB_CMD_AOD_DSS_ON_REQ,
+	SUB_CMD_AOD_DSS_OFF_REQ,
 
 	//key
 	SUB_CMD_BACKLIGHT_REQ = 0x20,
@@ -285,6 +320,11 @@ typedef enum{
 	SUB_CMD_RPC_STOP_REQ,
 	SUB_CMD_RPC_UPDATE_REQ,
 	SUB_CMD_RPC_LIBHAND_REQ,
+
+	SUB_CMD_VIBRATOR_SINGLE_REQ = 0x20,
+	SUB_CMD_VIBRATOR_REPEAT_REQ,
+	SUB_CMD_VIBRATOR_ON_REQ,
+	SUB_CMD_VIBRATOR_SET_AMPLITUDE_REQ,
 
 	SUB_CMD_MAX = 0xff,
 }obj_sub_cmd_t;
@@ -678,6 +718,14 @@ typedef struct {
 	uint8_t len;
 } fingerprint_req_t;
 
+typedef struct {
+	pkt_header_t hd;
+	uint64_t app_id;
+	uint16_t msg_type;
+	uint8_t res[2];
+	uint8_t data[];
+} chre_req_t;
+
 typedef enum additional_info_type {
     //
     AINFO_BEGIN = 0x0,                      // Marks the beginning of additional information frames
@@ -774,6 +822,7 @@ enum {
     	FILE_FLP,                               // 22
     	FILE_TILT_DETECTOR,     //23
         FILE_RPC,
+	FILE_FINGERPRINT_UD = 28,
 	FILE_APP_ID_MAX = 31,                   /* MAX VALID FILE ID FOR APPs */
 
 	FILE_AKM09911_DOE_MAG,                  /* 32 */
@@ -826,6 +875,10 @@ enum {
 	FILE_BOSCH_BMP380,			/* 82 */
 	FILE_TMD3725_ALS,                       // 83
 	FILE_TMD3725_PS,                        // 84
+	FILE_DRV2605_DRV,                       //85
+	FILE_LTR582_ALS, //86
+	FILE_LTR582_PS,  //87
+	FILE_GOODIX_BAIKAL_FP, //88
 	FILE_ID_MAX = 89,                       /* MAX VALID FILE ID */
 };
 

@@ -66,7 +66,7 @@ void iaware_proc_fork_connector(struct task_struct *task)
                 break;
         }
 
-        parent = rcu_dereference(temp_task->real_parent);/*lint !e1058 !e64*/
+        parent = rcu_dereference(temp_task->real_parent); /*lint !e1058 !e64*/
         if (!parent)
             break;
         vip = get_static_vip(parent);

@@ -10,7 +10,7 @@
  */
 
 /{
-	modem_pinctrl {
+	modem_pinctrl:modem_pinctrl {
 		compatible = "arm,modem_pinctrl";
 			pinctrl-names = "init","default","idle";
 			/*table: gpio_group gpio_pin mux_addr mux_value cfg_addr cfg_value gpio_dir gpio_value*/

@@ -55,9 +55,7 @@
 #include "AtDeviceCmd.h"
 #include "AtCmdPacketProc.h"
 
-/* Added by j00174725 for V3R3C60_eCall项目, 2014-3-29, begin */
 #include "AtCmdCallProc.h"
-/* Added by j00174725 for V3R3C60_eCall项目, 2014-3-29, end */
 
 #include "AtTestParaCmd.h"
 #include "AtCmdSupsProc.h"
@@ -85,7 +83,6 @@
 */
 /* SMS命令表 */
 
-/* Modified by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-25, begin */
 /* 主动上报相关命令设置和查询时需要等待回复，添加等待设置回复时间和等待查询回复时间 */
 const AT_SMS_CMD_TAB_STRU gastAtSmsCmdTab[]=
 {
@@ -304,7 +301,7 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
 
     /* 语音新增AT命令 */
     {AT_CMD_CLVL,
-    At_SetClvlPara,     AT_SET_PARA_TIME, At_QryClvlPara,   AT_QRY_PARA_TIME,   VOS_NULL_PTR, AT_NOT_SET_TIME,
+    At_SetClvlPara,     AT_SET_VC_PARA_TIME, At_QryClvlPara,   AT_QRY_VC_PARA_TIME,   VOS_NULL_PTR, AT_NOT_SET_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8*)"+CLVL", (VOS_UINT8*)"(0-5)"},
@@ -388,7 +385,7 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_LIMITED_NULL,
     (VOS_UINT8*)"+CSSN", (VOS_UINT8*)"(0,1),(0,1)"},
     {AT_CMD_CHLD,
-    At_SetChldPara,     AT_SET_PARA_TIME, VOS_NULL_PTR,     AT_NOT_SET_TIME,    VOS_NULL_PTR, AT_NOT_SET_TIME,
+    At_SetChldPara,     AT_SET_CALL_PARA_TIME, VOS_NULL_PTR,     AT_NOT_SET_TIME,    VOS_NULL_PTR, AT_NOT_SET_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8*)"+CHLD", (VOS_UINT8*)"(0-5,11-19,21-29)"},
@@ -462,7 +459,7 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
     At_SetCopsPara,     AT_COPS_SPEC_SRCH_TIME, At_QryCopsPara,   AT_QRY_PARA_TIME,   At_TestCopsPara, AT_COPS_LIST_SRCH_TIME,
     At_AbortCopsPara,   AT_COPS_LIST_ABORT_TIME,
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_LIMITED_NULL,
-    (VOS_UINT8*)"+COPS",       (VOS_UINT8*)"(0,1,3),(0-2),(@oper),(0,2,7)"},
+    (VOS_UINT8*)"+COPS",       (VOS_UINT8*)"(0,1,2,3,4),(0-2),(@oper),(0,2,7)"},
     /* Modified by s46746 for V7R1 phase II , 2011-10-18, end */
 
     {AT_CMD_CSGIDSEARCH,
@@ -674,19 +671,19 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
 
 
     {AT_CMD_CGCONTRDP,
-    atSetCgcontrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,   AT_NOT_SET_TIME,  At_TestCgcontrdp,       AT_NOT_SET_TIME,
+    atSetCgcontrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,   AT_NOT_SET_TIME,  At_TestCgcontrdp,       AT_TEST_PARA_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8*)"+CGCONTRDP",    (VOS_UINT8*)"(1-31)"},
 
     {AT_CMD_CGSCONTRDP,
-    atSetCgscontrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,   AT_NOT_SET_TIME,  At_TestCgscontrdp,       AT_NOT_SET_TIME,
+    atSetCgscontrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,   AT_NOT_SET_TIME,  At_TestCgscontrdp,       AT_TEST_PARA_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8*)"+CGSCONTRDP",    (VOS_UINT8*)"(1-31)"},
 
     {AT_CMD_CGTFTRDP,
-    atSetCgtftrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,    AT_NOT_SET_TIME,  At_TestCgtftrdp,       AT_NOT_SET_TIME,
+    atSetCgtftrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,    AT_NOT_SET_TIME,  At_TestCgtftrdp,       AT_TEST_PARA_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8*)"+CGTFTRDP",    (VOS_UINT8*)"(1-31)"},
@@ -698,7 +695,7 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
     (VOS_UINT8*)"+CGEQOS",    (VOS_UINT8*)"(1-31),(0-9),(0-10485760),(0-10485760),(0-10485760),(0-10485760)"},
 
     {AT_CMD_CGEQOSRDP,
-    atSetCgeqosrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,   AT_NOT_SET_TIME,  At_TestCgeqosrdp,       AT_NOT_SET_TIME,
+    atSetCgeqosrdpPara, AT_SET_PARA_TIME, VOS_NULL_PTR,   AT_NOT_SET_TIME,  At_TestCgeqosrdp,       AT_TEST_PARA_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8*)"+CGEQOSRDP",    (VOS_UINT8*)"(1-31)"},
@@ -741,7 +738,7 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
     (VOS_UINT8*)"+CPOSR",    (VOS_UINT8 *)"(0,1)"},
 
     {AT_CMD_CMUT,
-    AT_SetCmutPara,     AT_SET_PARA_TIME,   AT_QryCmutPara,     AT_QRY_PARA_TIME,   AT_TestCmutPara,   AT_NOT_SET_TIME,
+    AT_SetCmutPara,     AT_SET_VC_PARA_TIME,   AT_QryCmutPara,     AT_QRY_VC_PARA_TIME,   AT_TestCmutPara,   AT_NOT_SET_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS,    CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8 *)"+CMUT",   (VOS_UINT8 *)"(0,1)"},
@@ -779,14 +776,12 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
 
 
 
-    /* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, begin */
-    /* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, end   */
 
     {AT_CMD_CCLK,
-    AT_SetCclkPara,  AT_NOT_SET_TIME,   AT_QryCclkPara,   AT_NOT_SET_TIME,    VOS_NULL_PTR, AT_NOT_SET_TIME,
+    AT_SetCclkPara,  AT_NOT_SET_TIME,   AT_QryCclkPara,   AT_QRY_PARA_TIME,    At_CmdTestProcOK, AT_NOT_SET_TIME,
     VOS_NULL_PTR,   AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS,    CMD_TBL_PIN_IS_LOCKED,
-    (VOS_UINT8 *)"+CCLK",    VOS_NULL_PTR},
+    (VOS_UINT8 *)"+CCLK",    (VOS_UINT8*)"(time)"},
 
 
     {AT_CMD_CTZU,
@@ -794,7 +789,6 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
     VOS_NULL_PTR,   AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS,    CMD_TBL_PIN_IS_LOCKED,
     (VOS_UINT8 *)"+CTZU",    (VOS_UINT8 *)"(0-1)"},
-
     {AT_CMD_CRM,
     AT_SetCrmPara,    AT_SET_PARA_TIME,    VOS_NULL_PTR,    AT_NOT_SET_TIME,    VOS_NULL_PTR,    AT_NOT_SET_TIME,
     VOS_NULL_PTR,    AT_NOT_SET_TIME,
@@ -831,38 +825,54 @@ AT_PAR_CMD_ELEMENT_STRU g_astAtExtendCmdTbl[] =
     AT_CME_INCORRECT_PARAMETERS, CMD_TBL_LIMITED_NULL,
     (VOS_UINT8*)"+CNAP",  (VOS_UINT8 *)"(0,1)"},
 
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
-    {AT_CMD_CMIP,
-    AT_SetMipPara,        AT_SET_PARA_TIME,    AT_QryMipPara,     AT_QRY_PARA_TIME,  AT_TestMipPara, AT_NOT_SET_TIME,
+    {AT_CMD_CGPIAF,
+    AT_SetCgpiafPara,   AT_NOT_SET_TIME,    AT_QryCgpiafPara,   AT_NOT_SET_TIME,    VOS_NULL_PTR,   AT_NOT_SET_TIME,
+    VOS_NULL_PTR,       AT_NOT_SET_TIME,
+    AT_CME_INCORRECT_PARAMETERS,    CMD_TBL_NO_LIMITED,
+    (VOS_UINT8*)"+CGPIAF",  (VOS_UINT8 *)"(0,1),(0,1),(0,1),(0,1)"},
+
+
+
+    {AT_CMD_CSDF,
+    AT_SetCsdfPara,  AT_NOT_SET_TIME,   AT_QryCsdfPara,   AT_NOT_SET_TIME,    VOS_NULL_PTR, AT_NOT_SET_TIME,
+    VOS_NULL_PTR,   AT_NOT_SET_TIME,
+    AT_CME_INCORRECT_PARAMETERS,    CMD_TBL_NO_LIMITED,
+    (VOS_UINT8 *)"+CSDF",    (VOS_UINT8 *)"(1-255),(1-2)"},
+
+    {AT_CMD_CGEREP,
+    AT_SetCgerepPara,        AT_SET_PARA_TIME,    AT_QryCgerepPara,     AT_QRY_PARA_TIME,  VOS_NULL_PTR, AT_NOT_SET_TIME,
     VOS_NULL_PTR,        AT_NOT_SET_TIME,
     AT_CME_INCORRECT_PARAMETERS,    CMD_TBL_NO_LIMITED,
-    (VOS_UINT8*)"^CMIP",  (VOS_UINT8 *)"(0-2)"},
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
+    (VOS_UINT8*)"+CGEREP",  (VOS_UINT8 *)"(0-2),(0,1)"},
+
+    {AT_CMD_CIND,
+    AT_SetCindPara,        AT_SET_PARA_TIME,    AT_QryCindPara,     AT_QRY_PARA_TIME,  AT_TestCindPara, AT_TEST_PARA_TIME,
+    VOS_NULL_PTR,        AT_NOT_SET_TIME,
+    AT_CME_INCORRECT_PARAMETERS,    CMD_TBL_PIN_IS_LOCKED,
+    (VOS_UINT8*)"+CIND",  (VOS_UINT8 *)"(0-5)"},
 };
-/* Modified by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-25, end */
 
 /*****************************************************************************
   3 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : At_RegisterExCmdTable
- 功能描述  : 注册扩展命令表
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年10月21日
-    作    者   : 鲁琳/l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_RegisterExCmdTable(VOS_VOID)
 {
     return AT_RegisterCmdTable(g_astAtExtendCmdTbl, sizeof(g_astAtExtendCmdTbl)/sizeof(g_astAtExtendCmdTbl[0]));
+}
+
+
+
+AT_PAR_CMD_ELEMENT_STRU *At_GetExtendCmdTable(VOS_VOID)
+{
+    return g_astAtExtendCmdTbl;
+}
+
+
+VOS_UINT32 At_GetExtendCmdNum(VOS_VOID)
+{
+    return sizeof(g_astAtExtendCmdTbl)/sizeof(g_astAtExtendCmdTbl[0]);
 }
 
 

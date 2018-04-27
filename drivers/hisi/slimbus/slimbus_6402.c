@@ -84,8 +84,8 @@ static uint16_t sl_table[SLIMBUS_RF_MAX][SLIMBUS_TRACK_MAX][SLIMBUS_CHANNELS_MAX
 			{
 				{6, 6},						/* audio playback */
 				{6, 6, 6, 6},					/* audio capture */
-				{4, 4},						/* voice down */
-				{4, 4, 4, 4},					/* voice up */
+				{6, 6},						/* voice down */
+				{6, 6, 6, 6},					/* voice up */
 				{5},						/* image download */
 				{4, 4},						/* EC_REF */
 				{4},						/* sound trigger */

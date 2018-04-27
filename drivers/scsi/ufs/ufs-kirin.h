@@ -14,6 +14,12 @@
 #ifndef UFS_KIRIN_H_
 #define UFS_KIRIN_H_
 
+#define UFS_TX_EQUALIZER_35DB
+/*#define UFS_TX_EQUALIZER_60DB*/
+
+#define UFS_I2C_SLAVE (0x5A)
+#define UFS_I2C_BUS 3
+
 #define HBRN8_POLL_TOUT_MS      1000
 
 /* Device ID */
@@ -98,8 +104,19 @@
 #define PHY_MPX_TEST_OBSV		(0x34)
 #define UFS_SYSCTRL			(0x5C)
 #define UFS_DEVICE_RESET_CTRL           (0x60)
+#define UFS_CRG_UFS_CFG                 (0x7C)
 #define UFS_APB_ADDR_MASK		(0x64)
-#define UFS_CRG_UFS_CFG			(0x7C)
+#define UFS_SYS_AXI_W_QOS_LMRT          (0x84)
+#define UFS_SYS_AXI_R_QOS_LMRT          (0x88)
+#define UFS_DEBUG_CTRL			(0xAC)
+#define UFS_DEBUG_STAT			(0xB0)
+#define UFS_IDLE_CONUTER		(0xBC)
+#define UFS_IDLE_CONUTER_CRUT	(0xC8)
+#define UFS_IDLE_CONUTER_CLR	(0xD4)
+#define UFS_SYS_UFS_POWER_GATING   (0xF4)
+#define UFS_SYS_PHY_SRAM_MEM_CTRL_S  (0xEC)
+#define UFS_SYS_PHY_SRAM_INIT_DONE (1 << 26)
+
 
 #define BIT_UFS_PSW_ISO_CTRL		(1 << 16)
 #define BIT_UFS_PSW_MTCMOS_EN		(1 << 0)
@@ -110,6 +127,7 @@
 #define BIT_SYSCTRL_PWR_READY		(1 << 8)
 #define BIT_SYSCTRL_REF_CLOCK_EN	(1 << 24)
 #define MASK_SYSCTRL_REF_CLOCK_SEL	(0x3 << 8)
+#define SYSCTRL_REF_CLOCK_SEL       	(0x2 << 8)
 #define MASK_SYSCTRL_CFG_CLOCK_FREQ	(0xFF)
 #define UFS_FREQ_CFG_CLK                (0x39)
 #define BIT_SYSCTRL_PSW_CLK_EN		(1 << 4)
@@ -120,6 +138,14 @@
 #define MASK_UFS_SYSCRTL_BYPASS		(0x3F << 16)
 #define MASK_UFS_DEVICE_RESET		(0x1 << 16)
 #define BIT_UFS_DEVICE_RESET		(0x1)
+#define SRAM_EXT_LD_DONE_BIT	    (0x1 << 27)
+#define PHY_SRAM_BYPASS_BIT			(0x1 << 28)
+#define BIT_RX_DISABLE_OVR_EN_WR    (1 << 4)
+#define BIT_UFS_IDLE_CNT_TIMEOUT_MASK	(1 << 5)
+#define BIT_UFS_IDLE_CNT_EN		(1 << 4)
+#define BIT_UFS_IDLE_CNT_TIMEOUT_MASK_STAT	(1 << 4)
+#define BIT_UFS_IDLE_TIMEOUT	(1 << 4)
+#define BIT_UFS_IDLE_CNT_TIMEOUT_CLR	(1 << 0)
 
 /*
  * KIRIN UFS HC specific Registers
@@ -242,22 +268,20 @@ enum {
 #define UFS_KIRIN_LIMIT_TX_PWR_HS	FASTAUTO_MODE
 #define UFS_KIRIN_LIMIT_HS_RATE		PA_HS_MODE_A
 #define UFS_KIRIN_LIMIT_DESIRED_MODE	FAST
+/* maximum number of reset retries before giving up */
+#define MAX_HOST_RESET_RETRIES 	7
 
 #define KIRIN_CAP_RESERVED	UFS_BIT(0)
-#define USE_SNPS_MPHY_TC	UFS_BIT(1)
-#define USE_FPGA_BOARD_CLK	UFS_BIT(2)
-#define USE_RATE_B		UFS_BIT(3)
-#define BROKEN_FASTAUTO		UFS_BIT(4)
-#define USE_ONE_LANE		UFS_BIT(5)
-#define USE_HS_GEAR3		UFS_BIT(6)
-#define USE_HS_GEAR2		UFS_BIT(7)
-#define USE_HS_GEAR1		UFS_BIT(8)
-#define USE_AUTO_H8		UFS_BIT(9)
-#define BROKEN_CLK_GATE_BYPASS	UFS_BIT(10)
-#define USE_HISI_MPHY_TC	UFS_BIT(11)
-#define USE_SINCE_BOSTON_CS	UFS_BIT(12)
-#define USE_SYSBUS_207M		UFS_BIT(13)
-#define PREPARE_MPHY_CALIB_AUTO UFS_BIT(14)
+#define USE_RATE_B		UFS_BIT(1)
+#define BROKEN_FASTAUTO		UFS_BIT(2)
+#define USE_ONE_LANE		UFS_BIT(3)
+#define USE_AUTO_H8		UFS_BIT(4)
+#define BROKEN_CLK_GATE_BYPASS	UFS_BIT(5)
+#define USE_HISI_MPHY_TC	UFS_BIT(6)
+#define USE_HS_GEAR1		UFS_BIT(7)
+#define USE_HS_GEAR2		UFS_BIT(8)
+#define USE_HS_GEAR3		UFS_BIT(9)
+#define USE_HS_GEAR4		UFS_BIT(10)
 
 struct ufs_kirin_host {
 	struct ufs_hba *hba;
@@ -285,11 +309,9 @@ struct ufs_kirin_host {
 	int chipsel_gpio;
 	struct i2c_client *i2c_client;
 
-	bool mr_workround_enable;
 	bool need_memrepair;
 
 	int in_suspend;
-	u32 dly_ms_after_rst;
 };
 
 struct st_register_dump {
@@ -325,4 +347,71 @@ struct st_register_dump {
 #define ufs_sctrl_writel(host, val, reg) writel((val), (host)->sysctrl + (reg))
 #define ufs_sctrl_readl(host, reg) readl((host)->sysctrl + (reg))
 
+/* TODO: get limit information from dts */
+struct ufs_kirin_dev_params {
+	u32 pwm_rx_gear; /* pwm rx gear to work in */
+	u32 pwm_tx_gear; /* pwm tx gear to work in */
+	u32 hs_rx_gear;  /* hs rx gear to work in */
+	u32 hs_tx_gear;  /* hs tx gear to work in */
+	u32 rx_lanes;    /* number of rx lanes */
+	u32 tx_lanes;    /* number of tx lanes */
+	u32 rx_pwr_pwm;  /* rx pwm working pwr */
+	u32 tx_pwr_pwm;  /* tx pwm working pwr */
+	u32 rx_pwr_hs;   /* rx hs working pwr */
+	u32 tx_pwr_hs;   /* tx hs working pwr */
+	u32 hs_rate;     /* rate A/B to work in HS */
+	u32 desired_working_mode;
+};
+
+int ufs_i2c_readl(struct ufs_hba *hba, u32 *value, u32 addr);
+int ufs_i2c_writel(struct ufs_hba *hba, u32 val, u32 addr);
+int create_i2c_client(struct ufs_hba *hba);
+void adapt_pll_to_power_mode(struct ufs_hba *hba);
+void deemphasis_config(struct ufs_kirin_host *host, struct ufs_hba *hba,
+				struct ufs_pa_layer_attr *dev_req_params);
+void i2c_chipsel_gpio_config(struct ufs_kirin_host *host, struct device *dev);
+
+void ufs_kirin_advertise_quirks(struct ufs_hba *hba);
+void ufs_kirin_set_pm_lvl(struct ufs_hba *hba);
+void ufs_kirin_populate_dt(struct device *dev,
+				  struct ufs_kirin_host *host);
+int ufs_kirin_get_resource(struct ufs_kirin_host *host);
+void ufs_kirin_regulator_init(struct ufs_hba *hba);
+void ufs_kirin_inline_crypto_attr(struct ufs_hba *hba);
+#ifndef CONFIG_SCSI_UFS_ENHANCED_INLINE_CRYPTO
+void ufs_kirin_uie_key_prepare(struct ufs_hba *hba, int key_index, void *key);
+#endif
+
+int ufs_kirin_link_startup_pre_change(struct ufs_hba *hba);
+int ufs_kirin_link_startup_post_change(struct ufs_hba *hba);
+void ufs_kirin_pwr_change_pre_change(struct ufs_hba *hba);
+
+void hisi_mphy_updata_temp_sqvref(struct ufs_hba *hba,
+				struct ufs_kirin_host *host);
+void hisi_mphy_updata_vswing_fsm_ocs5(struct ufs_hba *hba,
+				struct ufs_kirin_host *host);
+
+int ufs_kirin_check_hibern8(struct ufs_hba *hba);
+void ufs_kirin_mphy_write(struct ufs_hba *hba, uint16_t addr, uint16_t value);
+int ufs_kirin_polling_mphy_write(struct ufs_hba *hba, uint16_t addr,
+				  uint16_t value);
+uint16_t ufs_kirin_mphy_read(struct ufs_hba *hba, uint16_t addr);
+
+void hisi_mphy_busdly_config(struct ufs_hba *hba,
+			struct ufs_kirin_host *host);
+
+void ufs_clk_init(struct ufs_hba *hba);
+void ufs_soc_init(struct ufs_hba *hba);
+void ufs_kirin_full_reset(struct ufs_hba *hba);
+void ufs_kirin_device_hw_reset(struct ufs_hba *hba);
+int ufs_kirin_suspend_before_set_link_state(struct ufs_hba *hba, enum ufs_pm_op pm_op);
+int ufs_kirin_resume_after_set_link_state(struct ufs_hba *hba, enum ufs_pm_op pm_op);
+int ufs_kirin_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op);
+int ufs_kirin_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op);
+#ifdef CONFIG_SCSI_UFS_HS_ERROR_RECOVER
+int ufs_kirin_get_pwr_by_sysctrl(struct ufs_hba *hba);
+#endif
+#ifdef CONFIG_SCSI_UFS_KIRIN_LINERESET_CHECK
+int ufs_kirin_daemon_thread(void *d);
+#endif
 #endif /* UFS_KIRIN_H_ */

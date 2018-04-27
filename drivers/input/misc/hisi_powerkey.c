@@ -187,6 +187,7 @@ static irqreturn_t hisi_powerkey_handler(int irq, void *data)
 #endif
 	} else if (info->irq[1] == irq) {
 		if (check_himntn(HIMNTN_PRESS_KEY_TO_FASTBOOT)) {
+#ifdef CONFIG_KEYBOARD_HISI_GPIO_KEY
 			if ((VOL_UPDOWN_PRESS & gpio_key_vol_updown_press_get())
 			    == VOL_UPDOWN_PRESS) {
 				gpio_key_vol_updown_press_set_zero();
@@ -198,6 +199,7 @@ static irqreturn_t hisi_powerkey_handler(int irq, void *data)
 #endif
 				}
 			}
+#endif
 		}
 #ifdef CONFIG_HISI_BB
 		if (AP_S_PRESS6S == get_reboot_reason())

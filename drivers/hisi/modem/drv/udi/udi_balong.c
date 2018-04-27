@@ -58,6 +58,7 @@
 #include <linux/string.h>
 #include <linux/kernel.h>
 #include <linux/semaphore.h>
+#include <securec.h>
 
 #include "udi_balong.h"
 
@@ -296,8 +297,10 @@ static int __init bsp_udi_init(void)
 	UDI_ADP_INIT_CB_T initCB;
 	unsigned int u32Cnt;
 
-	memset(g_deviceTable, 0, sizeof(g_deviceTable));
-	memset(g_openNodeTable, 0, sizeof(g_openNodeTable));
+	memset_s(g_deviceTable, sizeof(g_deviceTable),
+		0, UDI_MAX_MAIN_DEV_NUM * UDI_MAX_DEV_TYPE_NUM * sizeof(UDI_DEV_INSTANCE));
+	memset_s(g_openNodeTable, sizeof(g_openNodeTable),
+		0, UDI_MAX_OPEN_NODE_NUM * sizeof(UDI_OPEN_NODE));
 
 	sema_init(&g_udiMtxOpen, 1);
 

@@ -60,6 +60,7 @@ static __inline__  void cache_sync(void)
 #endif
 
 #elif defined(__OS_VXWORKS__)||defined(__OS_RTOSCK__) ||defined(__OS_RTOSCK_SMP__)&& !defined(__ASSEMBLY__)
+#include <sre_cache.h>
 #define isb() __asm__ __volatile__ ("isb" : : : "memory")
 #define dsb() __asm__ __volatile__ ("dsb" : : : "memory")
 #define dmb() __asm__ __volatile__ ("dmb" : : : "memory")
@@ -76,7 +77,6 @@ static inline void WFI(void)
 	asm volatile ( "nop;");/*lint !e123*/
 }
 
-extern void SRE_L2CacheWait(void);
 static __inline__ void DWB(void) /* drain write buffer */
 {
 //    asm volatile ( "mcr p15, 0, r0, c7, c10, 4;");
@@ -273,6 +273,29 @@ enum MMU_MAP_E
 #endif
 
 #endif
+
+#ifdef __OS_NRCCPU__
+
+static inline void *ioremap(void* phy_addr, unsigned int len)
+{
+	return (void *)phy_addr;
+}
+static inline void *ioremap_wc(void* phy_addr, unsigned int len)
+{
+	return (void *)phy_addr;
+}
+static inline void *ioremap_memory(void* phy_addr, unsigned int len)
+{
+	return (void *)phy_addr;
+}
+static inline unsigned int io_unmap(void* pVStart, unsigned int uwLen)
+{
+    return 0;
+}
+
+#else
+
+
 #if defined(__OS_RTOSCK_SMP__) ||defined(__OS_RTOSCK__)
 /* device: strongly-ordered 寄存器都要使用该接口 */
 void *ioremap(MMU_PA_T phy_addr, unsigned int len);
@@ -287,6 +310,9 @@ int ioremap_wc_smp(void* phy_addr, unsigned int len,void* virt_addr);
 int ioremap_memory_smp(void* phy_addr, unsigned int len,void* virt_addr);
 int iounmap_smp(unsigned int region_id,void* virt_addr, unsigned int len);
 #endif
+
+#endif 
+
 #if defined (__KERNEL__)||defined(__CMSIS_RTOS)
 static __inline__ unsigned osl_reg_get_bit(void *reg, unsigned bit_start, unsigned bit_end)
 {

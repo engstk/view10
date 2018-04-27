@@ -1,0 +1,15 @@
+menu "Hisi L3 Cache Share"
+config HISI_L3CACHE_SHARE
+	bool "l3 share"
+	default n
+	help
+	 support l3 cache share
+
+config HISI_L3CACHE_DEBUG
+	bool "l3cache debug"
+	depends on HISI_L3CACHE_SHARE
+	default n
+	help
+	 support l3cache debug
+
+endmenu

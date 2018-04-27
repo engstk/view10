@@ -260,4 +260,5 @@ void bsp_om_save_reboot_log(const char * func_name, const void* caller)
     dump_fetal("bsp_om_save_reboot_log finish\n");
 
 }
+EXPORT_SYMBOL(bsp_om_save_reboot_log);
 

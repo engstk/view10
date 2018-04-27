@@ -64,6 +64,8 @@ typedef enum FUNC_SEC_CMD_ID {
     FUNC_ICC_MSG_SWITCH_OFF,             /* 禁止ICC往modem发送消息 */
     FUNC_EFUSE_READ,                     /* Efuse Read控制命令 */
     FUNC_EFUSE_WRITE,                    /* Efuse Write控制命令 */
+    FUNC_PM_RESET_NONBOOT,               /*pm对从核复位*/
+    FUNC_PM_BOOT_NONBOOT,                /*pm对从核解复位*/
 
 	FUNC_CMD_ID_MIN_BUTTOM  /* 请在此之前添加 */
 

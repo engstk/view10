@@ -39,6 +39,8 @@
 #include "clock.h"
 
 /*lint -e429 -e514 -e574*/
+#define USB_REQ_SET_VOLUME 0x2
+
 struct usbaudio_pcm_cfg {
 	u64 formats;			/* ALSA format bits */
 	unsigned int channels;		/* # channels */
@@ -748,7 +750,7 @@ void hifi_samplerate_table_filled(struct audioformat *fp, struct usbaudio_format
 	int i;
 	unsigned int rate = 0;
 
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < ARRAY_SIZE(fmt->rate_table); i++) {
 		fmt->rate_table[i] = 0;
 	}
 
@@ -990,25 +992,65 @@ bool is_special_usbid(u32 usb_id)
 	return false;
 }
 
+static void _customsized_headset_volume_set(struct usb_device *dev, u32 usb_id)
+{
+	int i;
+	int ret;
+	char result = 0;
+
+	for (i = 0; i < ARRAY_SIZE(customsized_usb_ids); i++) {
+		if (usb_id == customsized_usb_ids[i]) {
+			pr_info("huawei headset 0x%x\n", usb_id);
+			ret = usb_control_msg(dev, usb_rcvctrlpipe(dev, 0), /*lint !e648 */
+				USB_REQ_SET_VOLUME,
+				USB_DIR_IN | USB_TYPE_VENDOR | USB_RECIP_DEVICE,
+				0, 0, &result, 1, 3000);
+			if (ret > 0) {
+				pr_info("result 0x%02x\n", result);
+				if (1 == result)
+					pr_info("volume set success\n");
+				else
+					pr_info("do not set volume\n");
+			} else {
+				pr_err("control msg send fail :%d\n", ret);
+			}
+			break;
+		}
+	}
+}
+
 bool controller_switch(struct usb_device *dev, u32 usb_id, struct usb_host_interface *ctrl_intf, int ctrlif, struct usbaudio_pcms *pcms)
 {
 	int ret = 0;
-	if ((!hisi_usb_using_hifi_usb(dev)) && is_usbaudio_device(dev) && !is_special_usbid(usb_id) && is_match_hifi_format(dev, usb_id, ctrl_intf, ctrlif, pcms)) {
-		ret = usbaudio_nv_check();
-		if (ret == 0) {
-			/* Some special device need reset power */
-			if (usb_id == USB_ID(0x262a, 0x1534)) {
-				if (!hisi_usb_start_hifi_usb_reset_power())
+	if (is_usbaudio_device(dev) && !is_special_usbid(usb_id) && is_match_hifi_format(dev, usb_id, ctrl_intf, ctrlif, pcms)) {
+		if (!hisi_usb_using_hifi_usb(dev)) {
+			/* set volume for huawei headset */
+			_customsized_headset_volume_set(dev, usb_id);
+
+			ret = usbaudio_nv_check();
+			if (ret == 0) {
+				/* Some special device need reset power */
+				if (usb_id == USB_ID(0x262a, 0x1534)) {
+					if (!hisi_usb_start_hifi_usb_reset_power())
+						return true;
+				} else if (!hisi_usb_start_hifi_usb()) {
 					return true;
-			} else if (!hisi_usb_start_hifi_usb()) {
+				} else {
+					pr_err("start hifi usb fail \n");
+				}
+			} else if (ret == -ETIME) {
 				return true;
 			} else {
-				pr_err("start hifi usb fail \n");
+				pr_err("nv check intime %d\n", ret);
+				return true;
 			}
-		} else if (ret == -ETIME) {
-			return true;
 		} else {
-			pr_err("nv check intime %d\n", ret);
+			pr_info("already using hifiusb\n");
+		}
+	} else {
+		if (hisi_usb_using_hifi_usb(dev)) {
+			pr_info("using hifiuusb, switch to arm usb\n");
+			hisi_usb_stop_hifi_usb();
 			return true;
 		}
 	}
@@ -1021,7 +1063,7 @@ bool send_usbaudioinfo2hifi(struct snd_usb_audio *chip, struct usbaudio_pcms *pc
 	int i = 0;
 	if (hisi_usb_using_hifi_usb(chip->dev)) {
 		if(0 == usbaudio_probe_msg(pcms)) {
-			for (i = 0; i < 2; i++) {
+			for (i = 0; i < USBAUDIO_PCM_NUM; i++) {
 				pr_err("-----------begin \n");
 				pr_err("formats %llx channels %d fmt_type %d frame_size %d iface %d altsetting %d altset_idx %d attributes %d endpoint %d ep_attr %d datainterval %d protocol %d maxpacksize %d rates %d clock %d\n",
 				pcms->fmts[i].formats,

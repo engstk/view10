@@ -46,18 +46,7 @@
  *
  */
 
-/************************************************************************
-  Copyright   : 2005-2007, Huawei Tech. Co., Ltd.
-  File name   : UsimPsInterface.h
-  Author      : zhuli 00100318
-  Version     : V200R001
-  Date        : 2008-09-23
-  Description : 该头文件定义了---usim模块对外的接口定义
-  History     :
-  1. Date:2008-09-23
-     Author: zhuli
-     Modification:Create
-************************************************************************/
+
 
 #ifndef _USIMM_USIMMPSINTERFACE_H_
 #define _USIMM_USIMMPSINTERFACE_H_

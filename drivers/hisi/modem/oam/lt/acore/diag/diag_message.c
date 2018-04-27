@@ -49,6 +49,7 @@
 
 
 #include "diag_common.h"
+#include "msp_diag_comm.h"
 #include "diag_api.h"
 #include "diag_cfg.h"
 #include "diag_debug.h"
@@ -103,7 +104,6 @@ struct DIAG_MESSAGE_PROC_STRU g_aFnMsgTbl[DIAG_MSG_TYPE_BUTT] =
     {DIAG_MSG_TYPE_PS,      VOS_NULL},
     {DIAG_MSG_TYPE_PHY,     VOS_NULL},
     {DIAG_MSG_TYPE_BBP,     VOS_NULL},
-    {DIAG_MSG_TYPE_RSV,     VOS_NULL},
     {DIAG_MSG_TYPE_RSV,     VOS_NULL},  /* reserve */
     {DIAG_MSG_TYPE_RSV,     VOS_NULL},  /* reserve */
     {DIAG_MSG_TYPE_RSV,     VOS_NULL},  /* reserve */
@@ -146,8 +146,21 @@ VOS_UINT32 diag_MessageProc(DIAG_FRAME_INFO_STRU *pData)
     {
         return VOS_ERR;
     }
+    /* 数据长度不能小于第三级DIAG业务层头的大小 */
+    if(pData->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU))
+    {
+        diag_error("rev tool datalen error, 0x%x\n", pData->ulMsgLen);
+        return ERR_MSP_INALID_LEN_ERROR;
+    }
 
-    ulMsgType = pData->stID.pri4b;
+    if(DIAG_SERVICE_HEAD_VER(pData))
+    {
+        ulMsgType = pData->stID.pri4b;
+    }
+    else
+    {
+        ulMsgType = ((MSP_DIAG_STID_STRU *)((VOS_UINT8*)pData + DIAG_4G_FRAME_HEAD_LEN))->pri4b;
+    }
 
     if((ulMsgType < DIAG_MSG_TYPE_BUTT) && (g_aFnMsgTbl[ulMsgType].fnMsgProc))
     {
@@ -205,7 +218,7 @@ VOS_UINT32 DIAG_MsgReport (MSP_DIAG_CNF_INFO_STRU *pstDiagInfo, VOS_VOID *pstDat
 
     mdrv_diag_PTR(EN_DIAG_PTR_MESSAGE_REPORT, 1, pstDiagInfo->ulMsgType, pstDiagInfo->ulSubType);
 
-    (VOS_VOID)VOS_MemSet_s(&stDiagHead, (VOS_UINT32)sizeof(DIAG_MSG_REPORT_HEAD_STRU), 0, sizeof(DIAG_MSG_REPORT_HEAD_STRU));
+    (VOS_VOID)VOS_MemSet_s(&stDiagHead, (VOS_UINT32)sizeof(stDiagHead), 0, sizeof(stDiagHead));
 
     stDiagHead.u.stID.pri4b     = (pstDiagInfo->ulMsgType & 0xf);
     stDiagHead.u.stID.mode4b    = (pstDiagInfo->ulMode & 0xf);

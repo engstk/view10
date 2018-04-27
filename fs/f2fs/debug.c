@@ -247,6 +247,9 @@ get_cache:
 static int stat_show(struct seq_file *s, void *v)
 {
 	struct f2fs_stat_info *si;
+#ifdef CONFIG_F2FS_REMAP_GC
+	unsigned long long total_latency;
+#endif
 	int i = 0;
 	int j;
 
@@ -347,8 +350,17 @@ static int stat_show(struct seq_file *s, void *v)
 			   si->nr_flushing, si->nr_flushed,
 			   si->nr_discarding, si->nr_discarded,
 			   si->nr_discard_cmd, si->undiscard_blks);
+#ifdef CONFIG_F2FS_CLOSE_FUA
+		if (blk_flush_async_support(si->sbi->sb->s_bdev)) /* indicate fua is off or on */
+			seq_printf(s, "  - inmem: %4d, atomic io: %4d (Max. %4d)\n",
+				   si->inmem_pages, si->aw_cnt, si->max_aw_cnt);
+		else
+			seq_printf(s, "  - inmem: %4d, Atomic IO: %4d (Max. %4d)\n",
+				   si->inmem_pages, si->aw_cnt, si->max_aw_cnt);
+#else
 		seq_printf(s, "  - inmem: %4d, atomic IO: %4d (Max. %4d)\n",
 			   si->inmem_pages, si->aw_cnt, si->max_aw_cnt);
+#endif
 		seq_printf(s, "  - nodes: %4d in %4d\n",
 			   si->ndirty_node, si->node_pages);
 		seq_printf(s, "  - dents: %4d in dirs:%4d (%4d)\n",
@@ -399,6 +411,30 @@ static int stat_show(struct seq_file *s, void *v)
 				si->cache_mem >> 10);
 		seq_printf(s, "  - paged : %llu KB\n",
 				si->page_mem >> 10);
+
+#ifdef CONFIG_F2FS_REMAP_GC
+		/* Remap GC info */
+		seq_printf(s, "Remap info:\n");
+		seq_printf(s, "\tCP calls: %u\n", si->rmpgc_cp_count);
+		seq_printf(s, "\tGrouped count of buffered GC blocks (Group n for [2^n, 2^(n+1)-1]):\n");
+		for (j = 0; j < F2FS_RMPGC_STATS_NGROUPS; j++)
+			seq_printf(s, "\t\tGroup %d: %llu\n", j,
+				   si->rmpgc_block_stats[j]);
+
+		seq_printf(s, "\tMin Latency(ns): %lld\n", si->rmpgc_min_lat);
+		seq_printf(s, "\tMax Latency(ns): %lld\n", si->rmpgc_max_lat);
+
+		total_latency = (unsigned long long )si->rmpgc_total_lat;
+		do_div(total_latency, (si->rmpgc_nlats ? : 1));
+		seq_printf(s, "\tAvg Latency(ns): %llu\n", total_latency);
+
+		seq_printf(s, "\tGrouped count of wait time in nsec (Group n for [10^n, 10^(n+1)-1]):\n");
+		for (j = 0; j < F2FS_RMPGC_STATS_NGROUPS; j++)
+			seq_printf(s, "\t\tGroup %d: %llu\n", j,
+				   si->rmpgc_time_stats[j]);
+
+		seq_printf(s, "\tDIO calls: %d\n", atomic_read(&si->dio_count));
+#endif
 	}
 	mutex_unlock(&f2fs_stat_mutex);
 	return 0;
@@ -436,6 +472,12 @@ int f2fs_build_stats(struct f2fs_sb_info *sbi)
 	si->main_area_zones = si->main_area_sections /
 				le32_to_cpu(raw_super->secs_per_zone);
 	/*lint -restore*/
+
+#ifdef CONFIG_F2FS_REMAP_GC
+	si->rmpgc_min_lat = LLONG_MAX;
+	atomic_set(&si->dio_count, 0);
+#endif
+
 	si->sbi = sbi;
 	sbi->stat_info = si;
 

@@ -6,7 +6,7 @@ ccflags-y += -DDEF_ENG
 endif
 
 obj-$(CONFIG_TZDRIVER) += tc_client_driver.o teek_client_api.o mailbox_mempool.o
-obj-$(CONFIG_TZDRIVER) += security_auth_enhance.o smc.o agent.o gp_ops.o mem.o
+obj-$(CONFIG_TZDRIVER) += security_auth_enhance.o smc.o agent.o gp_ops.o mem.o cmdmonitor.o
 obj-$(CONFIG_TEELOG) += tlogger.o tee_rdr_register.o
 ifeq ($(CONFIG_TZDRIVER), y)
 obj-$(CONFIG_HISI_MMC_SECURE_RPMB) += agent_rpmb.o

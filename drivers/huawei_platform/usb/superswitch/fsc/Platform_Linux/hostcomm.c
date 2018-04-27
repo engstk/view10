@@ -4,6 +4,8 @@
 #include "FSCTypes.h"
 #include "platform_helpers.h"
 #include "../core/core.h"
+#include "../core/PDTypes.h"
+#include "../core/TypeCTypes.h"
 #include "hostcomm.h"
 
 #ifdef FSC_HAVE_VDM
@@ -27,6 +29,8 @@ void FUSB3601_ReadSinkCapabilities(FSC_U8 *data, struct Port *port);
 void FUSB3601_WriteSinkCapabilities(FSC_U8 *data, struct Port *port);
 void FUSB3601_ReadSinkRequestSettings(FSC_U8 *data, struct Port *port);
 void FUSB3601_WriteSinkRequestSettings(FSC_U8 *data, struct Port *port);
+void FUSB3601_ConfigurePortType(FSC_U8 Control, struct Port *port);
+
 
 void FUSB3601_fusb_ProcessMsg(struct Port *port,
                      FSC_U8* inMsgBuffer, FSC_U8* outMsgBuffer)
@@ -63,7 +67,7 @@ void FUSB3601_fusb_ProcessMsg(struct Port *port,
 
                 outMsgBuffer[26] = TEST_FIRMWARE;
             }
-            break; 
+            break;
 #ifdef FSC_LOGGING
         case CMD_USBPD_BUFFER_READ:
             FUSB3601_ReadPDLog(&port->log_, &outMsgBuffer[4],
@@ -388,7 +392,84 @@ void FUSB3601_ProcessTCPDStatus(FSC_U8 *inMsgBuffer, FSC_U8 *outMsgBuffer,
     }
   }
 }
+void FUSB3601_ConfigurePortType(FSC_U8 control,struct Port *port)
+{
+	FSC_U8 value;
+	FSC_BOOL setUnattached = FALSE;
+	value = control & 0x03;
 
+	if (port->port_type_ != value) {
+		switch (value) {
+		case 1:
+#ifdef FSC_HAVE_SRC
+			port->port_type_= USBTypeC_Source;
+#endif /* FSC_HAVE_SRC */
+			break;
+		case 2:
+#ifdef FSC_HAVE_DRP
+			port->port_type_ = USBTypeC_DRP;
+#endif /* FSC_HAVE_DRP */
+			break;
+		default:
+#ifdef FSC_HAVE_SNK
+			port->port_type_ = USBTypeC_Sink;
+#endif /* FSC_HAVE_SNK */
+			break;
+		}
+		setUnattached = TRUE;
+	}
+#ifdef FSC_HAVE_ACC
+	if (((control & 0x04) >> 2) != port->acc_support_) {
+		port->acc_support_ = control & 0x04 ? TRUE : FALSE;
+		setUnattached = TRUE;
+	}
+#endif /* FSC_HAVE_ACC */
+#ifdef FSC_HAVE_DRP
+	if ((control & 0x08) && !port->src_preferred_) {
+		port->src_preferred_ = TRUE;
+		setUnattached = TRUE;
+	} else if (!(control & 0x08) && port->src_preferred_) {
+		port->src_preferred_ = FALSE;
+		setUnattached = TRUE;
+	}
+
+	if ((control & 0x40) && !port->snk_preferred_) {
+		port->snk_preferred_ = TRUE;
+		setUnattached = TRUE;
+	} else if (!(control & 0x40) && port->snk_preferred_) {
+		port->snk_preferred_ = FALSE;
+		setUnattached = TRUE;
+	}
+#endif /* FSC_HAVE_DRP */
+
+#ifdef FSC_HAVE_SRC
+	value = (control & 0x30) >> 4;
+	if (port->src_current_ != value) {
+		switch (value) {
+		case 1:
+			port->src_current_ = utccDefault;
+			break;
+		case 2:
+			port->src_current_ = utcc1p5A;
+			break;
+		case 3:
+			port->src_current_ = utcc3p0A;
+			break;
+		default:
+			port->src_current_ = utccOpen;
+			break;
+		}
+		FUSB3601_UpdateSourceCurrent(port, port->src_current_);
+	}
+#endif /* FSC_HAVE_SRC */
+
+	if(setUnattached)
+		FUSB3601_SetStateUnattached(port);
+
+	if (control & 0x80) {
+		port->tc_enabled_ = TRUE;
+	}
+}
 void FUSB3601_ProcessTCPDControl(FSC_U8 *inMsgBuffer, FSC_U8 *outMsgBuffer,
                         struct Port *port)
 {
@@ -813,6 +894,19 @@ void FUSB3601_ReadSinkCapabilities(FSC_U8 *data, struct Port *port)
       data[index++] = port->caps_sink_[i].byte[j];
     }
   }
+}
+
+void FUSB3601_tx_pd_cmd_msg(struct Port *port, FSC_U8 message_type) {
+	FSC_U8 data[2];
+	sopMainHeader_t tx_header;
+
+	tx_header.MessageType = message_type;
+	tx_header.NumDataObjects = 0;
+
+	data[0] = tx_header.byte[0];
+	data[1] = tx_header.byte[1];
+
+	FUSB3601_SendUSBPDMessage(data, port);
 }
 
 #endif  /* FSC_DEBUG */

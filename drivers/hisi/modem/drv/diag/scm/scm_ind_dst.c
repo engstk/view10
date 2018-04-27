@@ -57,6 +57,7 @@
 #include <bsp_slice.h>
 #include <bsp_nvim.h>
 #include <diag_system_debug.h>
+#include <securec.h>
 #include "diag_port_manager.h"
 #include "diag_system_debug.h"
 #include "OmCommonPpm.h"
@@ -74,7 +75,7 @@ SCM_CODER_DEST_CFG_STRU g_astSCMIndCoderDstCfg=
     SOCP_CODER_DST_OM_IND, 
     SCM_CODER_DST_IND_SIZE, 
     SCM_CODER_DST_THRESHOLD,  
-    SOCP_TIMEOUT_TRF,
+    SOCP_TIMEOUT_TRF_LONG,
     NULL, 
     NULL,  
     NULL
@@ -82,19 +83,7 @@ SCM_CODER_DEST_CFG_STRU g_astSCMIndCoderDstCfg=
 
 extern OM_ACPU_DEBUG_INFO g_stAcpuDebugInfo;
 
-/* ****************************************************************************
- 函 数 名  : SCM_CoderDstChanMemAlloc
- 功能描述  : 编码目的通道memory申请
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月20日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 u32 scm_malloc_ind_dst_buff(void)
 {
     unsigned long                        ulPHYAddr;
@@ -123,25 +112,12 @@ u32 scm_malloc_ind_dst_buff(void)
     return BSP_OK;
 }
 
-/* ****************************************************************************
- 函 数 名  : SCM_CoderDstChanMemInit
- 功能描述  : 编码目的通道memory初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年8月20日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 u32 scm_ind_dst_buff_init(void)
 {
     SOCP_ENC_DST_BUF_LOG_CFG_STRU       stLogCfg;
 
-    /* coverity[secure_coding] */
-    memset(&stLogCfg, 0,sizeof(stLogCfg));
+    memset_s(&stLogCfg, sizeof(stLogCfg), 0, sizeof(stLogCfg));
     if(BSP_OK != bsp_socp_get_sd_logcfg(&stLogCfg))
     {
         scm_printf("!!!! No code dest channel config from SOCP.\n");
@@ -169,20 +145,7 @@ u32 scm_ind_dst_buff_init(void)
     return BSP_OK;
 }
 
-/* ****************************************************************************
- 函 数 名  : SCM_RlsDestBuf
- 功能描述  : 处理目的通道的数据释放
- 输入参数  : ulChanlID 目的通道ID
-             ulReadSize 数据大小
- 输出参数  : 无
- 返 回 值  : ERR_MSP_FAILURE/BSP_OK
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 u32 scm_rls_ind_dst_buff(u32 ulReadSize)
 {
     u32                          ulDataLen;
@@ -223,19 +186,7 @@ u32 scm_rls_ind_dst_buff(u32 ulReadSize)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : SCM_CoderDstChannelInit
- 功能描述  : 将ACPU的编码目的通道的配置重置
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : ERR_MSP_FAILURE/BSP_OK
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-*****************************************************************************/
+
 u32 scm_ind_dst_channel_init(void)
 {
     SOCP_CODER_DEST_CHAN_S              stChannel;
@@ -268,21 +219,7 @@ u32 scm_ind_dst_channel_init(void)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : SCM_SocpSendDataToUDI
- 功能描述  : 用于把数据从SOCP通道的缓冲中发送到指定的端口
- 输入参数  : enChanID:  目的通道号
-             pucVirData:SOCP通道传递的数据虚拟地址
-             pucPHYData:SOCP通道传递的数据物理地址
-             ulDataLen: SOCP通道的数据长度
- 输出参数  : 无
- 返 回 值  : void
 
- 修改历史      :
-  1.日    期   : 2014年5月25日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 void scm_send_ind_data_to_udi(u8 *pucVirData, u8 *pucPHYData, u32 ulDataLen)
 {
     u32                  ulResult;
@@ -384,8 +321,7 @@ void  scm_set_power_on_log(void)
     NV_POWER_ON_LOG_SWITCH_STRU     stPowerOnLog;
     SOCP_ENC_DST_BUF_LOG_CFG_STRU   stLogCfg;
 
-    /* coverity[secure_coding] */
-    memset(&stLogCfg, 0, sizeof(stLogCfg));
+    memset_s(&stLogCfg, sizeof(stLogCfg), 0, sizeof(stLogCfg));
     if(BSP_OK == bsp_socp_get_sd_logcfg(&stLogCfg))
     {
         ulRet = bsp_nvm_read(EN_NV_ID_POWER_ON_LOG_SWITCH, (u8*)&stPowerOnLog, sizeof(stPowerOnLog));
@@ -412,19 +348,7 @@ void  scm_set_power_on_log(void)
 
 }
 
-/* ****************************************************************************
- 函 数 名  : SCM_CoderDestReadCB
- 功能描述  : 处理编码目的通道的数据
- 输入参数  : ulDstChID 目的通道ID
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 void scm_ind_dst_read_cb(void)
 {
     u32                          ulChType;

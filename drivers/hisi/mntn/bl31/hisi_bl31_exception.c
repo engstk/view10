@@ -14,10 +14,8 @@
 #include <linux/errno.h>
 #include <linux/err.h>
 #include <linux/platform_device.h>
-#include <linux/mutex.h>
 #include <linux/of.h>
 #include <linux/io.h>
-#include <linux/kthread.h>
 #include <global_ddr_map.h>
 #include <linux/hisi/rdr_pub.h>
 #include <linux/hisi/util.h>
@@ -30,7 +28,6 @@
 #include <asm/compiler.h>
 #include <linux/debugfs.h>
 
-struct semaphore bl31_panic_sem;
 static void *sctrl_base;
 
 u32 get_bl31_exception_flag(void)
@@ -46,21 +43,11 @@ u32 get_bl31_exception_flag(void)
 void bl31_panic_ipi_handle(void)
 {
 	pr_crit("bl31 panic handler in kernel.\n");
-	up(&bl31_panic_sem);
-}
-/*lint -e715 -e838*/
-int bl31_panic_thread(void *arg)
-{
-	while (1) {
-		down(&bl31_panic_sem);
-
-		pr_err("bl31 panic trigger system_error.\n");
-		rdr_syserr_process_for_ap((u32)MODID_AP_S_BL31_PANIC, 0ULL, 0ULL);
-		break;
-	}
-	return 0;
+	rdr_syserr_process_for_ap((u32)MODID_AP_S_BL31_PANIC, 0ULL, 0ULL);
+	return;
 }
 
+/*lint -e578 -e715 -e838*/
 noinline int atfd_hisi_service_bl31_dbg_smc(u64 function_id, u64 arg0, u64 arg1, u64 arg2)
 {
 	asm volatile (
@@ -87,7 +74,7 @@ static int bl31_panic_debug_show(struct seq_file *s, void *unused)
 		return -EPERM;
 	return 0;
 }
-/*lint +e715 +e838*/
+/*lint +e578 +e715 +e838*/
 static int bl31_panic_debug_open(struct inode *inode, struct file *file)
 {
 	return single_open(file, bl31_panic_debug_show, &inode->i_private);
@@ -161,10 +148,6 @@ static int __init hisi_bl31_panic_init(void)
 	ret = (s32)rdr_register_exception(&einfo);
 	if (!ret)
 		pr_err("register bl31 exception fail.\n");
-
-	sema_init(&bl31_panic_sem, 0);
-	if (!kthread_run(bl31_panic_thread, NULL, "bl31_exception"))
-		pr_err("create bl31_exception_thread faild.\n");
 
 
 	/*enable bl31 switch:route to kernel*/

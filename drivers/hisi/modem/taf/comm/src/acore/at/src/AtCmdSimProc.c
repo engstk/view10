@@ -78,22 +78,7 @@ extern VOS_UINT32 AT_Hex2AsciiStrLowHalfFirst(
   4 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : At_IsSimSlotAllowed
- 功能描述  : 同一张硬卡不允许配置多个modem
- 输入参数  : VOS_UINT32 ulModem0,
-             VOS_UINT32 ulModem1,
-             VOS_UINT32 ulModem2
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月6日
-    作    者   : h00360002
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 At_IsSimSlotAllowed(
     VOS_UINT32                          ulModem0Slot,
     VOS_UINT32                          ulModem1Slot,
@@ -132,32 +117,7 @@ VOS_UINT32 At_IsSimSlotAllowed(
     return VOS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetSIMSlotPara
- 功能描述  : ^SIMSLOT, 设置modem连接的SIM卡槽，用于切换SIM卡槽
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年7月4日
-    作    者   : s00190137
-    修改内容   : 新生成函数
-
-  2.日    期   : 2015年6月11日
-    作    者   : l00198894
-    修改内容   : TSTS
-
-  3.日    期   : 2015年11月25日
-    作    者   : l00198894
-    修改内容   : DTS2015112506652: Dallas双卡形态切卡失败
-
-  4.日    期   : 2016年6月6日
-    作    者   : h00360002
-    修改内容   : DTS2016060602669新增
-*****************************************************************************/
 VOS_UINT32 At_SetSIMSlotPara(VOS_UINT8 ucIndex)
 {
     TAF_NV_SCI_CFG_STRU                 stSCICfg;
@@ -198,10 +158,11 @@ VOS_UINT32 At_SetSIMSlotPara(VOS_UINT8 ucIndex)
 
     /* 从NV中读取当前SIM卡的SCI配置 */
     TAF_MEM_SET_S(&stSCICfg, sizeof(stSCICfg), 0x00, sizeof(stSCICfg));
-    if (NV_OK != NV_ReadEx(MODEM_ID_0,
-                            en_NV_Item_SCI_DSDA_CFG,
-                            &stSCICfg,
-                            sizeof(stSCICfg)))
+
+    if (NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_SCI_DSDA_CFG,
+                                   &stSCICfg,
+                                   sizeof(stSCICfg)))
     {
         AT_ERR_LOG("At_SetSIMSlotPara: en_NV_Item_SCI_DSDA_CFG read fail!");
         return AT_ERROR;
@@ -237,10 +198,10 @@ VOS_UINT32 At_SetSIMSlotPara(VOS_UINT8 ucIndex)
 
 
     /* 将设置的SCI值保存到NV中 */
-    if (NV_OK != NV_WriteEx(MODEM_ID_0,
-                            en_NV_Item_SCI_DSDA_CFG,
-                            &stSCICfg,
-                            sizeof(stSCICfg)))
+    if (NV_OK != TAF_ACORE_NV_WRITE(MODEM_ID_0,
+                                    en_NV_Item_SCI_DSDA_CFG,
+                                    &stSCICfg,
+                                    sizeof(stSCICfg)))
     {
         AT_ERR_LOG("At_SetSIMSlotPara: en_NV_Item_SCI_DSDA_CFG write failed");
         return AT_ERROR;
@@ -249,24 +210,7 @@ VOS_UINT32 At_SetSIMSlotPara(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QrySIMSlotPara
- 功能描述  : 查询SIM卡卡槽设置
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年7月4日
-    作    者   : s00190137
-    修改内容   : 新生成函数
-
-  2.日    期   : 2015年6月11日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_UINT32 At_QrySIMSlotPara(VOS_UINT8 ucIndex)
 {
     TAF_NV_SCI_CFG_STRU                 stSCICfg;
@@ -274,10 +218,11 @@ VOS_UINT32 At_QrySIMSlotPara(VOS_UINT8 ucIndex)
 
     /*从NV中读取当前SIM卡的SCI配置*/
     TAF_MEM_SET_S(&stSCICfg, sizeof(stSCICfg), 0x00, sizeof(stSCICfg));
-    if (NV_OK != NV_ReadEx(MODEM_ID_0,
-                            en_NV_Item_SCI_DSDA_CFG,
-                            &stSCICfg,
-                            sizeof(stSCICfg)))
+
+    if (NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_SCI_DSDA_CFG,
+                                   &stSCICfg,
+                                   sizeof(stSCICfg)))
     {
         AT_ERR_LOG("At_QrySIMSlotPara: en_NV_Item_SCI_DSDA_CFG read fail!");
         gstAtSendData.usBufLen = 0;
@@ -355,26 +300,7 @@ VOS_UINT32 At_Base16Decode(VOS_CHAR *pcData, VOS_UINT32 ulDataLen, VOS_UINT8* pu
     return (ulDataLen/2);
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetHvsstPara
- 功能描述  : (AT^HVSST)激活/去激活(U)SIM卡
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月18日
-    作    者   : zhuli
-    修改内容   : vSIM卡项目新增函数
-  2.日    期   : 2014年10月9日
-    作    者   : zhuli
-    修改内容   : 根据青松产品要求，该接口不受宏控制
-  3.日    期   : 2015年6月10日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_UINT32 At_SetHvsstPara(
     VOS_UINT8                           ucIndex
 )
@@ -422,26 +348,154 @@ VOS_UINT32 At_SetHvsstPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryHvsstPara
- 功能描述  : ^HVSST查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月18日
-    作    者   : zhuli
-    修改内容   : vSIM卡项目新增函数
-  2.日    期   : 2014年10月9日
-    作    者   : zhuli
-    修改内容   : 根据青松产品要求，该接口不受宏控制
-  3.日    期   : 2015年6月11日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
+VOS_UINT32 At_SetSilentPin(
+    VOS_UINT8                           ucIndex
+)
+{
+    VOS_UINT32                          ulResult;
+    VOS_UINT16                          usLength = 0;
+    SI_PIH_CRYPTO_PIN_STRU              stCryptoPin;
+
+    /* 命令类型检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        AT_WARN_LOG("At_SetSilentPinInfo: CmdOptType fail.");
+
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /*  参数不为3 */
+    if (3 != gucAtParaIndex)
+    {
+        AT_WARN_LOG1("At_SetSilentPinInfo: para num  %d.", gucAtParaIndex);
+
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    if ( ((DRV_AGENT_PIN_CRYPTO_DATA_LEN * 2)  != gastAtParaList[0].usParaLen)
+      || ((DRV_AGENT_PIN_CRYPTO_IV_LEN * 2)    !=  gastAtParaList[1].usParaLen)
+      || ((DRV_AGENT_HMAC_DATA_LEN * 2)        != gastAtParaList[2].usParaLen))
+    {
+        AT_WARN_LOG2("At_SetSilentPinInfo: 0 %d %d.",
+                     gastAtParaList[0].usParaLen,
+                     gastAtParaList[1].usParaLen );
+
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    TAF_MEM_SET_S(&stCryptoPin, sizeof(stCryptoPin), 0, sizeof(stCryptoPin));
+
+    /* 将密文PIN字符串参数转换为码流 */
+    usLength = gastAtParaList[0].usParaLen;
+    ulResult = At_AsciiNum2HexString(gastAtParaList[0].aucPara, &usLength);
+    if ( (AT_SUCCESS != ulResult) || (DRV_AGENT_PIN_CRYPTO_DATA_LEN != usLength) )
+    {
+        AT_WARN_LOG1("At_SetSilentPinInfo: Encpin fail %d.", usLength);
+
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    TAF_MEM_CPY_S(stCryptoPin.aucCryptoPin,
+                  DRV_AGENT_PIN_CRYPTO_DATA_LEN,
+                  (VOS_VOID*)gastAtParaList[0].aucPara,
+                  DRV_AGENT_PIN_CRYPTO_DATA_LEN);
+
+    /* 将IV字符串参数转换为码流 */
+    usLength = gastAtParaList[1].usParaLen;
+    ulResult = At_AsciiNum2HexString(gastAtParaList[1].aucPara, &usLength);
+    if ( (AT_SUCCESS != ulResult) || (DRV_AGENT_PIN_CRYPTO_IV_LEN != usLength) )
+    {
+        AT_WARN_LOG1("At_SetSilentPinInfo: IV Len fail %d.", usLength);
+
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    TAF_MEM_CPY_S(stCryptoPin.aulPinIv,
+                  DRV_AGENT_PIN_CRYPTO_IV_LEN,
+                  (VOS_VOID*)gastAtParaList[1].aucPara,
+                  DRV_AGENT_PIN_CRYPTO_IV_LEN);
+
+    /* 将HMAC字符串参数转换为码流 */
+    usLength = gastAtParaList[2].usParaLen;
+    ulResult = At_AsciiNum2HexString(gastAtParaList[2].aucPara, &usLength);
+    if ( (AT_SUCCESS != ulResult) || (DRV_AGENT_HMAC_DATA_LEN != usLength) )
+    {
+        AT_WARN_LOG1("At_SetSilentPinInfo: hmac Len fail %d.", usLength);
+
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    TAF_MEM_CPY_S(stCryptoPin.aucHmacValue,
+                  DRV_AGENT_HMAC_DATA_LEN,
+                  (VOS_VOID*)gastAtParaList[2].aucPara,
+                  DRV_AGENT_HMAC_DATA_LEN);
+
+    ulResult = SI_PIH_SetSilentPinReq(gastAtClientTab[ucIndex].usClientId,
+                                      gastAtClientTab[ucIndex].opId,
+                                      &stCryptoPin);
+
+    if (TAF_SUCCESS != ulResult)
+    {
+        AT_WARN_LOG("At_SetSilentPinInfo: SI_PIH_SetSilentPinReq fail.");
+        return AT_ERROR;
+    }
+
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_SILENTPIN_SET;
+
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
+VOS_UINT32 At_SetSilentPinInfo(
+    VOS_UINT8                           ucIndex
+)
+{
+    VOS_UINT8                           aucPin[TAF_PH_PINCODELENMAX+1] = {0};
+    VOS_UINT32                          ulResult;
+
+    /* 命令类型检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数不为1 */
+    if (1 != gucAtParaIndex)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数检查 */
+    if ( (TAF_PH_PINCODELENMAX < gastAtParaList[0].usParaLen)
+      || (TAF_PH_PINCODELENMIN > gastAtParaList[0].usParaLen) )
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    TAF_MEM_SET_S(aucPin, TAF_PH_PINCODELENMAX, 0xFF, TAF_PH_PINCODELENMAX);
+
+    TAF_MEM_CPY_S(aucPin,
+                  TAF_PH_PINCODELENMAX,
+                  (VOS_VOID*)gastAtParaList[0].aucPara,
+                  gastAtParaList[0].usParaLen);
+
+    ulResult = SI_PIH_GetSilentPinInfoReq(gastAtClientTab[ucIndex].usClientId,
+                                          gastAtClientTab[ucIndex].opId,
+                                          (VOS_VOID*)aucPin);
+
+    if (TAF_SUCCESS != ulResult)
+    {
+        AT_WARN_LOG("At_SetSilentPinInfo: SI_PIH_SetSilentPinReq fail.");
+        return AT_ERROR;
+    }
+
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_SILENTPININFO_SET;
+
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
 VOS_UINT32 At_QryHvsstPara(
     VOS_UINT8                           ucIndex
 )
@@ -463,53 +517,44 @@ VOS_UINT32 At_QryHvsstPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_HvsstQueryCnf
- 功能描述  : ^HVSST查询结果打印
- 输入参数  : SI_PIH_EVENT_INFO_STRU *pstEvent
- 输出参数  : 无
- 返 回 值  : VOS_UINT16
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年3月18日
-    作    者   : z00100318
-    修改内容   : 新生成函数
-
-  2.日    期   : 2015年6月10日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
-VOS_UINT16 At_HvsstQueryCnf(
+VOS_UINT32 At_HvsstQueryCnf(
     VOS_UINT8                           ucIndex,
-    SI_PIH_EVENT_INFO_STRU             *pstEvent)
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
 {
-    VOS_UINT16                          usLength;
     MODEM_ID_ENUM_UINT16                enModemId;
     VOS_UINT32                          ulRslt;
     TAF_NV_SCI_CFG_STRU                 stSCICfg;
     VOS_UINT32                          ulSlot;
     SI_PIH_SIM_INDEX_ENUM_UINT8         enSimIndex;
 
-    usLength    = 0;
     ulRslt      = AT_GetModemIdFromClient(ucIndex, &enModemId);
 
     if (VOS_OK != ulRslt)
     {
         AT_ERR_LOG("At_HvsstQueryCnf: Get modem id fail.");
-        return usLength;
+        return AT_ERROR;
+    }
+
+    /* 判断当前操作类型是否为AT_CMD_HVSST_QRY */
+    if (AT_CMD_HVSST_QRY != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_HvsstQueryCnf : CmdCurrentOpt is not AT_CMD_HVSST_QRY!");
+        return AT_ERROR;
     }
 
     /* 从NV中读取当前SIM卡的SCI配置 */
     TAF_MEM_SET_S(&stSCICfg, sizeof(stSCICfg), 0x00, sizeof(stSCICfg));
-    if (NV_OK != NV_ReadEx(MODEM_ID_0,
-                            en_NV_Item_SCI_DSDA_CFG,
-                            &stSCICfg,
-                            sizeof(stSCICfg)))
+
+    if (NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_SCI_DSDA_CFG,
+                                   &stSCICfg,
+                                   sizeof(stSCICfg)))
     {
         AT_ERR_LOG("At_HvsstQueryCnf: en_NV_Item_SCI_DSDA_CFG read fail!");
-        return usLength;
+        return AT_ERROR;
     }
 
     if (MODEM_ID_0 == enModemId)
@@ -534,9 +579,9 @@ VOS_UINT16 At_HvsstQueryCnf(
         enSimIndex = SI_PIH_SIM_REAL_SIM1;
     }
 
-    usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+    (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
                                        (VOS_CHAR *)pgucAtSndCodeAddr,
-                                       (VOS_CHAR *)pgucAtSndCodeAddr + usLength,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),
                                        "%s: %d,%d,%d,%d",
                                        g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
                                        enSimIndex,
@@ -544,31 +589,10 @@ VOS_UINT16 At_HvsstQueryCnf(
                                        ulSlot,
                                        pstEvent->PIHEvent.HVSSTQueryCnf.enCardUse);
 
-    return usLength;
+    return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetSciChgPara
- 功能描述  : ^SCICHG设置函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期  : 2014年10月9日
-    作    者  : zhuli
-    修改内容  : 青松产品天际通功能增加
-
-  2.日    期   : 2015年6月10日
-    作    者   : l00198894
-    修改内容   : TSTS
-
-  3.日    期   : 2016年6月6日
-    作    者   : h00360002
-    修改内容   : DTS2016060602669新增
-*****************************************************************************/
 VOS_UINT32 At_SetSciChgPara(
     VOS_UINT8                           ucIndex
 )
@@ -627,24 +651,7 @@ VOS_UINT32 At_SetSciChgPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryHvsstPara
- 功能描述  : ^SCICHG查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期  : 2014年10月9日
-    作    者  : zhuli
-    修改内容  : 青松产品天际通功能增加
-
-  2.日    期   : 2015年6月10日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_UINT32 At_QrySciChgPara(
     VOS_UINT8                           ucIndex
 )
@@ -666,29 +673,21 @@ VOS_UINT32 At_QrySciChgPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SciCfgQueryCnf
- 功能描述  : TSTS
- 输入参数  : VOS_UINT8                           ucIndex
-             SI_PIH_EVENT_INFO_STRU             *pstEvent
- 输出参数  : 无
- 返 回 值  : VOS_UINT16
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月11日
-    作    者   : l00198894
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-VOS_UINT16 At_SciCfgQueryCnf(
+VOS_UINT32 At_SciCfgQueryCnf(
     VOS_UINT8                           ucIndex,
-    SI_PIH_EVENT_INFO_STRU             *pstEvent)
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
 {
-    VOS_UINT16                          usLength;
+    /* 判断当前操作类型是否为AT_CMD_SCICHG_QRY */
+    if (AT_CMD_SCICHG_QRY != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_SciCfgQueryCnf : CmdCurrentOpt is not AT_CMD_SCICHG_QRY!");
+        return AT_ERROR;
+    }
 
-    usLength = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+    (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
                                       (VOS_CHAR *)pgucAtSndCodeAddr,
                                       (VOS_CHAR *)pgucAtSndCodeAddr,
                                       "%s: %d,%d",
@@ -696,14 +695,499 @@ VOS_UINT16 At_SciCfgQueryCnf(
                                       pstEvent->PIHEvent.SciCfgCnf.enCard0Slot,
                                       pstEvent->PIHEvent.SciCfgCnf.enCard1Slot);
 
-    usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+    (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
                                        (VOS_CHAR *)pgucAtSndCodeAddr,
-                                       (VOS_CHAR *)pgucAtSndCodeAddr + usLength,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),
                                        ",%d",
                                        pstEvent->PIHEvent.SciCfgCnf.enCard2Slot);
 
-    return usLength;
+    return AT_OK;
 }
+
+
+VOS_UINT32 At_ProcPihFndBndCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    if (AT_CMD_CLCK_PIN_HANDLE != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihFndBndCnf : CmdCurrentOpt is not AT_CMD_CLCK_PIN_HANDLE!");
+        return AT_ERROR;
+    }
+
+    /* 如果是状态查询命令 */
+    if(SI_PIH_FDN_BDN_QUERY == pstEvent->PIHEvent.FDNCnf.FdnCmd)
+    {
+        (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s",gaucAtCrLf);
+        (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ",g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+        (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d",pstEvent->PIHEvent.FDNCnf.FdnState);
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihGenericAccessCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    if (AT_CMD_CSIM_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihGenericAccessCnf : CmdCurrentOpt is not AT_CMD_CSIM_SET!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ",g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+    /* <length>, */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d,\"",(pstEvent->PIHEvent.GAccessCnf.Len+2)*2);
+    if(pstEvent->PIHEvent.GAccessCnf.Len != 0)
+    {
+        /* <command>, */
+        (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN,(TAF_INT8 *)pgucAtSndCodeAddr,(TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength),pstEvent->PIHEvent.GAccessCnf.Command,pstEvent->PIHEvent.GAccessCnf.Len);
+    }
+    /*SW1*/
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN,(TAF_INT8 *)pgucAtSndCodeAddr,(TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength),&pstEvent->PIHEvent.GAccessCnf.SW1,sizeof(TAF_UINT8));
+    /*SW1*/
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN,(TAF_INT8 *)pgucAtSndCodeAddr,(TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength),&pstEvent->PIHEvent.GAccessCnf.SW2,sizeof(TAF_UINT8));
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihIsdbAccessCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CISA_SET */
+    if (AT_CMD_CISA_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihIsdbAccessCnf : CmdCurrentOpt is not AT_CMD_CISA_SET!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ", g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    /* <length>, */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d,\"", (pstEvent->PIHEvent.IsdbAccessCnf.usLen + 2) * 2);
+    if(pstEvent->PIHEvent.IsdbAccessCnf.usLen != 0)
+    {
+        /* <command>, */
+        (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), pstEvent->PIHEvent.IsdbAccessCnf.aucCommand, pstEvent->PIHEvent.IsdbAccessCnf.usLen);
+    }
+
+    /*SW1*/
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), &pstEvent->PIHEvent.IsdbAccessCnf.ucSW1, sizeof(TAF_UINT8));
+
+    /*SW2*/
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), &pstEvent->PIHEvent.IsdbAccessCnf.ucSW2, sizeof(TAF_UINT8));
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength), "\"");
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCchoSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CCHO_SET */
+    if (AT_CMD_CCHO_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCchoSetCnf : CmdCurrentOpt is not AT_CMD_CCHO_SET!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ",g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+    /* <sessionid>, */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%u", pstEvent->PIHEvent.ulSessionID);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCchpSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CCHP_SET */
+    if (AT_CMD_CCHP_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCchpSetCnf : CmdCurrentOpt is not AT_CMD_CCHP_SET!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ",g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+    /* <sessionid>, */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%u", pstEvent->PIHEvent.ulSessionID);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCchcSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CCHC_SET */
+    if (AT_CMD_CCHC_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCchcSetCnf : CmdCurrentOpt is not AT_CMD_CCHC_SET!");
+        return AT_ERROR;
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihSciCfgSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_SCICHG_SET */
+    if (AT_CMD_SCICHG_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihSciCfgSetCnf : CmdCurrentOpt is not AT_CMD_SCICHG_SET!");
+        return AT_ERROR;
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihHvsstSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_HVSST_SET */
+    if (AT_CMD_HVSST_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihHvsstSetCnf : CmdCurrentOpt is not AT_CMD_HVSST_SET!");
+        return AT_ERROR;
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCglaSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CGLA_SET */
+    if (AT_CMD_CGLA_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCglaSetCnf : CmdCurrentOpt is not AT_CMD_CGLA_SET!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ", g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    /* <length>, */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d,\"", (pstEvent->PIHEvent.stCglaCmdCnf.usLen + 2) * 2);
+    if(pstEvent->PIHEvent.stCglaCmdCnf.usLen != 0)
+    {
+        /* <command>, */
+        (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), pstEvent->PIHEvent.stCglaCmdCnf.aucCommand, pstEvent->PIHEvent.stCglaCmdCnf.usLen);
+    }
+
+    /*SW1*/
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), &pstEvent->PIHEvent.stCglaCmdCnf.ucSW1, sizeof(TAF_UINT8));
+
+    /*SW2*/
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), &pstEvent->PIHEvent.stCglaCmdCnf.ucSW2, sizeof(TAF_UINT8));
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength), "\"");
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCardAtrQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CARD_ATR_READ */
+    if (AT_CMD_CARD_ATR_READ != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCardAtrQryCnf : CmdCurrentOpt is not AT_CMD_CARD_ATR_READ!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength), "%s:\"", g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), pstEvent->PIHEvent.stATRQryCnf.aucCommand, (VOS_UINT16)pstEvent->PIHEvent.stATRQryCnf.ulLen);
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength), "\"");
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCardTypeQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CARDTYPE_QUERY */
+    if (AT_CMD_CARDTYPE_QUERY != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCardTypeQryCnf : CmdCurrentOpt is not AT_CMD_CARDTYPE_QUERY!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),
+                    "%s: %d, %d, %d",
+                    g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
+                    pstEvent->PIHEvent.CardTypeCnf.ucMode,
+                    pstEvent->PIHEvent.CardTypeCnf.ucHasCModule,
+                    pstEvent->PIHEvent.CardTypeCnf.ucHasGModule);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCardTypeExQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CARDTYPEEX_QUERY */
+    if (AT_CMD_CARDTYPEEX_QUERY != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCardTypeExQryCnf : CmdCurrentOpt is not AT_CMD_CARDTYPEEX_QUERY!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),
+                    "%s: %d, %d, %d",
+                    g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
+                    pstEvent->PIHEvent.CardTypeCnf.ucMode,
+                    pstEvent->PIHEvent.CardTypeCnf.ucHasCModule,
+                    pstEvent->PIHEvent.CardTypeCnf.ucHasGModule);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCardVoltageQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CARDVOLTAGE_QUERY */
+    if (AT_CMD_CARDVOLTAGE_QUERY != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCardVoltageQryCnf : CmdCurrentOpt is not AT_CMD_CARDVOLTAGE_QUERY!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr,
+            "%s: %d, %x",
+            g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
+            pstEvent->PIHEvent.stCardVoltageCnf.ulVoltage,
+            pstEvent->PIHEvent.stCardVoltageCnf.ucCharaByte);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihPrivateCglaSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_PRIVATECGLA_REQ */
+    if (AT_CMD_PRIVATECGLA_REQ != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihPrivateCglaSetCnf : CmdCurrentOpt is not AT_CMD_PRIVATECGLA_REQ!");
+        return AT_ERROR;
+    }
+
+    /* 非最后一条打印上报IND，需要在行首添加回车换行 */
+    if (VOS_TRUE != pstEvent->PIHEvent.stCglaHandleCnf.ucLastDataFlag)
+    {
+        (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr, "\r\n");
+    }
+
+    /* ^CGLA: <flag>,<length>,"[<command>]<SW1><SW2>" */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                       (TAF_CHAR *)pgucAtSndCodeAddr,
+                                       (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),
+                                       "%s: %d,%d,\"",
+                                       g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
+                                       pstEvent->PIHEvent.stCglaHandleCnf.ucLastDataFlag,
+                                       (pstEvent->PIHEvent.stCglaHandleCnf.usLen + 2) * 2);
+
+    if(pstEvent->PIHEvent.stCglaHandleCnf.usLen != 0)
+    {
+        /* <command>, */
+        (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), pstEvent->PIHEvent.stCglaHandleCnf.aucCommand, pstEvent->PIHEvent.stCglaHandleCnf.usLen);
+    }
+
+    /* <SW1> */
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), &pstEvent->PIHEvent.stCglaHandleCnf.ucSW1, (VOS_UINT16)sizeof(TAF_UINT8));
+
+    /* <SW2> */
+    (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength), &pstEvent->PIHEvent.stCglaHandleCnf.ucSW2, (VOS_UINT16)sizeof(TAF_UINT8));
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength), "\"");
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCrsmSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CRSM_SET */
+    if (AT_CMD_CRSM_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCrsmSetCnf : CmdCurrentOpt is not AT_CMD_CRSM_SET!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ",g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+    /* <sw1, sw2>, */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d,%d",pstEvent->PIHEvent.RAccessCnf.ucSW1, pstEvent->PIHEvent.RAccessCnf.ucSW2);
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),",\"");
+
+    if(0 != pstEvent->PIHEvent.RAccessCnf.usLen)
+    {
+        /* <response> */
+        (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN,(TAF_INT8 *)pgucAtSndCodeAddr,(TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength),pstEvent->PIHEvent.RAccessCnf.aucContent, pstEvent->PIHEvent.RAccessCnf.usLen);
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCrlaSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CRLA_SET */
+    if (AT_CMD_CRLA_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCrlaSetCnf: CmdCurrentOpt is not AT_CMD_CRLA_SET!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ",g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+    /* <sw1, sw2>, */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d,%d",pstEvent->PIHEvent.RAccessCnf.ucSW1, pstEvent->PIHEvent.RAccessCnf.ucSW2);
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),",\"");
+
+    if(0 != pstEvent->PIHEvent.RAccessCnf.usLen)
+    {
+        /* <response> */
+        (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN,(TAF_INT8 *)pgucAtSndCodeAddr,(TAF_UINT8 *)pgucAtSndCodeAddr + (*pusLength),pstEvent->PIHEvent.RAccessCnf.aucContent, pstEvent->PIHEvent.RAccessCnf.usLen);
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihSessionQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CARDSESSION_QRY */
+    if (AT_CMD_CARDSESSION_QRY != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihSessionQryCnf: CmdCurrentOpt is not AT_CMD_CARDSESSION_QRY!");
+        return AT_ERROR;
+    }
+
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%s: ",g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    /* <CSIM,USIM,ISIM> */
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"CSIM,%d,",pstEvent->PIHEvent.aulSessionID[USIMM_CDMA_APP]);
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"USIM,%d,",pstEvent->PIHEvent.aulSessionID[USIMM_GUTL_APP]);
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN,(TAF_CHAR *)pgucAtSndCodeAddr,(TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),"ISIM,%d", pstEvent->PIHEvent.aulSessionID[USIMM_IMS_APP]);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCimiQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CIMI_READ */
+    if (AT_CMD_CIMI_READ != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCimiQryCnf: CmdCurrentOpt is not AT_CMD_CIMI_READ!");
+        return AT_ERROR;
+    }
+
+    g_enLogPrivacyAtCmd = TAF_LOG_PRIVACY_AT_CMD_CIMI;
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),
+                                           "%s",
+                                           pstEvent->PIHEvent.stImsi.aucImsi);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_ProcPihCcimiQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
+{
+    /* 判断当前操作类型是否为AT_CMD_CCIMI_SET */
+    if (AT_CMD_CCIMI_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("At_ProcPihCcimiQryCnf: CmdCurrentOpt is not AT_CMD_CCIMI_SET!");
+        return AT_ERROR;
+    }
+
+    g_enLogPrivacyAtCmd = TAF_LOG_PRIVACY_AT_CMD_CIMI;
+    (*pusLength) += (TAF_UINT16)At_sprintf(AT_CMD_MAX_LEN, (TAF_CHAR *)pgucAtSndCodeAddr, (TAF_CHAR *)pgucAtSndCodeAddr + (*pusLength),
+                                           "%s",
+                                           pstEvent->PIHEvent.stImsi.aucImsi);
+
+    return AT_OK;
+}
+
 
 /*****************************************************************************
  Prototype      : At_Hex2Base16
@@ -740,20 +1224,7 @@ VOS_UINT16 At_Hex2Base16(VOS_UINT32 MaxLength,VOS_CHAR *headaddr,VOS_CHAR *pucDs
     return (VOS_UINT16)(usSrcLen*2);
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryIccVsimVer
- 功能描述  : ^ICCVSIMVER
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期  : 2016年05月23日
-    作    者  : c00298064
-    修改内容  : 增加
-*****************************************************************************/
 VOS_UINT32 At_QryIccVsimVer(
     VOS_UINT8                           ucIndex
 )
@@ -766,20 +1237,7 @@ VOS_UINT32 At_QryIccVsimVer(
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryHvCheckCardPara
- 功能描述  : ^HVCHECKCARD 查询函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期  : 2014年10月9日
-    作    者  : zhuli
-    修改内容  : 青松产品天际通功能增加
-*****************************************************************************/
 VOS_UINT32 At_QryHvCheckCardPara(
     VOS_UINT8                           ucIndex
 )
@@ -797,109 +1255,102 @@ VOS_UINT32 At_QryHvCheckCardPara(
 }
 
 
-/*****************************************************************************
- Prototype      : AT_UiccAuthCnf
- Description    : 命令返回
- Input          : pstEvent --- 消息内容
- Output         :
- Return Value   : 数据长度
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2005-04-19
-    Author      : ---
-    Modification: Created function
-*****************************************************************************/
-VOS_UINT16 AT_UiccAuthCnf(TAF_UINT8 ucIndex, SI_PIH_EVENT_INFO_STRU *pstEvent)
+VOS_UINT32 AT_UiccAuthCnf(
+    TAF_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
 {
-    VOS_UINT16 usLength = 0;
+    /* 判断当前操作类型是否为AT_CMD_UICCAUTH_SET/AT_CMD_KSNAFAUTH_SET */
+    if ( (AT_CMD_UICCAUTH_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+      && (AT_CMD_KSNAFAUTH_SET != gastAtClientTab[ucIndex].CmdCurrentOpt))
+    {
+        AT_WARN_LOG("AT_UiccAuthCnf : CmdCurrentOpt is not AT_CMD_UICCAUTH_SET/AT_CMD_KSNAFAUTH_SET!");
+        return AT_ERROR;
+    }
 
     if (AT_CMD_UICCAUTH_SET == gastAtClientTab[ucIndex].CmdCurrentOpt)
     {
-        usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"^UICCAUTH:");
+        (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"^UICCAUTH:");
 
         /* <result> */
-        usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"%d",pstEvent->PIHEvent.UiccAuthCnf.enStatus);
+        (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d",pstEvent->PIHEvent.UiccAuthCnf.enStatus);
 
         if (SI_PIH_AUTH_SUCCESS == pstEvent->PIHEvent.UiccAuthCnf.enStatus)
         {
             /* ,<Res> */
-            usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,",\"");
-            usLength += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+usLength, &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuthRes[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuthRes[0]);
-            usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"\"");
+            (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),",\"");
+            (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+(*pusLength), &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuthRes[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuthRes[0]);
+            (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
 
             if (SI_PIH_UICCAUTH_AKA == pstEvent->PIHEvent.UiccAuthCnf.enAuthType)
             {
                 /* ,<ck> */
-                usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,",\"");
-                usLength += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+usLength, &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucCK[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucCK[0]);
-                usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"\"");
+                (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),",\"");
+                (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+(*pusLength), &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucCK[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucCK[0]);
+                (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
 
                 /* ,<ik> */
-                usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,",\"");
-                usLength += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+usLength, &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucIK[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucIK[0]);
-                usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"\"");
+                (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),",\"");
+                (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+(*pusLength), &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucIK[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucIK[0]);
+                (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
             }
         }
 
         if (SI_PIH_AUTH_SYNC == pstEvent->PIHEvent.UiccAuthCnf.enStatus)
         {
             /* ,"","","",<autn> */
-            usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,",\"\",\"\",\"\",\"");
-            usLength += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+usLength, &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuts[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuts[0]);
-            usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"\"");
+            (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),",\"\",\"\",\"\",\"");
+            (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+(*pusLength), &pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuts[1], pstEvent->PIHEvent.UiccAuthCnf.stAkaData.aucAuts[0]);
+            (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
         }
     }
 
     if (AT_CMD_KSNAFAUTH_SET == gastAtClientTab[ucIndex].CmdCurrentOpt)
     {
-        usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"^KSNAFAUTH:");
+        (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"^KSNAFAUTH:");
 
         /* <status> */
-        usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"%d",pstEvent->PIHEvent.UiccAuthCnf.enStatus);
+        (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"%d",pstEvent->PIHEvent.UiccAuthCnf.enStatus);
 
         if (VOS_NULL != pstEvent->PIHEvent.UiccAuthCnf.stNAFData.aucKs_ext_NAF[0])
         {
             /* ,<ks_Naf> */
-            usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,",\"");
-            usLength += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+usLength, &pstEvent->PIHEvent.UiccAuthCnf.stNAFData.aucKs_ext_NAF[1], pstEvent->PIHEvent.UiccAuthCnf.stNAFData.aucKs_ext_NAF[0]);
-            usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"\"");
+            (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),",\"");
+            (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+(*pusLength), &pstEvent->PIHEvent.UiccAuthCnf.stNAFData.aucKs_ext_NAF[1], pstEvent->PIHEvent.UiccAuthCnf.stNAFData.aucKs_ext_NAF[0]);
+            (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
         }
     }
 
-    return usLength;
+    return AT_OK;
 }
 
-/*****************************************************************************
- Prototype      : AT_UiccAccessFileCnf
- Description    : 命令返回
- Input          : pstEvent --- 消息内容
- Output         :
- Return Value   : 数据长度
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2005-04-19
-    Author      : ---
-    Modification: Created function
-*****************************************************************************/
-VOS_UINT16 AT_UiccAccessFileCnf(TAF_UINT8 ucIndex, SI_PIH_EVENT_INFO_STRU *pstEvent)
+VOS_UINT32 AT_UiccAccessFileCnf(
+    TAF_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+)
 {
-    VOS_UINT16      usLength = 0;
+    /* 判断当前操作类型是否为AT_CMD_CURSM_SET */
+    if (AT_CMD_CURSM_SET != gastAtClientTab[ucIndex].CmdCurrentOpt)
+    {
+        AT_WARN_LOG("AT_UiccAccessFileCnf : CmdCurrentOpt is not AT_CMD_CURSM_SET!");
+        return AT_ERROR;
+    }
 
     if ((0 != pstEvent->PIHEvent.UiccAcsFileCnf.ulDataLen)
         && (SI_PIH_ACCESS_READ == pstEvent->PIHEvent.UiccAcsFileCnf.enCmdType))
     {
-        usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"^CURSM:");
+        (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"^CURSM:");
 
-        usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"\"");
-        usLength += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+usLength, pstEvent->PIHEvent.UiccAcsFileCnf.aucCommand, (VOS_UINT16)pstEvent->PIHEvent.UiccAcsFileCnf.ulDataLen);
-        usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + usLength,"\"");
+        (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
+        (*pusLength) += (TAF_UINT16)At_HexAlpha2AsciiString(AT_CMD_MAX_LEN, (TAF_INT8 *)pgucAtSndCodeAddr, (TAF_UINT8 *)pgucAtSndCodeAddr+(*pusLength), pstEvent->PIHEvent.UiccAcsFileCnf.aucCommand, (VOS_UINT16)pstEvent->PIHEvent.UiccAcsFileCnf.ulDataLen);
+        (*pusLength) += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,(VOS_CHAR *)pgucAtSndCodeAddr,(VOS_CHAR *)pgucAtSndCodeAddr + (*pusLength),"\"");
     }
 
-    return usLength;
+    return AT_OK;
 }
 
 /********************************************************************
@@ -1210,18 +1661,7 @@ TAF_UINT32 At_CrlaParaReadRecordCheck(
     return At_CrlaFilePathParse(pstCommand);
 }
 
-/********************************************************************
-  Function:       At_CrlaParaGetRspCheck
-  Description:    执行CRLA命令的Get Response命令参数检查
-  Input:
-  Output:         *pstCommand：CRLA命令的数据结构?
-  Return:         AT_SUCCESS：成功，其他为失败
-  Others:
-  History        : ---
-   1.Date        : 2015-04-08
-     Author      : g00256031
-     Modification: Created function
-********************************************************************/
+
 VOS_UINT32 At_CrlaParaGetRspCheck(
     SI_PIH_CRLA_STRU                   *pstCommand
 )
@@ -1245,18 +1685,7 @@ VOS_UINT32 At_CrlaParaGetRspCheck(
     return At_CrlaFilePathParse(pstCommand);
 }
 
-/********************************************************************
-  Function:       At_CrlaParaUpdateBinaryCheck
-  Description:    执行CRLA命令的Update Binary参数检查
-  Input:          无
-  Output:         *pstCommand：CRSM命令的数据结构
-  Return:         AT_SUCCESS：成功，其他为失败
-  Others:
-  History        : ---
-   1.Date        : 2015-04-08
-     Author      : g00256031
-     Modification: Created function
-********************************************************************/
+
 VOS_UINT32 At_CrlaParaUpdateBinaryCheck(
     SI_PIH_CRLA_STRU                       *pstCommand
 )
@@ -1308,18 +1737,7 @@ VOS_UINT32 At_CrlaParaUpdateBinaryCheck(
     return At_CrlaFilePathParse(pstCommand);
 }
 
-/********************************************************************
-  Function:       At_CrlaParaUpdateRecordCheck
-  Description:    执行CRSM命令的参数检查
-  Input:          无
-  Output:         *pstCommand：CRSM命令的数据结构
-  Return:         AT_SUCCESS：成功，其他为失败
-  Others:
-  History        : ---
-   1.Date        : 2015-04-08
-     Author      : g00256031
-     Modification: Created function
-********************************************************************/
+
 VOS_UINT32 At_CrlaParaUpdateRecordCheck (
     SI_PIH_CRLA_STRU                   *pstCommand
 )
@@ -1373,20 +1791,7 @@ VOS_UINT32 At_CrlaParaUpdateRecordCheck (
     return At_CrlaFilePathParse(pstCommand);
 }
 
-/*****************************************************************************
- Prototype      : At_SetCrlaPara
- Description    : +CRLA=<sessionid>,<command>[,<fileid>[,<P1>,<P2>,<P3>[,<data>,<pathid>]]]
- Input          : ucIndex --- 用户索引
- Output         :
- Return Value   : AT_XXX  --- ATC返回码
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2015-04-08
-    Author      : g00256031
-    Modification: Created function
-*****************************************************************************/
 TAF_UINT32 At_SetCrlaPara(TAF_UINT8 ucIndex)
 {
     SI_PIH_CRLA_STRU                    stCommand;
@@ -1457,20 +1862,7 @@ TAF_UINT32 At_SetCrlaPara(TAF_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryCardSession
- 功能描述  : ^CARD_SESSION=<enable>[,<interval>]
- 输入参数  : ucIndex --- 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月2日
-    作    者   : g00256031
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 At_QryCardSession(VOS_UINT8 ucIndex)
 {
     if (TAF_SUCCESS == SI_PIH_CardSessionQuery(gastAtClientTab[ucIndex].usClientId, gastAtClientTab[ucIndex].opId))
@@ -1486,20 +1878,7 @@ VOS_UINT32 At_QryCardSession(VOS_UINT8 ucIndex)
     return AT_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryCardSession
- 功能描述  : ^CARDVOLTAGE?
- 输入参数  : ucIndex --- 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年01月20日
-    作    者   : x00306642
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT32 At_QryCardVoltagePara(TAF_UINT8 ucIndex)
 {
     VOS_UINT32 ulResult;
@@ -1518,20 +1897,7 @@ TAF_UINT32 At_QryCardVoltagePara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- Prototype      : At_SetPrivateCglaPara
- Description    : ^CGLA=<sessionid>,<length>,<command>
- Input          : ucIndex --- 用户索引
- Output         :
- Return Value   : AT_XXX  --- ATC返回码
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2017-02-21
-    Author      : x00306642
-    Modification: Created function
-*****************************************************************************/
 TAF_UINT32 At_SetPrivateCglaPara(TAF_UINT8 ucIndex)
 {
     SI_PIH_CGLA_COMMAND_STRU    stCglaCmd;
@@ -1589,20 +1955,7 @@ TAF_UINT32 At_SetPrivateCglaPara(TAF_UINT8 ucIndex)
     return AT_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetPrfApp
- 功能描述  : 设置CDMA或者GUTL应用优先级
- 输入参数  : enCardApp 设置谁优先 GUTL/CDMA
- 输出参数  : enCardAPP NV设置应用类型
- 返 回 值  : enModemId 当前通道模式
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月20日
-    作    者   : d00212987
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT32 AT_SetPrfApp(
     AT_CARDAPP_ENUM_UINT32              enCardApp,
     USIMM_NV_CARDAPP_ENUM_UINT32        enCardAPP,
@@ -1616,10 +1969,10 @@ TAF_UINT32 AT_SetPrfApp(
 
     TAF_MEM_SET_S(&stAppInfo, (VOS_SIZE_T)sizeof(stAppInfo), 0x00, (VOS_SIZE_T)sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
 
-    ulRslt = NV_ReadEx(enModemId,
-                       en_NV_Item_Usim_App_Priority_Cfg,
-                       &stAppInfo,
-                       sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
+    ulRslt = TAF_ACORE_NV_READ(enModemId,
+                               en_NV_Item_Usim_App_Priority_Cfg,
+                               &stAppInfo,
+                               sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
 
     if (NV_OK != ulRslt)
     {
@@ -1656,10 +2009,10 @@ TAF_UINT32 AT_SetPrfApp(
             stAppInfo.aenAppList[0] = enCardAPP;
             stAppInfo.ucAppNum ++;
 
-            ulRslt = NV_WriteEx(enModemId,
-                                en_NV_Item_Usim_App_Priority_Cfg,
-                                &stAppInfo,
-                                sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
+            ulRslt = TAF_ACORE_NV_WRITE(enModemId,
+                                        en_NV_Item_Usim_App_Priority_Cfg,
+                                        &stAppInfo,
+                                        sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
         }
     }
     else
@@ -1674,36 +2027,23 @@ TAF_UINT32 AT_SetPrfApp(
 
             stAppInfo.aenAppList[0] = enCardAPP;
 
-            ulRslt = NV_WriteEx(enModemId,
-                                en_NV_Item_Usim_App_Priority_Cfg,
-                                &stAppInfo,
-                                sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
+            ulRslt = TAF_ACORE_NV_WRITE(enModemId,
+                                        en_NV_Item_Usim_App_Priority_Cfg,
+                                        &stAppInfo,
+                                        sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
         }
     }
 
     if (NV_OK != ulRslt)
     {
-        AT_ERR_LOG("NV_WriteEx: Write NV Fail.");
+        AT_ERR_LOG("TAF_ACORE_NV_WRITE: Write NV Fail.");
         return AT_ERROR;
     }
 
     return AT_OK;
 }
 
-/*****************************************************************************
- Prototype      : At_SetPrfAppPara
- Description    : ^PRFAPP=<N>
- Input          : ucIndex --- 用户索引
- Output         :
- Return Value   : AT_XXX  --- ATC返回码
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2015-06-13
-    Author      : H00300778
-    Modification: Created function
-*****************************************************************************/
 TAF_UINT32 At_SetPrfAppPara(TAF_UINT8 ucIndex)
 {
     MODEM_ID_ENUM_UINT16                enModemId;
@@ -1737,17 +2077,7 @@ TAF_UINT32 At_SetPrfAppPara(TAF_UINT8 ucIndex)
     return ulRslt;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryPrfAppPara
- 功能描述  : ^PRFAPP查询命令处理函数
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32
- 修改历史      :
-  1.日    期   : 2015年06月13日
-    作    者   : H00300778
-    修改内容   : 新增函数
-*****************************************************************************/
+
 TAF_UINT32 At_QryPrfAppPara(TAF_UINT8 ucIndex)
 {
     TAF_UINT32                          i;
@@ -1767,7 +2097,7 @@ TAF_UINT32 At_QryPrfAppPara(TAF_UINT8 ucIndex)
 
     TAF_MEM_SET_S(&stAppInfo, (VOS_SIZE_T)sizeof(stAppInfo), 0x00, (VOS_SIZE_T)sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
 
-    if (NV_OK != NV_ReadEx(enModemId, en_NV_Item_Usim_App_Priority_Cfg, &stAppInfo, sizeof(USIMM_APP_PRIORITY_CONFIG_STRU)))
+    if (NV_OK != TAF_ACORE_NV_READ(enModemId, en_NV_Item_Usim_App_Priority_Cfg, &stAppInfo, sizeof(USIMM_APP_PRIORITY_CONFIG_STRU)))
     {
         AT_ERR_LOG("At_QryPrfAppPara: Get en_NV_Item_Usim_App_Priority_Cfg fail.");
 
@@ -1825,17 +2155,7 @@ TAF_UINT32 At_QryPrfAppPara(TAF_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_TestPrfAppPara
- 功能描述  : ^PRFAPP测试命令处理函数
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32
- 修改历史      :
-  1.日    期   : 2015年06月13日
-    作    者   : H00300778
-    修改内容   : 新增函数
-*****************************************************************************/
+
 TAF_UINT32 At_TestPrfAppPara(TAF_UINT8 ucIndex)
 {
     VOS_UINT16      usLength;
@@ -1853,20 +2173,7 @@ TAF_UINT32 At_TestPrfAppPara(TAF_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetUiccPrfApp
- 功能描述  : 设置CDMA或者GUTL应用优先级
- 输入参数  : enCardApp 设置谁优先 GUTL/CDMA
- 输出参数  : enCardAPP NV设置应用类型
- 返 回 值  : enModemId 当前通道模式
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月6日
-    作    者   : d00212987
-    修改内容   : 新增函数
-*****************************************************************************/
 TAF_UINT32 AT_SetUiccPrfApp(
     AT_CARDAPP_ENUM_UINT32              enCardApp,
     USIMM_NV_CARDAPP_ENUM_UINT32        enCardAPP,
@@ -1880,10 +2187,10 @@ TAF_UINT32 AT_SetUiccPrfApp(
 
     TAF_MEM_SET_S(&stAppInfo, (VOS_SIZE_T)sizeof(stAppInfo), 0x00, (VOS_SIZE_T)sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
 
-    ulRslt = NV_ReadEx(enModemId,
-                       en_NV_Item_Usim_Uicc_App_Priority_Cfg,
-                       &stAppInfo,
-                       sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
+    ulRslt = TAF_ACORE_NV_READ(enModemId,
+                               en_NV_Item_Usim_Uicc_App_Priority_Cfg,
+                               &stAppInfo,
+                               sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
 
     if (NV_OK != ulRslt)
     {
@@ -1920,10 +2227,10 @@ TAF_UINT32 AT_SetUiccPrfApp(
             stAppInfo.aenAppList[0] = enCardAPP;
             stAppInfo.ucAppNum ++;
 
-            ulRslt = NV_WriteEx(enModemId,
-                                en_NV_Item_Usim_Uicc_App_Priority_Cfg,
-                                &stAppInfo,
-                                sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
+            ulRslt = TAF_ACORE_NV_WRITE(enModemId,
+                                        en_NV_Item_Usim_Uicc_App_Priority_Cfg,
+                                        &stAppInfo,
+                                        sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
         }
     }
     else
@@ -1938,34 +2245,23 @@ TAF_UINT32 AT_SetUiccPrfApp(
 
             stAppInfo.aenAppList[0] = enCardAPP;
 
-            ulRslt = NV_WriteEx(enModemId,
-                                en_NV_Item_Usim_Uicc_App_Priority_Cfg,
-                                &stAppInfo,
-                                sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
+            ulRslt = TAF_ACORE_NV_WRITE(enModemId,
+                                        en_NV_Item_Usim_Uicc_App_Priority_Cfg,
+                                        &stAppInfo,
+                                        sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
         }
     }
 
     if (NV_OK != ulRslt)
     {
-        AT_ERR_LOG("NV_WriteEx: Write NV Fail.");
+        AT_ERR_LOG("TAF_ACORE_NV_WRITE: Write NV Fail.");
         return AT_ERROR;
     }
 
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetUiccPrfAppPara
- 功能描述  : ^UICCPRFAPP设置命令处理函数
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32
 
- 修改历史      :
-  1.日    期   : 2016年06月6日
-    作    者   : d00212987
-    修改内容   : 新增函数
-*****************************************************************************/
 TAF_UINT32 At_SetUiccPrfAppPara(TAF_UINT8 ucIndex)
 {
     MODEM_ID_ENUM_UINT16                enModemId;
@@ -1999,18 +2295,7 @@ TAF_UINT32 At_SetUiccPrfAppPara(TAF_UINT8 ucIndex)
     return ulRslt;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryUiccPrfAppPara
- 功能描述  : ^UICCPRFAPP查询命令处理函数
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32
- 修改历史      :
- 修改历史      :
-  1.日    期   : 2016年06月6日
-    作    者   : d00212987
-    修改内容   : 新增函数
-*****************************************************************************/
+
 TAF_UINT32 At_QryUiccPrfAppPara(TAF_UINT8 ucIndex)
 {
     TAF_UINT32                          i;
@@ -2030,7 +2315,7 @@ TAF_UINT32 At_QryUiccPrfAppPara(TAF_UINT8 ucIndex)
 
     TAF_MEM_SET_S(&stAppInfo, (VOS_SIZE_T)sizeof(stAppInfo), 0x00, (VOS_SIZE_T)sizeof(USIMM_APP_PRIORITY_CONFIG_STRU));
 
-    if (NV_OK != NV_ReadEx(enModemId, en_NV_Item_Usim_Uicc_App_Priority_Cfg, &stAppInfo, sizeof(USIMM_APP_PRIORITY_CONFIG_STRU)))
+    if (NV_OK != TAF_ACORE_NV_READ(enModemId, en_NV_Item_Usim_Uicc_App_Priority_Cfg, &stAppInfo, sizeof(USIMM_APP_PRIORITY_CONFIG_STRU)))
     {
         AT_ERR_LOG("At_QryUiccPrfAppPara: Get en_NV_Item_Usim_Uicc_App_Priority_Cfg fail.");
 
@@ -2088,17 +2373,7 @@ TAF_UINT32 At_QryUiccPrfAppPara(TAF_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_TestUiccPrfAppPara
- 功能描述  : ^UICCPRFAPP测试命令处理函数
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32
- 修改历史      :
-  1.日    期   : 2016年06月6日
-    作    者   : d00212987
-    修改内容   : 新增函数
-*****************************************************************************/
+
 TAF_UINT32 At_TestUiccPrfAppPara(TAF_UINT8 ucIndex)
 {
     VOS_UINT16                          usLength;
@@ -2116,20 +2391,7 @@ TAF_UINT32 At_TestUiccPrfAppPara(TAF_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetCCimiPara
- 功能描述  : ^CCIMI
- 输入参数  : TAF_UINT8 ucIndex 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32        ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年6月17日
-    作    者   :
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT32 At_SetCCimiPara(TAF_UINT8 ucIndex)
 {
     /* 参数检查 */
@@ -2151,20 +2413,6 @@ TAF_UINT32 At_SetCCimiPara(TAF_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_CardErrorInfoInd
- 功能描述  : ^USIMMEX
- 输入参数  : TAF_UINT8 ucIndex 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32        ATC返回码
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2016年2月22日
-    作    者   :
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT16 At_CardErrorInfoInd(
     TAF_UINT8                           ucIndex,
     SI_PIH_EVENT_INFO_STRU             *pstEvent)
@@ -2218,20 +2466,7 @@ TAF_UINT16 At_CardErrorInfoInd(
     return usLength;
 }
 
-/*****************************************************************************
- 函 数 名  : At_CardIccidInfoInd
- 功能描述  : ^USIMICCID
- 输入参数  : TAF_UINT8 ucIndex 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32        ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年2月22日
-    作    者   :
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT16 At_CardIccidInfoInd(
     TAF_UINT8                           ucIndex,
     SI_PIH_EVENT_INFO_STRU             *pstEvent
@@ -2260,20 +2495,7 @@ TAF_UINT16 At_CardIccidInfoInd(
     return usLength;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SimHotPlugStatusInd
- 功能描述  : ^SIMHOTPLUG
- 输入参数  : TAF_UINT8 ucIndex 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32        ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月3日
-    作    者   : d00212987
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT16 At_SimHotPlugStatusInd(
     TAF_UINT8                           ucIndex,
     SI_PIH_EVENT_INFO_STRU             *pstEvent
@@ -2291,20 +2513,7 @@ TAF_UINT16 At_SimHotPlugStatusInd(
     return usLength;
 }
 
-/*****************************************************************************
- 函 数 名  : At_PrintPrivateCglaResult
- 功能描述  : ^CGLA
- 输入参数  : TAF_UINT8 ucIndex 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32        ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年02月21日
-    作    者   : x00306642
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT16 At_PrintPrivateCglaResult(
     TAF_UINT8                           ucIndex,
     SI_PIH_EVENT_INFO_STRU             *pstEvent)
@@ -2342,20 +2551,7 @@ TAF_UINT16 At_PrintPrivateCglaResult(
     return usLength;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SWCheckStatusInd
- 功能描述  : ^SWCHECK
- 输入参数  : TAF_UINT8 ucIndex 用户索引
- 输出参数  : 无
- 返 回 值  : TAF_UINT32        ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月29日
-    作    者   : z00377832
-    修改内容   : 新生成函数
-*****************************************************************************/
 TAF_UINT16 At_SWCheckStatusInd(
     SI_PIH_EVENT_INFO_STRU             *pstEvent
 )

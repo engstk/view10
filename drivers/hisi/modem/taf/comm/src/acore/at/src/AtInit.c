@@ -70,7 +70,6 @@
 
 
 
-
 /*****************************************************************************
     协议栈打印打点方式下的.C文件宏定义
 *****************************************************************************/
@@ -86,20 +85,7 @@
   3 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : AT_ReadPlatformNV
- 功能描述  : 平台接入技术NV读取
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月27日
-    作    者   : z00220246
-    修改内容   : DSDA Phase II:新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_ReadPlatformNV(VOS_VOID)
 {
     MODEM_ID_ENUM_UINT16                enModemID;
@@ -114,8 +100,10 @@ VOS_VOID AT_ReadPlatformNV(VOS_VOID)
         pstAtSptRatList = AT_GetSptRatFromModemId(enModemID);
 
         /* 读取平台NV成功 */
-        if(NV_OK == NV_ReadEx(enModemID, en_NV_Item_Platform_RAT_CAP, &stPlatFormRat,
-                              sizeof(PLATAFORM_RAT_CAPABILITY_STRU)))
+        if(NV_OK == TAF_ACORE_NV_READ(enModemID,
+                                      en_NV_Item_Platform_RAT_CAP,
+                                      &stPlatFormRat,
+                                      sizeof(PLATAFORM_RAT_CAPABILITY_STRU)))
         {
             pstAtSptRatList->ucPlatformSptGsm        = VOS_FALSE;
             pstAtSptRatList->ucPlatformSptWcdma      = VOS_FALSE;
@@ -152,22 +140,7 @@ VOS_VOID AT_ReadPlatformNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadClientConfigNV
- 功能描述  : 读取en_NV_Item_AT_CLIENT_CFG，判断属于哪个modem
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月28日
-    作    者   : l00227485
-    修改内容   : DSDA PhaseII: 新生成函数
-  2.日    期   : 2014年04月23日
-    作    者   : f00179208
-    修改内容   : DTS2014042304605
-*****************************************************************************/
 VOS_VOID AT_ReadClientConfigNV(VOS_VOID)
 {
     TAF_AT_NVIM_AT_CLIENT_CFG_STRU      stAtClientCfg;
@@ -188,10 +161,10 @@ VOS_VOID AT_ReadClientConfigNV(VOS_VOID)
        BIT0-BIT1对应一个client归属于哪个ModemId:00:表示modem0 01:表示modem1
        BIT2对应一个client是否允许广播:0:表示不允许 1:表示允许
     */
-    if (VOS_OK != NV_ReadEx(MODEM_ID_0,
-                            en_NV_Item_AT_CLIENT_CFG,
-                            &stAtClientCfg,
-                            sizeof(TAF_AT_NVIM_AT_CLIENT_CFG_STRU)))
+    if (VOS_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                    en_NV_Item_AT_CLIENT_CFG,
+                                    &stAtClientCfg,
+                                    sizeof(TAF_AT_NVIM_AT_CLIENT_CFG_STRU)))
     {
         return;
     }
@@ -210,24 +183,7 @@ VOS_VOID AT_ReadClientConfigNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetCpmsMtMem
- 功能描述  : 获取CPMS命令的<MT>的默认配置
- 输入参数  : 无
- 输出参数  : MODEM_ID_ENUM_UINT16                enModemId
-             MN_MSG_MEM_STORE_ENUM_U8           *penSmMemStore  CPMS命令的<MT>的默认配置
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月20日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-*****************************************************************************/
 VOS_VOID AT_GetCpmsMtMem(
     MODEM_ID_ENUM_UINT16                enModemId,
     MN_MSG_MEM_STORE_ENUM_U8           *penSmMemStore
@@ -245,7 +201,7 @@ VOS_VOID AT_GetCpmsMtMem(
 
     *penSmMemStore = MN_MSG_MEM_STORE_SIM;
 
-    ulRet = NV_ReadEx(enModemId, en_NV_Item_SMS_SERVICE_Para, &stSmsServicePara, MN_MSG_SRV_PARAM_LEN);
+    ulRet = TAF_ACORE_NV_READ(enModemId, en_NV_Item_SMS_SERVICE_Para, &stSmsServicePara, MN_MSG_SRV_PARAM_LEN);
     if (NV_OK != ulRet)
     {
         AT_ERR_LOG("AT_GetCpmsMtMem: Read Service Parm From Nvim Failed");
@@ -267,21 +223,7 @@ VOS_VOID AT_GetCpmsMtMem(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SendDomainNvimToProto
- 功能描述  : NVIM中发送域的值转化为协议中的发送域的值
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : 转换后的发送域
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 AT_CGSMS_SEND_DOMAIN_ENUM_U8 AT_SendDomainNvimToProto(
     VOS_UINT32                           ulNvimSendDomain
 )
@@ -308,23 +250,7 @@ AT_CGSMS_SEND_DOMAIN_ENUM_U8 AT_SendDomainNvimToProto(
     return enProtoSendDomain;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSmsSendDomainNV
- 功能描述  : 读取SMS发送域相关的NV项
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月20日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-*****************************************************************************/
 VOS_VOID AT_ReadSmsSendDomainNV(VOS_VOID)
 {
     VOS_UINT32                          ulRet;
@@ -339,7 +265,7 @@ VOS_VOID AT_ReadSmsSendDomainNV(VOS_VOID)
         /* 读取失败和未激活一样处理,首先判断NVIM项是否激活,未激活则取默认值 */
         TAF_MEM_SET_S(&stSendDomain, sizeof(stSendDomain), 0x00, sizeof(stSendDomain));
 
-        ulRet = NV_ReadEx(enModemId, en_NV_Item_SMS_SEND_DOMAIN, &stSendDomain, sizeof(AT_NVIM_SEND_DOMAIN_STRU));
+        ulRet = TAF_ACORE_NV_READ(enModemId, en_NV_Item_SMS_SEND_DOMAIN, &stSendDomain, sizeof(AT_NVIM_SEND_DOMAIN_STRU));
 
         if ( (NV_OK == ulRet)
           && (VOS_TRUE == stSendDomain.ucActFlg))
@@ -353,21 +279,7 @@ VOS_VOID AT_ReadSmsSendDomainNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSmsMeStorageInfoNV
- 功能描述  : 获取ME短信存储介质的支持状态
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_ReadSmsMeStorageInfoNV(VOS_VOID)
 {
     VOS_UINT32                          ulRet;
@@ -383,7 +295,7 @@ VOS_VOID AT_ReadSmsMeStorageInfoNV(VOS_VOID)
         stMeStorageParm.usMeStorageNum      = 0;
 
         /* 获取ME短信存储介质的支持状态 */
-        ulRet = NV_ReadEx(enModemId, en_NV_Item_Sms_Me_Storage_Info, &stMeStorageParm, sizeof(stMeStorageParm));
+        ulRet = TAF_ACORE_NV_READ(enModemId, en_NV_Item_Sms_Me_Storage_Info, &stMeStorageParm, sizeof(stMeStorageParm));
         if (NV_OK == ulRet)
         {
             pstSmsCtx->enMsgMeStorageStatus = stMeStorageParm.enMeStorageStatus;
@@ -397,23 +309,7 @@ VOS_VOID AT_ReadSmsMeStorageInfoNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSmsClass0TailorNV
- 功能描述  : 获取CLASS0类短信接收上报方式
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月20日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-*****************************************************************************/
 VOS_VOID AT_ReadSmsClass0TailorNV(VOS_VOID)
 {
     VOS_UINT32                          ulRet;
@@ -423,7 +319,7 @@ VOS_VOID AT_ReadSmsClass0TailorNV(VOS_VOID)
     stClass0Tailor.enClass0Tailor       = MN_MSG_CLASS0_DEF;
 
     /* 获取CLASS0类短信接收上报方式 */
-    ulRet = NV_ReadEx(MODEM_ID_0, en_NV_Item_SMS_CLASS0_TAILOR, &stClass0Tailor, sizeof(MN_MSG_NVIM_CLASS0_TAILOR_STRU));
+    ulRet = TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_SMS_CLASS0_TAILOR, &stClass0Tailor, sizeof(MN_MSG_NVIM_CLASS0_TAILOR_STRU));
     if ( (NV_OK == ulRet)
       && (MN_MSG_NVIM_ITEM_ACTIVE == stClass0Tailor.ucActFlg))
     {
@@ -437,23 +333,7 @@ VOS_VOID AT_ReadSmsClass0TailorNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSmsClosePathNV
- 功能描述  : 读取短信close path的NV的值
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年7月17日
-    作    者   : z00234330
-    修改内容   : DTS2013052304352问题单新增
-  2.日    期   : 2013年10月08日
-    作    者   : j00174725
-    修改内容   : TQE
-*****************************************************************************/
 VOS_VOID AT_ReadSmsClosePathNV(VOS_VOID)
 {
     TAF_NVIM_SMS_CLOSE_PATH_CFG_STRU    stClosePath;
@@ -468,7 +348,7 @@ VOS_VOID AT_ReadSmsClosePathNV(VOS_VOID)
         pstSmsCtx = AT_GetModemSmsCtxAddrFromModemId(enModemId);
 
         /* 获取ME短信存储介质的支持状态 */
-        ulRet = NV_ReadEx(enModemId, en_NV_Item_SMS_Close_Path, &stClosePath, sizeof(stClosePath));
+        ulRet = TAF_ACORE_NV_READ(enModemId, en_NV_Item_SMS_Close_Path, &stClosePath, sizeof(stClosePath));
         if ( (NV_OK == ulRet)
            && (VOS_TRUE == stClosePath.ucNvimValid))
         {
@@ -477,20 +357,7 @@ VOS_VOID AT_ReadSmsClosePathNV(VOS_VOID)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadMtCustomizeInfo
- 功能描述  : 获取短信接收运营商定制类型
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年01月14日
-    作    者   : x00182239
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReadMtCustomizeInfo(VOS_VOID)
 {
     VOS_UINT32                          ulRet;
@@ -500,9 +367,10 @@ VOS_VOID AT_ReadMtCustomizeInfo(VOS_VOID)
 
     TAF_MEM_SET_S(&stMtCustomize, (VOS_SIZE_T)sizeof(stMtCustomize), 0x00, (VOS_SIZE_T)sizeof(MN_MSG_MT_CUSTOMIZE_INFO_STRU));
 
-    ulRet = NV_Read(en_NV_Item_SMS_MT_CUSTOMIZE_INFO,
-                &stMtCustomize,
-                sizeof(stMtCustomize));
+    ulRet = TAF_ACORE_NV_READ(MODEM_ID_0,
+                              en_NV_Item_SMS_MT_CUSTOMIZE_INFO,
+                              &stMtCustomize,
+                              sizeof(stMtCustomize));
     if (NV_OK != ulRet)
     {
         AT_INFO_LOG("AT_ReadMtCustomizeInfo: Fail to read ");
@@ -522,24 +390,7 @@ VOS_VOID AT_ReadMtCustomizeInfo(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadPortBuffCfgNV
- 功能描述  : 读取缓存控制NV项
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年12月28日
-    作    者   : j00174725
-    修改内容   : HSUART PHASE III
-
-  2.日    期   : 2014年2月14日
-    作    者   : j00174725
-    修改内容   : TQE
-*****************************************************************************/
 VOS_VOID AT_ReadPortBuffCfgNV(VOS_VOID)
 {
     AT_COMM_CTX_STRU                   *pstCommCtx = VOS_NULL_PTR;
@@ -550,7 +401,7 @@ VOS_VOID AT_ReadPortBuffCfgNV(VOS_VOID)
 
     TAF_MEM_SET_S(&stSmsBuffCfg, sizeof(stSmsBuffCfg), 0x00, sizeof(stSmsBuffCfg));
 
-    ulRet = NV_ReadEx(MODEM_ID_0, en_NV_Item_PORT_BUFF_CFG, &stSmsBuffCfg, sizeof(stSmsBuffCfg));
+    ulRet = TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_PORT_BUFF_CFG, &stSmsBuffCfg, sizeof(stSmsBuffCfg));
 
     if (NV_OK == ulRet)
     {
@@ -572,21 +423,7 @@ VOS_VOID AT_ReadPortBuffCfgNV(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSmsNV
- 功能描述  : 读取SMS相关的NV项
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_ReadSmsNV(VOS_VOID)
 {
     AT_ReadSmsSendDomainNV();
@@ -602,29 +439,8 @@ VOS_VOID AT_ReadSmsNV(VOS_VOID)
 
     return;
 }
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-1, begin */
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-1, end */
 
-/*****************************************************************************
- 函 数 名  : AT_ReadRoamCapaNV
- 功能描述  : 读取漫游能力相关的NV项
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月20日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-  3.日    期   : 2013年10月08日
-    作    者   : j00174725
-    修改内容   : TQE
-*****************************************************************************/
 VOS_VOID  AT_ReadRoamCapaNV(VOS_VOID)
 {
     NAS_NVIM_ROAM_CFG_INFO_STRU         stRoamCfgInfo;
@@ -637,7 +453,7 @@ VOS_VOID  AT_ReadRoamCapaNV(VOS_VOID)
     {
         pstNetCtx = AT_GetModemNetCtxAddrFromModemId(enModemId);
 
-        if (NV_OK == NV_ReadEx(enModemId, en_NV_Item_Roam_Capa, &stRoamCfgInfo, sizeof(NAS_NVIM_ROAM_CFG_INFO_STRU)))
+        if (NV_OK == TAF_ACORE_NV_READ(enModemId, en_NV_Item_Roam_Capa, &stRoamCfgInfo, sizeof(NAS_NVIM_ROAM_CFG_INFO_STRU)))
         {
             if (stRoamCfgInfo.ucRoamFeatureFlg >1)
             {
@@ -656,23 +472,7 @@ VOS_VOID  AT_ReadRoamCapaNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadPrivacyFilterCfgNv
- 功能描述  : 从Nv中读取SMS短信过滤功能是否使能的标识
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年09月17日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-  2.日    期   : 2016年07月01日
-    作    者   : f00179208
-    修改内容   : 隐私过滤项目:修改NV名称
-*****************************************************************************/
 VOS_VOID AT_ReadPrivacyFilterCfgNv(VOS_VOID)
 {
     AT_MODEM_PRIVACY_FILTER_CTX_STRU   *pstFilterCtx = VOS_NULL_PTR;
@@ -685,10 +485,10 @@ VOS_VOID AT_ReadPrivacyFilterCfgNv(VOS_VOID)
     for (enModemId = 0; enModemId < MODEM_ID_BUTT; enModemId++)
     {
         /* 读取NV项 */
-        if (NV_OK != NV_ReadEx(enModemId,
-                               en_NV_Item_Privacy_Log_Filter_Cfg,
-                               &stPrivacyFilterCfg,
-                               sizeof(NAS_NV_PRIVACY_FILTER_CFG_STRU)))
+        if (NV_OK != TAF_ACORE_NV_READ(enModemId,
+                                       en_NV_Item_Privacy_Log_Filter_Cfg,
+                                       &stPrivacyFilterCfg,
+                                       sizeof(NAS_NV_PRIVACY_FILTER_CFG_STRU)))
         {
             stPrivacyFilterCfg.ucFilterEnableFlg = VOS_FALSE;
         }
@@ -707,23 +507,7 @@ VOS_VOID AT_ReadPrivacyFilterCfgNv(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSystemAppConfigNV
- 功能描述  : 读取特性控制NV相关信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月17日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-*****************************************************************************/
 VOS_VOID  AT_ReadSystemAppConfigNV(VOS_VOID)
 {
     VOS_UINT8                          *pucSystemAppConfig;
@@ -735,7 +519,7 @@ VOS_VOID  AT_ReadSystemAppConfigNV(VOS_VOID)
     pucSystemAppConfig                  = AT_GetSystemAppConfigAddr();
 
     /*读取失败按默认值处理 */
-    if (VOS_OK != NV_ReadEx(MODEM_ID_0, en_NV_Item_System_APP_Config,&stSysAppConfig,sizeof(NAS_NVIM_SYSTEM_APP_CONFIG_STRU)))
+    if (VOS_OK != TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_System_APP_Config,&stSysAppConfig,sizeof(NAS_NVIM_SYSTEM_APP_CONFIG_STRU)))
     {
         *pucSystemAppConfig  = SYSTEM_APP_MP;
         return;
@@ -754,22 +538,7 @@ VOS_VOID  AT_ReadSystemAppConfigNV(VOS_VOID)
 
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadAtDislogPwdNV
- 功能描述  : 读取DISLOG密码NV
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月17日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-*****************************************************************************/
 VOS_VOID AT_ReadAtDislogPwdNV(VOS_VOID)
 {
     VOS_UINT8                          *pucSystemAppConfig;
@@ -783,9 +552,10 @@ VOS_VOID AT_ReadAtDislogPwdNV(VOS_VOID)
     pucSystemAppConfig = AT_GetSystemAppConfigAddr();
 
     /* 新加NV项保存DISLOG密码(OPWORD使用) */
-    if (NV_OK == NV_ReadEx(MODEM_ID_0, en_NV_Item_AT_DISLOG_PWD_NEW,
-                          &stDislogPwdNew,
-                          AT_OPWORD_PWD_LEN))
+    if (NV_OK == TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_AT_DISLOG_PWD_NEW,
+                                   &stDislogPwdNew,
+                                   AT_OPWORD_PWD_LEN))
     {
         TAF_MEM_CPY_S((VOS_INT8*)g_acATOpwordPwd,
                    AT_OPWORD_PWD_LEN + 1,
@@ -811,25 +581,7 @@ VOS_VOID AT_ReadAtDislogPwdNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadAtRightPasswordNV
- 功能描述  : 读取当前是否有权限操作AT端口信息的NV
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年5月17日
-    作    者   : l00167671
-    修改内容   : NV项拆分项目, 将NV项数据用结构体描述
-  3.日    期   : 2014年5月30日
-    作    者   : j00174725
-    修改内容   : TQE
-*****************************************************************************/
 VOS_VOID AT_ReadAtRightPasswordNV(VOS_VOID)
 {
     TAF_AT_NVIM_RIGHT_OPEN_FLAG_STRU        stNvimRightOpenFlg;
@@ -837,9 +589,10 @@ VOS_VOID AT_ReadAtRightPasswordNV(VOS_VOID)
     TAF_MEM_SET_S(&stNvimRightOpenFlg, sizeof(stNvimRightOpenFlg), 0x00, sizeof(stNvimRightOpenFlg));
 
     /* 从NV中获取当前操作AT命令的权限 */
-    if (NV_OK != NV_ReadEx(MODEM_ID_0, en_NV_Item_AT_RIGHT_PASSWORD,
-                           &stNvimRightOpenFlg,
-                           sizeof(stNvimRightOpenFlg)))
+    if (NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_AT_RIGHT_PASSWORD,
+                                   &stNvimRightOpenFlg,
+                                   sizeof(stNvimRightOpenFlg)))
     {
         /* 读取NV失败,采用默认密码 */
         TAF_MEM_SET_S(&g_stAtRightOpenFlg, sizeof(g_stAtRightOpenFlg), 0x00, sizeof(g_stAtRightOpenFlg));
@@ -850,31 +603,17 @@ VOS_VOID AT_ReadAtRightPasswordNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadAtDissdPwdNV
- 功能描述  : 读取使能禁止SD卡时需要的密码NV
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月17日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-*****************************************************************************/
 VOS_VOID AT_ReadAtDissdPwdNV(VOS_VOID)
 {
     TAF_AT_NVIM_DISSD_PWD_STRU          stDissdPwd;
 
     TAF_MEM_SET_S(&stDissdPwd, sizeof(stDissdPwd), 0x00, AT_DISSD_PWD_LEN);
 
-    if (NV_OK == NV_ReadEx(MODEM_ID_0, en_NV_Item_AT_DISSD_PWD,
-                           &stDissdPwd,
-                           AT_DISSD_PWD_LEN))
+    if (NV_OK == TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_AT_DISSD_PWD,
+                                   &stDissdPwd,
+                                   AT_DISSD_PWD_LEN))
     {
         TAF_MEM_CPY_S((VOS_INT8*)g_acATE5DissdPwd,
                    AT_DISSD_PWD_LEN + 1,
@@ -891,22 +630,7 @@ VOS_VOID AT_ReadAtDissdPwdNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadNotSupportRetValueNV
- 功能描述  : 从NV中获取不支持命令的返回值
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年5月17日
-    作    者   : l00167671
-    修改内容   : NV项拆分项目, 将NV项数据用结构体描述
-*****************************************************************************/
 VOS_VOID AT_ReadNotSupportRetValueNV(VOS_VOID)
 {
     VOS_UINT32                                  ulRetLen;
@@ -917,8 +641,10 @@ VOS_VOID AT_ReadNotSupportRetValueNV(VOS_VOID)
 
      /* 从NV中获取不支持命令的返回值，当为E5、LCARD、DONGLE时，
         该NV设置为"ERROR",其他平台设置为"COMMAND NOT SUPPORT" */
-    if (NV_OK == NV_ReadEx(MODEM_ID_0, en_NV_Item_NOT_SUPPORT_RET_VALUE, stErrorText.acErrorText,
-                           AT_NOTSUPPORT_STR_LEN))
+    if (NV_OK == TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_NOT_SUPPORT_RET_VALUE,
+                                   stErrorText.acErrorText,
+                                   AT_NOTSUPPORT_STR_LEN))
     {
          TAF_MEM_CPY_S(acRetVal,
                     sizeof(acRetVal),
@@ -941,19 +667,7 @@ VOS_VOID AT_ReadNotSupportRetValueNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadE5NV
- 功能描述  : 读取E5相关的几个NV项
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReadE5NV(VOS_VOID)
 {
     AT_ReadAtDislogPwdNV();
@@ -967,23 +681,7 @@ VOS_VOID AT_ReadE5NV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_IsAbortCmdCharValid
- 功能描述  : 判断打断命令的字符是否为有效字符.
- 输入参数  : pucAbortCmdChar: 打断命令的字符串
-             ulLen          : 字符串的长度
- 输出参数  : 无
- 返 回 值  : VOS_TRUE: 有效
-             VOS_FALSE:无效
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年9月22日
-    作    者   : lijun 00171473
-    修改内容   : 新生成函数 for V7R1C50_At_Abort
-
-*****************************************************************************/
 VOS_UINT32 AT_IsAbortCmdCharValid(
     VOS_UINT8                          *pucAbortCmdChar,
     VOS_UINT32                          ulLen
@@ -1022,23 +720,7 @@ VOS_UINT32 AT_IsAbortCmdCharValid(
     return VOS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadAbortCmdParaNV
- 功能描述  : 读取AT打断命令的NV项, 用户可配置打断命令的命令名和返回值
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年9月22日
-    作    者   : lijun 00171473
-    修改内容   : 新生成函数 for V7R1C50_At_Abort
-  2.日    期   : 2013年10月22日
-    作    者   : w00242748
-    修改内容   : NETSCAN项目，读取NV项时，若读取到ANY，则认为任意字符打断
-
-*****************************************************************************/
 VOS_VOID AT_ReadAbortCmdParaNV(VOS_VOID)
 {
     AT_ABORT_CMD_PARA_STRU             *pstAbortCmdPara   = VOS_NULL_PTR;
@@ -1059,9 +741,10 @@ VOS_VOID AT_ReadAbortCmdParaNV(VOS_VOID)
     TAF_MEM_SET_S(pstAbortCmdPara, sizeof(AT_ABORT_CMD_PARA_STRU), 0x00, sizeof(AT_ABORT_CMD_PARA_STRU));
 
     /* 读取NV项中配置的打断命令和打断回复 */
-    ulRlst = NV_ReadEx(MODEM_ID_0, en_NV_Item_AT_ABORT_CMD_PARA,
-                       &stNvAbortCmdPara,
-                       sizeof(AT_NVIM_ABORT_CMD_PARA_STRU));
+    ulRlst = TAF_ACORE_NV_READ(MODEM_ID_0,
+                               en_NV_Item_AT_ABORT_CMD_PARA,
+                               &stNvAbortCmdPara,
+                               sizeof(AT_NVIM_ABORT_CMD_PARA_STRU));
 
     /* NV读取失败则使用默认值 */
     if ( NV_OK != ulRlst )
@@ -1157,20 +840,7 @@ VOS_VOID AT_ReadAbortCmdParaNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSysNV
- 功能描述  : 读取系统相关的NV项
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReadSysNV(VOS_VOID)
 {
     AT_ReadRoamCapaNV();
@@ -1184,26 +854,7 @@ VOS_VOID AT_ReadSysNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadCellSignReportCfgNV
- 功能描述  : 从NV中读取信号质量上报相关配置信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年1月11日
-    作    者   : t00212959
-    修改内容   : 支持cerssi新增参数
-  3.日    期   : 2013年5月17日
-    作    者   : l00167671
-    修改内容   : NV项拆分项目, 将NV项数据用结构体描述
-*****************************************************************************/
 VOS_VOID AT_ReadCellSignReportCfgNV( VOS_VOID )
 {
     AT_MODEM_NET_CTX_STRU              *pstNetCtx = VOS_NULL_PTR;
@@ -1216,10 +867,10 @@ VOS_VOID AT_ReadCellSignReportCfgNV( VOS_VOID )
 
         TAF_MEM_SET_S(&stCellSignReportCfg, sizeof(stCellSignReportCfg), 0x00, sizeof(stCellSignReportCfg));
 
-        if(NV_OK != NV_ReadEx(enModemId,
-                              en_NV_Item_CELL_SIGN_REPORT_CFG,
-                              &stCellSignReportCfg,
-                              sizeof(NAS_NVIM_CELL_SIGN_REPORT_CFG_STRU)))
+        if(NV_OK != TAF_ACORE_NV_READ(enModemId,
+                                      en_NV_Item_CELL_SIGN_REPORT_CFG,
+                                      &stCellSignReportCfg,
+                                      sizeof(NAS_NVIM_CELL_SIGN_REPORT_CFG_STRU)))
         {
              AT_WARN_LOG("AT_ReadCellSignReportCfgNV:read en_NV_Item_CELL_SIGN_REPORT_CFG failed");
              return;
@@ -1243,22 +894,7 @@ VOS_VOID AT_ReadCellSignReportCfgNV( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ValidateWasCategory
- 功能描述  : 检查UE能力中Category有效性
- 输入参数  : pstUeCapability - WAS的UE能力NV项
- 输出参数  : 无
- 返 回 值  : VOS_OK          - 有效
-             VOS_ERR         - 无效
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年9月14日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_ValidateWasCategory(
     AT_NV_UE_CAPABILITY_STRU           *pstUeCapability
 )
@@ -1277,22 +913,7 @@ VOS_UINT32 AT_ValidateWasCategory(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ValidateWasCategoryExt
- 功能描述  : 检查UE能力中CategoryExt有效性
- 输入参数  : pstUeCapability - WAS的UE能力NV项
- 输出参数  : 无
- 返 回 值  : VOS_OK          - 有效
-             VOS_ERR         - 无效
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年9月14日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_ValidateWasCategoryExt(
     AT_NV_UE_CAPABILITY_STRU           *pstUeCapability
 )
@@ -1312,22 +933,7 @@ VOS_UINT32 AT_ValidateWasCategoryExt(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ValidateWasCategoryExt2
- 功能描述  : 检查UE能力中CategoryExt2有效性
- 输入参数  : pstUeCapability - WAS的UE能力NV项
- 输出参数  : 无
- 返 回 值  : VOS_OK          - 有效
-             VOS_ERR         - 无效
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年9月14日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_ValidateWasCategoryExt2(
     AT_NV_UE_CAPABILITY_STRU           *pstUeCapability
 )
@@ -1348,22 +954,7 @@ VOS_UINT32 AT_ValidateWasCategoryExt2(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ValidateWasCategoryExt3
- 功能描述  : 检查UE能力中CategoryExt3有效性
- 输入参数  : pstUeCapability - WAS的UE能力NV项
- 输出参数  : 无
- 返 回 值  : VOS_OK          - 有效
-             VOS_ERR         - 无效
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年9月14日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_ValidateWasCategoryExt3(
     AT_NV_UE_CAPABILITY_STRU           *pstUeCapability
 )
@@ -1385,21 +976,7 @@ VOS_UINT32 AT_ValidateWasCategoryExt3(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_GetWasDefaultCategory
- 功能描述  :
- 输入参数  : AT_NV_UE_CAPABILITY_STRU           *pstUeCapability
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年9月14日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT8 AT_GetWasDefaultCategory(
     AT_NV_UE_CAPABILITY_STRU           *pstUeCapability
 )
@@ -1429,21 +1006,7 @@ VOS_UINT8 AT_GetWasDefaultCategory(
     return enRateCategory;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_CalcWasCategory
- 功能描述  : 根据WAS的UE能力NV项内容计算WAS的CATEGORY
- 输入参数  : pstUeCapability - WAS的UE能力NV项
- 输出参数  : 无
- 返 回 值  : VOS_UINT8
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年9月14日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT8 AT_CalcWasCategory(
     AT_NV_UE_CAPABILITY_STRU           *pstUeCapability
 )
@@ -1475,20 +1038,7 @@ VOS_UINT8 AT_CalcWasCategory(
     return enRateCategory;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadWasCapabilityNV
- 功能描述  : 读取WAS的能力值: 协议版本和CATEGORY
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReadWasCapabilityNV(VOS_VOID)
 {
     AT_NV_UE_CAPABILITY_STRU            stNvUeCapability;
@@ -1496,9 +1046,10 @@ VOS_VOID AT_ReadWasCapabilityNV(VOS_VOID)
 
     TAF_MEM_SET_S(&stNvUeCapability, sizeof(stNvUeCapability), 0x00, sizeof(stNvUeCapability));
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_WAS_RadioAccess_Capa_New,
-                         &stNvUeCapability,
-                         sizeof(AT_NV_UE_CAPABILITY_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0,
+                                 en_NV_Item_WAS_RadioAccess_Capa_New,
+                                 &stNvUeCapability,
+                                 sizeof(AT_NV_UE_CAPABILITY_STRU));
     if (VOS_OK != ulResult)
     {
         /* NV读取失败, 协议版本默认为R99 */
@@ -1512,24 +1063,7 @@ VOS_VOID AT_ReadWasCapabilityNV(VOS_VOID)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_CalcGasCategory
- 功能描述  : 根据GAS的UE能力NV项内容计算GAS的CATEGORY
- 输入参数  : NVIM_GAS_HIGH_MULTISLOT_CLASS_STRU         *pstHighMultislotclass
-             VOS_UINT16                                  usGprsMultiSlotClass
-             VOS_UINT16                                  usEgprsMultiSlotClass
-             VOS_UINT16                                  usEgprsFlag
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年3月15日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_CalcGasCategory(
     NVIM_GAS_HIGH_MULTISLOT_CLASS_STRU         *pstHighMultislotclass,
     VOS_UINT16                                  usGprsMultiSlotClass,
@@ -1559,20 +1093,7 @@ VOS_VOID AT_CalcGasCategory(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadGasCapabilityNV
- 功能描述  : 读取GAS的能力值: 协议版本和CATEGORY
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReadGasCapabilityNV(VOS_VOID)
 {
     VOS_UINT32                                  ulResult;
@@ -1588,13 +1109,13 @@ VOS_VOID AT_ReadGasCapabilityNV(VOS_VOID)
     usEgprsMultiSlotClass = 0;
     usEgprsFlag           = 0;
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_Egprs_Flag, &usEgprsFlag, sizeof(VOS_UINT16));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_Egprs_Flag, &usEgprsFlag, sizeof(VOS_UINT16));
     if ( NV_OK != ulResult )
     {
         usEgprsFlag = 0x01;
     }
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_Nv_Item_Gprs_Multi_Slot_Class, &usGprsMultiSlotClass, sizeof(VOS_UINT16));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0, en_Nv_Item_Gprs_Multi_Slot_Class, &usGprsMultiSlotClass, sizeof(VOS_UINT16));
 
     /* 读取失败，默认多时隙能力等级为12 */
     if ( NV_OK != ulResult )
@@ -1609,7 +1130,7 @@ VOS_VOID AT_ReadGasCapabilityNV(VOS_VOID)
         usGprsMultiSlotClass = AT_GAS_GRR_MULTISLOT_CLASS_MAX;
     }
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_Egprs_Multi_Slot_Class, &usEgprsMultiSlotClass, sizeof(VOS_UINT16));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_Egprs_Multi_Slot_Class, &usEgprsMultiSlotClass, sizeof(VOS_UINT16));
     if ( NV_OK != ulResult )
     {
         usEgprsMultiSlotClass = AT_GAS_GRR_MULTISLOT_CLASS_MAX;
@@ -1622,7 +1143,7 @@ VOS_VOID AT_ReadGasCapabilityNV(VOS_VOID)
         usEgprsMultiSlotClass = AT_GAS_GRR_MULTISLOT_CLASS_MAX;
     }
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_GAS_High_Multislot_Class,&stHighMultislotclass, sizeof(NVIM_GAS_HIGH_MULTISLOT_CLASS_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_GAS_High_Multislot_Class,&stHighMultislotclass, sizeof(NVIM_GAS_HIGH_MULTISLOT_CLASS_STRU));
 
     /* 读取失败，默认High Multislot Class 无效  */
     if ( NV_OK != ulResult )
@@ -1644,23 +1165,7 @@ VOS_VOID AT_ReadGasCapabilityNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadPppDialErrCodeNV
- 功能描述  : 从NV中读取PPP拨号错误码上报相关信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年5月17日
-    作    者   : l00167671
-    修改内容   : NV项拆分项目, 将NV项数据用结构体描述
-*****************************************************************************/
 VOS_VOID AT_ReadPppDialErrCodeNV( VOS_VOID )
 {
     NAS_NV_PPP_DIAL_ERR_CODE_STRU       stPppErrRpt;
@@ -1669,9 +1174,10 @@ VOS_VOID AT_ReadPppDialErrCodeNV( VOS_VOID )
     stPppErrRpt.ucStatus         = VOS_FALSE;
     stPppErrRpt.ucErrCodeRpt     = PPP_DIAL_ERR_CODE_BUTT;
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_PPP_DIAL_ERR_CODE,
-                         &stPppErrRpt,
-                         sizeof(NAS_NV_PPP_DIAL_ERR_CODE_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0,
+                                 en_NV_Item_PPP_DIAL_ERR_CODE,
+                                 &stPppErrRpt,
+                                 sizeof(NAS_NV_PPP_DIAL_ERR_CODE_STRU));
 
     if ((ulResult == NV_OK)
      && (VOS_TRUE == stPppErrRpt.ucStatus)
@@ -1688,23 +1194,7 @@ VOS_VOID AT_ReadPppDialErrCodeNV( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadReportRegActFlgNV
- 功能描述  : 从NV中读取CREG/CGREG的ACT参数相关信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年05月20日
-    作    者   : m00217266
-    修改内容   : nv项拆分
-*****************************************************************************/
 VOS_VOID AT_ReadReportRegActFlgNV( VOS_VOID )
 {
     VOS_UINT32                          ulResult;
@@ -1712,9 +1202,10 @@ VOS_VOID AT_ReadReportRegActFlgNV( VOS_VOID )
 
     TAF_MEM_SET_S(&stReportRegFlg, sizeof(stReportRegFlg), 0x00, sizeof(TAF_AT_NVIM_REPORT_REG_ACT_FLG_STRU));
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_REPORT_REG_ACT_FLG,
-                         &(stReportRegFlg.usReportRegActFlg),
-                         sizeof(stReportRegFlg.usReportRegActFlg));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0,
+                                 en_NV_Item_REPORT_REG_ACT_FLG,
+                                 &(stReportRegFlg.usReportRegActFlg),
+                                 sizeof(stReportRegFlg.usReportRegActFlg));
     if (NV_OK != ulResult)
     {
         g_usReportCregActParaFlg = VOS_FALSE;
@@ -1727,23 +1218,7 @@ VOS_VOID AT_ReadReportRegActFlgNV( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadCregAndCgregCiFourByteRptNV
- 功能描述  : 从NV中读取CREG/CGREG的CI参数是否以4字节上报相关信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年5月17日
-    作    者   : l00167671
-    修改内容   : NV项拆分项目, 将NV项数据用结构体描述
-*****************************************************************************/
 VOS_VOID AT_ReadCregAndCgregCiFourByteRptNV( VOS_VOID )
 {
     NAS_NV_CREG_CGREG_CI_FOUR_BYTE_RPT_STRU     stCiFourByteRpt;
@@ -1752,9 +1227,10 @@ VOS_VOID AT_ReadCregAndCgregCiFourByteRptNV( VOS_VOID )
     stCiFourByteRpt.ucStatus     = VOS_FALSE;
     stCiFourByteRpt.ucCiBytesRpt = 0;
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_CREG_CGREG_CI_Four_Byte_Rpt,
-                         &stCiFourByteRpt,
-                         sizeof(NAS_NV_CREG_CGREG_CI_FOUR_BYTE_RPT_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0,
+                                 en_NV_Item_CREG_CGREG_CI_Four_Byte_Rpt,
+                                 &stCiFourByteRpt,
+                                 sizeof(NAS_NV_CREG_CGREG_CI_FOUR_BYTE_RPT_STRU));
 
     if ((NV_OK == ulResult)
      && (VOS_TRUE == stCiFourByteRpt.ucStatus)
@@ -1770,21 +1246,7 @@ VOS_VOID AT_ReadCregAndCgregCiFourByteRptNV( VOS_VOID )
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadIpv6CapabilityNV
- 功能描述  : 从NV中读取IPV6能力相关信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_ReadIpv6CapabilityNV( VOS_VOID )
 {
     AT_NV_IPV6_CAPABILITY_STRU          stNvIpv6Capability;
@@ -1796,10 +1258,10 @@ VOS_VOID AT_ReadIpv6CapabilityNV( VOS_VOID )
 
     pstCommPsCtx = AT_GetCommPsCtxAddr();
 
-    ulRslt = NV_ReadEx(MODEM_ID_0,
-                       en_NV_Item_IPV6_CAPABILITY,
-                       &stNvIpv6Capability,
-                       sizeof(AT_NV_IPV6_CAPABILITY_STRU));
+    ulRslt = TAF_ACORE_NV_READ(MODEM_ID_0,
+                               en_NV_Item_IPV6_CAPABILITY,
+                               &stNvIpv6Capability,
+                               sizeof(AT_NV_IPV6_CAPABILITY_STRU));
 
     ulIpv6CapabilityValid = AT_PS_IsIpv6CapabilityValid(stNvIpv6Capability.ucIpv6Capablity);
 
@@ -1818,20 +1280,7 @@ VOS_VOID AT_ReadIpv6CapabilityNV( VOS_VOID )
 }
 
 /* Added by l60609 for V9R1 IPv6&TAF/SM Project, 2013-4-24, begin */
-/*****************************************************************************
- 函 数 名  : AT_ReadIpv6BackProcExtCauseNV
- 功能描述  : 读取NV定制的IPv4v6双栈拨号回退处理扩展原因值
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月17日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReadIpv6BackProcExtCauseNV(VOS_VOID)
 {
     AT_PS_IPV6_BACKPROC_EXT_CAUSE_STRU *pstPsBackProcExtCause = VOS_NULL_PTR;
@@ -1845,10 +1294,10 @@ VOS_VOID AT_ReadIpv6BackProcExtCauseNV(VOS_VOID)
 
     TAF_MEM_SET_S(&stNvBackProcExtCause, sizeof(stNvBackProcExtCause), 0x00, sizeof(TAF_NV_IPV6_FALLBACK_EXT_CAUSE_STRU));
 
-    ulRslt = NV_ReadEx(MODEM_ID_0,
-                       en_NV_Item_IPV6_BACKPROC_EXT_CAUSE,
-                       &stNvBackProcExtCause,
-                       sizeof(TAF_NV_IPV6_FALLBACK_EXT_CAUSE_STRU));
+    ulRslt = TAF_ACORE_NV_READ(MODEM_ID_0,
+                               en_NV_Item_IPV6_BACKPROC_EXT_CAUSE,
+                               &stNvBackProcExtCause,
+                               sizeof(TAF_NV_IPV6_FALLBACK_EXT_CAUSE_STRU));
 
     if ( (NV_OK == ulRslt)
       && (VOS_TRUE == stNvBackProcExtCause.ulActiveFlag) )
@@ -1873,21 +1322,7 @@ VOS_VOID AT_ReadIpv6BackProcExtCauseNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadIpv6AddrTestModeCfgNV
- 功能描述  : 读取IPV6地址测试模式配置的NV
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月29日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_ReadIpv6AddrTestModeCfgNV(VOS_VOID)
 {
     TAF_NVIM_IPV6_ADDR_TEST_MODE_CFG_STRU                   stIpv6AddrTestModeCfg;
@@ -1898,10 +1333,10 @@ VOS_VOID AT_ReadIpv6AddrTestModeCfgNV(VOS_VOID)
 
     pstCommPsCtx = AT_GetCommPsCtxAddr();
 
-    ulRslt = NV_ReadEx(MODEM_ID_0,
-                       en_NV_Item_Ipv6_Address_Test_Mode_Cfg,
-                       &stIpv6AddrTestModeCfg,
-                       sizeof(stIpv6AddrTestModeCfg));
+    ulRslt = TAF_ACORE_NV_READ(MODEM_ID_0,
+                               en_NV_Item_Ipv6_Address_Test_Mode_Cfg,
+                               &stIpv6AddrTestModeCfg,
+                               sizeof(stIpv6AddrTestModeCfg));
 
     if ((NV_OK == ulRslt))
     {
@@ -1917,20 +1352,7 @@ VOS_VOID AT_ReadIpv6AddrTestModeCfgNV(VOS_VOID)
 
 /* Added by l60609 for V9R1 IPv6&TAF/SM Project, 2013-4-24, end */
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSharePdpInfoNV
- 功能描述  : 读取NV定制的Share PDP特性FLAG
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年6月7日
-    作    者   : z00214637
-    修改内容   : V3R3 Share-PDP项目新增
-*****************************************************************************/
 VOS_VOID AT_ReadSharePdpInfoNV(VOS_VOID)
 {
     TAF_NVIM_SHARE_PDP_INFO_STRU        stSharePdpInfo;
@@ -1941,10 +1363,10 @@ VOS_VOID AT_ReadSharePdpInfoNV(VOS_VOID)
 
     pstCommPsCtx = AT_GetCommPsCtxAddr();
 
-    ulRslt = NV_ReadEx(MODEM_ID_0,
-                       en_NV_Item_SHARE_PDP_INFO,
-                       &stSharePdpInfo,
-                       sizeof(stSharePdpInfo));
+    ulRslt = TAF_ACORE_NV_READ(MODEM_ID_0,
+                               en_NV_Item_SHARE_PDP_INFO,
+                               &stSharePdpInfo,
+                               sizeof(stSharePdpInfo));
 
     if (NV_OK == ulRslt)
     {
@@ -1958,26 +1380,7 @@ VOS_VOID AT_ReadSharePdpInfoNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadDialConnectDisplayRateNV
- 功能描述  : 从NV中读取拨号系统托盘显示速率相关信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年5月17日
-    作    者   : l00167671
-    修改内容   : NV项拆分项目, 将NV项数据用结构体描述
-  3.日    期   : 2013年10月08日
-    作    者   : j00174725
-    修改内容   : TQE
-*****************************************************************************/
 VOS_VOID AT_ReadDialConnectDisplayRateNV(VOS_VOID)
 {
     VOS_UINT32                                              ulResult;
@@ -1985,10 +1388,10 @@ VOS_VOID AT_ReadDialConnectDisplayRateNV(VOS_VOID)
 
     TAF_MEM_SET_S(&stDialConnectDisplayRate, sizeof(stDialConnectDisplayRate), 0x00, sizeof(stDialConnectDisplayRate));
 
-
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_DIAL_CONNECT_DISPLAY_RATE,
-                         &stDialConnectDisplayRate,
-                         sizeof(AT_NVIM_DIAL_CONNECT_DISPLAY_RATE_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0,
+                                 en_NV_Item_DIAL_CONNECT_DISPLAY_RATE,
+                                 &stDialConnectDisplayRate,
+                                 sizeof(AT_NVIM_DIAL_CONNECT_DISPLAY_RATE_STRU));
     if (NV_OK != ulResult)
     {
         TAF_MEM_SET_S(&g_stDialConnectDisplayRate, sizeof(g_stDialConnectDisplayRate), 0x00, sizeof(g_stDialConnectDisplayRate));
@@ -2007,24 +1410,7 @@ VOS_VOID AT_ReadDialConnectDisplayRateNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadPsNV
- 功能描述  : 读取PS域相关的NV项
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-    修改内容   : DSDA PHASE III
-  2.日    期   : 2013年6月4日
-    作    者   : z00214637
-    修改内容   : V3R3 Share-PDP项目修改
-*****************************************************************************/
 VOS_VOID  AT_ReadPsNV(VOS_VOID)
 {
     /* 读取拨号错误码上报NV */
@@ -2065,26 +1451,7 @@ VOS_VOID  AT_ReadPsNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadCsNV
- 功能描述  : cs域相关NV项的读取 (包括ss和CC相关的NV项)
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年01月24日
-    作    者   : f62575
-    修改内容   : DTS2013012408620, 支持SS查询操作输出网络SS-STATUS参数
-  3.日    期   : 2013年5月17日
-    作    者   : l00167671
-    修改内容   : NV项拆分项目, 将NV项数据用结构体描述
-*****************************************************************************/
 VOS_VOID  AT_ReadCsNV(VOS_VOID)
 {
     TAF_USSD_NVIM_TRANS_MODE_STRU       stUssdTranMode;
@@ -2101,10 +1468,10 @@ VOS_VOID  AT_ReadCsNV(VOS_VOID)
         TAF_MEM_SET_S(&stTimeInfo, sizeof(stTimeInfo), 0x00, sizeof(stTimeInfo));
 
         /*读取语音自动应答 */
-        if(NV_OK == NV_ReadEx(enModemId,
-                              en_NV_Item_CCA_TelePara,
-                              &stTimeInfo,
-                              sizeof(TAF_CCA_TELE_PARA_STRU)))
+        if(NV_OK == TAF_ACORE_NV_READ(enModemId,
+                                      en_NV_Item_CCA_TelePara,
+                                      &stTimeInfo,
+                                      sizeof(TAF_CCA_TELE_PARA_STRU)))
         {
             pstCcCtx->stS0TimeInfo.ucS0TimerLen = stTimeInfo.ucS0TimerLen;
         }
@@ -2112,10 +1479,10 @@ VOS_VOID  AT_ReadCsNV(VOS_VOID)
         TAF_MEM_SET_S(&stUssdTranMode, sizeof(stUssdTranMode), 0x00, sizeof(stUssdTranMode));
 
         /*读取USSD是否透传设置 */
-        if (NV_OK == NV_ReadEx(MODEM_ID_0,
-                               en_NV_Item_CUST_USSD_MODE,
-                               &stUssdTranMode,
-                               sizeof(TAF_USSD_NVIM_TRANS_MODE_STRU)))
+        if (NV_OK == TAF_ACORE_NV_READ(MODEM_ID_0,
+                                       en_NV_Item_CUST_USSD_MODE,
+                                       &stUssdTranMode,
+                                       sizeof(TAF_USSD_NVIM_TRANS_MODE_STRU)))
         {
             if (VOS_TRUE == stUssdTranMode.ucStatus)
             {
@@ -2130,23 +1497,7 @@ VOS_VOID  AT_ReadCsNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadLTENV
- 功能描述  : 读取LTE相关的NV项
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年4月28日
-    作    者   : w00182550
-    修改内容   : 新生成函数
-  2.日    期   : 2013年07月222日
-    作    者   : j00177245
-    修改内容   : 清理编译warning
-*****************************************************************************/
 VOS_VOID AT_ReadLTENV(VOS_VOID)
 {
     VOS_UINT32 ulResult = NV_OK;
@@ -2156,7 +1507,7 @@ VOS_VOID AT_ReadLTENV(VOS_VOID)
     TAF_MEM_SET_S(&g_stEcioCfg, sizeof(g_stEcioCfg), 0x00, sizeof(g_stEcioCfg));
 
     /* 从NV中获取门限值 */
-    ulResult = NVM_Read(EN_NV_ID_RSRP_CFG, &g_stRsrpCfg, sizeof(NVIM_RSRP_CFG_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0, EN_NV_ID_RSRP_CFG, &g_stRsrpCfg, sizeof(NVIM_RSRP_CFG_STRU));
 
     if(NV_OK != ulResult)
     {
@@ -2165,7 +1516,7 @@ VOS_VOID AT_ReadLTENV(VOS_VOID)
     }
 
     /* 从NV中获取门限值 */
-    ulResult = NVM_Read(EN_NV_ID_RSCP_CFG, &g_stRscpCfg, sizeof(NVIM_RSCP_CFG_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0, EN_NV_ID_RSCP_CFG, &g_stRscpCfg, sizeof(NVIM_RSCP_CFG_STRU));
 
     if(NV_OK != ulResult)
     {
@@ -2174,7 +1525,7 @@ VOS_VOID AT_ReadLTENV(VOS_VOID)
     }
 
     /* 从NV中获取门限值 */
-    ulResult = NVM_Read(EN_NV_ID_ECIO_CFG, &g_stEcioCfg, sizeof(NVIM_ECIO_CFG_STRU));
+    ulResult = TAF_ACORE_NV_READ(MODEM_ID_0, EN_NV_ID_ECIO_CFG, &g_stEcioCfg, sizeof(NVIM_ECIO_CFG_STRU));
 
     if(NV_OK != ulResult)
     {
@@ -2186,21 +1537,7 @@ VOS_VOID AT_ReadLTENV(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_ReadAgpsNv
- 功能描述  : AGPS相关NV初始化
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年5月28日
-    作    者   : l00198894
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_ReadAgpsNv(VOS_VOID)
 {
     AT_MODEM_AGPS_CTX_STRU             *pstAgpsCtx      = VOS_NULL_PTR;
@@ -2210,7 +1547,7 @@ VOS_VOID AT_ReadAgpsNv(VOS_VOID)
     TAF_MEM_SET_S(&stXcposrRptCfg, (VOS_SIZE_T)sizeof(stXcposrRptCfg), 0x00, (VOS_SIZE_T)sizeof(stXcposrRptCfg));
 
     /* 读取NV项 */
-    if (NV_OK == NV_Read(en_NV_Item_XCPOSRRPT_CFG, &stXcposrRptCfg, sizeof(stXcposrRptCfg)))
+    if (NV_OK == TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_XCPOSRRPT_CFG, &stXcposrRptCfg, sizeof(stXcposrRptCfg)))
     {
         for (enModemId = MODEM_ID_0; enModemId < MODEM_ID_BUTT; enModemId++)
         {
@@ -2227,28 +1564,7 @@ VOS_VOID AT_ReadAgpsNv(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadNV
- 功能描述  : AT初始化时读取NV
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-  2.日    期   : 2013年09月21日
-    作    者   : j00174725
-    修改内容   : UART-MODEM: 增加UART配置NV读取
-
-  3.日    期   : 2015年10月20日
-    作    者   : W00316404
-    修改内容   : R11 TFT 协议升级
-*****************************************************************************/
 VOS_VOID  AT_ReadNV(VOS_VOID)
 {
     /* 平台接入技术NV读取 */
@@ -2257,8 +1573,6 @@ VOS_VOID  AT_ReadNV(VOS_VOID)
     /* client NV读取 */
     AT_ReadClientConfigNV();
 
-    /* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, begin */
-    /* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, end */
 
     /* 读取系统相关的NV项 */
     AT_ReadSysNV();
@@ -2288,40 +1602,17 @@ VOS_VOID  AT_ReadNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_WriteCcpuResetRecordNvim
- 功能描述  : 设置C核单独复位标记的NV项(en_NV_Item_Ccpu_Reset_Record)
- 输入参数  : VOS_BOOL bCcpuResetFlag
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年5月25日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_WriteCcpuResetRecordNvim(VOS_UINT8 ucCcpuResetFlag)
 {
     VOS_UINT32                          ulResult;
-    VOS_UINT32                          ulLength;
     TAF_NVIM_CCPU_RESET_RECORD_STRU     stCcpuResetRecord;
-
-    ulLength = 0;
 
     TAF_MEM_SET_S(&stCcpuResetRecord, sizeof(stCcpuResetRecord), 0x00, sizeof(TAF_NVIM_CCPU_RESET_RECORD_STRU));
 
-    (VOS_VOID)NV_GetLength(en_NV_Item_Ccpu_Reset_Record, &ulLength);
-    if (ulLength > sizeof(TAF_NVIM_CCPU_RESET_RECORD_STRU))
-    {
-        return;
-    }
-
     stCcpuResetRecord.ucCcpuResetFlag = ucCcpuResetFlag;
 
-    ulResult = NV_WriteEx(MODEM_ID_0, en_NV_Item_Ccpu_Reset_Record, &stCcpuResetRecord, ulLength);
+    ulResult = TAF_ACORE_NV_WRITE(MODEM_ID_0, en_NV_Item_Ccpu_Reset_Record, &stCcpuResetRecord, sizeof(TAF_NVIM_CCPU_RESET_RECORD_STRU));
 
     if (NV_OK != ulResult)
     {
@@ -2331,21 +1622,7 @@ VOS_VOID AT_WriteCcpuResetRecordNvim(VOS_UINT8 ucCcpuResetFlag)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadPhyNV
- 功能描述  : 读取物理号相关的NV
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年3月4日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  AT_ReadPhyNV(VOS_VOID)
 {
     VOS_BOOL                            bImeiIsNull;
@@ -2367,21 +1644,7 @@ VOS_UINT32  AT_ReadPhyNV(VOS_VOID)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_InitDeviceCmd
- 功能描述  : 装备相关初始化
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年3月21日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_InitDeviceCmd(VOS_VOID)
 {
     TAF_MEM_SET_S(&g_stAtDevCmdCtrl, sizeof(g_stAtDevCmdCtrl), 0x00, sizeof(AT_DEVICE_CMD_CTRL_STRU));
@@ -2397,27 +1660,14 @@ VOS_VOID AT_InitDeviceCmd(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_InitStk
- 功能描述  : STK在AT模块的初始化
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_InitStk(VOS_VOID)
 {
     USIMM_STK_CFG_STRU                  stProfile;
 
     TAF_MEM_SET_S(&stProfile, sizeof(stProfile), 0x00, sizeof(stProfile));
 
-    if(NV_OK != NV_ReadEx(MODEM_ID_0, en_NV_Item_TerminalProfile_Set, &stProfile, sizeof(USIMM_STK_CFG_STRU)))
+    if(NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0, en_NV_Item_TerminalProfile_Set, &stProfile, sizeof(USIMM_STK_CFG_STRU)))
     {
         AT_ERR_LOG("AT_StkInit: read en_NV_Item_TerminalProfile_Set fail.");
 
@@ -2431,21 +1681,7 @@ VOS_VOID AT_InitStk(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_InitPara
- 功能描述  : AT模块参数的初始化
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_InitPara(VOS_VOID)
 {
     VOS_UINT8                          *pucSystemAppConfig;
@@ -2524,29 +1760,7 @@ VOS_VOID AT_InitPara(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_UsbSwitchGwMode
- 功能描述  : 从闪电卡切换到网关模式
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-  2.日    期   : 2013年1月14日
-    作    者   : A00165503
-    修改内容   : DTS2012042104301: PCUI端口发起NDIS/APP拨号流程优化
-  3.日    期   : 2013年4月13日
-    作    者   : y00213812
-    修改内容   : 合入DTS2012042104301并修改ClientId
-  4.日    期   : 2013年07月08日
-    作    者   : Y00213812
-    修改内容   : VoLTE_PhaseI 项目，增加PID
-*****************************************************************************/
 VOS_VOID AT_UsbSwitchGwMode(VOS_VOID)
 {
     AT_PDP_ENTITY_STRU                 *pstAppPdpEntity;
@@ -2615,20 +1829,7 @@ VOS_VOID AT_UsbSwitchGwMode(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_UsbEnableCB
- 功能描述  : 注册USB相关端口使能回调函数
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年12月28日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_UsbEnableCB(VOS_VOID)
 {
     /* USB MODEM口链路的建立 */
@@ -2638,24 +1839,7 @@ VOS_VOID AT_UsbEnableCB(VOS_VOID)
     AT_OpenUsbNdis();
 }
 
-/*****************************************************************************
- 函 数 名  : AT_UsbDisableCB
- 功能描述  : 注册USB相关端口去使能回调函数
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年12月28日
-    作    者   : j00174725
-    修改内容   : 新生成函数
-
-  2.日    期   : 2015年5月27日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_VOID AT_UsbDisableCB(VOS_VOID)
 {
     (VOS_VOID)vos_printf("AT_UsbDisableCB\r\n");
@@ -2674,32 +1858,7 @@ VOS_VOID AT_UsbDisableCB(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_InitPort
- 功能描述  : AT端口初始化
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年1月22日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-  2.日    期   : 2013年05月22日
-    作    者   : f00179208
-    修改内容   : V3R3 PPP PROJECT
-
-  3.日    期   : 2013年9月21日
-    作    者   : j00174725
-    修改内容   : UART-MODEM: 增加HSUART端口
-
-  4.日    期   : 2015年5月27日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_VOID AT_InitPort(VOS_VOID)
 {
     VOS_UINT8                           i;
@@ -2749,26 +1908,7 @@ VOS_VOID AT_InitPort(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : At_PidInit
- 功能描述  : AT PID初始化函数
- 输入参数  : enum VOS_INIT_PHASE_DEFINE enPhase
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
-             VOS_OK
-             VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年03月06日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-
-  2.日    期   : 2013年12月28日
-    作    者   : j00174725
-    修改内容   : HSUART PHASE III
-*****************************************************************************/
 VOS_UINT32  At_PidInit(enum VOS_INIT_PHASE_DEFINE enPhase)
 {
     switch ( enPhase )
@@ -2837,7 +1977,7 @@ VOS_UINT32  At_PidInit(enum VOS_INIT_PHASE_DEFINE enPhase)
             AT_InitMntnCtx();
 
             /* 注册层间消息过滤函数 */
-            GUNAS_OM_LayerMsgReplaceCBReg();
+            GUNAS_OM_LayerMsgReplaceCBRegACore();
             TAF_OM_LayerMsgLogPrivacyMatchRegAcore();
             break;
 
@@ -2848,30 +1988,16 @@ VOS_UINT32  At_PidInit(enum VOS_INIT_PHASE_DEFINE enPhase)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadSsNV
- 功能描述  : 从NV中读取SS相关定制参数
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年01月24日
-    作    者   : f62575
-    修改内容   : DTS2013012408620, 支持SS查询操作输出网络SS-STATUS参数
-
-*****************************************************************************/
 VOS_VOID AT_ReadSsNV( VOS_VOID )
 {
     TAF_MEM_SET_S(&g_stAtSsCustomizePara, sizeof(g_stAtSsCustomizePara), 0x00, sizeof(g_stAtSsCustomizePara));
 
     /* 读取SS定制的NV项到全局变量 */
-    if(NV_OK != NV_ReadEx(MODEM_ID_0,
-                          en_NV_Item_SS_CUSTOMIZE_PARA,
-                          &g_stAtSsCustomizePara,
-                          sizeof(g_stAtSsCustomizePara)))
+    if(NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                  en_NV_Item_SS_CUSTOMIZE_PARA,
+                                  &g_stAtSsCustomizePara,
+                                  sizeof(g_stAtSsCustomizePara)))
     {
         g_stAtSsCustomizePara.ucStatus = VOS_FALSE;
     }
@@ -2880,23 +2006,7 @@ VOS_VOID AT_ReadSsNV( VOS_VOID )
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_ReadRedialNwCauseFlagNV
- 功能描述  : 从NV中读取关闭网侧无原因值重拨功能开关
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年08月31日
-    作    者   : l00373346
-    修改内容   : 新生成函数
-  2.日    期   : 2017年05月20日
-    作    者   : w00316404
-    修改内容   : ReDial Nw Cause Requirement
-*****************************************************************************/
 VOS_VOID AT_ReadRedialNwCauseFlagNV(VOS_VOID)
 {
     AT_COMM_PS_CTX_STRU                                *pstCommPsCtx = VOS_NULL_PTR;
@@ -2912,10 +2022,10 @@ VOS_VOID AT_ReadRedialNwCauseFlagNV(VOS_VOID)
 
     pstCommPsCtx = AT_GetCommPsCtxAddr();
 
-    ulRslt = NV_ReadEx(MODEM_ID_0,
-                       en_NV_Item_PDP_REDIAL_FOR_NO_CAUSE_CFG,
-                       &stNvRedialForNoCauseCfg,
-                       (VOS_SIZE_T)sizeof(TAF_NV_PDP_REDIAL_FOR_NO_CAUSE_CFG_STRU));
+    ulRslt = TAF_ACORE_NV_READ(MODEM_ID_0,
+                               en_NV_Item_PDP_REDIAL_FOR_NO_CAUSE_CFG,
+                               &stNvRedialForNoCauseCfg,
+                               (VOS_SIZE_T)sizeof(TAF_NV_PDP_REDIAL_FOR_NO_CAUSE_CFG_STRU));
 
     if ((NV_OK == ulRslt)
      && (VOS_FALSE == stNvRedialForNoCauseCfg.ucEnable))
@@ -2927,10 +2037,10 @@ VOS_VOID AT_ReadRedialNwCauseFlagNV(VOS_VOID)
         pstCommPsCtx->stRedialForNwCauseCfg.ucRedialForNoCausePolicy = VOS_TRUE;
     }
 
-    ulRslt = NV_ReadEx(MODEM_ID_0,
-                       en_NV_Item_Pdp_Redial_For_No_Pdp_Type_CAUSE_CFG,
-                       &stNvRedialForNoPdpTypeCauseCfg,
-                       (VOS_SIZE_T)sizeof(TAF_NV_PDP_REDIAL_FOR_NO_PDP_TYPE_CAUSE_CFG_STRU));
+    ulRslt = TAF_ACORE_NV_READ(MODEM_ID_0,
+                               en_NV_Item_Pdp_Redial_For_No_Pdp_Type_CAUSE_CFG,
+                               &stNvRedialForNoPdpTypeCauseCfg,
+                               (VOS_SIZE_T)sizeof(TAF_NV_PDP_REDIAL_FOR_NO_PDP_TYPE_CAUSE_CFG_STRU));
 
     if ((NV_OK == ulRslt)
      && (VOS_FALSE == stNvRedialForNoPdpTypeCauseCfg.ucEnablePolicy))
@@ -2945,20 +2055,7 @@ VOS_VOID AT_ReadRedialNwCauseFlagNV(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ReadCdmaModemSwitchNotResetCfgNv
- 功能描述  : 从Nv中读取CdmaModemSwitch命令不重启特性是否开启标志
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月27日
-    作    者   : h00313353
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID AT_ReadCdmaModemSwitchNotResetCfgNv(VOS_VOID)
 {
     AT_MODEM_CDMAMODEMSWITCH_CTX_STRU                      *pstCdmaModemSwitchCtx = VOS_NULL_PTR;
@@ -2969,10 +2066,10 @@ VOS_VOID AT_ReadCdmaModemSwitchNotResetCfgNv(VOS_VOID)
     TAF_MEM_SET_S(&stCdmaModemSwitchNvCfg, (VOS_UINT32)sizeof(TAF_NVIM_CDMAMODEMSWITCH_NOT_RESET_CFG_STRU), 0x00, (VOS_UINT32)sizeof(TAF_NVIM_CDMAMODEMSWITCH_NOT_RESET_CFG_STRU));
 
     /* 读取NV项 */
-    if (NV_OK != NV_ReadEx(MODEM_ID_0,
-                           en_NV_Item_CDMAMODEMSWITCH_NOT_RESET_CFG,
-                           &stCdmaModemSwitchNvCfg,
-                           (VOS_UINT32)sizeof(TAF_NVIM_CDMAMODEMSWITCH_NOT_RESET_CFG_STRU)))
+    if (NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_CDMAMODEMSWITCH_NOT_RESET_CFG,
+                                   &stCdmaModemSwitchNvCfg,
+                                   (VOS_UINT32)sizeof(TAF_NVIM_CDMAMODEMSWITCH_NOT_RESET_CFG_STRU)))
     {
         stCdmaModemSwitchNvCfg.ucEnableFlg = VOS_FALSE;
     }

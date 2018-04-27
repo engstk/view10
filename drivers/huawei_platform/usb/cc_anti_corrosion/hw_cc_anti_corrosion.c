@@ -36,6 +36,11 @@ struct cc_anti_corrosion_dev *cc_corrosion_dev_p = NULL;
 #define VBUS_ON 1
 static unsigned char prev_nv_value = NV_DEFAULT;
 static struct cc_corrosion_ops *cc_corrosion_ops = NULL;
+static unsigned char local_gpio_state = 0;
+enum {
+	GPIO_LOW = 0,
+	GPIO_HIGH,
+};
 
 int hw_cc_corrosion_write_nv(unsigned char info)
 {
@@ -137,8 +142,12 @@ static void hw_cc_corrosion_first_work(void)
 	}
 
 	gpio_value = gpio_get_value(cc_corrosion_dev_p->irq_gpio);
+	if (cc_corrosion_dev_p->gpio_mode == GPIO_HIGH)
+	{
+		gpio_value = !gpio_value;
+	}
 
-	if ( (NV_CGNF_OK == nv_value) && gpio_value) {
+	if ( (NV_CGNF_OK == nv_value) && gpio_value && (local_gpio_state == NV_CGNF_OK)) {
 		hw_usb_err("%s set cc mode to UFP\n", __func__);
 		cc_corrosion_ops->set_cc_mode(CC_MODE_UFP);
 	}else {
@@ -156,16 +165,21 @@ static void hw_cc_corrosion_update_nv_work(struct work_struct *work)
 		return;
 	}
 
-	if (VBUS_ON != hisi_usb_vbus_value())
-	{
-		hw_usb_err("%s vbus is absent\n", __func__);
-		return;
-	}
+	//if (VBUS_ON != hisi_usb_vbus_value())
+	//{
+	//	hw_usb_err("%s vbus is absent\n", __func__);
+	//	return;
+	//}
 
 	mutex_lock(&cc_corrosion_dev_p->nv_lock);
 	gpio_value = gpio_get_value(cc_corrosion_dev_p->irq_gpio);
+	if (cc_corrosion_dev_p->gpio_mode == GPIO_HIGH)
+	{
+		gpio_value = !gpio_value;
+	}
 
 	nv_value = gpio_value ? NV_CGNF_NOT_OK : NV_CGNF_OK;
+	local_gpio_state = nv_value;
 	ret = hw_cc_corrosion_write_nv(nv_value);
 	if (ret)
 	{
@@ -207,7 +221,10 @@ static void hw_cc_corrosion_intb_work(struct work_struct *work)
 	}
 
 	gpio_value = gpio_get_value(cc_corrosion_dev_p->irq_gpio);
-
+	if (cc_corrosion_dev_p->gpio_mode == GPIO_HIGH)
+	{
+		gpio_value = !gpio_value;
+	}
 	ret = hw_cc_corrosion_read_nv(&nv_value);
 	if (ret)
 	{
@@ -294,12 +311,21 @@ static int hw_cc_anti_corrosion_probe(struct platform_device *pdev)
 	dev = &pdev->dev;
 	dnp = dev->of_node;
 
+	ret = of_property_read_u32(dnp, "gpio_mode", &cc_corrosion_dev_p->gpio_mode);
+	if (ret) {
+		hw_usb_err("%s get irq mode failed!\n", __func__);
+		devm_kfree(&pdev->dev, cc_corrosion_dev_p);
+		return ret;
+	}
+	hw_usb_err("%s gpio_mode = %d\n", __func__, cc_corrosion_dev_p->gpio_mode);
+
 	cc_corrosion_dev_p->irq_gpio = of_get_named_gpio(dnp, "cc_corrosion_gpio", 0);
 	if (cc_corrosion_dev_p->irq_gpio < 0)
 	{
 		hw_usb_err("%s of_get_named_gpio error!!! irq_gpio=%d.\n", __func__, cc_corrosion_dev_p->irq_gpio);
 		goto err_of_get_named_gpio;
 	}
+	hw_usb_err("%s irq_gpio = %d\n", __func__, cc_corrosion_dev_p->irq_gpio);
 
 	mutex_init(&cc_corrosion_dev_p->int_lock);
 	mutex_init(&cc_corrosion_dev_p->nv_lock);

@@ -32,19 +32,9 @@ struct platform_device *g_dp_pdev = NULL;
 static bool bpress_powerkey = false;
 static bool btrigger_timeout = false;
 
-static struct dsm_client *dp_dclient = NULL;
-EXPORT_SYMBOL(dp_dclient);
-
-static struct dsm_dev dsm_dp = {
-	.name = "dsm_dp",
-	.device_name = "NULL",
-	.module_name = "NULL",
-	.fops = NULL,
-	.buff_size = 1024,
-};
-
 extern int get_current_dp_source_mode(void);
 extern int update_external_display_timming_info(uint32_t width,uint32_t high,uint32_t fps);
+
 /*******************************************************************************
 **
 */
@@ -63,8 +53,8 @@ int dp_ceil(uint64_t a, uint64_t b)
 int dp_pxl_ppll7_init(struct hisi_fb_data_type *hisifd, uint64_t pixel_clock)
 {
 	uint64_t refdiv,fbdiv,frac,postdiv1,postdiv2;
-	uint64_t vco_min_freq_output = KIRIN970_VCO_MIN_FREQ_OUPUT;
-	uint64_t sys_clock_fref=KIRIN970_SYS_19M2;
+	uint64_t vco_min_freq_output = KIRIN_VCO_MIN_FREQ_OUPUT;
+	uint64_t sys_clock_fref = KIRIN_SYS_FREQ;
 	uint64_t ppll7_freq_divider;
 	uint64_t vco_freq_output;
 	uint64_t frac_range = 0x1000000;/*2^24*/
@@ -74,14 +64,14 @@ int dp_pxl_ppll7_init(struct hisi_fb_data_type *hisifd, uint64_t pixel_clock)
 	uint32_t ppll7ctrl1;
 	uint32_t ppll7ctrl0_val;
 	uint32_t ppll7ctrl1_val;
-	int i,ret;
+	int i, ret;
 	int ceil_temp;
 	int freq_divider_list[22]={1,2,3,4,5,6,7,8,9,10,
-	        12,14,15,16,20,21,24,
+			12,14,15,16,20,21,24,
 			25,30,36,42,49};
 
 	int postdiv1_list[22]={1,2,3,4,5,6,7,4,3,5,
-	       4,7,5,4,5,7,6,5,6,6,
+		   4,7,5,4,5,7,6,5,6,6,
 			7,7};
 
 	int postdiv2_list[22]={1,1,1,1,1,1,1,2,3,2,
@@ -100,19 +90,18 @@ int dp_pxl_ppll7_init(struct hisi_fb_data_type *hisifd, uint64_t pixel_clock)
 
 	pixel_clock_ori = pixel_clock;
 
-	if (pixel_clock_ori <= 255000000)
-		pixel_clock_cur = pixel_clock * 7;
-	else if (pixel_clock_ori <= 415000000)
-		pixel_clock_cur = pixel_clock * 5;
-	else if(pixel_clock_ori <= 594000000)
-		pixel_clock_cur = pixel_clock * 3;
+	if (pixel_clock_ori <= PERI_VOLTAGE_065V_CLK)
+		pixel_clock_cur = pixel_clock * PPLL7_DIV_VOLTAGE_065V;
+	else if (pixel_clock_ori <= PERI_VOLTAGE_070V_CLK)
+		pixel_clock_cur = pixel_clock * PPLL7_DIV_VOLTAGE_070V;
+	else if(pixel_clock_ori <= PERI_VOLTAGE_080V_CLK)
+		pixel_clock_cur = pixel_clock * PPLL7_DIV_VOLTAGE_080V;
 	else {
 		HISI_FB_ERR("Clock don't support!!\n");
 		return -EINVAL;
 	}
 
 	pixel_clock_cur = pixel_clock_cur / 1000;
-
 	ceil_temp = dp_ceil(vco_min_freq_output, pixel_clock_cur);
 
 	if (ceil_temp < 0)
@@ -135,7 +124,7 @@ int dp_pxl_ppll7_init(struct hisi_fb_data_type *hisifd, uint64_t pixel_clock)
 	if (vco_freq_output == 0)
 		return -EINVAL;
 
-	ceil_temp=dp_ceil(400000, vco_freq_output);
+	ceil_temp = dp_ceil(400000, vco_freq_output);
 
 	if (ceil_temp < 0)
 		return -EINVAL;
@@ -169,13 +158,15 @@ int dp_pxl_ppll7_init(struct hisi_fb_data_type *hisifd, uint64_t pixel_clock)
 	ppll7ctrl1 |= ppll7ctrl1_val;
 
 	outp32(hisifd->pmctrl_base + MIDIA_PPLL7_CTRL1, ppll7ctrl1);
+
 	/*comfirm ldi1 switch ppll7*/
-	if (pixel_clock_ori <= 255000000)
-		ret = clk_set_rate(hisifd->dss_pxl1_clk, DEFAULT_MIDIA_PPLL7_CLOCK_FREQ/7);
-	else if (pixel_clock_ori <= 415000000)
-		ret = clk_set_rate(hisifd->dss_pxl1_clk, DEFAULT_MIDIA_PPLL7_CLOCK_FREQ/5);
-	else if(pixel_clock_ori <= 594000000)
-		ret = clk_set_rate(hisifd->dss_pxl1_clk, DEFAULT_MIDIA_PPLL7_CLOCK_FREQ/3);
+
+	if (pixel_clock_ori <= PERI_VOLTAGE_065V_CLK)
+		ret = clk_set_rate(hisifd->dss_pxl1_clk, DEFAULT_MIDIA_PPLL7_CLOCK_FREQ/PPLL7_DIV_VOLTAGE_065V);
+	else if (pixel_clock_ori <= PERI_VOLTAGE_070V_CLK)
+		ret = clk_set_rate(hisifd->dss_pxl1_clk, DEFAULT_MIDIA_PPLL7_CLOCK_FREQ/PPLL7_DIV_VOLTAGE_070V);
+	else if(pixel_clock_ori <= PERI_VOLTAGE_080V_CLK)
+		ret = clk_set_rate(hisifd->dss_pxl1_clk, DEFAULT_MIDIA_PPLL7_CLOCK_FREQ/PPLL7_DIV_VOLTAGE_080V);
 	else {
 		HISI_FB_ERR("Clock don't support!!\n");
 		return -EINVAL;
@@ -185,7 +176,6 @@ int dp_pxl_ppll7_init(struct hisi_fb_data_type *hisifd, uint64_t pixel_clock)
 		HISI_FB_ERR("fb%d dss_pxl1_clk clk_set_rate(%llu) failed, error=%d!\n",
 			hisifd->index, pixel_clock_cur, ret);
 	}
-
 	return ret;
 }
 
@@ -336,12 +326,7 @@ static int dp_clock_setup(struct platform_device *pdev)
 			DEFAULT_AUXCLK_DPCTRL_RATE, clk_get_rate(hisifd->dss_auxclk_dpctrl_clk));
 	}
 
-	default_aclk_dpctrl_rate = 0;
-	if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-		default_aclk_dpctrl_rate = DEFAULT_ACLK_DPCTRL_RATE_CS;
-	} else {
-		default_aclk_dpctrl_rate = DEFAULT_ACLK_DPCTRL_RATE_ES;
-	}
+	default_aclk_dpctrl_rate = DEFAULT_ACLK_DPCTRL_RATE;
 
 	hisifd->dss_aclk_dpctrl_clk = devm_clk_get(&pdev->dev, hisifd->dss_aclk_dpctrl_name);
 	if (IS_ERR(hisifd->dss_aclk_dpctrl_clk)) {
@@ -406,21 +391,15 @@ static int dp_on(struct platform_device *pdev)
 		return 0;
 	}
 
-	ret = dptx_get_current_time(&dptx->m_dsm_info.dsm_dp_on_time[0]);
-	if(ret < 0){
-		HISI_FB_ERR("get current time failed!\n");
-	}
 	/* dp dis reset */
 	outp32(hisifd->peri_crg_base + PERRSTDIS0, 0x00000400);
 	dp_clk_enable(pdev);
 
-	if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-		if (!dptx_check_dptx_id(dptx)) {
-			HISI_FB_ERR("DPTX_ID not match to 0x%04x:0x%04x!\n",
-				DPTX_ID_DEVICE_ID, DPTX_ID_VENDOR_ID);
-			ret = -ENODEV;
-			goto err_out;
-		}
+	if (!dptx_check_dptx_id(dptx)) {
+		HISI_FB_ERR("DPTX_ID not match to 0x%04x:0x%04x!\n",
+			DPTX_ID_DEVICE_ID, DPTX_ID_VENDOR_ID);
+		ret = -ENODEV;
+		goto err_out;
 	}
 
 	ret = dptx_core_init(dptx);
@@ -504,9 +483,7 @@ static int dp_off(struct platform_device *pdev)
 	dp_clk_disable(pdev);
 
 	/* dp reset */
-	if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-		outp32(hisifd->peri_crg_base + PERRSTEN0, 0x00000400);
-	}
+	outp32(hisifd->peri_crg_base + PERRSTEN0, 0x00000400);
 
 	dptx->detect_times = 0;
 	dptx->dptx_vr = false;
@@ -529,7 +506,6 @@ static int dp_off(struct platform_device *pdev)
 	mutex_unlock(&dptx->dptx_mutex);
 
 	HISI_FB_INFO("fb%d, -.\n", hisifd->index);
-
 	return ret;
 }
 
@@ -830,7 +806,8 @@ int hisi_dptx_switch_source(uint32_t user_mode, uint32_t user_format)
 		msleep(10);
 
 		mutex_lock(&dptx->dptx_mutex);
-		handle_hotplug(hisifd);
+		ret = handle_hotplug(hisifd);
+		dp_imonitor_set_param(DP_PARAM_HOTPLUG_RETVAL, &ret);
 	}
 fail:
 	mutex_unlock(&dptx->dptx_mutex);
@@ -1013,46 +990,6 @@ bool hisi_dptx_ready(void)
 }
 EXPORT_SYMBOL_GPL(hisi_dptx_ready);
 
-void dptx_dmd_report(int dmd_num, const char* pszFormat, ...)
-{
-	char input_buf[DP_DMD_REPORT_SIZE] = {0};
-	char report_buf[DP_DMD_REPORT_SIZE] = {0};
-	int ret = 0;
-
-	va_list args;
-	va_start(args, pszFormat);
-
-	vsnprintf(input_buf, sizeof(input_buf) - 1, pszFormat, args);
-	va_end(args);
-	ret = snprintf(report_buf, sizeof(report_buf), "%s", input_buf);
-	if (!dsm_client_ocuppy(dp_dclient)) {
-		dsm_client_record(dp_dclient, report_buf);
-		dsm_client_notify(dp_dclient, dmd_num);
-		HISI_FB_INFO("dp_dmd_report %d,%s", ret, report_buf);
-	}
-}
-EXPORT_SYMBOL_GPL(dptx_dmd_report);
-
-int dptx_get_current_time(char *output)
-{
-	struct timex  txc;
-	struct rtc_time tm;
-
-	do_gettimeofday(&(txc.time));
-	txc.time.tv_sec -= sys_tz.tz_minuteswest * 60;/*lint !e647 */
-
-	rtc_time_to_tm(txc.time.tv_sec,&tm);
-	if(output == NULL){
-		HISI_FB_ERR("output is NULL!\n");
-		return -EINVAL;
-	}
-
-	return snprintf(output, DP_TIME_INFO_SIZE, "%04d-%02d-%02d %02d:%02d:%02d"
-		,tm.tm_year+1900, tm.tm_mon+1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-}
-EXPORT_SYMBOL_GPL(dptx_get_current_time);
-
-
 /*******************************************************************************
 **
 */
@@ -1061,7 +998,7 @@ static int dp_device_init(struct platform_device *pdev)
 	struct dp_ctrl *dptx;
 	struct hisi_fb_data_type *hisifd;
 	struct device_node *np = NULL;
-	int ret;
+	int i, ret;
 
 	if (pdev == NULL) {
 		HISI_FB_ERR("pdev NULL Pointer\n");
@@ -1105,7 +1042,11 @@ static int dp_device_init(struct platform_device *pdev)
 	atomic_set(&(dptx->shutdown), 0);
 	atomic_set(&(dptx->c_connect), 0);
 
-	dptx->max_rate = DPTX_PHYIF_CTRL_RATE_HBR2;
+	if (g_fpga_flag == 1) {
+		dptx->max_rate = DPTX_PHYIF_CTRL_RATE_RBR;
+	} else {
+		dptx->max_rate = DPTX_PHYIF_CTRL_RATE_HBR2;
+	}
 	dptx->max_lanes = 4;
 	dptx->dptx_vr = false;
 	dptx->dptx_gate = false;
@@ -1117,7 +1058,6 @@ static int dp_device_init(struct platform_device *pdev)
 	dptx->dptx_plug_type = DP_PLUG_TYPE_NORMAL;
 	dptx->user_mode_format = VCEA;
 	dptx->same_source = get_current_dp_source_mode();
-	dptx->swing2_value = 0xAF88;
 	dptx->max_edid_timing_hactive = 0;
 	memset(&(dptx->edid_info), 0, sizeof(struct edid_information));
 
@@ -1150,10 +1090,13 @@ static int dp_device_init(struct platform_device *pdev)
 		HISI_FB_ERR("NOT FOUND device node %s!\n", DTS_COMP_SWING_VALUE);
 		return -ENOMEM;
 	}
-	ret = of_property_read_u32(np, "swing2_pe0_value", &(dptx->swing2_value));
-	if (ret) {
-		HISI_FB_ERR("dts get hisi_dp_swing fail! \n");
-		return -ENOMEM;
+	for(i = 0; i < DPTX_COMBOPHY_PARAM_NUM; i++)
+	{
+		ret = of_property_read_u32_index(np, "preemphasis_swing", i, &(dptx->combophy_pree_swing[i]));
+		if(ret) {
+			HISI_FB_ERR("preemphasis_swing[%d] is got fail\n", i);
+			return -ENOMEM;
+		}
 	}
 
 	ret = devm_request_threaded_irq(&(pdev->dev),
@@ -1165,6 +1108,8 @@ static int dp_device_init(struct platform_device *pdev)
 	} else {
 		disable_irq(dptx->irq);
 	}
+
+	dp_debug_init_combophy_pree_swing(dptx->combophy_pree_swing, DPTX_COMBOPHY_PARAM_NUM);
 
 	hisifd->dp_device_srs = dp_device_srs;
 	hisifd->dp_get_color_bit_mode = dp_get_color_bit_mode;
@@ -1252,13 +1197,6 @@ static int dp_probe(struct platform_device *pdev)
 	}
 
 	HISI_FB_INFO("fb%d, +.\n", hisifd->index);
-	if (!dp_dclient) {
-		dp_dclient = dsm_register_client(&dsm_dp);
-	}
-
-	if (NULL == dp_dclient) {
-		HISI_FB_ERR("dp register dsm fail\n");
-	}
 
 	ret = dp_device_init(pdev);
 	if (ret) {
@@ -1311,6 +1249,9 @@ static int dp_probe(struct platform_device *pdev)
 
 	HISI_FB_INFO("fb%d, -.\n", hisifd->index);
 
+	if (g_fpga_flag == 1) {
+		dp_on(pdev);
+	}
 	return 0;
 
 err_device_put:

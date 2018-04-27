@@ -235,14 +235,16 @@ VOS_VOID AT_FmtTimeStru(
     VOS_UINT16                          usInLen
 );
 VOS_VOID AT_FormatRsrp(
+    VOS_UINT8                           ucIndex,
     MTA_AT_RS_INFO_QRY_CNF_STRU        *pstRsInfoQryCnf
 );
 VOS_VOID AT_FormatRsrq(
+    VOS_UINT8                           ucIndex,
     MTA_AT_RS_INFO_QRY_CNF_STRU        *pstRsInfoQryCnf
 );
 #endif
 VOS_VOID AT_FormatGasAtCmdRslt(
-    GAS_AT_RSLT_STRU                   *pstAtCmdRslt
+    MTA_AT_GAS_AUTOTEST_QRY_RSLT_STRU                      *pstAtCmdRslt
 );
 
 #if (VOS_OS_VER == VOS_WIN32)

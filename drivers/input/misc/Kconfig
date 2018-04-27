@@ -374,6 +374,12 @@ config INPUT_KEYCHORD
 	  To compile this driver as a module, choose M here: the
 	  module will be called keychord.
 
+config MINI_BUGREPORT
+	tristate "mini bugreport support"
+	default n
+	help
+	  Say Y here if we want to enable minibugreport.
+
 config INPUT_KEYSPAN_REMOTE
 	tristate "Keyspan DMR USB remote control"
 	depends on USB_ARCH_HAS_HCD
@@ -837,5 +843,15 @@ config INPUT_DRV2667_HAPTICS
 config HISI_VIBRATOR
 	bool "Android timed vibrator hisi driver"
 	depends on ANDROID_TIMED_OUTPUT
+	default n
+
+config HISI_PMIC_VIBRATOR
+	bool "Hisilicon PMIC haptics support"
+	depends on ANDROID_TIMED_OUTPUT && HISI_PMIC_PMU_SPMI
+	default n
+
+config HISI_PMIC_VIBRATOR_DEBUG
+	bool "HiSilicon PMIC haptics driver debug"
+	depends on HISI_PMIC_VIBRATOR
 	default n
 endif

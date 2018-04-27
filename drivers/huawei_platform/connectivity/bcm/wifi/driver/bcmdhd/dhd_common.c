@@ -421,8 +421,11 @@ dhd_wl_ioctl(dhd_pub_t *dhd_pub, int ifidx, wl_ioctl_t *ioc, void *buf, int len)
 		dhd_pub->dhd_bus_busy_state |= DHD_BUS_BUSY_IN_IOVAR;
 		if (dhd_os_devwake_check_deepsleep(dhd_pub)) {
 			DHD_GENERAL_UNLOCK(dhd_pub, flags);
-			if (!dhd_os_devwake_wait(dhd_pub, &(dhd_pub->deepsleep)))
+			if (!dhd_os_devwake_wait(dhd_pub, &(dhd_pub->deepsleep))) {
+				/* We have to restart netif queue here */
+				dhd_bus_start_queue(dhd_pub->bus);
 				DHD_ERROR(("%s: dev wake timeout\n", __FUNCTION__));
+			}
 		} else
 #endif /* DHD_DEVWAKE_EARLY */
 		DHD_GENERAL_UNLOCK(dhd_pub, flags);

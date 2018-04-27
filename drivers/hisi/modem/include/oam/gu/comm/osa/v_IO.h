@@ -108,7 +108,7 @@ extern "C" {
 #define ZEROPAD        0x20        /* zero (as opposed to blank) pad */
 #define HEXPREFIX      0x40            /* add 0x or 0X prefix */
 
-#if (OSA_CPU_CCPU == VOS_OSA_CPU)
+#if ( (OSA_CPU_CCPU == VOS_OSA_CPU) || (OSA_CPU_NRCPU == VOS_OSA_CPU) )
 #define    FLOAT_SUPPORT
 #endif
 

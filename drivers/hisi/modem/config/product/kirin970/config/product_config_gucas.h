@@ -1,4 +1,4 @@
-/* MD5: 8c80b75c14a8d99a017b72b3b5fef7cf*/
+/* MD5: 999fd37dc31e1e1780fc7dc938207615*/
 #if !defined(__PRODUCT_CONFIG_GUCAS_H__)
 #define __PRODUCT_CONFIG_GUCAS_H__
 
@@ -66,40 +66,8 @@
 #define VISP_IMS_NIC_CNT 8 
 #endif 
 
-#ifndef SC_CTRL_MOD_P532
-#define SC_CTRL_MOD_P532 1 
-#endif 
-
-#ifndef SC_CTRL_MOD_M533
-#define SC_CTRL_MOD_M533 2 
-#endif 
-
-#ifndef SC_CTRL_MOD_M535
-#define SC_CTRL_MOD_M535 3 
-#endif 
-
-#ifndef SC_CTRL_MOD_3650_SFT
-#define SC_CTRL_MOD_3650_SFT 4 
-#endif 
-
-#ifndef SC_CTRL_MOD_6250_SFT
-#define SC_CTRL_MOD_6250_SFT 5 
-#endif 
-
-#ifndef SC_CTRL_MOD_6932_SFT
-#define SC_CTRL_MOD_6932_SFT 6 
-#endif 
-
-#ifndef SC_CTRL_MOD_3660_SFT
-#define SC_CTRL_MOD_3660_SFT 7 
-#endif 
-
-#ifndef SC_CTRL_MOD_KIRIN970_SFT
-#define SC_CTRL_MOD_KIRIN970_SFT 8 
-#endif 
-
-#ifndef SC_CTRL_MOD
-#define SC_CTRL_MOD (SC_CTRL_MOD_KIRIN970_SFT) 
+#ifndef TTF_MEM_POOL_CFG
+#define TTF_MEM_POOL_CFG TTF_MEM_SPECIFICATION3 
 #endif 
 
 #ifndef TTF_CF_FEATURE
@@ -174,10 +142,17 @@
 #define FEATURE_HARDWARE_HDLC_ON_CCPU FEATURE_ON 
 #endif 
 
+#ifdef cdma 
+#ifndef FEATURE_UE_MODE_CDMA
+#define FEATURE_UE_MODE_CDMA FEATURE_OFF 
+#endif 
+
+#else
 #ifndef FEATURE_UE_MODE_CDMA
 #define FEATURE_UE_MODE_CDMA FEATURE_ON 
 #endif 
 
+#endif
 #ifndef FEATURE_BASTET
 #define FEATURE_BASTET FEATURE_ON 
 #endif 

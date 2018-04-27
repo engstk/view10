@@ -48,6 +48,26 @@ config HISI_FB_970
 	help
 	  This framebuffer driver supports HISI970 FB.
 
+config HISI_FB_V501
+	tristate "HISI FB V501 Framebuffer support"
+	depends on FB
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	select REGMAP
+	help
+	  This framebuffer driver supports HISI V501 FB.
+
+config HISI_FB_V320
+	tristate "HISI FB V320 Framebuffer support"
+	depends on FB
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	select REGMAP
+	help
+	  This framebuffer driver supports HISI V320 FB.
+
 config HISI_FB_ENG_DBG
 	tristate "HISI FB ENG DEBUG support"
 	depends on FB

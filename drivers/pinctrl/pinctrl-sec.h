@@ -57,7 +57,7 @@ struct pinctrl_sec_num *find_io_id(char *name)
         io_info_entry = (struct pinctrl_sec_num *)(&pin_num_name_table[index]);
 
         while (END_SYMBOL !=  io_info_entry->gpio) {
-		if (!strcmp(name, io_info_entry->name)) {
+		if (!strcmp(name, io_info_entry->name)) { /*lint !e421*/
                             return io_info_entry;
                     }
                     index++;

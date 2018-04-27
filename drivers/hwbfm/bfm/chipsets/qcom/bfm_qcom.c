@@ -363,7 +363,7 @@ static __ref int boot_ats_kthread(void *arg)
     {
        ;
     }
-    if (boot_wait_partition("/log/boot_fail", 1000) != 0)
+    if (boot_wait_partition("/log/reliability/boot_fail", 1000) != 0)
     {
         pr_err("%s wait log partition fail\n",__func__);
         return 0;

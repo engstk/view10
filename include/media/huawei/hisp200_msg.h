@@ -1,8 +1,7 @@
 
 
-
-#ifndef HISP160_MSG_H_INCLUDED
-#define HISP160_MSG_H_INCLUDED
+#ifndef HISP_MSG_H_INCLUDED
+#define HISP_MSG_H_INCLUDED
 
 #define MAX_INPUT_STREAM_NUM (2)
 #define MAX_STREAM_NUM       (14)
@@ -12,6 +11,8 @@
 #define EXT_ACK_PARAS_LEN    (64)
 #define EVENT_PARAMS_LEN     (400)
 #define PIPELINE_COUNT       (2)
+#define MAX_WARP_CGRID_POINT 1050
+
 
 /* based on msg len is 464 */
 #define MAX_SET_ISP_NR  1//50//53//59
@@ -47,6 +48,7 @@ typedef enum
     PIXEL_FMT_YUV422_YVYU,
     PIXEL_FMT_MONOCHROME,
     PIXEL_FMT_Y8,
+    PIXEL_FMT_YUV420SP_WARP_ARSR, // only warp
     PIXEL_FMT_YUV420_PLANAR,//only warp
     PIXEL_FMT_XYMAP_8,//only warp
     PIXEL_FMT_XYMAP,//only warp
@@ -56,6 +58,8 @@ typedef enum
     PIXEL_FMT_DEPTH_MAP_8,//only warp
     PIXEL_FMT_DEPTH_MAP_16,//only warp
     PIXEL_FMT_YUV422_SP,
+    PIXEL_FMT_YUV420_HFBC,// for mdc
+    PIXEL_FMT_D64,
 } pix_format_e;
 
 typedef enum
@@ -71,9 +75,10 @@ typedef enum
     STREAM_ISP_YUV_OUT_DMAP_PRE,
     STREAM_ISP_SENSOR_Y_OUT_FD,
     STREAM_RAW_OUT,
-    STREAM_ISP_YUV_OUT_CB,
-    STREAM_POS_MAX,
     STREAM_ISP_PD,
+    STREAM_ISP_YUV_OUT_CB,
+    STREAM_ISP_YUV_MDC,
+    STREAM_POS_MAX,
 } stream_pos_e;
 
 typedef enum
@@ -88,10 +93,39 @@ typedef enum
     REGISTER_TYPE_I2C,
 } register_type_e;
 
+typedef enum _map_pool_usage_e
+{
+    MAP_POOL_USAGE_FW = 0,
+    MAP_POOL_USAGE_ISP_FW,
+    MAP_POOL_USAGE_ISP,
+    MAP_POOL_USAGE_HFBC,
+    MAP_POOL_USAGE_MAX,
+} map_pool_usage_e;
+
+typedef enum
+{
+    MDC_OFF = 0,
+    MDC_HFR_ON,
+    MDC_PRE_ON,
+    MDC_PRE_ON_WARP,
+}mdc_flag_e;
+
+typedef enum
+{
+    Qs10_0 = 0,
+    Qs9_1,
+    Qs8_2,
+    Qs9_2,
+    Qs_MAX,
+}cgrid_precision_e;
+
+
+
 struct hi_list_head
 {
     struct hi_list_head *next, *prev;
 };
+#define list_head hi_list_head
 
 typedef enum
 {
@@ -139,6 +173,7 @@ typedef enum
     COMMAND_DMAP_FLUSH_REQUEST,
     COMMAND_MEM_POOL_INIT_REQUEST,
     COMMAND_MEM_POOL_DEINIT_REQUEST,
+    COMMAND_ISP_CPU_POWER_OFF_REQUEST,
     /* Response items. */
     QUERY_CAPABILITY_RESPONSE = 0x2000,
     ACQUIRE_CAMERA_RESPONSE,
@@ -183,27 +218,29 @@ typedef enum
     DMAP_FLUSH_RESPONSE,
     MEM_POOL_INIT_RESPONSE,
     MEM_POOL_DEINIT_RESPONSE,
+    ISP_CPU_POWER_OFF_RESPONSE,
     /* Event items sent to AP. */
     MSG_EVENT_SENT           = 0x3000,
 } api_id_e;
 
 typedef enum _ucfg_ext_e
 {
-    NO_USE               = 0 << 0,
-    H_VIDEO_720P_120     = 1 << 1,
-    H_VIDEO_1080P_60     = 1 << 2,
-    MIRROR_MODE          = 1 << 3,
-    LONG_EXPOSURE_MODE   = 1 << 4,
-    HDR_MOVIE            = 1 << 5,
-    DARK_RAIDER_MODE     = 1 << 6,
-    H_VIDEO_720P_60      = 1 << 7,
-    H_VIDEO_VGA_120      = 1 << 8,
-    TUNING_PRE_MODE      = 1 << 9,
-    H_VIDEO_720P_240     = 1 << 10,
-    H_VIDEO_1080P_120    = 1 << 11,
-    H_VIDEO_HIGH_RES     = 1 << 12,
-    SEAMLESS_MODE        = 1 << 13,
-    RESERVED             = 1 << 14,
+    NO_USE                       = 0 << 0,
+    H_VIDEO_720P_120             = 1 << 1,
+    H_VIDEO_1080P_60             = 1 << 2,
+    MIRROR_MODE                  = 1 << 3,
+    LONG_EXPOSURE_MODE           = 1 << 4,
+    HDR_MOVIE                    = 1 << 5,
+    DARK_RAIDER_MODE             = 1 << 6,
+    H_VIDEO_720P_60              = 1 << 7,
+    H_VIDEO_VGA_120              = 1 << 8,
+    TUNING_PRE_MODE              = 1 << 9,
+    H_VIDEO_720P_240             = 1 << 10,
+    H_VIDEO_1080P_120            = 1 << 11,
+    H_VIDEO_HIGH_RES             = 1 << 12,
+    SEAMLESS_MODE                = 1 << 13,
+    FREQ_GEAR_FLAG               = 1 << 14,
+    RESERVED                     = 1 << 15,
 } ucfg_ext_e;
 
 typedef enum _ucfg_scene_e
@@ -218,6 +255,7 @@ typedef enum
     PRIMARY_CAMERA = 0,
     FRONT_CAMERA,
     SECONDARY_CAMERA,
+    THIRD_CAMERA,
     IR_CAMERA,
 } camera_id_t;
 typedef struct _isp_crop_region_info_t
@@ -261,14 +299,20 @@ typedef struct _subcmd_yuvnfds_info_t
     yuvnfds_info_t yuvnfds_info[PIPELINE_COUNT];
 } subcmd_yuvnfds_info_t;
 
-typedef enum _map_pool_usage_e{
-    MAP_POOL_USAGE_FW = 0,
-    MAP_POOL_USAGE_ISP_FW,
-    MAP_POOL_USAGE_ISP,
-    MAP_POOL_USAGE_SEC_ISP_FW,
-    MAP_POOL_USAGE_HFBC,
-    MAP_POOL_USAGE_MAX,
-} map_pool_usage_e;
+typedef enum
+{
+    COLOR_MODE = 0,
+    MONOC_MODE,
+    IR_MODE,
+} sensor_type_e;
+
+
+typedef enum{
+    MODE_EIS_PRE = 0,
+    MODE_EIS_VID,
+    MODE_DMAP,
+    MODE_MAX,
+} warp_request_mode_e;
 
 typedef struct _msg_ack_get_api_version_t
 {
@@ -335,6 +379,7 @@ typedef struct _msg_req_acquire_camera_t
     unsigned int buffer_size;
     unsigned int info_buffer;
     unsigned int info_count;
+    unsigned int factory_calib_buffer;
 } msg_req_acquire_camera_t;
 
 typedef struct _msg_ack_acquire_camera_t
@@ -370,6 +415,12 @@ typedef struct _fov_info
     float          angle;
 }fov_info_t;
 
+typedef struct _laser_ref_t
+{
+    unsigned char ref_vhvsetting;
+    unsigned char ref_phasecal;
+}laser_ref_t;
+
 typedef struct _msg_req_acquire_laser_t
 {
     unsigned int    i2c_index;
@@ -379,6 +430,7 @@ typedef struct _msg_req_acquire_laser_t
     int             xtalk;
     laser_fov_t     fov_info;
     laser_spad_t    spad;
+    laser_ref_t    ref;
     laser_dmax_t    dmax;
 } msg_req_acquire_laser_t;
 
@@ -430,6 +482,7 @@ typedef struct _stream_config_t
     unsigned int height;
     unsigned int stride;
     unsigned int format;
+    unsigned int secure;
 } stream_config_t;
 
 typedef struct _msg_req_usecase_config_t
@@ -533,10 +586,7 @@ typedef struct _msg_ack_jpeg_encode_t
     int          status;
 } msg_ack_jpeg_encode_t;
 
-typedef enum{
-    MODE_EIS_VIDHANCE = 0,
-    MODE_DMAP = 1,
-} warp_request_mode_e;
+
 
 typedef struct grid_displacement
 {
@@ -552,7 +602,8 @@ typedef struct cgrid_info
     unsigned int cgrid_size_exp_v;
     unsigned int cgrid_sector_h;
     unsigned int cgrid_sector_v;
-    grid_displacement_t cgrid_xy_location[567];
+    unsigned int fix_pt_precision;
+    grid_displacement_t cgrid_xy_location[MAX_WARP_CGRID_POINT];
 } cgrid_info_t;
 
 typedef struct warp_image_info
@@ -570,6 +621,7 @@ typedef struct warp_info
     cgrid_info_t grid_info;
     warp_image_info_t image_info;
 } warp_info_t;
+
 typedef struct _msg_req_warp_request_t
 {
     unsigned int  cam_id;
@@ -589,6 +641,7 @@ typedef struct _msg_ack_warp_request_t
     unsigned int  frame_number;
     stream_info_t input_stream_info;
     stream_info_t output_stream_info;
+    warp_request_mode_e mode;
     unsigned int  status;
 } msg_ack_warp_request_t;
 
@@ -599,6 +652,14 @@ typedef struct _msg_req_arsr_request_t
     stream_info_t input_stream_info;
     stream_info_t output_stream_info;
 } msg_req_arsr_request_t;
+
+typedef struct _scaler_request_t
+{
+    unsigned int  cam_id;
+    unsigned int  frame_number;
+    stream_info_t input_stream_info;
+    stream_info_t output_stream_info;
+}scaler_request_t;
 
 typedef struct _msg_ack_arsr_request_t
 {
@@ -775,12 +836,17 @@ typedef struct OISInfo
     float        hallAccuracy;
     float        normalize;
     int          version;
-    char moduleId[64];
+    char         moduleId[64];
+    short        srvOnHallX;
+    short        srvOnHallY;
+    char         srvOnHallValid;
+    char         reserved[3];
 }OISInfo;
 
 typedef enum {
-    WARP_BASE_PRIMARY = 0,
-    WARP_BASE_SECOND,
+    MONO_NEED_WARP = 0,
+    COLOR_NEED_WARP,
+    MAX_WARP_BASE,
 }warp_base_t;
 
 typedef struct _warp_info_params_t
@@ -1022,6 +1088,7 @@ typedef struct _msg_ack_dmap_flush_t
 {
     unsigned int status;
 }msg_ack_dmap_flush_t;
+
 typedef struct _msg_req_map_buffer_t
 {
     unsigned int cam_id;
@@ -1147,6 +1214,7 @@ typedef struct _msg_ack_test_case_interface_t
 typedef struct _msg_req_flush_t
 {
     unsigned int cam_id;
+    unsigned int is_hotplug;
 } msg_req_flush_t;
 
 typedef struct _msg_ack_flush_t
@@ -1190,6 +1258,25 @@ typedef struct _msg_ack_ois_update_t
     int status;
 } msg_ack_ois_update_t;
 
+typedef enum
+{
+    MOTION_SENSOR_ACCEL = 1,
+    MOTION_SENSOR_GYRO = 4,
+    MOTION_SENSOR_LINEAR_ACCEL = 10,
+}motion_sensor_type_t;
+
+typedef struct _msg_req_motion_sensor_map_t
+{
+    motion_sensor_type_t motion_sensor_type;
+    unsigned int input_motion_sensor_mem_buffer;
+    unsigned int input_motion_sensor_mem_buffer_size;
+} msg_req_motion_sensor_map_t;
+
+typedef struct _msg_ack_motion_sensor_map_t
+{
+    motion_sensor_type_t motion_sensor_type;
+    int status;
+} msg_ack_motion_sensor_map_t;
 typedef struct _msg_req_mem_pool_init_t
 {
     unsigned int mempool_addr;
@@ -1214,24 +1301,44 @@ typedef struct _msg_ack_mem_pool_deinit_t
     unsigned int status;
 }msg_ack_mem_pool_deinit_t;
 
-typedef enum{
-    MOTION_SENSOR_ACCEL = 1,
-    MOTION_SENSOR_GYRO = 4,
-    MOTION_SENSOR_LINEAR_ACCEL = 10,
-}motion_sensor_type_t;
-
-typedef struct _msg_req_motion_sensor_map_t
+typedef struct _msg_req_isp_cpu_poweroff_t
 {
-    motion_sensor_type_t motion_sensor_type;
-    unsigned int input_motion_sensor_mem_buffer;
-    unsigned int input_motion_sensor_mem_buffer_size;
-} msg_req_motion_sensor_map_t;
+    int flag;
+} msg_req_isp_cpu_poweroff_t;
 
-typedef struct _msg_ack_motion_sensor_map_t
+typedef struct _msg_ack_isp_cpu_poweroff_t
 {
-    motion_sensor_type_t motion_sensor_type;
     int status;
-} msg_ack_motion_sensor_map_t;
+} msg_ack_isp_cpu_poweroff_t;
+
+typedef struct _msg_req_set_pd_key_t
+{
+    unsigned short setVal;
+} msg_req_set_pd_key;
+
+typedef struct _msg_req_get_pd_key_t
+{
+    unsigned short getVal1;
+    unsigned short getVal2;
+} msg_req_get_pd_key;
+
+typedef struct _pdaf_sensor_coord_t
+{
+    unsigned int img_orientation_h;
+    unsigned int img_orientation_v;
+    unsigned int x_add_sta;
+    unsigned int y_add_sta;
+    unsigned int x_add_end;
+    unsigned int y_add_end;
+    unsigned int dig_crop_x_offset;
+    unsigned int dig_crop_y_offset;
+    unsigned int binning_type_h;
+    unsigned int binning_type_v;
+    unsigned int x_out_size;
+    unsigned int y_out_size;
+    unsigned int dig_crop_image_width;
+    unsigned int dig_crop_image_height;
+} pdaf_sensor_coord;
 
 typedef enum
 {
@@ -1258,7 +1365,7 @@ typedef enum
     SUBCMD_AWB_LOCK = 20, //20
     SUBCMD_AWB_MODE = 21,
     SUBCMD_AWB_REGIONS = 22,
-    SCALER_CROP_REGION = 23,
+    SUBCMD_SCALER_CROP_REGION = 23,
     SUBCMD_START_CAPTURE = 24,
     SUBCMD_STOP_CAPTURE = 25,
     SUBCMD_SET_DEBUG_OPEN = 26,
@@ -1402,33 +1509,27 @@ typedef enum
     SUBCMD_STREAM_REF_VALUE = 163,
     SUBCMD_SET_PD_OFFSET_CALIB_RESULT = 164,
     SUBCMD_SET_FILL_RAWNFDS = 165,
-    SUBCMD_DE_ENABLE = 166,
-    SUBCMD_SET_CAPTURE_DE = 167,
-    SUBCMD_YUVNF_IIR_ENABLE = 168,
-    SUBCMD_SET_CAPTURE_YUVNF_IIR = 169,
-    SUBCMD_SHARPEN_SELF_ENABLE = 170,
-    SUBCMD_SET_CAPTURE_SHARPEN_SELF = 171,
-    SUBCMD_YUVNF_Y_ENABLE = 172,
-    SUBCMD_YUVNF_UV_ENABLE = 173,
-    SUBCMD_RAWNF_MULTISCALE_ENABLE = 174,
-    SUBCMD_YUVNF_MULTISCALE_ENABLE = 175,
-    SUBCMD_SET_DRC_MODE = 176,
-    SUBCMD_LASER_RAWDATA = 178,
-
-    SUBCMD_SD_RESULTS = 179,
-    SUBCMD_SET_LCD_RATIO                  = 180,
-    SUBCMD_SET_CAPLCD_ON                  = 181,
-    SUBCMD_SET_LCD_COMPENSATE_MODE        = 182,
-    SUBCMD_SAVE_PREVIEW_AE_AWB            = 183,
-    SUBCMD_SET_HUAWEI_CAMERA = 184,
-	SUBCMD_SET_SOFTLIGHT_MODE  = 185,
-
-    SUBCMD_SET_PDALGO_ENABLE = 186,
-    SUBCMD_SET_PD_INFO = 187,
-    SUBCMD_SET_SWPD_KEY = 188,
-    SUBCMD_GET_SWPD_KEY = 189,
-    SUBCMD_GET_SENSOR_COORD = 190,
-
+    SUBCMD_SET_DRC_MODE = 166,
+    SUBCMD_SET_WARP_SELFLEARN = 167,
+    SUBCMD_LASER_RAWDATA = 168,
+    SUBCMD_SD_RESULTS = 169,
+    SUBCMD_SET_LCD_RATIO = 170,
+    SUBCMD_SET_CAPLCD_ON = 171,
+    SUBCMD_SET_LCD_COMPENSATE_MODE = 172,
+    SUBCMD_SAVE_PREVIEW_AE_AWB = 173,
+    SUBCMD_SET_HUAWEI_CAMERA = 174,
+    SUBCMD_SET_RAW_READBACK_ADDR = 175,
+    SUBCMD_SET_SOFTLIGHT_MODE    = 176,
+    SUBCMD_LASER_VERSION = 177,
+    SUBCMD_SET_PDALGO_ENABLE = 178,
+    SUBCMD_SET_PD_INFO = 179,
+    SUBCMD_SET_SWPD_KEY = 180,
+    SUBCMD_GET_SWPD_KEY = 181,
+    SUBCMD_GET_SENSOR_COORD = 182,
+    SUBCMD_SET_CC_SAT_VAL = 183,
+    SUBCMD_SET_LUT3D_MODE = 184,
+    SUBCMD_SET_FORCE_CAF = 185,
+    SUBCMD_SET_AE_SENSOR_VERIFY_MODE = 186,
     SUBCMD_MAX,
 } extendset_info_e;
 
@@ -1539,6 +1640,11 @@ typedef struct _msg_subreq_eg_st_t
     /*TODO*/
 } msg_subreq_eg_st_t;
 
+typedef struct _msg_subreq_optical_zoom_st_t
+{
+    unsigned int status; // 0: none 1:optical zoom primary to secondary 2:secondary to primary
+} msg_subreq_optical_zoom_st_t;
+
 typedef struct _msg_req_extend_set_t
 {
     unsigned int cam_id;
@@ -1602,7 +1708,7 @@ typedef void (*msg_looper_handler)(struct msg_base*, void*);
 
 typedef struct msg_base
 {
-    struct hi_list_head link;
+    struct list_head link;
     msg_looper_handler handler;
     void* user;
 } msg_base_t;
@@ -1646,7 +1752,7 @@ typedef struct _isp_msg_t
         msg_req_dmap_flush_t            req_dmap_flush;
         msg_req_extend_set_t            req_extend_set;
         msg_req_extend_get_t            req_extend_get;
-        msg_req_jpeg_encode_t       req_jpeg_encode;
+        msg_req_jpeg_encode_t           req_jpeg_encode;
         msg_req_inv_tlb_t               req_inv_tlb;
         msg_req_query_ois_update_t      req_query_ois_update;
         msg_req_ois_update_t            req_ois_update;
@@ -1658,6 +1764,7 @@ typedef struct _isp_msg_t
         msg_req_motion_sensor_map_t     req_motion_sensor_map;
         msg_req_mem_pool_init_t         req_mem_pool_init;
         msg_req_mem_pool_deinit_t       req_mem_pool_deinit;
+        msg_req_isp_cpu_poweroff_t      req_isp_cpu_poweroff;
         /* Response items. */
         msg_ack_query_capability_t      ack_query_capability;
         msg_ack_acquire_camera_t        ack_require_camera;
@@ -1689,7 +1796,7 @@ typedef struct _isp_msg_t
         msg_ack_dmap_flush_t            ack_dmap_flush;
         msg_ack_extend_set_t            ack_extend_set;
         msg_ack_extend_get_t            ack_extend_get;
-        msg_ack_jpeg_encode_t       ack_jpeg_encode;
+        msg_ack_jpeg_encode_t           ack_jpeg_encode;
         msg_ack_inv_tlb_t               ack_inv_tlb;
         msg_ack_query_ois_update_t      ack_query_ois_update;
         msg_ack_ois_update_t            ack_ois_update;
@@ -1702,6 +1809,7 @@ typedef struct _isp_msg_t
         msg_ack_motion_sensor_map_t     ack_motion_sensor_map;
         msg_ack_mem_pool_init_t         ack_mem_pool_init;
         msg_ack_mem_pool_deinit_t       ack_mem_pool_deinit;
+        msg_ack_isp_cpu_poweroff_t      ack_isp_cpu_poweroff;
         /* Event items sent to AP. */
         msg_event_sent_t                event_sent;
     }u;
@@ -1710,7 +1818,92 @@ typedef struct _isp_msg_t
     struct rpmsg_ept *ept;
 } hisp_msg_t;
 
+enum
+{
+    OPTICAL_SWITCH_NONE = 0, // zoom without switch
+    OPTICAL_SWITCH_PRIMARY_TO_SECONDARY, // optical zoom primary to secondary
+    OPTICAL_SWITCH_SECONDARY_TO_PRIMARY, // optical zoom secondary to primary
+};
+
+/* focus area structure */
+typedef struct _tag_af_pd_area
+{
+    int pd_area_enable;
+    int pd_area_w_num;
+    int pd_area_h_num;
+    int pd_area_begin_x;
+    int pd_area_begin_y;
+    int pd_area_width;
+    int pd_area_height;
+} af_pd_area_t;
+
+#define PD_WND_XNUM_MAX (16)
+#define PD_WND_YNUM_MAX (12)
+#define AF_PD_FLEXIBLE_MODE_MAX_WINDOWS (8)
+typedef struct _tag_af_pdaf_output
+{
+    int             pd_phase_diff[AF_PD_FLEXIBLE_MODE_MAX_WINDOWS];
+    unsigned int    pd_conf_level[AF_PD_FLEXIBLE_MODE_MAX_WINDOWS];
+} af_pdaf_output_t;
+
+/* area mode supported by sensor */
+typedef enum
+{
+    AF_PD_AP_AREA_MODE_FIXED_16_12 = 0,
+    AF_PD_AP_AREA_MODE_FIXED_8_6,
+    AF_PD_AP_AREA_MODE_FLEXIBLE
+} af_global_assist_pd_area_mode_e;
+
+typedef struct _tag_af_pd_config_param
+{
+    int                             window_change;
+    af_global_assist_pd_area_mode_e mode;
+    unsigned int                    window_num;
+    int                             master_cur_code;
+    af_pd_area_t                    windows[AF_PD_FLEXIBLE_MODE_MAX_WINDOWS];
+} af_pd_config_param_t;
+
+typedef struct _af_pdaf_lib_input_param
+{
+    unsigned int expo_line;
+    unsigned short again;
+    unsigned short dgain;
+} af_pdaf_lib_input_param_t;
+
+typedef struct _tag_af_sony_pdaf_output
+{
+    int               pd_phase_diff[AF_PD_FLEXIBLE_MODE_MAX_WINDOWS];
+    unsigned int      pd_conf_level[AF_PD_FLEXIBLE_MODE_MAX_WINDOWS];
+} af_sony_pdaf_output_t;
+
+typedef struct _tag_af_ov_pdaf_result
+{
+  int            phase_df;              // phase difference
+  char           conf;                  // 0-good, -1 not good
+  unsigned char  conf_level;            // confidence level, 0-255
+  unsigned char  conf_level_improve;
+  int            defocus_df;            // the diff value of actuator DAC
+  int            slope;
+} af_ov_pdaf_result_t;
+
+typedef struct _tag_af_ov_pdaf_output
+{
+    af_ov_pdaf_result_t  ov_pd_lib_result[AF_PD_FLEXIBLE_MODE_MAX_WINDOWS];
+} af_ov_pdaf_output_t;
+
+typedef struct _tag_af_pdaf_result
+{
+    unsigned int     pd_valid;
+    unsigned int     window_num;
+    union
+    {
+        af_sony_pdaf_output_t  sony_pd_lib_output;
+        af_ov_pdaf_output_t    ov_pd_lib_output;
+    }ap_pdaf_result;
+} af_pdaf_result_t;
+
 void msg_init_req(hisp_msg_t* req, unsigned int api_name, unsigned int msg_id);
 void msg_init_ack(hisp_msg_t* req, hisp_msg_t* ack);
 
-#endif /* HISP160_MSG_H_INCLUDED */
+#endif /* HISP_MSG_H_INCLUDED */
+

@@ -1,4 +1,5 @@
 config HISI_NOC
+	depends on HISI_BB
 	bool "Support HiSilicon NOC"
 	default n
 	help

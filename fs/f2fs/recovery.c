@@ -609,6 +609,9 @@ static int recover_data(struct f2fs_sb_info *sbi, int type,
 	curseg = CURSEG_I(sbi, type);
 	blkaddr = NEXT_FREE_BLKADDR(sbi, curseg);
 
+	if (unlikely(list_empty(head)))
+		return 0;
+
 	while (1) {
 		struct fsync_inode_entry *entry;
 

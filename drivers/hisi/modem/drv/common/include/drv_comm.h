@@ -175,8 +175,12 @@ typedef unsigned int (*PWRCTRLFUNCPTR)(unsigned int arg);     /* ptr to function
 #else
 
 typedef BSP_VOID (*VOIDFUNCPTR)(BSP_U32);
+#ifndef SEM_FULL
 #define SEM_FULL            (1)
+#endif
+#ifndef SEM_EMPTY
 #define SEM_EMPTY           (0)
+#endif
 #define IVEC_TO_INUM(intVec)    ((int)(intVec))
 
 #endif

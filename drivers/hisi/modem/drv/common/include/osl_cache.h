@@ -78,26 +78,6 @@ enum dma_data_direction {
 	DMA_NONE = 3,
 };
 
-
-static __inline__ void __dma_single_cpu_to_dev(void *kaddr, size_t size,
-	enum dma_data_direction dir)
-{
-	int dma_ret = cacheFlush(DATA_CACHE, kaddr, size);
-	if(dma_ret != OK)
-	{
-		logMsg("cacheFlush error\n", 0, 0, 0, 0, 0, 0);
-	}
-}
-
-static __inline__ void __dma_single_dev_to_cpu(void *kaddr, size_t size,
-	enum dma_data_direction dir)
-{
-	int dma_ret = cacheInvalidate(DATA_CACHE, kaddr, size);
-	if(dma_ret != OK)
-	{
-		logMsg("cacheInvalidate error\n", 0, 0, 0, 0, 0, 0);
-	}
-}
 static __inline__ int osl_cache_flush( OSL_CACHE_TYPE type,void *address,unsigned int bytes  )
 {
     int ret = OK;
@@ -153,6 +133,10 @@ static __inline__ unsigned int osl_cache_flush_all_nolock(void)
 static __inline__ BOOL osl_l2cache_enabled(void)
 {
     return SRE_L2CacheIsEnable();
+}
+static __inline__ void osl_l2cache_spin_unlock(void)
+{
+    SRE_L2CacheSpinUnLock();
 }
 
 #else

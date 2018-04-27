@@ -307,13 +307,7 @@ typedef VOS_UINT16 AT_HPA_CFG_RLST_ENUM_UINT16;
 #define ID_AT_CHPA_RF_RX_RSSI_REQ        0x6302
 #define ID_CHPA_AT_RF_RX_RSSI_IND        0x6303
 
-/*****************************************************************************
- 结构名    : C_RF_CFG_PARA_STRU
- 结构说明  : RF配置参数结构
- 1.日    期   : 2011年11月16日
-   作    者   : f62575
-   修改内容   : 补充结构注释
-*****************************************************************************/
+
 typedef struct
 {
     /* Tx Cfg */
@@ -359,19 +353,7 @@ typedef struct
 *****************************************************************************/
 /* W的RF配置结构 */
 /* RF配置参数结构 */
-/*****************************************************************************
- 结构名    : W_RF_CFG_PARA_STRU
- 结构说明  : RF配置参数结构
- 1.日    期   : 2011年11月16日
-   作    者   : f62575
-   修改内容   : 补充结构注释
- 2.日    期   : 2011年11月16日
-   作    者   : f62575
-   修改内容   : 适配物理层接口变更
-                增加sRrcWidth, sDbbAtten, usRxCarrMode, usPaVbias
-                移动sTxPower,
-                删除sRxPGC
-*****************************************************************************/
+
 typedef struct
 {
     /* TX RX均使用 */
@@ -425,16 +407,7 @@ typedef struct
     VOS_UINT16                          usRsv2;
 }AT_GHPA_RF_RX_CFG_REQ_STRU;
 
-/*****************************************************************************
- 枚举名    : AT_GHPA_RF_CTRLMODE_TYPE_ENUM
- 结构说明  : 发射控制方式：
-             0：GMSK电压控制,此方式下usTxVpa要配置；
-             1：功率控制,此方式下usTxPower要配置；
-             2：8PSK PaVbias电压&DBB Atten&RF Atten控制，usPAVbias和usRfAtten,sDbbAtten三个参数都要配置；
-1.日    期   : 2011年11月17日
-  作    者   : f62575
-  修改内容   : 新生成
-*****************************************************************************/
+
 enum AT_GHPA_RF_CTRLMODE_TYPE_ENUM
 {
     AT_GHPA_RF_CTRLMODE_TYPE_GMSK,
@@ -444,19 +417,7 @@ enum AT_GHPA_RF_CTRLMODE_TYPE_ENUM
 };
 typedef VOS_UINT16 AT_GHPA_RF_CTRLMODE_TYPE_ENUM_UINT16;
 
-/*****************************************************************************
- 结构名    : AT_GHPA_RF_TX_CFG_REQ_STRU
- 结构说明  :
- 1.日    期   : 2011年11月16日
-   作    者   : f62575
-   修改内容   : 补充注释
- 2.日    期   : 2011年11月16日
-   作    者   : f62575
-   修改内容   : 适配物理层接口变更
-                增加enCtrlMode, uhwRfAtten
-                移动usModType,
-                删除usTxolc
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -517,13 +478,7 @@ typedef struct
     VOS_INT16                           sAGCGain;         /* 取得测量值时的增益状态，-1表示出错 */
 }HPA_AT_RF_RX_RSSI_IND_STRU;
 
-/*****************************************************************************
- 结构名    : PHY_NOISE_RESULT_STRU
- 结构说明  : PHY向AT上报的单个结果的结构
- 1.日    期   : 2014年12月29日
-   作    者   : tianyige
-   修改内容   : Noise tool PHY上报结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usDLFreq;                               /*PHY上报当前测量频点*/
@@ -532,13 +487,7 @@ typedef struct
     VOS_UINT16                          usRsv;
 }PHY_NOISE_RESULT_STRU;
 
-/*****************************************************************************
- 结构名    : HPA_NOISE_RSSI_IND_STRU
- 结构说明  : WPHY或GPHY向AT上报的消息结构
- 1.日    期   : 2014年12月29日
-   作    者   : tianyige
-   修改内容   : Noise tool PHY上报结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usDLRssiNum;                            /*PHY上报测量RSSI个数*/
@@ -547,26 +496,14 @@ typedef struct
 }HPA_NOISE_RSSI_IND_STRU;
 
 
-/*****************************************************************************
- 结构名    : PHY_AT_RF_NOISE_RSSI_IND_STRU
- 结构说明  : WPHY或GPHY向AT上报的消息结构
- 1.日    期   : 2014年12月29日
-   作    者   : tianyige
-   修改内容   : Noise tool PHY上报结构
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;                            /* 标准头 */
     HPA_NOISE_RSSI_IND_STRU             stRssiInd;                              /* 结果 */
 }PHY_AT_RF_NOISE_RSSI_IND_STRU;
 
-/*****************************************************************************
- 结构名    : AT_PHY_RF_PLL_STATUS_REQ_STRU
- 结构说明  : AT向WPHY或GPHY查询PLL状态的消息结构
- 1.日    期   : 2013年11月29日
-   作    者   : L00256032
-   修改内容   : Added for PLL status query
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -576,13 +513,7 @@ typedef struct
     VOS_UINT16                          usRsv2;            /* 保留位 */
 }AT_PHY_RF_PLL_STATUS_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : AT_PHY_RF_PLL_STATUS_REQ_STRU
- 结构说明  : WPHY或GPHY向AT返回PLL状态的消息结构
- 1.日    期   : 2013年11月29日
-   作    者   : L00256032
-   修改内容   : Added for PLL status query
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;
@@ -591,13 +522,7 @@ typedef struct
 }PHY_AT_RF_PLL_STATUS_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : AT_PHY_POWER_DET_REQ_STRU
- 结构说明  : AT向WPHY查询功率检测的消息结构
- 1.日    期   : 2014年05月06日
-   作    者   : c00242732
-   修改内容   : Added for Power_Detect query
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -605,13 +530,7 @@ typedef struct
     VOS_UINT16                          usRsv;             /* 保留位 */
 }AT_PHY_POWER_DET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : PHY_AT_POWER_DET_CNF_STRU
- 结构说明  : WPHY向AT返回功率检测结果的消息结构
- 1.日    期   : 2014年05月06日
-   作    者   : c00242732
-   修改内容   : Added for Power_Detect query
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;
@@ -620,13 +539,7 @@ typedef struct
 }PHY_AT_POWER_DET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : AT_HPA_RF_NOISE_CFG_REQ_STRU
- 结构说明  : AT向GPHY下发noise tool请求
- 1.日    期   : 2014年12月19日
-   作    者   : tianyige
-   修改内容   : Added for noise tool
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -640,14 +553,7 @@ typedef struct
     VOS_UINT16                          usRsv;                                  /* 保留位 */
 }AT_HPA_RF_NOISE_CFG_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : AT_HPA_MIPI_WR_REQ_STRU
- 结构说明  : 设置MIPI 寄存器请求结构体
 
- 1.日    期   : 2015年9月10日
-    作    者   : l00227485
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -659,26 +565,14 @@ typedef struct
     VOS_UINT16                          usRsv;
 }AT_HPA_MIPI_WR_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : HPA_AT_MIPI_WR_CNF_STRU
- 结构说明  : AT与AT AGENT 设置MIPI 寄存器请求结构体
-1.日    期   : 2015年9月10日
-   作    者   :l00227485
-   修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;
     VOS_UINT32                          usErrFlg;          /* 0:success, 1:fail */
 }HPA_AT_MIPI_WR_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : AT_HPA_MIPI_RD_REQ_STRU
- 结构说明  :查询MIPI 寄存器请求结构体
- 1.日    期   : 2015年9月10日
-    作    者   : l00227485
-    修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -688,13 +582,7 @@ typedef struct
     VOS_UINT16                          uhwChannel;                             /* 开始的寄存器 */
 }AT_HPA_MIPI_RD_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : HPA_AT_MIPI_RD_CNF_STRU
- 结构说明  : AT与AT AGENT 设置MIPI 寄存器请求结构体
-1.日    期   : 2015年9月10日
-   作    者   :l00227485
-   修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;
@@ -702,13 +590,7 @@ typedef struct
     VOS_UINT32                          ulResult;
 }HPA_AT_MIPI_RD_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : AT_HPA_SSI_WR_REQ_STRU
- 结构说明  : AT向PHY下发SSI请求
- 1.日    期   : 2015年09月19日
-   作    者   : x00316382
-   修改内容   : Added for ssi tool
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -718,26 +600,14 @@ typedef struct
     VOS_UINT16                          usData;                                 /* 数据 */
 }AT_HPA_SSI_WR_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : HPA_AT_SSI_WR_CNF_STRU
- 结构说明  : AT与AT AGENT 设置MIPI 寄存器请求结构体
-1.日    期   : 2015年9月10日
-   作    者   :l00227485
-   修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;
     VOS_UINT32                          usErrFlg;                               /* 0:success, 1:fail */
 }HPA_AT_SSI_WR_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : AT_HPA_SSI_RD_REQ_STRU
- 结构说明  :
- 1.日    期   : 2015年09月19日
-   作    者   : x00316382
-   修改内容   : Added for tool
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -746,13 +616,7 @@ typedef struct
     VOS_UINT32                          uwRficReg;
 }AT_HPA_SSI_RD_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : HPA_AT_SSI_RD_CNF_STRU
- 结构说明  : AT与AT AGENT 设置MIPI 寄存器请求结构体
-1.日    期   : 2015年9月10日
-   作    者   :l00227485
-   修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;
@@ -775,13 +639,7 @@ typedef struct
     VOS_UINT16                          usErrFlg;          /* 0:success, 1:fail */
 }CHPA_AT_RF_CFG_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : AT_HPA_PDM_CTRL_REQ_STRU
- 结构说明  :
- 1.日    期   : 2015年10月20日
-   作    者   : x00316382
-   修改内容   : Added for tool
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER
@@ -793,13 +651,7 @@ typedef struct
     VOS_UINT16                          usPaVbias3;
 }AT_HPA_PDM_CTRL_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : HPA_AT_PDM_CTRL_CNF_STRU
- 结构说明  : AT与AT AGENT 设置PDM 寄存器请求结构体
-1.日    期   : 2015年10月20日
-  作    者   : x00316382
-  修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     HPA_AT_HEADER_STRU                  stMsgHeader;

@@ -258,6 +258,7 @@ static int dwc3_alloc_event_buffers(struct dwc3 *dwc, unsigned length)
 			GFP_KERNEL);
 	if (!dwc->ev_buffs) {
 		dev_err(dwc->dev, "can't allocate event buffers array\n");
+		dwc->num_event_buffers = 0;
 		return -ENOMEM;
 	}
 
@@ -1089,15 +1090,21 @@ static int dwc3_probe(struct platform_device *pdev)
 	dev->dma_parms = dev->parent->dma_parms;
 	dma_set_coherent_mask(dev, dev->parent->coherent_dma_mask);
 
+	pm_runtime_set_active(dev);
 	pm_runtime_enable(dev);
-	pm_runtime_get_sync(dev);
+	ret = pm_runtime_get_sync(dev);
+	if (ret < 0) {
+		dev_err(dwc->dev, "failed to get pm runtime, error %d\n", ret);
+		goto err1;
+	}
+
 	pm_runtime_forbid(dev);
 
 	ret = dwc3_alloc_event_buffers(dwc, DWC3_EVENT_BUFFERS_SIZE);
 	if (ret) {
 		dev_err(dwc->dev, "failed to allocate event buffers\n");
 		ret = -ENOMEM;
-		goto err1;
+		goto err2;
 	}
 
 	if (IS_ENABLED(CONFIG_USB_DWC3_HOST))
@@ -1112,7 +1119,7 @@ static int dwc3_probe(struct platform_device *pdev)
 	ret = dwc3_core_init(dwc);
 	if (ret) {
 		dev_err(dev, "failed to initialize core\n");
-		goto err1;
+		goto err2;
 	}
 
 	/* Adjust Frame Length */
@@ -1135,26 +1142,26 @@ static int dwc3_probe(struct platform_device *pdev)
 	usb_phy_set_suspend(dwc->usb3_phy, 0);
 	ret = phy_power_on(dwc->usb2_generic_phy);
 	if (ret < 0)
-		goto err2;
+		goto err3;
 
 	ret = phy_power_on(dwc->usb3_generic_phy);
 	if (ret < 0)
-		goto err3;
+		goto err4;
 
 	ret = dwc3_event_buffers_setup(dwc);
 	if (ret) {
 		dev_err(dwc->dev, "failed to setup event buffers\n");
-		goto err4;
+		goto err5;
 	}
 
 	ret = dwc3_core_init_mode(dwc);
 	if (ret)
-		goto err5;
+		goto err6;
 
 	ret = dwc3_debugfs_init(dwc);
 	if (ret) {
 		dev_err(dev, "failed to initialize debugfs\n");
-		goto err6;
+		goto err7;
 	}
 
 	pm_runtime_allow(dev);
@@ -1163,26 +1170,31 @@ static int dwc3_probe(struct platform_device *pdev)
 
 	return 0;
 
-err6:
+err7:
 	dwc3_core_exit_mode(dwc);
 
-err5:
+err6:
 	dwc3_event_buffers_cleanup(dwc);
 
-err4:
+err5:
 	phy_power_off(dwc->usb3_generic_phy);
 
-err3:
+err4:
 	phy_power_off(dwc->usb2_generic_phy);
 
-err2:
+err3:
 	usb_phy_set_suspend(dwc->usb2_phy, 1);
 	usb_phy_set_suspend(dwc->usb3_phy, 1);
 	dwc3_core_exit(dwc);
 
-err1:
+err2:
 	dwc3_free_event_buffers(dwc);
 	dwc3_ulpi_exit(dwc);
+	pm_runtime_allow(&pdev->dev);
+
+err1:
+	pm_runtime_put_sync(&pdev->dev);
+	pm_runtime_disable(&pdev->dev);
 
 err0:
 	/*
@@ -1226,170 +1238,29 @@ static int dwc3_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#ifdef CONFIG_PM
 static int dwc3_runtime_suspend(struct device *dev)
 {
-	int ret;
-	unsigned long	flags;
-	struct dwc3	*dwc = dev_get_drvdata(dev);
-
 	DBG("+\n");
-
-	spin_lock_irqsave(&dwc->lock, flags);
-
-	switch (dwc->dr_mode) {
-	case USB_DR_MODE_PERIPHERAL:
-		ret = dwc3_gadget_suspend(dwc);
-		if (ret)
-			goto err;
-		break;
-	case USB_DR_MODE_HOST:
-		/* do nothing */
-		break;
-	case USB_DR_MODE_OTG:
-		dwc3_otg_suspend(dwc);
-		break;
-	default:
-		break;
-	}
-
-err:
-	spin_unlock_irqrestore(&dwc->lock, flags);
-
-	DBG("-\n");
 
 	return 0;
 }
 
 static int dwc3_runtime_resume(struct device *dev)
 {
-	int ret = 0;
-	unsigned long	flags;
-	struct dwc3	*dwc = dev_get_drvdata(dev);
-
 	DBG("+\n");
 
-	spin_lock_irqsave(&dwc->lock, flags);
-
-	ret = dwc3_core_init(dwc);
-	if (ret) {
-		dev_err(dev, "dwc3_core_init error\n");
-		goto err;
-	}
-
-	dwc3_resume_usb2_phy(dwc);
-	dwc3_resume_usb3_phy(dwc);
-
-	ret = dwc3_event_buffers_setup(dwc);
-	if (ret) {
-		dev_err(dev, "dwc3_event_buffers_setup error\n");
-		goto err;
-	}
-
-	switch (dwc->dr_mode) {
-	case USB_DR_MODE_PERIPHERAL:
-		ret = dwc3_gadget_resume(dwc);
-		if (ret)
-			dev_err(dev, "dwc3_gadget_resume error\n");
-		break;
-	case USB_DR_MODE_HOST:
-		/* do nothing */
-		break;
-	case USB_DR_MODE_OTG:
-		dwc3_otg_resume(dwc);
-		break;
-	default:
-		break;
-	}
-
-err:
-	spin_unlock_irqrestore(&dwc->lock, flags);
-
-	DBG("-\n");
-
-	return ret;
-}
-
-#ifdef CONFIG_PM
-/**
- * dwc3_resume_device - immediately autoresume a dwc3 device
- * @dwc: the dwc3 device to resume
- */
-int dwc3_resume_device(struct dwc3 *dwc)
-{
-	int	status;
-
-	DBG("+\n");
-	status = pm_runtime_get_sync(dwc->dev);
-	if (status < 0) {
-		DBG("pm_runtime_get_sync error\n");
-		pm_runtime_put_sync(dwc->dev);
-	}
-	if (status > 0)
-		status = 0;
-	DBG("-\n");
-
-	return status;
-}
-
-/**
- * dwc3_suspend_device - decrement dwc3 PM-usage counter
- * @dwc: the dwc3 device whose counter should be decremented
- */
-void dwc3_suspend_device(struct dwc3 *dwc)
-{
-	const int DEFAULT_RETRY_PUT  = 5;
-	int status;
-	int times = DEFAULT_RETRY_PUT;
-
-	DBG("+\n");
-	do {
-		if (DEFAULT_RETRY_PUT != times) {
-			msleep(20);
-		}
-
-		status = pm_runtime_put_sync(dwc->dev);
-		if (!times) {
-			break;
-		}
-		times--;
-	} while (-EAGAIN == status);
-
-	if (status < 0) {
-		DBG("%s: %d\n", __func__, status);
-	}
-	DBG("-\n");
+	return 0;
 }
 
 static int dwc3_runtime_idle(struct device *dev)
 {
-	const int DEFAULT_RETRY_PUT  = 5;
-	int ret;
-	int times = DEFAULT_RETRY_PUT;
-
 	DBG("+\n");
 
-	do {
-		if (DEFAULT_RETRY_PUT != times) {
-			msleep(20);
-		}
-
-		ret = pm_runtime_autosuspend(dev);
-
-		if (!times) {
-			break;
-		}
-		times--;
-	} while (-EAGAIN == ret);
-
-	if (ret)
-		dev_err(dev, "pm_runtime_autosuspend error ret=%d\n", ret);
-
-	DBG("-\n");
-	return ret;
+	return 0;
 }
+#endif
 
-/* original code but not used by hisi */
-#if 0
 static int dwc3_suspend(struct device *dev)
 {
 	struct dwc3	*dwc = dev_get_drvdata(dev);
@@ -1399,8 +1270,10 @@ static int dwc3_suspend(struct device *dev)
 	spin_lock_irqsave(&dwc->lock, flags);
 
 	switch (dwc->dr_mode) {
-	case USB_DR_MODE_PERIPHERAL:
 	case USB_DR_MODE_OTG:
+		dwc3_otg_suspend(dwc);
+		break;
+	case USB_DR_MODE_PERIPHERAL:
 		dwc3_gadget_suspend(dwc);
 		/* FALLTHROUGH */
 	case USB_DR_MODE_HOST:
@@ -1452,8 +1325,10 @@ static int dwc3_resume(struct device *dev)
 	dwc3_writel(dwc->regs, DWC3_GCTL, dwc->gctl);
 
 	switch (dwc->dr_mode) {
-	case USB_DR_MODE_PERIPHERAL:
 	case USB_DR_MODE_OTG:
+		dwc3_otg_resume(dwc);
+		break;
+	case USB_DR_MODE_PERIPHERAL:
 		dwc3_gadget_resume(dwc);
 		/* FALLTHROUGH */
 	case USB_DR_MODE_HOST:
@@ -1476,28 +1351,17 @@ err_usb2phy_init:
 
 	return ret;
 }
-#endif
 
-static const struct dev_pm_ops dwc3_dev_pm_ops = {
-	/* original code but not used by hisi */
-#if 0
-	SET_SYSTEM_SLEEP_PM_OPS(dwc3_suspend, dwc3_resume)
-#endif
-
-	SET_RUNTIME_PM_OPS(dwc3_runtime_suspend, dwc3_runtime_resume,
-			dwc3_runtime_idle)
-};
-
-#define DWC3_PM_OPS	(&(dwc3_dev_pm_ops))
-#else  /* CONFIG_PM */
-#define DWC3_PM_OPS	NULL
-
+/**
+ * dwc3_resume_device - immediately autoresume a dwc3 device
+ * @dwc: the dwc3 device to resume
+ */
 int dwc3_resume_device(struct dwc3 *dwc)
 {
 	int status;
 
 	DBG("+\n");
-	status = dwc3_runtime_resume(dwc->dev);
+	status = dwc3_resume(dwc->dev);
 	if (status < 0) {
 		DBG("dwc3_runtime_resume error\n");
 	}
@@ -1505,18 +1369,26 @@ int dwc3_resume_device(struct dwc3 *dwc)
 	return status;
 }
 
+/**
+ * dwc3_suspend_device - decrement dwc3 PM-usage counter
+ * @dwc: the dwc3 device whose counter should be decremented
+ */
 void dwc3_suspend_device(struct dwc3 *dwc)
 {
 	int status;
 
 	DBG("+\n");
-	status = dwc3_runtime_suspend(dwc->dev);
+	status = dwc3_suspend(dwc->dev);
 	if (status < 0) {
 		DBG("dwc3_runtime_suspend error\n");
 	}
 	DBG("-\n");
 }
-#endif /* CONFIG_PM */
+
+static const struct dev_pm_ops dwc3_dev_pm_ops = {
+	SET_RUNTIME_PM_OPS(dwc3_runtime_suspend, dwc3_runtime_resume,
+			dwc3_runtime_idle)
+};
 
 #ifdef CONFIG_OF
 static const struct of_device_id of_dwc3_match[] = {
@@ -1549,7 +1421,7 @@ static struct platform_driver dwc3_driver = {
 		.name	= "dwc3",
 		.of_match_table	= of_match_ptr(of_dwc3_match),
 		.acpi_match_table = ACPI_PTR(dwc3_acpi_match),
-		.pm	= DWC3_PM_OPS,
+		.pm	= &dwc3_dev_pm_ops,
 	},
 };
 

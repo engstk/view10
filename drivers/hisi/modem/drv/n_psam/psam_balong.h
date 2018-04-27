@@ -155,6 +155,7 @@ struct psam_device {
 	struct ipf_desc_handler_s* desc_hd;
 	struct psam_hal_handle* hal;
 	struct psam_pm_cb* pm;
+    unsigned int ads_up;
 };
 
 #define psam_readl(x) /*lint -save -e732 */readl((unsigned char*)g_psam_device->regs + (x))/*lint -restore */

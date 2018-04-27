@@ -73,21 +73,7 @@ Auth2Nam(VOS_UINT16 auth, VOS_CHAR chap_type)
   return "Unknown";
 }
 
-/*****************************************************************************
- 函 数 名  : AuthTimeout
- 功能描述  : 认证定时器超时处理
- 输入参数  : l - PPP链接
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年10月27日
-    作    者   : liukai
-    修改内容   : porting from BSD
-
-*****************************************************************************/
 VOS_VOID AuthTimeout(struct link *l)
 {
   VOS_UINT32 ulTimerValue;
@@ -132,21 +118,7 @@ auth_Init(struct authinfo *authp, auth_func req,
 /*  authp->physical = p;*/
 }
 
-/*****************************************************************************
- 函 数 名  : auth_StartReq
- 功能描述  : 发起认证
- 输入参数  : l - PPP链接
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年10月27日
-    作    者   : liukai
-    修改内容   : porting from BSD
-
-*****************************************************************************/
 VOS_VOID auth_StartReq(struct link *l, struct authinfo *authp)
 {
   VOS_UINT32        ulTimerValue;
@@ -177,21 +149,7 @@ VOS_VOID auth_StartReq(struct link *l, struct authinfo *authp)
   }
 }    /* auth_StartReq */
 
-/*****************************************************************************
- 函 数 名  : auth_StopTimer
- 功能描述  : 停止认证定时器
- 输入参数  : authp - PPP链接中认证参数
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年10月27日
-    作    者   : liukai
-    修改内容   : porting from BSD
-
-*****************************************************************************/
 VOS_VOID auth_StopTimer(struct authinfo *authp)
 {
     if (VOS_NULL_PTR != authp->hAuthTimer)

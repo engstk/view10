@@ -55,6 +55,7 @@
 #include <linux/skbuff.h>
 #include <linux/netlink.h>
 #include <linux/wakelock.h>
+#include <securec.h>
 #include "product_config.h"
 #include <linux/mtd/hisi_nve_interface.h>
 #include "mdrv.h"
@@ -229,7 +230,7 @@ static int diag_vcom_send_resp_msg(struct diag_vcom_entity_s *entity,
 	}
 
 	resp_msg = (struct diag_vcom_msg_s *)nlmsg_data(resp_nlh);
-	memcpy(resp_msg, msg, msg_len);
+	memcpy_s(resp_msg, msg_len, msg, msg_len);
 
 	ret = nlmsg_unicast(entity->sk, resp_skb, entity->resp_pid);
 	if (ret < 0) {
@@ -286,7 +287,7 @@ static int diag_vcom_send_om_cmd_msg(struct diag_vcom_entity_s *entity,
 	resp_msg->args_length = DIAG_VCOM_MSG_ARGS_SIZE(om_command) + len;
 
 	resp_msg->om_command.length = len;
-	memcpy(resp_msg->om_command.data, data, len);
+	memcpy_s(resp_msg->om_command.data, resp_msg->om_command.length, data, len);
 
 	ret = nlmsg_unicast(entity->sk, resp_skb, entity->portid);
 	if (ret < 0) {
@@ -346,7 +347,7 @@ static int diag_vcom_send_om_data_msg(struct diag_vcom_entity_s *entity,
 	unsol_msg->om_data.blk_seq = desc->blk_seq;
 	unsol_msg->om_data.mode = desc->mode;
 	unsol_msg->om_data.length = desc->len;
-	memcpy(unsol_msg->om_data.data, desc->data, desc->len);
+	memcpy_s(unsol_msg->om_data.data, unsol_msg->om_data.length, desc->data, desc->len);
 
 	ret = netlink_unicast(entity->sk, unsol_skb, entity->portid, 0);
 	if (ret < 0) {
@@ -382,7 +383,7 @@ static int diag_vcom_fragment_om_data(struct diag_vcom_entity_s *entity,
 	blk_num = len / DIAG_VCOM_DATA_SIZE;
 	tail_blk_size = len % DIAG_VCOM_DATA_SIZE;
 
-	memset(&om_data_desc, 0, sizeof(om_data_desc));
+	memset_s(&om_data_desc, sizeof(om_data_desc), 0, sizeof(om_data_desc));
 	om_data_desc.blk_num = blk_num + ((tail_blk_size) ? 1 : 0);
 	om_data_desc.mode = mode;
 	om_data_desc.data = data;
@@ -466,7 +467,7 @@ static void diag_vcom_associate_port(struct diag_vcom_entity_s *entity,
 
 	DIAG_VCOM_LOGI("pid=%d,type=0x%x", msg->port.pid,msg->message_type);
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
@@ -506,7 +507,7 @@ static void diag_vcom_unassociate_port(struct diag_vcom_entity_s *entity,
 
 	DIAG_VCOM_LOGI("pid=%d.type=0x%x", msg->port.pid,msg->message_type);
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
@@ -538,7 +539,7 @@ static void diag_vcom_set_log_port_config(struct diag_vcom_entity_s *entity,
 
 	DIAG_VCOM_LOGI("port=%d,type=0x%x", msg->log_port_config.port,msg->message_type);
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
@@ -569,7 +570,7 @@ static void diag_vcom_get_log_port_config(struct diag_vcom_entity_s *entity,
 
     DIAG_VCOM_LOGI("port=%d,type=0x%x", msg->log_port_config.port,msg->message_type);
     
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
@@ -603,7 +604,7 @@ static void diag_vcom_set_log_config(struct diag_vcom_entity_s *entity,
 
 	DIAG_VCOM_LOGH("mode=%d,type=0x%x", msg->log_config.mode,msg->message_type);
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 	resp_msg.return_code = DIAG_VCOM_E_SUCCESS;
@@ -655,7 +656,7 @@ static void diag_vcom_get_log_config(struct diag_vcom_entity_s *entity,
 
     DIAG_VCOM_LOGI("mode=%d,type=0x%x", msg->log_config.mode,msg->message_type);
     
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
@@ -701,11 +702,11 @@ static void diag_vcom_set_log_nve_config(struct diag_vcom_entity_s *entity,
 
 	DIAG_VCOM_LOGI("NVE feature on, enable=%d", msg->log_nve_config.enable);
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
-	memset(&nve_config, 0, sizeof(nve_config));
+	memset_s(&nve_config, sizeof(nve_config), 0, sizeof(nve_config));
 	nve_config.nv_number = 285;
 	nve_config.valid_size = 4;
 	nve_config.nv_operation = NV_READ;
@@ -743,11 +744,11 @@ static void diag_vcom_get_log_nve_config(struct diag_vcom_entity_s *entity,
 	struct diag_vcom_msg_s resp_msg;
 	SOCP_ENC_DST_BUF_LOG_CFG_STRU log_cfg;
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
-	memset(&log_cfg, 0, sizeof(log_cfg));
+	memset_s(&log_cfg, sizeof(log_cfg), 0, sizeof(log_cfg));
 
 	if (mdrv_socp_get_sd_logcfg(&log_cfg) != 0) {
 		resp_msg.return_code = DIAG_VCOM_E_GENERIC_FAILURE;
@@ -777,7 +778,7 @@ static void diag_vcom_send_om_cmd_request(struct diag_vcom_entity_s *entity,
 
 	DIAG_VCOM_LOGI("length=%d,type=0x%x", msg->om_command.length,msg->message_type);
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 
@@ -817,7 +818,7 @@ static void diag_vcom_process_unknown_msg(struct diag_vcom_entity_s *entity,
 
 	DIAG_VCOM_LOGH("Unknow message");
 
-	memset(&resp_msg, 0, sizeof(resp_msg));
+	memset_s(&resp_msg, sizeof(resp_msg), 0, sizeof(resp_msg));
 	resp_msg.message_type = msg->message_type;
 	resp_msg.op = DIAG_VCOM_MSG_RETURN_CODE;
 	resp_msg.return_code = DIAG_VCOM_E_UNKNOWN_MESSAGE;
@@ -1009,4 +1010,4 @@ void diag_vcom_show_stats(void)
 		pr_err("[CH:%d] unicast_message:           %10u\n", i, stats->unicast_message);
 	}
 }
-
+EXPORT_SYMBOL(diag_vcom_show_stats);

@@ -150,6 +150,15 @@ typedef enum {
 	JPU_OUTPUT_BGRA8888 = 9,
 } jpu_output_format;
 
+/*
+** support platform
+*/
+typedef enum {
+	HISI_KIRIN_970 = 1,
+	HISI_DSS_V501,
+	UNSUPPORT_PLATFORM,
+}jpeg_dec_platform;
+
 typedef struct jpu_dec_reg {
 	uint32_t dec_start;
 	uint32_t preftch_ctrl;

@@ -76,17 +76,37 @@ static int peri_fast_avs(struct peri_volt_poll *pvp, unsigned int target_volt)
 }
 #endif
 
+#ifdef CONFIG_HISI_PERI_AVS_IPC_NOTIFY
+static int peri_avs_notify_m3(struct peri_volt_poll *pvp, unsigned int target_volt)
+{
+	int ret = 0;
+	u32 avs_ipc_cmd[LPM3_CMD_LEN] = {LPM3_CMD_CLOCK_EN, FAST_AVS_ID};
+
+	/*send ipc when volt up and down*/
+	ret = hisi_clkmbox_send_msg(avs_ipc_cmd);
+			if (ret < 0) {
+				pr_err("[%s]fail to notify LPM3 !\n",
+					__func__);
+			}
+	return ret;
+}
+#endif
+
 static int hisi_peri_set_volt(struct peri_volt_poll *pvp, unsigned int volt)
 {
 	unsigned int val = 0;
 	int ret = 0;
+#ifdef CONFIG_HISI_CLK_LOW_TEMPERATURE_JUDGE_BY_VOLT
 	int temprature = 0;
+#endif
 
 	if (hwspin_lock_timeout((struct hwspinlock *)pvp->priv,
 					HWLOCK_TIMEOUT)) {
 		pr_err("pvp hwspinlock timout!\n");
 		return -ENOENT;
 	}
+
+#ifdef CONFIG_HISI_CLK_LOW_TEMPERATURE_JUDGE_BY_VOLT
 	/*read pmctrl 0x350 bit 27:26,value of bit 27:26 is
 	 *	 not 0: low temprature
 	 *	 0: normal temprature
@@ -105,7 +125,10 @@ static int hisi_peri_set_volt(struct peri_volt_poll *pvp, unsigned int volt)
 				volt = PERI_VOLT_2;
 			}
 		}
+
 	}
+#endif
+
     if(volt <= PERI_VOLT_3){
 		val = readl(pvp->addr);
 		val &= (~(pvp->bitsmask));
@@ -121,8 +144,36 @@ static int hisi_peri_set_volt(struct peri_volt_poll *pvp, unsigned int volt)
 	if (!(readl(pvp->addr_0) & PMCTRL_PERI_CTRL4_ON_OFF_MASK))
 		ret = peri_fast_avs(pvp, volt);
 #endif
+
+#ifdef CONFIG_HISI_PERI_AVS_IPC_NOTIFY
+	/*avs send ipc to notify lpm3*/
+	ret = peri_avs_notify_m3(pvp, volt);
+#endif
 	hwspin_unlock((struct hwspinlock *)pvp->priv);
 
+	return ret;
+}
+
+static int hisi_peri_get_temprature(struct peri_volt_poll *pvp)
+{
+	unsigned int temprature = 0;
+	int ret = 0;
+
+	if (hwspin_lock_timeout((struct hwspinlock *)pvp->priv,
+					HWLOCK_TIMEOUT)) {
+		pr_err("pvp hwspinlock timout!\n");
+		return -ENOENT;//lint !e570
+	}
+	temprature = readl(pvp->addr_0);
+	temprature &= PMCTRL_PERI_CTRL4_TEMPERATURE_MASK;
+	temprature = temprature >> PMCTRL_PERI_CTRL4_TEMPERATURE_SHIFT;
+	if(NORMAL_TEMPRATURE == temprature) {
+		ret = 0;
+	} else {
+		ret = -1;
+	}
+
+	hwspin_unlock((struct hwspinlock *)pvp->priv);
 	return ret;
 }
 
@@ -139,12 +190,7 @@ static unsigned int hisi_peri_get_volt(struct peri_volt_poll *pvp)
 	ret &= PMCTRL_PERI_CTRL4_VDD_MASK;
 	ret = ret >> PMCTRL_PERI_CTRL4_VDD_SHIFT;
 	WARN_ON(ret > PERI_VOLT_3);
-/*
-	if (ret < PERI_VOLT_2)
-		ret = PERI_VOLT_0;
-	if (ret > PERI_VOLT_2)
-		BUG_ON(1);
-*/
+
 	hwspin_unlock((struct hwspinlock *)pvp->priv);
 
 	return ret;
@@ -190,6 +236,7 @@ static struct peri_volt_ops hisi_peri_volt_ops = {
 	.get_volt = hisi_peri_get_volt,
 	.recalc_volt = hisi_peri_get_volt,
 	.get_poll_stat = hisi_peri_poll_stat,
+	.get_temperature = hisi_peri_get_temprature,
 	.init = hisi_peri_dvfs_init,
 };
 

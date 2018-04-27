@@ -122,11 +122,9 @@ extern "C" {
 
 #define DRV_AGENT_SIMLOCK_MAX_ERROR_TIMES  (3)  /* Simlock解锁最大失败次数 */
 
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
 #define  AT_PID_MEM_INFO_LEN                        (150) /* VOS内存查询时支持的最大PID个数 */
 
 #define  AT_KB_TO_BYTES_NUM                         (1024) /* KB向字节转换需乘1024 */
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
 
 
 
@@ -158,11 +156,7 @@ extern "C" {
 #endif
 #define DRV_AGENT_PUBKEY_SIGNATURE_LEN          (32)        /* 鉴权公钥SSK签名长度 */
 
-#if ((FEATURE_ON == FEATURE_SC_DATA_STRUCT_EXTERN) || (FEATURE_ON == FEATURE_BOSTON_AFTER_FEATURE))
 #define DRV_AGENT_SUPPORT_CATEGORY_NUM          (4)         /* 支持的锁网锁卡CATEGORY类别数，目前只支持四种:network/network subset/SP/CP */
-#else
-#define DRV_AGENT_SUPPORT_CATEGORY_NUM          (3)         /* 支持的锁网锁卡CATEGORY类别数，目前只支持三种:network/network subset/SP */
-#endif
 
 #define DRV_AGENT_PH_LOCK_CODE_GROUP_NUM        (20)        /* 锁网锁卡号段组数 */
 
@@ -185,6 +179,11 @@ extern "C" {
 /* Added by L47619 for V9R1 vSIM Project, 2013-8-27, end */
 
 #define DRV_AGENT_HMAC_DATA_LEN                 (32)        /* HMAC数据的长度 */
+
+#if (FEATURE_ON == FEATURE_PHONE_SC)
+#define DRV_AGENT_PIN_CRYPTO_DATA_LEN           (16)        /* PIN加密数据的长度 */
+#define DRV_AGENT_PIN_CRYPTO_IV_LEN             (16)        /* PIN IV数据的长度 */
+#endif
 
 #define TAF_MAX_CPU_CNT                         (4)
 #define TAF_SRE_ERROR_CODE                      (0xffffffff)
@@ -247,14 +246,7 @@ enum DRV_AGENT_ERROR_ENUM
 typedef VOS_UINT32 DRV_AGENT_ERROR_ENUM_UINT32;
 
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_MSID_QRY_ERROR_ENUM
- 结构说明  : 调用底软接口查询MS ID错误枚举
 
-  1.日    期   : 2011年10月22日
-    作    者   : o00132663
-    修改内容   : 创建
-*****************************************************************************/
 enum DRV_AGENT_MSID_QRY_ERROR_ENUM
 {
     DRV_AGENT_MSID_QRY_NO_ERROR                  = 0,
@@ -265,15 +257,7 @@ enum DRV_AGENT_MSID_QRY_ERROR_ENUM
 typedef VOS_UINT32  DRV_AGENT_MSID_QRY_ERROR_ENUM_UINT32;
 
 /* Added by f62575 for AT Project, 2011-10-04,  Begin */
-/*****************************************************************************
- 枚举名    : DRV_AGENT_APPDMVER_QRY_ERROR_ENUM
- 结构说明  : APPDMVER命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_APPDMVER_QRY_ERROR_ENUM
 {
     DRV_AGENT_APPDMVER_QRY_NO_ERROR      = 0,
@@ -283,15 +267,7 @@ enum DRV_AGENT_APPDMVER_QRY_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_APPDMVER_QRY_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_DLOADINFO_QRY_ERROR_ENUM
- 结构说明  : DLOADINFO命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_DLOADINFO_QRY_ERROR_ENUM
 {
     DRV_AGENT_DLOADINFO_QRY_NO_ERROR      = 0,
@@ -301,15 +277,7 @@ enum DRV_AGENT_DLOADINFO_QRY_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_DLOADINFO_QRY_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_AUTHORITYVER_QRY_ERROR_ENUM
- 结构说明  : AUTHORITYVER命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_AUTHORITYVER_QRY_ERROR_ENUM
 {
     DRV_AGENT_AUTHORITYVER_QRY_NO_ERROR      = 0,
@@ -319,15 +287,7 @@ enum DRV_AGENT_AUTHORITYVER_QRY_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_AUTHORITYVER_QRY_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_AUTHORITYID_QRY_ERROR_ENUM
- 结构说明  : AUTHORITYID命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_AUTHORITYID_QRY_ERROR_ENUM
 {
     DRV_AGENT_AUTHORITYID_QRY_NO_ERROR      = 0,
@@ -337,15 +297,7 @@ enum DRV_AGENT_AUTHORITYID_QRY_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_AUTHORITYID_QRY_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_GODLOAD_SET_ERROR_ENUM
- 结构说明  : GODLOAD_命令设置操作结果错误码列表
-             0: 设置操作成功；
-             1: 设置操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_GODLOAD_SET_ERROR_ENUM
 {
     DRV_AGENT_GODLOAD_SET_NO_ERROR      = 0,
@@ -355,15 +307,7 @@ enum DRV_AGENT_GODLOAD_SET_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_GODLOAD_SET_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_SDLOAD_SET_ERROR_ENUM
- 结构说明  : SDLOAD_命令设置操作结果错误码列表
-             0: 设置操作成功；
-             1: 设置操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_SDLOAD_SET_ERROR_ENUM
 {
     DRV_AGENT_SDLOAD_SET_NO_ERROR      = 0,
@@ -373,15 +317,7 @@ enum DRV_AGENT_SDLOAD_SET_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_SDLOAD_SET_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_HWNATQRY_QRY_ERROR_ENUM
- 结构说明  : HWNATQRY_命令设置操作结果错误码列表
-             0: 设置操作成功；
-             1: 设置操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_HWNATQRY_QRY_ERROR_ENUM
 {
     DRV_AGENT_HWNATQRY_QRY_NO_ERROR      = 0,
@@ -392,15 +328,7 @@ enum DRV_AGENT_HWNATQRY_QRY_ERROR_ENUM
 typedef VOS_UINT32 DRV_AGENT_HWNATQRY_QRY_ERROR_ENUM_UINT32;
 
 /* Added by 傅映君/f62575 for CPULOAD&MFREELOCKSIZE处理过程移至C核, 2011/11/15, begin */
-/*****************************************************************************
- 枚举名    : DRV_AGENT_CPULOAD_QRY_ERROR_ENUM
- 结构说明  : CPULOAD命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年11月12日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_CPULOAD_QRY_ERROR_ENUM
 {
     DRV_AGENT_CPULOAD_QRY_NO_ERROR      = 0,
@@ -410,15 +338,7 @@ enum DRV_AGENT_CPULOAD_QRY_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_CPULOAD_QRY_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_MFREELOCKSIZE_QRY_ERROR_ENUM
- 结构说明  : MFREELOCKSIZE命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年11月12日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_MFREELOCKSIZE_QRY_ERROR_ENUM
 {
     DRV_AGENT_MFREELOCKSIZE_QRY_NO_ERROR      = 0,
@@ -430,15 +350,7 @@ typedef VOS_UINT32 DRV_AGENT_MFREELOCKSIZE_QRY_ERROR_ENUM_UINT32;
 
 /* Added by 傅映君/f62575 for CPULOAD&MFREELOCKSIZE处理过程移至C核, 2011/11/15, end */
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_AUTHVER_QRY_ERROR_ENUM
- 结构说明  : AUTHVER_命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_AUTHVER_QRY_ERROR_ENUM
 {
     DRV_AGENT_AUTHVER_QRY_NO_ERROR      = 0,
@@ -448,15 +360,7 @@ enum DRV_AGENT_AUTHVER_QRY_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_AUTHVER_QRY_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_FLASHINFO_QRY_ERROR_ENUM
- 结构说明  : FLASHINFO_命令查询操作结果错误码列表
-             0: 查询操作成功；
-             1: 查询操作失败；
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_FLASHINFO_QRY_ERROR_ENUM
 {
     DRV_AGENT_FLASHINFO_QRY_NO_ERROR      = 0,
@@ -466,16 +370,7 @@ enum DRV_AGENT_FLASHINFO_QRY_ERROR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_FLASHINFO_QRY_ERROR_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_PFVER_QRY_ERROR_ENUM
- 结构说明  : PFVER_命令查询操作结果错误码列表
-            0: 查询操作成功；
-            1: 获取版本能时间失败
-            2: 获取版本失败
-1.日    期   : 2011年10月4日
-  作    者   : f62575
-  修改内容   : 新生成函数
-*****************************************************************************/
+
 enum DRV_AGENT_PFVER_QRY_ERROR_ENUM
 {
     DRV_AGENT_PFVER_QRY_NO_ERROR                 = 0,
@@ -504,15 +399,7 @@ typedef VOS_UINT32 DRV_AGENT_DLOADVER_QRY_ERROR_ENUM_UINT32;
 
 /* Added by f62575 for AT Project, 2011-10-04,  End */
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_PERSONALIZATION_ERROR_ENUM
- 结构说明  : 锁网锁卡错误码列表
 
-  1.日    期   : 2012年04月07日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增枚举
-
-*****************************************************************************/
 enum DRV_AGENT_PERSONALIZATION_ERR_ENUM
 {
     DRV_AGENT_PERSONALIZATION_NO_ERROR         = 0,             /* 操作成功 */
@@ -533,15 +420,7 @@ enum DRV_AGENT_PERSONALIZATION_ERR_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : DRV_AGENT_PERSONALIZATION_CATEGORY_ENUM
-枚举说明  : 锁网锁卡的category类型
 
-  1.日    期   : 2012年04月07日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增枚举
-
-*****************************************************************************/
 enum DRV_AGENT_PERSONALIZATION_CATEGORY_ENUM
 {
     DRV_AGENT_PERSONALIZATION_CATEGORY_NETWORK                 = 0x00,          /* category:锁网 */
@@ -554,15 +433,7 @@ enum DRV_AGENT_PERSONALIZATION_CATEGORY_ENUM
 };
 typedef VOS_UINT8 DRV_AGENT_PERSONALIZATION_CATEGORY_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : DRV_AGENT_PERSONALIZATION_INDICATOR_ENUM
-枚举说明  : 指定的锁网锁卡类型是否激活
 
-  1.日    期   : 2012年04月07日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增枚举
-
-*****************************************************************************/
 enum DRV_AGENT_PERSONALIZATION_INDICATOR_ENUM
 {
     DRV_AGENT_PERSONALIZATION_INDICATOR_INACTIVE               = 0x00,          /* 未激活 */
@@ -572,15 +443,7 @@ enum DRV_AGENT_PERSONALIZATION_INDICATOR_ENUM
 };
 typedef VOS_UINT8 DRV_AGENT_PERSONALIZATION_INDICATOR_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : DRV_AGENT_PERSONALIZATION_STATUS_ENUM
-枚举说明  : 指定的锁网锁卡类型的状态
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 enum DRV_AGENT_PERSONALIZATION_STATUS_ENUM
 {
     DRV_AGENT_PERSONALIZATION_STATUS_READY      = 0x00,                         /* 已经解锁 */
@@ -591,15 +454,7 @@ enum DRV_AGENT_PERSONALIZATION_STATUS_ENUM
 };
 typedef VOS_UINT8 DRV_AGENT_PERSONALIZATION_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : DRV_AGENT_PH_PHYNUM_TYPE_ENUM
-枚举说明  : 物理号类型枚举
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增枚举
-
-*****************************************************************************/
 enum DRV_AGENT_PH_PHYNUM_TYPE_ENUM
 {
     DRV_AGENT_PH_PHYNUM_IMEI            = 0x00,          /* IMEI */
@@ -609,15 +464,7 @@ enum DRV_AGENT_PH_PHYNUM_TYPE_ENUM
 };
 typedef VOS_UINT8 DRV_AGENT_PH_PHYNUM_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : DRV_AGENT_PORT_STATUS_ENUM
-枚举说明  : 通信端口状态类型枚举
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增枚举
-
-*****************************************************************************/
 enum DRV_AGENT_PORT_STATUS_ENUM
 {
     DRV_AGENT_PORT_STATUS_OFF              = 0,         /* 端口关闭 */
@@ -627,14 +474,7 @@ enum DRV_AGENT_PORT_STATUS_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_PORT_STATUS_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : DRV_AGENT_USIM_OPERATE_ENUM_UINT32
-枚举说明  : USIM操作类型枚举
 
-  1.日    期   : 2012年06月18日
-    作    者   : f00179208
-    修改内容   : 问题单:DTS2012060804905, 新增AT命令AT^APSIMST
-*****************************************************************************/
 enum DRV_AGENT_USIM_OPERATE_ENUM
 {
     DRV_AGENT_USIM_OPERATE_DEACT                = 0,         /* 去激活USIM */
@@ -644,32 +484,14 @@ enum DRV_AGENT_USIM_OPERATE_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_USIM_OPERATE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_MSG_TYPE_ENUM
- 结构说明  : AT与DRV AGENT消息接口枚举
-  1.日    期   : 2012年1月16日
-    作    者   : f62575
-    修改内容   : SMALL IMAGE特性合入: 新增下述四条消息
-                                DRV_AGENT_TSELRF_SET_REQ
-                                DRV_AGENT_HKADC_GET_REQ
-                                DRV_AGENT_TSELRF_SET_CNF
-                                DRV_AGENT_HKADC_GET_CNF
-  2.日    期   : 2012年02月06日
-    作    者   : 傅映君/f62575
-    修改内容   : B050特性合入: 新增下述两条消息
-                   DRV_AGENT_SECUBOOT_SET_REQ
-                   DRV_AGENT_SECUBOOT_SET_CNF
-  3.日    期   : 2012年12月26日
-    作    者   : m00217266
-    修改内容   : 删除在DSDA c核项目中调整的与WAS相关的消息ID
-*****************************************************************************/
+
 enum DRV_AGENT_MSG_TYPE_ENUM
 {
     /* 消息名称 */                      /*消息ID*/      /* 备注 */
     /* AT发给DRV AGENT的消息 */
     DRV_AGENT_MSID_QRY_REQ               = 0x0000,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
     DRV_AGENT_GCF_IND                    = 0x0002,
-    DRV_AGENT_GAS_MNTN_CMD               = 0x0006,
+
     DRV_AGENT_GPIOPL_SET_REQ             = 0x000E,
     DRV_AGENT_GPIOPL_QRY_REQ             = 0x0010,
     DRV_AGENT_DATALOCK_SET_REQ           = 0x0012,
@@ -690,9 +512,7 @@ enum DRV_AGENT_MSG_TYPE_ENUM
     DRV_AGENT_MFREELOCKSIZE_QRY_REQ      = 0x003A,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU*/
     /* Added by 傅映君/f62575 for CPULOAD&MFREELOCKSIZE处理过程移至C核, 2011/11/15, end */
 
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
     DRV_AGENT_MEMINFO_QRY_REQ            = 0x003B,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU*/
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
 
     DRV_AGENT_HARDWARE_QRY               = 0x003E, /*查询硬件版本号*/
     DRV_AGENT_FULL_HARDWARE_QRY          = 0x0040, /*查询完整的硬件版本号*/
@@ -747,22 +567,15 @@ enum DRV_AGENT_MSG_TYPE_ENUM
     DRV_AGENT_FACAUTHPUBKEY_SET_REQ      = 0x009C,                              /* _H2ASN_MsgChoice DRV_AGENT_FACAUTHPUBKEY_SET_REQ_STRU */
     DRV_AGENT_IDENTIFYSTART_SET_REQ      = 0x009E,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
     DRV_AGENT_IDENTIFYEND_SET_REQ        = 0x00A0,                              /* _H2ASN_MsgChoice DRV_AGENT_IDENTIFYEND_SET_REQ_STRU */
-    DRV_AGENT_SIMLOCKDATAWRITE_SET_REQ   = 0x00A2,                              /* _H2ASN_MsgChoice DRV_AGENT_SIMLOCKDATAWRITE_SET_REQ_STRU */
     DRV_AGENT_PHONESIMLOCKINFO_QRY_REQ   = 0x00A4,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
     DRV_AGENT_SIMLOCKDATAREAD_QRY_REQ    = 0x00A6,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
     DRV_AGENT_PHONEPHYNUM_SET_REQ        = 0x00A8,                              /* _H2ASN_MsgChoice DRV_AGENT_PHONEPHYNUM_SET_REQ_STRU */
     DRV_AGENT_PHONEPHYNUM_QRY_REQ        = 0x00AA,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
-    DRV_AGENT_PORTCTRLTMP_SET_REQ        = 0x00AC,                              /* _H2ASN_MsgChoice DRV_AGENT_PORTCTRLTMP_SET_REQ_STRU */
-    DRV_AGENT_PORTATTRIBSET_SET_REQ      = 0x00AE,                              /* _H2ASN_MsgChoice DRV_AGENT_PORTATTRIBSET_SET_REQ_STRU */
-    DRV_AGENT_PORTATTRIBSET_QRY_REQ      = 0x00B0,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
-    DRV_AGENT_OPWORD_SET_REQ             = 0x00B2,                              /* _H2ASN_MsgChoice DRV_AGENT_OPWORD_SET_REQ_STRU */
     /* Added by h59254 for V7R1C50_SAR Project, 2012/03/10, begin */
     DRV_AGENT_SARREDUCTION_SET_REQ       = 0x00B4,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
     /* Added by h59254 for V7R1C50_SAR Project, 2012/03/10, end */
 
-    /* Add by h00135900 for V7代码同步, 2012-04-07, Begin   */
     DRV_AGENT_INFORRS_SET_REQ            = 0x0100,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
-    /* Add by h00135900 for V7代码同步, 2012-04-07, End   */
 
     DRV_AGENT_MAX_LOCK_TIMES_SET_REQ     = 0x0102,
 
@@ -775,9 +588,7 @@ enum DRV_AGENT_MSG_TYPE_ENUM
     DRV_AGENT_HVPDH_REQ                  = 0x010A,
     /* Added by L47619 for V9R1 vSIM Project, 2013-8-27, end */
 
-    /* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, begin */
     DRV_AGENT_NVMANUFACTUREEXT_SET_REQ   = 0x010C,
-    /* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, end */
 
     DRV_AGENT_ANTSWITCH_SET_REQ          = 0x010E,                              /* _H2ASN_MsgChoice DRV_AGENT_ANTSWITCH_SET_STRU */
     DRV_AGENT_ANTSWITCH_QRY_REQ          = 0x0110,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU */
@@ -787,7 +598,7 @@ enum DRV_AGENT_MSG_TYPE_ENUM
 
     /* DRV AGENT发给AT的消息 */
     DRV_AGENT_MSID_QRY_CNF               = 0x0001,                              /* _H2ASN_MsgChoice DRV_AGENT_MSID_QRY_CNF_STRU */
-    DRV_AGENT_GAS_MNTN_CMD_RSP           = 0x0005,
+
     DRV_AGENT_GPIOPL_SET_CNF             = 0x000D,
     DRV_AGENT_GPIOPL_QRY_CNF             = 0x000F,
     DRV_AGENT_DATALOCK_SET_CNF           = 0x0011,
@@ -808,9 +619,7 @@ enum DRV_AGENT_MSG_TYPE_ENUM
     DRV_AGENT_MFREELOCKSIZE_QRY_CNF      = 0x0039,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU*/
     /* Added by 傅映君/f62575 for CPULOAD&MFREELOCKSIZE处理过程移至C核, 2011/11/15, end */
 
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
     DRV_AGENT_MEMINFO_QRY_CNF            = 0x003A,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU*/
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
 
     DRV_AGENT_HARDWARE_QRY_RSP           = 0x003D, /*回复硬件版本号*/
     DRV_AGENT_FULL_HARDWARE_QRY_RSP      = 0x003F, /*回复完整的硬件版本号*/
@@ -869,10 +678,8 @@ enum DRV_AGENT_MSG_TYPE_ENUM
     /* Added by h59254 for V7R1C50_SAR Project, 2012/03/10, begin */
     DRV_AGENT_ANTSTATE_QRY_IND           = 0x00AF,                              /* _H2ASN_MsgChoice AT_APPCTRL_STRU*/
     /* Added by h59254 for V7R1C50_SAR Project, 2012/03/10, end */
-    /* Add by h00135900 for V7代码同步, 2012-04-07, Begin   */
     DRV_AGENT_INFORRS_SET_CNF            = 0x0101,                              /* _H2ASN_MsgChoice DRV_AGENT_INFORRS_SET_CNF_STRU */
 
-    /* Add by h00135900 for V7代码同步, 2012-04-07, End   */
 
     DRV_AGENT_MAX_LOCK_TIMES_SET_CNF     = 0x0103,                              /* _H2ASN_MsgChoice DRV_AGENT_MAX_LOCK_TMS_SET_CNF_STRU */
 
@@ -884,9 +691,7 @@ enum DRV_AGENT_MSG_TYPE_ENUM
     DRV_AGENT_HVPDH_CNF                  = 0x0109,
     /* Added by L47619 for V9R1 vSIM Project, 2013-8-27, end */
 
-    /* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, begin */
     DRV_AGENT_NVMANUFACTUREEXT_SET_CNF   = 0x010B,
-    /* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, end */
 
     DRV_AGENT_ANTSWITCH_SET_CNF          = 0x010D,                              /* _H2ASN_MsgChoice DRV_AGENT_ANTSWITCH_SET_CNF_STRU */
     DRV_AGENT_ANTSWITCH_QRY_CNF          = 0x010F,                              /* _H2ASN_MsgChoice DRV_AGENT_ANTSWITCH_QRY_CNF_STRU */
@@ -901,14 +706,7 @@ enum DRV_AGENT_MSG_TYPE_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_MSG_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : AT_DEVICE_CMD_RAT_MODE_ENUM
- 结构说明  : 装备AT命令模式枚举
 
-  1.日    期   : 2011年10月15日
-    作    者   : o00132663
-    修改内容   : 创建
-*****************************************************************************/
 enum AT_DEVICE_CMD_RAT_MODE_ENUM
 {
     AT_RAT_MODE_WCDMA = 0,
@@ -924,7 +722,6 @@ enum AT_DEVICE_CMD_RAT_MODE_ENUM
 };
 typedef VOS_UINT8 AT_DEVICE_CMD_RAT_MODE_ENUM_UINT8;
 
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
 
 /* 查询软件内存事情类型  */
 enum AT_MEMQUERY_PARA_ENUM
@@ -935,18 +732,9 @@ enum AT_MEMQUERY_PARA_ENUM
 };
 typedef VOS_UINT32  AT_MEMQUERY_PARA_ENUM_UINT32;
 
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
 
 /* Added by L47619 for V9R1 vSIM Project, 2013-8-27, begin */
-/*****************************************************************************
-枚举名    : DRV_AGENT_DH_KEY_TYPE_ENUM
-枚举说明  : DH算法使用的秘钥类型
 
-  1.日    期   : 2013年8月27日
-    作    者   : L47619
-    修改内容   : V9R1 vSIM项目修改
-
-*****************************************************************************/
 enum DRV_AGENT_DH_KEY_TYPE_ENUM
 {
     DRV_AGENT_DH_KEY_SERVER_PUBLIC_KEY  = 0x00,          /* 服务器公钥 */
@@ -957,15 +745,7 @@ enum DRV_AGENT_DH_KEY_TYPE_ENUM
 };
 typedef VOS_UINT32 DRV_AGENT_DH_KEY_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : DRV_AGENT_HVPDH_ERR_ENUM
-枚举说明  : 设置DH算法的秘钥结果
 
-  1.日    期   : 2013年8月27日
-    作    者   : L47619
-    修改内容   : V9R1 vSIM项目修改
-
-*****************************************************************************/
 enum DRV_AGENT_HVPDH_ERR_ENUM
 {
     DRV_AGENT_HVPDH_NO_ERROR            = 0x00,          /* 操作成功 */
@@ -998,14 +778,7 @@ typedef VOS_UINT32 DRV_AGENT_HVPDH_ERR_ENUM_UINT32;
 
 
 /* Modify by f62575 for V7代码同步, 2012-04-07, Begin   */
-/*****************************************************************************
- 结构名    : DRV_AGENT_PSTANDBY _REQ_STRU
- 结构说明  : AT与AT AGENT AT^PSTANDBY设置命令结构
 
-  1.日    期   : 2012年04月12日
-    作    者   : f62575
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulStandbyTime;                          /* 单板进入待机状态的时间长度，(单位为ms),取值范围 0~65535,默认为5000。 */
@@ -1014,14 +787,7 @@ typedef struct
 /* Modify by f62575 for V7代码同步, 2012-04-07, End   */
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_REQ_STRU
- 结构说明  : AT与DRV AGENT的消息结构
 
-  1.日    期   : 2011年10月29日
-    作    者   : 鲁琳/l60609
-    修改内容   : AT Project: DRV AGENT给AT的消息结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -1035,41 +801,26 @@ typedef struct
 *****************************************************************************/
 
 
-/*****************************************************************************
- 枚举名    : GAS_AT_CMD_ENUM
- 结构说明  : GAS测试命令类型枚举结构
 
-  1.日    期   : 2011年10月15日
-    作    者   : o00132663
-    修改内容   : 创建
-
-  2.日    期   : 2016年5月7日
-    作    者   : f00367319
-    修改内容   : 结构体命名方式修改
-*****************************************************************************/
 enum GAS_AT_CMD_ENUM
 {
-    GAS_AT_CMD_GAS_STA          =   0,  /* GAS状态 */
-    GAS_AT_CMD_NCELL            =   1,  /* 邻区状态 */
-    GAS_AT_CMD_SCELL            =   2,  /* 服务小区状态 */
-    GAS_AT_CMD_MEASURE_DOWN     =   3,  /* 测量下移 */
-    GAS_AT_CMD_MEASURE_UP       =   4,  /* 测量上移 */
-    GAS_AT_CMD_FREQ_LOCK        =   5,  /* 锁频点，允许被动重选 */
-    GAS_AT_CMD_FREQ_UNLOCK      =   6,  /* 解锁 */
-    GAS_AT_CMD_FREQ_SPEC_SEARCH =   7,  /* 指定频点搜网 */
+    GAS_AT_CMD_GAS_STA              =   0,  /* GAS状态 */
+    GAS_AT_CMD_NCELL                =   1,  /* 邻区状态 */
+    GAS_AT_CMD_SCELL                =   2,  /* 服务小区状态 */
+    GAS_AT_CMD_MEASURE_DOWN         =   3,  /* 测量下移 */
+    GAS_AT_CMD_MEASURE_UP           =   4,  /* 测量上移 */
+    GAS_AT_CMD_FREQ_LOCK            =   5,  /* 锁频点，允许被动重选 */
+    GAS_AT_CMD_FREQ_UNLOCK          =   6,  /* 解锁 */
+    GAS_AT_CMD_FREQ_SPEC_SEARCH     =   7,  /* 指定频点搜网 */
+    GAS_AT_CMD_ADD_FORB_CELL        =   8,  /* 添加禁止小区 */
+    GAS_AT_CMD_DEL_FORB_CELL        =   9,  /* 删除禁止小区 */
+    GAS_AT_CMD_DEL_HISTORY_SI_DATA  =   10, /* 删除历史消息 */
     GAS_AT_CMD_BUTT
 };
 
 typedef VOS_UINT8 GAS_AT_CMD_ENUM_U8;
 
-/*****************************************************************************
- 枚举名    : GAS_AT_CMD_ENUM
- 结构说明  : GAS测试命令结构
 
-  1.日    期   : 2011年10月15日
-    作    者   : o00132663
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     GAS_AT_CMD_ENUM_U8                  ucCmd;
@@ -1078,28 +829,7 @@ typedef struct
     VOS_UINT32                          aulPara[10];
 }GAS_AT_CMD_STRU;
 
-/*****************************************************************************
- 枚举名    : GAS_AT_CMD_ENUM
- 结构说明  : GAS测试命令结果结构
 
-  1.日    期   : 2011年10月15日
-    作    者   : o00132663
-    修改内容   : 创建
-*****************************************************************************/
-typedef struct
-{
-    VOS_UINT32                          ulRsltNum;
-    VOS_UINT32                          aulRslt[20];
-}GAS_AT_RSLT_STRU;
-
-/*****************************************************************************
- 结构名    : DRV_AGENT_MSID_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询MS ID信息消息回复结构
-
-  1.日    期   : 2011年10月15日
-    作    者   : o00132663
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                      stAtAppCtrl;                                   /* AT用户控制结构 */
@@ -1110,14 +840,7 @@ typedef struct
 } DRV_AGENT_MSID_QRY_CNF_STRU;
 
 /* Added by f62575 for SMALL IMAGE, 2012-1-3, begin   */
-/*****************************************************************************
- 结构名    : DRV_AGENT_TSELRF_SET_REQ_STRU
- 结构说明  : ^TSELRF设置命令，请求加载DSP
-             ucLoadDspMode  请求加载的DSP模式
- 1.日    期   : 20112年1月10日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucLoadDspMode;
@@ -1126,13 +849,7 @@ typedef struct
 /* Added by f62575 for SMALL IMAGE, 2012-1-3, end   */
 
 /* Added by f62575 for AT Project，2011-10-04,  Begin*/
-/*****************************************************************************
- 结构名    : DRV_AGENT_APPDMVER_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询AP PDMVER信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                          stAtAppCtrl;
@@ -1141,13 +858,7 @@ typedef struct
     VOS_UINT8                                aucReserved1[3];
 } DRV_AGENT_APPDMVER_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DLOADINFO_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询DLOADINFO信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                           stAtAppCtrl;
@@ -1155,13 +866,7 @@ typedef struct
     VOS_UCHAR                                 aucDlodInfo[TAF_DLOAD_INFO_LEN];
 } DRV_AGENT_DLOADINFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_AUTHORITYVER_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询AUTHORITYVER信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                              stAtAppCtrl;
@@ -1170,13 +875,7 @@ typedef struct
     VOS_UINT8                                    aucReserved1[1];
 } DRV_AGENT_AUTHORITYVER_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_AUTHORITYID_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询DLOADINFO信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                             stAtAppCtrl;
@@ -1185,26 +884,14 @@ typedef struct
     VOS_UINT8                                   aucReserved1[1];
 } DRV_AGENT_AUTHORITYID_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PFVER_REQ_STRU
- 结构说明  : 平台软件版本号
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucPfVer[TAF_MAX_PROPLAT_LEN + 1];
     VOS_CHAR                            acVerTime[AT_AGENT_DRV_VERSION_TIME_LEN];
 }DRV_AGENT_PFVER_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PFVER_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询PFVER信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                       stAtAppCtrl;
@@ -1212,26 +899,14 @@ typedef struct
     DRV_AGENT_PFVER_INFO_STRU             stPfverInfo;
 } DRV_AGENT_PFVER_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SDLOAD_SET_CNF_STRU
- 结构说明  : AT与AT AGENT 设置SDLOAD 消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                               stAtAppCtrl;
     DRV_AGENT_SDLOAD_SET_ERROR_ENUM_UINT32        enResult;
 } DRV_AGENT_SDLOAD_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DLOADVER_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询DLOADVER 消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                               stAtAppCtrl;
@@ -1240,26 +915,14 @@ typedef struct
     VOS_UINT8                                     ucReserved1;
 } DRV_AGENT_DLOADVER_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DLOADINFO_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 设置GODLOAD 信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                          stAtAppCtrl;
     DRV_AGENT_GODLOAD_SET_ERROR_ENUM_UINT32  enResult;
 } DRV_AGENT_GODLOAD_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_HWNATQRY_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询HWNATQRY信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                          stAtAppCtrl;
@@ -1268,18 +931,7 @@ typedef struct
 } DRV_AGENT_HWNATQRY_QRY_CNF_STRU;
 
 /* Added by 傅映君/f62575 for CPULOAD&MFREELOCKSIZE处理过程移至C核, 2011/11/15, begin */
-/*****************************************************************************
- 结构名    : DRV_AGENT_CPULOAD_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询CPULOAD信息消息回复结构
- 1.日    期   : 2011年11月12日
-   作    者   : f62575
-   修改内容   : 新生成函数
 
- 2.日    期   : 2017年3月31日
-   作    者   : wx270776
-   修改内容   : 支持查询多核CPU负载
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                          stAtAppCtrl;
@@ -1287,13 +939,7 @@ typedef struct
     VOS_UINT32                               aulCurCpuLoad[TAF_MAX_CPU_CNT];
 } DRV_AGENT_CPULOAD_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_MFREELOCKSIZE_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询MFREELOCKSIZE信息消息回复结构
- 1.日    期   : 2011年11月12日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;
@@ -1302,14 +948,7 @@ typedef struct
 }DRV_AGENT_MFREELOCKSIZE_QRY_CNF_STRU;
 /* Added by 傅映君/f62575 for CPULOAD&MFREELOCKSIZE处理过程移至C核, 2011/11/15, end */
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DLOAD_FLASH_STRU
- 结构说明  :升级Flash信息;该结构与DLOAD_FLASH_STRU_S一致
 
- 1.日    期   : 2011年11月1日
-   作    者   : l60609
-   修改内容   : 新生成函数
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                              ulBlockCount;                       /*Block个数*/
@@ -1317,13 +956,7 @@ typedef struct
     VOS_UINT32                              ulPgCntPerBlk;                      /*一个Block中的page个数*/
 }DRV_AGENT_DLOAD_FLASH_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_FLASHINFO_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询FLASHINFO信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                           stAtAppCtrl;
@@ -1331,13 +964,7 @@ typedef struct
     DRV_AGENT_DLOAD_FLASH_STRU                stFlashInfo;
 } DRV_AGENT_FLASHINFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_AUTHVER_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询AUTHVER信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                           stAtAppCtrl;
@@ -1345,13 +972,7 @@ typedef struct
     VOS_UINT32                                ulSimLockVersion;
 } DRV_AGENT_AUTHVER_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_APPDMVER_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询AP PDMVER信息消息回复结构
- 1.日    期   : 2011年10月4日
-   作    者   : f62575
-   修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                          stAtAppCtrl;
@@ -1359,50 +980,19 @@ typedef struct
 } DRV_AGENT_SDLOAD_QRY_CNF_STRU;
 /* Added by f62575 for AT Project，2011-10-04,  End*/
 
-/* Added by o00132663 for AT Project，2011-10-04,  Begin */
-/*****************************************************************************
- 结构名    : DRV_AGENT_VERSION_CTRL_STRU
- 结构说明  : AT与AT AGENT版本查询与控制结构
 
-1.日    期   : 2011年10月15日
-  作    者   : o00132663
-  修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucType;                                 /* 组件类型: COMP_TYPE_I */
-    VOS_UINT8                           ucMode;                                 /* 操作模式: 读或者写 */
+    VOS_UINT8                           ucMode;
     VOS_UINT8                           aucReserved[1];                         /* 数据指针 */
     VOS_UINT8                           ucLen;                                  /* 数据长度 */
     VOS_CHAR                            aucData[AT_MAX_VERSION_LEN];
 } DRV_AGENT_VERSION_CTRL_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_GAS_MNTN_CMD_CNF_STRU
- 结构说明  : AT与AT AGENT AT^CGAS命令回复结构
 
-1.日    期   : 2011年10月15日
-  作    者   : o00132663
-  修改内容   : 创建
-*****************************************************************************/
-typedef struct
-{
-    AT_APPCTRL_STRU                     stAtAppCtrl;
-    VOS_UINT32                          ulResult;
-    GAS_AT_CMD_ENUM_U8                  ucCmd;
-    VOS_UINT8                           aucReserved[3];
-    GAS_AT_RSLT_STRU                    stAtCmdRslt;
-} DRV_AGENT_GAS_MNTN_CMD_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : AT_DRV_AGENT_RXDIV_SET_STRU
- 结构说明  : AT与AT AGENT AT^RXDIV设置命令结构
 
-修改历史      :
- 1.日    期   : 2011年10月5日
-   作    者   : C00173809
-   修改内容   : 新生成函数
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usDspBand;       /*DSP格式的频段值*/
@@ -1411,15 +1001,7 @@ typedef struct
     VOS_UINT32                          ulSetLowBands;   /*转换位数字格式的分集低位*/
     VOS_UINT32                          ulSetHighBands;  /*转换位数字格式的分集高位*/
 } AT_DRV_AGENT_RXDIV_SET_STRU;
-/*****************************************************************************
- 结构名    : DRV_AGENT_RXDIV_CNF_STRU
- 结构说明  : AT与AT AGENT AT^RXDIV命令回复结构
 
-修改历史      :
- 1.日    期   : 2011年10月5日
-   作    者   : C00173809
-   修改内容   : 新生成函数
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;        /*消息头*/
@@ -1428,15 +1010,7 @@ typedef struct
     VOS_UINT8                           ucReserve;          /*保留位*/
     VOS_UINT16                          usSetDivBands;      /*要设置的BAND*/
 } DRV_AGENT_AT_RXDIV_CNF_STRU;
-/*****************************************************************************
- 结构名    : DRV_AGENT_QRY_RXDIV_CNF_STRU
- 结构说明  : AT与AT AGENT AT^RXDIV命令回复结构
 
-修改历史      :
- 1.日    期   : 2011年10月22日
-   作    者   : C00173809
-   修改内容   : 新生成函数
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;        /*消息头*/
@@ -1445,50 +1019,21 @@ typedef struct
     VOS_UINT16                          usCurBandSwitch;    /*当前设置的BAND*/
 } DRV_AGENT_QRY_RXDIV_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SIMLOCK_SET_REQ_STRU
- 结构说明  : DRV与AT AGENT simlock的校验的消息结构
 
- 1.日    期   : 2011年11月3日
-    作    者   : C00173809
-    修改内容   : 新增结构体
- 2.日    期   : 2012年02月20日
-    作    者   : L60609
-    修改内容   : 结构中删除错误次数，直接在C核记录
-
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulPwdLen;
     VOS_UINT8                           aucPwd[TAF_PH_ME_PERSONALISATION_PWD_LEN_MAX +4];
 }DRV_AGENT_SIMLOCK_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SET_SIMLOCK_CNF_STRU
- 结构说明  : DRV与AT AGENT simlock的校验的消息结构
 
- 1.日    期   : 2011年11月3日
-    作    者   : C00173809
-    修改内容   : 新增结构体
-  2.日    期   : 2012年2月20日
-    作    者   : l60609
-    修改内容   : B060 Prj:AT不需要记录SIMLOCK错误次数，删除全局变量g_ucAtSi-
-                 mLockErrTimes
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                            /*消息头*/
     VOS_UINT32                          ulResult;                               /*返回结果*/
 }DRV_AGENT_SET_SIMLOCK_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DRV_AGENT_HARDWARE_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT AT^HWVER命令回复结构
 
-1.日    期   : 2011年10月15日
-  作    者   : c00173809
-  修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                            /*消息头*/
@@ -1496,14 +1041,7 @@ typedef struct
     VOS_UINT8                           aucHwVer[DRV_AGENT_MAX_HARDWARE_LEN+1]; /*硬件版本号*/
 } DRV_AGENT_HARDWARE_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DRV_AGENT_FULL_HARDWARE_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT AT^FHVER命令回复结构
 
-1.日    期   : 2011年10月15日
-  作    者   : c00173809
-  修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                                        /*消息头*/
@@ -1514,34 +1052,19 @@ typedef struct
 } DRV_AGENT_FULL_HARDWARE_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_NVRESTORE_RST_STRU
- 结构说明  : AT与AT AGENT AT^NVRESTORE设置命令回复结构
 
-  1.日    期   : 2011年11月03日
-    作    者   : f00179208
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                            /*消息头*/
     VOS_UINT32                          ulResult;                               /*返回结果*/
 } DRV_AGENT_NVRESTORE_RST_STRU;
 
-/* Added by o00132663 for AT Project，2011-10-04,  End */
 
 #define AT_SD_DATA_UNIT_LEN             (512)
 #define AT_GPIOPL_MAX_LEN               (20)
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_GPIOPL_SET_REQ_STRU
- 结构说明  : DRV与AT AGENT设置GPIO电平消息的请求结构
 
- 1.日    期   : 2011年10月15日
-    作    者   : w00181244
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          enGpioOper;
@@ -1549,14 +1072,7 @@ typedef struct
 
 }DRV_AGENT_GPIOPL_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_GPIOPL_SET_CNF_STRU
- 结构说明  : DRV与AT AGENT设置GPIO电平消息的请求结构
 
- 1.日    期   : 2011年10月15日
-    作    者   : w00181244
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1565,14 +1081,7 @@ typedef struct
 }DRV_AGENT_GPIOPL_SET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_GPIOPL_QRY_CNF_STRU
- 结构说明  : DRV与AT AGENT查询GPIO电平消息的回复结构
 
-  1.日    期   : 2011年10月15日
-    作    者   : w00181244
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1581,14 +1090,7 @@ typedef struct
 
 }DRV_AGENT_GPIOPL_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DATALOCK_SET_REQ_STRU
- 结构说明  : DRV与AT AGENT datalock的校验的消息结构
 
- 1.日    期   : 2011年10月15日
-    作    者   : w00181244
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucPwd[TAF_PH_ME_PERSONALISATION_PWD_LEN_MAX +1];
@@ -1596,14 +1098,7 @@ typedef struct
 }DRV_AGENT_DATALOCK_SET_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_DATALOCK_SET_CNF_STRU
- 结构说明  : DRV与AT AGENT datalock的校验的消息回复结构
 
- 1.日    期   : 2011年10月15日
-    作    者   : w00181244
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1611,14 +1106,7 @@ typedef struct
 
 }DRV_AGENT_DATALOCK_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_TBATVOLT_QRY_CNF_STRU
- 结构说明  : DRV与AT AGENT 查询电池电压的消息回复结构
 
-1.日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
 
@@ -1628,14 +1116,7 @@ typedef struct
 
 }DRV_AGENT_TBATVOLT_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_TMODE_SET_CNF
- 结构说明  : AT与AT AGENT 设置升级标志位的消息结构
 
-1.日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1643,15 +1124,7 @@ typedef struct
 
 }DRV_AGENT_TMODE_SET_CNF_STRU;
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_VERSION_QRY_ERROR_ENUM
- 结构说明  : ^VERSION命令查询操作结果错误码列表
 
- 1. 日    期   : 2011年10月15日
-    作    者   : w00181244
-    修改内容   : 新增枚举
-
-*****************************************************************************/
 enum DRV_AGENT_VERSION_QRY_ERROR_ENUM
 {
     DRV_AGENT_VERSION_QRY_NO_ERROR              = 0,
@@ -1662,14 +1135,7 @@ enum DRV_AGENT_VERSION_QRY_ERROR_ENUM
 typedef VOS_UINT32 DRV_AGENT_VERSION_QRY_ERROR_ENUM_UINT32;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_VERSION_QRY_CNF_STRU
- 结构说明  : DRV与AT AGENT 查询版本信息的回复消息结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                          stAtAppCtrl;
@@ -1684,23 +1150,7 @@ typedef struct
 
 }DRV_AGENT_VERSION_QRY_CNF_STRU;
 
-/*******************************************************************************
- 结构名    : WCDMA_PREF_BAND_STRU
- 协议表格  :
- ASN.1描述 :
- 结构说明  : union WCDMA_BAND_SET_UN成员BitBand定义
-             bit位置1表示该频段有效
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-2. 日    期   : 2012年5月10日
-   作    者   : f62575
-   修改内容   : DTS2012051007817 解决SFEATURE查询命令没有WCDMA 的BAND11输出问题
-3. 日    期   : 2012年11月12日
-   作    者   : t00212959
-   修改内容   : DTS2012103101740,MMA中Band结构改为UINT32,AT保持一致
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT32                          BandWCDMA_I_2100      :1;
@@ -1719,20 +1169,7 @@ typedef struct
     VOS_UINT32                          BandSpare13           :13;
 }AT_WCDMA_PREF_BAND_STRU;
 
-/*******************************************************************************
- 结构名    :GSM_PREF_BAND_STRU
- 协议表格  :
- ASN.1描述 :
- 结构说明  : union GSM_BAND_SET_UN成员BitBand定义
-             bit位置1表示该频段有效
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-2. 日    期   : 2012年11月12日
-   作    者   : t00212959
-   修改内容   : DTS2012103101740,MMA中Band结构改为UINT32,AT保持一致
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT32                          BandGsm450      :1;
@@ -1748,38 +1185,14 @@ typedef struct
 
 }AT_GSM_PREF_BAND_STRU;
 
-/*******************************************************************************
- 结构名    : WCDMA_BAND_SET_UN
- 协议表格  :
- ASN.1描述 :
- 结构说明  : WCDMA频段union定义
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-2. 日    期   : 2012年11月12日
-   作    者   : t00212959
-   修改内容   : DTS2012103101740,MMA中Band结构改为UINT32,AT保持一致
-*******************************************************************************/
 typedef union
 {
     VOS_UINT32                          ulBand;
     AT_WCDMA_PREF_BAND_STRU             BitBand;
 }AT_WCDMA_BAND_SET_UN;
 
-/*******************************************************************************
- 结构名    : GSM_BAND_SET_UN
- 协议表格  :
- ASN.1描述 :
- 结构说明  : GSM频段union定义
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-2. 日    期   : 2012年11月12日
-   作    者   : t00212959
-   修改内容   : DTS2012103101740,MMA中Band结构改为UINT32,AT保持一致
-*******************************************************************************/
 typedef union
 {
     VOS_UINT32                          ulBand;
@@ -1787,16 +1200,7 @@ typedef union
 }AT_GSM_BAND_SET_UN;
 
 
-/*******************************************************************************
- 结构名    : AT_UE_BAND_CAPA_ST
- 协议表格  :
- ASN.1描述 :
- 结构说明  : 单板支持频段信息
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulUeGSptBand;
@@ -1806,15 +1210,7 @@ typedef struct
     AT_GSM_BAND_SET_UN                  unGRFSptBand;
 }AT_UE_BAND_CAPA_ST;
 
-/*****************************************************************************
- 枚举名    : AT_FEATURE_DRV_TYPE_ENUM
- 协议表格  :
- 枚举说明  : 驱动支持特性的枚举
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 enum AT_FEATURE_DRV_TYPE_ENUM
 {
     AT_FEATURE_LTE = 0,
@@ -1839,16 +1235,7 @@ typedef VOS_UINT32  AT_FEATURE_DRV_TYPE_ENUM_UINT32;
 #define AT_FEATURE_CONTENT_LEN_MAX    (56)
 
 
-/*****************************************************************************
- 结构名    : AT_PRO_FEA_INFO_ST
- 协议表格  :
- ASN.1描述 :
- 结构说明  : 对应驱动支持的特性
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8        ucFeatureFlag;
@@ -1856,16 +1243,7 @@ typedef struct
     VOS_UINT8        aucContent[AT_FEATURE_CONTENT_LEN_MAX];
 }AT_FEATURE_SUPPORT_ST;
 
-/*****************************************************************************
- 结构名    : AT_RF_CAPA_STRU
- 协议表格  :
- ASN.1描述 :
- 结构说明  : RF 能力信息
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucPowerClass;       /* UE功率级别                      */
@@ -1874,17 +1252,7 @@ typedef struct
 } AT_RF_CAPA_STRU;
 
 
-/*****************************************************************************
- 结构名    : AT_UE_CAPA_STRU
- 协议表格  :
- ASN.1描述 :
- 结构说明  : en_NV_Item_WAS_RadioAccess_Capa NV项对应的结构，
-             用于保存是否使能了HSDPA、HSUPA、HSDPA能力等级
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulHspaStatus;       /* 0表示未激活,那么DPA和UPA都支持;1表示激活           */
@@ -1902,14 +1270,7 @@ typedef struct
     VOS_UINT8                           enHSDSCHSupport;     /* 是否支持enHSDSCHSupport的标志  */
 } AT_UE_CAPA_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SFEATURE_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询版本频段信息的消息结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1918,13 +1279,7 @@ typedef struct
 }DRV_AGENT_SFEATURE_QRY_CNF_STRU;
 
 /* Added by f62575 for B050 Project, 2012-2-3, begin   */
-/*****************************************************************************
- 结构名    : DRV_AGENT_SECUBOOT_SET_CNF_STRU
- 结构说明  : AT与AT AGENT 使能Secure Boot 功能的消息回复结构
- 1.日    期   : 2012年02月06日
-   作    者   : f62575
-   修改内容   : 新增结构体
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1932,14 +1287,7 @@ typedef struct
 }DRV_AGENT_SECUBOOT_SET_CNF_STRU;
 /* Added by f62575 for B050 Project, 2012-2-3, end   */
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SECUBOOT_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询Secure Boot 功能使能状态的消息回复结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1949,14 +1297,7 @@ typedef struct
 }DRV_AGENT_SECUBOOT_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SECUBOOTFEATURE_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询Secure Boot 版本的消息回复结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -1965,14 +1306,7 @@ typedef struct
     VOS_UINT8                           aucReserve1[7];                          /* 4字节对齐，保留 */
 }DRV_AGENT_SECUBOOTFEATURE_QRY_CNF_STRU;
 
-/*****************************************************************************
- 枚举名    : AT_DEVICE_CMD_BAND_ENUM
- 枚举说明  : 装备频段信息
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 enum AT_DEVICE_CMD_BAND_ENUM
 {
     AT_BAND_2100M = 0,
@@ -1992,14 +1326,7 @@ enum AT_DEVICE_CMD_BAND_ENUM
 };
 typedef VOS_UINT8 AT_DEVICE_CMD_BAND_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : AT_DSP_BAND_ARFCN_STRU
- 结构说明  : 信道信息
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usUlArfcn;  /*上行的Channel No*/
@@ -2008,32 +1335,14 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }AT_DSP_BAND_ARFCN_STRU;
 
-/*****************************************************************************
- 结构名    : AT_ARFCN_RANGE_STRU
- 结构说明  :每个信道对应的Afrcn的最大值和最小值
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16             usArfcnMin;
     VOS_UINT16             usArfcnMax;
 }AT_ARFCN_RANGE_STRU;
 
-/*****************************************************************************
- 枚举名    : AT_TMODE_ENUM
- 枚举说明  : 装备模式信息
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-2.日    期   : 2012年1月3日
-  作    者   : f62575
-  修改内容   : SMALL IMAGE特性合入: 新增自动关机下电过程，
-               原<TESTMODE>4以上操作向后移动7个数值，从11开始
-*****************************************************************************/
 enum AT_TMODE_ENUM
 {
     AT_TMODE_NORMAL = 0,   /*信令模式,正常服务状态*/
@@ -2058,14 +1367,7 @@ enum AT_TMODE_ENUM
 };
 typedef VOS_UINT8  TAF_PH_TMODE_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_FCHAN_SET_REQ_STRU
- 结构说明  : DRV与AT AGENT 设置 FCHAN 的消息结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucLoadDspMode;
@@ -2079,14 +1381,7 @@ typedef struct
 }DRV_AGENT_FCHAN_SET_REQ_STRU;
 
 
-/*****************************************************************************
- 枚举名    : DRV_AGENT_FCHAN_SET_ERROR_ENUM
- 结构说明  : FCHAN_命令设置操作结果错误码列表
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增枚举
-*****************************************************************************/
 enum DRV_AGENT_FCHAN_SET_ERROR_ENUM
 {
     DRV_AGENT_FCHAN_SET_NO_ERROR                            = 0,
@@ -2099,14 +1394,7 @@ enum DRV_AGENT_FCHAN_SET_ERROR_ENUM
 typedef VOS_UINT32 DRV_AGENT_FCHAN_SET_ERROR_ENUM_UINT32;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_FCHAN_SET_CNF_STRU
- 结构说明  : AT与AT AGENT 设置 FCHAN 的消息回复结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                       stAtAppCtrl;
@@ -2116,13 +1404,7 @@ typedef struct
 }DRV_AGENT_FCHAN_SET_CNF_STRU;
 
 
-/*****************************************************************************
-  定义说明  :  MS支持的接收分集类型定义
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 #define AT_MS_SUPPORT_RX_DIV_2100           0x0001
 #define AT_MS_SUPPORT_RX_DIV_1900           0x0002
 #define AT_MS_SUPPORT_RX_DIV_1800           0x0004
@@ -2134,15 +1416,7 @@ typedef struct
 #define AT_MS_SUPPORT_RX_DIV_IX_1700        0x0100
 
 
-/*****************************************************************************
- 枚举名    : AT_DSP_RF_ON_OFF_ENUM_UINT8
- 协议表格  :
- 枚举说明  : RF开关
 
-1. 日    期   : 2011年10月18日
-   作    者   : w00181244
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 enum AT_DSP_RF_ON_OFF_ENUM
 {
     AT_DSP_RF_SWITCH_OFF = 0,
@@ -2151,32 +1425,15 @@ enum AT_DSP_RF_ON_OFF_ENUM
 };
 typedef VOS_UINT8 AT_DSP_RF_ON_OFF_ENUM_UINT8;
 
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
-/*****************************************************************************
- 枚举名    : AT_PID_MEM_INFO_PARA_STRU
- 协议表格  :
- 枚举说明  : 每个PID的内存占用情况的结构体
 
-1. 日    期   : 2011年11月30日
-   作    者   : l00171473
-   修改内容   : 从 AtCmdProc.h中移植过来
-*****************************************************************************/
 typedef struct
 {
     VOS_PID                             ulPid;
     VOS_UINT32                          ulMsgPeakSize;
     VOS_UINT32                          ulMemPeakSize;
 }AT_PID_MEM_INFO_PARA_STRU;
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_RXPRI_SET_REQ_STRU
- 结构说明  : AT与AT AGENT 设置 RXPRI 的消息结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulSetLowBands;
@@ -2185,14 +1442,7 @@ typedef struct
 }DRV_AGENT_RXPRI_SET_REQ_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_RXPRI_SET_CNF_STRU
- 结构说明  : AT与AT AGENT 设置 RXPRI 的消息回复结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2205,14 +1455,7 @@ typedef struct
 }DRV_AGENT_RXPRI_SET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PRODTYPE_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询 PRODTYPE 的消息回复结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2221,14 +1464,7 @@ typedef struct
 }DRV_AGENT_PRODTYPE_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_TBAT_QRY_CNF_STRU
- 结构说明  : AT与AT AGENT 查询 TBAT 的消息回复结构
 
-1. 日    期   : 2012年1月13日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2237,14 +1473,7 @@ typedef struct
 }DRV_AGENT_TBAT_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_RXPRI_QRY_CNF_STRU
- 结构说明  : DRV与AT AGENT  获取驱动支持的RX分集
 
-1. 日    期   : 2011年10月22日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                      stAtAppCtrl;
@@ -2253,14 +1482,7 @@ typedef struct
     VOS_BOOL                             bFail;
 }DRV_AGENT_RXPRI_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_ADC_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT 设置 ADC 的消息请求结构
 
-1. 日    期   : 2011年11月5日
-   作    者   : w00181244
-   修改内容   : 从monitorps.h中移植过来
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                  ulIsEnable;           /*是否需要启动保护机制, 0为关闭，1为开启*/
@@ -2269,14 +1491,7 @@ typedef struct
     VOS_INT32                   lResumeAdcThreshold;  /*恢复到正常模式的温度门限*/
 }SPY_TEMP_THRESHOLD_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_ADC_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT 设置 RXPRI 的消息回复结构
 
-1. 日    期   : 2011年10月15日
-   作    者   : w00181244
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                        stAtAppCtrl;
@@ -2284,14 +1499,7 @@ typedef struct
 
 }DRV_AGENT_ADC_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_VERSION_TIME_STRU
- 结构说明  : AT与AT AGENT版本查询与控制结构
 
-  1.日    期   : 2011年10月15日
-    作    者   : o00132663
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2323,14 +1531,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 } DRV_AGENT_YJCX_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_IMSICHG_QRY_CNF_STRU
- 结构说明  : DRV与TAF DRV AGENT查询IMSICHG回复结构
 
-1. 日    期   : 2011年11月3日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2339,45 +1540,22 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }DRV_AGENT_IMSICHG_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_INFORBU_SET_CNF_STRU
- 结构说明  : DRV与TAF DRV AGENT设置INFORBU回复结构
 
-1. 日    期   : 2011年11月3日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
     VOS_UINT32                          ulRslt;
 }DRV_AGENT_INFORBU_SET_CNF_STRU;
 
-/* Add by h00135900 for V7代码同步, 2012-04-07, Begin   */
-/*****************************************************************************
- 结构名    : DRV_AGENT_INFORRS_SET_CNF_STRU
- 结构说明  : DRV与TAF DRV AGENT设置INFORRU回复结构
 
-1. 日    期   : 2012年04月11日
-   作    者   : H00135900
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
     VOS_UINT32                          ulRslt;
 }DRV_AGENT_INFORRS_SET_CNF_STRU;
 
-/* Add by h00135900 for V7代码同步, 2012-04-07, End   */
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_CPNN_TEST_CNF_STRU
- 结构说明  : DRV与TAF DRV AGENT CPNN测试命令回复结构
 
-1. 日    期   : 2011年11月3日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2387,43 +1565,21 @@ typedef struct
 
 }DRV_AGENT_CPNN_TEST_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_CPNN_TEST_CNF_STRU
- 结构说明  : DRV与TAF DRV AGENT CPNN测试命令回复结构
 
-1. 日    期   : 2011年11月3日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
     VOS_UINT32                          ulRslt;
 }DRV_AGENT_NVBACKUP_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_CPNN_QRY_CNF_STRU
- 结构说明  : DRV与TAF DRV AGENT CPNN查询命令回复结构
 
-1. 日    期   : 2011年11月3日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
     VOS_BOOL                            bNormalSrvStatus;
 }DRV_AGENT_CPNN_QRY_CNF_STRU;
 
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
-/*****************************************************************************
- 结构名    : DRV_AGENT_MEMINFO_QRY_RSP_STRU
- 结构说明  : DRV与TAF AGENT AT^MEMINFO命令回复结构
 
-  1.日    期   : 2011年11月29日
-    作    者   : l00171473
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                         stAtAppCtrl;
@@ -2432,17 +1588,9 @@ typedef struct
     VOS_UINT32                              ulPidNum;                           /* PID的个数 */
     VOS_UINT8                               aucData[4];                         /* 每个PID的内存使用情况 */
 }DRV_AGENT_MEMINFO_QRY_RSP_STRU;
-/* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
 
 /* Added by f62575 for SMALL IMAGE, 2012-1-3, begin */
-/*****************************************************************************
- 结构名    : DRV_AGENT_TSELRF_SET_CNF_STRU
- 结构说明  : DRV与TAF DRV AGENT TSELRF设置命令回复结构
 
-1. 日    期   : 20112年01月10日
-   作    者   : f62575
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                         stAtAppCtrl;
@@ -2451,14 +1599,7 @@ typedef struct
     VOS_UINT8                               aucReserved[3];
 }DRV_AGENT_TSELRF_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_HKADC_GET_CNF_STRU
- 结构说明  : AT与DRV AGENT 获取HKADC电压 的消息回复结构
 
-1. 日    期   : 20112年01月10日
-   作    者   : f62575
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                             stAtAppCtrl;
@@ -2470,27 +1611,13 @@ typedef struct
 /* Added by f62575 for SMALL IMAGE, 2012-1-3, End */
 
 #if (FEATURE_ON == FEATURE_SECURITY_SHELL)
-/*****************************************************************************
- 结构名    : DRV_AGENT_SPWORD_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT 获取SPWORD的消息请求结构
 
-1. 日    期   : 2012年02月21日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_CHAR                            acShellPwd[AT_SHELL_PWD_LEN];
 }DRV_AGENT_SPWORD_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SPWORD_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT 获取SPWORD的消息回复结构
 
-1. 日    期   : 2012年02月21日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2498,13 +1625,7 @@ typedef struct
 }DRV_AGENT_SPWORD_SET_CNF_STRU;
 #endif
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_NVBACKUPSTAT_QRY_CNF_STRU
- 结构说明  : AT与DRV AGENT查询NV备份状态信息消息回复结构
- 1.日    期   : 2012年02月16日
-   作    者   : l00198894
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                            /* 消息头 */
@@ -2512,13 +1633,7 @@ typedef struct
     VOS_UINT32                          ulNvBackupStat;                         /* NV备份状态 */
 }DRV_AGENT_NVBACKUPSTAT_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_NANDBBC_QRY_CNF_STRU
- 结构说明  : AT与DRV AGENT查询NAND FLASH的所有坏块索引列表消息回复结构
- 1.日    期   : 2012年02月16日
-   作    者   : l00198894
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                            /* 消息头 */
@@ -2528,13 +1643,7 @@ typedef struct
 } DRV_AGENT_NANDBBC_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_NAND_DEV_INFO_STRU
- 结构说明  : AT与DRV AGENT查询NAND FLASH的设备信息消息回复结构
- 1.日    期   : 2012年02月16日
-   作    者   : l00198894
-   修改内容   : 新增结构
-*****************************************************************************/
+
 #define DRV_AGENT_NAND_MFU_NAME_MAX_LEN     16                                  /* 厂商名称最大长度 */
 #define DRV_AGENT_NAND_DEV_SPEC_MAX_LEN     32                                  /* 设备规格最大长度 */
 
@@ -2546,13 +1655,7 @@ typedef struct
     VOS_UINT8       aucDevSpec[DRV_AGENT_NAND_DEV_SPEC_MAX_LEN];                /* 设备规格字符串 */
 } DRV_AGENT_NAND_DEV_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_NANDVER_QRY_CNF_STRU
- 结构说明  : AT与DRV AGENT查询NAND FLASH的型号信息消息回复结构
- 1.日    期   : 2012年02月16日
-   作    者   : l00198894
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                 /* 消息头 */
@@ -2560,13 +1663,7 @@ typedef struct
     DRV_AGENT_NAND_DEV_INFO_STRU        stNandDevInfo;               /* 设备信息 */
 } DRV_AGENT_NANDVER_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_CHIPTEMP_QRY_CNF_STRU
- 结构说明  : AT与DRV AGENT查询PA、SIM卡和电池的温度信息消息回复结构
- 1.日    期   : 2012年02月16日
-   作    者   : l00198894
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                 /* 消息头 */
@@ -2579,13 +1676,7 @@ typedef struct
 } DRV_AGENT_CHIPTEMP_QRY_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_ANTSWITCH_SET_STRU
- 结构说明  : AT与DRV AGENT设置天线信息
- 1.日    期   : 2013年11月11日
-   作    者   : y00258578
-   修改内容   : 新增结构
-*****************************************************************************/
+
 
 typedef struct
 {
@@ -2593,13 +1684,7 @@ typedef struct
 
 } DRV_AGENT_ANTSWITCH_SET_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_ANTSWITCH_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT设置天线应答信息
- 1.日    期   : 2013年11月11日
-   作    者   : y00258578
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                 /* 消息头 */
@@ -2607,13 +1692,7 @@ typedef struct
 
 } DRV_AGENT_ANTSWITCH_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_ANTSWITCH_QRY_CNF_STRU
- 结构说明  : AT与DRV AGENT查询天线应答信息
- 1.日    期   : 2013年11月11日
-   作    者   : y00258578
-   修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                 /* 消息头 */
@@ -2624,14 +1703,7 @@ typedef struct
 
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_ANT_STATE_IND_STRU
- 结构说明  : AT与DRV AGENT 设置ANT STATE IND的消息回复结构
 
-1. 日    期   : 2012年12月25日
-   作    者   : l00227485
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                 /* 消息头 */
@@ -2639,41 +1711,20 @@ typedef struct
     VOS_UINT8                           aucRsv[2];
 } DRV_AGENT_ANT_STATE_IND_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_MAX_LOCK_TMS_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT 设置MAX LOCK TIMES的消息回复结构
 
-1. 日    期   : 2012年03月19日
-   作    者   : f00179208
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
     VOS_UINT32                          ulResult;
 }DRV_AGENT_MAX_LOCK_TMS_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_AP_SIMST_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT设置APSIMST的消息请求结构
 
-1. 日    期   : 2012年06月18日
-   作    者   : f00179208
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulUsimState;
 }DRV_AGENT_AP_SIMST_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_AP_SIMST_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT 设置APSIMST的消息回复结构
 
-1. 日    期   : 2012年06月18日
-   作    者   : f00179208
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -2681,29 +1732,13 @@ typedef struct
 }DRV_AGENT_AP_SIMST_SET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_HUK_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT设置HUK的消息请求结构
 
-  1.日    期   : 2012年04月07日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucHUK[DRV_AGENT_HUK_LEN];  /* HUK码流 128Bits */
 }DRV_AGENT_HUK_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_HUK_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT设置HUK的消息回复结构
 
-  1.日    期   : 2012年04月07日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -2711,15 +1746,7 @@ typedef struct
 }DRV_AGENT_HUK_SET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_FACAUTHPUBKEY_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT设置鉴权公钥的消息请求结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     /* 鉴权公钥码流 */
@@ -2728,15 +1755,7 @@ typedef struct
     VOS_UINT8                           aucPubKeySign[DRV_AGENT_PUBKEY_SIGNATURE_LEN];
 }DRV_AGENT_FACAUTHPUBKEY_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SIMLOCKWRITEEX_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT分包设置锁网锁卡的消息请求结构
 
-  1.日    期   : 2017年03月06日
-    作    者   : q00380176
-    修改内容   : 新增
-
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucNetWorkFlg;                       /* 1: 网络下发 0: 产线下发 */
@@ -2749,15 +1768,7 @@ typedef struct
     VOS_UINT8                           aucSimlockData[4];
 }DRV_AGENT_SIMLOCKWRITEEX_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SIMLOCKWRITEEX_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT设置锁网锁卡信息的消息回复结构
 
-  1.日    期   : 2017年03月06日
-    作    者   : q00380176
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                                      ulTotal;                    /* 写入的次数 */
@@ -2765,28 +1776,14 @@ typedef struct
     DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32       enResult;                   /* 命令执行结果 */
 }DRV_AGENT_SIMLOCKWRITEEX_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SIMLOCKDATAREADEX_READ_REQ_STRU
- 结构说明  : AT与DRV AGENT分包读取锁网锁卡数据请求的结构
-  1.日    期   : 2017年03月06日
-    作    者   : q00380176
-    修改内容   : AP-Modem锁网锁卡项目新增结构
 
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucLayer;        /* 第几层数据 */
     VOS_UINT8                           ucIndex;        /* 第几包数据 */
 }DRV_AGENT_SIMLOCKDATAREADEX_READ_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SIMLOCKDATAREADEX_READ_CNF_STRU
- 结构说明  : AT与DRV AGENT分包读取锁网锁卡数据请求的确认消息结构
-  1.日    期   : 2017年03月06日
-    作    者   : q00380176
-    修改内容   : AP-Modem锁网锁卡项目新增结构
 
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;                /* 消息头 */
@@ -2800,43 +1797,20 @@ typedef struct
 }DRV_AGENT_SIMLOCKDATAREADEX_READ_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_FACAUTHPUBKEYEX_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT设置鉴权公钥的消息请求结构
 
-  1.日    期   : 2016年5月11日
-    作    者   : z00301431
-    修改内容   : 锁网锁卡安全升级新增结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           aucPara[DRV_AGENT_PUBKEY_LEN];
 }DRV_AGENT_FACAUTHPUBKEYEX_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_FACAUTHPUBKEY_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT设置鉴权公钥的消息回复结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
     DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32       enResult;                   /* 命令执行结果 */
 }DRV_AGENT_FACAUTHPUBKEY_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_IDENTIFYSTART_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT发起产线鉴权的消息回复结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -2845,105 +1819,44 @@ typedef struct
     VOS_UINT8                                       aucRsaText[DRV_AGENT_RSA_CIPHERTEXT_LEN];
 }DRV_AGENT_IDENTIFYSTART_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_IDENTIFYEND_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT完成产线鉴权的消息请求结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     /* 使用私钥进行RSA加密后的密文 */
     VOS_UINT8                           aucRsaText[DRV_AGENT_RSA_CIPHERTEXT_LEN];
 }DRV_AGENT_IDENTIFYEND_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_IDENTIFYEND_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT完成产线鉴权的消息回复结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
     DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32       enResult;                   /* 命令执行结果 */
 }DRV_AGENT_IDENTIFYEND_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_SIMLOCKDATAWRITE_SET_REQ_STRU
-结构说明  : AT与DRV AGENT设置锁网锁卡信息的消息请求结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
 
-*****************************************************************************/
-typedef struct
-{
-    /* 结构体码流, 包含该锁网锁卡类型的包括状态, 锁网号段, CK, UK等所有信息 */
-    VOS_UINT8       aucCategoryData[DRV_AGENT_SIMLOCKDATAWRITE_STRU_LEN];
-}DRV_AGENT_SIMLOCKDATAWRITE_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SIMLOCKDATAWRITE_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT设置锁网锁卡信息的消息回复结构
-
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
     DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32       enResult;                   /* 命令执行结果 */
 }DRV_AGENT_SIMLOCKDATAWRITE_SET_CNF_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_PH_LOCK_CODE_NEW_STRU
-结构说明  : 锁网锁卡号段结构
 
-  1.日    期   : 2017年03月24日
-    作    者   : q00380176
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
    VOS_UINT8        aucPhLockCodeBegin[DRV_AGENT_PH_LOCK_CODE_LEN_EXTERNED];
    VOS_UINT8        aucPhLockCodeEnd[DRV_AGENT_PH_LOCK_CODE_LEN_EXTERNED];
 }DRV_AGENT_PH_LOCK_CODE_NEW_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_PH_LOCK_CODE_STRU
-结构说明  : 锁网锁卡号段结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
    VOS_UINT8        aucPhLockCodeBegin[DRV_AGENT_PH_LOCK_CODE_LEN];
    VOS_UINT8        aucPhLockCodeEnd[DRV_AGENT_PH_LOCK_CODE_LEN];
 }DRV_AGENT_PH_LOCK_CODE_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_SIMLOCK_DATA_CATEGORY_STRU
-结构说明  : 锁网锁卡安全数据单个类型的数据结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     DRV_AGENT_PERSONALIZATION_CATEGORY_ENUM_UINT8           enCategory;             /* 锁网锁卡的category类别 */
@@ -2954,15 +1867,7 @@ typedef struct
     VOS_UINT8                                               aucRsv[3];              /* 保留字节，用于四字节对齐 */
 }DRV_AGENT_SIMLOCK_DATA_CATEGORY_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_SIMLOCKDATAREAD_QRY_CNF_STRU
-结构说明  : AT与DRV AGENT查询锁网锁卡安全数据的消息回复结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -2974,15 +1879,7 @@ typedef struct
     DRV_AGENT_SIMLOCK_DATA_CATEGORY_STRU            astCategoryData[DRV_AGENT_SUPPORT_CATEGORY_NUM];
 }DRV_AGENT_SIMLOCKDATAREAD_QRY_CNF_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_SIMLOCKDATAREAD_QRY_CNF_EX_STRU
-结构说明  : AT与DRV AGENT查询锁网锁卡安全数据的消息回复结构,支持4层锁
 
-  1.日    期   : 2017年03月28日
-    作    者   : q00380176
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -2991,15 +1888,7 @@ typedef struct
     DRV_AGENT_SIMLOCK_DATA_CATEGORY_STRU            astCategoryData[DRV_AGENT_SUPPORT_CATEGORY_NUM];
 }DRV_AGENT_SIMLOCKDATAREAD_QRY_CNF_EX_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_SIMLOCK_INFO_CATEGORY_NEW_STRU
-结构说明  : 锁网锁卡数据升级后锁网锁卡信息单个类型的数据结构
 
-  1.日    期   : 2017年03月23日
-    作    者   : q00380176
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     DRV_AGENT_PERSONALIZATION_CATEGORY_ENUM_UINT8           enCategory;             /* 锁网锁卡的category类别 */
@@ -3010,15 +1899,7 @@ typedef struct
     DRV_AGENT_PH_LOCK_CODE_NEW_STRU                         astLockCode[DRV_AGENT_PH_LOCK_CODE_GROUP_NUM_EXTERED];      /* 锁网锁卡的号段内容*/
 }DRV_AGENT_SIMLOCK_INFO_CATEGORY_NEW_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_SIMLOCK_INFO_CATEGORY_STRU
-结构说明  : 锁网锁卡信息单个类型的数据结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     DRV_AGENT_PERSONALIZATION_CATEGORY_ENUM_UINT8           enCategory;             /* 锁网锁卡的category类别 */
@@ -3029,15 +1910,7 @@ typedef struct
     DRV_AGENT_PH_LOCK_CODE_STRU                             astLockCode[DRV_AGENT_PH_LOCK_CODE_GROUP_NUM];
 }DRV_AGENT_SIMLOCK_INFO_CATEGORY_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_PHONESIMLOCKINFO_QRY_CNF_NEW_STRU
-结构说明  : AT与DRV AGENT查询锁网锁卡信息的消息回复结构
 
-  1.日    期   : 2017年03月23日
-    作    者   : q00380176
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -3047,15 +1920,7 @@ typedef struct
     DRV_AGENT_SIMLOCK_INFO_CATEGORY_NEW_STRU        astCategoryInfo[DRV_AGENT_SUPPORT_CATEGORY_NUM_EXTERED];
 }DRV_AGENT_PHONESIMLOCKINFO_QRY_CNF_NEW_STRU;
 
-/*****************************************************************************
-结构名    : DRV_AGENT_PHONESIMLOCKINFO_QRY_CNF_STRU
-结构说明  : AT与DRV AGENT查询锁网锁卡信息的消息回复结构
 
-  1.日    期   : 2012年04月09日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -3065,15 +1930,7 @@ typedef struct
     DRV_AGENT_SIMLOCK_INFO_CATEGORY_STRU            astCategoryInfo[DRV_AGENT_SUPPORT_CATEGORY_NUM];
 }DRV_AGENT_PHONESIMLOCKINFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PHONEPHYNUM_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT设置物理号的消息请求结构
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     DRV_AGENT_PH_PHYNUM_TYPE_ENUM_UINT8 enPhynumType;                                   /* 物理号类型 */
@@ -3084,30 +1941,14 @@ typedef struct
     VOS_UINT32                          ulHmacLen;                                      /* hmac签名长度 */
 }DRV_AGENT_PHONEPHYNUM_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PHONEPHYNUM_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT设置物理号的消息回复结构
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
     DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32       enResult;                   /* 命令执行结果 */
 }DRV_AGENT_PHONEPHYNUM_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PHONEPHYNUM_QRY_CNF_STRU
- 结构说明  : AT与DRV AGENT查询物理号的消息回复结构
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -3116,74 +1957,25 @@ typedef struct
     VOS_UINT8                                       aucSnRsa[DRV_AGENT_RSA_CIPHERTEXT_LEN];
 }DRV_AGENT_PHONEPHYNUM_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PORTCTRLTMP_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT临时打开通信端口的消息请求结构
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
 
-*****************************************************************************/
-typedef struct
-{
-    VOS_UINT8       aucPortPassword[DRV_AGENT_PORT_PASSWORD_LEN];               /* 通信端口锁密码 */
-}DRV_AGENT_PORTCTRLTMP_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PORTCTRLTMP_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT临时打开通信端口的消息回复结构
-
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
     DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32       enResult;                   /* 命令执行结果 */
 }DRV_AGENT_PORTCTRLTMP_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PORTATTRIBSET_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT设置通信端口开机初始状态及端口锁密码的消息请求结构
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
 
-*****************************************************************************/
-typedef struct
-{
-    DRV_AGENT_PORT_STATUS_ENUM_UINT32   enPortStatus;                                   /* 通信端口状态 */
-    VOS_UINT8                           aucPortPassword[DRV_AGENT_RSA_CIPHERTEXT_LEN];  /* 通信端口锁密码 */
-}DRV_AGENT_PORTATTRIBSET_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PORTATTRIBSET_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT设置通信端口开机初始状态及端口锁密码的消息回复结构
-
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
     DRV_AGENT_PERSONALIZATION_ERR_ENUM_UINT32       enResult;                   /* 命令执行结果 */
 }DRV_AGENT_PORTATTRIBSET_SET_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_PORTATTRIBSET_QRY_CNF_STRU
- 结构说明  : AT与DRV AGENT查询通信端口开机初始状态的消息回复结构
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -3191,29 +1983,8 @@ typedef struct
     DRV_AGENT_PORT_STATUS_ENUM_UINT32               enPortStatus;               /* 通信端口状态 */
 }DRV_AGENT_PORTATTRIBSET_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_OPWORD_SET_REQ_STRU
- 结构说明  : AT与DRV AGENT获取开关DIAG口和开关SHELL口的权限的消息请求结构
 
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
 
-*****************************************************************************/
-typedef struct
-{
-    VOS_UINT8       aucPortPassword[DRV_AGENT_PORT_PASSWORD_LEN];               /* 通信端口锁密码 */
-}DRV_AGENT_OPWORD_SET_REQ_STRU;
-
-/*****************************************************************************
- 结构名    : DRV_AGENT_OPWORD_SET_CNF_STRU
- 结构说明  : AT与DRV AGENT获取开关DIAG口和开关SHELL口的权限的消息回复结构
-
-  1.日    期   : 2012年04月10日
-    作    者   : l00198894
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -3222,15 +1993,7 @@ typedef struct
 
 
 /* Added by L47619 for V9R1 vSIM Project, 2013-8-27, begin */
-/*****************************************************************************
- 结构名    : DRV_AGENT_HVPDH_REQ_STRU
- 结构说明  : 产线预制DH秘钥，AT向SC发送秘钥信息所用的数据结构
 
-  1.日    期   : 2013年8月27日
-    作    者   : L47619
-    修改内容   : V9R1 vSIM项目修改
-
-*****************************************************************************/
 typedef struct
 {
     DRV_AGENT_DH_KEY_TYPE_ENUM_UINT32   enKeyType;                              /* DH秘钥类型 */
@@ -3238,15 +2001,7 @@ typedef struct
     VOS_UINT8                           aucKey[DRV_AGENT_DH_PUBLICKEY_LEN];     /* DH秘钥，按最大长度来设置数组，以便用于存储公钥和私钥 */
 }DRV_AGENT_HVPDH_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_HVPDH_CNF_STRU
- 结构说明  : SC向AT返回写入预制DH秘钥的响应结果
 
-  1.日    期   : 2013年8月27日
-    作    者   : L47619
-    修改内容   : V9R1 vSIM项目修改
-
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                                 stAtAppCtrl;                /* 消息头 */
@@ -3254,30 +2009,14 @@ typedef struct
 }DRV_AGENT_HVPDH_CNF_STRU;
 /* Added by L47619 for V9R1 vSIM Project, 2013-8-27, end */
 
-/* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, begin */
-/*****************************************************************************
- 结构名    : DRV_AGENT_NVMANUFACTUREEXT_SET_CNF_STRU
- 结构说明  : AT与TAF DRV AGENT 获取NV强制恢复出厂设置的消息回复结构
 
-1. 日    期   : 2011年11月3日
-   作    者   : l60609
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
     VOS_UINT32                          ulRslt;
 }DRV_AGENT_NVMANUFACTUREEXT_SET_CNF_STRU;
-/* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, end */
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_QRY_CCPU_MEM_INFO_CNF_STRU
- 结构说明  : AT与TAF DRV AGENT 获取内存泄漏检查结果回复结构
 
-1. 日    期   : 2016年09月20日
-   作    者   : wx270776
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAtAppCtrl;
@@ -3314,13 +2053,7 @@ typedef struct
 }TafDrvAgent_MSG;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SWVER_INFO_STRU
- 结构说明  : 平台软件版本号
- 1.日    期   : 2012年11月24日
-   作    者   : s00190137
-   修改内容   : 手机产品查询modem版本号接口新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucSWVer[TAF_MAX_REVISION_ID_LEN + 1];
@@ -3328,13 +2061,7 @@ typedef struct
 }DRV_AGENT_SWVER_INFO_STRU;
 
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_SWVER_SET_CNF_STRU
- 结构说明  : AT与AT AGENT 查询SWVER信息消息回复结构
- 1.日    期   : 2012年11月24日
-   作    者   : s00190137
-   修改内容   : 手机产品查询modem版本号接口新增结构
-*****************************************************************************/
+
 typedef struct
 {
     AT_APPCTRL_STRU                       stAtAppCtrl;
@@ -3343,12 +2070,22 @@ typedef struct
 } DRV_AGENT_SWVER_SET_CNF_STRU;
 
 
+typedef struct
+{
+    VOS_UINT16                         *pusDrvAgentUsimTempTable;           /* SIM hkadc转换表 */
+    VOS_UINT16                         *pusDrvAgentBatTempTable;            /* Battery hkadc转换表 */
+    VOS_UINT16                         *pusDrvAgentAdcTable;                /* PA hkadc转换表 */
+    VOS_UINT8                           ucDrvAgentSystemAppConfigAddr;      /* DrvAgent模块保存平台特性 */
+    VOS_UINT8                           ucGcfInd;                           /* 指示当前是否为GCF测试 */
+    VOS_UINT8                           ucSimLockErrTimes;                  /* 统计SIMLOCK连续解锁错误的次数 */
+    VOS_UINT8                           aucReserve[5];                      /* PCLINT-64 需要8字节对齐 */
+} DRV_AGENT_CONTEXT_STRU;
 
 /*****************************************************************************
   10 函数声明
 *****************************************************************************/
 
-extern VOS_UINT32   GAS_AtCmd(GAS_AT_CMD_STRU *pstAtCmd,GAS_AT_RSLT_STRU *pstAtCmdRslt);
+extern DRV_AGENT_CONTEXT_STRU* DRVAGENT_GetCtxAddr(VOS_VOID);
 
 extern VOS_VOID MMA_GetProductionVersion(VOS_CHAR *pcDest);
 extern VOS_UINT32 MMA_VerifyOperatorLockPwd(VOS_UINT8 *pucPwd);
@@ -3361,11 +2098,9 @@ extern VOS_UINT32 At_SendRfCfgAntSelToHPA(
 extern VOS_UINT32 At_DelCtlAndBlankCharWithEndPadding(VOS_UINT8 *pucData, VOS_UINT16  *pusCmdLen);
 extern VOS_UINT32 Spy_SetTempPara(SPY_TEMP_THRESHOLD_PARA_STRU *stTempPara);
 
-/* Add by w00184875 For L降SAR begin */
 #if (FEATURE_ON == FEATURE_LTE)
-extern VOS_VOID L_ExtSarPowerReductionPRI(VOS_UINT32 para);
+extern VOS_VOID L_ExtSarPowerReductionPRI(MODEM_ID_ENUM_UINT16 enModemId, VOS_UINT32 para);
 #endif
-/* Add by w00184875 For L降SAR end */
 
 #if (VOS_RTOSCK == VOS_OS_VER)
 //extern VOS_UINT32 SRE_GetMaxNumberOfCores(VOS_VOID);

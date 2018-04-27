@@ -32,6 +32,9 @@ extern int mmc_blk_cmdq_halt(struct mmc_card *card);
 bool g_mmc_reset_status;
 #endif
 
+#if defined(CONFIG_HISI_DEBUG_FS)
+extern unsigned int sd_test_reset_flag;
+#endif
 
 void mmc_power_up_vcc(struct mmc_host *host,u32 ocr)
 {
@@ -345,9 +348,6 @@ int mmc_init_card_enable_feature(struct mmc_card *card)
 				   mmc_hostname(card->host));
 			err = 0;
 			card->ext_csd.bkops_auto_en = 0;
-#ifdef CONFIG_HISI_MMC_MANUAL_BKOPS
-			card->hisi_man_bkops_en = 0;
-#endif
 		} else {
 			card->ext_csd.bkops_auto_en = 1;
 #ifdef CONFIG_HISI_MMC_MANUAL_BKOPS
@@ -759,6 +759,10 @@ static int mmc_do_sd_reset(struct mmc_host *host)
 	if (host->ops->hw_reset)
 		host->ops->hw_reset(host);
 
+	/*clear the reset flag after reset has been done*/
+#if defined(CONFIG_HISI_DEBUG_FS)
+	sd_test_reset_flag = 0;
+#endif
 	/* Only for K930/920 SD slow down clk*/
 	if (host->ops->slowdown_clk)
 		host->ops->slowdown_clk(host, host->ios.timing);

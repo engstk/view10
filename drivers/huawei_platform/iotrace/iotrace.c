@@ -301,7 +301,7 @@ struct delay_io_count
 #define io_ns_to_ms(ns) ((ns) / 1000000)
 
 #ifdef CONFIG_SCSI_UFS_HI1861_VCMD
-static struct scsi_cmnd *fsr_scsi;
+static struct scsi_cmnd *fsr_scsi = NULL;
 static int iotrace_ufs_fsr_get(void);
 static int io_fsr_log_get(struct file *filp);
 
@@ -1208,11 +1208,12 @@ static ssize_t sysfs_io_trace_attr_store(struct device *dev,
 extern int ufshcd_get_fsr_command(struct scsi_cmnd *cmd, unsigned char *buf, unsigned int size);
 static int iotrace_ufs_fsr_get(void)
 {
-	if(fsr_scsi == NULL)
+    struct scsi_cmnd *fsr_scsi_tmp = fsr_scsi;
+    if(fsr_scsi_tmp == NULL)
         return -1;
 
     struct ufs_hba *hba;
-    struct Scsi_Host *host = fsr_scsi->device->host;
+    struct Scsi_Host *host = fsr_scsi_tmp->device->host;
     hba = shost_priv(host);
 
     if(!hba)
@@ -1255,11 +1256,12 @@ static int iotrace_ufs_fsr_get(void)
 
 static int io_fsr_log_get(struct file *filp)
 {
-    if(fsr_scsi == NULL)
+    struct scsi_cmnd *fsr_scsi_tmp = fsr_scsi;
+    if(fsr_scsi_tmp == NULL)
         return -1;
 
     struct ufs_hba *hba;
-    struct Scsi_Host *host = fsr_scsi->device->host;
+    struct Scsi_Host *host = fsr_scsi_tmp->device->host;
     hba = shost_priv(host);
 
     if(!hba)
@@ -1290,7 +1292,7 @@ static int io_fsr_log_get(struct file *filp)
         goto end;
     }
 
-    ret = ufshcd_get_fsr_command(fsr_scsi, mem, IO_MAX_BUF_ENTRY);
+    ret = ufshcd_get_fsr_command(fsr_scsi_tmp, mem, IO_MAX_BUF_ENTRY);
 
     if(ret < 0){
         io_trace_print("get fsr log kernel failed !\n");
@@ -2104,7 +2106,7 @@ static void blk_add_trace_sleeprq(void *ignore, struct request_queue *q,
         struct bio *bio, int rw)
 {
 
-    if(io_trace_this->enable)
+    if(io_trace_this->enable && bio)
     {
         io_trace_global_log(BLOCK_RQ_SLEEP_TAG,  bio->bi_iter.bi_sector, bio->bi_iter.bi_size,
                0, 0, 0, bio->bi_rw, NULL, 0);

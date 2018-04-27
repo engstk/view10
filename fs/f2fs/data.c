@@ -55,6 +55,8 @@ static void f2fs_read_end_io(struct bio *bio)
 	struct bio_vec *bvec;
 	int i;
 
+	f2fs_gc_endio(bio);
+
 #ifdef CONFIG_F2FS_FAULT_INJECTION
 	if (time_to_inject(F2FS_P_SB(bio->bi_io_vec->bv_page), FAULT_IO)) {
 		f2fs_show_injection_info(FAULT_IO);
@@ -81,7 +83,7 @@ static void f2fs_read_end_io(struct bio *bio)
 			printk(KERN_ERR "%s: read IO fault[%d]\n",
 				__func__, bio->bi_error);
 #ifdef CONFIG_HUAWEI_F2FS_DSM
-	/* report this behavor to DSM */
+			 /* report this behavor to DSM */
 			if (f2fs_dclient && !dsm_client_ocuppy(f2fs_dclient)) {
 				dsm_client_record(f2fs_dclient,
 				"%s: read IO fault[%d]\n",
@@ -89,6 +91,7 @@ static void f2fs_read_end_io(struct bio *bio)
 				dsm_client_notify(f2fs_dclient, DSM_F2FS_NEED_FSCK);
 			}
 #endif
+
 			ClearPageUptodate(page);
 			SetPageError(page);
 		}
@@ -102,6 +105,8 @@ static void f2fs_write_end_io(struct bio *bio)
 	struct f2fs_sb_info *sbi = bio->bi_private;
 	struct bio_vec *bvec;
 	int i;
+
+	f2fs_gc_endio(bio);
 
 	bio_for_each_segment_all(bvec, bio, i) {
 		struct page *page = bvec->bv_page;
@@ -128,6 +133,9 @@ static void f2fs_write_end_io(struct bio *bio)
 			WARN_ON(1);
 			f2fs_add_restart_wq();
 		}
+		if (page->mapping == NODE_MAPPING(sbi) &&
+					page->index != nid_of_node(page))
+			f2fs_bug_on(sbi, 1);
 		dec_page_count(sbi, type);
 		clear_cold_data(page);
 		end_page_writeback(page);
@@ -259,7 +267,11 @@ static void __submit_merged_bio(struct f2fs_bio_info *io)
 	if (!io->bio)
 		return;
 
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	bio_set_op_attrs(io->bio, fio->op, fio->op_flags, fio->sp_type);
+#else
 	bio_set_op_attrs(io->bio, fio->op, fio->op_flags);
+#endif
 
 	if (is_read_io(fio->op))
 		trace_f2fs_prepare_read_bio(io->sbi->sb, fio->type, io->bio);
@@ -391,7 +403,13 @@ int f2fs_submit_page_bio(struct f2fs_io_info *fio)
 		bio_put(bio);
 		return -EFAULT;
 	}
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	bio_set_op_attrs(bio, fio->op, fio->op_flags, fio->sp_type);
+#else
 	bio_set_op_attrs(bio, fio->op, fio->op_flags);
+#endif
+
+	f2fs_io_remap_gc_check(fio, bio);
 
 	__submit_bio(fio->sbi, bio, fio->type);
 	return 0;
@@ -435,6 +453,10 @@ int f2fs_submit_page_mbio(struct f2fs_io_info *fio)
 						bio_page->index - 1)))
 		__submit_merged_bio(io);
 #endif
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	else if (io->fio.sp_type != fio->sp_type)
+		__submit_merged_bio(io);
+#endif
 
 alloc_new:
 	if (io->bio == NULL) {
@@ -461,6 +483,12 @@ alloc_new:
 		if (nomerge)
 			io->bio->bi_rw |= REQ_NOMERGE;
 		io->fio = *fio;
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+		if (is_read_io(fio->op))
+			bio_set_streamid(io->bio, SP_UNSET);
+		else
+			bio_set_streamid(io->bio, fio->sp_type);
+#endif
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
 		io->bio->ci_key = fio->ci_key;
 		io->bio->ci_key_len = fio->ci_key_len;
@@ -472,6 +500,9 @@ alloc_new:
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
 	f2fs_bug_on(sbi, (io->bio->ci_key != fio->ci_key) ||
 			(io->bio->ci_key_len != fio->ci_key_len));
+#endif
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	f2fs_bug_on(sbi, bio_get_streamid(io->bio) != fio->sp_type);
 #endif
 
 	if (bio_add_page(io->bio, bio_page, PAGE_SIZE, 0) <
@@ -615,6 +646,9 @@ struct page *get_read_data_page(struct inode *inode, pgoff_t index,
 		.op = REQ_OP_READ,
 		.op_flags = op_flags,
 		.encrypted_page = NULL,
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+		.sp_type = SP_UNSET,
+#endif
 	};
 
 	if (f2fs_encrypted_inode(inode) && S_ISREG(inode->i_mode))
@@ -661,7 +695,9 @@ got_it:
 
 	fio.new_blkaddr = fio.old_blkaddr = dn.data_blkaddr;
 	fio.page = page;
+	f2fs_io_set_remap_gc_check(&fio, false);
 	err = f2fs_submit_page_bio(&fio);
+	f2fs_io_clear_remap_gc_check(&fio);
 	if (err)
 		goto put_err;
 	return page;
@@ -1194,7 +1230,7 @@ static struct bio *f2fs_grab_bio(struct inode *inode, block_t blkaddr,
 		f2fs_wait_on_encrypted_page_writeback(sbi, blkaddr);
 	}
 
-	bio = bio_alloc(GFP_KERNEL, min_t(int, nr_pages, BIO_MAX_PAGES));
+	bio = f2fs_bio_alloc(min_t(int, nr_pages, BIO_MAX_PAGES));
 	if (!bio) {
 		if (ctx)
 			fscrypt_release_ctx(ctx);
@@ -1203,6 +1239,9 @@ static struct bio *f2fs_grab_bio(struct inode *inode, block_t blkaddr,
 	f2fs_target_device(sbi, blkaddr, bio);
 	bio->bi_end_io = f2fs_read_end_io;
 	bio->bi_private = ctx;
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	bio_set_streamid(bio, SP_UNSET);
+#endif
 #ifdef CONFIG_F2FS_FS_ENCRYPTION
 	if (need_key) {
 		bio->ci_key = fscrypt_ci_key(inode);
@@ -1233,6 +1272,8 @@ static int f2fs_mpage_readpages(struct address_space *mapping,
 	sector_t last_block;
 	sector_t last_block_in_file;
 	sector_t block_nr;
+	sector_t new_block_nr;
+	bool blk_mapped = false;
 	struct f2fs_map_blocks map;
 
 	map.m_pblk = 0;
@@ -1305,6 +1346,12 @@ got_it:
 			goto next_page;
 		}
 
+		new_block_nr = block_nr;
+		blk_mapped = f2fs_remap_gc_get_mapped_blk(F2FS_I_SB(inode),
+							  new_block_nr,
+							  (block_t *)&block_nr,
+							  false);
+
 		/*
 		 * This page will go to BIO.  Do we need to send this
 		 * BIO off first?
@@ -1322,14 +1369,23 @@ submit_and_realloc:
 		if (bio == NULL) {
 			bio = f2fs_grab_bio(inode, block_nr, nr_pages, page);
 			if (IS_ERR(bio)) {
+				if (blk_mapped)
+					f2fs_remap_gc_put_mapped_blk(F2FS_I_SB(inode));
 				bio = NULL;
 				goto set_error_page;
 			}
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+			bio_set_op_attrs(bio, REQ_OP_READ, 0, SP_UNSET);
+#else
 			bio_set_op_attrs(bio, REQ_OP_READ, 0);
+#endif
 		}
 
 		if (bio_add_page(bio, page, blocksize, 0) < blocksize)
 			goto submit_and_realloc;
+
+		if (blk_mapped)
+			f2fs_remap_gc_add_to_bio(F2FS_I_SB(inode), bio);
 
 		last_block_in_bio = block_nr;
 		last_index_in_bio = block_in_file;
@@ -1382,7 +1438,7 @@ static int f2fs_read_data_pages(struct file *file,
 			struct address_space *mapping,
 			struct list_head *pages, unsigned nr_pages)
 {
-	struct inode *inode = file->f_mapping->host;
+	struct inode *inode = mapping->host;
 	struct page *page = list_last_entry(pages, struct page, lru);
 
 	trace_f2fs_readpages(inode, page, nr_pages);
@@ -1507,6 +1563,9 @@ static int __write_data_page(struct page *page, bool *submitted,
 		.encrypted_page = NULL,
 		.submitted = false,
 		.cp_rwsem_locked = true,
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+		.sp_type = SP_UNSET,
+#endif
 	};
 
 	trace_f2fs_writepage(page, DATA);
@@ -1964,8 +2023,16 @@ static int f2fs_write_begin(struct file *file, struct address_space *mapping,
 	block_t blkaddr = NULL_ADDR;
 	int err = 0;
 
-	trace_android_fs_datawrite_start(inode, pos, len,
-					 current->pid, current->comm);
+	if (trace_android_fs_datawrite_start_enabled()) {
+		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
+
+		path = android_fstrace_get_pathname(pathbuf,
+						    MAX_TRACE_PATHBUF_LEN,
+						    inode);
+		trace_android_fs_datawrite_start(inode, pos, len,
+						 current->pid, path,
+						 current->comm);
+	}
 	trace_f2fs_write_begin(inode, pos, len, flags);
 
 	/*
@@ -2033,11 +2100,16 @@ repeat:
 			goto fail;
 		}
 		bio->bi_rw = READ_SYNC;
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+		bio_set_streamid(bio, SP_UNSET);
+#endif
 		if (bio_add_page(bio, page, PAGE_SIZE, 0) < PAGE_SIZE) {
 			bio_put(bio);
 			err = -EFAULT;
 			goto fail;
 		}
+
+		f2fs_remap_gc_check_mapped_blk(sbi, bio, blkaddr, false);
 
 		__submit_bio(sbi, bio, DATA);
 
@@ -2300,6 +2372,12 @@ static void f2fs_submit_direct(int rw, struct bio *bio, struct inode *inode,
 	}
 
 	bio->bi_private = dio;
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	if (!write)
+		bio_set_streamid(bio, SP_UNSET);
+	else
+		bio_set_streamid(bio, SP_WARM_DATA);
+#endif
 	submit_bio(rw, bio);
 	return;
 
@@ -2323,6 +2401,10 @@ static ssize_t f2fs_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
 	int rw = iov_iter_rw(iter);
 	int err;
 
+#if defined(CONFIG_F2FS_REMAP_GC) && defined(CONFIG_F2FS_STAT_FS)
+	atomic_inc(&F2FS_STAT(F2FS_I_SB(inode))->dio_count);
+#endif
+
 	err = check_direct_IO(inode, iter, offset);
 	if (err)
 		return err;
@@ -2333,16 +2415,35 @@ static ssize_t f2fs_direct_IO(struct kiocb *iocb, struct iov_iter *iter,
 	trace_f2fs_direct_IO_enter(inode, offset, count, rw);
 
 	if (trace_android_fs_dataread_start_enabled() &&
-	    (iov_iter_rw(iter) == READ))
-		trace_android_fs_dataread_start(inode, offset,
-						count, current->pid,
-						current->comm);
-	if (trace_android_fs_datawrite_start_enabled() &&
-	    (iov_iter_rw(iter) == WRITE))
-		trace_android_fs_datawrite_start(inode, offset, count,
-						 current->pid, current->comm);
+	    (iov_iter_rw(iter) == READ)) {
+		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
 
+		path = android_fstrace_get_pathname(pathbuf,
+						    MAX_TRACE_PATHBUF_LEN,
+						    inode);
+		trace_android_fs_dataread_start(inode, offset,
+						count, current->pid, path,
+						current->comm);
+	}
+	if (trace_android_fs_datawrite_start_enabled() &&
+	    (iov_iter_rw(iter) == WRITE)) {
+		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
+
+		path = android_fstrace_get_pathname(pathbuf,
+						    MAX_TRACE_PATHBUF_LEN,
+						    inode);
+
+		trace_android_fs_datawrite_start(inode, offset, count,
+						 current->pid, path,
+						 current->comm);
+	}
 	down_read(&F2FS_I(inode)->dio_rwsem[rw]);
+
+	if (f2fs_need_submit_remap_table(F2FS_I_SB(inode))) {
+		up_read(&F2FS_I(inode)->dio_rwsem[rw]);
+		return 0;
+	}
+
 #ifdef CONFIG_FS_ENCRYPTION
 	if (f2fs_encrypted_inode(inode) && S_ISREG(inode->i_mode) &&
 		!f2fs_inline_encrypted_inode(inode)) {

@@ -289,6 +289,10 @@ unsigned long hisi_pmu_rtc_readcount(void)
 	return hisi_pmu_rtc_read_bulk(data->pmu_rtc_baseaddr + PMU_RTC_DR);
 }
 
+#ifdef CONFIG_HISI_PMU_RTC_READCOUNT
+EXPORT_SYMBOL_GPL(hisi_pmu_rtc_readcount);
+#endif
+
 void hisi_pmu_rtc_setalarmtime(unsigned long time)
 {
 	struct hisi_rtc_dev *ldata = hisi_rtc_ldata_get();/*lint !e578*/
@@ -555,7 +559,6 @@ static int hisi_rtc_remove(struct platform_device *pdev)
 
 	rtc_device_unregister(ldata->rtc_dev);
 	iounmap(ldata->soc_rtc_baseaddr);
-	kfree(ldata);
 
 	return 0;
 }

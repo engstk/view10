@@ -49,8 +49,6 @@
 #ifndef __MDRV_ACORE_MBB_CHANNEL_H__
 #define __MDRV_ACORE_MBB_CHANNEL_H__
 
-#define NETLINK_HW_LOGCAT     29
-#define NETLINK_HW_LOGCAT_EXT 31
 
 typedef enum _DEVICE_ID
 {	

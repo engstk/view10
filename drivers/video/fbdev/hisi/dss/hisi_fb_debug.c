@@ -26,6 +26,8 @@ int g_debug_ldi_underflow = 0;
 
 int g_debug_ldi_underflow_clear = 1;
 
+int g_debug_panel_mode_switch = 0;
+
 int g_debug_set_reg_val = 0;
 
 int g_debug_online_vsync = 0;
@@ -70,7 +72,9 @@ int g_dump_cmdlist_content = 0;
 
 int g_enable_ovl_cmdlist_online = 1;
 
-int g_enable_l3_cache = 0;
+int g_video_idle_l3cache_ctrl = 0;
+
+int g_enable_video_idle = 0;
 
 int g_smmu_global_bypass = 0;
 
@@ -82,13 +86,15 @@ int g_enable_dirty_region_updt = 1;
 
 int g_debug_dirty_region_updt = 0;
 
-int g_enable_crc_debug = 0;
+int g_enable_mmbuf_debug = 0;
 
 int g_ldi_data_gate_en = 1;
 
 int g_debug_ovl_credit_step = 0;
 
 int g_debug_layerbuf_sync = 0;
+
+int g_debug_fence_timeline = 0;
 
 int g_enable_dss_idle = 1;
 
@@ -101,6 +107,8 @@ uint32_t g_underflow_stop_perf_stat = 0;
 uint32_t g_dss_min_bandwidth_inbusbusy = 200; //200M
 
 uint32_t g_mmbuf_addr_test = 0;
+
+uint32_t g_dump_sensorhub_aod_hwlock = 0;
 /* lint -restore */
 
 

@@ -6,7 +6,7 @@
  * apply:
  *
  * * This program is free software; you can redistribute it and/or modify
- * * it under the terms of the GNU General Public License version 2 and 
+ * * it under the terms of the GNU General Public License version 2 and
  * * only version 2 as published by the Free Software Foundation.
  * *
  * * This program is distributed in the hope that it will be useful,
@@ -28,10 +28,10 @@
  * * 2) Redistributions in binary form must reproduce the above copyright
  * *    notice, this list of conditions and the following disclaimer in the
  * *    documentation and/or other materials provided with the distribution.
- * * 3) Neither the name of Huawei nor the names of its contributors may 
- * *    be used to endorse or promote products derived from this software 
+ * * 3) Neither the name of Huawei nor the names of its contributors may
+ * *    be used to endorse or promote products derived from this software
  * *    without specific prior written permission.
- * 
+ *
  * * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -52,7 +52,7 @@
 extern "C"
 {
 #endif
-
+/*lint -e488*/
 /* 处理器类型*/
 typedef enum tagIPC_INT_CORE_E
 {
@@ -208,7 +208,7 @@ typedef enum tagIPC_SEM_ID_E
     IPC_SEM_NVIM = 6,
     IPC_SEM_TELE_MNTN = 7,
     IPC_SEM_MEDPLL_STATE = 8,
-	IPC_SEM_EFUSE = 9, 
+	IPC_SEM_EFUSE = 9,
     IPC_SEM_BBPMASTER_0 = 10,
     IPC_SEM_BBPMASTER_1 = 11,
     IPC_SEM_BBPMASTER_2 = 12,
@@ -271,7 +271,7 @@ typedef enum tagIPC_INT_LEV_E
 
 	/*  austin项目和 mcu 通信使用 icc 中断号, 不能变更 */
     IPC_CCPU_INT_SRC_ACPU_ICC			   = 31, /* acpu发给ccpu中断*/
-    
+
 	/* C核接收，v8 特有的ipc 中断 */
     IPC_CCPU_INT_SRC_ACPU_MSG              = IPC_CCPU_INT_SRC_COMMON_END,      /* 通用mailbox,底软内部使用*/
     IPC_CCPU_INT_SRC_ACPU_IFC              ,      /* 远程函数调用,底软内部使用*/
@@ -324,7 +324,7 @@ typedef enum tagIPC_INT_LEV_E
     IPC_MCU_INT_SRC_HIFI_MEMSHARE_DDR_VOTE      ,   /* MP3超低功耗播放使用HARQMEM,HIFI DDR自刷新投票*/
     IPC_MCU_INT_SRC_HIFI_MEMSHARE_DDR_EXIT_VOTE ,   /* MP3超低功耗播放使用HARQMEM,HIFI投票DDR退出自刷新*/
     IPC_MCU_INT_SRC_ACPU_DFS                    ,   /*ACPU DFS*/
-    
+
     IPC_MCU_INT_SRC_END                         ,
 
     /* 定义ACPU IPC跨核消息中断源bit位置 */
@@ -371,11 +371,11 @@ typedef enum tagIPC_INT_LEV_E
     IPC_HIFI_INT_SRC_BBE_MSG      ,  /* TDDSP跨核消息通知 */
     IPC_HIFI_INT_SRC_MCU_MSG      ,
     IPC_HIFI_INT_SRC_COMMON_END   ,
-    
+
     /* v8 特有的ipc 中断 */
     IPC_HIFI_INT_SRC_MCU_WAKE_DDR = IPC_HIFI_INT_SRC_COMMON_END,  /* MCU通知HIFI唤醒DDR */
     IPC_HIFI_INT_SRC_MCU_IFC      ,
-    
+
     IPC_HIFI_INT_SRC_END          ,
 
     /* 定义BBE16 IPC跨核消息中断源bit位置 */
@@ -394,7 +394,7 @@ typedef enum tagIPC_INT_LEV_E
     IPC_XDSP_INT_SRC_CCPU_OM_MBX      ,   /* C核->XDSP */
     IPC_XDSP_INT_SRC_CCPU_PUB_MBX     ,   /* C核->XDSP */
 
-	IPC_XDSP_INT_SRC_END ,   
+	IPC_XDSP_INT_SRC_END ,
 
 
     /* 仅解决编译问题 */
@@ -406,12 +406,12 @@ typedef enum tagIPC_SEM_ID_E
     IPC_SEM_MEM          ,
     IPC_SEM_DICC         ,
     IPC_SEM_EMMC         ,
-    IPC_SEM_SYNC         , 
+    IPC_SEM_SYNC         ,
     IPC_SEM_SYSCTRL      ,
     IPC_SEM_BBP          ,  /*该值与BBE16镜像绑定，修改需通知BBE16作相应修改*/
     IPC_SEM_RFILE_LOG    ,  /*用于flashless可维可测*/
     IPC_SEM_NVIM         ,
-    IPC_SEM_EFUSE        , 
+    IPC_SEM_EFUSE        ,
     IPC_SEM_DPDT_CTRL_ANT,  /* 添加mdrv_ipc_spin_trylock时添加 */
     IPC_SEM_BBPMASTER_0  ,
     IPC_SEM_BBPMASTER_1  ,
@@ -455,7 +455,7 @@ typedef enum tagIPC_SEM_ID_E
 
     IPC_SEM_BUTTOM       = 32
 } IPC_SEM_ID_E;
-
+/*lint +e488*/
 #endif
 
 

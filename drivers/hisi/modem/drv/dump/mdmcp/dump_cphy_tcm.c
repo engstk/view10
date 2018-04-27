@@ -83,6 +83,13 @@ void dump_save_cphy_tcm(char *  dst_path)
     struct bbe_dump_proc_flag *c_flag;
     DUMP_FILE_CFG_STRU* cfg = dump_get_file_cfg();
 
+    if(DUMP_PHONE == dump_get_product_type() 
+        && DUMP_ACCESS_MDD_DDR_NON_SEC != dump_get_access_mdmddr_type())
+    {
+        return;            
+    }
+       
+
     if(cfg->file_list.file_bits.cphy_tcm != 1)
     {
         return;

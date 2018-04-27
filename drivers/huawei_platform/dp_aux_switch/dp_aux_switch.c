@@ -26,6 +26,7 @@
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
 #include <huawei_platform/dp_aux_switch/dp_aux_switch.h>
+#include <huawei_platform/audio/usb_analog_hs_interface.h>
 
 static uint32_t g_dp_aux_gpio;
 static uint32_t g_dp_aux_uart_gpio;
@@ -38,8 +39,23 @@ static DEFINE_MUTEX(g_dp_aux_ldo_op_mutex);
 #define SET_GPIO_LOW  0
 #define DTS_DP_AUX_SWITCH "huawei,dp_aux_switch"
 
+static bool g_aux_switch_from_fsa4476 = false;
+static uint32_t g_aux_ch_polarity = 0;
+
+enum aux_switch_channel_type get_aux_switch_channel(void)
+{
+	if (g_aux_switch_from_fsa4476)
+		return channel_fsa4476;
+	else
+		return channel_superswitch;
+}
 void dp_aux_switch_op(uint32_t value)
 {
+	if (g_aux_switch_from_fsa4476) {
+		g_aux_ch_polarity = value;
+		return;
+	}
+
 	if (gpio_is_valid(g_dp_aux_gpio)) {
 	        gpio_direction_output(g_dp_aux_gpio, value);
 	} else {
@@ -49,6 +65,22 @@ void dp_aux_switch_op(uint32_t value)
 
 void dp_aux_uart_switch_enable(void)
 {
+	if (g_aux_switch_from_fsa4476) {
+		// SBU bypass switch
+		if (g_aux_ch_polarity) {
+			// ENN L, EN1/EN2 01
+			// SBU1 to SBU2_H, SBU2 to SBU1_H
+			usb_analog_hs_plug_in_out_handle(DP_PLUG_IN_CROSS);
+			printk(KERN_INFO "%s: dp plug in cross.\n", __func__);
+		} else {
+			// ENN L, EN1/EN2 00
+			// SBU1 to SBU1_H, SBU2 to SBU2_H
+			usb_analog_hs_plug_in_out_handle(DP_PLUG_IN);
+			printk(KERN_INFO "%s: dp plug in.\n", __func__);
+		}
+		return;
+	}
+
 	if (gpio_is_valid(g_dp_aux_uart_gpio)) {
 	        gpio_direction_output(g_dp_aux_uart_gpio, SET_GPIO_HIGH);
 	} else {
@@ -58,6 +90,13 @@ void dp_aux_uart_switch_enable(void)
 
 void dp_aux_uart_switch_disable(void)
 {
+	if (g_aux_switch_from_fsa4476) {
+		// ENN H, EN1/EN2 00
+		usb_analog_hs_plug_in_out_handle(DP_PLUG_OUT);
+		printk(KERN_INFO "%s: dp plug out.\n", __func__);
+		return;
+	}
+
 	if (gpio_is_valid(g_dp_aux_uart_gpio)) {
 	        gpio_direction_output(g_dp_aux_uart_gpio, SET_GPIO_LOW);
 	} else {
@@ -75,7 +114,7 @@ int dp_aux_ldo_supply_enable(dp_aux_ldo_ctrl_type_t type)
 		return -ENODEV;
 	}
 
-	if ((type < DP_AUX_LDO_CTRL_BEGIN) || (type >= DP_AUX_LDO_CTRL_MAX)) {
+	if (type >= DP_AUX_LDO_CTRL_MAX) {
 		printk(KERN_ERR "%s: type(%d) is invalid!\n", __func__, type);
 		return -EINVAL;
 	}
@@ -88,11 +127,9 @@ int dp_aux_ldo_supply_enable(dp_aux_ldo_ctrl_type_t type)
 			mutex_unlock(&g_dp_aux_ldo_op_mutex);
 			return -EPERM;
 		}
-
-		g_dp_aux_ldo_status = 1 << type;
-	} else {
-		g_dp_aux_ldo_status =  g_dp_aux_ldo_status | (1 << type);
 	}
+	g_dp_aux_ldo_status =  g_dp_aux_ldo_status | (1 << type);
+
 	mutex_unlock(&g_dp_aux_ldo_op_mutex);
 
 	printk(KERN_INFO "%s: regulator enable(%d) success!\n", __func__, type);
@@ -110,19 +147,21 @@ int dp_aux_ldo_supply_disable(dp_aux_ldo_ctrl_type_t type)
 		return -ENODEV;
 	}
 
-	if ((type < DP_AUX_LDO_CTRL_BEGIN) || (type >= DP_AUX_LDO_CTRL_MAX)) {
+	if (type >= DP_AUX_LDO_CTRL_MAX) {
 		printk(KERN_ERR "%s: type(%d) is invalid!\n", __func__, type);
 		return -EINVAL;
 	}
 
 	mutex_lock(&g_dp_aux_ldo_op_mutex);
-	g_dp_aux_ldo_status = g_dp_aux_ldo_status & (~(1 << type));
-	if (g_dp_aux_ldo_status == 0) {
-		ret = regulator_disable(g_dp_aux_ldo_supply);
-		if (ret) {
-			printk(KERN_ERR "%s: regulator disable failed(%d)!\n", __func__, ret);
-			mutex_unlock(&g_dp_aux_ldo_op_mutex);
-			return -EPERM;
+	if (g_dp_aux_ldo_status != 0) {
+		g_dp_aux_ldo_status = g_dp_aux_ldo_status & (~(1 << type));
+		if (g_dp_aux_ldo_status == 0) {
+			ret = regulator_disable(g_dp_aux_ldo_supply);
+			if (ret) {
+				printk(KERN_ERR "%s: regulator disable failed(%d)!\n", __func__, ret);
+				mutex_unlock(&g_dp_aux_ldo_op_mutex);
+				return -EPERM;
+			}
 		}
 	}
 	mutex_unlock(&g_dp_aux_ldo_op_mutex);
@@ -202,6 +241,12 @@ static int __init dp_aux_switch_init(void)
 	if (!np) {
 		printk(KERN_ERR "NOT FOUND device node %s!\n", DTS_DP_AUX_SWITCH);
 		goto err_return;
+	}
+
+	if (of_property_read_bool(np, "aux_switch_from_fsa4476")) {
+		g_aux_switch_from_fsa4476 = true;
+		printk(KERN_INFO "%s: aux switch from fsa4476\n", __func__);
+		return 0;
 	}
 
 	g_dp_aux_gpio = of_get_named_gpio(np, "cs-gpios", 0);

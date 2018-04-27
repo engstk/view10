@@ -1,4 +1,4 @@
-# MD5: 8c80b75c14a8d99a017b72b3b5fef7cf
+# MD5: 999fd37dc31e1e1780fc7dc938207615
 CFG_FEATURE_ON                                  := 1
 CFG_FEATURE_OFF                                 := 0
 CFG_FEATURE_ACPU_FC_POINT_REG                   := FEATURE_ON
@@ -15,15 +15,7 @@ CFG_FEATURE_SMALL_MAILBOX                       := FEATURE_OFF
 CFG_FEATURE_TTF_MEM_DEBUG                       := FEATURE_ON
 CFG_FEATURE_VISP_VPP                            := FEATURE_ON
 CFG_VISP_IMS_NIC_CNT                            := 8
-CFG_SC_CTRL_MOD_P532                            := 1
-CFG_SC_CTRL_MOD_M533                            := 2
-CFG_SC_CTRL_MOD_M535                            := 3
-CFG_SC_CTRL_MOD_3650_SFT                        := 4
-CFG_SC_CTRL_MOD_6250_SFT                        := 5
-CFG_SC_CTRL_MOD_6932_SFT                        := 6
-CFG_SC_CTRL_MOD_3660_SFT                        := 7
-CFG_SC_CTRL_MOD_KIRIN970_SFT                    := 8
-CFG_SC_CTRL_MOD                                 := (SC_CTRL_MOD_KIRIN970_SFT)
+CFG_TTF_MEM_POOL_CFG                            := TTF_MEM_SPECIFICATION3
 CFG_TTF_CF_FEATURE                              := FEATURE_OFF
 CFG_FEATURE_DSDS                                := FEATURE_ON
 CFG_GAS_PTL_VER_PRE_R99                         := (PS_PTL_VER_PRE_R99)
@@ -42,6 +34,10 @@ CFG_FEATURE_DL_E_CELL_FACH                      := FEATURE_ON
 CFG_FEATURE_UL_E_CELL_FACH                      := FEATURE_ON
 CFG_FEATURE_MODEM1_SUPPORT_WCDMA                := FEATURE_ON
 CFG_FEATURE_HARDWARE_HDLC_ON_CCPU               := FEATURE_ON
+ifeq ($(cdma),false)
+CFG_FEATURE_UE_MODE_CDMA                        := FEATURE_OFF
+else
 CFG_FEATURE_UE_MODE_CDMA                        := FEATURE_ON
+endif
 CFG_FEATURE_BASTET                              := FEATURE_ON
 CFG_GU_PRODUCT_VERSION                          := VERSION_V7R1

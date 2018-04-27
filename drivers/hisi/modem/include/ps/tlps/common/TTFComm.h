@@ -436,21 +436,27 @@ usSn:当前期望获取其存储位置的块的块号*/
 /* 获取最大的非法core mask */
 #define TTF_GET_MAX_CORE_MASK     ((1UL << VOS_GetNumberOfCores()) - 1)
 
+/* 掩码值为0 */
+#define TTF_MASK_EMPTY                  (0x0)
+
+/* 掩码值为1 */
+#define TTF_MASK_ON                     (0x1)
+
 /* TTF Log输出 */
 #define TTF_LOG(ModulePID, ModeType, Level, String) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%s \r\n", String))
+        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "\r\n"))
 
 #define TTF_LOG1(ModulePID, ModeType, Level, String, Para1) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%s, %d \r\n", String, Para1))
+        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%d \r\n", Para1))
 
 #define TTF_LOG2(ModulePID, ModeType, Level, String, Para1, Para2) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%s, %d, %d \r\n", String, Para1, Para2))
+        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%d, %d \r\n", Para1, Para2))
 
 #define TTF_LOG3(ModulePID, ModeType, Level, String,Para1, Para2, Para3) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%s, %d, %d, %d \r\n", String, Para1, Para2, Para3))
+        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%d, %d, %d \r\n", Para1, Para2, Para3))
 
 #define TTF_LOG4(ModulePID, ModeType, Level, String, Para1, Para2, Para3, Para4) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%s, %d, %d, %d, %d \r\n", String, Para1, Para2, Para3, Para4))
+        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, "%d, %d, %d, %d \r\n", Para1, Para2, Para3, Para4))
 
 /******************************************************************************
   3 枚举定义

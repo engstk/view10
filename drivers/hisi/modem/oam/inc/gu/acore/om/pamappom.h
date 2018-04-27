@@ -46,24 +46,7 @@
  *
  */
 
-/******************************************************************************
 
-                  版权所有 (C), 2001-2015, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名      : pamappom.h
-  版 本 号      : 初稿
-  作    者      : H00300778
-  生成日期      : 2015年6月24日
-  最近修改      :
-  功能描述      : 该h文件给出了pamappom.c的头文件
-  函数列表      :
-  修改历史      :
-  1.日    期    : 2015年6月24日
-    作    者    : H00300778
-    修改内容    : 创建文件
-
-******************************************************************************/
 
 
 #ifndef __PAMAPPOM_H__
@@ -84,7 +67,6 @@ extern "C"{
 #include "mdrv.h"
 #include "omprivate.h"
 
-
 /*****************************************************************************
   2 宏定义
 ******************************************************************************/
@@ -95,6 +77,7 @@ extern "C"{
 
 #define OM_DRV_MAX_IO_COUNT             (8)        /*一次提交给底软接口的最大数目*/
 
+/* 与si_pih.h中的枚举定义SI_PIH_REQ_ENUM_UINT32保持一致 */
 #define OM_SI_PIH_GACCESS_REQ             (3)
 #define OM_SI_PIH_ISDB_ACCESS_REQ         (7)
 #define OM_SI_PIH_CGLA_SET_REQ            (16)
@@ -102,6 +85,9 @@ extern "C"{
 #define OM_SI_PIH_CRSM_SET_REQ            (21)
 #define OM_SI_PIH_CRLA_SET_REQ            (22)
 #define OM_SI_PIH_PRIVATECGLA_SET_REQ     (32)
+#if (FEATURE_ON == FEATURE_PHONE_SC)
+#define OM_SI_PIH_SILENT_PININFO_SET_REQ  (35)
+#endif
 
 #define OM_LOG1(Mod, SubMod, Level, String, Para1) \
            (VOS_VOID)DIAG_LogReport( DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(Mod), DIAG_MODE_UMTS, (Level)), \
@@ -144,22 +130,6 @@ enum OM_ICC_CHANNEL_ENUM
     OM_ICC_CHANNEL_BUTT
 };
 typedef VOS_UINT32 OM_ICC_CHANNEL_ENUM_UINT32;
-
-typedef struct
-{
-   VOS_UINT16                       usSendPid;
-   VOS_UINT16                       usRcvPid;
-   VOS_UINT32                       ulMsgName;
-   VOS_UINT32                       ulSliceStart;
-   VOS_UINT32                       ulSliceEnd;
-}OM_RECORD_INFO_STRU;
-
-typedef struct
-{
-   VOS_UINT8                       *pucBuf;
-   VOS_UINT32                       ulLen;
-   VOS_UINT8                        aucRsv[4];
-}OM_RECORD_BUF_STRU;
 
 typedef struct
 {

@@ -3,7 +3,8 @@ CFLAGS_trace.o				:= -I$(src)
 
 ccflags-$(CONFIG_USB_DWC3_HISI)		+= -DDWC3_ENABLE_CSP
 ccflags-$(CONFIG_USB_DWC3_OTG)		+= -DDWC3_OTG_FORCE_MODE
-ccflags-$(CONFIG_USB_DWC3_KIRIN970)	+= -DDWC3_OTG_FORCE_RESET_GCTL
+ccflags-$(CONFIG_USB_DWC3_FEB)	+= -DDWC3_OTG_FORCE_RESET_GCTL
+ccflags-$(CONFIG_USB_DWC3_MAR)	+= -DDWC3_USB_HOST_IN_IMMRETRY_EN -DDWC3_DEV_P4_PG_EN -DDWC3_RX_TRES_CFG_DIS
 
 ifneq ($(TARGET_BUILD_VARIANT),user)
 EXTRA_CFLAGS += -DHISI_PLUGUSB_TEST
@@ -63,9 +64,11 @@ ifeq ($(CONFIG_USB_DWC3_VBUS_SPMI),y)
 	usb-vbus-y    += hisi_usb_vbus_spmi.o
 endif
 
-obj-$(CONFIG_USB_DWC3_KIRIN970)		+= dwc3-kirin970.o hisi_usb3_bc.o hisi_usb3_misctrl.o
-obj-$(CONFIG_USB_DWC3_KIRIN960)		+= dwc3-hi3660.o hisi_usb3_bc.o
-obj-$(CONFIG_USB_DWC3_KIRIN950)		+= dwc3-hi3650.o hisi_usb3_bc.o
+obj-$(CONFIG_USB_DWC3_NOV)		+= dwc3-nov.o hisi_usb2_bc.o
+obj-$(CONFIG_USB_DWC3_MAR)		+= dwc3-mar.o hisi_usb3_bc.o hisi_usb3_misctrl.o
+obj-$(CONFIG_USB_DWC3_FEB)		+= dwc3-feb.o hisi_usb3_bc.o hisi_usb3_misctrl.o
+obj-$(CONFIG_USB_DWC3_JAN)		+= dwc3-jan.o hisi_usb3_bc.o
+
 obj-$(CONFIG_USB_DWC3_HISI)		+= dwc3-hisi.o usb-vbus.o
 
 ifneq ($(CFG_CONFIG_HISI_FAMA),true)
@@ -77,3 +80,12 @@ EXTRA_CFLAGS += -I$(srctree)/drivers/hisi/hifi_mailbox/mailbox
 EXTRA_CFLAGS += -I$(srctree)/drivers/hisi/hifi_mailbox/ipcm
 EXTRA_CFLAGS += -I$(srctree)/drivers/hisi/hifi_dsp
 endif
+
+ifeq ($(CONFIG_USB_DWC3_MAR), y)
+EXTRA_CFLAGS += -DCOMBOPHY_VERSION_1_1
+ifeq ($(chip_type), es)
+EXTRA_CFLAGS += -DCOMBOPHY_FW_UPDATE
+endif
+endif
+
+obj-$(CONFIG_CONTEXTHUB_PD) += pd.o

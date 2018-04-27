@@ -1524,8 +1524,8 @@ static long anc_max14744_ioctl(struct file *file, unsigned int cmd,
 static ssize_t anc_max14744_reg_list_show(struct device *dev,
 					  struct device_attribute *attr, char *buf)
 {
-	int value;
-	int reg;
+	int value = 0;
+	int reg = 0;
 	char val_str[20];
 
 	buf[0] = '\0';
@@ -2070,7 +2070,6 @@ err_out:
 			regmap_exit(di->regmapL);
 	}
 	g_anc_max14744_priv = NULL;
-	np = NULL;
 
 	return ret;
 }
@@ -2125,7 +2124,6 @@ static int anc_max14744_remove(struct i2c_client *client)
 			hwlog_err("%s: disable anc hs ldo failed.\n", __func__);
 		}
 	}
-	di = NULL;
 
 	misc_deregister(&anc_max14744_device);
 

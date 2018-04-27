@@ -57,7 +57,6 @@
 #include <linux/fs.h>
 #include <linux/slab.h>
 #include <linux/rtc.h>
-
 #include <product_config.h>
 #include <osl_bio.h>
 #include <osl_list.h>
@@ -68,98 +67,32 @@
 #include <bsp_pmu.h>
 #include <power_com.h>
 #include "power_exchange.h"
-
 #include <bsp_reset.h>
-
 #include <bsp_onoff.h>
 #include <bsp_sysctrl.h>
 #include "mdrv_chg.h"
-
 #include "bsp_dump.h"
-
 #include <hi_sysboot.h>
-
 #include "bsp_llt.h"
 
+#include "power_off_mbb.h"
 
-struct bsp_onoff_callback {
-    struct list_head node;
-    void (*fn)(void);
-};
-
-/*lint -save -e* */
-static LIST_HEAD(list_callback);
-static DEFINE_SPINLOCK(list_spinlock);
-/*lint -restore */
-
-
-void bsp_reboot_callback_register(void (*hook)(void))
-{
-    /*lint --e{*} */
-    unsigned long flags = 0;
-
-    struct bsp_onoff_callback *callback =
-        (struct bsp_onoff_callback *)kmalloc(sizeof(struct bsp_onoff_callback), GFP_KERNEL);
-    if (NULL == callback)
-    {
-        pr_dbg("fail to malloc struct bsp_onoff_callback \n");
-        return;
-    }
-    memset((void*)callback,0,sizeof(struct bsp_onoff_callback));
-
-    callback->fn = hook;
-
-    spin_lock_irqsave(&list_spinlock, flags);
-    list_add(&callback->node, &list_callback);
-    spin_unlock_irqrestore(&list_spinlock, flags);
-    /*coverity[leaked_storage] */
-}
 
 /******************************************************************************
 *  Function:  drv_shut_down
-*  Description: start the power off process.
+*  Description: start the power off process right now or a few second later, and no reboot flow.
 *  Input:
 *         eReason : shutdown reason.
+*         delay_in_ms: timing shutdown time in ms
 *  Output:
 *         None
 *  Return:
 *         None
-*  Note  : 底层调用关机接口，启用定时器，上报事件给应用。
-*          超时时间内应用不关机，由底层强制关机。
+*  Note  : the ONLY entry of normal shutdown
 ********************************************************************************/
-void drv_shut_down( DRV_SHUTDOWN_REASON_E enReason )
+void drv_shut_down( DRV_SHUTDOWN_REASON_E enReason, unsigned int  delay_in_ms )
 {
-    printk(KERN_ERR"%s is called from (%pF) ...\n",
-        __FUNCTION__, __builtin_return_address(0U));
-
-    if (DRV_SHUTDOWN_RESET == enReason)
-    {
-        pr_dbg("drv_shut_down is called, modem reset...");
-       if(!is_in_llt())
-        {
-            system_error(DRV_ERROR_USER_RESET, 0, 0, NULL, 0);
-        }
-    }
-    /* Notify the monitor task */
-}
-
-/******************************************************************************
-*  Function:  bsp_drv_power_off
-*  Description: same as drv_power_off, the public API
-*  Input:
-*         None
-*  Output:
-*         None
-*  Return:
-*         None
-*  Note  : 应用调用关机时调用，at+cfun=8
-********************************************************************************/
-void bsp_drv_power_off( void )
-{
-    printk(KERN_ERR"%s is called from (%pF) ...\n",
-        __FUNCTION__, __builtin_return_address(0U));
-
-    printk(KERN_ERR"we will do nothing...\n");
+    /*do nothing*/
 }
 
 /******************************************************************************
@@ -171,17 +104,20 @@ void bsp_drv_power_off( void )
 *         None
 *  Return:
 *         None
-*  Note  : 应用调用重启时调用，at+cfun=6
+*  Note  : the ONLY entry of Normal restart
 ********************************************************************************/
 void bsp_drv_power_reboot( void )
 {
-    printk(KERN_ERR"bsp_drv_power_reboot is called, modem reset...\n");
     if(!is_in_llt())
     {
-         system_error(DRV_ERROR_USER_RESET, 0, 0, NULL, 0);
+        bsp_log_print("bsp_drv_power_reboot is called, modem reset...\n");
+        system_error(DRV_ERROR_USER_RESET, 0, 0, NULL, 0);
     }
 }
 
+/*******************************************************************************
+* The following is hisi drv native packaged interfaces for other modules( OM/TAF and so on )
+*******************************************************************************/
 void mdrv_sysboot_restart(void)
 {
     printk(KERN_ERR"%s is called from (%pF) ...\n",
@@ -200,7 +136,7 @@ EXPORT_SYMBOL_GPL(mdrv_sysboot_restart);
 *         None
 *  Return:
 *         None
-*  Note  : 直接重启
+*  Note  : reboot immediately
 ********************************************************************************/
 void bsp_drv_power_reboot_direct( void )
 {
@@ -215,7 +151,7 @@ void bsp_drv_power_reboot_direct( void )
 EXPORT_SYMBOL_GPL(bsp_drv_power_reboot_direct);
 /******************************************************************************
 *  Function:  balong_power_restart
-*  Description: same as bsp_drv_power_reboot, 系统调用时使用
+*  Description: same as bsp_drv_power_reboot,
 *  Input:
 *         None
 *  Output:
@@ -230,6 +166,7 @@ void balong_power_restart(char mode, const char *cmd)
     printk(KERN_ERR"%s is called from (%pF) ...\n",
         __FUNCTION__, __builtin_return_address(0U));
 
+    mbb_record_reboot_mode(cmd);
     bsp_drv_power_reboot();
 }
 EXPORT_SYMBOL_GPL(balong_power_restart);
@@ -237,7 +174,7 @@ EXPORT_SYMBOL_GPL(balong_power_restart);
 
 /******************************************************************************
 *  Function:  balong_power_off
-*  Description: same as bsp_drv_power_off, 系统调用时使用
+*  Description: shut down right now
 *  Input:
 *         None
 *  Output:
@@ -251,18 +188,16 @@ void balong_power_off( void )
     printk(KERN_ERR"%s is called from (%pF) ...\n",
         __FUNCTION__, __builtin_return_address(0U));
 
-	bsp_drv_power_off();
+    drv_shut_down( DRV_SHUTDOWN_POWER_KEY, 0 );
 }
 EXPORT_SYMBOL_GPL(balong_power_off);
-
-
 
 void mdrv_sysboot_shutdown(void)
 {
     printk(KERN_ERR"%s is called from (%pF) ...\n",
         __FUNCTION__, __builtin_return_address(0U));
 
-	drv_shut_down(DRV_SHUTDOWN_TEMPERATURE_PROTECT);
+    drv_shut_down(DRV_SHUTDOWN_TEMPERATURE_PROTECT, 0);
 }
 EXPORT_SYMBOL_GPL(mdrv_sysboot_shutdown);
 

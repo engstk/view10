@@ -35,6 +35,7 @@ OSAL_SEMA g_BPDSem;
 extern Vfmw_Osal_Func_Ptr g_vfmw_osal_fun_ptr;
 
 #define OSAL_Print  printk
+#define MAX_WAIT_EVENT_CNT  100
 #define TIME_PERIOD(begin, end) ((end >= begin) ? (end - begin) : (0xffffffff - begin + end))
 
 UINT32 OSAL_GetTimeInMs(VOID)
@@ -75,6 +76,7 @@ static inline SINT32 OSAL_GiveEvent(OSAL_EVENT *pEvent)
 static inline SINT32 OSAL_WaitEvent(OSAL_EVENT *pEvent, SINT32 msWaitTime)
 {
 	SINT32 ret;
+	UINT32 cnt = 0;
 
 	UINT32 start_time, cur_time;
 	start_time = VFMW_OSAL_GetTimeInMs();
@@ -84,12 +86,17 @@ static inline SINT32 OSAL_WaitEvent(OSAL_EVENT *pEvent, SINT32 msWaitTime)
 		if (ret < 0) {
 			cur_time = VFMW_OSAL_GetTimeInMs();
 			if (TIME_PERIOD(start_time, cur_time) > (UINT32)msWaitTime) {
-				dprint(PRN_ALWS, "wait event time out, time : %d\n", TIME_PERIOD(start_time, cur_time));
+				dprint(PRN_ALWS, "wait event time out, time : %d, cnt: %d\n", TIME_PERIOD(start_time, cur_time), cnt);
 				ret = 0;
 				break;
 			}
 		}
+		cnt++;
 	} while ((pEvent->flag == 0) && (ret < 0));
+
+	if (cnt > MAX_WAIT_EVENT_CNT) {
+		dprint(PRN_ALWS, "the max cnt of wait_event interrupts by singal is %d\n", cnt);
+	}
 
 	if (ret  == 0) {
 		dprint(PRN_ALWS, "wait pEvent signal timeout\n");

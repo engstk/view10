@@ -22,7 +22,7 @@
 #include <linux/of_reserved_mem.h>
 #include <linux/sort.h>
 
-#if defined(CONFIG_DEBUG_FS)
+#if defined(CONFIG_HISI_DEBUG_FS)
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
 #define DT_MEM_RESERVED  "dt_mem_reserved"
@@ -31,7 +31,7 @@
 #define MAX_RESERVED_REGIONS	64
 static struct reserved_mem reserved_mem[MAX_RESERVED_REGIONS];
 static int reserved_mem_count;
-#if defined(CONFIG_DEBUG_FS)
+#if defined(CONFIG_HISI_DEBUG_FS)
 static  int dynamic_mem_reserved_count = 0;
 static  const char *dynamic_mem_reserved_array[MAX_RESERVED_REGIONS];
 static  int cma_mem_reserved_count = 0;
@@ -94,7 +94,7 @@ void __init fdt_reserved_mem_save_node(unsigned long node, const char *uname,
 	rmem->name = uname;
 	rmem->base = base;
 	rmem->size = size;
-#if defined(CONFIG_DEBUG_FS)
+#if defined(CONFIG_HISI_DEBUG_FS)
 	if((of_get_flat_dt_prop(node, "reusable", NULL))
 	   &&  (cma_mem_reserved_count < MAX_RESERVED_REGIONS)) {
 		cma_mem_reserved_array[cma_mem_reserved_count] = rmem->name;
@@ -192,7 +192,7 @@ static int __init __reserved_mem_alloc_size(unsigned long node,
 			uname);
 		return -ENOMEM;
 	}
-#if defined(CONFIG_DEBUG_FS)
+#if defined(CONFIG_HISI_DEBUG_FS)
 	if(dynamic_mem_reserved_count < MAX_RESERVED_REGIONS) {
 		dynamic_mem_reserved_array[dynamic_mem_reserved_count] = uname;
 		dynamic_mem_reserved_count++;
@@ -372,7 +372,7 @@ void of_reserved_mem_device_release(struct device *dev)
 }
 EXPORT_SYMBOL_GPL(of_reserved_mem_device_release);
 
-#if defined(CONFIG_DEBUG_FS)
+#if defined(CONFIG_HISI_DEBUG_FS)
 
 static int dt_memory_reserved_debug_show(struct seq_file *m, void *private)
 {
@@ -442,5 +442,5 @@ static int __init dt_memory_reserved_init_debugfs(void)
 }
 __initcall(dt_memory_reserved_init_debugfs);
 
-#endif /* CONFIG_DEBUG_FS */
+#endif /* CONFIG_HISI_DEBUG_FS */
 

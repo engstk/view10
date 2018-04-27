@@ -5,6 +5,8 @@
 #include "lcdkit_panel.h"
 #include "lcdkit_disp.h"
 #include "lcdkit_dbg.h"
+#include <soc_sctrl_interface.h>
+#include <soc_acpu_baseaddr_interface.h>
 #include <huawei_platform/log/log_jank.h>
 #include "lcdkit_btb_check.h"
 #include "lcdkit_ext.h"
@@ -23,6 +25,16 @@ extern bool isbulcked;
 volatile int lcdkit_brightness_ddic_info = 0;
 extern char lcdkit_panel_name[128];
 char read_temp[20]={0};
+int g_max_backlight_from_app = MAX_BACKLIGHT_FROM_APP;
+int g_min_backlight_from_app = MIN_BACKLIGHT_FROM_APP;
+struct timer_list backlight_second_timer;
+
+/* for backlight print count when power on*/
+#define BACKLIGHT_PRINT_TIMES	10
+static int g_backlight_count;
+
+/* set global variables of td4336 */
+uint32_t g_read_value_td4336[19] = {0};
 
 void lcdkit_set_pdev(struct platform_device *pdev)
 {
@@ -74,6 +86,16 @@ static void lcdkit_display_on_cmds_check_delay(void)
     mdelay(delay_margin);
 CHECK_DELAY_END:
     lcdkit_info.panel_infos.dis_on_cmds_panel_on_tag = false;
+    return;
+}
+static void lcdkit_record_display_on_time_for_mipi_dsm(void)
+{
+    if (lcdkit_info.panel_infos.mipi_check_support){
+        do_gettimeofday(&lcdkit_info.panel_infos.display_on_record_time);
+        LCDKIT_INFO("display on at %lu seconds %lu mil seconds\n",
+            lcdkit_info.panel_infos.display_on_record_time.tv_sec,
+            lcdkit_info.panel_infos.display_on_record_time.tv_usec);
+    }
     return;
 }
 static void lcdkit_display_on_new_seq_set_delay_time(void)
@@ -495,6 +517,9 @@ void lcdkit_backlight_ic_power_on(void)
             LCDKIT_INFO("backlight_ic power ctrl mode is %d  bl gpio ctrl mode is %d!\n",
             lcdkit_info.panel_infos.lcd_backlight_power_ctrl_mode,lcdkit_info.panel_infos.lcd_bl_gpio_ctrl_mode);
             lcdkit_backlight_ic_inital();
+#if defined (CONFIG_HUAWEI_DSM)
+            lcdkit_backlight_ic_ovp_check();
+#endif
         }
     }
 }
@@ -535,6 +560,7 @@ static int jdi_panel_write(struct hisi_fb_data_type* hisifd)
     reg_32[1] = read_temp[0];
     reg_33[1] = read_temp[1];
     reg_34[1] = read_temp[2];
+    char cmd1[2] = {0xff, 0x10};
 
     struct dsi_cmd_desc lcd_reg_32_cmds[] = {
         {DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
@@ -561,6 +587,10 @@ static int jdi_panel_write(struct hisi_fb_data_type* hisifd)
             sizeof(reg_fb), reg_fb},
     };
 
+    struct dsi_cmd_desc cmd1_code_cmds[] = {
+        {DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
+            sizeof(cmd1), cmd1},
+    };
     /*switch page2a*/
     mipi_dsi_cmds_tx(lcd_page2a_cmds, \
         ARRAY_SIZE(lcd_page2a_cmds), hisifd->mipi_dsi0_base);
@@ -574,8 +604,8 @@ static int jdi_panel_write(struct hisi_fb_data_type* hisifd)
     mipi_dsi_cmds_tx(lcd_reg_34_cmds, \
         ARRAY_SIZE(lcd_reg_34_cmds), hisifd->mipi_dsi0_base);
     /*switch page10*/
-    mipi_dsi_cmds_tx(lcd_page10_cmds, \
-        ARRAY_SIZE(lcd_page10_cmds), hisifd->mipi_dsi0_base);
+    mipi_dsi_cmds_tx(cmd1_code_cmds, \
+        ARRAY_SIZE(cmd1_code_cmds), hisifd->mipi_dsi0_base);
     return 0;
 }
 
@@ -595,6 +625,7 @@ static int jdi_panel_read(void)
     char reg_fb[2] = {0xfb, 0x01};
     static int read_flag = 0;
     struct hisi_fb_data_type *hisifd = NULL;
+    char cmd1[2] = {0xff, 0x10};
 
     struct dsi_cmd_desc lcd_reg_cmd[] = {
         {DTYPE_GEN_READ1, 0, 1, WAIT_TYPE_MS,
@@ -625,6 +656,11 @@ static int jdi_panel_read(void)
             sizeof(reg_fb), reg_fb},
     };
 
+    struct dsi_cmd_desc cmd1_code_cmds[] = {
+        {DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
+            sizeof(cmd1), cmd1},
+    };
+
     hisifd = hisifd_list[PRIMARY_PANEL_IDX];
     /*read 0xa1 reg*/
         ret = mipi_dsi_lread_reg(read_back, lcd_reg_cmd, 5, hisifd->mipi_dsi0_base);
@@ -651,12 +687,11 @@ static int jdi_panel_read(void)
                read_temp[2] =  read_back[0] & 0xFF;
         LCDKIT_INFO("jdi  lcd  91  first=0x%x\n", read_back[0]);
     /*switch page10*/
-    mipi_dsi_cmds_tx(lcd_page10_cmds, \
-        ARRAY_SIZE(lcd_page10_cmds), hisifd->mipi_dsi0_base);
+    mipi_dsi_cmds_tx(cmd1_code_cmds, \
+        ARRAY_SIZE(cmd1_code_cmds), hisifd->mipi_dsi0_base);
     }
     return 0;
 }
-
 static void sharp_panel_read(void)
 {
 	struct hisi_fb_data_type *hisifd = NULL;
@@ -688,6 +723,183 @@ static void sharp_panel_read(void)
 		strncpy(lcdkit_panel_name,lcdkit_info.panel_infos.panel_name,strlen(lcdkit_info.panel_infos.panel_name));
 	}
 }
+
+static int lcdkit_panel_is_power_on(struct hisi_fb_data_type* hisifd)
+{
+    uint32_t temp = 0;
+    int ret       = 0;
+    char __iomem* sctrl_base = NULL;
+    /*bit[8] = 1 : lcd power on
+     *bit[8] = 0 : lcd power off*/
+    sctrl_base = hisifd->sctrl_base;
+    temp = inp32(sctrl_base + SCBAKDATA11);
+    ret  = (temp & 0x100) >> 8;
+
+    LCDKIT_INFO("inp32(SOC_SCTRL_SCBAKDATA11_ADDR(SOC_ACPU_SCTRL_BASE_ADDR))= 0x%x bit[8] = %d!\n",
+                    temp, ret);
+    return ret;
+}
+
+static void lcdkit_clear_sctrl_reg(struct hisi_fb_data_type* hisifd)
+{
+    uint32_t temp = 0;
+    int ret       = 0;
+    char __iomem* sctrl_base = NULL;
+    /*bit[8] = 1 : lcd power on
+     *bit[8] = 0 : lcd power off*/
+    sctrl_base = hisifd->sctrl_base;
+    temp = inp32(sctrl_base + SCBAKDATA11);
+    temp &= ~(0x100);
+    outp32(sctrl_base + SCBAKDATA11, temp);
+    LCDKIT_INFO("outp32(SOC_SCTRL_SCBAKDATA11_ADDR(SOC_ACPU_SCTRL_BASE_ADDR), 0x%x)\n",temp);
+}
+
+static int lcdkit_vcc_and_tp_power_on(struct platform_device* pdev)
+{
+    struct hisi_fb_data_type* hisifd = NULL;
+    struct hisi_panel_info* pinfo = NULL;
+    ssize_t ret = 0;
+    int data_for_ts_resume = LCDKIT_SHORT_SYNC_TIMEOUT;
+    int data_for_ts_after_resume = LCDKIT_NO_SYNC_TIMEOUT;
+
+    if (NULL == pdev)
+    {
+        LCDKIT_ERR("NULL Pointer\n");
+        return -EINVAL;
+    }
+
+    hisifd = platform_get_drvdata(pdev);
+
+    if (NULL == hisifd)
+    {
+        LCDKIT_ERR("NULL Pointer\n");
+        return -EINVAL;
+    }
+
+    pinfo = &(hisifd->panel_info);
+
+    LCDKIT_INFO("Exit Aod mode, not running lcdkit_on, lcd_init_step %d . \n", pinfo->lcd_init_step);
+    if (pinfo->lcd_init_step == LCD_INIT_POWER_ON)
+    {
+        if(!lcdkit_is_enter_sleep_mode())
+        {
+            if(lcdkit_info.panel_infos.iovcc_before_vci == 1)
+            {
+                /*For amoled, Iovcc is need to be pulled up before vci. */
+                /* Iovcc  1.8V*/
+                if ( lcdkit_iovcc_is_regulator_ctrl_power())
+                {
+                    vcc_cmds_tx(pdev, lcdkit_io_vcc_enable_cmds,
+                        ARRAY_SIZE(lcdkit_io_vcc_enable_cmds));
+                }
+                /* Vci  3.3V */
+                /*for incell panel, lcd ctrl tp VCI power*/
+                if ( HYBRID == g_tskit_ic_type || AMOLED == g_tskit_ic_type)
+                {
+                    if(lcdkit_vci_is_regulator_ctrl_power())
+                    {
+                        vcc_cmds_tx(pdev, lcdkit_regulator_vci_enable_cmds,
+                            ARRAY_SIZE(lcdkit_regulator_vci_enable_cmds));
+                    }
+                }
+            }
+            else
+            {
+                /*For incell panel, lcd ctrl tp VCI power*/
+                /* Vci  3.3V */
+                if ( HYBRID == g_tskit_ic_type || AMOLED == g_tskit_ic_type)
+                {
+                    if(lcdkit_vci_is_regulator_ctrl_power())
+                    {
+                        vcc_cmds_tx(pdev, lcdkit_regulator_vci_enable_cmds,
+                            ARRAY_SIZE(lcdkit_regulator_vci_enable_cmds));
+                    }
+                }
+
+                /*Iovcc 1.8V*/
+                if ( lcdkit_iovcc_is_regulator_ctrl_power())
+                {
+                    vcc_cmds_tx(pdev, lcdkit_io_vcc_enable_cmds,
+                        ARRAY_SIZE(lcdkit_io_vcc_enable_cmds));
+                }
+
+            }
+            if (lcdkit_is_lcd_panel() && lcdkit_bias_is_regulator_ctrl_power())
+            {
+                //for lcd, vsp/vsn enable
+                LCDKIT_INFO("power ctrl by regulator and the panel is lcd!\n");
+                vcc_cmds_tx(NULL, lcdkit_scharger_bias_enable_cmds, \
+                            ARRAY_SIZE(lcdkit_scharger_bias_enable_cmds));
+            }
+        }
+        pinfo->lcd_init_step = LCD_INIT_MIPI_LP_SEND_SEQUENCE;
+    }
+    else if (pinfo->lcd_init_step == LCD_INIT_MIPI_LP_SEND_SEQUENCE)
+    {
+        if ( g_tskit_ic_type && lcdkit_info.panel_infos.ts_resume_ctrl_mode == LCDKIT_TS_RESUME_BEFORE_LCD_RST)
+        {
+            LCDKIT_INFO("Call ts first resume before lcd reset.\n");
+            if(lcdkit_info.panel_infos.tp_resume_no_sync)
+            {
+                data_for_ts_resume = LCDKIT_NO_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            else
+            {
+                data_for_ts_resume = LCDKIT_SHORT_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            mdelay(lcdkit_info.panel_infos.delay_af_tp_reset);
+        }
+        if ( g_tskit_ic_type && !lcdkit_info.panel_infos.ts_resume_ctrl_mode)
+        {
+            LCDKIT_INFO("call ts resume default\n");
+            if(lcdkit_info.panel_infos.tp_resume_no_sync)
+            {
+                data_for_ts_resume = LCDKIT_NO_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            else
+            {
+                data_for_ts_resume = LCDKIT_SHORT_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            mdelay(lcdkit_info.panel_infos.delay_af_tp_reset);
+        }
+        if ( g_tskit_ic_type && (lcdkit_info.panel_infos.ts_resume_ctrl_mode == LCDKIT_TS_RESUME_AFTER_DIS_ON))
+        {
+            LCDKIT_INFO("call ts resume after display on\n");
+            if(lcdkit_info.panel_infos.tp_resume_no_sync)
+            {
+                data_for_ts_resume = LCDKIT_NO_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            else
+            {
+                data_for_ts_resume = LCDKIT_SHORT_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            if (ret)
+            {
+                LCDKIT_ERR("ts resume device err\n");
+            }
+
+            mdelay(lcdkit_info.panel_infos.delay_af_tp_reset);
+        }
+        pinfo->lcd_init_step = LCD_INIT_MIPI_HS_SEND_SEQUENCE;
+        LCDKIT_INFO("lcd name = %s.\n", lcdkit_info.panel_infos.panel_name);
+    }
+    else if (pinfo->lcd_init_step == LCD_INIT_MIPI_HS_SEND_SEQUENCE)
+    {
+        if ( g_tskit_ic_type)
+        {
+            lcdkit_notifier_call_chain(LCDKIT_TS_AFTER_RESUME, &data_for_ts_after_resume);
+        }
+        lcdkit_clear_sctrl_reg(hisifd);
+    }
+    LCDKIT_INFO("Exit Aod mode, not running lcdkit_on,exit lcdkit_on lcd_init_step %d . \n", pinfo->lcd_init_step);
+    return ret;
+}
 /*
 *name:lcdkit_on
 *function:power on panel
@@ -709,11 +921,7 @@ static int lcdkit_on(struct platform_device* pdev)
 #endif
     LCDKIT_INFO("enter!\n");
 
-    if (NULL == pdev)
-    {
-        LCDKIT_ERR("NULL Pointer\n");
-        return -EINVAL;
-    }
+    LCDKIT_ASSERT((NULL != pdev), (-EINVAL));
 
     hisifd = platform_get_drvdata(pdev);
 
@@ -722,6 +930,8 @@ static int lcdkit_on(struct platform_device* pdev)
         LCDKIT_ERR("NULL Pointer\n");
         return -EINVAL;
     }
+
+    g_backlight_count = BACKLIGHT_PRINT_TIMES;
 
     if(hisifd->aod_function)
     {
@@ -732,6 +942,10 @@ static int lcdkit_on(struct platform_device* pdev)
     pinfo = &(hisifd->panel_info);
     mipi_dsi0_base = hisifd->mipi_dsi0_base;
 
+    if(1 == lcdkit_panel_is_power_on(hisifd))
+    {
+        return lcdkit_vcc_and_tp_power_on(pdev);
+    }
     /*for mipi clk debug*/
     if (is_lcdkit_mipiclk_enable())
     {
@@ -763,37 +977,73 @@ static int lcdkit_on(struct platform_device* pdev)
         {
 	        lcdkit_backlight_bias_ic_power_on();
         }
-        /*for incell panel, lcd ctrl tp VCI power*/
-        if ( HYBRID == g_tskit_ic_type || AMOLED == g_tskit_ic_type)
-         {
-               if(lcdkit_vci_is_regulator_ctrl_power())
-               	{
-                vcc_cmds_tx(pdev, lcdkit_regulator_vci_enable_cmds,
-                            ARRAY_SIZE(lcdkit_regulator_vci_enable_cmds));
-            }
-            else if ( lcdkit_vci_is_gpio_ctrl_power())
+        if(lcdkit_info.panel_infos.iovcc_before_vci == 1)
+        {
+            /*For amoled, Iovcc is need to be pulled up before vci. */
+            /* Iovcc  1.8V*/
+            if ( lcdkit_iovcc_is_regulator_ctrl_power())
             {
-                gpio_cmds_tx(lcdkit_vci_request_cmds, ARRAY_SIZE(lcdkit_vci_request_cmds));
-                gpio_cmds_tx(lcdkit_vci_enable_cmds, ARRAY_SIZE(lcdkit_vci_enable_cmds));
-
+                vcc_cmds_tx(pdev, lcdkit_io_vcc_enable_cmds,
+                    ARRAY_SIZE(lcdkit_io_vcc_enable_cmds));
             }
+            else if (lcdkit_iovcc_is_gpio_ctrl_power())
+            {
+                gpio_cmds_tx(lcdkit_iovcc_request_cmds, ARRAY_SIZE(lcdkit_iovcc_request_cmds));
+                gpio_cmds_tx(lcdkit_iovcc_enable_cmds, ARRAY_SIZE(lcdkit_iovcc_enable_cmds));
+            }
+
+            mdelay(lcdkit_info.panel_infos.delay_af_iovcc_on);
+            /* Vci  3.3V */
+            /*for incell panel, lcd ctrl tp VCI power*/
+            if ( HYBRID == g_tskit_ic_type || AMOLED == g_tskit_ic_type)
+            {
+                if(lcdkit_vci_is_regulator_ctrl_power())
+                {
+                    vcc_cmds_tx(pdev, lcdkit_regulator_vci_enable_cmds,
+                        ARRAY_SIZE(lcdkit_regulator_vci_enable_cmds));
+                }
+                else if ( lcdkit_vci_is_gpio_ctrl_power())
+                {
+                    gpio_cmds_tx(lcdkit_vci_request_cmds, ARRAY_SIZE(lcdkit_vci_request_cmds));
+                    gpio_cmds_tx(lcdkit_vci_enable_cmds, ARRAY_SIZE(lcdkit_vci_enable_cmds));
+                }
+            }
+            mdelay(lcdkit_info.panel_infos.delay_af_vci_on);
         }
-
-        mdelay(lcdkit_info.panel_infos.delay_af_vci_on);
-
-        /*1.8V*/
-        if ( lcdkit_iovcc_is_regulator_ctrl_power())
+        else
         {
-            vcc_cmds_tx(pdev, lcdkit_io_vcc_enable_cmds,
-                        ARRAY_SIZE(lcdkit_io_vcc_enable_cmds));
-        }
-        else if (lcdkit_iovcc_is_gpio_ctrl_power())
-        {
-            gpio_cmds_tx(lcdkit_iovcc_request_cmds, ARRAY_SIZE(lcdkit_iovcc_request_cmds));
-            gpio_cmds_tx(lcdkit_iovcc_enable_cmds, ARRAY_SIZE(lcdkit_iovcc_enable_cmds));
-        }
+            /*For incell panel, lcd ctrl tp VCI power*/
+            /* Vci  3.3V */
+            if ( HYBRID == g_tskit_ic_type || AMOLED == g_tskit_ic_type)
+            {
+                if(lcdkit_vci_is_regulator_ctrl_power())
+                {
+                    vcc_cmds_tx(pdev, lcdkit_regulator_vci_enable_cmds,
+                        ARRAY_SIZE(lcdkit_regulator_vci_enable_cmds));
+                }
+                else if ( lcdkit_vci_is_gpio_ctrl_power())
+                {
+                    gpio_cmds_tx(lcdkit_vci_request_cmds, ARRAY_SIZE(lcdkit_vci_request_cmds));
+                    gpio_cmds_tx(lcdkit_vci_enable_cmds, ARRAY_SIZE(lcdkit_vci_enable_cmds));
+                }
+            }
 
-        mdelay(lcdkit_info.panel_infos.delay_af_iovcc_on);
+            mdelay(lcdkit_info.panel_infos.delay_af_vci_on);
+
+            /*Iovcc 1.8V*/
+            if ( lcdkit_iovcc_is_regulator_ctrl_power())
+            {
+                vcc_cmds_tx(pdev, lcdkit_io_vcc_enable_cmds,
+                    ARRAY_SIZE(lcdkit_io_vcc_enable_cmds));
+            }
+            else if (lcdkit_iovcc_is_gpio_ctrl_power())
+            {
+                gpio_cmds_tx(lcdkit_iovcc_request_cmds, ARRAY_SIZE(lcdkit_iovcc_request_cmds));
+                gpio_cmds_tx(lcdkit_iovcc_enable_cmds, ARRAY_SIZE(lcdkit_iovcc_enable_cmds));
+            }
+
+            mdelay(lcdkit_info.panel_infos.delay_af_iovcc_on);
+        }
 
         if (lcdkit_vbat_is_gpio_ctrl_power())
         {
@@ -855,6 +1105,21 @@ static int lcdkit_on(struct platform_device* pdev)
         mdelay(lcdkit_info.panel_infos.delay_af_LP11);
 
 lp_sequence_restart:
+        if ( g_tskit_ic_type && lcdkit_info.panel_infos.ts_resume_ctrl_mode == LCDKIT_TS_RESUME_BEFORE_LCD_RST)
+        {
+            LCDKIT_INFO("Call ts first resume before lcd reset.\n");
+            if(lcdkit_info.panel_infos.tp_resume_no_sync)
+            {
+                data_for_ts_resume = LCDKIT_NO_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            else
+            {
+                data_for_ts_resume = LCDKIT_SHORT_SYNC_TIMEOUT;
+                lcdkit_notifier_call_chain(LCDKIT_TS_RESUME_DEVICE, &data_for_ts_resume);
+            }
+            mdelay(lcdkit_info.panel_infos.delay_af_tp_reset);
+        }
         // lcd gpio normal
         if (lcdkit_info.panel_infos.second_reset)
         {
@@ -901,6 +1166,7 @@ lp_sequence_restart:
             if(lcdkit_info.panel_infos.dynamic_gamma_support)
             {
                 if ((!strncmp(lcdkit_info.panel_infos.panel_name, "JDI_2LANE_NT36860 5.88' CMD TFT 1440 x 2560", strlen(lcdkit_info.panel_infos.panel_name)))||
+                    (!strncmp(lcdkit_info.panel_infos.panel_name, "JDI_2LANE_NT36860 CUT2 5.88' CMD TFT 1440 x 2560", strlen(lcdkit_info.panel_infos.panel_name)))||
                     (!strncmp(lcdkit_info.panel_infos.panel_name, "JDI_NT36860 5.88' CMD TFT 1440 x 2560", strlen(lcdkit_info.panel_infos.panel_name))))
                 {
                     ret = lcdkit_jdi_nt36860_5p88_gamma_reg_read(hisifd);
@@ -928,12 +1194,13 @@ lp_sequence_restart:
                 LCDKIT_DEBUG("send second cmds ok !\n");
             }
 
-            if (lcdkit_info.panel_infos.lcd_otp_support) {
+            if (lcdkit_info.panel_infos.lcd_otp_support)
+            {
               jdi_panel_write(hisifd);
             }
         }
 
-        if ( g_tskit_ic_type && (lcdkit_info.panel_infos.ts_resume_ctrl_mode & LCDKIT_TS_RESUME_AFTER_DIS_ON))
+        if ( g_tskit_ic_type && (lcdkit_info.panel_infos.ts_resume_ctrl_mode == LCDKIT_TS_RESUME_AFTER_DIS_ON))
         {
             LCDKIT_INFO("call ts resume after display on\n");
             if(lcdkit_info.panel_infos.tp_resume_no_sync)
@@ -1025,9 +1292,26 @@ lp_sequence_restart:
         //	amoled_irq_enable();
     }
 
+	/* record display on time for mipi error dmd report*/
+	lcdkit_record_display_on_time_for_mipi_dsm();
+
     LCDKIT_INFO("fb%d, -!\n", hisifd->index);
 
     return 0;
+}
+
+static void lcdkit_remove_shield_backlight(void)
+{
+	if(lcdkit_info.panel_infos.bl_is_shield_backlight == true)
+	{
+		lcdkit_info.panel_infos.bl_is_shield_backlight = false;
+	}
+	if(false != lcdkit_info.panel_infos.bl_is_start_second_timer)
+	{
+		del_timer(&backlight_second_timer);
+		lcdkit_info.panel_infos.bl_is_start_second_timer = false;
+		LCDKIT_INFO("panel powerOff, clear backlight shield timer.\n");
+	}
 }
 
 /*
@@ -1063,6 +1347,7 @@ static int lcdkit_off(struct platform_device* pdev)
         lcdkit_notifier_call_chain(LCDKIT_TS_SUSPEND_DEVICE, &data_for_notify_suspend);
         return ret;
     }
+    lcdkit_remove_shield_backlight();
 
     if (NULL == hisifd->mipi_dsi0_base)
     {
@@ -1074,6 +1359,9 @@ static int lcdkit_off(struct platform_device* pdev)
 
     if (pinfo->lcd_uninit_step == LCD_UNINIT_MIPI_HS_SEND_SEQUENCE)
     {
+        if(lcdkit_info.panel_infos.mipi_check_support){
+            lcdkit_mipi_check(hisifd);
+        }
         LOG_JANK_D(JLID_KERNEL_LCD_POWER_OFF, "%s", "LCD_POWER_OFF");
 		if (g_tskit_ic_type) {
 			lcdkit_notifier_call_chain(LCDKIT_TS_EARLY_SUSPEND, NULL);
@@ -1220,7 +1508,12 @@ static int lcdkit_off(struct platform_device* pdev)
 				gpio_cmds_tx(lcdkit_iovcc_free_cmds, ARRAY_SIZE(lcdkit_iovcc_free_cmds));
 			}
 		}
-        msleep(lcdkit_info.panel_infos.delay_af_iovcc_off);
+
+        if (lcdkit_info.panel_infos.delay_af_iovcc_off > 0) {
+                msleep(lcdkit_info.panel_infos.delay_af_iovcc_off);
+        } else {
+                LCDKIT_INFO("No delay after iovcc off !\n");
+        }
 
         if ( HYBRID ==  g_tskit_ic_type || AMOLED == g_tskit_ic_type )
         {
@@ -1340,6 +1633,8 @@ static int lcdkit_set_backlight(struct platform_device* pdev, uint32_t bl_level)
     static uint32_t last_bl_level = 255;
     static uint32_t jank_last_bl_level = 0;
     static uint32_t reg_value_61h;
+    static uint32_t last_bl = 0;
+    static int count = 0;
     struct hisi_panel_info* pinfo = NULL;
 
     if (NULL == pdev)
@@ -1361,7 +1656,11 @@ static int lcdkit_set_backlight(struct platform_device* pdev, uint32_t bl_level)
         LCDKIT_INFO("It is in AOD mode and should bypass lcdkit_set_backlight! \n");
         return 0;
     }
-
+    if(true == lcdkit_info.panel_infos.bl_is_shield_backlight)
+    {
+        LCDKIT_ERR("It is in finger down status, Not running lcdkit_set_backlight! \n");
+        return 0;
+    }
     pinfo = &(hisifd->panel_info);
     if (NULL == pinfo)
     {
@@ -1383,15 +1682,36 @@ static int lcdkit_set_backlight(struct platform_device* pdev, uint32_t bl_level)
     {
         lcdkit_display_on_cmds_check_delay();
     }
-    LCDKIT_DEBUG("fb%d, bl_level=%d.\n", hisifd->index, bl_level);
+    if (hisifb_display_effect_check_bl_value(bl_level, last_bl)) {
+        if (count == 0) {
+            LCDKIT_INFO("[effect] last bl_level=%d.\n", last_bl);
+        }
+        count = DISPLAYENGINE_BL_DEBUG_FRAMES;
+    }
+    if (count > 0) {
+        LCDKIT_INFO("[effect] fb%d, bl_level=%d.\n", hisifd->index, bl_level);
+        count--;
+    } else {
+        LCDKIT_DEBUG("fb%d, bl_level=%d.\n", hisifd->index, bl_level);
+    }
+    last_bl = bl_level;
+
+    if (g_backlight_count)
+    {
+        LCDKIT_INFO("[backlight] Set backlight to %d. [backlight print sequence number: %d] \n",bl_level,BACKLIGHT_PRINT_TIMES-g_backlight_count+1);
+        g_backlight_count = (g_backlight_count > 0) ? (g_backlight_count - 1) : 0;
+    }
+
     if(jank_last_bl_level == 0 && bl_level != 0)
     {
         LOG_JANK_D(JLID_KERNEL_LCD_BACKLIGHT_ON, "LCD_BACKLIGHT_ON,%u", bl_level);
+        LCDKIT_INFO("[backlight on] bl_level = %d!\n", bl_level);
         jank_last_bl_level = bl_level;
     }
     else if (bl_level == 0 && jank_last_bl_level != 0)
     {
         LOG_JANK_D(JLID_KERNEL_LCD_BACKLIGHT_OFF, "LCD_BACKLIGHT_OFF");
+        LCDKIT_INFO("[backlight off] bl_level = %d!\n", bl_level);
         jank_last_bl_level = bl_level;
     }
 
@@ -1430,7 +1750,6 @@ static int lcdkit_set_backlight(struct platform_device* pdev, uint32_t bl_level)
                 {
                     vcc_cmds_tx(NULL, lcdkit_scharger_bl_enable_cmds, \
                                 ARRAY_SIZE(lcdkit_scharger_bl_enable_cmds));
-                    LCDKIT_INFO("bl_level = %d!\n", bl_level);
                 }
 
                 last_bl_level = bl_level;
@@ -1460,32 +1779,41 @@ static int lcdkit_set_backlight(struct platform_device* pdev, uint32_t bl_level)
                 lcdkit_info.panel_infos.backlight_cmds.cmds[0].payload[1] = (bl_level >> 2) & 0xff;    // high 8bit
                 lcdkit_info.panel_infos.backlight_cmds.cmds[0].payload[2] = (bl_level << 2) & 0x00ff;  // low bit2-3
             }
-            else{
+            else if(lcdkit_info.panel_infos.bl_byte_order == 1) {
+                lcdkit_info.panel_infos.backlight_cmds.cmds[0].payload[1] = bl_level & 0x00ff;        // low 8bit
+                lcdkit_info.panel_infos.backlight_cmds.cmds[0].payload[2] = (bl_level >> 8) & 0xff;   // high 8bit
+            } else {
                 lcdkit_info.panel_infos.backlight_cmds.cmds[0].payload[1] = (bl_level >> 8) & 0xff;   // high 8bit
                 lcdkit_info.panel_infos.backlight_cmds.cmds[0].payload[2] = bl_level & 0x00ff;        // low 8bit
             }
         }
-
-        lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.backlight_cmds);
-
-        if (lcdkit_info.panel_infos.panel_type & PANEL_TYPE_LCD)
+        if(lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
         {
-            /*enable/disable backlight*/
-            down(&lcdkit_info.panel_infos.bl_sem);
-            if (bl_level == 0 && last_bl_level != 0)
-            {
-                vcc_cmds_tx(NULL, lcdkit_scharger_bl_disable_cmds, \
-                            ARRAY_SIZE(lcdkit_scharger_bl_disable_cmds));
-            }
-            else if (last_bl_level == 0 && bl_level != 0)
-            {
-                vcc_cmds_tx(NULL, lcdkit_scharger_bl_enable_cmds, \
-                            ARRAY_SIZE(lcdkit_scharger_bl_enable_cmds));
-                LCDKIT_INFO("bl_level = %d!\n", bl_level);
-            }
+            LCDKIT_ERR("MIPI DSI FIFO not empty,backlight cmd send fail!\n");
+            return -EPERM;
+        }
+        else
+        {
+            lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.backlight_cmds);
 
-            last_bl_level = bl_level;
-            up(&lcdkit_info.panel_infos.bl_sem);
+            if (lcdkit_info.panel_infos.panel_type & PANEL_TYPE_LCD)
+            {
+                /*enable/disable backlight*/
+                down(&lcdkit_info.panel_infos.bl_sem);
+                if (bl_level == 0 && last_bl_level != 0)
+                {
+                    vcc_cmds_tx(NULL, lcdkit_scharger_bl_disable_cmds, \
+                                ARRAY_SIZE(lcdkit_scharger_bl_disable_cmds));
+                }
+                else if (last_bl_level == 0 && bl_level != 0)
+                {
+                    vcc_cmds_tx(NULL, lcdkit_scharger_bl_enable_cmds, \
+                                ARRAY_SIZE(lcdkit_scharger_bl_enable_cmds));
+                }
+
+                last_bl_level = bl_level;
+                up(&lcdkit_info.panel_infos.bl_sem);
+            }
         }
     }
     else
@@ -1499,12 +1827,89 @@ static int lcdkit_set_backlight(struct platform_device* pdev, uint32_t bl_level)
     return ret;
 }
 
+
+static void lcdkit_second_timerout_function(unsigned long arg)
+{
+	unsigned long temp;
+	temp = arg;
+	if(lcdkit_info.panel_infos.bl_is_shield_backlight == true)
+	{
+		lcdkit_info.panel_infos.bl_is_shield_backlight = false;
+	}
+	del_timer(&backlight_second_timer);
+	lcdkit_info.panel_infos.bl_is_start_second_timer = false;
+	LCDKIT_INFO("max backlight timeout\n");
+}
+
+static int lcdkit_set_backlight_by_type(struct platform_device* pdev, int backlight_type)
+{
+	int ret = 0;
+	int max_backlight = 0;
+	int min_backlight = 0;
+	struct hisi_fb_data_type* hisifd = NULL;
+
+	if (NULL == pdev)
+	{
+		LCDKIT_ERR("NULL Pointer\n");
+		return -EINVAL;
+	}
+	hisifd = platform_get_drvdata(pdev);
+
+	if (NULL == hisifd)
+	{
+		LCDKIT_ERR("NULL Pointer\n");
+		return -EINVAL;
+	}
+	LCDKIT_INFO("backlight_type is %d\n", backlight_type);
+
+	max_backlight = g_max_backlight_from_app;
+	min_backlight = g_min_backlight_from_app;
+
+	switch (backlight_type) {
+	case BACKLIGHT_HIGH_LEVEL:
+		lcdkit_set_backlight(pdev, max_backlight);
+		lcdkit_info.panel_infos.bl_is_shield_backlight = true;
+		if(lcdkit_info.panel_infos.bl_is_start_second_timer == false)
+		{
+			init_timer(&backlight_second_timer);
+			backlight_second_timer.expires = jiffies + 12*HZ/10;// 1.2s
+			backlight_second_timer.data = 0;
+			backlight_second_timer.function = lcdkit_second_timerout_function;
+			add_timer(&backlight_second_timer);
+			lcdkit_info.panel_infos.bl_is_start_second_timer = true;
+		}
+		else
+		{
+			//if timer is not timeout, restart timer
+			mod_timer(&backlight_second_timer, (jiffies + 12*HZ/10));
+		}
+		LCDKIT_INFO("backlight_type is (%d), set_backlight is (%d)\n", backlight_type, max_backlight);
+		break;
+	case BACKLIGHT_LOW_LEVEL:
+		if(lcdkit_info.panel_infos.bl_is_start_second_timer == true)
+		{
+			del_timer(&backlight_second_timer);
+			lcdkit_info.panel_infos.bl_is_start_second_timer = false;
+		}
+		lcdkit_info.panel_infos.bl_is_shield_backlight = false;
+		lcdkit_set_backlight(pdev, min_backlight);
+		LCDKIT_INFO("backlight_type is (%d), set_backlight is (%d)\n", backlight_type, min_backlight);
+		break;
+	default:
+		LCDKIT_ERR("backlight_type is not define(%d).\n", backlight_type);
+		break;
+	}
+	return ret;
+
+}
+
 static int lcdkit_esd_check(struct platform_device* pdev)
 {
     struct hisi_fb_data_type* hisifd = NULL;
     int ret = 0;
     uint32_t temp = 0;
     uint32_t read_value = 0, tmp_value = 0;
+    int esd_exception_flags = 0;
     int i = 0, j = 0, count = 0;
     struct dsi_cmd_desc dsi_cmd;
     struct lcdkit_dsi_cmd_desc* lcdkit_dsi_cmd = NULL;
@@ -1539,7 +1944,7 @@ static int lcdkit_esd_check(struct platform_device* pdev)
 	if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base)) {
 		HISI_FB_ERR("esd check cmd send fail!\n");
 		up(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
-		return 0;
+		return 1;
 	}
 
 	if(g_lcdkit_pri_info.aod_switch_status == 1){
@@ -1560,7 +1965,23 @@ static int lcdkit_esd_check(struct platform_device* pdev)
             if (!ret) {
                 for (j = 0; j < lcdkit_dsi_cmd->dlen; j++) {
                     tmp_value = (read_value >> j * 8) & 0xff;
-                    if (tmp_value & g_lcdkit_pri_info.esd_value.buf[count++]) {
+                    switch(hisifd->panel_info.esd_expect_value_type)
+                    {
+                        case 0:
+                            if (tmp_value & g_lcdkit_pri_info.esd_value.buf[count++]) {
+                                esd_exception_flags = 1;
+                            }
+                            break;
+                        case 1:
+                            if (tmp_value != g_lcdkit_pri_info.esd_value.buf[count++]) {
+                                esd_exception_flags = 1;
+                            }
+                            break;
+                        default:
+                            LCDKIT_ERR("[ESD] error esd-expect-value-type = %d, line = %d\n", hisifd->panel_info.esd_expect_value_type, __LINE__);
+                            break;
+                    }
+                    if (esd_exception_flags) {
                         hisifd->esd_recover_state = ESD_RECOVER_STATE_START;
                         LCDKIT_ERR("esd abnormal read reg:0x%x = 0x%x\n", g_lcdkit_pri_info.esd_cmds.cmds[i].payload[0], read_value);
                         up(&lcdkit_info.panel_infos.lcdkit_cmd_sem);
@@ -1831,7 +2252,7 @@ int lcdkit_hbm_set_func(struct hisi_fb_data_type *hisifd)
     }
     else
     {
-        LCDKIT_INFO("hbm is not support!\n");
+        LCDKIT_DEBUG("hbm is not support!\n");
     }
     return ret;
 }
@@ -1938,6 +2359,198 @@ static ssize_t lcdkit_aod_alpm_setting_store(struct platform_device *pdev, const
     return count;
 }
 
+void read_ddic_reg_parse(uint32_t input[],uint8_t inputlen, uint8_t output[], uint8_t start_position, uint8_t length)
+{
+	int i = 0;
+
+	if ((NULL == input) || (NULL == output) || (start_position + length > inputlen))
+	{
+		LCDKIT_ERR("NULL Pointer!\n");
+		return ;
+	}
+
+
+	for(i = 0; i < length; i++,start_position++)
+	{
+			/*The following numbers such as "4","8","16","24", are have no specfic meanings, so needn't to define macro.*/
+			switch (start_position % 4)
+				{
+				case 0:
+					if ((input[start_position / 4] & 0xFF) == 0)
+						{
+							output[i] = (uint8_t)((input[start_position / 4] & 0xFF) + '0');
+						}
+					else
+						{
+							output[i] = (uint8_t)(input[start_position / 4] & 0xFF);
+						}
+					break;
+				case 1:
+					if (((input[start_position / 4] >> 8) & 0xFF) == 0)
+						{
+							output[i] = (uint8_t)(((input[start_position / 4] >> 8) & 0xFF) + '0');
+						}
+					else
+						{
+							output[i] = (uint8_t)((input[start_position / 4] >> 8) & 0xFF);
+						}
+					break;
+				case 2:
+					if (((input[start_position / 4] >> 16) & 0xFF) == 0)
+						{
+							output[i] = (uint8_t)(((input[start_position / 4] >> 16) & 0xFF) + '0');
+						}
+					else
+						{
+							output[i] = (uint8_t)((input[start_position / 4] >> 16) & 0xFF);
+						}
+					break;
+				case 3:
+					if (((input[start_position / 4] >> 24) & 0xFF) == 0)
+						{
+							output[i] = (uint8_t)(((input[start_position / 4] >> 24) & 0xFF) + '0');
+						}
+					else
+						{
+							output[i] = (uint8_t)((input[start_position / 4] >> 24) & 0xFF);
+						}
+					break;
+				default:
+					break;
+		}
+		LCDKIT_INFO("output[%d]=0x%x \n ",i,output[i]);
+	}
+	return;
+}
+
+
+void read_td4336_project_id(struct hisi_fb_data_type* hisifd, uint8_t g_project_id[], uint8_t start_position, uint8_t length)
+{
+    char __iomem *mipi_dsi0_base = NULL;
+    char project_id_reg[] = {0xbf};
+
+	if (NULL == hisifd || NULL == g_project_id)
+	{
+		LCDKIT_ERR("NULL Pointer!\n");
+		return ;
+	}
+
+    mipi_dsi0_base = hisifd->mipi_dsi0_base;
+
+    struct dsi_cmd_desc project_id_cmd[] =
+	{
+        {DTYPE_GEN_READ1, 0, 100, WAIT_TYPE_US, sizeof(project_id_reg), project_id_reg},
+	};
+
+    if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
+	{
+		HISI_FB_ERR("The fifo is full causing timeout when read td4336's porjectid!\n");
+	}
+	/*The number "75" means the length of register BFh for TD4336. */
+
+	mipi_dsi_lread_reg(g_read_value_td4336, project_id_cmd, READ_REG_TD4336_NUM, mipi_dsi0_base);
+	read_ddic_reg_parse(g_read_value_td4336,READ_REG_TD4336_NUM,g_project_id, start_position, length);
+	return;
+}
+
+void read_himax83112_project_id(struct hisi_fb_data_type* hisifd, uint8_t g_project_id[])
+{
+	char __iomem *mipi_dsi0_base = NULL;
+	uint32_t read_value[2] = {0};
+	int i = 0;
+	char project_id_reg[] = {0xbb};
+	char project_addr[PROJECT_ID_LENGTH] = {0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b};
+	char project_addr_112A[PROJECT_ID_LENGTH] = {0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f};
+	char playload1_enter1[] = {0xbb, 0x07, 0x82, 0x00, 0x80, 0xff};
+	char playload1_enter2[] = {0xbb, 0x07, 0x82, 0x00, 0x00, 0xff};
+	char playload1_enter1_112A[] = {0xbb, 0x05, 0x16, 0x00, 0x80, 0xff};
+	char playload1_enter2_112A[] = {0xbb, 0x05, 0x16, 0x00, 0x00, 0xff};
+
+	char otp_poweron_offset1[] = {0xe9, 0xcd};
+	char otp_poweron_offset2[] = {0xe9, 0x00};
+	char otp_poweron1[] = {0xbb, 0x22};
+	char otp_poweron2[] = {0xbb, 0x23};
+	char otp_poweroff[] = {0xbb, 0x20};
+
+	if (NULL == hisifd || NULL == g_project_id)
+	{
+		LCDKIT_ERR("NULL Pointer!\n");
+		return ;
+	}
+
+	mipi_dsi0_base = hisifd->mipi_dsi0_base;
+	/* "Emily_read_reg_flag = 1" means Hx83112A, "Emily_read_reg_flag = 2" means Hx83112C. */
+	if(lcdkit_info.panel_infos.eml_read_reg_flag == Hx83112A)
+	{
+		for(i = 0; i< PROJECT_ID_LENGTH; i++)
+		{
+			project_addr[i] = project_addr_112A[i];
+		}
+		playload1_enter1[1] = playload1_enter1_112A[1];
+		playload1_enter1[2] = playload1_enter1_112A[2];
+		playload1_enter2[1] = playload1_enter2_112A[1];
+		playload1_enter2[2] = playload1_enter2_112A[2];
+	}
+
+	struct dsi_cmd_desc otp_poweron1_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron1), otp_poweron1},
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_MS, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+	struct dsi_cmd_desc otp_poweron2_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron2), otp_poweron2},
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_MS, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+	struct dsi_cmd_desc otp_poweroff_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset1), otp_poweron_offset1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweroff), otp_poweroff},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(otp_poweron_offset2), otp_poweron_offset2},
+	};
+
+	struct dsi_cmd_desc playload1_enter_cmds[] =
+	{
+		{DTYPE_DCS_LWRITE, 0, 1, WAIT_TYPE_US, sizeof(playload1_enter1), playload1_enter1},
+		{DTYPE_DCS_LWRITE, 0, 0, WAIT_TYPE_US, sizeof(playload1_enter2), playload1_enter2},
+	};
+	struct dsi_cmd_desc project_id_cmd[] =
+	{
+		{DTYPE_GEN_READ, 0, 100, WAIT_TYPE_US, sizeof(project_id_reg), project_id_reg},
+	};
+
+	if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
+	{
+		HISI_FB_ERR("The fifo is full causing timeout when read hx83112's porjectid!\n");
+	}
+	/* send otp power on cmds for hx83112*/
+	mipi_dsi_cmds_tx(otp_poweron1_cmds, ARRAY_SIZE(otp_poweron1_cmds), mipi_dsi0_base);
+	mipi_dsi_cmds_tx(otp_poweron2_cmds, ARRAY_SIZE(otp_poweron2_cmds), mipi_dsi0_base);
+
+	for(i = 0; i<PROJECT_ID_LENGTH; i++)
+	{
+		playload1_enter1[2] =  project_addr[i];
+		playload1_enter2[2] =  project_addr[i];
+		if (lcdkit_check_mipi_fifo_empty(hisifd->mipi_dsi0_base))
+		{
+			HISI_FB_ERR("The fifo is full causing timeout when read hx83112's porjectid!\n");
+		}
+		mipi_dsi_cmds_tx(playload1_enter_cmds, ARRAY_SIZE(playload1_enter_cmds), mipi_dsi0_base);
+		//Here number "5" means to read five paramaters.
+		mipi_dsi_lread_reg(read_value, project_id_cmd, 5, mipi_dsi0_base);
+
+		if(read_value[1] == 0)
+			read_value[1]+= '0';
+		g_project_id[i] = read_value[1];
+		memset(read_value,0,sizeof(read_value));
+	}
+	/* send otp power off cmds for hx83112*/
+	mipi_dsi_cmds_tx(otp_poweroff_cmds, ARRAY_SIZE(otp_poweroff_cmds), mipi_dsi0_base);
+	return;
+}
+
 static void lcdkit_read_project_id(void)
 {
 	int ret = 0;
@@ -1948,9 +2561,24 @@ static void lcdkit_read_project_id(void)
 		LCDKIT_ERR("hisifd is NULL\n");
 		return;
 	}
-	lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_enter_cmds);
-	ret = hostprocessing_read_ddic(g_project_id, &lcdkit_info.panel_infos.host_project_id_cmds, hisifd, LCD_DDIC_INFO_LEN);
-	lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_exit_cmds);
+	LCDKIT_INFO("eml_read_reg_flag = %d!\n",lcdkit_info.panel_infos.eml_read_reg_flag);
+	switch(lcdkit_info.panel_infos.eml_read_reg_flag)
+	{
+		case Hx83112A:
+		case Hx83112C:
+			read_himax83112_project_id(hisifd, g_project_id);
+			break;
+		case TD4336:
+			read_td4336_project_id(hisifd, g_project_id, PROJECT_ID_START_POSITION_TD4336, PROJECT_ID_LENGTH);
+			break;
+		//this case is for eml_read_reg_flag == 0 or == 4
+		default:
+			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_enter_cmds);
+			ret = hostprocessing_read_ddic(g_project_id, &lcdkit_info.panel_infos.host_project_id_cmds, hisifd, LCD_DDIC_INFO_LEN);
+			lcdkit_dsi_tx(hisifd, &lcdkit_info.panel_infos.host_project_id_exit_cmds);
+			break;
+	}
+
 	if (ret) {
 		LCDKIT_ERR("read reg error\n");
 		return;
@@ -2045,6 +2673,38 @@ static ssize_t lcdkit_cabc_store(struct platform_device *pdev, const char *buf, 
 	}
 	return count;
 }
+
+
+/*
+*name:lcdkit_panel_bypass_powerdown_ulps_support
+*function:get the ulps support flag when panel off bypass ddic power down.
+*@pdev:platform device
+*/
+int lcdkit_panel_bypass_powerdown_ulps_support(struct platform_device* pdev)
+{
+	int support_flag = 0;
+	struct hisi_fb_data_type* hisifd = NULL;
+
+	hisifd = platform_get_drvdata(pdev);
+	if (NULL == hisifd)
+	{
+		LCDKIT_ERR("NULL Pointer\n");
+		return 0;
+	}
+
+	if (hisifd->aod_function)
+	{
+		support_flag = 1;
+		LCDKIT_INFO("AOD mode: send ulps when power off, exit ulps when power on\n");
+	}
+	if (lcdkit_info.panel_infos.pt_ulps_support && g_tskit_pt_station_flag)
+	{
+		support_flag = 1;
+		LCDKIT_INFO("It is need to send ulps when panel off bypass ddic power down! Support_flag=%d !\n",support_flag);
+	}
+	return support_flag;
+}
+
 /*******************************************************************************
 **
 */
@@ -2068,7 +2728,9 @@ static struct hisi_fb_panel_data lcdkit_data =
     .snd_cmd_before_frame = lcdkit_snd_cmd_before_frame,
     .amoled_alpm_setting_store = lcdkit_aod_alpm_setting_store,
 	.lcd_color_param_get_func = lcdkit_color_param_get_func,
+	.lcd_set_backlight_by_type_func = lcdkit_set_backlight_by_type,
 	.lcd_cabc_mode_store = lcdkit_cabc_store,
+	.panel_bypass_powerdown_ulps_support = lcdkit_panel_bypass_powerdown_ulps_support,
 };
 #if defined(CONFIG_HISI_FB_970)
 void hisifb_get_calicolordata_from_share_mem(struct lcdbrightnesscoloroeminfo *pinfo)
@@ -2135,7 +2797,6 @@ static int __init lcdkit_probe(struct platform_device* pdev)
         pinfo->sbl_support = 0;
         pinfo->acm_support = 0;
         pinfo->acm_ce_support = 0;
-        pinfo->esd_enable = 0;
         pinfo->blpwm_precision_type = BLPWM_PRECISION_DEFAULT_TYPE;
         pinfo->comform_mode_support = 0;
         pinfo->color_temp_rectify_support = 0;
@@ -2144,7 +2805,7 @@ static int __init lcdkit_probe(struct platform_device* pdev)
         pinfo->arsr1p_sharpness_support = 0;
         pinfo->blpwm_input_ena = 0;
         lcdkit_info.panel_infos.display_effect_on_support = 0;
-        lcdkit_info.panel_infos.effect_support_mode = 0;
+        lcdkit_info.panel_infos.effect_support_mode &= BITS(31);
         pinfo->gmp_support = 0;
     }
 
@@ -2241,14 +2902,14 @@ static int __init lcdkit_probe(struct platform_device* pdev)
 			lcdkit_read_project_id();
 		}
 	}
-	if (lcdkit_info.panel_infos.lcd_version_support){
+	if (lcdkit_info.panel_infos.lcd_version_support) {
 		sharp_panel_read();
 	}
 
-	if (lcdkit_info.panel_infos.lcd_otp_support){
-		jdi_panel_read();
-	}
-	return 0;
+    if (lcdkit_info.panel_infos.lcd_otp_support)  {
+         jdi_panel_read();
+    }
+    return 0;
 
 err_device_put:
     platform_device_put(pdev);

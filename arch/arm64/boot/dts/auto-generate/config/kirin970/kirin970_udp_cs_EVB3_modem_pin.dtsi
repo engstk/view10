@@ -10,7 +10,7 @@
  */
 
 /{
-	modem_pinctrl {
+	modem_pinctrl:modem_pinctrl {
 		compatible = "arm,modem_pinctrl";
 			pinctrl-names = "init","default","idle";
 			/*table: gpio_group gpio_pin mux_addr mux_value cfg_addr cfg_value gpio_dir gpio_value*/
@@ -18,11 +18,11 @@
 					 6         4      0x094           3        0x098      1     0xffff     0xffff
 					 6         5      0x098           3        0x09C      0     0xffff     0xffff
 					 7         2      0x0AC           2        0x0B0      0     0xffff     0xffff
-					 7         3      0x0B0           1        0x0B4      0     0xffff     0xffff
-					 7         4      0x0B4           1        0x0B8      0     0xffff     0xffff
+					 7         3      0x0B0           0        0x0B4      0          1          0
+					 7         4      0x0B4           0        0x0B8      0          1          0
 					 7         5      0x0B8           1        0x0BC      0     0xffff     0xffff
-					 7         6      0x0BC           1        0x0C0      0     0xffff     0xffff
-					 7         7      0x0C0           1        0x0C4      0     0xffff     0xffff
+					 7         6      0x0BC           4        0x0C0      0     0xffff     0xffff
+					 7         7      0x0C0           4        0x0C4      0     0xffff     0xffff
 					 8         0      0x0C4           1        0x0C8      0     0xffff     0xffff
 					 8         1      0x0C8           1        0x0CC      0     0xffff     0xffff
 					 8         2      0x0CC           1        0x0D0      0     0xffff     0xffff
@@ -64,11 +64,11 @@
 					 6         4      0x094           3        0x098      1     0xffff     0xffff
 					 6         5      0x098           3        0x09C      0     0xffff     0xffff
 					 7         2      0x0AC           2        0x0B0      0     0xffff     0xffff
-					 7         3      0x0B0           1        0x0B4      0     0xffff     0xffff
-					 7         4      0x0B4           1        0x0B8      0     0xffff     0xffff
+					 7         3      0x0B0           0        0x0B4      0          1     0xffff
+					 7         4      0x0B4           0        0x0B8      0          1     0xffff
 					 7         5      0x0B8           1        0x0BC      0     0xffff     0xffff
-					 7         6      0x0BC           1        0x0C0      0     0xffff     0xffff
-					 7         7      0x0C0           1        0x0C4      0     0xffff     0xffff
+					 7         6      0x0BC           4        0x0C0      0     0xffff     0xffff
+					 7         7      0x0C0           4        0x0C4      0     0xffff     0xffff
 					 8         0      0x0C4           1        0x0C8      0     0xffff     0xffff
 					 8         1      0x0C8           1        0x0CC      0     0xffff     0xffff
 					 8         2      0x0CC           1        0x0D0      0     0xffff     0xffff
@@ -110,11 +110,11 @@
 					 6         4      0x094           3        0x098      1     0xffff     0xffff
 					 6         5      0x098           3        0x09C      0     0xffff     0xffff
 					 7         2      0x0AC           2        0x0B0      0     0xffff     0xffff
-					 7         3      0x0B0           1        0x0B4      0     0xffff     0xffff
-					 7         4      0x0B4           1        0x0B8      0     0xffff     0xffff
+					 7         3      0x0B0           0        0x0B4      0          1     0xffff
+					 7         4      0x0B4           0        0x0B8      0          1     0xffff
 					 7         5      0x0B8           1        0x0BC      0     0xffff     0xffff
-					 7         6      0x0BC           1        0x0C0      0     0xffff     0xffff
-					 7         7      0x0C0           1        0x0C4      0     0xffff     0xffff
+					 7         6      0x0BC           4        0x0C0      0     0xffff     0xffff
+					 7         7      0x0C0           4        0x0C4      0     0xffff     0xffff
 					 8         0      0x0C4           1        0x0C8      0     0xffff     0xffff
 					 8         1      0x0C8           1        0x0CC      0     0xffff     0xffff
 					 8         2      0x0CC           1        0x0D0      0     0xffff     0xffff

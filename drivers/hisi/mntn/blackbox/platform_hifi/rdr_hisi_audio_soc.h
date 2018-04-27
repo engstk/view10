@@ -30,29 +30,12 @@ extern "C" {
 #define BSP_RESET_ERROR                 (-1)
 #define DRV_MODULE_NAME_LEN             9  /* exclude '\0' */
 #define HIFI_SEC_DDR_MAX_NUM            (100)
-#define HIFI_SEC_MAX_NUM                (100)
 
 #ifdef CONFIG_HISI_FAMA
 #define ICC_SHARE_FAMA_ADDR_OFFSET      (HISI_RESERVED_MODEM_SHARE_PHYMEM_BASE_FAMA - HISI_RESERVED_MODEM_SHARE_PHYMEM_HIFI_ICC_BASE)
 #else
 #define ICC_SHARE_FAMA_ADDR_OFFSET      0
 #endif
-
-struct drv_hifi_image_sec {
-	unsigned short	 sn;
-	unsigned char type;
-	unsigned char load_attib;
-	unsigned int src_offset;
-	unsigned int des_addr;
-	unsigned int size;
-};
-
-struct drv_hifi_image_head {
-	char time_stamp[24];
-	unsigned int image_size;
-	unsigned int sections_num;
-	struct drv_hifi_image_sec sections[HIFI_SEC_MAX_NUM];
-};
 
 struct drv_hifi_sec_info {
 	unsigned int type;
@@ -72,7 +55,6 @@ struct drv_hifi_sec_ddr_head {
 
 #define ICC_DEBUG_PROTECT_WORD1 0xCDCDDCDC
 #define ICC_DEBUG_PROTECT_WORD2 0xEFEFFEFE
-
 
 struct icc_channel_fifo {
 	unsigned int magic;     /* fifo魔数，标识通道fifo的状态 */
@@ -163,6 +145,99 @@ struct sreset_mgr_lli {
 	struct sreset_mgr_lli *pnext;
 };
 
+#define OM_LOG_INNER_MAX_NUM (300)
+#define INNERLOG_ONE_INFO_LEN (124)
+#define UCOM_MEM_DYN_NODE_MAX_NUM (959)
+#define MEM_DYN_STATUS_ONE_INFO_LEN (307)
+#define MEM_DYN_NODE_ONE_INFO_LEN (167)
+#define COMPILE_TIME_BUFF_SIZE (24)
+#define RDR_FALG_OFFSET (HIFI_FLAG_DATA_ADDR - HIFI_DUMP_BIN_ADDR)
+#define PARSE_INNERLOG_SIZE (OM_LOG_INNER_MAX_NUM * INNERLOG_ONE_INFO_LEN)
+#define PARSE_MEM_DYN_LOG_SIZE (MEM_DYN_STATUS_ONE_INFO_LEN*UCOM_MEM_DYN_TYPE_BUTT + MEM_DYN_NODE_ONE_INFO_LEN*UCOM_MEM_DYN_NODE_MAX_NUM)
+
+/*Innerlog*/
+struct innerlog_record
+{
+	unsigned int enlogid;
+	unsigned int time_stamp;
+	unsigned short fileid;
+	unsigned short lineid;
+	unsigned int value1;
+	unsigned int value2;
+	unsigned int value3;
+};
+
+struct innerlog_reset
+{
+	unsigned int cnt;
+	unsigned int time_stamp;
+};
+
+struct innerlog_obj
+{
+	unsigned int curr_idx;
+	struct innerlog_record records[OM_LOG_INNER_MAX_NUM];
+	struct innerlog_reset wait_reset;
+};
+
+#define SOCHIFI_ORIGINAL_INNERLOG_SIZE  (sizeof(struct innerlog_obj))
+
+/*mem_dyn*/
+enum UCOM_MEM_DYN_OM_ENABLE_ENUM {
+    UCOM_MEM_DYN_OM_ENABLE_NO = 0,
+    UCOM_MEM_DYN_OM_ENABLE_YES,
+    UCOM_MEM_DYN_OM_ENABLE_BUTT,
+};
+
+enum UCOM_MEM_DYN_TYPE_ENUM {
+	UCOM_MEM_DYN_TYPE_DDR = 0,
+	UCOM_MEM_DYN_TYPE_TCM,
+	UCOM_MEM_DYN_TYPE_OCB,	/* memory on OCB (On Chip Buffer, another name is sram) */
+	UCOM_MEM_DYN_TYPE_USB_160K,
+	UCOM_MEM_DYN_TYPE_USB_96K,
+	UCOM_MEM_DYN_TYPE_BUTT,
+};
+
+typedef struct {
+	unsigned int addr;
+	unsigned int size;
+	unsigned short fileid;
+	unsigned short lineid;
+} mem_dyn_blk_stru;
+
+typedef struct {
+	unsigned int time_stamp;
+	unsigned int curr_used_rate;
+} mem_dyn_trace_stru;
+
+struct mem_dyn_node {
+	mem_dyn_blk_stru blk;
+	unsigned int next;     //struct mem_dyn_node *
+	unsigned int prev;     //struct mem_dyn_node *
+};
+
+struct mem_dyn_list {
+	struct mem_dyn_node head;
+	struct mem_dyn_node tail;
+	unsigned int len;
+};
+
+struct mem_dyn_status {
+	unsigned int enable;
+	unsigned int total_size;
+	unsigned int used_rate;
+	mem_dyn_trace_stru mem_trace;
+};
+
+struct mem_dyn_ctrl {
+	struct mem_dyn_status status[UCOM_MEM_DYN_TYPE_BUTT];
+	struct mem_dyn_list freelist[UCOM_MEM_DYN_TYPE_BUTT];
+	struct mem_dyn_list unfreelist[UCOM_MEM_DYN_TYPE_BUTT];
+	struct mem_dyn_list idlelist;
+	struct mem_dyn_node nodes[UCOM_MEM_DYN_NODE_MAX_NUM];
+};
+
+#define SOCHIFI_ORIGINAL_DYNMEM_SIZE (sizeof(struct mem_dyn_ctrl))
 
 int  rdr_audio_soc_init(void);
 void rdr_audio_soc_exit(void);

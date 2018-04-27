@@ -19,7 +19,6 @@
 #include <linux/uaccess.h>
 #include <huawei_platform/log/hw_log.h>
 #include "dsm_core.h"
-#include "dsm_lib.h"
 
 /* int debug_output = 1; */
 #define HWLOG_TAG	DSM
@@ -242,31 +241,32 @@ int dsm_client_record(struct dsm_client *client, const char *fmt, ...)
 {
 	va_list ap;
 	int size = 0;
-	char *str;
-	struct snprintf_ctxt ctxt;
+	size_t avail = 0;
 
 	if (!client) {
 		DSM_LOG_ERR("%s no client to record\n", __func__);
 		goto out;
 	}
 
-	if (client->buff_size <= client->used_size) {
+	if (client->buff_size - 1 <= client->used_size) {
 		DSM_LOG_ERR("%s no buffer to record\n", __func__);
 		goto out;
 	}
 
-	ctxt.avail = client->buff_size - client->used_size - 1;
-	str = (char *)&client->dump_buff[client->used_size];
-	ctxt.next = str;
+	avail = client->buff_size - client->used_size - 1;
 
 	va_start(ap, fmt);
-	__xprintf(fmt, ap, printf_putc, &ctxt);
+	size = vsnprintf((char*)&client->dump_buff[client->used_size], avail, fmt, ap);
 	va_end(ap);
+	if(size < 0) {
+		DSM_LOG_ERR("%s:record buffer failed!\n", __func__);
+		goto out;
+	}
 
-	*ctxt.next = 0;
-	size = ctxt.next - str;
 	client->used_size += size;
-
+	if(client->used_size >= client->buff_size) {
+		client->used_size = client->buff_size - 1;
+	}
 out:
 	return size;
 }

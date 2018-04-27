@@ -9,8 +9,9 @@ ifdef CONFIG_HUAWEI_SMARTPAKIT_AUDIO
 	ccflags-y += -Idrivers/devkit/audiokit/
 endif
 obj-$(CONFIG_HUAWEI_SMARTPAKIT_AUDIO) += smartpakit.o
-obj-$(CONFIG_HUAWEI_SMARTPAKIT_AUDIO) += smartpakit_i2c.o
-ifeq ($(TARGET_BUILD_VARIANT),eng)
-	obj-m += smartpakit_info.o
-endif
 
+smartpakit_i2c-objs := smartpakit_i2c_ops.o
+ifneq ($(TARGET_BUILD_VARIANT),user)
+	smartpakit_i2c-objs += smartpakit_info.o
+endif
+obj-$(CONFIG_HUAWEI_SMARTPAKIT_AUDIO) += smartpakit_i2c.o

@@ -52,8 +52,11 @@ int mipi_dsi_swrite(struct dsi_cmd_desc *cm, char __iomem *dsi_base)
 		hdr |= DSI_HDR_DATA2(0);
 	}
 
-	set_reg(dsi_base + MIPIDSI_GEN_HDR_OFFSET, hdr, 24, 0);
+	/*used for low power cmds trans under video mode*/
+	hdr |= cm->dtype & GEN_VID_LP_CMD;
+	set_reg(dsi_base + MIPIDSI_GEN_HDR_OFFSET, hdr, 25, 0);
 
+	HISI_FB_DEBUG("hdr=0x%x!\n", hdr);
 	return len;  /* 4 bytes */
 }
 
@@ -66,6 +69,7 @@ int mipi_dsi_swrite(struct dsi_cmd_desc *cm, char __iomem *dsi_base)
  *
  * Write to GEN_HDR 24 bit register the value: WC[23:8] ,VC[7:6],29h
  */
+/*lint -e574*/
 int mipi_dsi_lwrite(struct dsi_cmd_desc *cm, char __iomem *dsi_base)
 {
 	uint32_t hdr = 0;
@@ -84,7 +88,7 @@ int mipi_dsi_lwrite(struct dsi_cmd_desc *cm, char __iomem *dsi_base)
 			pld = *((uint32_t *)(cm->payload + i));
 		} else {
 			for (j = i; j < cm->dlen; j++) {
-				pld |= ((uint32_t)(cm->payload[j] & 0x0ff) << ((j - i) * 8)); 
+				pld |= ((uint32_t)(cm->payload[j] & 0x0ff) << ((j - i) * 8));
 			}
 			HISI_FB_DEBUG("pld=0x%x!\n", pld);
 		}
@@ -98,11 +102,14 @@ int mipi_dsi_lwrite(struct dsi_cmd_desc *cm, char __iomem *dsi_base)
 	hdr |= DSI_HDR_VC(cm->vc);
 	hdr |= DSI_HDR_WC(cm->dlen);
 
-	set_reg(dsi_base + MIPIDSI_GEN_HDR_OFFSET, hdr, 24, 0);
+	/*used for low power cmds trans under video mode*/
+	hdr |= cm->dtype & GEN_VID_LP_CMD;
+	set_reg(dsi_base + MIPIDSI_GEN_HDR_OFFSET, hdr, 25, 0);
 
+	HISI_FB_DEBUG("hdr=0x%x!\n", hdr);
 	return cm->dlen;
 }
-
+/*lint +e574*/
 void mipi_dsi_max_return_packet_size(struct dsi_cmd_desc *cm, char __iomem *dsi_base)
 {
 	uint32_t hdr = 0;
@@ -128,11 +135,9 @@ uint32_t mipi_dsi_read(uint32_t *out, char __iomem *dsi_base)
 
 	*out = inp32(dsi_base + MIPIDSI_GEN_PLD_DATA_OFFSET);
 	if (!try_times)
-		HISI_FB_ERR("mipi_dsi_read timeout\n"
-			"MIPIDSI_CMD_PKT_STATUS = 0x%x \n"
-			"MIPIDSI_PHY_STATUS = 0x%x \n",
-			inp32(dsi_base + MIPIDSI_CMD_PKT_STATUS_OFFSET),
-			inp32(dsi_base + MIPIDSI_PHY_STATUS_OFFSET));
+		HISI_FB_ERR("mipi_dsi_read timeout,CMD_PKT_STATUS[0x%x],PHY_STATUS[0x%x],INT_ST0[0x%x],INT_ST1[0x%x]. \n",
+			inp32(dsi_base + MIPIDSI_CMD_PKT_STATUS_OFFSET), inp32(dsi_base + MIPIDSI_PHY_STATUS_OFFSET),
+			inp32(dsi_base + MIPIDSI_INT_ST0_OFFSET), inp32(dsi_base + MIPIDSI_INT_ST1_OFFSET));
 
 	return try_times;
 }
@@ -181,7 +186,7 @@ int mipi_dsi_lread_reg(uint32_t *out, struct dsi_cmd_desc *cm, uint32_t len, cha
 		return -1;
 	}
 
-	if (cm->dtype == DTYPE_GEN_READ || cm->dtype == DTYPE_GEN_READ1 || cm->dtype == DTYPE_GEN_READ2) {
+	if (cm->dtype == DTYPE_GEN_READ || cm->dtype == DTYPE_GEN_READ1 || cm->dtype == DTYPE_GEN_READ2 || cm->dtype == DTYPE_DCS_READ) {
 		packet_size_cmd_set.dtype = DTYPE_MAX_PKTSIZE;
 		packet_size_cmd_set.vc = 0;
 		packet_size_cmd_set.dlen = len;
@@ -219,7 +224,7 @@ int mipi_dsi_cmd_add(struct dsi_cmd_desc *cm, char __iomem *dsi_base)
 		return -EINVAL;
 	}
 
-	switch (cm->dtype) {
+	switch (DSI_HDR_DTYPE(cm->dtype)) {
 	case DTYPE_GEN_WRITE:
 	case DTYPE_GEN_WRITE1:
 	case DTYPE_GEN_WRITE2:

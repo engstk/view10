@@ -47,8 +47,24 @@ typedef struct {
 
 /* EXTERN VARIABLES */
 extern sys_status_t iom3_sr_status;
+extern int g_iom3_state;
 
 /* LOCAL FUNCTIONS */
+static bool is_inputhub_ipc_available(void)
+{
+	if (ST_SLEEP == iom3_sr_status) {
+		pr_warn("%s: sensorhub is sleep.\n", __func__);
+		return false;
+	}
+
+	if (IOM3_ST_RECOVERY == g_iom3_state) {
+		pr_warn("%s: sensorhub is recoverying.\n", __func__);
+		return false;
+	}
+
+	return true;
+}
+
 int ao_loadmonitor_enable(unsigned int delay_value, unsigned int freq)
 {
 	struct aold_open_param *open;
@@ -59,8 +75,7 @@ int ao_loadmonitor_enable(unsigned int delay_value, unsigned int freq)
 	write_info_t winfo;
 #endif
 
-	if (iom3_sr_status == ST_SLEEP) {
-		pr_err("sensorhub is sleep.\n");
+	if (false == is_inputhub_ipc_available()) {
 		return -1;
 	}
 
@@ -101,8 +116,7 @@ int ao_loadmonitor_disable(void)
 	pkt_cmn_close_req_t pkt;
 #endif
 
-	if (iom3_sr_status == ST_SLEEP) {
-		pr_err("sensorhub is sleep.\n");
+	if (false == is_inputhub_ipc_available()) {
 		return -1;
 	}
 
@@ -148,8 +162,7 @@ int32_t _ao_loadmonitor_read(void *data, uint32_t len)
 		return -1;
 	}
 
-	if (iom3_sr_status == ST_SLEEP) {
-		pr_err("sensorhub is sleep.\n");
+	if (false == is_inputhub_ipc_available()) {
 		return -1;
 	}
 

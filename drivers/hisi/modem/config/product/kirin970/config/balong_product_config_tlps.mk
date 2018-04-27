@@ -1,4 +1,4 @@
-# MD5: 6432ed69825b916b1052c97300aa3d65
+# MD5: 848fafd1ea694f0dc38b8f50abfdc5ff
 CFG_FEATURE_IMS                                 := FEATURE_ON
 CFG_FEATURE_LTE_R11                             := FEATURE_ON
 CFG_FEATURE_LTE_R13                             := FEATURE_ON
@@ -6,7 +6,11 @@ CFG_FEATURE_LTE_R14 							:= FEATURE_OFF
 CFG_FEATURE_LTE_MBMS                            := FEATURE_OFF
 CFG_FEATURE_LTE_CDMA_R11                        := FEATURE_OFF
 CFG_FEATURE_PTM                                 := FEATURE_ON
+ifeq ($(cdma),false)
+CFG_FEATURE_BALONG_CL                           := FEATURE_OFF
+else
 CFG_FEATURE_BALONG_CL                           := FEATURE_ON
+endif
 CFG_FEATURE_LTE_CAT_PART_R11                    := YES
 CFG_TL_PS_MAX_TRCH_NUM_8    := YES
 CFG_FEATURE_LPP                                 := FEATURE_ON
@@ -34,10 +38,11 @@ CFG_FEATURE_LL2_SUPPORT_LLRAM_DL_TB            := FEATURE_OFF
 endif
 CFG_FEATURE_MEMORY_REDUCE                      := FEATURE_OFF
 CFG_FEATURE_LTE_JAM_DET                        := FEATURE_OFF
-CFG_FEATURE_LTE_ASN_V722_VALID                 := FEATURE_ON
-CFG_FEATURE_LTE_ASN_ALL_VERSION_VALID          := FEATURE_OFF
+CFG_FEATURE_LTE_ASN_CUT                        := FEATURE_ON
 CFG_FEATURE_LL2_SPECIAL_VERSION                := FEATURE_OFF
-CFG_FEATURE_IQI                                := FEATURE_OFF
-CFG_FEATURE_LL2_SUPPORT_DSDSV3                 := FEATURE_OFF
+CFG_FEATURE_LL2_SUPPORT_DSDSV3                 := FEATURE_ON
 CFG_FEATURE_LMAC_LPHY_EPDCCH_CR                 := FEATURE_OFF
 CFG_FEATURE_UL_HCODE                 			:= FEATURE_OFF
+CFG_FEATURE_LTE_R12                                := FEATURE_ON
+CFG_FEATURE_LTE_DC                                 := FEATURE_ON
+CFG_FEATURE_LTE_LAA                 			   := FEATURE_ON

@@ -380,6 +380,10 @@ static inline int power_actor_set_powers(struct thermal_zone_device *tz,
 		actor_id = IPA_CLUSTER0;
 	} else if (!strncmp(instance->cdev->type, "thermal-cpufreq-1", 17)) {
 		actor_id = IPA_CLUSTER1;
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+	} else if (!strncmp(instance->cdev->type, "thermal-cpufreq-2", 17)) {
+		actor_id = IPA_CLUSTER2;
+#endif
 	} else
 		actor_id = -1;
 
@@ -513,7 +517,7 @@ static int allocate_power(struct thermal_zone_device *tz,
 		power_actor_set_powers(tz, instance, &soc_sustainable_power, granted_power[i]);/*lint !e661 !e662*/
 #else
 		power_actor_set_power(instance->cdev, instance,
-				      granted_power[i]);
+				      granted_power[i]);/*lint !e661 !e662*/
 #endif
 		total_granted_power += granted_power[i];/*lint !e661 !e662*/
 
@@ -738,12 +742,11 @@ static int power_allocator_throttle(struct thermal_zone_device *tz, int trip)
 		return ret;
 	}
 
+#ifdef CONFIG_HISI_IPA_THERMAL
 	if (!ret && (tz->temperature <= (control_temp - BOARDIPA_PID_RESET_TEMP)) && tz->is_board_thermal) {
 		reset_pid_controller(params);
 	}
 
-
-#ifdef CONFIG_HISI_IPA_THERMAL
 	return allocate_power(tz, control_temp, switch_on_temp);
 #else
 	return allocate_power(tz, control_temp);

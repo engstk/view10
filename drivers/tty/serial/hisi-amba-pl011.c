@@ -47,6 +47,7 @@ const struct file_operations pl011_tx_stat_ops = {
 };
 
 #ifdef CONFIG_SERIAL_AMBA_PL011_CONSOLE
+/*lint -save -e454 */
 static int pl011_uart_tx_work(void *arg)
 {
 	struct uart_tx_unit *unit = (struct uart_tx_unit *)arg;
@@ -85,7 +86,7 @@ print_retry:
 			locked = 1;
 		}
 
-		ret = clk_enable(uap->clk);
+		ret = clk_enable(uap->clk); /*lint !e456*/
 		if (ret) {
 			printk(KERN_ERR	"could not enable clock\n");
 		}
@@ -169,7 +170,7 @@ print_retry:
 		if (locked)
 			spin_unlock(&uap->port.lock);
 
-		local_irq_restore(flags);
+		local_irq_restore(flags); /*lint !e456*/
 		if (kfifo_len(&unit->tx_fifo) > 0) {
 			goto print_retry;
 		}
@@ -177,6 +178,7 @@ print_retry:
 	}
 	return 0;
 }
+/*lint -restore */
 int pl011_tx_work_init(struct uart_amba_port *uap, unsigned int aurt_tx_buf_size, int cpuid)
 {
 	struct uart_tx_unit *unit = &uap->tx_unit;
@@ -306,6 +308,7 @@ pl011_console_write_tx(struct console *co, const char *s, unsigned int count)
 
 }
 
+/*lint -save -e429 */
 int hisi_pl011_probe_get_clk_freq(struct amba_device *dev, struct uart_amba_port *uap, int i) {
 	int ret;
 	u64 clk_rate = 0;	        /* high speed clk vaule */
@@ -326,6 +329,7 @@ int hisi_pl011_probe_get_clk_freq(struct amba_device *dev, struct uart_amba_port
 	}
 	return ret;
 }
+/*lint -restore */
 int hisi_pl011_probe_reset_func_enable(struct amba_device *dev, struct uart_amba_port *uap) {
 	struct device_node *node = NULL;
 	int ret;
@@ -383,7 +387,7 @@ void hisi_pl011_probe_console_enable(struct amba_device *dev, struct uart_amba_p
 	char console_uart_name[8] = "";
 
 	if (0 == get_console_name(console_uart_name, sizeof(console_uart_name))) {
-		if (0 == strcmp(console_uart_name, amba_console_name))
+		if (0 == strncmp(console_uart_name, amba_console_name,8))
 			console_uart_name_is_ttyAMA = 1;
 	}
 	if (console_uart_name_is_ttyAMA && (get_console_index() == (int)uap->port.line)) {
@@ -509,22 +513,4 @@ void hisi_pl011_disable_ms(struct uart_port *port)
 
 	uap->im &= ~(UART011_RIMIM|UART011_CTSMIM|UART011_DCDMIM|UART011_DSRMIM);
 	writew(uap->im, uap->port.membase + UART011_IMSC);
-}
-
-void uartprint_enable(struct amba_device *dev, struct uart_amba_port *uap){
-	int ret;
-	u32 data[4];
-
-	/* get uart reset-clk-reg regester */
-	ret = of_property_read_u32_array(dev->dev.of_node, "debug_uart_reg", &data[0], 4);
-	if (ret) {
-		uap->reset_clk_reg_base = NULL;
-	}else {
-		dev_info(uap->port.dev, "%s:find \"reset_clk_reg_base\" property. reset uart3 clk div function will be enable.\n",__func__);
-		uap->reset_clk_reg_base = ioremap(data[1], data[3]);
-		uap->reset_clk_reg_offset = data[2];
-		if (!uap->reset_clk_reg_base)
-			dev_err(uap->port.dev, "cannot remap reset_clk_reg_base \n");
-	}
-
 }

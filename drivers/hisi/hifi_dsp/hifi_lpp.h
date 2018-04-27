@@ -57,46 +57,16 @@ extern "C" {
 #define ASP_FAMA_PHY_ADDR_DIFF (0)
 #endif
 
-/** for dallas **/
-/** unsecured region 3.5M **/
-/* |~0x34f00000~|~0x35032000~|~0x35132000~|~0x351b1000~|~0x351b2000~|~0x351c5000~|~~0x351c6000~~|~0x351c7000~|~0x35212C00~|~~0x35222C00~~| */
-/* |~Music data~|~~~PCM data~|~~hifi uart~|~panic stack|~icc debug~~|~flag data ~|~DDR sec head~|~~~AP NV ~~~|~AP&HIFI MB~|~unsec reserve| */
-/* |~~~~~1.2M~~~|~~~~~1M~~~~~|~~~508k~~~~~|~~~~~~4k~~~~|~~~~76k~~~~~|~~~~~4k~~~~~|~~~~~~4k~~~~~~|~~~~303k~~~~|~~~~~64k~~~~|~~~~~~373k~~~~| */
-/* |~0x35031fff~|~0x35131fff~|~0x351b0fff~|~0x351b1fff~|~0x351c4fff~|~0x351c5fff~|~~0x351c6fff~~|~0x35212BFF~|~0x35222BFF~|~~~0x3527ffff~| */
-
-/** secure region 11.5M **/
-/* |~~~0x35280000~~~|~~~0x352b0000~~|~~~0x352ce000~~~|~~~0x352cf000~~~|~~~0x35300000~~~| */
-/* |~OCRAM img bak~~|~~TCM img bak~~|~~sec img head~~|~~~sec reserve~~|~~HIFI RUNNING~~| */
-/* |~~~~~~192K~~~~~~|~~~~~120k~~~~~~|~~~~~~~4k ~~~~~~|~~~~~196k~~~~~~~|~~~~~~~11M~~~~~~| */
-/* |~~~0x352affff~~~|~~~0x352cdfff~~|~~~0x352cefff~~~|~~~0x352FFFFF~~~|~~~0x35dfffff~~~| */
-
-/** for chicago only **/
-/** unsecured region 5M **/
-/* |~0x8B600000~|~0x8B732000~|~0x8B932000~|~0x8B9B1000~|~0x8B9B2000~|~0x8B9C5000~|~0x8B9C6000~|~0x8B9C7000~|~0x8BA12C00~| */
-/* |~Music data~|~~~PCM data~|~~hifi uart~|~panic stack|~icc debug~~|~flag data ~|DDR sec head|~~~AP NV ~~~|~AP&HIFI MB~| */
-/* |~~~~~1.2M~~~|~~~~~2M~~~~~|~~~508k~~~~~|~~~~~~4k~~~~|~~~~76k~~~~~|~~~~~4k~~~~~|~~~~~4k~~~~~|~~~~303k~~~~|~~~~~64k~~~~| */
-/* |~0x8B731fff~|~0x8B931fff~|~0x8B9B0fff~|~0x8B9B1fff~|~0x8B9C4fff~|~0x8B9C5fff~|~0x8B9C6fff~|~0x8BA12BFF~|~0x8BA22BFF~| */
-
-/* |~0x8BA22C00~|~~0x8BA31C00~~|~0x8BA40C00~|~0x8BA42C00~|~~0x8BA62C00~~~|~~0x8BA82C00~~~| */
-/* |~~~OM DMA~~~|~soundtrigger~|~upload buf~|~usb share~~|~~~DP buffer~~~|~unsec reserve~| */
-/* |~~~~~60K~~~~|~~~~~~60K~~~~~|~~~~~8k~~~~~|~~~~128k~~~~|~~~~~128k~~~~~~|~~~~~501k~~~~~~| */
-/* |~0x8BA31BFF~|~~0x8BA40BFF~~|~0x8BA42BFF~|~0x8BA62BFF~|~~0x8BA82BFF~~~|~~0x8BAFFFFF~~~| */
-
-/** secure region 12M **/
-/* |~~~0x89200000~~~|~0x89d00000~|~0x89d30000~~|~~~0x89d64000~~~|~0x89d65000~| */
-/* |~~HIFI RUNNING~~|~OCRAM bak~~|~TCM img bak~|~~sec img head~~|~~reserve~~~| */
-/* |~~~~~~~11M~~~~~~|~  192K    ~|~~~~~208k ~~~|~~~~~~~4K ~~~~~~|~~~~~620K~~~| */
-/* |~~~0x89cfffff~~~|~0x89d2ffff~|~0x89d63FFF~~|~~~0x89d64FFF~~~|~0x89dfffff~| */
-
 #ifdef CONFIG_HIFI_IPC_3660
 #define HIFI_UNSEC_REGION_SIZE              (0x500000)
-#define PCM_PLAY_BUFF_SIZE                  (0x200000)
+#define HIFI_MUSIC_DATA_SIZE                (0x132000 + 0x32000)
+#define PCM_PLAY_BUFF_SIZE                  (0x200000 - 0x32000)
 #else
 #define HIFI_UNSEC_REGION_SIZE              (0x380000)
+#define HIFI_MUSIC_DATA_SIZE                (0x132000)
 #define PCM_PLAY_BUFF_SIZE                  (0x100000)
 #endif
 #define HIFI_AP_NV_DATA_SIZE                (0x4BC00)
-#define HIFI_MUSIC_DATA_SIZE                (0x132000)
 #define DRV_DSP_UART_TO_MEM_SIZE            (0x7f000)
 #define DRV_DSP_UART_TO_MEM_RESERVE_SIZE    (0x100)
 #define DRV_DSP_STACK_TO_MEM_SIZE           (0x1000)
@@ -112,7 +82,8 @@ extern "C" {
 #define HIFI_AUDIO_EFFECT_PARAM_BUFF_SIZE   (0xC000)
 #define HIFI_USB_DRIVER_SHARE_MEM_SIZE      (0x20000)
 #define HISI_DP_AUDIO_DATA_BUFF_SIZE        (0x20000)
-#define HIFI_UNSEC_RESERVE_SIZE             (0x7D400)
+#define HISI_AP_AUDIO_PA_BUFF_SIZE          (0x1800)
+#define HIFI_UNSEC_RESERVE_SIZE             (0x7BC00)
 
 #define HIFI_MUSIC_DATA_LOCATION        (HIFI_UNSEC_BASE_ADDR)
 #define PCM_PLAY_BUFF_LOCATION          (HIFI_MUSIC_DATA_LOCATION + HIFI_MUSIC_DATA_SIZE)
@@ -130,6 +101,8 @@ extern "C" {
 #define HIFI_AUDIO_EFFECT_PARAM_ADDR    (HIFI_PCM_UPLOAD_BUFFER_ADDR + HIFI_PCM_UPLOAD_BUFFER_SIZE)
 #define HIFI_USB_DRIVER_SHARE_MEM_ADDR  (HIFI_AUDIO_EFFECT_PARAM_ADDR + HIFI_AUDIO_EFFECT_PARAM_BUFF_SIZE)
 #define HISI_DP_AUDIO_DATA_LOCATION     (HIFI_USB_DRIVER_SHARE_MEM_ADDR + HIFI_USB_DRIVER_SHARE_MEM_SIZE)
+#define HISI_AP_AUDIO_PA_ADDR           (HISI_DP_AUDIO_DATA_LOCATION + HISI_DP_AUDIO_DATA_BUFF_SIZE)
+#define HIFI_UNSEC_RESERVE_ADDR         (HISI_AP_AUDIO_PA_ADDR + HISI_AP_AUDIO_PA_BUFF_SIZE)
 
 #define HIFI_OM_LOG_SIZE                (0xA000)
 #define HIFI_OM_LOG_ADDR                (DRV_DSP_UART_TO_MEM - HIFI_OM_LOG_SIZE)
@@ -147,7 +120,9 @@ extern "C" {
 #define DRV_DSP_POWER_STATUS_ADDR       (DRV_DSP_WRITE_MEM_PRINT_ADDR + 4)
 #define DRV_DSP_NMI_FLAG_ADDR           (DRV_DSP_POWER_STATUS_ADDR + 4)
 #define DRV_DSP_SOCP_FAMA_CONFIG_ADDR   (DRV_DSP_NMI_FLAG_ADDR + 4)
-#define DRV_DSP_FLAG_DATA_RESERVED      (DRV_DSP_SOCP_FAMA_CONFIG_ADDR + sizeof(struct drv_fama_config)) //TODO: add new flag data here
+#define DRV_DSP_FLAG_ALP_NOC_CHECK      (DRV_DSP_SOCP_FAMA_CONFIG_ADDR + sizeof(struct drv_fama_config))
+#define DRV_DSP_SLT_FLAG_ADDR           (DRV_DSP_FLAG_ALP_NOC_CHECK + 4)
+#define DRV_DSP_FLAG_DATA_RESERVED      (DRV_DSP_SLT_FLAG_ADDR + 4) //TODO: add new flag data here
 
 #define DRV_DSP_POWER_ON                (0x55AA55AA)
 #define DRV_DSP_POWER_OFF               (0x55FF55FF)
@@ -161,7 +136,6 @@ extern "C" {
 
 #define HIFI_IMAGE_OCRAMBAK_SIZE        (0x30000)
 #define HIFI_SEC_HEAD_SIZE              (0x1000)
-#define HIFI_IMAGE_SIZE                 (0x580000)
 #ifdef CONFIG_HIFI_IPC_3660
 #define HIFI_SEC_REGION_SIZE            (0xC00000)
 #define HIFI_RUN_SIZE                   (0xB00000)
@@ -314,6 +288,7 @@ typedef enum HIFI_MSG_ID_ {
 	ID_AP_HIFI_REQUEST_SET_PARA_CMD     = 0xDF08,    /* HIFI SET PARAM MSG */
 	ID_AP_HIFI_REQUEST_GET_PARA_CMD     = 0xDF09,    /* HIFI GET PARAM MSG */
 	ID_AP_HIFI_REQUEST_GET_PARA_CNF     = 0xDF0A,    /* HIFI GET PARAM MSG */
+	ID_HIFI_AP_BIGDATA_CMD              = 0xDF10,   /*bigdata*/
 } HIFI_MSG_ID;
 
 typedef enum HI6402_DP_CLK_STATE_ {

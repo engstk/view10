@@ -19,38 +19,30 @@
 #include <linux/clk.h>
 #include <linux/mutex.h>
 
-enum ipu_clock_freq {
-	IPU_CLOCK_UNSET  = 0,
-	IPU_CLOCK_LOW    = 384000000,
-	IPU_CLOCK_NORMAL = 600000000,
-	IPU_CLOCK_HIGH   = 900000000,
-};
-
-enum vcodecbus_clock_freq {
-	VCODECBUS_CLOCK_DEFAULT = 415000000,
-	VCODECBUS_CLOCK_HIGH2DEFAULT = 225000000,
-	VCODECBUS_CLOCK_LOW    = 185000000,
-	VCODECBUS_CLOCK_NORMAL = 332000000,
-	VCODECBUS_CLOCK_EXCEED = 450000000,
-};
+#define IPU_CLOCK_UNSET (0)
 
 struct ics_clock {
 	struct clk *ipu_clk_ptr;
 	struct clk *vcodecbus_clk_ptr;
-	struct clk *vote_high_volt;
-	struct clk *vote_normal_volt;
+	unsigned int ipu_low;
+	unsigned int ipu_middle;
+	unsigned int ipu_high;
+	unsigned int ipu_low_temperature;
+	unsigned int vcodecbus_low;
+	unsigned int vcodecbus_middle;
+	unsigned int vcodecbus_high;
+	unsigned int vcodecbus_default;
+	unsigned int vcodecbus_high2default;
 	unsigned int start_rate;
 	unsigned int curr_rate;
 	unsigned int stop_rate;
-	unsigned int voted_peri_volt;
 	struct mutex clk_mutex;
+	bool lpm3_set_vcodecbus;
 };
 
-extern int ipu_clock_init(struct device *dev, struct ics_clock *clk);
+extern int ipu_clock_init(struct device *dev, struct ics_clock *clk, bool lpm3_set_vcodecbus);
 extern int ipu_clock_start(struct ics_clock *clk);
 extern void ipu_clock_stop(struct ics_clock *clk);
 extern int ipu_clock_set_rate(struct ics_clock *clk, unsigned int new_rate);
-extern int ipu_vote_peri(struct ics_clock *clk);
-extern void ipu_vote_peri_withdraw(struct ics_clock *clk);
 extern int ipu_clock_set_start_rate(struct ics_clock *clk, unsigned int new_rate);
 #endif

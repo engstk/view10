@@ -52,6 +52,7 @@
 #include <linux/vmalloc.h>
 #include <linux/rtc.h>
 #include <product_config.h>
+#include <securec.h>
 #include <bsp_dump.h>
 #include <bsp_slice.h>
 #include <bsp_nvim.h>
@@ -113,7 +114,7 @@ void nv_debug_QueueInit(nv_queue_t *Q, u32 elementNum)
     Q->num = 0;
 
     /* coverity[secure_coding] */
-    (void)nv_memset((void *)Q->data, 0, (size_t)(elementNum*sizeof(nv_queue_elemnt)));/* [false alarm]:fortify  */
+    (void)memset_s((void *)Q->data, (size_t)(elementNum*sizeof(nv_queue_elemnt)), 0, (size_t)(elementNum*sizeof(nv_queue_elemnt)));/* [false alarm]:fortify  */
 }
 
 static __inline__ s32 nv_debug_QueueIn(nv_queue_t *Q, nv_queue_elemnt element)
@@ -183,7 +184,7 @@ u32 nv_debug_init(void)
 
     /*if or not print info when write nv*/
     /* coverity[secure_coding] */
-    nv_memset(&NV_DEBUG_CTRL_VALUE, 0, sizeof(debug_ctrl_union_t));
+    (void)memset_s(&NV_DEBUG_CTRL_VALUE, sizeof(debug_ctrl_union_t), 0, sizeof(debug_ctrl_union_t));
     ret = (u32)bsp_access(NV_DEBUG_SWICH_PATH, 0);
     if(ret)
     {
@@ -740,14 +741,7 @@ void nv_help(u32 type)
     nv_printf("reseved4             : 0x%x\n",g_nv_debug[i].reseved4);
     nv_printf("***************************************\n");
 }
-/*
-* Function   : nv_show_item_info
-* Discription: 打印nv id 为itemid的nv相关的信息
-* Parameter  : itemid: 需要查询的nv项的id
-* Output     : 0     : 查询成功
-               -1    : 查询失败不存在该nv项
-* History    : yuyangyang  00228784  create
-*/
+
 
 u32 nv_show_item_info(u16 itemid)
 {
@@ -891,7 +885,7 @@ void nv_get_current_sys_time(struct rtc_time *tm)
     u32 ret;
     nv_file_info_s  file_info = {0};
     nv_item_info_s  item_info = {0};
-    
+
     ret = nv_search_byid(itemid,((u8*)NV_GLOBAL_CTRL_INFO_ADDR),&item_info,&file_info);
     if(ret)
     {
@@ -936,7 +930,7 @@ u32 nv_debug_chk_invalid_type(const s8 * path, u32 invalid_type)
 *************************************************************************/
 void nv_debug_set_invalid_type(const s8 * path, u32 invalid_type)
 {
-    nv_memcpy((s8 *)g_debug_check_file, (s8 *)path, sizeof(g_debug_check_file));
+    (void)memcpy_s((s8 *)g_debug_check_file, sizeof(g_debug_check_file), (s8 *)path, sizeof(g_debug_check_file));
     g_debug_check_flag = invalid_type;
     return;
 }
@@ -948,7 +942,7 @@ void nv_debug_set_invalid_type(const s8 * path, u32 invalid_type)
 *************************************************************************/
 void nv_debug_clear_invalid_type(void)
 {
-    nv_memset((s8 *)g_debug_check_file, 0, sizeof(g_debug_check_file));
+    (void)memset_s((s8 *)g_debug_check_file, sizeof(g_debug_check_file), 0, sizeof(g_debug_check_file));
     g_debug_check_flag = 0;
 
     nv_img_clear_check_result();
@@ -975,7 +969,7 @@ u32 nvm_read_rand(u32 nvid)
     {
         return BSP_ERR_NV_MALLOC_FAIL;
     }
-    nv_memset(tempdata, 0, (size_t)(ref_info.nv_len +1));
+    (void)memset_s(tempdata, (size_t)(ref_info.nv_len +1), 0, (size_t)(ref_info.nv_len +1));
 
     ret = bsp_nvm_read(nvid,tempdata,ref_info.nv_len);
     if(NV_OK != ret)
@@ -999,8 +993,8 @@ u32 nvm_read_rand(u32 nvid)
 
 u32 nvm_read_randex(u32 nvid,u32 modem_id)
 {
-    u32 ret;    
-    u8* tempdata;    
+    u32 ret;
+    u8* tempdata;
     u32 i;
     nv_item_info_s ref_info = {0};
     nv_file_info_s file_info = {0};

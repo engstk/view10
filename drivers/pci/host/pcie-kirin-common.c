@@ -47,7 +47,7 @@ int config_enable_dbi(u32 rc_id, int flag)
 	kirin_elb_writel(pcie, ret1, SOC_PCIECTRL_CTRL0_ADDR);
 	kirin_elb_writel(pcie, ret2, SOC_PCIECTRL_CTRL1_ADDR);
 
-	udelay(2);//lint !e778  !e774  !e516 !e747
+	udelay(10);//lint !e778  !e774  !e516 !e747
 	ret1 = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL0_ADDR);
 	ret2 = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL1_ADDR);
 
@@ -154,9 +154,23 @@ int ltssm_enable(u32 rc_id, int yes)
 	return 0;
 }
 
+void kirin_pcie_reset_phy(struct kirin_pcie *pcie)
+{
+	u32 reg_val;
+
+	reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_CTRL1_ADDR);
+	reg_val &= ~(0x1 << 17);//phy_reset_sel
+	reg_val |= (0x1 << 16);//phy_reset
+	kirin_apb_phy_writel(pcie, reg_val, SOC_PCIEPHY_CTRL1_ADDR);
+	udelay(10);//lint !e778  !e774
+	reg_val &= ~(0x1 << 16);//phy_dereset
+	kirin_apb_phy_writel(pcie, reg_val, SOC_PCIEPHY_CTRL1_ADDR);
+}
+
 void kirin_pcie_config_l0sl1(u32 rc_id, enum link_aspm_state aspm_state)
 {
 	struct kirin_pcie *pcie;
+	u16 reg_val;
 
 	if (!kirin_pcie_valid(rc_id))
 		return;
@@ -174,6 +188,8 @@ void kirin_pcie_config_l0sl1(u32 rc_id, enum link_aspm_state aspm_state)
 
 		pcie_capability_clear_and_set_word(pcie->rc_dev, PCI_EXP_LNKCTL,
 					PCI_EXP_LNKCTL_ASPMC, aspm_state);
+		pcie_capability_read_word(pcie->ep_dev, PCI_EXP_LNKCTL, &reg_val);
+		PCIE_PR_DEBUG("EP LNKCTL: 0x%x", reg_val);
 	} else {
 		pcie_capability_clear_and_set_word(pcie->rc_dev, PCI_EXP_LNKCTL,
 						   PCI_EXP_LNKCTL_ASPMC, aspm_state);
@@ -241,11 +257,11 @@ void kirin_pcie_config_l1ss(u32 rc_id, enum l1ss_ctrl_state enable)
 
 	/*disble L1ss*/
 	pci_read_config_dword(pcie->ep_dev, ep_l1ss_pm + PCI_EXT_L1SS_CTRL1, &reg_val);
-	reg_val &= ~L1SS_PM_ALL;
+	reg_val &= ~L1SS_PM_ASPM_ALL;
 	pci_write_config_dword(pcie->ep_dev, ep_l1ss_pm + PCI_EXT_L1SS_CTRL1, reg_val);
 
 	pci_read_config_dword(pcie->rc_dev, rc_l1ss_pm + PCI_EXT_L1SS_CTRL1, &reg_val);
-	reg_val &= ~L1SS_PM_ALL;
+	reg_val &= ~L1SS_PM_ASPM_ALL;
 	pci_write_config_dword(pcie->rc_dev, rc_l1ss_pm + PCI_EXT_L1SS_CTRL1, reg_val);
 
 	if (enable) {
@@ -354,6 +370,248 @@ void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
 					type, cpu_addr, pci_addr, size);//lint !e648
 }
 
+int kirin_pcie_power_ctrl(struct pcie_port *pp, enum rc_power_status on_flag)
+{
+	int ret;
+	struct kirin_pcie *pcie = to_kirin_pcie(pp);
+
+	PCIE_PR_DEBUG("++");
+
+	/*power on*/
+	if (on_flag == RC_POWER_ON || on_flag == RC_POWER_RESUME) {
+		spin_lock(&pcie->ep_ltssm_lock);
+		pcie->ep_link_status = DEVICE_LINK_UP;
+		spin_unlock(&pcie->ep_ltssm_lock);
+
+		ret = pcie->plat_ops->plat_on(pp, on_flag);
+
+	} else if (on_flag == RC_POWER_OFF || on_flag == RC_POWER_SUSPEND) {
+
+		ret = pcie->plat_ops->plat_off(pp, on_flag);
+
+	} else {
+		PCIE_PR_ERR("Invalid Param");
+		ret = -1;
+	}
+
+	PCIE_PR_DEBUG("--");
+	return ret;
+}
+
+bool is_pipe_clk_stable(struct kirin_pcie *pcie)
+{
+	u32 reg_val;
+	u32 time = 100;
+	u32 pipe_clk_stable = 0x1 << 19;
+
+	if (pcie->dtsinfo.board_type != BOARD_FPGA) {
+		reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_STATE0_ADDR);
+		while (reg_val & pipe_clk_stable) {
+			mdelay(1);
+			if (time == 0) {
+				return false;
+			}
+			time--;
+			reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_STATE0_ADDR);
+		}
+	}
+
+	return true;
+}
+
+/* ECO Function for PHY Debug */
+#define ECO				1
+#define ECO_TEST		2
+#define SRAM_TEST_SIZE	16
+#define ECO_BYPASS_ADDR	SOC_PCIEPHY_CTRL40_ADDR
+
+int kirin_pcie_cfg_eco(struct kirin_pcie *pcie)
+{
+	u32 reg_val;
+	struct kirin_pcie_dtsinfo *dtsinfo;
+	u32 sram_init_done = 0x1 << 0;
+	u32 time = 10;
+
+#ifdef CONFIG_KIRIN_PCIE_TEST
+	void __iomem *checkdata;
+	void __iomem *sramdata = pcie->phy_base + pcie->sram_phy_offset;
+#endif
+
+	PCIE_PR_DEBUG("+");
+	dtsinfo = &(pcie->dtsinfo);
+
+	reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_STATE39_ADDR);
+	while (!(reg_val & sram_init_done)) {
+		udelay(100);//lint !e778  !e774  !e516 !e747
+		if (time == 0) {
+			PCIE_PR_ERR("phy0_sram_init_done fail");
+			return -1;
+		}
+		time--;
+		reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_STATE39_ADDR);
+	}
+
+	if (pcie->plat_ops->sram_ext_load
+		&& pcie->plat_ops->sram_ext_load((void *)pcie)) {
+		PCIE_PR_ERR("Sram extra load Failed");
+		return -1;
+	}
+
+#ifdef CONFIG_KIRIN_PCIE_TEST
+	if (dtsinfo->eco == ECO_TEST) {
+		/*lint -e124 -esym(124,*)  */
+		checkdata = (char *)kmalloc(SRAM_TEST_SIZE * 2, GFP_KERNEL);
+		if (!checkdata) {
+			PCIE_PR_ERR("Failed to alloc checkdata");
+			return -ENOMEM;
+		}
+		memset(checkdata, 0x0, SRAM_TEST_SIZE * 2);
+		memcpy_fromio(checkdata, sramdata, SRAM_TEST_SIZE);
+		memset_io(sramdata, 0x0, SRAM_TEST_SIZE);
+		if (memcmp(sramdata, checkdata + SRAM_TEST_SIZE, SRAM_TEST_SIZE) != 0) {
+			PCIE_PR_ERR("sram data clear fail");
+			goto ECO_TEST_FAIL;
+		}
+		memcpy_toio(sramdata, checkdata, SRAM_TEST_SIZE);
+		if (memcmp(sramdata, checkdata + SRAM_TEST_SIZE, SRAM_TEST_SIZE) == 0) {
+			PCIE_PR_ERR("sram data all is 0, write eco data fail");
+			goto ECO_TEST_FAIL;
+		}
+		PCIE_PR_ERR("ECO TEST SUCCESS!");
+		kfree(checkdata);
+		/*lint -e124 +esym(124,*) */
+	}
+#endif
+
+	/*pull up phy0_sram_ext_ld_done signal, not choose ECO */
+	reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_CTRL40_ADDR);
+	reg_val |= (0x1 << 4);
+	kirin_apb_phy_writel(pcie, reg_val, SOC_PCIEPHY_CTRL40_ADDR);
+
+	PCIE_PR_DEBUG("-");
+	return 0;
+
+#ifdef CONFIG_KIRIN_PCIE_TEST
+ECO_TEST_FAIL:
+	kfree(checkdata);
+#endif
+	return -1;
+}
+
+/*Set Bit0=0'b: pull down phy0_sram_bypass signal, choose ECO */
+/*Set Bit0=1'b: pull up phy0_sram_bypass signal, not choose ECO */
+void kirin_pcie_select_eco(struct kirin_pcie *pcie)
+{
+	u32 reg_val;
+	reg_val = kirin_apb_phy_readl(pcie, ECO_BYPASS_ADDR);
+	if (pcie->dtsinfo.eco)
+		reg_val &= ~(0x1 << 0);
+	else
+		reg_val |= (0x1 << 0);
+	kirin_apb_phy_writel(pcie, reg_val, ECO_BYPASS_ADDR);
+}
+
+int kirin_pcie_noc_power(struct kirin_pcie *pcie, int enable)
+{
+	u32 time = 100;
+	u32 val = NOC_PW_MASK;
+	int rst;
+
+	if (enable)
+		val = NOC_PW_MASK | NOC_PW_SET_BIT;
+	else
+		val = NOC_PW_MASK;
+	rst = enable ? 1 : 0;
+
+	writel(val, pcie->pmctrl_base + NOC_POWER_IDLEREQ_1);
+
+	time = 100;
+	val = readl(pcie->pmctrl_base + NOC_POWER_IDLE_1);
+	while((val & NOC_PW_SET_BIT) != rst) {
+		udelay(10);
+		if (!time) {
+			PCIE_PR_ERR("Failed to reverse noc power-status");
+			return -1;
+		}
+		time--;
+		val = readl(pcie->pmctrl_base + NOC_POWER_IDLE_1);
+	}
+
+	return 0;
+}
+
+#ifndef CONFIG_KIRIN_PCIE_JAN
+int kirin_pcie_phy_init(struct kirin_pcie *pcie)
+{
+	u32 reg_val;
+
+	kirin_pcie_select_eco(pcie);
+
+	/* pull down phy_test_powerdown signal */
+	reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_CTRL0_ADDR);
+	reg_val &= ~(0x1 << 22);
+	kirin_apb_phy_writel(pcie, reg_val, SOC_PCIEPHY_CTRL0_ADDR);
+
+	reg_val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_CTRL33_ADDR);
+	reg_val |= (0x1 << 1);
+	kirin_apb_phy_writel(pcie, reg_val, SOC_PCIEPHY_CTRL33_ADDR);
+
+	if (pcie->dtsinfo.eco)
+		kirin_pcie_reset_phy(pcie);
+
+	/* deassert controller perst_n */
+	reg_val = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL12_ADDR);
+	reg_val |= (0x1 << 2);
+	kirin_elb_writel(pcie, reg_val, SOC_PCIECTRL_CTRL12_ADDR);
+	udelay(10);
+
+	if (pcie->dtsinfo.eco && kirin_pcie_cfg_eco(pcie)) {
+		PCIE_PR_ERR("eco init fail");
+		return -1;
+	}
+
+	return 0;
+}
+#endif
+
+void kirin_pcie_natural_cfg(struct kirin_pcie *pcie)
+{
+	u32 val;
+
+	/* pull up sys_aux_pwr_det */
+	val = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL7_ADDR);
+	val |= (0x1 << 10);
+	kirin_elb_writel(pcie, val, SOC_PCIECTRL_CTRL7_ADDR);
+
+	if (pcie->dtsinfo.ep_flag) {
+		/* cfg as ep */
+		val = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL0_ADDR);
+		val &= 0xFFFFFFF;
+		kirin_elb_writel(pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
+		/* input */
+		val = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL12_ADDR);
+		val |= (0x3 << 2);
+		kirin_elb_writel(pcie, val, SOC_PCIECTRL_CTRL12_ADDR);
+	} else {
+		/* cfg as rc */
+		val = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL0_ADDR);
+		val &= 0x4FFFFFFF;
+		kirin_elb_writel(pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
+		/* output, pull down */
+		val = kirin_elb_readl(pcie, SOC_PCIECTRL_CTRL12_ADDR);
+		val &= ~(0x3 << 2);
+		val |= (0x1 << 1);
+		val &= ~(0x1 << 0);
+		kirin_elb_writel(pcie, val, SOC_PCIECTRL_CTRL12_ADDR);
+	}
+
+	/* Handle phy_reset and lane0_reset to HW */
+	val = kirin_apb_phy_readl(pcie, SOC_PCIEPHY_CTRL1_ADDR);
+	val |= PCIEPHY_RESET_BIT;
+	val &= ~PCIEPHY_PIPE_LINE0_RESET_BIT;
+	kirin_apb_phy_writel(pcie, val, SOC_PCIEPHY_CTRL1_ADDR);
+}
+
 void kirin_pcie_outbound_atu(u32 rc_id, int index,
 		int type, u64 cpu_addr, u64 pci_addr, u32 size)
 {
@@ -386,6 +644,63 @@ void kirin_pcie_inbound_atu(u32 rc_id, int index,
 					type, pci_addr, cpu_addr, size);
 }
 
+/*
+* lookup host ltssm val.
+*/
+#define LTSSM_STATUE_MASK 0x3F
+#define LTSSM_L1SS_MASK 0xC000
+u32 show_link_state(u32 rc_id)
+{
+	unsigned int val;
+	struct kirin_pcie *pcie;
+
+	if (!kirin_pcie_valid(rc_id))
+		return LTSSM_PWROFF;
+
+	pcie = &g_kirin_pcie[rc_id];
+
+	val = kirin_elb_readl(pcie, SOC_PCIECTRL_STATE4_ADDR);
+
+	PCIE_PR_INFO("Register 0x410 value [0x%x]", val);
+
+	val = val & LTSSM_STATUE_MASK;
+
+	switch (val) {
+	case LTSSM_CPLC:
+		PCIE_PR_INFO("L-state: Compliance");
+		break;
+	case LTSSM_L0:
+		PCIE_PR_INFO("L-state: L0");
+		break;
+	case LTSSM_L0S:
+		PCIE_PR_INFO("L-state: L0S");
+		break;
+	case LTSSM_L1: {
+		val = kirin_elb_readl(pcie, SOC_PCIECTRL_STATE5_ADDR);
+		PCIE_PR_INFO("Register 0x414 value [0x%x]", val);
+		val = val & LTSSM_L1SS_MASK;
+		if (val == LTSSM_L1_1)
+			PCIE_PR_INFO("L-state: L1.1");
+		else if (val == LTSSM_L1_2)
+			PCIE_PR_INFO("L-state: L1.2");
+		else {
+			PCIE_PR_INFO("L-state: L1.0");
+			val = LTSSM_L1;
+		}
+		break;
+	}
+	case LTSSM_LPBK:
+		PCIE_PR_INFO("L-state: LoopBack");
+		break;
+	default:
+		val = LTSSM_OTHERS;
+		PCIE_PR_INFO("Other state");
+	}
+	return val;
+}
+EXPORT_SYMBOL_GPL(show_link_state);
+
+#ifdef CONFIG_KIRIN_PCIE_TEST
 int wlan_on(u32 rc_id, int on)
 {
 	int ret;
@@ -441,36 +756,6 @@ int wlan_on(u32 rc_id, int on)
 
 	return 0;
 }
-
-int kirin_pcie_power_on(struct pcie_port *pp, enum rc_power_status on_flag)
-{
-	int ret;
-	struct kirin_pcie *pcie = to_kirin_pcie(pp);
-
-	PCIE_PR_DEBUG("++");
-
-	/*power on*/
-	if (on_flag == RC_POWER_ON || on_flag == RC_POWER_RESUME) {
-		spin_lock(&pcie->ep_ltssm_lock);
-		pcie->ep_link_status = DEVICE_LINK_UP;
-		spin_unlock(&pcie->ep_ltssm_lock);
-
-		ret = kirin_pcie_turn_on(pp, on_flag);
-
-	} else if (on_flag == RC_POWER_OFF || on_flag == RC_POWER_SUSPEND) {
-
-		ret = kirin_pcie_turn_off(pp, on_flag);
-
-	} else {
-		PCIE_PR_ERR("Invalid Param");
-		ret = -1;
-	}
-
-	PCIE_PR_DEBUG("--");
-	return ret;
-}
-
-#ifdef CONFIG_KIRIN_PCIE_TEST
 
 int retrain_link(u32 rc_id)
 {
@@ -579,62 +864,6 @@ int show_link_speed(u32 rc_id)
 	return val;
 }
 
-/**
- * show_link_state - show the rc link state.
- */
-u32 show_link_state(u32 rc_id)
-{
-	unsigned int val;
-	struct kirin_pcie *pcie;
-
-	if (!kirin_pcie_valid(rc_id))
-		return 0xFFFFFFFF;
-
-	pcie = &g_kirin_pcie[rc_id];
-
-	val = kirin_elb_readl(pcie, SOC_PCIECTRL_STATE4_ADDR);
-
-	PCIE_PR_INFO("Register 0x410 value [0x%x]", val);
-
-	val = val & 0x3f;
-
-	switch (val) {
-	case 0x3:
-		PCIE_PR_INFO("L-state: Compliance");
-		break;
-	case 0x11:
-		PCIE_PR_INFO("L-state: L0");
-		break;
-	case 0x12:
-		PCIE_PR_INFO("L-state: L0S");
-		break;
-	case 0x14: {
-		val = kirin_elb_readl(pcie, SOC_PCIECTRL_STATE5_ADDR);
-		PCIE_PR_INFO("Register 0x414 value [0x%x]", val);
-		val = val & 0xC000;
-		if (val == 0x4000)
-			PCIE_PR_ERR("L-state: L1.1");
-		else if (val == 0xC000)
-			PCIE_PR_ERR("L-state: L1.2");
-		else {
-			PCIE_PR_ERR("L-state: L1.0");
-			val = 0x14;
-		}
-		break;
-	}
-	case 0x15:
-		PCIE_PR_INFO("L-state: L2");
-		break;
-	case 0x1B:
-		PCIE_PR_INFO("L-state: LoopBack");
-		break;
-	default:
-		val = 0x0;
-		PCIE_PR_ERR("Other state");
-	}
-	return val;
-}
-
 u32 kirin_pcie_find_capability(struct pcie_port *pp, int cap)
 {
 	u8 id;
@@ -659,8 +888,6 @@ u32 kirin_pcie_find_capability(struct pcie_port *pp, int cap)
 	return 0;
 }
 
-
 #endif
 /*lint -e618  -e826 -e648 -e438 -e550 -e713 -e732 -e737 -e774 -e838 -esym(618,*) -esym(826,*) -esym(648,*) -esym(438,*) -esym(550,*) -esym(713,*) -esym(732,*) -esym(737,*) -esym(774,*) -esym(838,*) */
-
 

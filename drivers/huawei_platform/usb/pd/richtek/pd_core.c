@@ -907,6 +907,7 @@ int pd_reply_svdm_request(pd_port_t *pd_port, pd_event_t *pd_event,
 #ifdef CONFIG_HUAWEI_DSM
 		rt_dsm_report(ERROR_RT_OVER_VDO_MAX_SIZE, buf);
 #endif
+		return 0;
 	}
 
 	if(pd_event->pd_msg == NULL) {
@@ -914,6 +915,7 @@ int pd_reply_svdm_request(pd_port_t *pd_port, pd_event_t *pd_event,
 #ifdef CONFIG_HUAWEI_DSM
 		rt_dsm_report(ERROR_RT_PD_MSG_NULL, buf);
 #endif
+		return 0;
 	}
 
 	vdo = pd_event->pd_msg->payload[0];
@@ -926,6 +928,7 @@ int pd_reply_svdm_request(pd_port_t *pd_port, pd_event_t *pd_event,
 #ifdef CONFIG_HUAWEI_DSM
 			rt_dsm_report(ERROR_RT_DATA_OBJ_NULL, buf);
 #endif
+			return 0;
 		}
 
 		memcpy(&payload[1], data_obj, sizeof(uint32_t) * cnt);

@@ -80,6 +80,8 @@
 #include "nv_msg.h"
 #include "nv_proc.h"
 #include "nv_cust.h"
+#include "nv_id_gucnas.h"
+#include "acore_nv_id_gucnas.h"
 
 /* 非加密版本需要进行恢复的机要数据NV项 */
 u32 g_ausNvResumeSecureIdList[] =
@@ -88,6 +90,40 @@ u32 g_ausNvResumeSecureIdList[] =
     8268,//en_NV_Item_CardlockStatus,
     8269//en_NV_Item_CustomizeSimLockMaxTimes
 };
+
+
+u32 g_ausNvAuthIdList[] =
+{
+    en_NV_Item_IMEI,
+    en_NV_Item_USB_Enum_Status,
+    en_NV_Item_CustomizeSimLockPlmnInfo,
+    en_NV_Item_CardlockStatus,
+    en_NV_Item_CustomizeSimLockMaxTimes,
+    en_NV_Item_CustomizeService,
+    en_NV_Item_PRODUCT_ID,
+    en_NV_Item_PREVENT_TEST_IMSI_REG,
+    en_NV_Item_AT_SHELL_OPEN_FLAG,
+};
+
+void bsp_nvm_get_auth_list(u32**list_addr, u32 * list_num)
+{
+    *list_addr = &g_ausNvAuthIdList[0];
+    *list_num = sizeof(g_ausNvAuthIdList)/sizeof(u32);
+
+    return;
+}
+
+static bool nv_is_auth_nv(u32 itemid)
+{
+    u32 i;
+    for(i = 0;i<sizeof(g_ausNvAuthIdList)/sizeof(u32);i++)
+    {
+        if(itemid == g_ausNvAuthIdList[i])
+            return true;
+    }
+
+    return false;
+}
 
 u32 nv_readEx(u32 modem_id,u32 itemid,u32 offset,u8* pdata,u32 datalen)
 {
@@ -245,6 +281,19 @@ nv_writeEx_err:
     return ret;
 }
 
+/*
+* Function   : bsp_nvm_get_modem_num
+* Discription:
+* Parameter  :
+*
+* Output     : return modem num
+* History    :
+*/
+u32 bsp_nvm_get_modem_num(void)
+{
+    nv_ctrl_info_s* ctrl_info = (nv_ctrl_info_s*)NV_GLOBAL_CTRL_INFO_ADDR;
+    return ctrl_info->modem_num;
+}
 
 
 u32 bsp_nvm_get_nv_num(void)
@@ -270,6 +319,11 @@ u32 bsp_nvm_get_nvidlist(NV_LIST_INFO_STRU*  nvlist)
     {
         nvlist[i].usNvId       = ref_info[i].itemid;
         nvlist[i].ucNvModemNum = ref_info[i].modem_num;
+        nvlist[i].ucNvAuthFlag = NV_AUTH_NO;
+        if(nv_is_auth_nv(ref_info[i].itemid))
+        {
+            nvlist[i].ucNvAuthFlag = NV_AUTH_YES;
+        }
     }
     return NV_OK;
 }
@@ -438,22 +492,6 @@ nv_flush_err:
 }
 
 
-/*
-* Function   : bsp_nvm_backup
-* Discription: backup the memory to file/flash/rfile
-* Parameter  : none
-* Output     : result
-* History    : yuyangyang  00228784  create
-* 备注       : 由于备份内存nv到备份区的过程中，需要保证内存中的NV数据不被改写，备份过程中需要锁住内存，
-*              那么对该接口的使用，要有场景上的限制，目前使用场景包括:
-*              1. 提供给用户接口mdrv_nv_backup使用，目前没人使用；
-*              2. bsp_nvm_update_default，产线专用接口，用于at命令^inforbu，不会有并发写操作；
-*              3. nv_file_flag_check，启动过程中检查写入完成性的操作，不会有并发写操作；
-*              4. nv_data_writeback, 升级完成之后，讲升级后的数据写回备份区，不会有并发写操作；
-*                                    启动加载过程中，从img分区和备份分区都加载失败，需要从出厂区做紧急恢复，
-*                                    恢复完成后写回备份区，不会有并发写操作。
-*               从现有场景看，bsp_nvm_backup接口过程中锁内存不会产生风险，维护时需要持续关注。
-*/
 u32 bsp_nvm_backup(u32 crc_flag)
 {
     u32 ret = NV_ERROR;
@@ -541,16 +579,7 @@ nv_backup_fail:
 /* added by yangzhi for muti-carrier, Begin:*/
 /* added by yangzhi for muti-carrier, End! */
 
-/*
-* Function   : bsp_nvm_update_default
-* Discription: update mem data to default section
-* Parameter  : none
-* Output     : result
-* History    : yuyangyang  00228784  create
-* 备注       : 产线专用接口，用于at命令^inforbu，此时要保证没有其他写NV的动作，
-*              备份出厂分区的过程中会锁住NV内存不让写，
-*              如果此时有写NV动作，可能会导致获取内存写权限时间超长，引起未知的程序错误
-*/
+
 u32 bsp_nvm_update_default(void)
 {
     u32 ret;
@@ -565,14 +594,14 @@ u32 bsp_nvm_update_default(void)
         nv_record("^INFORBU: factory bakup failed 1, nv is not init! %d\n", ddr_info->acore_init_state);
         return NV_ERROR;
     }
-    
+
     ret = nv_set_resume_mode(NV_MODE_USER);
     if(ret)
     {
         nv_record("^INFORBU: factory bakup failed 2, set resume mode failed! 0x%x\n", ret);
         return NV_ERROR;
     }
-    
+
     /*在写入文件前进行CRC校验，以防数据不正确*/
     ret = nv_crc_check_ddr(NV_RESUME_NO);
     if(ret)
@@ -628,7 +657,7 @@ u32 bsp_nvm_update_default(void)
     nv_record("^INFORBU: factory bakup end!\n");
 
     return NV_OK;
-    
+
 nv_update_default_err:
     /* coverity[deref_arg] */
     if(fp){nv_file_close(fp);}
@@ -683,6 +712,7 @@ u32 nv_write2file_handle(nv_cmd_req *msg)
 
     if (true == nv_isSysNv(nv_info->itemid))
     {
+
         ret = bsp_nvm_flushSys();
     }
 
@@ -694,7 +724,7 @@ void bsp_nvm_icc_task(void* parm)
     u32 ret = NV_ERROR;
     nv_cmd_req *msg;
     nv_item_info_t *nv_info;
-	
+
     /* coverity[self_assign] */
     parm = parm;
 
@@ -740,6 +770,7 @@ void bsp_nvm_icc_task(void* parm)
                 ret = nv_resume_item(NULL, nv_info->itemid, nv_info->modem_id);
                 break;
 
+
             default:
                 nv_printf("msg type invalid, msg type;0x%x\n", msg->msg_type);
                 break;
@@ -766,15 +797,7 @@ u32 bsp_nvm_xml_decode(void)
 	return nv_upgrade_dec_xml_all();
 }
 
-/*
-* Function   : bsp_nvm_resume_bakup
-* Discription: resume all nv data from bakup partition, when image partition is invalid
-* Parameter  : none
-* Output     : result
-* History    : yuyangyang  00228784  create
-* 备注       : reload在初始化过程中，需要从流程上保证此时不会有写NV的操作，
-               从而做crc check的时候内存不会被改写。
-*/
+
 u32 bsp_nvm_resume_bakup(void)
 {
     u32 ret = NV_ERROR;
@@ -820,16 +843,7 @@ load_err_proc:
 }
 
 
-/*
-* Function   : bsp_nvm_reload
-* Discription: init mem,include first load the file to dload section,
-*              this step ensure the nv data copy to ddr,enhance the dload file check
-* Parameter  : none
-* Output     : result
-* History    : yuyangyang  00228784  create
-* 备注       : reload在初始化过程中，需要从流程上保证此时不会有写NV的操作，
-               从而做crc check的时候内存不会被改写。
-*/
+
 u32 bsp_nvm_reload(void)
 {
     u32 ret = NV_ERROR;
@@ -942,7 +956,7 @@ s32 bsp_nvm_kernel_init(void)
         nv_debug(NV_FUN_KERNEL_INIT,2,ret,0,0);
         goto out;
     }
-    
+
     if(ddr_info->acore_init_state != NV_BOOT_INIT_OK)
     {
         nv_record("fast boot nv init fail !\n");
@@ -1103,7 +1117,6 @@ void modem_nv_delay(void)
             nv_printf("get block device %s fail\n", blk_label);
             continue;
         }
-
         blk_label = (char*)NV_SYS_SEC_NAME;
         ret = bsp_blk_size(blk_label, &blk_size);
         if (ret) {
@@ -1111,7 +1124,6 @@ void modem_nv_delay(void)
             nv_printf("get block device %s fail\n", blk_label);
             continue;
         }
-
         blk_label = (char*)NV_DEF_SEC_NAME;
         ret = bsp_blk_size(blk_label, &blk_size);
         if (ret) {
@@ -1119,6 +1131,7 @@ void modem_nv_delay(void)
             nv_printf("get block device %s fail\n", blk_label);
             continue;
         }
+
         return;
     }
 }
@@ -1176,7 +1189,7 @@ static s32 modem_nv_suspend(struct device *dev)
 static s32 modem_nv_resume(struct device *dev)
 {
     static int count = 0;
-    
+
     g_nv_ctrl.pmState = NV_WAKEUP_STATE;
     if(NV_OPS_STATE== g_nv_ctrl.opState)
     {

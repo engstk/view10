@@ -27,7 +27,7 @@ extern "C" {
 #include  "nv_id_tlas.h"
 #include  "nv_stru_rrc.h"
 #include  "msp_nvim.h"
-#if (VOS_OS_VER != VOS_WIN32)
+#if (VOS_OS_VER != VOS_WIN32) && (!defined NV_DEFINE)
 #include  "msp.h"
 #endif
 #pragma pack(4)
@@ -278,40 +278,7 @@ typedef struct
     ****************************************************************************/
     LPS_NV_LONG_BIT_STRU                 stPsFunFlag02;
 
-    /************************stPsFunFlag03各个BIT含义***************************
-     bitFlag01:  终端开发SCC特性; 缺省值:0; 0:关;1:开;wanjiang w00178404
-     bitFlag02:  终端开发ADRX特性;缺省值:0; 0:关;1:开;wanjiang w00178404
-     bitFlag03:
-     bitFlag04:
-     bitFlag05:
-     bitFlag06:  异系统到L,TAU带ACTIVE FLAG定制开关;确省值:0; 0:关; 1:开
-     bitFlag07:  软银定制不允许MFBI情况下的band定制外频点的连接态测量开关;缺省值0;0:允许测量;1:不允许测量
-     bitFlag08:  MDT/RLF以及连接态立即MDT场景上报假的位置信息，以使GCF用例可以通过，默认为0.0:功能关闭 1:功能打开
-     bitFlag09:  CMAS消息接收成功之后是否置接收成功标志位开关；缺省值0；0:置位，1:不置位。
-     bitFlag10:  GU2L的重选和CCO，如果搜到L小区后能量较好，重选失败，给L回复一个较小的受限时间10ms
-     bitFlag11:
-     bitFlag12:
-     bitFlag13:
-     bitFlag14:
-     bitFlag15:
-     bitFlag16:
-     bitFlag17:
-     bitFlag18:
-     bitFlag19:
-     bitFlag20:
-     bitFlag21:
-     bitFlag22:
-     bitFlag23:
-     bitFlag24:
-     bitFlag25:
-     bitFlag26:
-     bitFlag27:
-     bitFlag28:
-     bitFlag29:
-     bitFlag30:
-     bitFlag31:
-     bitFlag32:
-    ****************************************************************************/
+    
     LPS_NV_LONG_BIT_STRU                 stPsFunFlag03;
 
    /************************stPsFunFlag04各个BIT含义***************************

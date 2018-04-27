@@ -747,6 +747,7 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
 {
 	struct eth_dev		*dev = netdev_priv(net);
 	int			length = 0;
+	int			old_length = 0;
 	int			retval;
 	struct usb_request	*req = NULL;
 	unsigned long		flags;
@@ -855,6 +856,7 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
 
 	if (dev->port_usb->multi_pkt_xfer) {
 		memcpy(req->buf + req->length, skb->data, skb->len);
+		old_length = req->length;
 		req->length = req->length + skb->len;
 		length = req->length;
 		dev_kfree_skb_any(skb);
@@ -936,6 +938,12 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
 	if (retval) {
 		if (!dev->port_usb->multi_pkt_xfer)
 			dev_kfree_skb_any(skb);
+		else {
+			req->length = old_length;
+			spin_lock_irqsave(&dev->req_lock, flags);
+			dev->no_tx_req_used--;
+			spin_unlock_irqrestore(&dev->req_lock, flags);
+		}
 drop:
 		dev->net->stats.tx_dropped++;
 multiframe:

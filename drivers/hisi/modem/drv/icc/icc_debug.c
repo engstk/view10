@@ -51,6 +51,7 @@
 #include <bsp_pm_om.h>
 #include "icc_core.h"
 #include "icc_platform.h"
+#include <securec.h>
 
 
 struct icc_pm_om
@@ -111,9 +112,9 @@ static inline void icc_pm_om_log(struct icc_channel_packet *packet, read_cb_func
 	struct icc_pm_om pm_om;
 
 	/* coverity[secure_coding] */
-	(void)icc_safe_memset((void *)&pm_om, sizeof(pm_om), 0, sizeof(pm_om));
+	(void)memset_s((void *)&pm_om, sizeof(pm_om), 0, sizeof(pm_om));
 	/* coverity[secure_coding] */
-	(void)icc_safe_memcpy((void *)&pm_om.packet, sizeof(*packet), (void *)packet, sizeof(*packet));
+	(void)memcpy_s((void *)&pm_om.packet, sizeof(*packet), (void *)packet, sizeof(*packet));
 	pm_om.read_cb      = read_cb;
 	pm_om.read_context = read_context;
 
@@ -218,7 +219,7 @@ static void icc_send_msg_queue_in(struct icc_msg_fifo *queue, struct icc_uni_msg
 	}
 
 	/* coverity[secure_coding] */
-	(void)icc_safe_memcpy((void *)(&queue->msg[queue->rear]), sizeof(*msg), msg, sizeof(*msg));
+	(void)memcpy_s((void *)(&queue->msg[queue->rear]), sizeof(*msg), msg, sizeof(*msg));
 	queue->rear = (queue->rear + 1) % ICC_STAT_MSG_NUM;
 	queue->size = queue->size + 1;
 }
@@ -233,7 +234,7 @@ static void icc_recv_msg_queue_in(struct icc_msg_fifo_recv *queue, struct icc_re
 	}
 
 	/* coverity[secure_coding] */
-	(void)icc_safe_memcpy((void *)(&queue->msg[queue->rear]), sizeof(*msg), msg, sizeof(*msg));
+	(void)memcpy_s((void *)(&queue->msg[queue->rear]), sizeof(*msg), msg, sizeof(*msg));
 	queue->rear = (queue->rear + 1) % ICC_STAT_MSG_NUM;
 	queue->size = queue->size + 1;
 }
@@ -251,7 +252,7 @@ void icc_dump_hook(void)
     }
 
 	/* coverity[secure_coding] */
-	(void)icc_safe_memcpy((void *)g_icc_dbg.dump_buf_addr, sizeof(struct icc_msg_info), 
+	(void)memcpy_s((void *)g_icc_dbg.dump_buf_addr, sizeof(struct icc_msg_info), 
 		(void *)&g_icc_dbg.msg_stat, sizeof(struct icc_msg_info));
 
     return;
@@ -304,14 +305,14 @@ err_ret:
 
 	/* channel init */
 	/* coverity[secure_coding] */
-	(void)icc_safe_memset((void *)channel, sizeof(struct icc_channel_info), 0, sizeof(struct icc_channel_info));
+	(void)memset_s((void *)channel, sizeof(struct icc_channel_info), 0, sizeof(struct icc_channel_info));
 	channel->id = icc_channel->id;
 	channel->recv.func_size= icc_channel->func_size;
 	channel->send.func_size= icc_channel->func_size;
 
 	/* sub channel init */
 	/* coverity[secure_coding] */
-	(void)icc_safe_memset((void *)sub_channel, sizeof(struct icc_channel_stat_info) * icc_channel->func_size * 2,/* [false alarm]:ÆÁ±ÎFortifyÎó±¨ */
+	(void)memset_s((void *)sub_channel, sizeof(struct icc_channel_stat_info) * icc_channel->func_size * 2,/* [false alarm]:ÆÁ±ÎFortifyÎó±¨ */
 		0, sizeof(struct icc_channel_stat_info) * icc_channel->func_size * 2); /*lint !e665 */
 	channel->send.sub_chn  = sub_channel;
 	channel->recv.sub_chn  = &(sub_channel[icc_channel->func_size]);
@@ -328,7 +329,7 @@ s32  icc_debug_init(u32 channel_num)
 	s32 ret;
 
 	/* coverity[secure_coding] */
-	(void)icc_safe_memset(&g_icc_dbg, sizeof(struct icc_dbg), 0, sizeof(struct icc_dbg));
+	(void)memset_s(&g_icc_dbg, sizeof(struct icc_dbg), 0, sizeof(struct icc_dbg));
 
 	for(i = 0; i < channel_num; i++)/*lint !e838 */
 	{
@@ -388,7 +389,7 @@ void icc_debug_after_send(struct icc_channel *channel, struct icc_channel_packet
 	msg_tx.duration_post = bsp_get_slice_value();
 
 	/* coverity[secure_coding] */
-	(void)icc_safe_memcpy((void *)msg_tx.data, ICC_MSG_RECORED_DATA_LEN, (void *)data, min(msg_tx.len, (u32)ICC_MSG_RECORED_DATA_LEN));
+	(void)memcpy_s((void *)msg_tx.data, ICC_MSG_RECORED_DATA_LEN, (void *)data, min(msg_tx.len, (u32)ICC_MSG_RECORED_DATA_LEN));
 
 	icc_send_msg_queue_in(&(g_icc_dbg.msg_stat.send), &msg_tx);
 	icc_channel_msg_stat(&(g_icc_dbg.channel_stat[GET_CHN_ID(msg_tx.channel_id)]->send.total), msg_tx.len, msg_tx.send_task_id);

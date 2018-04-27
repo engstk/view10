@@ -92,6 +92,9 @@
 *****************************************************************************/
 #define    THIS_FILE_ID        PS_FILE_ID_V_MSG_C
 
+/* 支持互相发送消息的多核的最大数目 */
+#define VOS_SUPPORT_CPU_NUM_MAX     (5)
+
 
 extern VOS_MSG_HOOK_FUNC                vos_MsgHook;
 
@@ -169,6 +172,21 @@ VOS_INT VOS_MsgLpmCb(VOS_INT x)
 
     return 0;
 }
+
+enum PM_LOG_AOSA_PAM_ENUM
+{
+    PM_LOG_AOSA_PAM_MSG     = 0x10000001,
+    PM_LOG_AOSA_PAM_BUTT,
+};
+typedef VOS_UINT32 PM_LOG_AOSA_PAM_ENUM_UINT32;
+
+typedef struct
+{
+    PM_LOG_AOSA_PAM_ENUM_UINT32     enType;
+    VOS_UINT32                      ulSenderPid;
+    VOS_UINT32                      ulReceiverPid;
+    VOS_UINT32                      ulMsgId;
+} VOS_A_MSG_LOG_STRU;
 
 VOS_ICC_DEBUG_INFO_STRU g_stVosAcoreCcoreIccDebugInfo;
 VOS_ICC_DEBUG_INFO_STRU g_stVosCcoreHifiIccDebugInfo;
@@ -756,22 +774,7 @@ VOS_UINT32 V_UnreserveMsg( VOS_PID Pid, MsgBlock * pMsg,
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : VOS_CheckMsgCPUId
- 功能描述  : 检查发送的消息是否为核间消息
- 输入参数  : VOS_UINT32 ulCPUId
- 输出参数  : 无
- 返 回 值  : VOS_BOOL   VOS_TRUE    发送的消息为核间消息
-                        VOS_FALSE   发送的消息为本地消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年8月13日
-    作    者   : s00207770
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_BOOL VOS_CheckMsgCPUId( VOS_UINT32 ulCPUId )
 {
     /* ACPU的id为1，如果消息接收的cpuid不为acpu id，则为跨核消息 */
@@ -782,22 +785,7 @@ VOS_BOOL VOS_CheckMsgCPUId( VOS_UINT32 ulCPUId )
     return VOS_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : VOS_CheckInterrupt
- 功能描述  : 检测是否为中断上下文
- 输入参数  : VOS_VOID
- 输出参数  : 无
- 返 回 值  : VOS_UINT32   非0        运行在中断上下文中
-                          VOS_FALSE  运行在任务上下文中
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年8月13日
-    作    者   : s00207770
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 VOS_CheckInterrupt( VOS_VOID )
 {
 
@@ -1283,6 +1271,8 @@ VOS_UINT V_ICC_OSAMsg_CB(VOS_UINT ulChannelID,VOS_INT lLen)
     MsgBlock                *pMsgCtrlBlk;
     MsgBlock                stTempDebug;
 
+    VOS_A_MSG_LOG_STRU      stOsaMsgLog;
+
     g_stVosAcoreCcoreIccDebugInfo.ulRcvNum++;
     g_stVosAcoreCcoreIccDebugInfo.ulRcvSlice = VOS_GetSlice();
 
@@ -1338,6 +1328,17 @@ VOS_UINT V_ICC_OSAMsg_CB(VOS_UINT ulChannelID,VOS_INT lLen)
     if(VOS_TRUE == g_msglpm)
     {
         g_msglpm = VOS_FALSE;
+        
+        if (VOS_CPU_ID_0_PID_BUTT > pMsgCtrlBlk->ulSenderPid)
+        {
+            stOsaMsgLog.enType        = PM_LOG_AOSA_PAM_MSG;
+            stOsaMsgLog.ulSenderPid   = pMsgCtrlBlk->ulSenderPid;
+            stOsaMsgLog.ulReceiverPid = pMsgCtrlBlk->ulReceiverPid;
+            stOsaMsgLog.ulMsgId       = *((VOS_UINT32 *)(pMsgCtrlBlk->aucValue));
+
+            (VOS_VOID)mdrv_pm_log(PM_MOD_AP_OSA, sizeof(VOS_A_MSG_LOG_STRU), &stOsaMsgLog);
+        }
+
 
         (VOS_VOID)vos_printf("[C SR] v_msg senderpid %d, receivepid %d, msgid 0x%x.\n",
             pMsgCtrlBlk->ulSenderPid, pMsgCtrlBlk->ulReceiverPid, *((VOS_UINT32*)(pMsgCtrlBlk->aucValue))); /* [false alarm]: 屏蔽Fortify错误 */
@@ -1348,23 +1349,7 @@ VOS_UINT V_ICC_OSAMsg_CB(VOS_UINT ulChannelID,VOS_INT lLen)
     return V_SendMsg(VOS_PID_DOPRAEND, (VOS_VOID**)(&(pucMsgData)), VOS_FILE_ID, __LINE__ );
 }
 
-/*****************************************************************************
- 函 数 名  : VOS_ICC_Init
- 功能描述  : 初始化ICC通道
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_ERR/VOS_OK
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2011年3月10日
-     作    者  : l46160
-     修改内容  : Creat Function
 
-   2.日    期  : 2016年12月20日
-     作    者  : x00306642
-     修改内容  : 移到OSA模块
-*****************************************************************************/
 VOS_UINT32 VOS_ICC_Init(VOS_VOID)
 {
     VOS_ICC_UDI_CTRL_STRU               stICCCtrlTable = {0};
@@ -1592,6 +1577,8 @@ VOS_UINT32 V_SendUrgentMsg(VOS_PID Pid, VOS_VOID ** ppMsg,
     {
         LogPrint3("# V_SendUrgentMsg, send api is null.F %d L %d RecvPid %d.\r\n",
                     (VOS_INT)ulFileID, lLineNo, (VOS_INT)ulPid);
+
+        (VOS_VOID)VOS_FreeMsg( Pid, *ppMsg );
 
         (VOS_VOID)VOS_SetErrorNo(VOS_ERRNO_MSG_SEND_FUNCEMPTY);
 

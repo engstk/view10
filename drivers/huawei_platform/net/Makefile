@@ -11,3 +11,5 @@ obj-$(CONFIG_HW_COMMSTAT) += commstat/
 obj-$(CONFIG_HW_QTAGUID_PID) += qtaguid_pid/
 
 obj-$(CONFIG_HW_DPIMARK_MODULE) += hw_dpi_mark/
+
+obj-$(CONFIG_HW_NETBOOSTER_MODULE) += netbooster/

@@ -14,6 +14,12 @@ config HISI_COUL_HI6421V600_SPMI
 config HISI_COUL_HI6555V100
         bool "hisi hi6555v100 coul"
         default n
+config HISI_COUL_HI6555V200
+        bool "hisi hi6555v200 coul"
+        default n
+config HISI_COUL_HI6421V700
+	bool "hisi hi6421v700 coul"
+	default n
 config HISI_COUL_TEST
         bool "hisi coul test"
         default n

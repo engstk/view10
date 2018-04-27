@@ -526,9 +526,9 @@
 		hw,lcdkit-panel-checksum-exit-command = <0x15 0x01 0x00 0x00 0x0a 0x00 0x02 0xFF 0x25
 				0x15 0x01 0x00 0x00 0x0a 0x00 0x02 0x93 0x00
 				0x15 0x01 0x00 0x00 0x0a 0x00 0x02 0x93 0x04>;
-		hw,lcdkit-panel-checksum-value = <0x08 0xc4 0xf3 0x6c 0x8f 0x9a 0xfc 0x01 0x56
-			 0x08 0xf5 0x7d 0xfd 0x8d 0xf9 0xcb 0x4b 0x64
-			 0x08 0xb8 0x83 0x84 0xb5 0x44 0x96 0xf0 0xab>;
+		hw,lcdkit-panel-checksum-value = <0x08 0x30 0x99 0xc0 0xa7 0x9a 0xda 0xe3 0x77
+                         0x08 0x55 0x30 0x80 0xc9 0x10 0xc7 0x5e 0xda
+                         0x08 0x5c 0xfa 0xeb 0x7d 0x95 0xa9 0x33 0x4>;
 		hw,lcdkit-panel-checksum-support = <1>;
 		hw,lcdkit-panel-esd-reg-command = <0x06 0x01 0x00 0x00 0x0a 0x00 0x01 0x0a>;
 		hw,lcdkit-panel-esd-reg-command-state = "dsi_lp_mode";
@@ -680,6 +680,7 @@
 								0x29 0x01 0x00 0x00 0x0a 0x00 0x02 0xFB 0x01>;
 		hw,lcdkit-reset-shutdown-later = <1>;
 		hw,lcdkit-panel-pcd-errflag-check-support = <0>;
+		hw,lcdkit-panel-pt-ulps-support = <0>;
 		hw,lcdkit-panel-aod-support = <0>;
 		hw,lcdkit-panel-orientation = <1>;
 		hw,lcdkit-panel-bpp = <0>;
@@ -692,6 +693,7 @@
 		hw,lcdkit-panel-getblmaxnit-type = <0>;
 		hw,lcdkit-panel-cmd-type = <16>;
 		hw,lcdkit-panel-ifbctype = <9>;
+		hw,lcdkit-panel-ifbc-vesa3x-set = <0>;
 		hw,lcdkit-panel-frc-enable = <0>;
 		hw,lcdkit-panel-esd-skip-mipi-check = <1>;
 		hw,lcdkit-panel-pxl-clk = <277>;
@@ -754,6 +756,8 @@
 		hw,lcdkit-mipi-clk-t-hs-zero-adjust = <0>;
 		hw,lcdkit-mipi-data-t-lpx-adjust = <0>;
 		hw,lcdkit-mipi-phy-mode = <1>;
+		hw,lcdkit-mipi-eotp-disable-flag = <0>;
+		hw,lcdkit-blpwm-input-disable = <0>;
 		hw,lcdkit-dirt-left-align = <0xffff>;
 		hw,lcdkit-dirt-right-align = <0xffff>;
 		hw,lcdkit-dirt-top-align = <8>;
@@ -764,6 +768,8 @@
 		hw,lcdkit-dirt-height-min = <8>;
 		hw,lcdkit-dirt-top-start = <0xffff>;
 		hw,lcdkit-dirt-bott-start = <0xffff>;
+		hw,lcdkit-bl-byte-order = <0>;
+		hw,lcdkit-iovcc-before-vci-flag = <0>;
 		hw,lcdkit-gpios = <&gpio4 2 0>,<&gpio6 3 0>,<&gpio1 4 0>,<&gpio26 2 0>,<&gpio24 4 0>,<&gpio4 3 0>;
 		lcdio-vcc-supply = <&ldo4>;
 		lcdanalog-vcc-supply = <&ldo17>;
@@ -843,6 +849,7 @@
 		hw,lcdkit-h-sync-skew = <0>;
 		hw,lcdkit-lcd-type = <1>;
 		hw,lcdkit-panel-pt-test-support = <1>;
+		hw,lcdkit-mipi-clk-config-support = <0>;
 		hw,lcdkit-panel-hkadc-support = <0>;
 		hw,lcdkit-bias-power-ctrl-mode = <4>;
 		hw,lcdkit-iovcc-power-ctrl-mode = <1>;

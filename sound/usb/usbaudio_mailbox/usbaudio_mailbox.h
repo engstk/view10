@@ -1,5 +1,6 @@
 #ifndef __USBUDIO_MAILBOX_H
 #define __USBUDIO_MAILBOX_H
+#include "../hifi/usbaudio_ioctl.h"
 
 enum IRQ_RT
 {
@@ -95,9 +96,9 @@ struct usbaudio_formats {
 };
 
 struct usbaudio_pcms {
-	struct usbaudio_formats fmts[2];
-	struct usbaudio_ifdesc ifdesc[2];
-	struct usbaudio_epdesc epdesc[2];
+	struct usbaudio_formats fmts[USBAUDIO_PCM_NUM];
+	struct usbaudio_ifdesc ifdesc[USBAUDIO_PCM_NUM];
+	struct usbaudio_epdesc epdesc[USBAUDIO_PCM_NUM];
 	unsigned int customsized;
 };
 

@@ -15,3 +15,7 @@ config HW_WIFI
 config HUAWEI_MSS_AUTO_CHANGE
         bool "Huawei MSS auto change function support"
         default n
+
+config HW_SYN_LINEAR_RETRY
+        bool "Huawei tcp syn sent linear retry support"
+        default n

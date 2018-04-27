@@ -61,10 +61,12 @@ typedef struct name_to_index {
 #define TO_NAME_INDEX(X)   #X, X
 
 extern smartpakit_priv_t *smartpakit_priv;
+extern void smartpakit_ctrl_get_model(char *dst, smartpakit_priv_t *pakit_priv);
 extern irqreturn_t smartpakit_i2c_thread_irq(int irq, void *data);
+char g_buffer_info[SMARTPAKIT_INFO_BUF_MAX] = {0};
 
 static name_to_index_t soc_platform_name_index[SMARTPAKIT_SOC_PLATFORM_MAX] = {
-    {TO_NAME_INDEX(SMARTPAKIT_SOC_PLATFORM_HISI)},
+	{TO_NAME_INDEX(SMARTPAKIT_SOC_PLATFORM_HISI)},
 	{TO_NAME_INDEX(SMARTPAKIT_SOC_PLATFORM_QCOM)},
 };
 
@@ -92,23 +94,44 @@ static name_to_index_t out_device_name_index[SMARTPAKIT_OUT_DEVICE_MAX] = {
 	out_device_name_index[index].name + strlen("SMARTPAKIT_OUT_DEVICE_")
 
 static name_to_index_t chip_vendor_name_index[SMARTPAKIT_CHIP_VENDOR_MAX] = {
-    {TO_NAME_INDEX(SMARTPAKIT_CHIP_VENDOR_MAXIM)},
+	{TO_NAME_INDEX(SMARTPAKIT_CHIP_VENDOR_MAXIM)},
 	{TO_NAME_INDEX(SMARTPAKIT_CHIP_VENDOR_NXP)},
 	{TO_NAME_INDEX(SMARTPAKIT_CHIP_VENDOR_TI)},
 	{TO_NAME_INDEX(SMARTPAKIT_CHIP_VENDOR_OTHER)},
+	{TO_NAME_INDEX(SMARTPAKIT_CHIP_VENDOR_CUSTOMIZE)},
 };
 
 #define GET_CHIP_VENDOR(index) \
 	chip_vendor_name_index[index].name + strlen("SMARTPAKIT_CHIP_VENDOR_")
 
+void smartpakit_append_info(char *fmt, ...)
+{
+	va_list args;
+	char tmp_str[SMARTPAKIT_INFO_BUF_MAX] = {0};
+
+	if(NULL == fmt) {
+		hwlog_err("%s, src string is null.", __func__);
+		return;
+	}
+
+	va_start(args, fmt);
+	vscnprintf(tmp_str, SMARTPAKIT_INFO_BUF_MAX, (const char *)fmt, args);
+	va_end(args);
+
+	strncat(g_buffer_info, tmp_str, SMARTPAKIT_INFO_BUF_MAX - strlen(g_buffer_info) - 1);
+	return;
+}
 // pa info
 static int smartpakit_get_pa_info(char *buffer, const struct kernel_param *kp)
 {
 	smartpakit_priv_t *kit = smartpakit_priv;
-	const char *chip_model = NULL;
+	char chip_model[SMARTPAKIT_NAME_MAX] = {0};
 	unsigned int chip_vendor = 0;
 	unsigned int device = 0;
 	int i = 0;
+	int len = 0;
+
+	memset(g_buffer_info, 0, SMARTPAKIT_INFO_BUF_MAX);
 
 	UNUSED(kp);
 	if ((NULL == buffer) || (NULL == kit)) {
@@ -119,26 +142,33 @@ static int smartpakit_get_pa_info(char *buffer, const struct kernel_param *kp)
 	// simple pa
 	if ((SMARTPAKIT_ALGO_IN_SIMPLE == kit->algo_in) || (SMARTPAKIT_ALGO_IN_SIMPLE_WITH_I2C == kit->algo_in)) {
 		hwlog_info("%s: simple pa info:\n", __func__);
+		smartpakit_append_info("simple pa info:\n", strlen("simple pa info:\n"));
 	} else { // smartpa
 		hwlog_info("%s: smartpa info:\n", __func__);
+		smartpakit_append_info("simple info:\n", strlen("simple info:\n"));
 	}
 
 	// soc_platform
 	if (kit->soc_platform < SMARTPAKIT_SOC_PLATFORM_MAX) {
 		hwlog_info("%s: soc_platform: %d, %s\n", __func__, kit->soc_platform, GET_SOC_PLATDORM(kit->soc_platform));
+		smartpakit_append_info("soc_platform: %d, %s\n", kit->soc_platform, GET_SOC_PLATDORM(kit->soc_platform));
 	} else {
 		hwlog_info("%s: soc_platform: %d, invalid!!!\n", __func__, kit->soc_platform);
+		smartpakit_append_info("soc_platform: %d, invalid!!!\n", kit->soc_platform);
 	}
 
 	// algo_in
 	if (kit->algo_in < SMARTPAKIT_ALGO_IN_MAX) {
 		hwlog_info("%s: algo_in: %d, %s\n", __func__, kit->algo_in, GET_ALGO_IN(kit->algo_in));
+		smartpakit_append_info("algo_in: %d, %s\n", kit->algo_in, GET_ALGO_IN(kit->algo_in));
 	} else {
 		hwlog_info("%s: algo_in: %d, invalid!!!\n", __func__, kit->algo_in);
+		smartpakit_append_info("algo_in: %d, invalid!!!\n", kit->algo_in);
 	}
 
 	// out_device
 	hwlog_info("%s: out_device: 0x%04x\n", __func__, kit->out_device);
+	smartpakit_append_info("out_device: 0x%04x\n", kit->out_device);
 
 	// out_device: spk or rcv
 	for (i = 0; i < (int)kit->pa_num; i++) { /*lint !e838*/
@@ -149,6 +179,7 @@ static int smartpakit_get_pa_info(char *buffer, const struct kernel_param *kp)
 			case SMARTPAKIT_OUT_DEVICE_SPEAKER:  // speaker
 			case SMARTPAKIT_OUT_DEVICE_RECEIVER: // receiver
 				hwlog_info("%s: out_device: pa%d is %s\n", __func__, i, GET_OUT_DEVICE(device));
+				smartpakit_append_info("out_device: pa%d is %s\n", i, GET_OUT_DEVICE(device));
 				break;
 			default:
 				break;
@@ -160,41 +191,55 @@ static int smartpakit_get_pa_info(char *buffer, const struct kernel_param *kp)
 
 	// algo_delay_time
 	hwlog_info("%s: algo_delay_time: %d\n", __func__, kit->algo_delay_time);
+	smartpakit_append_info("pa_num: %d\nalgo_delay_time: %d\n", kit->pa_num, kit->algo_delay_time);
 
 	// chip_vendor
 	if (SMARTPAKIT_ALGO_IN_SIMPLE == kit->algo_in) {
 		chip_vendor = SMARTPAKIT_CHIP_VENDOR_OTHER;
-		chip_model  = kit->chip_model;
+		strncpy(chip_model, kit->chip_model, (strlen(kit->chip_model) < SMARTPAKIT_NAME_MAX) ? strlen(kit->chip_model) : (SMARTPAKIT_NAME_MAX - 1));
 	} else if (SMARTPAKIT_ALGO_IN_WITH_DSP_PLUGIN == kit->algo_in) {
 		chip_vendor = kit->chip_vendor;
-		chip_model  = kit->chip_model;
-	} else {
+		strncpy(chip_model, kit->chip_model, (strlen(kit->chip_model) < SMARTPAKIT_NAME_MAX) ? strlen(kit->chip_model) : (SMARTPAKIT_NAME_MAX - 1));
+	} else if (SMARTPAKIT_ALGO_IN_WITH_DSP == kit->algo_in) {
 		if (kit->i2c_priv[0] != NULL) {
 			chip_vendor = kit->i2c_priv[0]->chip_vendor;
-			chip_model	= kit->i2c_priv[0]->chip_model;
+			strncpy(chip_model, kit->i2c_priv[0]->chip_model,
+			(strlen(kit->i2c_priv[0]->chip_model) < SMARTPAKIT_NAME_MAX) ? strlen(kit->i2c_priv[0]->chip_model) : (SMARTPAKIT_NAME_MAX - 1));
 		} else {
 			chip_vendor = 0xFF;
 		}
+	} else {
+		if (kit->i2c_priv[0] != NULL) {
+			chip_vendor = kit->i2c_priv[0]->chip_vendor;
+		} else {
+			chip_vendor = 0xFF;
+		}
+		smartpakit_ctrl_get_model(chip_model, kit);
 	}
 
 	if (chip_vendor != 0xFF) {
 		hwlog_info("%s: chip_vendor: %d, %s\n", __func__, chip_vendor, GET_CHIP_VENDOR(chip_vendor));
 		hwlog_info("%s: chip_model: %s\n", __func__, chip_model);
+		smartpakit_append_info("chip_vendor: %d, %s\nchip_model: %s\n", chip_vendor, GET_CHIP_VENDOR(chip_vendor), chip_model);
 	} else {
 		hwlog_info("%s: chip_vendor: invalid!!!\nchip_model: invalid!!!\n", __func__);
+		smartpakit_append_info("chip_vendor: invalid!!!\nchip_model: invalid!!!\n");
 	}
 
-	return snprintf(buffer, (unsigned long)SMARTPAKIT_INFO_BUF_MAX,
-		"get smartpa info success!(dmesg -c | grep smartpakit)");
+	len = snprintf(buffer, (unsigned long)SMARTPAKIT_INFO_BUF_MAX, g_buffer_info);
+	memset(g_buffer_info, 0, SMARTPAKIT_INFO_BUF_MAX);
+
+	return len;
 }
 
 #define SMARTPAKIT_INFO_HELP \
 	"Usage:\n" \
-	"hw_reset:    echo h > reg_ctl\n" \
-	"irq_trigger: echo i,pa_index > reg_ctl\n" \
-	"dump_regs:   echo d > reg_ctl\n" \
-	"read_regs:   echo \"r,pa_index,reg_addr,[bulk_count_once]\" > reg_ctl\n" \
-	"write_regs:  echo \"w,pa_index,reg_addr,reg_value,[reg_value2...]\" > reg_ctl\n"
+	"report remap info:	echo m > reg_ctl\n"	\
+	"hw_reset:		echo h > reg_ctl\n" \
+	"irq_trigger:		echo i,pa_index > reg_ctl\n" \
+	"dump_regs:		echo d > reg_ctl\n" \
+	"read_regs:		echo \"r,pa_index,reg_addr,[bulk_count_once]\" > reg_ctl\n" \
+	"write_regs:		echo \"w,pa_index,reg_addr,reg_value,[reg_value2...]\" > reg_ctl\n"
 
 typedef struct smartpakit_reg_ctl_params {
 	char cmd;
@@ -235,8 +280,13 @@ static int smartpakit_get_reg_ctl(char *buffer, const struct kernel_param *kp)
 	if (0 == reg_ctl_flag) {
 		ret = snprintf(buffer, (unsigned long)SMARTPAKIT_INFO_BUF_MAX, SMARTPAKIT_INFO_HELP);
 	} else {
-		ret = snprintf(buffer, (unsigned long)SMARTPAKIT_INFO_BUF_MAX,
-			"smartpa reg_ctl success!(dmesg -c | grep smartpakit)");
+		if (strlen(g_buffer_info) > 0) {
+			ret = snprintf(buffer, (unsigned long)SMARTPAKIT_INFO_BUF_MAX, g_buffer_info);
+			memset(g_buffer_info, 0, SMARTPAKIT_INFO_BUF_MAX);
+		} else {
+			ret = snprintf(buffer, (unsigned long)SMARTPAKIT_INFO_BUF_MAX,
+				"smartpa reg_ctl success!(dmesg -c | grep smartpakit)");
+		}
 	}
 
 	return ret;
@@ -253,7 +303,7 @@ static int smartpakit_parse_reg_ctl(const char *val)
 		hwlog_err("%s: val is NULL!!!\n", __func__);
 		return -EINVAL;
 	}
-	memset(&reg_ctl_params, 0, sizeof(smartpakit_reg_ctl_t));
+	memset(&reg_ctl_params, 0, sizeof(smartpakit_reg_ctl_params_t));
 
 	// ops cmd
 	hwlog_info("%s: val = %s\n", __func__, val);
@@ -267,7 +317,7 @@ static int smartpakit_parse_reg_ctl(const char *val)
 		if (NULL == tokens) {
 			break;
 		}
-		kstrtoint(tokens, 16, &reg_ctl_params.params[index]);
+		(void)kstrtoint(tokens, 16, &reg_ctl_params.params[index]);
 		hwlog_info("%s: tokens[%d] = %s,%d\n", __func__, index, tokens, reg_ctl_params.params[index]);
 
 		index++;
@@ -311,7 +361,7 @@ static int smartpakit_bulk_read_regs(void)
 		return -ENOMEM;
 	}
 
-	regmap_bulk_read(kit->i2c_priv[index]->regmap_cfg->regmap, addr, bulk_value, bulk_count_once * bulk_value_bytes);
+	(void)regmap_bulk_read(kit->i2c_priv[index]->regmap_cfg->regmap, addr, bulk_value, bulk_count_once * bulk_value_bytes);
 	for (i = 0; i < bulk_count_once; i++) {
 		if (1 == bulk_value_bytes) {
 			hwlog_info("%s: bulk read reg[0x%x]=0x%x\n", __func__, addr + i, ((unsigned char *)bulk_value)[i]);
@@ -398,6 +448,21 @@ static int smartpakit_set_reg_ctl(const char *val, const struct kernel_param *kp
 
 	// dump/read/write ops
 	switch (reg_ctl_params.cmd) {
+		case 'm': // report remap info
+			if ((NULL == kit->i2c_priv[0]) || (NULL == kit->i2c_priv[0]->regmap_cfg)) {
+				hwlog_err("%s: i2c_priv is null.\n", __func__);
+				return -EINVAL;
+			}
+			memset(g_buffer_info, 0, SMARTPAKIT_INFO_BUF_MAX);
+			hwlog_info("%s: reg_bits=%d,val_bits=%d,max_register=%d.\n", __func__, kit->i2c_priv[0]->regmap_cfg->cfg.reg_bits,
+						kit->i2c_priv[0]->regmap_cfg->cfg.val_bits,
+						kit->i2c_priv[0]->regmap_cfg->cfg.max_register);
+
+			smartpakit_append_info("reg_bits=%d,val_bits=%d,max_register=%d.\n",
+						kit->i2c_priv[0]->regmap_cfg->cfg.reg_bits,
+						kit->i2c_priv[0]->regmap_cfg->cfg.val_bits,
+						kit->i2c_priv[0]->regmap_cfg->cfg.max_register);
+			break;
 		case 'h': // hw_reset
 			if ((kit->ioctl_ops != NULL) && (kit->ioctl_ops->hw_reset != NULL)) {
 				hwlog_info("%s: chip hw_reset by test!!!\n", __func__);
@@ -433,8 +498,10 @@ static int smartpakit_set_reg_ctl(const char *val, const struct kernel_param *kp
 
 				if ((kit->i2c_priv[index] != NULL) && (kit->i2c_priv[index]->regmap_cfg != NULL)
 					&& (kit->i2c_priv[index]->regmap_cfg->regmap != NULL)) {
-					regmap_read(kit->i2c_priv[index]->regmap_cfg->regmap, reg_ctl_params.addr_r, &value);
+					(void)regmap_read(kit->i2c_priv[index]->regmap_cfg->regmap, reg_ctl_params.addr_r, &value);
 					hwlog_info("%s: pa%d read reg[0x%x]=0x%x\n", __func__, index, reg_ctl_params.addr_r, value);
+					memset(g_buffer_info, 0, SMARTPAKIT_INFO_BUF_MAX);
+					snprintf(g_buffer_info, (unsigned long)SMARTPAKIT_INFO_BUF_MAX, "reg[0x%x]=0x%04x\n", reg_ctl_params.addr_r, value);
 				}
 			} else {
 				hwlog_info("%s: params_num %d need >=2, index %d need <pa_num %d!\n", __func__,

@@ -207,9 +207,6 @@ void blk_queue_split(struct request_queue *q, struct bio **bio,
 	bio_set_flag(res, BIO_SEG_VALID);
 
 	if (split) {
-	#ifdef HISI_BLK_FTRACE_ENABLE
-		trace_blk_mq_debug(__func__,"bio split");
-	#endif
 		/* there isn't chance to merge the splitted bio */
 		split->bi_rw |= REQ_NOMERGE;
 		bio_chain(split, *bio);

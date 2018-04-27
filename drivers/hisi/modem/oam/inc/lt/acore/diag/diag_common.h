@@ -69,9 +69,10 @@ extern "C" {
 
 /* 单帧最大长度 */
 #define DIAG_FRAME_MAX_LEN      (4*1024)
-
+/* 单消息最大帧个数 */
+#define DIAG_FRMAE_MAX_CNT      (16)
 /* 总长度最大值 */
-#define DIAG_FRAME_SUM_LEN      (DIAG_FRAME_MAX_LEN * 16)
+#define DIAG_FRAME_SUM_LEN      (DIAG_FRAME_MAX_LEN * DIAG_FRMAE_MAX_CNT)
 
 /* DIAG二级三级头的长度 */
 #define DIAG_MESSAGE_DATA_HEADER_LEN  (sizeof(DIAG_SERVICE_HEAD_STRU)   \
@@ -122,6 +123,11 @@ do {    \
     }   \
 }while(0)
 
+#define diag_crit(fmt, ...)     (printk(KERN_CRIT "[CRIT]<%s>%d "fmt,__FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define diag_error(fmt, ...)    (printk(KERN_ERR "[ERROR]<%s>%d "fmt,__FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define diag_warning(fmt, ...)  (printk(KERN_WARNING "[WARNING]<%s>%d "fmt,__FUNCTION__, __LINE__, ##__VA_ARGS__))
+#define diag_debug(fmt, ...)    (printk(KERN_DEBUG "[DEBUG]<%s>%d "fmt,__FUNCTION__, __LINE__, ##__VA_ARGS__))
+
 
 /* debug定时器时长 */
 #define DIAG_DEBUG_TIMER_LEN      (5*1000)
@@ -145,12 +151,6 @@ do {    \
 #define     DIAG_MSG_BBP_A_TRANS_C_REQ          0x00000005
 #define     DIAG_MSG_PHY_A_TRANS_C_REQ          0x00000006
 
-#define     DIAG_MSG_DIAG_SOCP_VOTE_REQ         0x00000007
-#define     DIAG_MSG_DIAG_SOCP_VOTE_CNF         DIAG_MSG_DIAG_SOCP_VOTE_REQ
-
-#define     DIAG_MSG_PHY_SOCP_VOTE_REQ          0x00000008
-#define     DIAG_MSG_PHY_SOCP_VOTE_CNF          DIAG_MSG_PHY_SOCP_VOTE_REQ
-
 #define     DIAG_MSG_MSP_A_DEBUG_C_REQ          0x00000009      /* 通知C核保存debug信息 */
 
 #define     DIAG_MSG_BSP_NV_AUTH_REQ            0x0000000A      /* 通知A核鉴权信息 */
@@ -164,7 +164,16 @@ do {    \
 /*****************************************************************************
   4 Enum
 *****************************************************************************/
-
+/*****************************************************************************
+  DIAG Cookie
+*****************************************************************************/
+enum
+{
+    DIAG_COOKIE_BASE        = 0xeb000000,
+    DIAG_COOKIE_CREATE_DFR  = DIAG_COOKIE_BASE + 0x1,
+    DIAG_COOKIE_MSGBBP_DFR  = DIAG_COOKIE_CREATE_DFR + 0x1,
+    DIAG_COOKIE_BUTT        = 0xebffffff,
+};
 
 /* MSP_DIAG_STID_STRU:cmdid19b */
 
@@ -195,6 +204,7 @@ do {    \
 
 /*2.	超时类（0x5100-0x51ff）*/
 #define DIAG_CMD_TIMER_OUT_IND                  (0x10015100)
+#define DIAG_CMD_HIGH_TIMESTAPM_IND             (0x10015101)
 
 /*3.	开关设置类（0x5300-0x53ff）*/
 #define DIAG_CMD_LOG_CAT_PRINT                  (0x10015310)
@@ -205,6 +215,7 @@ do {    \
 #define DIAG_CMD_LOG_CAT_EVENT                  (0x10015315)
 #define DIAG_CMD_LOG_CAT_CMD                    (0x10015316)    /* TODO */
 #define DIAG_CMD_LOG_CAT_MSG                    (0x10015317)
+#define DIAG_CMD_DEBUG_MSG                      (0x10015318)    /* debug 收到后会上报所有类型IND 消息*/
 
 /* 自动化类（0x5400-0x54ff）*/
 #define DIAG_CMD_GTR_SET                        (0x10015454)
@@ -423,6 +434,28 @@ typedef struct
     VOS_UINT32      ulDFCur;            /* data flow空间当前指针 */
 }DIAG_DUMP_INFO_STRU;
 
+/*****************************************************************************
+  diag service
+*****************************************************************************/
+
+typedef struct
+{
+    VOS_UINT32    mdmid;   /* modem id dfd*/
+    VOS_UINT32    ssid;   /* sub system id , DIAG_SSID_TYPE, CCPU/ACPU/BBE NX/Audio Dsp/LTE-V DSP..... */
+    VOS_UINT32    dirction;
+    VOS_UINT32    index;
+    VOS_UINT32    end;
+    VOS_UINT32    split;
+    VOS_UINT32    ulMsgTransId;
+    VOS_UINT8     aucTimeStamp[8];
+}DIAG_SRVICE_HEAD_BASE_INFO;
+
+/******************************0x10015101 时间戳心跳结构体****************************************/
+typedef struct
+{
+    VOS_UINT32 ulLowTimeStamp;
+	VOS_UINT32 ulHighTimeStamp;    /* 高32bit时间戳*/
+} DIAG_IND_HIGH_TS_STRU;
 
 /*****************************************************************************
   6 UNION
@@ -454,16 +487,6 @@ extern VOS_VOID diag_MessageInit(VOS_VOID);
 
 #endif
 
-#if ((VOS_OS_VER == VOS_RTOSCK) || (VOS_OS_VER == VOS_VXWORKS))
-
-extern VOS_UINT32 diag_AgentMsgProcInit(enum VOS_INIT_PHASE_DEFINE ip);
-
-extern VOS_VOID diag_AgentMsgProc(MsgBlock* pMsgBlock);
-
-extern VOS_VOID diag_AgentPsTransRcv(MsgBlock* pMsgBlock);
-
-extern VOS_UINT32 diag_ProcAppAgentMsg(MsgBlock* pMsgBlock);
-#endif
 /* DIAG全局信息初始化接口 */
 extern VOS_VOID diag_ServiceInit(VOS_VOID);
 extern VOS_VOID diag_MspMsgInit(VOS_VOID);
@@ -475,20 +498,15 @@ extern VOS_UINT32 diag_ServicePackData(DIAG_MSG_REPORT_HEAD_STRU *pData);
 
 extern VOS_UINT32 DIAG_MsgReport (MSP_DIAG_CNF_INFO_STRU *pstDiagInfo, VOS_VOID *pstData, VOS_UINT32 ulLen);
 
-extern VOS_UINT32 diag_SetChanDisconn(MsgBlock* pMsgBlock);
-
 extern VOS_UINT32 diag_SrvcPackFirst(DIAG_MSG_REPORT_HEAD_STRU *pData, VOS_UINT8 *puctime);
 
 extern VOS_UINT32 diag_SrvcPackOther(DIAG_PACKET_INFO_STRU *pPacket, DIAG_MSG_REPORT_HEAD_STRU *pstMsg);
-
-extern VOS_VOID diag_AgentVoteToSocp(SOCP_VOTE_TYPE_ENUM_U32 voteType);
-
-extern VOS_UINT32 diag_AgentSocpVoteCnfMsgProc(MsgBlock * pMsgBlock);
 
 extern VOS_VOID diag_DumpDFInfo(DIAG_FRAME_INFO_STRU * pFrame);
 
 extern VOS_BOOL diag_IsPowerOnLogOpen(VOS_VOID);
 
+VOS_VOID diag_SrvcFillServiceHead(DIAG_SRVICE_HEAD_BASE_INFO *pstServInfo, DIAG_FRAME_INFO_STRU *stFrame);
 /*****************************************************************************
   9 OTHERS
 *****************************************************************************/

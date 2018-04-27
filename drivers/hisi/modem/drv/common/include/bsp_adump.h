@@ -79,7 +79,30 @@ typedef enum _adump_reboot_reason_e
 /**************************************************************************
   STRUCT定义
 **************************************************************************/
+typedef struct
+{
+    u32 reboot_cpu;          /*0x00  */
+    u32 reboot_context;     /*0x00  */
+    u32 reboot_task;        /*0x04  */
+    u32 reboot_task_tcb;    /*0x04  */
+    u8  taskName[16];       /*0x08  */
+    u32 reboot_int;         /*0x18  */
+    u32 reboot_time;        /*0x84 */
 
+    u32 modId;              /*0x1c  */
+    u32 arg1;               /*0x20  */
+    u32 arg2;               /*0x24  */
+    u32 arg3;               /*0x28  */
+    u32 arg3_length;        /*0x2c  */
+    u32 vec;                /*0x30  */
+
+    u32 cpu_max_num;        /*0x88 */
+    u32 cpu_online_num;     /*0x88 */
+    u8  version[32];        /*0xA0 */
+    u8  compile_time[32];   /*0xB0 */
+    u32 reboot_reason;      /*m3专用*/
+
+}adump_base_info_t;
 
 /**************************************************************************
   宏定义
@@ -99,6 +122,7 @@ typedef enum _adump_reboot_reason_e
 #define RDR_AP_DUMP_ARM_UNKNOW_MOD_ID            (0x80000100)
 #define RDR_AP_DUMP_NORMAL_EXC_MOD_ID            (0x80000101)
 #define RDR_AP_DUMP_AP_WDT_MOD_ID                (0x80000102)
+#define RDR_AP_DUMP_AP_DMSS_MOD_ID                (0x80000103)
 
 
 

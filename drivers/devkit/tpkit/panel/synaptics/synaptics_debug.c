@@ -38,6 +38,7 @@
 #define  CSV_TP_DELTA_ABS_RX_LIMIT "Rx_delta_abslimit"
 #define  CSV_TP_NOISE_DATA_LIMIT "noise_data_limit"
 #define  CSV_TP_EE_SHORT_DATA_LIMIT "tddi_ee_short_data_limit"
+#define  CSV_TP_TREX_SHORT_DATA_LIMIT "trex_shorts"
 #define  CSV_TP_SELFCAP_RAW_TX_RANGE "SelfCapRawTxRange"    /*6p/f*/
 #define  CSV_TP_SELFCAP_RAW_RX_RANGE "SelfCapRawRxRange"
 #define  CSV_TP_SELFCAP_NOIZE_TX_RANGE "SelfCapNoiseTxRange"   /*7p/f*/
@@ -1111,15 +1112,15 @@ static int f54_rawimage_report(void)
 			TS_LOG_INFO("Threshold file name is not detected\n");
 			goto error_release_mem;
 		}
-		snprintf(file_name, sizeof(file_name), "%s_%s_%s_%s_raw.csv",
+		snprintf(file_name, sizeof(file_name) - 1, "%s_%s_%s_%s_raw.csv",
 			f54->rmi4_data->synaptics_chip_data->ts_platform_data->product_name,
 			f54->rmi4_data->synaptics_chip_data->chip_name,
 			f54->rmi4_data->rmi4_mod_info.project_id_string,
 			f54->rmi4_data->module_name);
 #ifdef BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE
-		snprintf(file_path, sizeof(file_path), "/product/etc/firmware/ts/%s", file_name);
+		snprintf(file_path, sizeof(file_path) -1, "/product/etc/firmware/ts/%s", file_name);
 #else
-		snprintf(file_path, sizeof(file_path), "/odm/etc/firmware/ts/%s", file_name);
+		snprintf(file_path, sizeof(file_path) -1, "/odm/etc/firmware/ts/%s", file_name);
 #endif
 		TS_LOG_INFO("threshold file name:%s, rows_size=%d, columns_size=%d\n", file_path, rows_size, columns_size);
 
@@ -1434,15 +1435,15 @@ static void check_hybrid_raw_cap(void)
        int rx_num = f54->rmi4_data->num_of_rx;
        int tx_num = f54->rmi4_data->num_of_tx;
 
-	snprintf(file_name, sizeof(file_name), "%s_%s_%s_%s_raw.csv",
+	snprintf(file_name, sizeof(file_name) -1, "%s_%s_%s_%s_raw.csv",
 			f54->rmi4_data->synaptics_chip_data->ts_platform_data->product_name,
 			f54->rmi4_data->synaptics_chip_data->chip_name,
 			f54->rmi4_data->rmi4_mod_info.project_id_string,
 			f54->rmi4_data->module_name);
 	#ifdef BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE
-	snprintf(file_path, sizeof(file_path), "/product/etc/firmware/ts/%s", file_name);
+	snprintf(file_path, sizeof(file_path) -1, "/product/etc/firmware/ts/%s", file_name);
 	#else
-	snprintf(file_path, sizeof(file_path), "/odm/etc/firmware/ts/%s", file_name);
+	snprintf(file_path, sizeof(file_path) -1, "/odm/etc/firmware/ts/%s", file_name);
 	#endif
 
 	TS_LOG_INFO("%s(%d), threshold file name:%s \n", __func__, __LINE__, file_path);
@@ -1546,7 +1547,7 @@ static void check_hybrid_abs_delta(void)
 		}
 	}
 
-	TS_LOG_INFO("%s(%d), hybrid_abs_delta_report_size = %d. test result is 7P \n", f54->report_size);
+	TS_LOG_INFO("%s(%d), hybrid_abs_delta_report_size = %d. test result is 7P \n",__func__, __LINE__, f54->report_size);
 	strncat(buf_f54test_result, "-7P", MAX_STR_LEN);
        return;
 
@@ -1645,8 +1646,8 @@ static int td43xx_ee_short_normalize_data(signed short * image)
 {
 	int retval = 0;
 	int i = 0, j = 0;
-	int tx_num = f54->rmi4_data->num_of_tx;
-	int rx_num = f54->rmi4_data->num_of_rx;
+	unsigned char tx_num = f54->rmi4_data->num_of_tx;
+	unsigned char rx_num = f54->rmi4_data->num_of_rx;
 	int part_two_limit = f54->rmi4_data->synaptics_chip_data->tddi_ee_short_test_parttwo_limit;
 	unsigned char left_size = TD43XX_EE_SHORT_TEST_LEFT_SIZE; //0x09
 	unsigned char right_size = TD43XX_EE_SHORT_TEST_RIGHT_SIZE;	//0x09
@@ -2010,6 +2011,7 @@ static void mmi_trex_shorts_test(void)
 		TS_LOG_ERR("%s: report_size < trx_short_array_num, err\n", __func__);
 		goto err_report_size;
 	}
+
 	for(i = 0; i < TP_3320_SHORT_ARRAY_NUM; i++) {
 		TS_LOG_INFO("%s: buf_backup[%d] is %d\n", __func__, i, buf_backup[i]);
 		if(buf_backup[i] != f54->rmi4_data->synaptics_chip_data->trx_short_circuit_array[i]) {
@@ -2723,7 +2725,7 @@ static void synaptics_change_report_rate(void)
 
 	if (0 == f54->rmi4_data->synaptics_chip_data->report_rate_test) {
 		strncat(buf_f54test_result, "-4P", MAX_STR_LEN);
-		TS_LOG_INFO("s3207 change_report_rate default pass\n");
+		TS_LOG_INFO("s3207 and s3706 change_report_rate default pass\n");
 		return;
 	}
 	TS_LOG_INFO("change report rate 120 first then to 60\n");
@@ -2828,7 +2830,7 @@ int synap_get_cap_data(struct ts_rawdata_info *info)
 		}
 		put_capacitance_data(mmi_buf_size / 2);
 
-		if (f54->rmi4_data->synaptics_chip_data->support_s3320_short_test) {
+		if (f54->rmi4_data->synaptics_chip_data->support_s3320_short_test){
 			mmi_trex_shorts_test();
 		}
 
@@ -2882,6 +2884,10 @@ int synap_get_cap_data(struct ts_rawdata_info *info)
 	case SYNAPTICS_S3320:
 		strncat(buf_f54test_result, "-synaptics_3320",
 			strlen("-synaptics_3320"));
+		break;
+	case SYNAPTICS_S3706:
+		strncat(buf_f54test_result, "-synaptics_3706",
+			strlen("-synaptics_3706"));
 		break;
 	case SYNAPTICS_S3718:
 	case SYNAPTICS_TD4322:
@@ -3672,6 +3678,10 @@ static int match_module_name(const char *module_name)
 				   __func__);
 			return -EINVAL;
 		}
+	}else {
+		TS_LOG_ERR("%s: Failed to match module_name \n",
+				   __func__);
+		return -EINVAL;
 	}
 }
 

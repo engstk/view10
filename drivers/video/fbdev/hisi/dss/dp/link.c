@@ -107,24 +107,24 @@ void dptx_combophy_set_preemphasis_swing(struct dp_ctrl *dptx,
 			switch(pe_level)
 			{
 				case 0:
-					usb31phy_cr_write(0xf, 0x3C0);
-					usb31phy_cr_write(u161n02_addr, 0x9788);//0x9a78(1);0x9BF8(4)
-					usb31phy_cr_write(u161n03_addr, 0x2040);
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[1]);//0x9a78(1);0x9BF8(4)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[2]);
 					break;
 				case 1:
-					usb31phy_cr_write(0xf, 0x3C0);
-					usb31phy_cr_write(u161n02_addr, 0xA188);//0x9678(1)
-					usb31phy_cr_write(u161n03_addr, 0x2640);//0x2440(1)
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[3]);//0x9678(1)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[4]);//0x2440(1)
 					break;
 				case 2:
-					usb31phy_cr_write(0xf, 0x3C0);//0x240(1)
-					usb31phy_cr_write(u161n02_addr, 0xA598);//0x9478(1)
-					usb31phy_cr_write(u161n03_addr, 0x2c40);//0x9478
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);//0x240(1)
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[5]);//0x9478(1)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[6]);//0x9478
 					break;
 				case 3:
-					usb31phy_cr_write(0xf, 0x3C0);//0x240
-					usb31phy_cr_write(u161n02_addr, 0xA1F8);//0x9278(1)
-					usb31phy_cr_write(u161n03_addr, 0x3040);//0x2840(1)
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);//0x240
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[7]);//0x9278(1)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[8]);//0x2840(1)
 					break;
 				default:
 					HISI_FB_ERR("preemphasis_ level error \n");
@@ -135,19 +135,19 @@ void dptx_combophy_set_preemphasis_swing(struct dp_ctrl *dptx,
 			switch(pe_level)
 			{
 				case 0:
-					usb31phy_cr_write(0xf, 0x3C0);
-					usb31phy_cr_write(u161n02_addr, 0xA388);//0xa678(1)
-					usb31phy_cr_write(u161n03_addr, 0x2040);
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[9]);//0xa678(1)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[10]);
 					break;
 				case 1:
-					usb31phy_cr_write(0xf, 0x3C0);//0x240(1)
-					usb31phy_cr_write(u161n02_addr, 0xA9A0);//0xa078(1)
-					usb31phy_cr_write(u161n03_addr, 0x2840);//0x2640(1)
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);//0x240(1)
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[11]);//0xa078(1)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[12]);//0x2640(1)
 					break;
 				case 2:
-					usb31phy_cr_write(0xf, 0x3c0);//0x240(1)
-					usb31phy_cr_write(u161n02_addr, 0xA5F8);//0x9c78(1)
-					usb31phy_cr_write(u161n03_addr, 0x2C40);//0x2a40(1)
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);//0x240(1)
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[13]);//0x9c78(1)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[14]);//0x2a40(1)
 					break;
 				case 3:
 					HISI_FB_WARNING("Don't support sw 1 & ps level 3 \n");
@@ -161,14 +161,14 @@ void dptx_combophy_set_preemphasis_swing(struct dp_ctrl *dptx,
 			switch(pe_level)
 			{
 				case 0:
-					usb31phy_cr_write(0xf, 0x3C0);//0x280(1) //0x240(2)//0x2c0(3)
-					usb31phy_cr_write(u161n02_addr, dptx->swing2_value);
-					usb31phy_cr_write(u161n03_addr, 0x2040);
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);//0x280(1) //0x240(2)//0x2c0(3)
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[15]);
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[16]);
 					break;
 				case 1:
-					usb31phy_cr_write(0xf, 0x3C0);//0x280(1)
-					usb31phy_cr_write(u161n02_addr, 0xA9F8);//0xa878(1)//0xA9F8(3) //0xA7F8(4)//0xA9F8(5)
-					usb31phy_cr_write(u161n03_addr, 0x2840);//0x2840(2)//0x2640(3)//0x2644(5)
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);//0x280(1)
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[17]);//0xa878(1)//0xA9F8(3) //0xA7F8(4)//0xA9F8(5)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[18]);//0x2840(2)//0x2640(3)//0x2644(5)
 					break;
 				case 2:
 					HISI_FB_WARNING("Don't support sw 2 & ps level 2 \n");
@@ -185,9 +185,9 @@ void dptx_combophy_set_preemphasis_swing(struct dp_ctrl *dptx,
 			switch(pe_level)
 			{
 				case 0:
-					usb31phy_cr_write(0xf, 0x3c0);
-					usb31phy_cr_write(u161n02_addr, 0xB1F8);//0xb078(1)
-					usb31phy_cr_write(u161n03_addr, 0x2040);
+					usb31phy_cr_write(TX_VBOOST_ADDR, dptx->combophy_pree_swing[0]);
+					usb31phy_cr_write(u161n02_addr, dptx->combophy_pree_swing[19]);//0xb078(1)
+					usb31phy_cr_write(u161n03_addr, dptx->combophy_pree_swing[20]);
 					break;
 				case 1:
 					HISI_FB_WARNING("Don't support sw 3 & ps level 1 \n");
@@ -446,10 +446,9 @@ void dptx_link_set_preemp_vswing(struct dp_ctrl *dptx)
 		return;
 
 	for (i = 0; i < dptx->link.lanes; i++) {
+		dp_imonitor_set_param_vs_pe(i, &(dptx->link.vswing_level[i]), &(dptx->link.preemp_level[i]));
 		pe = dptx->link.preemp_level[i];
 		vs = dptx->link.vswing_level[i];
-		dptx->m_dsm_info.vp.vs_pe[i].vswing = vs;
-		dptx->m_dsm_info.vp.vs_pe[i].preemp = pe;
 		HISI_FB_INFO("[DP] lane: (%d), vs: (%d), pe: (%d) \n",i,vs ,pe);
 			dptx_combophy_set_preemphasis_swing(dptx, i, vs, pe);
 	}
@@ -604,8 +603,10 @@ static int dptx_link_training_init(struct dp_ctrl *dptx,
 		rate = sink_max_rate;
 
 	HISI_FB_INFO("Sink Device Capability: lanes=%d, rate=%d\n", sink_max_lanes, sink_max_rate);
-	dptx->m_dsm_info.max_rate  = sink_max_rate;
-	dptx->m_dsm_info.max_lanes = sink_max_lanes;
+	dp_imonitor_set_param(DP_PARAM_MAX_RATE,   &sink_max_rate);
+	dp_imonitor_set_param(DP_PARAM_MAX_LANES,  &sink_max_lanes);
+	dp_imonitor_set_param(DP_PARAM_LINK_RATE,  &rate);
+	dp_imonitor_set_param(DP_PARAM_LINK_LANES, &lanes);
 
 	dptx->link.lanes = lanes;
 	dptx->link.rate = rate;
@@ -944,6 +945,14 @@ again:
 	retval = dptx_link_cr(dptx);
 	if (retval) {
 		if (retval == -EPROTO) {
+			// for factory test
+			if (dp_factory_mode_is_enable()) {
+				dp_factory_link_cr_or_ch_eq_fail(true);
+				HISI_FB_ERR("not support reduce rate by CR verify in factory mode!\n");
+				retval = -ECONNREFUSED;
+				goto fail;
+			}
+
 			HISI_FB_INFO("Reduce rate by CR verify\n");
 			if (dptx_link_reduce_rate(dptx)) {
 				/* TODO If CR_DONE bits for some lanes
@@ -968,6 +977,14 @@ again:
 	retval = dptx_link_ch_eq(dptx);
 	if (retval) {
 		if (retval == -EPROTO) {
+			// for factory test
+			if (dp_factory_mode_is_enable()) {
+				dp_factory_link_cr_or_ch_eq_fail(false);
+				HISI_FB_ERR("not support reduce rate by EQ verify in factory mode!\n");
+				retval = -ECONNREFUSED;
+				goto fail;
+			}
+
 			HISI_FB_INFO("Reduce rate by EQ verify\n");
 			if (dptx_link_reduce_rate(dptx)) {
 				if (dptx_link_reduce_lanes(dptx)) {
@@ -1004,8 +1021,6 @@ again:
 	dptx_video_ts_change(dptx);
 	HISI_FB_INFO("Link training succeeded rate=%d lanes=%d\n",
 		 dptx->link.rate, dptx->link.lanes);
-	dptx->m_dsm_info.rate  = dptx->link.rate;
-	dptx->m_dsm_info.lanes = dptx->link.lanes;
 
 	dptx_triger_media_transfer(dptx, true);
 
@@ -1015,7 +1030,6 @@ again:
 
 fail:
 	HISI_FB_ERR("Link training failed %d\n", retval);
-		dptx_dmd_report(DSM_DP_BASIC_EXTERNAL_DISPLAY_NO, "DP LINK FAIL: Link training failed =%d.\n",retval);
 	return retval;
 }
 
@@ -1050,6 +1064,7 @@ int dptx_link_check_status(struct dp_ctrl *dptx)
 	    (!drm_dp_channel_eq_ok(dptx->link.status, dptx->link.lanes) ||
 	     !drm_dp_clock_recovery_ok(dptx->link.status, dptx->link.lanes))) {
 		HISI_FB_INFO("Retraining link\n");
+		dp_imonitor_set_param(DP_PARAM_LINK_RETRAINING, NULL);
 
 		return dptx_link_training(dptx,
 					  DPTX_MAX_LINK_RATE,

@@ -89,7 +89,7 @@ extern void mdrv_om_system_error(int modId, int arg1, int arg2, char * arg3, int
 #define VOS_FLOW_REBOOT     0xffffffff
 
 /* C 核 有 64K 空间, 将最后的16 K 空间拿出来给 任务定位用，每个任务最多 4K */
-#if (OSA_CPU_CCPU == VOS_OSA_CPU)
+#if ( (OSA_CPU_CCPU == VOS_OSA_CPU) || (OSA_CPU_NRCPU == VOS_OSA_CPU) )
 #define VOS_DUMP_MEM_TOTAL_SIZE         (48*1024)
 #define VOS_TASK_DUMP_INFO_SIZE         (4*1024)
 #else
@@ -175,26 +175,25 @@ enum
     VOS_MEMCTRL_ADDR_ERROR2,                       /* 0x10000042 */
     VOS_MEMCTRL_ADDR_ERROR3,                       /* 0x10000043 */
     VOS_FREE_MSG_AGAIN,                            /* 0x10000044 */
+    OM_APP_EICC_INIT_ERROR,                        /* 0x10000045 */
 
     OSA_REBOOT_MODULE_ID_BUTT = 0x1fffffff
 };
 
 enum
 {
-    OM_RNG_BUFFER_ALLOC = 0x10000000,
-    OM_TRANS_BUFFER_ALLOC,                          /* 0x10000001 */
-    USIMM_INIT_ALLOC,                               /* 0x10000002 */
-    PAM_ALLOC_COOKIE_ID_BUTT = 0x1fffffff
+    OM_RNG_BUFFER_ALLOC = 0xE1000000,
+    OM_TRANS_BUFFER_ALLOC,                          /* 0xE1000001 */
+    USIMM_INIT_ALLOC,                               /* 0xE1000002 */
+    USIMM_INIT_DL_LOG_FILE_ALLOC,                   /* 0xE1000003 */
+    ACPU_USB_FRAME_INIT,                            /* 0xE1000004 */
+    ACPU_PCV_OM_USB_ADDR,                           /* 0xE1000005 */
+    ACPU_PCV_OM_PHY_ADDR,                           /* 0xE1000006 */
+    ACPU_PCV_PHY_OM_ADDR,                           /* 0xE1000007 */
+    PAM_ALLOC_COOKIE_ID_BUTT = 0xE1FFFFFF
 };
 
-/*****************************************************************************
- 枚举名    : VOS_GET_DRV_VER_INFO_ENUM
- 结构说明  : 获取单板类型信息枚举
 
-  1.日    期   : 2014年11月07日
-    作    者   : d00212987
-    修改内容   :
-*****************************************************************************/
 enum VOS_GET_DRV_VER_INFO_ENUM
 {
     VOS_GET_DRV_BOARD_PRODUCT_ID      = 0x00,
@@ -205,14 +204,7 @@ enum VOS_GET_DRV_VER_INFO_ENUM
 };
 typedef VOS_UINT32 VOS_GET_DRV_VER_INFO_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : PM_LOG_COSA_PAM_ENUM
- 枚举说明  : PM COSA PAM主要类型
 
-  1.日    期   : 2015年03月21日
-    作    者   : s00207770
-    修改内容   : PM LOG特性新增
-*****************************************************************************/
 enum PM_LOG_COSA_PAM_ENUM
 {
     PM_LOG_COSA_PAM_TIMER   = 0x00000001,
@@ -239,8 +231,14 @@ VOS_INT VOS_GetDrvVerInfo(VOS_GET_DRV_VER_INFO_ENUM_UINT32 enVerInfo);
 
 #if (OSA_CPU_ACPU == VOS_OSA_CPU)
 #define DUMP_SAVE_MOD_OSA_MEM OM_AP_OSA
-#else
+#endif
+
+#if (OSA_CPU_CCPU == VOS_OSA_CPU)
 #define DUMP_SAVE_MOD_OSA_MEM OM_CP_OSA
+#endif
+
+#if (OSA_CPU_NRCPU == VOS_OSA_CPU)
+#define DUMP_SAVE_MOD_OSA_MEM OM_NR_OSA
 #endif
 
 #define VOS_EXCH_MEM_MALLOC\

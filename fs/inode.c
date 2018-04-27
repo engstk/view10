@@ -182,10 +182,6 @@ int inode_init_always(struct super_block *sb, struct inode *inode)
 	mapping->flags = 0;
 	atomic_set(&mapping->i_mmap_writable, 0);
 
-	if (sb->s_magic == F2FS_SUPER_MAGIC
-		|| sb->s_magic == EXT4_SUPER_MAGIC)
-		mask |= ___GFP_CMA;
-
 	mapping_set_gfp_mask(mapping, mask);
 
 	mapping->private_data = NULL;

@@ -395,7 +395,6 @@ out:
 	return rc;
 }
 
-#define TPM_DIGEST_SIZE 20
 #define TPM_RET_CODE_IDX 6
 
 ssize_t tpm_transmit_cmd(struct tpm_chip *chip, void *cmd,

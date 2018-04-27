@@ -53,6 +53,11 @@
 #define ALPM_ON_50NIT_CMD 1
 #define ALPM_OFF_CMD    2
 #define ALPM_ON_10NIT_CMD 3
+#define SCBAKDATA11 (0x438)
+
+//app setting default backlight 	
+#define MAX_BACKLIGHT_FROM_APP  (995)//995 from huguangyu 	
+#define MIN_BACKLIGHT_FROM_APP  (500)
 
 struct lcdkit_private_info {
     u32 platform_esd_support;
@@ -74,6 +79,21 @@ extern uint8_t g_project_id[LCD_DDIC_INFO_LEN];
 
 //extern void ts_kit_check_bootup_upgrade(void);
 
+//This macros are for reading project id
+#define Hx83112A 1
+#define Hx83112C 2
+#define TD4336 3
+#define PROJECT_ID_LENGTH 10
+#define PROJECT_ID_START_POSITION_TD4336 54
+#define BARCODE_START_POSITION_TD4336 4
+#define BARCODE_LENGTH    46
+#define COLOR_POINT_START_POSITION_TD4336 64
+#define COLOR_POINT_LENGTH  6
+#define READ_REG_TD4336_NUM 75
+
+#define BACKLIGHT_HIGH_LEVEL (1)
+#define BACKLIGHT_LOW_LEVEL  (2)
+
 /*extern fun*/
 extern int mipi_dsi_ulps_cfg(struct hisi_fb_data_type* hisifd, int enable);
 extern int lcdkit_jdi_nt35696_5p5_gamma_reg_read(struct hisi_fb_data_type* hisifd);
@@ -81,11 +101,25 @@ extern int lcdkit_jdi_nt36860_5p88_gamma_reg_read(struct hisi_fb_data_type* hisi
 extern void lcdkit_get_pdev(struct platform_device **pdev);
 extern void lcdkit_set_pdev(struct platform_device *pdev);
 extern int hostprocessing_read_ddic(uint8_t *out, struct lcdkit_dsi_panel_cmds *cmds, struct hisi_fb_data_type *hisifd, int max_out_size);
+extern int lcdkit_check_mipi_fifo_empty(char __iomem *dsi_base);
+void read_himax83112_project_id(struct hisi_fb_data_type* hisifd, uint8_t read_value[]);
+void read_td4336_project_id(struct hisi_fb_data_type* hisifd, uint8_t g_project_id[], uint8_t start_position, uint8_t length);
+void read_ddic_reg_parse(uint32_t input[], uint8_t inputlen, uint8_t output[], uint8_t start_position, uint8_t length);
+extern void lcdkit_mipi_check(void* pdata);
 
 struct lcdkit_vsp_vsn_voltage{
     u32 voltage;
     int value;
 };
+
+#define LCDKIT_ASSERT(cond, ret) \
+    do { \
+        if (!(cond)) \
+        { \
+            LCDKIT_ERR("LCDKIT_ASSERT fail,[" #cond "]\n");   \
+            return ret;     \
+        }\
+    } while (false)
 
 static struct lcdkit_vsp_vsn_voltage voltage_table[] = {
         {4000000,TPS65132_VOL_40},
@@ -324,7 +358,7 @@ static struct gpio_desc lcdkit_gpio_reset_free_cmds[] =
 
 static struct gpio_desc lcdkit_gpio_reset_normal_cmds[] =
 {
-    /* reset  high-low-high*/
+    /* reset */
     {
         DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 15,
         GPIO_LCDKIT_RESET_NAME, &lcdkit_info.panel_infos.gpio_lcd_reset, 1

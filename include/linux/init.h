@@ -4,7 +4,7 @@
 #include <linux/compiler.h>
 #include <linux/types.h>
 
-/* These macros are used to mark some functions or 
+/* These macros are used to mark some functions or
  * initialized data (doesn't apply to uninitialized data)
  * as `initialization' functions. The kernel can take this
  * as hint that the function is used only during the initialization
@@ -12,7 +12,7 @@
  *
  * Usage:
  * For functions:
- * 
+ *
  * You should add __init immediately before the function name, like:
  *
  * static void __init initme(int x, int y)
@@ -143,6 +143,7 @@ void __init load_default_modules(void);
 int __init init_rootfs(void);
 
 #ifdef CONFIG_DEBUG_RODATA
+extern bool rodata_enabled;
 void mark_rodata_ro(void);
 #endif
 
@@ -151,7 +152,7 @@ extern void (*late_time_init)(void);
 extern bool initcall_debug;
 
 #endif
-  
+
 #ifndef MODULE
 
 #ifndef __ASSEMBLY__
@@ -173,10 +174,10 @@ extern bool initcall_debug;
 #define LTO_REFERENCE_INITCALL(x)
 #endif
 
-/* initcalls are now grouped by functionality into separate 
+/* initcalls are now grouped by functionality into separate
  * subsections. Ordering inside the subsections is determined
- * by link order. 
- * For backwards compatibility, initcall() puts the call in 
+ * by link order.
+ * For backwards compatibility, initcall() puts the call in
  * the device init subsection.
  *
  * The `id' arg to __define_initcall() is needed so that multiple initcalls

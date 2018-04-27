@@ -146,6 +146,7 @@ void SCM_SoftDecodeCfgRcvSelfTask(void);
 void scm_soft_decode_init(void);
 u32 SCM_SoftDecodeAcpuRcvData(OM_HDLC_STRU *pstHdlcCtrl, u8 *pucData, u32 ulLen);
 u32 SCM_SoftDecodeCfgHdlcInit(OM_HDLC_STRU *pstHdlc);
+void SCM_SoftDecodeInfoShow(void);
 
 
 #ifdef __cplusplus

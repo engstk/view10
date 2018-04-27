@@ -43,4 +43,10 @@ int dump_cvdr_reg(u32 chip_type, void __iomem * viraddr);
 int dump_jpeg_reg(u32 chip_type, void __iomem * viraddr);
 #endif//DUMP_REGS
 
+#if defined( HISP120_CAMERA )
+int hjpeg_120_map_reg(void);
+void hjpeg_120_unmap_reg(void);
+void hjpeg_120_dump_reg(void);
+#endif
+
 #endif//__HJPEG_DEBUG_H_INCLUDE__

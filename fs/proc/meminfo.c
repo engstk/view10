@@ -23,6 +23,10 @@
 #include <linux/unmovable_isolate.h>
 #endif
 
+#ifdef CONFIG_ION
+#include <linux/hisi/hisi_ion.h>
+#endif
+
 void __attribute__((weak)) arch_report_meminfo(struct seq_file *m)
 {
 }
@@ -163,6 +167,10 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
 		"Isolate1Free:   %8lu kB\n"
 		"Isolate2Free:   %8lu kB\n"
 #endif
+#ifdef CONFIG_ION
+		"IonTotalCache:  %8lu kB\n"
+		"IonTotalUsed:   %8lu kB\n"
+#endif
 		,
 		K(i.totalram),
 		K(i.freeram),
@@ -231,6 +239,10 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
 #ifdef CONFIG_HUAWEI_UNMOVABLE_ISOLATE
 		, K(global_page_state(NR_FREE_UNMOVABLE_ISOLATE1_PAGES))
 		, K(global_page_state(NR_FREE_UNMOVABLE_ISOLATE2_PAGES))
+#endif
+#ifdef CONFIG_ION
+		, K(global_page_state(NR_IONCACHE_PAGES))
+		, K(hisi_ion_total() >> PAGE_SHIFT)
 #endif
 		);
 

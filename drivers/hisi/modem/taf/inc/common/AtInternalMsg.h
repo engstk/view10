@@ -6,7 +6,7 @@
 * apply:
 *
 * * This program is free software; you can redistribute it and/or modify
-* * it under the terms of the GNU General Public License version 2 and 
+* * it under the terms of the GNU General Public License version 2 and
 * * only version 2 as published by the Free Software Foundation.
 * *
 * * This program is distributed in the hope that it will be useful,
@@ -28,10 +28,10 @@
 * * 2) Redistributions in binary form must reproduce the above copyright
 * *    notice, this list of conditions and the following disclaimer in the
 * *    documentation and/or other materials provided with the distribution.
-* * 3) Neither the name of Huawei nor the names of its contributors may 
-* *    be used to endorse or promote products derived from this software 
+* * 3) Neither the name of Huawei nor the names of its contributors may
+* *    be used to endorse or promote products derived from this software
 * *    without specific prior written permission.
-* 
+*
 * * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -97,17 +97,12 @@
 
 #define ID_AT_MNTN_PORT_BASE_ID         (0x2300)
 
+#define ID_AT_MNTN_PS_CALL_BASE_ID      (0x2400)
+
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : AT_INTER_MSG_ID_ENUM
- 枚举说明  : 定义AT到AT内部消息ID
 
-  1.日    期   : 2013年11月06日
-    作    者   : j00174725
-    修改内容   : 定义AT到AT内部消息ID
-*****************************************************************************/
 enum AT_INTER_MSG_ID_ENUM
 {
     /* AT命令消息ID定义 [0x0000, 0x0FFF]*/
@@ -305,6 +300,9 @@ enum AT_INTER_MSG_ID_ENUM
     /* 端口信息相关可维可测 [0x2301, 0x23FF] */
     ID_AT_MNTN_RPT_PORT                 = ID_AT_MNTN_PORT_BASE_ID + 0x01,       /* _H2ASN_MsgChoice AT_MNTN_RPTPORT_STRU */
 
+    /* 端口信息相关可维可测 [0x2401, 0x24FF] */
+    ID_AT_MNTN_PS_CALL_ENTITY_RPT       = ID_AT_MNTN_PS_CALL_BASE_ID + 0x01,    /* _H2ASN_MsgChoice AT_MNTN_PS_CALL_ENTITY_STRU */
+
 };
 typedef VOS_UINT32 AT_INTER_MSG_ID_ENUM_UINT32;
 
@@ -326,13 +324,7 @@ typedef VOS_UINT32 AT_INTER_MSG_ID_ENUM_UINT32;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*****************************************************************************
- 结构名    : AT_MSG_STRU
- 结构说明  : AT消息结构体
- 1.日    期   : 2013年11月13日
-   作    者   : j00174725
-   修改内容   :
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */

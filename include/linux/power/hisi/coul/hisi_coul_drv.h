@@ -116,6 +116,7 @@ struct hisi_coul_ops {
     int (*battery_vbat_max)(void);
     int (*charger_event_rcv)(unsigned int);
     int (*battery_cycle_count)(void);
+    int (*get_battery_limit_fcc)(void);
     int (*coul_is_fcc_debounce)(void);
     int (*set_hltherm_flag)(int);
     int (*get_hltherm_flag)(void);
@@ -153,6 +154,7 @@ extern int hisi_battery_technology(void);
 extern struct chrg_para_lut *hisi_battery_charge_params(void);
 extern int hisi_battery_vbat_max(void);
 extern int hisi_battery_cycle_count(void);
+extern int hisi_battery_get_limit_fcc(void);
 extern int hisi_coul_ops_register (struct hisi_coul_ops *coul_ops,enum HISI_COULOMETER_TYPE coul_type);
 extern int hisi_coul_ops_unregister (struct hisi_coul_ops *coul_ops);
 extern int hisi_power_supply_voltage(void);

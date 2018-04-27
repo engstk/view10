@@ -10,7 +10,6 @@ struct hkip_atkinfo {
     struct timer_list timer;
 	/*make sure hkip don't upload attack logs no more 3 times each 24hours */
     unsigned int cycle_time;
-	unsigned short msg_handle;
 };
 
 /* Event types */

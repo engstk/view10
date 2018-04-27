@@ -204,6 +204,7 @@
 #define GT1X_HOLSTER_NOISE_CONFIG	"holster_noise_config"
 #define GT1X_TEST_CONFIG		"tptest_config"
 #define GT1X_NOISE_TEST_CONFIG		"tpnoise_test_config"
+#define GT1X_GAME_SCENE_CONFIG		"game_scene_config"
 
 #define GT1X_NEED_SLEEP			1
 #define GT1X_NOT_NEED_SLEEP		0
@@ -395,6 +396,7 @@ struct gt1x_ts_data {
 	struct gt1x_ts_config holster_config;
 	struct gt1x_ts_config holster_noise_config;
 	struct gt1x_ts_config noise_test_config;
+	struct gt1x_ts_config game_scene_config;
 	bool noise_env;
 
 	struct gt1x_ts_roi roi;
@@ -422,6 +424,8 @@ struct gt1x_ts_data {
 	int support_get_tp_color;
 	u32 gt1x_edge_add;
 	u32 gt1x_edge_support_xyer;
+	int gt1x_support_wxy;
+	u32 gt1x_wxy_data_add;
 	u32 gt1x_roi_data_add;
 	int gt1x_roi_fw_supported;
 	bool open_threshold_status;

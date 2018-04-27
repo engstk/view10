@@ -11,7 +11,6 @@
 #include <linux/fs.h>
 #include <linux/cdev.h>
 #include <linux/io.h>
-#include <linux/wakelock.h>
 #include <linux/timer.h>
 #include <linux/kthread.h>
 
@@ -29,6 +28,7 @@ struct ics_noc_bus_reg_offset {
 	unsigned int qos_type;
 	unsigned int factor;
 	unsigned int saturation;
+	unsigned int qos_extcontrol;
 };
 
 struct pmctrl_reg_offset {
@@ -85,10 +85,12 @@ struct ics_feature_tree {
 	bool finish_irq_to_lpm3;
 	bool finish_irq_to_iocmu;
 	bool smmu_port_select;
-	bool fault_irq;
+	bool level1_irq;
 	bool performance_monitor;
 	bool wr_qword;
 	bool soft_watchdog_enable;
+	bool lpm3_set_vcodecbus;
+	bool smmu_mstr_hardware_start;
 	unsigned int ipu_reset_when_in_error;
 	unsigned int ipu_bandwidth_lmt;
 };
@@ -164,7 +166,6 @@ struct cambricon_ipu_private
 	unsigned int irq;
 	bool ipu_device_opened;
 	bool ipu_power_up;
-	struct wake_lock wakelock;
 	struct mutex power_mutex;
 	struct mutex open_mutex;
 	struct mutex bandwidth_lmt_mutex;

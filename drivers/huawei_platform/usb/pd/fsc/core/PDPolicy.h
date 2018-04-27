@@ -203,3 +203,4 @@ void SetVbusTransitionTime(FSC_U32 time_ms);
 #define MAX_VDM_LEN 7
 
 #endif	/* _PDPOLICY_H_ */
+extern void pd_dpm_set_optional_max_power_status(bool status);

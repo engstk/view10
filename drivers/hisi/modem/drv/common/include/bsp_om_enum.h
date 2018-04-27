@@ -135,12 +135,14 @@ typedef enum{
     DUMP_CP_CPM_LTE1             = (0x02000087),
     DUMP_CP_CPM_TDS              = (0x02000088),
     DUMP_CP_CPM_NXP              = (0x02000089),
+    DUMP_CP_CPM_1X               = (0x0200008A),
     DUMP_CP_DUMP_DEBUG           = (0x02000090),
     DUMP_CP_EXCINFO              = (0x02000091),
+
     DUMP_CP_REBOOTCONTEX         = (0x02000092),
     DUMP_CP_WDT                  = (0x02000093),
     DUMP_CP_FREQ                 = (0x02000094),
-    DUMP_CP_PMU                  = (0x02000095),    
+    DUMP_CP_PMU                  = (0x02000095),
     DUMP_CP_FIQ                  = (0x02000096),
     DUMP_CP_DSP0                 = (0x02000097),
     /*0x02F00000-- 专用于smp修改新增的特定格式段其他模块不得使用*/
@@ -178,8 +180,9 @@ typedef enum{
     DUMP_KERNEL_DEBUGREG_CPU    = (0x030F0020),/*0x030F0020 ~ 0x030F0027 :8个预留给Debug Reg保存使用*/
     DUMP_KERNEL_DEBUGREG_CPU_END= (0x030F0027),
     DUMP_KERNEL_USB             = (0x03100000),
-    DUMP_KERNEL_UTRACE0         = (0x03100001),
+    DUMP_KERNEL_UTRACE          = (0x03100001),
     DUMP_KERNEL_DRX             = (0x03100002),
+    DUMP_KERNEL_UTRACE0         = (0x03100003),
     DUMP_KERNEL_UTRACE1         = (0x03100004),
     DUMP_KERNEL_UTRACE2         = (0x03100005),
     DUMP_KERNEL_UTRACE3         = (0x03100006),

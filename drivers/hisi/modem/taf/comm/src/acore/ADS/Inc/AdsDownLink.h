@@ -85,8 +85,7 @@ extern "C" {
                                                         | ADS_DL_IPF_RESULT_HDR_LEN_ERR_MASK \
                                                         | ADS_DL_IPF_RESULT_IP_VER_ERR_MASK)
 
-#define ADS_DL_IPF_RESULT_PKT_ERR_FEEDBACK_MASK     (ADS_DL_IPF_RESULT_PKT_LEN_ERR_MASK\
-                                                        | ADS_DL_IPF_RESULT_HDR_LEN_ERR_MASK\
+#define ADS_DL_IPF_RESULT_PKT_ERR_FEEDBACK_MASK     (ADS_DL_IPF_RESULT_HDR_LEN_ERR_MASK\
                                                         | ADS_DL_IPF_RESULT_IP_VER_ERR_MASK)
 
 /*lint -emacro({717}, ADS_DL_SAVE_RD_DESC_TO_IMM)*/
@@ -207,14 +206,7 @@ extern VOS_UINT32                       g_ulRnicNapiPollQueLen[RNIC_RMNET_ID_BUT
   7 STRUCT定义
 *****************************************************************************/
 
-/*****************************************************************************
- 结构名    : ADS_DL_IPF_RESULT_STRU
- 结构说明  : 硬件IPF过滤结果的结构
 
-  1.日    期   : 2012年4月12日
-    作    者   : A00165503
-    新    增   : 硬件Ip过滤结果的结构
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT16                          usBearedId:6;

@@ -70,6 +70,7 @@ extern "C" {
 
 #if defined(__KERNEL__)
 #include <linux/stddef.h>
+#include <linux/kernel.h>
 #endif
 
 #include "bsp_om_enum.h"
@@ -93,7 +94,9 @@ extern "C" {
 /* dump侵入内核修改 end */
 
 #define DUMP_INT_IN_FLAG                    (0xAAAA)
+#define DUMP_FLAG_INT_ENTER                 (0xAAAA0000)
 #define DUMP_INT_EXIT_FLAG                  (0xBBBB)
+#define DUMP_FLAG_INT_EXIT                  (0xBBBB0000)
 #define DUMP_INT_UNLOCK_FLAG                (0xCCCC)
 #define DUMP_SAVE_SUCCESS                   (0xA4A4A4A4)
 #define DUMP_TASK_INFO_SIZE                 (0x150)
@@ -124,6 +127,14 @@ typedef enum
     DUMP_PHONE,
     DUMP_PRODUCT_BUTT
 }dump_product_type_t;
+
+typedef enum
+{
+    DUMP_ACCESS_MDD_DDR_NON_SEC =0,
+    DUMP_ACCESS_MDD_DDR_SEC =1,
+    DUMP_ACCESS_MDD_DDR_SEC_BUTT =2,
+
+}dump_access_mdmddr_type_t;
 
 typedef enum
 {
@@ -215,21 +226,21 @@ typedef struct _dump_exc_contex
 typedef struct _dump_load_info_s
 {
     u32 magic_num;      /* dump加载信息区标识，用于兼容之前版本 */
-    u32 ap_ddr;         /* AP DDR加载地址 */
-    u32 ap_share;       /* AP共享内存加载地址 */
-    u32 ap_dump;        /* AP可维可测内存加载地址 */
-    u32 ap_sram;        /* AP SRAM加载地址 */
-    u32 ap_dts;         /* AP DTS加载地址 */
     u32 mdm_ddr;        /* MODEM DDR加载地址 */
     u32 mdm_share;      /* MODEM共享内存加载地址 */
     u32 mdm_dump;       /* MODEM可维可测内存加载地址 */
     u32 mdm_sram;       /* MODEM SRAM加载地址 */
     u32 mdm_dts;        /* MODEM DTS加载地址 */
-    u32 mdm_secshare;   /* MODEM安全共享内存加载地址 */    
+    u32 mdm_secshare;   /* MODEM安全共享内存加载地址 */
     u32 mdm_llram;      /* MODEM安全共享内存加载地址 */
+    u64 ap_ddr;         /* AP DDR加载地址 */
+    u64 ap_share;       /* AP共享内存加载地址 */
+    u64 ap_dump;        /* AP可维可测内存加载地址 */
+    u64 ap_sram;        /* AP SRAM加载地址 */
+    u64 ap_dts;         /* AP DTS加载地址 */
     u32 lpm3_tcm0;      /* LPM3 TCM0加载地址 */
     u32 lpm3_tcm1;      /* LPM3 TCM1加载地址 */
-    u32 mdm_ddr_saveoff;    /* MODEM DDR保存bin时的偏移(去掉text段)*/    
+    u32 mdm_ddr_saveoff;    /* MODEM DDR保存bin时的偏移(去掉text段)*/
     u32 mdm_share_ddr_size;    /* MODEM DDR保存bin时的偏移(去掉text段)*/
 }dump_load_info_t;
 
@@ -357,8 +368,8 @@ typedef struct
 /*  REG
 R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R10 R11 R12 R13/SP R14/LR R15/PC R16/CPSR
 */
-typedef struct
-{   
+typedef struct dump_baseinfo_head
+{
     u32 reboot_cpu;          /*0x00  */
     u32 reboot_context;     /*0x00  */
     u32 reboot_task;        /*0x04  */
@@ -393,7 +404,7 @@ typedef struct
 
 
 
-typedef struct
+typedef struct 
 {
     u32 pid;
     u32 core;
@@ -422,10 +433,10 @@ typedef enum _dump_reboot_ctx_e
 
 
 typedef struct
-{   
+{
     u32 cpu_state;                      /*cpu 状态*/
     dump_reboot_ctx_t current_ctx;      /*cpu上下文*/
-    u32 current_int;                    /*当前的中断*/	
+    u32 current_int;                    /*当前的中断*/
     u32 current_task;                   /*当前正在运行的任务*/
     u8  taskName[TASK_NAME_LEN];        /*任务名*/
     u32 regSet[ARM_REGS_NUM];           /*寄存器信息*/
@@ -434,13 +445,19 @@ typedef struct
 
 
 
+#define DUMP_QUEUE_MAGIC_NUM        (0xabcd6789)
 typedef struct
 {
+    u32 magic;          /*0xabcd6789*/
     u32 maxNum;
     u32 front;
     u32 rear;
     u32 num;
+#if defined(__KERNEL__)
     u32 data[1];
+#else
+    u32* data;
+#endif
 } dump_queue_t;
 
 
@@ -475,9 +492,10 @@ typedef bool (*exc_hook)(void * param);
 #define DUMP_REBOOT_INT "Interrupt_No"
 #define DUMP_REBOOT_TASK "task_name"
 
-#define DUMP_MODID_OFFSET        (offsetof(dump_base_info_t,modId))
-#define DUMP_TASK_NAME_OFFSET    (offsetof(dump_base_info_t,taskName))
+#define DUMP_MODID_OFFSET        (offsetof(struct dump_baseinfo_head,modId))
+#define DUMP_TASK_NAME_OFFSET    (offsetof(struct dump_baseinfo_head,taskName))
 
+#ifndef __OS_NRCCPU__
 
 /*****************************************************************************
   3 函数声明
@@ -513,8 +531,8 @@ dump_product_type_t dump_get_product_type(void);
 
 #if defined(__OS_RTOSCK__) || defined(__OS_RTOSCK_SMP__)
 void bsp_dump_save_regs(void* reg_addr,u32 reg_size);
+BOOL bsp_rtosck_exc_hook(EXC_INFO_S *pstExcInfo);
 #endif
-
 
 #else
 
@@ -584,17 +602,104 @@ static void inline bsp_ccore_wdt_register_hook(void)
     return;
 }
 
-static void bsp_dump_save_regs(void* reg_addr,u32 reg_size)
+static inline void  bsp_dump_save_regs(void* reg_addr,u32 reg_size)
 {
-    return;    
+    return;
+}
+#if defined(__OS_RTOSCK__) || defined(__OS_RTOSCK_SMP__)
+static inline void bsp_dump_save_regs(void* reg_addr,u32 reg_size)
+{
+    return;
+}
+
+static inline BOOL bsp_rtosck_exc_hook(EXC_INFO_S *pstExcInfo)
+{
+    return true;
+}
+#endif
+
+
+#endif
+#else
+static void inline system_error (u32 mod_id, u32 arg1, u32 arg2, char *data, u32 length)
+{
+    return ;
+}
+static s32 inline bsp_dump_init(void)
+{
+    return 0;
+}
+
+static dump_handle inline bsp_dump_register_hook(char * name, dump_hook func)
+{
+    return 0;
+}
+
+static s32 inline bsp_dump_unregister_hook(dump_handle handle)
+{
+    return 0;
+}
+
+static inline u8 * bsp_dump_register_field(u32 mod_id, char * name, void * virt_addr, void * phy_addr, u32 length, u16 version)
+{
+    return BSP_NULL;
+}
+
+static inline u8 * bsp_dump_get_field_addr(u32 field_id)
+{
+    return 0;
+}
+
+static inline u8 * bsp_dump_get_field_phy_addr(u32 field_id)
+{
+    return 0;
+}
+
+static s32 inline bsp_dump_register_sysview_hook(dump_sysview_t mod_id, dump_hook func)
+{
+    return 0;
 }
 
 
+static void inline bsp_dump_trace_stop(void)
+{
+    return;
+}
+
+static int inline bsp_dump_save_all_task_name(void)
+{
+    return 0;
+}
+
+static void inline bsp_om_save_reboot_log(const char * func_name,  const void* caller)
+{
+    return;
+}
+
+
+
+static s32 inline dump_exc_register(exc_hook func)
+{
+    return 0;
+}
+static void inline bsp_ccore_wdt_register_hook(void)
+{
+    return;
+}
+
+static inline void  bsp_dump_save_regs(void* reg_addr,u32 reg_size)
+{
+    return;
+}
+#if defined(__OS_RTOSCK__) || defined(__OS_RTOSCK_SMP__)
+static inline BOOL bsp_rtosck_exc_hook(EXC_INFO_S *pstExcInfo)
+{
+    return true;
+}
 #endif
 
-#if defined(__OS_RTOSCK__) || defined(__OS_RTOSCK_SMP__)
-BOOL bsp_rtosck_exc_hook(EXC_INFO_S *pstExcInfo);
 #endif
+
 
 /*****************************************************************************
   4 错误码声明

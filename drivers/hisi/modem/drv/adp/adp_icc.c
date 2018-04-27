@@ -68,13 +68,15 @@ struct icc_channel_map_logic2phy
 };
 
 static struct icc_channel_map_logic2phy g_icc_channel_map_logic2phy[] = {
-    {MDRV_ICC_VT_VOIP,                    (ICC_CHN_VT_VOIP << 16) | ICC_DEFAULT_SUB_CHANNEL},
-    {MDRV_ICC_GUOM0,                      (ICC_CHN_GUOM0   << 16) | ICC_DEFAULT_SUB_CHANNEL},
-    {MDRV_ICC_GUOM1,                      (ICC_CHN_GUOM1   << 16) | ICC_DEFAULT_SUB_CHANNEL},
-    {MDRV_ICC_GUOM2,                      (ICC_CHN_GUOM2   << 16) | ICC_DEFAULT_SUB_CHANNEL},
-    {MDRV_ICC_GUOM3,                      (ICC_CHN_GUOM3   << 16) | ICC_DEFAULT_SUB_CHANNEL},
-    {MDRV_ICC_GUOM4,                      (ICC_CHN_GUOM4   << 16) | ICC_DEFAULT_SUB_CHANNEL},
-    {MDRV_ICC_GUOM5,                      (ICC_CHN_GUOM5   << 16) | ICC_DEFAULT_SUB_CHANNEL}
+    [MDRV_ICC_VT_VOIP] =                  {MDRV_ICC_VT_VOIP,                 (ICC_CHN_VT_VOIP            <<16)  | VT_VOIP_FUNC_VT_VOIP},
+    [MDRV_ICC_RCS_SERV]=                {MDRV_ICC_RCS_SERV,              (ICC_CHN_VT_VOIP            <<16)  | VT_VOIP_FUNC_RCS_SERV},
+    [MDRV_ICC_GUOM0]   =                 {MDRV_ICC_GUOM0,                   (ICC_CHN_GUOM0             <<16)  | ICC_DEFAULT_SUB_CHANNEL},
+    [MDRV_ICC_GUOM1]   =                 {MDRV_ICC_GUOM1,                   (ICC_CHN_GUOM1             <<16)  | ICC_DEFAULT_SUB_CHANNEL},
+    [MDRV_ICC_GUOM2]   =                 {MDRV_ICC_GUOM2,                   (ICC_CHN_GUOM2             <<16)  | ICC_DEFAULT_SUB_CHANNEL},
+    [MDRV_ICC_GUOM3]   =                 {MDRV_ICC_GUOM3,                   (ICC_CHN_GUOM3             <<16)  | ICC_DEFAULT_SUB_CHANNEL},
+    [MDRV_ICC_GUOM4]   =                 {MDRV_ICC_GUOM4,                   (ICC_CHN_GUOM4             <<16)  | ICC_DEFAULT_SUB_CHANNEL},
+    [MDRV_ICC_GUOM5]   =                 {MDRV_ICC_GUOM5,                   (ICC_CHN_GUOM5             <<16)  | ICC_DEFAULT_SUB_CHANNEL},
+
 };
 
 s32 icc_read_cb_wraper(u32 channel_id , u32 len, void* context);
@@ -93,12 +95,6 @@ s32 icc_read_cb_wraper(u32 channel_id , u32 len, void* context)
 
 s32 icc_write_cb_wraper(u32 real_channel_id , void* context)
 {
-	icc_write_cb cb = (icc_write_cb)context; /*lint !e611 */
-	if(cb)
-	{
-		return (s32)cb(real_channel_id);
-	}
-
 	return ICC_OK;
 }
 

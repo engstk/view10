@@ -16,13 +16,15 @@
 #define ktPDDebounce            (12 * kMSTimeFactor)
 #define ktDRPTry                (125 * kMSTimeFactor)
 #define ktDRPTryWait            (500 * kMSTimeFactor)
-#define ktErrorRecovery         (30 * kMSTimeFactor)
-
+#define ktErrorRecovery         (50 * kMSTimeFactor)
 #define ktDeviceToggle          (3 * kMSTimeFactor)
 #define ktTOG2                  (30 * kMSTimeFactor)
 #define ktIllegalCable          (150 * kMSTimeFactor)
 #define ktLoopReset				(100 * kMSTimeFactor)
 #define ktCableCheck			(50 * kMSTimeFactor)
+#define ktSourceDetach          (8 * kMSTimeFactor)
+#define ktVDMWait				(60 * kMSTimeFactor)
+#define ktTxTimeout				(10 * kMSTimeFactor)
 
 #define ktNoResponse            (5000 * kMSTimeFactor)
 #define ktSenderResponse        (25 * kMSTimeFactor)

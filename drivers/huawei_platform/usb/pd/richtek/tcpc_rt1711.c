@@ -1115,7 +1115,7 @@ static int rt1711_tcpcdev_init(struct rt1711_chip *chip, struct device *dev)
 
 	if (of_property_read_u32(
 		np, "rt-tcpc,notifier_supply_num", &val) >= 0) {
-		if (val < 0)
+		if ((int)val < 0)
 			desc->notifier_supply_num = 0;
 		else
 			desc->notifier_supply_num = val;

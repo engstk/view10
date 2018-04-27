@@ -13,7 +13,6 @@
 
 #include <linux/types.h>
 
-#ifdef CONFIG_HISI_BB_DEBUG
 #define BB_PRINT_PN(args...)    printk(KERN_ERR args);
 #define BB_PRINT_ERR(args...)   printk(KERN_ERR args);
 #define BB_PRINT_DBG(args...)   printk(KERN_DEBUG args);
@@ -21,13 +20,6 @@
 	printk(KERN_INFO ">>>>>enter blackbox %s: %.4d.\n", __func__, __LINE__);
 #define BB_PRINT_END(args...)   \
 	printk(KERN_INFO "<<<<<exit  blackbox %s: %.4d.\n", __func__, __LINE__);
-#else
-#define BB_PRINT_PN(args...)
-#define BB_PRINT_ERR(args...)
-#define BB_PRINT_DBG(args...)
-#define BB_PRINT_START(args...)
-#define BB_PRINT_END(args...)
-#endif
 
 void rdr_print_all_ops(void);
 void rdr_print_all_exc(void);

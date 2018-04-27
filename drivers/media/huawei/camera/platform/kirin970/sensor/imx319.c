@@ -168,6 +168,84 @@ static struct sensor_power_setting imx319_power_setting_udp[] = {
     },
 };
 
+// Emily power up seq
+static struct sensor_power_setting imx319_power_setting_emily[] = {
+    //MCAM1 AVDD 2.8V
+    {
+        .seq_type = SENSOR_AVDD,
+        .config_val = LDO_VOLTAGE_V2P8V,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 0,
+    },
+    //MCAM1 DVDD 1.1V
+    {
+        .seq_type = SENSOR_DVDD,
+        .config_val = LDO_VOLTAGE_1P1V,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 0,
+    },
+    //MCAM IOVDD 1.80V
+    {
+        .seq_type = SENSOR_IOVDD,
+        .config_val = LDO_VOLTAGE_1P8V,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 1,
+    },
+    {
+        .seq_type = SENSOR_MCLK,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 1,
+    },
+    {
+        .seq_type = SENSOR_RST,
+        .config_val = SENSOR_GPIO_LOW,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 1,
+    },
+};
+
+// Neo power up seq
+static struct sensor_power_setting imx319_power_setting_neo[] = {
+    //MCAM1 AVDD 2.8V
+    {
+        .seq_type = SENSOR_AVDD,
+        .config_val = LDO_VOLTAGE_V2P8V,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 0,
+    },
+    //MCAM1 DVDD 1.1V
+    {
+        .seq_type = SENSOR_DVDD,
+        .config_val = LDO_VOLTAGE_1P1V,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 0,
+    },
+    //MCAM IOVDD 1.80V
+    {
+        .seq_type = SENSOR_IOVDD,
+        .config_val = LDO_VOLTAGE_1P8V,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 1,
+    },
+    {
+        .seq_type = SENSOR_MCLK,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 1,
+    },
+    {
+        .seq_type = SENSOR_RST,
+        .config_val = SENSOR_GPIO_LOW,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 1,
+    },
+    {
+        .seq_type = SENSOR_RST2,
+        .config_val = SENSOR_GPIO_HIGH,
+        .sensor_index = SENSOR_INDEX_INVALID,
+        .delay = 1,
+    },
+};
+
 static sensor_t s_imx319 =
 {
     .intf = { .vtbl = &s_imx319_vtbl, },
@@ -195,6 +273,24 @@ static sensor_t s_imx319_udp =
     },
 };
 
+static sensor_t s_imx319_emily =
+{
+    .intf = { .vtbl = &s_imx319_vtbl, },
+    .power_setting_array = {
+        .size = ARRAY_SIZE(imx319_power_setting_emily),
+        .power_setting = imx319_power_setting_emily,
+    },
+};
+
+static sensor_t s_imx319_neo =
+{
+    .intf = { .vtbl = &s_imx319_vtbl, },
+    .power_setting_array = {
+        .size = ARRAY_SIZE(imx319_power_setting_neo),
+        .power_setting = imx319_power_setting_neo,
+    },
+};
+
 static const struct of_device_id s_imx319_dt_match[] =
 {
     {
@@ -208,6 +304,14 @@ static const struct of_device_id s_imx319_dt_match[] =
     {
         .compatible = "huawei,imx319_udp",
         .data = &s_imx319_udp.intf,
+    },
+    {
+        .compatible = "huawei,imx319_emily",
+        .data = &s_imx319_emily.intf,
+    },
+    {
+        .compatible = "huawei,imx319_neo",
+        .data = &s_imx319_neo.intf,
     },
     {
 
@@ -380,15 +484,10 @@ int imx319_config(hwsensor_intf_t* si, void  *argp)
             }
             break;
         case SEN_CONFIG_WRITE_REG:
-            break;
         case SEN_CONFIG_READ_REG:
-            break;
         case SEN_CONFIG_WRITE_REG_SETTINGS:
-            break;
         case SEN_CONFIG_READ_REG_SETTINGS:
-            break;
         case SEN_CONFIG_ENABLE_CSI:
-            break;
         case SEN_CONFIG_DISABLE_CSI:
             break;
         case SEN_CONFIG_MATCH_ID:

@@ -263,13 +263,17 @@ FSC_S32 fusb_InitializeDFS(void)
 
     debugfs_create_u8("porttype", 0666, chip->debugfs_parent,
                       (u8 *)&(chip->port.port_type_));
-    debugfs_create_u8("dfpcurrent", 0666, chip->debugfs_parent,
+
+    debugfs_create_u8("src_current", 0666, chip->debugfs_parent,
                       (u8 *)&(chip->port.src_current_));
+
+	debugfs_create_u8("snk_current", 0666, chip->debugfs_parent,
+                      (u8 *)&(chip->port.snk_current_));
 
     return 0;
 }
 
-/* 
+/*
  * Cleanup/remove unneeded DebugFS file objects
  */
 FSC_S32 fusb_DFS_Cleanup(void)
@@ -287,4 +291,3 @@ FSC_S32 fusb_DFS_Cleanup(void)
 
     return 0;
 }
-

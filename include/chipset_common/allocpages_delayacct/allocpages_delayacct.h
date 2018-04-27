@@ -4,7 +4,7 @@
 #include <linux/sched.h>
 
 #ifdef CONFIG_HW_MEMORY_MONITOR
-#include <huawei_platform/log/log_usertype/log-usertype.h>
+#include <log/log_usertype/log-usertype.h>
 
 extern void __delayacct_allocpages_start(void);
 extern void __delayacct_allocpages_end(unsigned int order);

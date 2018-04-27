@@ -1,14 +1,4 @@
-/******************************************************************************
 
-    Copyright(C)2008,Hisilicon Co. LTD.
-
- ******************************************************************************
-  File Name       : AppRrcInterface.h
-  Description     : AppRrcInterface.h header file
-  History         :
-     1.XiaoJun 58160       2009-4-29     Draft Enact
-	 2.lishangfeng  55206 2011-09-11 DTS2011091100356:候补信息维护策略改进，并且能够支持多Band时的维护
-******************************************************************************/
 
 #ifndef __APPRRCINTERFACE_H__
 #define __APPRRCINTERFACE_H__
@@ -82,7 +72,6 @@ extern "C" {
 /* 受限列表中保存最大的条目数 */
 #define RRC_APP_MAX_LIMITED_ITEM_COUNT         (32)
 /* add for AT&T LRRC DAM end */
-/*f00295098新增测量消息中上报小区最大个数*/
 #define LRRC_LCSEL_INTRA_CELL_REPORT_NUM 4
 #define LRRC_LCSEL_INTER_CELL_REPORT_NUM 4
 #define LRRC_LCSEL_UTRAN_CELL_REPORT_NUM 4
@@ -101,6 +90,9 @@ extern "C" {
 
 /* 存放BAND信息最大的数组 */
 #define LRRC_APP_MAX_BAND_IND_ARRAY_NUM                     (8)
+
+#define LRRC_APP_LWCLASH_MAX_SCELL_NUM                      (4)
+
 
 /*****************************************************************************
   3 Massage Declare
@@ -141,13 +133,11 @@ enum APP_RRC_MSG_ID_ENUM
     ID_APP_LRRC_FAST_DORM_CFG_NTF          = (PS_MSG_ID_APP_TO_RRC_BASE + 0x12),   /* _H2ASN_MsgChoice APP_LRRC_FAST_DORM_CFG_NTF_STRU  */
     ID_APP_LRRC_GET_NCELL_INFO_REQ      = (PS_MSG_ID_APP_TO_RRC_BASE + 0x13),   /* _H2ASN_MsgChoice APP_LRRC_GET_NCELL_INFO_REQ_STRU  */
 
-    /* begin:V7R2-DT 移植强制切换，重选和禁止限制小区接入等功能,c00134407,2014/3/26 */
     /* yangfan Prob Begin */
     ID_APP_LRRC_INQ_TCFG_TXPOWER_REQ    = (PS_MSG_ID_APP_TO_RRC_BASE + 0x14),   /* _H2ASN_MsgChoice APP_RRC_INQ_TCFG_TXPOWER_REQ_STRU */
     /* yangfan Prob End */
     ID_APP_RRC_FORCE_HOANDCSEL_REQ        = (PS_MSG_ID_APP_TO_RRC_BASE + 0x15),/*_H2ASN_MsgChoice APP_RRC_FORCE_HOANDCSEL_REQ_STRU*/
     ID_APP_RRC_BARCELL_ACCESS_REQ        = (PS_MSG_ID_APP_TO_RRC_BASE + 0x16),/*_H2ASN_MsgChoice APP_RRC_BARCELL_ACCESS_REQ_STRU*/
-    /* end:V7R2-DT 移植强制切换，重选和禁止限制小区接入等功能,c00134407,2014/3/26 */
     ID_APP_LRRC_SET_UE_REL_VERSION_REQ      = (PS_MSG_ID_APP_TO_RRC_BASE + 0x17), /* _H2ASN_MsgChoice APP_LRRC_SET_UE_REL_VERSION_REQ_STRU  */
 
     /* begin:add for 路测融合 */
@@ -157,6 +147,7 @@ enum APP_RRC_MSG_ID_ENUM
 
     ID_APP_LRRC_GET_UE_CAP_INFO_REQ    = (PS_MSG_ID_APP_TO_RRC_BASE + 0x1a),   /* _H2ASN_MsgChoice APP_LRRC_GET_UE_CAP_INFO_REQ_STRU */
 
+    ID_APP_RRC_SCELL_INFO_REQ    = (PS_MSG_ID_APP_TO_RRC_BASE + 0x1b),   /* _H2ASN_MsgChoice APP_RRC_SCELL_INFO_REQ_STRU */
     ID_APP_LRRC_SET_TLPS_PRINT2LAYER_REQ    = (PS_MSG_ID_RRC_TO_APP_BASE + 0x18),
 
     /* APP发给RRC的原语 */
@@ -224,6 +215,9 @@ enum APP_RRC_MSG_ID_ENUM
 
     ID_RRC_APP_DEBUG_STUB_CMD_CNF             = (PS_MSG_ID_RRC_TO_APP_BASE + 0x4d),   /* _H2ASN_MsgChoice RRC_APP_DEBUG_STUB_CMD_CNF_STRU */
 
+    ID_RRC_APP_SCELL_INFO_CNF              = (PS_MSG_ID_RRC_TO_APP_BASE + 0x4e), /* _H2ASN_MsgChoice RRC_APP_SCELL_INFO_CNF_STRU */
+
+    ID_RRC_CLOUD_CA_INFO_IND               = (PS_MSG_ID_RRC_TO_APP_BASE + 0x4f),
 
     ID_APP_RRC_MSG_ID_BUTT
 };
@@ -1094,7 +1088,6 @@ typedef struct
 
 /* niuxiufan DT end */
 
-/* begin:V7R2-DT 移植强制切换、重选和禁止限制小区接入等功能,c00134407,2014/3/26 */
 typedef struct
 {
     VOS_MSG_HEADER                                          /*_H2ASN_Skip*/
@@ -1131,7 +1124,6 @@ typedef struct
     VOS_UINT8                           ucRsv[3];
 }APP_RRC_BARCELL_ACCESS_REQ_STRU;
 
-/* end:V7R2-DT 移植强制切换、重选和禁止限制小区接入等功能,c00134407,2014/3/26 */
 
 /*****************************************************************************
  结构名    : APP_RRC_MSG_DATA
@@ -1190,6 +1182,19 @@ typedef struct
     APP_MSG_HEADER
     VOS_UINT32                          ulOpId;
 } APP_RRC_LWCLASH_REQ_STRU;
+/*********************************************************
+ 枚举名    : APP_RRC_ANTENNA_MAX_LAYERS_MIMO_ENUM
+ 协议表格  :
+ ASN.1描述 :
+ 枚举说明  :
+**********************************************************/
+enum APP_RRC_ANTENNA_MAX_LAYERS_MIMO_ENUM
+{
+    APP_RRC_ANTENNA_TWO_LAYERS      = 0,      /* UE MIMO层数2层 */
+    APP_RRC_ANTENNA_FOUR_LAYERS,              /* UE MIMO层数4层 */
+    APP_RRC_ANTENNA_EIGHT_LAYERS,             /* UE MIMO层数8层 */
+};
+typedef VOS_UINT8    APP_RRC_ANTENNA_MAX_LAYERS_MIMO_ENUM_UINT8;
 /*****************************************************************************
  结构名    : RRC_APP_LWCLASH_PARA_STRU
 结构说明  : RRC上报的消息
@@ -1203,8 +1208,25 @@ typedef struct
     APP_CAMPED_FLAG_ENUM_UINT8              enCamped;          /*是否驻留 */
     APP_STATE_FLAG_ENUM_UINT8               enState;           /*是否为冲突状态 */
     VOS_UINT8                               usBand;            /*频带指示 */
-    VOS_UINT8                               aucResv[1];
+    APP_RRC_ANTENNA_MAX_LAYERS_MIMO_ENUM_UINT8   enDlMimo;
 } RRC_APP_LWCLASH_PARA_STRU;
+
+/*****************************************************************************
+ 结构名    : RRC_APP_SCELL_INFO_STRU
+ 协议表格  :
+ ASN.1描述 :
+ 结构说明  :
+*****************************************************************************/
+typedef struct
+{
+    VOS_UINT32                              ulUlFreq;           /*上行中心频率 单位:100Khz*/
+    VOS_UINT32                              ulDlFreq;           /*下行中心频率 单位:100Khz*/
+    RRC_APP_BAND_WIDTH_ENUM_UINT16          usUlBandwidth;      /*上行带宽 */
+    RRC_APP_BAND_WIDTH_ENUM_UINT16          usDlBandwidth;      /*下行带宽 */
+    APP_RRC_ANTENNA_MAX_LAYERS_MIMO_ENUM_UINT8   enDlMimo;
+    VOS_UINT8                               aucResv[3];
+}RRC_APP_SCELL_INFO_STRU;
+
 
 /*****************************************************************************
  结构名    : RRC_APP_LWCLASH_CNF_STRU
@@ -1218,7 +1240,9 @@ typedef struct
     VOS_UINT32                          ulMsgId;        /*_H2ASN_Skip*/
     APP_MSG_HEADER
     VOS_UINT32                          ulOpId;         /* MSP直接将此ID做为CmdID发给Prob */
-    RRC_APP_LWCLASH_PARA_STRU       stLWClashPara;
+    RRC_APP_LWCLASH_PARA_STRU           stLWClashPara;
+    VOS_UINT32                          ulScellNum;
+    RRC_APP_SCELL_INFO_STRU             stScellInfo[LRRC_APP_LWCLASH_MAX_SCELL_NUM];
 } RRC_APP_LWCLASH_CNF_STRU;
 /*****************************************************************************
  结构名    : RRC_APP_LWCLASH_IND_STRU
@@ -1229,6 +1253,8 @@ typedef struct
     VOS_MSG_HEADER                                      /*_H2ASN_Skip*/
     VOS_UINT32                          ulMsgId;        /*_H2ASN_Skip*/
     RRC_APP_LWCLASH_PARA_STRU           stLWClashPara;
+    VOS_UINT32                          ulScellNum;
+    RRC_APP_SCELL_INFO_STRU             stScellInfo[LRRC_APP_LWCLASH_MAX_SCELL_NUM];
 } RRC_APP_LWCLASH_IND_STRU;
 
 /*****************************************************************************
@@ -1443,6 +1469,53 @@ typedef struct
     APP_RESULT_ENUM_UINT32              enResult;
 } LRRC_APP_SET_UE_REL_VERSION_CNF_STRU;
 
+/*****************************************************************************
+ 结构名    :APP_RRC_SCELL_INFO_REQ_STRU
+ 结构说明  :AT下发的查询SCELL信息的结构体
+*****************************************************************************/
+typedef struct
+{
+    VOS_MSG_HEADER                                          /*_H2ASN_Skip*/
+    VOS_UINT32                          ulMsgID;            /*_H2ASN_Skip*/
+    APP_MSG_HEADER
+    VOS_UINT32                          ulOpId;
+    VOS_UINT8                           aucReserved[4];                         /* 保留 */
+}APP_RRC_SCELL_INFO_REQ_STRU;
+
+
+typedef struct
+{
+    VOS_UINT32  ulPhyCellId;          /* scell的物理小区id */
+    VOS_UINT32  ulScellUlFreq;        /* scell上行频率 */
+    VOS_UINT32  ulScellDlFreq;        /* scell下行频率 */
+    VOS_UINT32  ulScellUlFreqPoint;     /* scell上行频点*/
+    VOS_UINT32  ulScellDlFreqPoint;     /* scell下行频点*/
+    VOS_UINT8    usScellUlBandWidth;   /* scell上行带宽*/
+    VOS_UINT8    usScellDlBandWidth;   /* scell下行带宽*/
+    VOS_UINT8    ucFreqBandIndicator;   /* scell 频段*/
+    VOS_UINT8    ucRsv;   /* 保留 */
+    VOS_INT16    sRssi;
+    VOS_INT16    sRsrp;
+    VOS_INT16    sRsrq;
+    VOS_UINT16  usScellIndex;
+}RRC_SCELL_INFO_STRU;
+
+/*****************************************************************************
+ 结构名    :RRC_APP_SCELL_INFO_CNF_STRU
+ 协议表格  :
+ ASN.1描述 :
+ 结构说明  :对原语APP_RRC_SCELL_INFO_REQ_STRU进行回复
+*****************************************************************************/
+typedef struct
+{
+    VOS_MSG_HEADER                                          /*_H2ASN_Skip*/
+    VOS_UINT32                            ulMsgId;            /*_H2ASN_Skip*/
+    APP_MSG_HEADER
+    VOS_UINT32                            ulOpId;
+    APP_RESULT_ENUM_UINT32      enResult;
+    VOS_UINT32                            ulSCellCnt;
+    RRC_SCELL_INFO_STRU           astSCellInfo[LRRC_SCELL_MAX_NUM];
+}RRC_APP_SCELL_INFO_CNF_STRU;
 
 /*****************************************************************************
  结构名    : LRRC_DAM_BAR_LIST_ITEM_STRU
@@ -1686,7 +1759,7 @@ enum LRRC_APP_GERAN_BANDIND_ENUM
     DCS1800                          = 0,
     PCS1900                          = 1,
 
-    LRRC_APP_GERAN_BANDIND_BUTT      = 0xFFFF
+    LRRC_APP_GERAN_BANDIND_BUTT      = 0x7FFF
 };
 typedef VOS_UINT16    LRRC_APP_GERAN_BANDIND_ENUM_UINT16;
 
@@ -1700,7 +1773,7 @@ enum RRC_APP_PROTOCOL_STATE_ENUM
 {
     RRC_MEAS_PROTOCOL_STATE_IDLE            = 0 ,
     RRC_MEAS_PROTOCOL_STATE_CONNECTED,
-    RRC_MEAS_PROTOCOL_STATE_BUTT            = 0xFFFF
+    RRC_MEAS_PROTOCOL_STATE_BUTT            = 0x7FFF
 };
 typedef VOS_UINT16 RRC_APP_PROTOCOL_STATE_ENUM_UINT16;
 
@@ -1971,19 +2044,19 @@ typedef struct
 }RRC_APP_DEBUG_STUB_CMD_CNF_STRU;
 
 
-extern PS_BOOL_ENUM_UINT8  LRRC_COMM_LoadDspAlready( VOS_VOID );
+extern PS_BOOL_ENUM_UINT8  LRRC_COMM_LoadDspAlready( MODEM_ID_ENUM_UINT16 enModemId);
 
 extern VOS_UINT32 LHPA_InitDsp( VOS_VOID );
-extern VOS_VOID LHPA_DbgSendSetWorkMode_toMaterMode(VOS_VOID);
-extern VOS_VOID LHPA_DbgSendSetWorkMode_toSlaveMode(VOS_VOID);
-extern VOS_UINT32  RRC_RRC_LoadDsp( VOS_VOID );
-extern VOS_VOID * LAPP_MemAlloc( VOS_UINT32 ulSize );
-extern VOS_UINT32  LApp_MemFree(VOS_VOID *pAddr );
-extern VOS_UINT32  LAppSndMsgToLPs(APP_LPS_MSG_STRU  *pstAppToPsMsg );
+extern VOS_VOID LHPA_DbgSendSetWorkMode_toMaterMode(MODEM_ID_ENUM_UINT16 enModemId);
+extern VOS_VOID LHPA_DbgSendSetWorkMode_toSlaveMode(MODEM_ID_ENUM_UINT16 enModemId);
+extern VOS_UINT32  RRC_RRC_LoadDsp( MODEM_ID_ENUM_UINT16 enModemId );
+extern VOS_VOID * LAPP_MemAlloc( MODEM_ID_ENUM_UINT16 enModemId,VOS_UINT32 ulSize );
+extern VOS_UINT32  LApp_MemFree(MODEM_ID_ENUM_UINT16 usModemId,VOS_VOID *pAddr );
+extern VOS_UINT32  LAppSndMsgToLPs(MODEM_ID_ENUM_UINT16 enModemId,APP_LPS_MSG_STRU  *pstAppToPsMsg );
 extern 	VOS_UINT32 LHPA_InitDsp_ForAT( VOS_VOID );
-extern VOS_UINT32 LHPA_InitDspNvForLteTdsCBT(VOS_VOID);
-extern VOS_UINT32 LHPA_LoadDspForLteCBT(VOS_VOID);
-extern VOS_VOID   LHPA_DbgSetSlaveModeThenMasterMode(VOS_VOID);
+extern VOS_UINT32 LHPA_InitDspNvForLteTdsCBT(MODEM_ID_ENUM_UINT16 enModemId);
+extern VOS_UINT32 LHPA_LoadDspForLteCBT(MODEM_ID_ENUM_UINT16 enModemId);
+extern VOS_VOID   LHPA_DbgSetSlaveModeThenMasterMode(MODEM_ID_ENUM_UINT16 enModemId);
 
 /*****************************************************************************
   8 Fuction Extern

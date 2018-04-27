@@ -11,3 +11,4 @@ obj-y				+= dump_cp_agent.o
 obj-y				+= dump_cp_wdt.o 
 obj-y				+= dump_lphy_tcm.o 
 obj-y				+= dump_cphy_tcm.o 
+obj-y				+= dump_easyrf_tcm.o

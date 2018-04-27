@@ -180,6 +180,36 @@ int peri_set_volt(struct peri_volt_poll *pvp, unsigned int volt)
 }
 EXPORT_SYMBOL_GPL(peri_set_volt);
 
+static int __peri_get_temperature(struct peri_volt_poll *pvp)
+{
+	int ret = 0;
+	if (pvp->ops->get_temperature)
+		ret = pvp->ops->get_temperature(pvp);
+	return ret;
+}
+
+/**
+ * hisi_peri_get_temprature - get current temperature
+ * Returns 0 on normal temperature, -1 on low temperature.
+ */
+int peri_get_temperature(struct peri_volt_poll *pvp)
+{
+	int ret = 0;
+
+	if (!pvp)
+		return -EINVAL;
+
+	/* prevent racing with updates to the clock topology */
+	perivolt_lock();
+
+	/* change the rates */
+	ret = __peri_get_temperature(pvp);
+	perivolt_unlock();
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(peri_get_temperature);
+
 int __perivolt_init(struct device *dev, struct peri_volt_poll *pvp)
 {
 	int ret = 0;

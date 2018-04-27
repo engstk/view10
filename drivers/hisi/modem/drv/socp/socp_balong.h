@@ -49,6 +49,8 @@
 #ifndef _SOCP_BALONG_H
 #define _SOCP_BALONG_H
 
+#ifndef DIAG_SYSTEM_5G
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -76,9 +78,7 @@ extern "C"
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/regulator/consumer.h>
-#if defined(__OS_RTOSCK__)
-#include "securec.h"
-#endif
+
 
 /**************************************************************************
   宏定义
@@ -175,7 +175,7 @@ typedef int (*socp_task_entry)(void * data);
 
 #define SOCP_REG_ENCDEST_SBCFG(n)        (HI_SOCP_ENC_DEST_SB_CFG_OFFSET + n*0x20)
 
-/* 注意!   以下寄存器在Boston CS版本(v2.04)之前使用*/
+/* 注意!   以下寄存器在v204之前使用*/
 #define SOCP_REG_ENCDEST_BUFSIDEBAND(n)  (HI_SOCP_ENC_DEST_BUFN_SIDBAND_OFFSET + n*0x20)
 ////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef FEATURE_SOCP_ADDR_64BITS
@@ -192,7 +192,7 @@ typedef int (*socp_task_entry)(void * data);
 #define SOCP_REG_DECSRC_BUFCFG0(x)  (HI_SOCP_DEC_SRC_BUFX_CFG0_0_OFFSET + x*0x40)
 #define SOCP_REG_DEC_BUFSTAT0(x)    (HI_SOCP_DEC_BUFX_STATUS0_0_OFFSET + x*0x40)
 #define SOCP_REG_DEC_BUFSTAT1(x)    (HI_SOCP_DEC_BUFX_STATUS1_0_OFFSET + x*0x40)
-/* 注意!   以下两个寄存器在Boston CS版本(v2.04)之前使用*/
+/* 注意!   以下两个寄存器在v204之前使用*/
 #define SOCP_REG_DECSRC_BUFSIDEBAND(x) (HI_SOCP_DEC_SRC_BUFX_SIDEBAND_OFFSET + x*0x40)
 #define SOCP_REG_DECDEST_BUFSIDEBAND(y)  (HI_SOCP_DEC_DEST_BUFY_SIDEBAND_OFFSET + y*0x10)
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -241,11 +241,11 @@ typedef int (*socp_task_entry)(void * data);
 /*版本寄存器*/
 #define SOCP_REG_SOCP_VERSION       (HI_SOCP_SOCP_VERSION_OFFSET)
 #define SOCP_201_VERSION            (0x201)
-#define SOCP_203_VERSION            (0x203)   /* 203版本(Boston ES)SOCP时钟调整，计数单位调整为3.4ms */
-#define SOCP_204_VERSION            (0x204)   /* Boston CS版本SOCP时钟调整，计数单位调整为3.4ms */
+#define SOCP_203_VERSION            (0x203)   /* v203版本SOCP时钟调整，计数单位调整为3.4ms */
+#define SOCP_204_VERSION            (0x204)   /* v204版本SOCP时钟调整，计数单位调整为3.4ms */
 #define SOCP_205_VERSION            (0x205)   
-#define SOCP_206_VERSION            (0x206)   /* M535/Miami版本*/
-#define SOCP_CLK_RATIO(n)           (n*5/39)    /* 时钟调整后，计数单位的换算比 */
+#define SOCP_206_VERSION            (0x206)
+#define SOCP_CLK_RATIO(n)           (n*10/34)    /* 时钟调整后，计数单位的换算比 */
 
 /* BBP 通道寄存器 */
 #define BBP_REG_LOG_ADDR(m)         (0x0200 + 0x10*m)
@@ -663,9 +663,9 @@ typedef struct
 #define SOCP_APP_ENC_TFRINT_MASK        ( (s32)(1<<15))      /* 编码通道传输全局中断 */
 #define SOCP_DEC_SRCINT_NUM             (6)                  /* 编码MODEMCPU包头检测错误中断 */
 
-
-#define SOCP_TRANS_TIMEOUT_DEFAULT      (0x17)     //dec:23
-#define SOCP_OVERFLOW_TIMEOUT_DEFAULT   (0x5969)   //dec:22889
+#define SOCP_TIMEOUT_TRF_LONG_MAX       (0x927c0)  // 10min
+#define SOCP_TIMEOUT_TRF_LONG_MIN       (0x0a)     // 10ms
+#define SOCP_TIMEOUT_TRF_SHORT_VAL      (0x0a)     // 10ms
 
 #define SOCP_DEC_PKTLGTH_MAX            (0x04)     //dec:4096, 单位为KB
 #define SOCP_DEC_PKTLGTH_MIN            (0x06)     //dec:6, 单位为字节
@@ -748,24 +748,6 @@ void socp_help(void);
 #define SOCP_FLUSH_CACHE(ptr, size)  (0)
 #define SOCP_INVALID_CACHE(ptr, size) (0)
 
-
-
-#if defined(__KERNEL__)
-
-#define Socp_Memcpy(dst,src,len)       (void)memcpy(dst,src,len)
-#define Socp_Memset(src,count,len)     (void)memset(src,count,len)
-
-#elif defined(__OS_VXWORKS__)
-
-#define Socp_Memcpy(dst,src,len)       (void)memcpy(dst,src,len)
-#define Socp_Memset(src,count,len)     (void)memset(src,count,len)
-
-#elif defined(__OS_RTOSCK__)
-
-//#define Socp_Memcpy(dst,src,len)        (void)memcpy_s(dst,len,src,len)
-//#define Socp_Memset(src,count,len)     (void)memset_s(src, len,count,len)
-
-#endif
 #define socp_printf(fmt,...)     bsp_trace(BSP_LOG_LEVEL_ERROR,BSP_MODU_SOCP,fmt,##__VA_ARGS__)
 
 #define BIT_N(n)                (0x01 << (n))
@@ -785,6 +767,7 @@ do{\
 }
 #endif
 
+#endif  /*end #ifndef DIAG_SYSTEM_5G*/
 #endif
 
 

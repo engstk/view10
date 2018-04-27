@@ -54,6 +54,7 @@ extern struct dsm_client *smartpa_dclient;
 static unsigned int interrupt_time = 0;
 #endif
 
+#define SMARTPA_REG_NODE_LEN    4
 struct tfa98xx_gain_def tfa9872_type_gain_def[] = {
 	{0x0a, 0x0a},//spk gain value
 	{0x0a, 0x0a},//rcv gain value
@@ -64,7 +65,7 @@ static struct reg_default tfa9872_reg[] = {
 };
 static ssize_t tfa9872_register_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	unsigned int value, i;
+	unsigned int value = 0, i;
 	char valStr[20];
 	struct tfa98xx_priv *p = NULL;
 	p = find_tfa98xx_by_dev(dev);
@@ -73,7 +74,9 @@ static ssize_t tfa9872_register_show(struct device *dev, struct device_attribute
 	}
 	buf[0] = '\0';
 	for (i = 0; i <= 0xff; i++) {
-		regmap_read(p->regmap, i, &value);
+		if(regmap_read(p->regmap, i, &value)) {
+			hwlog_err("%s: regmap_read error!!!\n", __func__);
+		}
 		sprintf(valStr, "0x%02x = 0x%04x\n", i, value);
 		strcat(buf, valStr);
 	}
@@ -185,7 +188,9 @@ static int tfa9872_set_param(struct list_head *tfa98xx, unsigned int __user *pUs
 	}
 	if((param.l_num + param.r_num > TFA98XX_PARAM_MAX_NUM) ||
 	   (param.l_num > TFA98XX_PARAM_MAX_NUM) ||
-	   (param.r_num > TFA98XX_PARAM_MAX_NUM)){
+	   (param.r_num > TFA98XX_PARAM_MAX_NUM) ||
+	    (param.l_num % SMARTPA_REG_NODE_LEN != 0) ||
+		(param.r_num % SMARTPA_REG_NODE_LEN != 0)){
 		hwlog_err("%s: param num is error:%d,%d\n", __func__, param.l_num, param.r_num);
 		return -1;
 	}
@@ -208,7 +213,7 @@ static int tfa9872_set_param(struct list_head *tfa98xx, unsigned int __user *pUs
 			hwlog_err("%s:pData is NULL", __func__);
 			return -1;
 		}
-		for(posData = pData; posData < pData + num; posData+=4){
+		for(posData = pData; posData < pData + num; posData+=SMARTPA_REG_NODE_LEN){
 			reg.reg_addr = (posData[1]<<8) + posData[0];
 			reg.reg_val = (posData[3]<<8) + posData[2];
 			ret |= regmap_write(p->regmap, reg.reg_addr, reg.reg_val);
@@ -426,7 +431,9 @@ static int tfa9872_open(struct inode *inode, struct file *filp)
 			case TFA9872_VERSION_N1B:
 				hwlog_info("%s: VERSION is N1B\n", __func__);
 				regmap_write(p->regmap, 0x0F, 0x5A6B);
-				regmap_read(p->regmap, 0xFB, &value);
+				if (regmap_read(p->regmap, 0xFB, &value)) {
+					hwlog_err("%s: regmap_read error!!!\n", __func__);
+				}
 				value = value ^ 0x005A;
 				regmap_write(p->regmap, 0xA0, value);
 
@@ -594,7 +601,9 @@ static ssize_t tfa98xx_rw_read(struct file *filp, struct kobject *kobj,
 	if (NULL == p) {
 		return 0;
 	}
-	regmap_read(p->regmap, p->reg, &val);
+	if(regmap_read(p->regmap, p->reg, &val)) {
+		hwlog_err("%s: regmap_read error!!!\n", __func__);
+	};
 
 	buf[1] = (char)(val & 0xFF);
 	buf[0] = (char)((val >> 8) & 0xFF);
@@ -637,15 +646,20 @@ static irqreturn_t tfa9872_thread_irq(int irq, void *data)
 	unsigned int out1 = 0, out2 = 0, out3 = 0;
 	int spk_id = 0,rcv_id = 0;
 	struct tfa98xx_priv *p = data;
+	int ret;
 
-	regmap_read(p->regmap, TFA9872_STATUS_FLAGS0, &status_flags0);
-	regmap_read(p->regmap, TFA9872_STATUS_FLAGS1, &status_flags1);
-	regmap_read(p->regmap, TFA9872_STATUS_FLAGS3, &status_flags3);
-	regmap_read(p->regmap, TFA9872_STATUS_FLAGS4, &status_flags4);
+	ret = regmap_read(p->regmap, TFA9872_STATUS_FLAGS0, &status_flags0);
+	ret += regmap_read(p->regmap, TFA9872_STATUS_FLAGS1, &status_flags1);
+	ret += regmap_read(p->regmap, TFA9872_STATUS_FLAGS3, &status_flags3);
+	ret += regmap_read(p->regmap, TFA9872_STATUS_FLAGS4, &status_flags4);
 
-	regmap_read(p->regmap, TFA9872_INTERRUPT_OUT_REG1, &out1);
-	regmap_read(p->regmap, TFA9872_INTERRUPT_OUT_REG2, &out2);
-	regmap_read(p->regmap, TFA9872_INTERRUPT_OUT_REG3, &out3);
+	ret += regmap_read(p->regmap, TFA9872_INTERRUPT_OUT_REG1, &out1);
+	ret += regmap_read(p->regmap, TFA9872_INTERRUPT_OUT_REG2, &out2);
+	ret += regmap_read(p->regmap, TFA9872_INTERRUPT_OUT_REG3, &out3);
+
+	if (ret < 0) {
+		hwlog_err("%s: regmap_read error!!!\n", __func__);
+	}
 
 	regmap_write(p->regmap, TFA9872_INTERRUPT_CLEAR_REG1, 0xFFFF);
 	regmap_write(p->regmap, TFA9872_INTERRUPT_CLEAR_REG2, 0xFFFF);

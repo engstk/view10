@@ -59,6 +59,7 @@
 #include <osl_types.h>
 #include <nv_stru_drv.h>
 #include <acore_nv_stru_drv.h>
+#include <securec.h>
 #include "hisocket.h"
 #include "diag_port_manager.h"
 #include "OmCommonPpm.h"

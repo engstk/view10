@@ -85,7 +85,7 @@
                 huawei,torch_led = <0x0 0x1 0x2 0x3 0x4 0x5 0x6 0x7>;
                 huawei,led-type = <1>; /* 1, dual tempature; 0, dual white */
                 huawei,flash-current = <0x7c 0x7f 0x0>;
-                status = "ok";
+                status = "disabled";
             };
             huawei,mp3336@27{
                 compatible = "huawei,mp3336";
@@ -120,6 +120,9 @@
 		huawei,power_control = <1>;
 		huawei,cvdr = <0 1 25>;
 		huawei,stream_id = <0 0 0>;
+		huawei,qos_update = <0>;
+		huawei,iova_update = <0>;
+               huawei,wr_port_addr_update = <0>;
 		huawei,hjpeg-base-flag = <0x00000200>;
 		huawei,hjpeg-irq = <265>;
 		huawei,hjpeg-irq-flag = <0x00000400>;

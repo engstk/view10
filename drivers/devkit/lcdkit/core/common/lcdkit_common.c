@@ -1,5 +1,6 @@
 #include "lcdkit_dbg.h"
 #include "lcdkit_btb_check.h"
+#include "lcdkit_parse.h"
 
 #ifdef CONFIG_HUAWEI_DSM
 #include <dsm/dsm_pub.h>
@@ -10,6 +11,8 @@
 extern int lcdkit_gpio_cmds_tx(unsigned int gpio_lcdkit_btb, int gpio_optype);
 extern int lcdkit_gpio_pulldown(void * btb_vir_addr);
 extern int lcdkit_gpio_pullup(void * btb_vir_addr);
+extern int lcdkit_dsi_rx(void* pdata, uint32_t* out, int len, struct lcdkit_dsi_panel_cmds* cmds);
+extern void lcdkit_hs_lp_switch(void* pdata, int mode);
 
 extern struct dsm_client* lcd_dclient;
 
@@ -114,3 +117,74 @@ int mipi_lcdkit_btb_check(void)
 	return btb_check_state();
 }
 
+#define MAX_ERROR_TIMES 100000000
+#define CHECK_TIMES 0
+#define CHECK_ERROR_TIMES 1
+#define ERROR_TIMES 2
+#define RECORD_ITEM_NUM 3
+#define REG_READ_COUNT 1
+void lcdkit_mipi_check(void* pdata)
+{
+    uint32_t read_value[MAX_REG_READ_COUNT] = {0};
+    int i = 0;
+    int len = REG_READ_COUNT;
+    static int MIPI_CHECK_ERROR[MAX_REG_READ_COUNT][RECORD_ITEM_NUM]={{0}};    /*[i][0]-check times  [i][1]-check error times  [i][2]-mipi error times*/
+    char* expect_ptr = lcdkit_info.panel_infos.mipi_check_value.buf;
+#if defined (CONFIG_HUAWEI_DSM)
+    struct timeval tv;
+    int diskeeptime = 0;
+    memset(&tv, 0, sizeof(struct timeval));
+#endif
+
+    if (NULL == pdata || NULL == expect_ptr){
+        LCDKIT_ERR("mipi check happened parameter error\n");
+        return;
+    }
+
+    if (LCDKIT_DSI_LP_MODE
+        == lcdkit_info.panel_infos.mipi_check_cmds.link_state){
+        lcdkit_hs_lp_switch(pdata, LCDKIT_DSI_LP_MODE);
+    }
+    lcdkit_dsi_rx(pdata, read_value, len, &lcdkit_info.panel_infos.mipi_check_cmds);
+    if (LCDKIT_DSI_LP_MODE
+        == lcdkit_info.panel_infos.mipi_check_cmds.link_state){
+        lcdkit_hs_lp_switch(pdata, LCDKIT_DSI_HS_MODE);
+    }
+    for (i = 0; i < lcdkit_info.panel_infos.mipi_check_cmds.cmd_cnt; i++)
+    {
+        if (MIPI_CHECK_ERROR[i][CHECK_TIMES] < MAX_ERROR_TIMES){
+            MIPI_CHECK_ERROR[i][CHECK_TIMES]++;
+        }
+        if (read_value[i] != (uint32_t)expect_ptr[i]){
+            if (MIPI_CHECK_ERROR[i][CHECK_ERROR_TIMES] < MAX_ERROR_TIMES){
+                MIPI_CHECK_ERROR[i][CHECK_ERROR_TIMES]++;
+            }
+            if (MIPI_CHECK_ERROR[i][ERROR_TIMES] < MAX_ERROR_TIMES){
+                MIPI_CHECK_ERROR[i][ERROR_TIMES] += (int)read_value[i];
+            }
+
+#if defined (CONFIG_HUAWEI_DSM)
+            do_gettimeofday(&tv);
+            if (tv.tv_sec >= lcdkit_info.panel_infos.display_on_record_time.tv_sec){
+                diskeeptime = tv.tv_sec - lcdkit_info.panel_infos.display_on_record_time.tv_sec;
+            }
+            if (read_value[i] >= lcdkit_info.panel_infos.mipi_error_report_threshold){
+                if (lcd_dclient && !dsm_client_ocuppy(lcd_dclient)) {
+                    dsm_client_record(lcd_dclient, "%s:display_on_keep_time=%ds, reg_val[%d]=0x%x!\n",
+                            lcdkit_info.panel_infos.panel_name,
+                            diskeeptime,
+                            lcdkit_info.panel_infos.mipi_check_cmds.cmds[i].payload[0],
+                            read_value[i]);
+                    dsm_client_notify(lcd_dclient, DSM_LCD_MIPI_TRANSMIT_ERROR_NO);
+                }
+            }
+#endif
+            LCDKIT_ERR("mipi check error[%d]: error times:%d! total error times:%d, check-error-times/check-times:%d/%d\n",
+                i, read_value[i], MIPI_CHECK_ERROR[i][ERROR_TIMES], MIPI_CHECK_ERROR[i][CHECK_ERROR_TIMES],MIPI_CHECK_ERROR[i][CHECK_TIMES]);
+
+            continue;
+        }
+        LCDKIT_INFO("mipi check nomal[%d]: total error times:%d, check-error-times/check-times:%d/%d\n",
+                i,MIPI_CHECK_ERROR[i][ERROR_TIMES], MIPI_CHECK_ERROR[i][CHECK_ERROR_TIMES],MIPI_CHECK_ERROR[i][CHECK_TIMES]);
+    }
+}

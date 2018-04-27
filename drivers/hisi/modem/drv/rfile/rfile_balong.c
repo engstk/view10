@@ -57,7 +57,7 @@
 //#include "bsp_nandc.h"
 
 #include "rfile_balong.h"
-
+#include <securec.h>
 
 /*lint --e{830, 529, 533, 64, 732, 737,607, 501}*/
 
@@ -147,8 +147,8 @@ s8 *rfile_getfilepath(s32 fp)
 do{ \
     if(g_stRfileMain.lpmstate) \
     { \
-        char rfile_pm[256]={0};\
-        snprintf(rfile_pm,256,"op %d,path %s.\n",op,path);\
+        char rfile_pm[257]={0};\
+        snprintf_s(rfile_pm,257,256,"op %d,path %s.\n",op,path);\
         bsp_pm_log(PM_OM_ARFILE, strlen(rfile_pm),rfile_pm);\
         g_stRfileMain.lpmstate = 0; \
         printk("[C SR] rfile op %d, path %s.\n", op, path); \
@@ -159,8 +159,8 @@ do{ \
 do{ \
     if(g_stRfileMain.lpmstate) \
     { \
-        char rfile_pm[256]={0};\
-        snprintf(rfile_pm,256,"op %d,path %s.\n",op,rfile_getdirpath((s32)fd));\
+        char rfile_pm[257]={0};\
+        snprintf_s(rfile_pm,257,256,"op %d,path %s.\n",op,rfile_getdirpath((s32)fd));\
         bsp_pm_log(PM_OM_ARFILE, strlen(rfile_pm),rfile_pm);\
         g_stRfileMain.lpmstate = 0; \
         printk("[C SR] rfile op %d, path %s.\n", op, rfile_getdirpath((s32)fd)); \
@@ -171,8 +171,8 @@ do{ \
 do{ \
     if(g_stRfileMain.lpmstate) \
     { \
-        char rfile_pm[256]={0};\
-        snprintf(rfile_pm,256,"op %d,path %s.\n",op,rfile_getfilepath((s32)fd));\
+        char rfile_pm[257]={0};\
+        snprintf_s(rfile_pm,257,256,"op %d,path %s.\n",op,rfile_getfilepath((s32)fd));\
         bsp_pm_log(PM_OM_ARFILE, strlen(rfile_pm),rfile_pm);\
         g_stRfileMain.lpmstate = 0; \
         printk("[C SR] rfile op %d, path %s.\n", op, rfile_getfilepath((s32)fd)); \
@@ -292,7 +292,7 @@ void rfile_FpListAdd(s32 fp, s8 *name)
 
         return;
     }
-    memset((void*)fp_elemt,0,sizeof(struct fp_list));
+    memset_s((void*)fp_elemt,sizeof(*fp_elemt),0,sizeof(struct fp_list));
     fp_elemt->fp=fp;
 
     len = (u32)strlen(name);
@@ -301,7 +301,7 @@ void rfile_FpListAdd(s32 fp, s8 *name)
         len = RFILE_NAME_MAX;
     }
 
-    memcpy(fp_elemt->name, name, (s32)len);
+    memcpy_s(fp_elemt->name,RFILE_NAME_MAX ,name, (s32)len);
     fp_elemt->name[len] = '\0';
 
     list_add(&(fp_elemt->stlist), &(g_stRfileMain.fplist));
@@ -344,7 +344,7 @@ void rfile_DpListAdd(s32 dp, s8 *name)
 
         return;
     }
-    memset((void*)dp_elemt,0,sizeof(struct dir_list));
+    memset_s((void*)dp_elemt,sizeof(*dp_elemt),0,sizeof(struct dir_list));
     dp_elemt->dp=dp;
 
     len = (u32)strlen(name);
@@ -353,7 +353,7 @@ void rfile_DpListAdd(s32 dp, s8 *name)
         len = RFILE_NAME_MAX;
     }
 
-    memcpy(dp_elemt->name, name, (s32)len);
+    memcpy_s(dp_elemt->name,RFILE_NAME_MAX,name, (s32)len);
     dp_elemt->name[len] = '\0';
 
     list_add(&(dp_elemt->stlist), &(g_stRfileMain.dplist));
@@ -369,21 +369,7 @@ s32 bsp_fs_ok(void)
     }
     return 0;
 }
-/*************************************************************************
- 函 数 名   : bsp_open
- 功能描述   : bsp_open
- 输入参数   : const s8 *path
-              s32 flags
-              s32 mode
 
- 返 回 值   : 失败返回-1，成功返回文件句柄
-
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_open(const s8 *path, s32 flags, s32 mode)
 {
     s32 ret;
@@ -401,7 +387,7 @@ s32 bsp_open(const s8 *path, s32 flags, s32 mode)
         return -1;
     }
 
-    memcpy(pathtmp, (char *)path, strlen(path));
+    memcpy_s(pathtmp,256, (char *)path, strlen(path));
 
     /* 路径中包含'/'并且不在根目录，则检查当前目录是否存在，不存在则创建目录 */
     p = strrchr(pathtmp, '/');
@@ -434,19 +420,7 @@ s32 bsp_open(const s8 *path, s32 flags, s32 mode)
     return ret;
 }
 
-/*************************************************************************
- 函 数 名   : bsp_close
- 功能描述   : bsp_close
- 输入参数   : fd
- 输出参数   :
- 返 回 值   : 成功返回0，失败返回-1
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_close(u32 fp)
 {/*lint --e{449}*/
     s32 ret;
@@ -473,21 +447,7 @@ s32 bsp_close(u32 fp)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_write
- 功能描述   : bsp_write
- 输入参数   : u32 fd
-              const s8 *ptr
-              u32 size
- 输出参数   :
- 返 回 值   : 返回写入的数据长度
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_write(u32 fd, const s8 *ptr, u32 size)
 {
     s32 ret;
@@ -528,21 +488,7 @@ s32 bsp_write(u32 fd, const s8 *ptr, u32 size)
 
 }
 
-/*************************************************************************
- 函 数 名   : bsp_write_sync
- 功能描述   : bsp_write_sync
- 输入参数   : u32 fd
-              const s8 *ptr
-              u32 size
- 输出参数   :
- 返 回 值   : 返回写入的数据长度
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_write_sync(u32 fd, const s8 *ptr, u32 size)
 {
     s32 ret;
@@ -583,20 +529,7 @@ s32 bsp_write_sync(u32 fd, const s8 *ptr, u32 size)
 
 }
 
-/*************************************************************************
- 函 数 名   : bsp_read
- 功能描述   : bsp_read
- 输入参数   : u32 fd
-              s8 *ptr
-              u32 size
- 返 回 值   : 返回读取的数据长度
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_read(u32 fd, s8 *ptr, u32 size)
 {
     s32 ret;
@@ -636,19 +569,7 @@ s32 bsp_read(u32 fd, s8 *ptr, u32 size)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_lseek
- 功能描述   : bsp_lseek
- 输入参数   : u32 fd, long offset, s32 whence
- 输出参数   :
- 返 回 值   : 成功返回0，失败返回-1
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_lseek(u32 fd, long offset, s32 whence)
 {
     s32 ret;
@@ -665,19 +586,7 @@ s32 bsp_lseek(u32 fd, long offset, s32 whence)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_tell
- 功能描述   : bsp_tell
- 输入参数   : u32 fd
- 输出参数   :
- 返 回 值   : 成功返回当前读写位置，失败返回-1
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 long bsp_tell(u32 fd)
 {
     s32 ret;
@@ -698,19 +607,7 @@ long bsp_tell(u32 fd)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_remove
- 功能描述   : bsp_remove
- 输入参数   : const s8 *pathname
- 输出参数   :
- 返 回 值   : 成功返回0，失败返回-1
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_remove(const s8 *pathname)
 {
     s32 ret;
@@ -727,19 +624,7 @@ s32 bsp_remove(const s8 *pathname)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_mkdir
- 功能描述   : bsp_mkdir
- 输入参数   : s8 *dirName
-              s32 mode
- 返 回 值   :
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_mkdir(s8 *dirName, s32 mode)
 {
     s32 ret;
@@ -751,7 +636,7 @@ s32 bsp_mkdir(s8 *dirName, s32 mode)
         return -1;
     }
 
-    memcpy(pathtmp, (char *)dirName, strlen(dirName));
+    memcpy_s(pathtmp,256, (char *)dirName, strlen(dirName));
 
     ret = AccessCreate((char *)pathtmp, mode);
     if(ret)
@@ -775,18 +660,7 @@ s32 bsp_mkdir(s8 *dirName, s32 mode)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_rmdir
- 功能描述   : bsp_rmdir
- 输入参数   : s8 *path
- 返 回 值   : 返回0
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_rmdir(s8 *path)
 {
     s32 ret;
@@ -803,19 +677,7 @@ s32 bsp_rmdir(s8 *path)
 
 }
 
-/*************************************************************************
- 函 数 名   : bsp_opendir
- 功能描述   : bsp_opendir
- 输入参数   :
- 输出参数   :
- 返 回 值   : 目录句柄
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_opendir(s8 *dirName)
 {
     s32 handle = 0;
@@ -833,19 +695,7 @@ s32 bsp_opendir(s8 *dirName)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_readdir
- 功能描述   : bsp_readdir
- 输入参数   :
- 输出参数   :
- 返 回 值   : s32
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_readdir(u32 fd, void  *dirent, u32 count)
 {
     s32 ret;
@@ -862,19 +712,7 @@ s32 bsp_readdir(u32 fd, void  *dirent, u32 count)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_closedir
- 功能描述   : bsp_closedir
- 输入参数   :
- 输出参数   :
- 返 回 值   :
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_closedir(s32 pDir)
 {
     s32 ret;
@@ -928,19 +766,7 @@ void rfile_TransStat(struct rfile_stat_stru *pstRfileStat, struct kstat *pRfileK
     pstRfileStat->blocks            = (u64)pRfileKstat->blocks       ;
 }
 
-/*************************************************************************
- 函 数 名   : bsp_stat
- 功能描述   : bsp_stat
- 输入参数   : s8 *name: 要读取的文件名称
- 输出参数   : void *pStat: 文件的状态信息，结构为struct rfile_stat_stru
- 返 回 值   : 成功返回0,失败返回-1
 
- 修改历史   :
- 日    期   : 2013年2月4日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_stat(s8 *name, void *pStat)
 {
     s32 ret;
@@ -962,20 +788,7 @@ s32 bsp_stat(s8 *name, void *pStat)
 }
 
 
-/*************************************************************************
- 函 数 名   : bsp_rename
- 功能描述   : bsp_rename
- 输入参数   : const char * oldname
-              const char * newname
- 输出参数   : no
- 返 回 值   : 成功返回0,失败返回-1
 
- 修改历史   :
- 日    期   : 2013年11月21日
- 作    者   : c64416
- 修改内容   :
-
-*************************************************************************/
 s32 bsp_rename( const char * oldname, const char * newname )
 {
     s32 ret;
@@ -997,19 +810,7 @@ s32 bsp_rename( const char * oldname, const char * newname )
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_IccSend
- 功能描述  : 向ICC通道发送数据，如果通道满，则重复尝试多次
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : void
 
- 修改历史      :
-  1.日    期   : 2013年10月29日
-    作    者   : c64416
-    修改内容   : 新生成函数(适配ICC通道回调中不能malloc、信号量阻塞修改)
-
-*****************************************************************************/
 void rfile_IccSend(void *pdata, u32 len, u32 ulId)
 {
     s32 ret, i;
@@ -1050,19 +851,7 @@ void rfile_IccSend(void *pdata, u32 len, u32 ulId)
 
 /*lint -save -e64*/
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreOpenReq
- 功能描述  : fopen的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreOpenReq(struct bsp_rfile_open_req *pstRfileReq, u32 ulId)
 {
     u32 ulNameLen;
@@ -1083,25 +872,25 @@ s32 rfile_AcoreOpenReq(struct bsp_rfile_open_req *pstRfileReq, u32 ulId)
 
     ulNameLen = (u32)(pstRfileReq->nameLen) ;
 
+    if(ulNameLen > 255)
+    {
+        goto rfile_AcoreFopenCnf;
+    }
+
     pcName = Rfile_Malloc(ulNameLen);
     if(!pcName)
     {
         goto rfile_AcoreFopenCnf;
     }
-    memset((void*)pcName,0,ulNameLen);
+    memset_s((void*)pcName,ulNameLen,0,ulNameLen);
 
     pcName[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(pcName, (char*)pstRfileReq->aucData, (unsigned long)ulNameLen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(pcName,ulNameLen, (char*)pstRfileReq->aucData, (unsigned long)ulNameLen); /* [false alarm]: 屏蔽Fortify错误 */
 
 #ifdef RFILE_AUTO_MKDIR
-    if(ulNameLen > 255)
-    {
-        Rfile_Free(pcName);
-        goto rfile_AcoreFopenCnf;
-    }
 
-    memcpy(pathtmp, pcName, ulNameLen);/*lint !e713 */
+    memcpy_s(pathtmp,256, pcName, ulNameLen);/*lint !e713 */
 
     /* 路径中包含'/'并且不在根目录，则检查当前目录是否存在，不存在则创建目录 */
     p = strrchr(pathtmp, '/');
@@ -1136,19 +925,7 @@ rfile_AcoreFopenCnf:
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreCloseReq
- 功能描述  : fclose的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreCloseReq(struct bsp_rfile_close_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1171,19 +948,7 @@ s32 rfile_AcoreCloseReq(struct bsp_rfile_close_req *pstRfileReq, u32 ulId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreWriteReq
- 功能描述  : fwrite的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreWriteReq(struct bsp_rfile_write_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1203,19 +968,7 @@ s32 rfile_AcoreWriteReq(struct bsp_rfile_write_req *pstRfileReq, u32 ulId)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreWriteSyncReq
- 功能描述  : fwrite的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreWriteSyncReq(struct bsp_rfile_write_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1236,19 +989,7 @@ s32 rfile_AcoreWriteSyncReq(struct bsp_rfile_write_req *pstRfileReq, u32 ulId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreReadReq
- 功能描述  : fopen的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreReadReq(struct bsp_rfile_read_req *pstRfileReq, u32 ulId)
 {
     u32 ulLen;
@@ -1270,7 +1011,7 @@ s32 rfile_AcoreReadReq(struct bsp_rfile_read_req *pstRfileReq, u32 ulId)
         bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_RFILE, "[rfile]: <%s> Rfile_Malloc failed.\n", __FUNCTION__);
         return BSP_ERROR;
     }
-    memset((void*)pstRfileCnf,0,ulLen);
+    memset_s((void*)pstRfileCnf,ulLen,0,ulLen);
 
     pstRfileCnf->opType = pstRfileReq->opType;
     pstRfileCnf->pstlist = pstRfileReq->pstlist;
@@ -1288,19 +1029,7 @@ s32 rfile_AcoreReadReq(struct bsp_rfile_read_req *pstRfileReq, u32 ulId)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreSeekReq
- 功能描述  : fseek的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreSeekReq(struct bsp_rfile_seek_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1320,19 +1049,7 @@ s32 rfile_AcoreSeekReq(struct bsp_rfile_seek_req *pstRfileReq, u32 ulId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreTellReq
- 功能描述  : ftell的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreTellReq(struct bsp_rfile_tell_req *pstRfileReq, u32 ulId)
 {
     s32 ret;
@@ -1358,19 +1075,7 @@ s32 rfile_AcoreTellReq(struct bsp_rfile_tell_req *pstRfileReq, u32 ulId)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreRemoveReq
- 功能描述  : remove的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreRemoveReq(struct bsp_rfile_remove_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1384,16 +1089,21 @@ s32 rfile_AcoreRemoveReq(struct bsp_rfile_remove_req *pstRfileReq, u32 ulId)
 
     ulPathLen =  (u32)(pstRfileReq->pathLen) ;
 
+    if(ulPathLen > 255)
+    {
+        goto rfile_AcoreRemoveCnf;
+    }
+
     pcPath = Rfile_Malloc(ulPathLen);
     if(BSP_NULL == pcPath)
     {
         goto rfile_AcoreRemoveCnf;
     }
-    memset((void*)pcPath,0,ulPathLen);
+    memset_s((void*)pcPath,ulPathLen,0,ulPathLen);
 
     pcPath[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(pcPath, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(pcPath,ulPathLen, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
 
     RFILE_LPM_PRINT_PATH(EN_RFILE_OP_REMOVE, pcPath);
 
@@ -1409,19 +1119,7 @@ rfile_AcoreRemoveCnf:
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreMkdirReq
- 功能描述  : mkdir的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreMkdirReq(struct bsp_rfile_mkdir_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1440,28 +1138,27 @@ s32 rfile_AcoreMkdirReq(struct bsp_rfile_mkdir_req *pstRfileReq, u32 ulId)
 
     ulPathLen = (u32)(pstRfileReq->pathLen) ;
 
+    if(ulPathLen > 255)
+    {
+        goto rfile_AcoreMkdirCnf;
+    }
+
     pcPath = Rfile_Malloc(ulPathLen);
     if(BSP_NULL == pcPath)
     {
         goto rfile_AcoreMkdirCnf;
     }
-    memset((void*)pcPath,0,ulPathLen);
+    memset_s((void*)pcPath,ulPathLen,0,ulPathLen);
 
     pcPath[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(pcPath, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(pcPath, ulPathLen,(char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
 
     RFILE_LPM_PRINT_PATH(EN_RFILE_OP_MKDIR, pcPath);
 
 #ifdef RFILE_AUTO_MKDIR
 
-    if(ulPathLen > 255)
-    {
-        Rfile_Free(pcPath);
-        goto rfile_AcoreMkdirCnf;
-    }
-
-    memcpy(pathtmp, pcPath, ulPathLen);/*lint !e713 */
+    memcpy_s(pathtmp,256, pcPath, ulPathLen);/*lint !e713 */
 
     stRfileCnf.ret = AccessCreate((char *)pathtmp, pstRfileReq->mode);
     if(stRfileCnf.ret)
@@ -1481,19 +1178,7 @@ rfile_AcoreMkdirCnf:
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreRmdirReq
- 功能描述  : rmdir的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreRmdirReq(struct bsp_rfile_rmdir_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1508,16 +1193,21 @@ s32 rfile_AcoreRmdirReq(struct bsp_rfile_rmdir_req *pstRfileReq, u32 ulId)
 
     ulPathLen =  (u32)(pstRfileReq->pathLen) ;
 
+    if(ulPathLen > 255)
+    {
+        goto rfile_AcoreRmdirCnf;
+    }
+
     pcPath = Rfile_Malloc(ulPathLen);
     if(BSP_NULL == pcPath)
     {
         goto rfile_AcoreRmdirCnf;
     }
-    memset((void*)pcPath,0,ulPathLen);
+    memset_s((void*)pcPath,ulPathLen,0,ulPathLen);
 
     pcPath[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(pcPath, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(pcPath,ulPathLen ,(char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
 
     RFILE_LPM_PRINT_PATH(EN_RFILE_OP_RMDIR, pcPath);
 
@@ -1533,19 +1223,7 @@ rfile_AcoreRmdirCnf:
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreOpendirReq
- 功能描述  : opendir的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreOpendirReq(struct bsp_rfile_opendir_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_opendir_cnf stRfileCnf = {0};
@@ -1560,16 +1238,21 @@ s32 rfile_AcoreOpendirReq(struct bsp_rfile_opendir_req *pstRfileReq, u32 ulId)
 
     ulPathLen =  (u32)(pstRfileReq->nameLen) ;
 
+    if(ulPathLen > 255)
+    {
+        goto rfile_AcoreOpendirCnf;
+    }
+
     pcPath = Rfile_Malloc(ulPathLen);
     if(BSP_NULL == pcPath)
     {
         goto rfile_AcoreOpendirCnf;
     }
-    memset((void*)pcPath,0,ulPathLen);
+    memset_s((void*)pcPath,ulPathLen,0,ulPathLen);
 
     pcPath[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(pcPath, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(pcPath, ulPathLen,(char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
 
     RFILE_LPM_PRINT_PATH(EN_RFILE_OP_OPENDIR, pcPath);
 
@@ -1590,25 +1273,18 @@ rfile_AcoreOpendirCnf:
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreReaddirReq
- 功能描述  : readdir的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreReaddirReq(struct bsp_rfile_readdir_req *pstRfileReq, u32 ulId)
 {
     u32 ulLen;
     struct bsp_rfile_readdir_cnf *pstRfileCnf = NULL;
 
     rfile_MntnDotRecord(__LINE__);
+
+    if(pstRfileReq->count >RFILE_RD_LEN_MAX)
+    {
+        return BSP_ERROR;
+    }
 
     ulLen = sizeof(struct bsp_rfile_readdir_cnf) + pstRfileReq->count;
 
@@ -1618,7 +1294,7 @@ s32 rfile_AcoreReaddirReq(struct bsp_rfile_readdir_req *pstRfileReq, u32 ulId)
         bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_RFILE, "[rfile]: <%s> Rfile_Malloc failed.\n", __FUNCTION__);
         return BSP_ERROR;
     }
-    memset((void*)pstRfileCnf,0,ulLen);
+    memset_s((void*)pstRfileCnf,ulLen,0,ulLen);
 
     pstRfileCnf->opType = pstRfileReq->opType;
     pstRfileCnf->pstlist = pstRfileReq->pstlist;
@@ -1635,19 +1311,7 @@ s32 rfile_AcoreReaddirReq(struct bsp_rfile_readdir_req *pstRfileReq, u32 ulId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreClosedirReq
- 功能描述  : closedir的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreClosedirReq(struct bsp_rfile_closedir_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1669,19 +1333,7 @@ s32 rfile_AcoreClosedirReq(struct bsp_rfile_closedir_req *pstRfileReq, u32 ulId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreStatReq
- 功能描述  : stat的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreStatReq(struct bsp_rfile_stat_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_stat_cnf stRfileCnf = {0};
@@ -1696,16 +1348,22 @@ s32 rfile_AcoreStatReq(struct bsp_rfile_stat_req *pstRfileReq, u32 ulId)
 
     ulPathLen =  pstRfileReq->ulSize ;
 
+    if(ulPathLen > 255)
+    {
+        goto rfile_AcoreStatCnf;
+    }
+
+
     pcPath = Rfile_Malloc(ulPathLen);
     if(!pcPath)
     {
         goto rfile_AcoreStatCnf;
     }
-    memset((void*)pcPath,0,ulPathLen);
+    memset_s((void*)pcPath,ulPathLen,0,ulPathLen);
 
     pcPath[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(pcPath, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(pcPath,ulPathLen ,(char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
 
     RFILE_LPM_PRINT_PATH(EN_RFILE_OP_STAT, pcPath);
 
@@ -1721,19 +1379,7 @@ rfile_AcoreStatCnf:
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreRenameReq
- 功能描述  : rename的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年11月21日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreRenameReq(struct bsp_rfile_rename_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_rename_cnf stRfileCnf = {0};
@@ -1760,13 +1406,12 @@ s32 rfile_AcoreRenameReq(struct bsp_rfile_rename_req *pstRfileReq, u32 ulId)
         goto rfile_AcoreRenameCnf;
     }
 
-
     oldname = Rfile_Malloc(uloldnamelen);
     if(!oldname)
     {
         goto rfile_AcoreRenameCnf;
     }
-    memset((void*)oldname,0,uloldnamelen);
+    memset_s((void*)oldname,uloldnamelen,0,uloldnamelen);
 
     newname = Rfile_Malloc(ulnewnamelen);
     if(!newname)
@@ -1774,14 +1419,14 @@ s32 rfile_AcoreRenameReq(struct bsp_rfile_rename_req *pstRfileReq, u32 ulId)
         Rfile_Free(oldname);
         goto rfile_AcoreRenameCnf;
     }
-    memset((void*)newname,0,ulnewnamelen);
+    memset_s((void*)newname,ulnewnamelen,0,ulnewnamelen);
 
     oldname[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(oldname, (char*)pstRfileReq->aucData, (unsigned long)uloldnamelen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(oldname,uloldnamelen ,(char*)pstRfileReq->aucData, (unsigned long)uloldnamelen); /* [false alarm]: 屏蔽Fortify错误 */   
     newname[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(newname, (char*)(pstRfileReq->aucData + uloldnamelen ), (unsigned long)ulnewnamelen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(newname,ulnewnamelen ,(char*)(pstRfileReq->aucData + uloldnamelen ), (unsigned long)ulnewnamelen); /* [false alarm]: 屏蔽Fortify错误 */  
 
     RFILE_LPM_PRINT_PATH(EN_RFILE_OP_RENAME, newname);
 
@@ -1798,19 +1443,7 @@ rfile_AcoreRenameCnf:
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreAccessReq
- 功能描述  : stat的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreAccessReq(struct bsp_rfile_access_req *pstRfileReq, u32 ulId)
 {
     struct bsp_rfile_common_cnf stRfileCnf = {0};
@@ -1825,16 +1458,21 @@ s32 rfile_AcoreAccessReq(struct bsp_rfile_access_req *pstRfileReq, u32 ulId)
 
     ulPathLen =  (u32)pstRfileReq->pathlen ;
 
+    if(ulPathLen > 255)
+    {
+        goto rfile_AcoreAccessCnf;
+    }
+
     pcPath = Rfile_Malloc(ulPathLen);
     if(!pcPath)
     {
         goto rfile_AcoreAccessCnf;
     }
-    memset((void*)pcPath,0,ulPathLen);
+    memset_s((void*)pcPath,ulPathLen,0,ulPathLen);
 
     pcPath[0] = '\0' ;
     /* coverity[secure_coding] */
-    strncat(pcPath, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
+    strncat_s(pcPath,ulPathLen, (char*)pstRfileReq->aucData, (unsigned long)ulPathLen); /* [false alarm]: 屏蔽Fortify错误 */
 
     RFILE_LPM_PRINT_PATH(EN_RFILE_OP_ACCESS, pcPath);
 
@@ -1850,141 +1488,22 @@ rfile_AcoreAccessCnf:
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreMassrdReq
- 功能描述  : massread的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreMassrdReq(struct bsp_rfile_massread_req *pstRfileReq, u32 ulId)
 {
-    u32 ulLen;
-    struct bsp_rfile_read_cnf *pstRfileCnf;
-
-    rfile_MntnDotRecord(__LINE__);
-
-    ulLen = sizeof(struct bsp_rfile_read_cnf) + pstRfileReq->size;
-
-    pstRfileCnf = Rfile_Malloc(ulLen);
-    if(!pstRfileCnf)
-    {
-        bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_RFILE, "[rfile]: <%s> Rfile_Malloc failed.\n", __FUNCTION__);
-        return BSP_ERROR;
-    }
-    memset((void*)pstRfileCnf,0,ulLen);
-
-    pstRfileCnf->opType = pstRfileReq->opType;
-    pstRfileCnf->pstlist = pstRfileReq->pstlist;
-
-    RFILE_LPM_PRINT_PATH(EN_RFILE_OP_MASSRD, pstRfileReq->aucData);
-
-
-
-
-
-
-
-
-    pstRfileCnf->Size = 0;
-
-    pstRfileCnf->errorno = -1;
-
-    /* 由C核请求的地方保证读取的数据长度不超过ICC最大长度限制 */
-    /*[false alarm]:误报*/
-    if((u32)pstRfileCnf->Size > RFILE_LEN_MAX)
-    {
-        /*[false alarm]:误报*/
-        bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_RFILE,
-            "![rfile]: <%s> pstRfileCnf->Size %d > RFILE_LEN_MAX.\n", __FUNCTION__, pstRfileCnf->Size);
-    }
-
-    rfile_IccSend(pstRfileCnf, ulLen, ulId);
-
-    Rfile_Free(pstRfileCnf);
-
-    return BSP_OK;
+    return BSP_ERROR;
 }
 
 
-/*****************************************************************************
- 函 数 名  : rfile_AcoreMasswrReq
- 功能描述  : massread的请求处理
- 输入参数  : struct bsp_rfile_que_stru *pstRfileQue
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月19日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_AcoreMasswrReq(struct bsp_rfile_masswrite_req *pstRfileReq, u32 ulId)
 {
-    s8 *partition;
-    struct bsp_rfile_common_cnf stRfileCnf = {0};
-
-    rfile_MntnDotRecord(__LINE__);
-
-    partition = Rfile_Malloc(pstRfileReq->partitionlen);
-    if(!partition)
-    {
-        bsp_trace(BSP_LOG_LEVEL_ERROR, BSP_MODU_RFILE, "[rfile]: <%s> Rfile_Malloc failed.\n", __FUNCTION__);
-        return BSP_ERROR;
-    }
-    memset((void*)partition,0,pstRfileReq->partitionlen);
-    memcpy(partition, pstRfileReq->aucData, (s32)pstRfileReq->partitionlen);
-
-    stRfileCnf.opType = pstRfileReq->opType;
-    stRfileCnf.pstlist = pstRfileReq->pstlist;
-
-    RFILE_LPM_PRINT_PATH(EN_RFILE_OP_MASSWR, pstRfileReq->aucData);
-
-
-
-
-
-
-
-
-
-    stRfileCnf.ret = 0;
-
-    stRfileCnf.errorno = -1;
-
-    rfile_IccSend(&stRfileCnf, sizeof(stRfileCnf), ulId);
-
-    Rfile_Free(partition);
-
-    return BSP_OK;
+     return BSP_ERROR;
 }
 /*lint -restore*/
 
 
-/*****************************************************************************
- 函 数 名  : bsp_RfileCallback
- 功能描述  : icc回调处理函数
- 输入参数  : u32 channel_id
-             u32 len
-             void *context
- 输出参数  : 无
- 返 回 值  : s32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年2月4日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 bsp_RfileCallback(u32 channel_id, u32 len, void *context)
 {/*lint --e{454}*/
     rfile_MntnDotRecord(__LINE__);
@@ -2054,19 +1573,7 @@ void rfile_ResetProc(void)
 }
 
 /*lint -save -e716*/
-/*****************************************************************************
- 函 数 名  : rfile_TaskProc
- 功能描述  : 自处理任务
- 输入参数  : void* obj
- 输出参数  : 无
- 返 回 值  : s32
 
- 修改历史      :
-  1.日    期   : 2013年2月5日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 rfile_TaskProc(void* obj)
 {
     s32 ret;
@@ -2172,20 +1679,7 @@ s32 bsp_rfile_reset_cb(DRV_RESET_CB_MOMENT_E eparam, s32 userdata)    /*lint !e8
     return 0;
 }
 
-/*****************************************************************************
- 函 数 名  : bsp_rfile_init
- 功能描述  : rfile模块初始化
- 输出参数  : 无
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年2月4日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 bsp_rfile_init(void)
 {
     s32 ret;
@@ -2213,7 +1707,7 @@ s32 bsp_rfile_init(void)
     INIT_LIST_HEAD(&g_stRfileMain.fplist);
     INIT_LIST_HEAD(&g_stRfileMain.dplist);
 
-    memset((void*)&g_stRfileMntnInfo, 0, sizeof(g_stRfileMntnInfo));
+    memset_s((void*)&g_stRfileMntnInfo,sizeof(g_stRfileMntnInfo),0, sizeof(g_stRfileMntnInfo));
 
     g_stRfileMain.eInitFlag = EN_RFILE_INIT_FINISH;
 
@@ -2239,20 +1733,7 @@ s32 bsp_rfile_init(void)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : bsp_rfile_release
- 功能描述  : rfile模块去初始化
- 输出参数  : 无
- 返 回 值  : void
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年2月4日
-    作    者   : c64416
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 s32 bsp_rfile_release(void)    /*lint !e830*/
 {
     s32 ret;

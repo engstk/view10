@@ -37,9 +37,9 @@ ifneq ($(CFI),)
 dwc_otg-objs	+= dwc_otg_cfi.o
 endif
 
-ifeq ($(CONFIG_HI6250_USB),y)
+ifeq ($(CONFIG_DEC_USB),y)
 ccflags-y	+= -DFORCE_ID_STATE
-dwc_otg-objs    += dwc_otg_hi6250.o
+dwc_otg-objs    += dwc_otg_dec.o
 endif
 
 # Must last compile this module.

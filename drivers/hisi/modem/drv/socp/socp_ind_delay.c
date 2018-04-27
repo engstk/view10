@@ -46,6 +46,8 @@
  *
  */
 #include "socp_ind_delay.h"
+#include <securec.h>
+
 #include "socp_balong.h"
 
 
@@ -65,6 +67,8 @@ socp_early_cfg_stru         g_stSocpEarlyCfg    = {NULL,0,0,0,0,0};
 socp_mem_reserve_stru       g_stSocpMemReserve  = {NULL,0,0,0,0};
 u32  g_stDeflateSetMode ;
 
+extern u32 socp_version;
+
 void *socp_logbuffer_memremap(unsigned long phys_addr, size_t size);
 s32 deflate_set_compress_mode(SOCP_IND_MODE_ENUM eMode);
 
@@ -80,6 +84,7 @@ s32 deflate_set_compress_mode(SOCP_IND_MODE_ENUM eMode);
 *
 * 返 回 值  : 无
 *****************************************************************************/
+/* cov_verified_start */
 static int __init socp_logbuffer_sizeparse(char *pucChar)
 {
     u32      ulBufferSize;
@@ -180,7 +185,7 @@ static int __init socp_logbuffer_addrparse(char *pucChar)
     return 0;
 }
 early_param("mdmlogbase", socp_logbuffer_addrparse);
-
+/* cov_verified_stop */
 
 /*****************************************************************************
 * 函 数 名  : socp_logbuffer_logcfg
@@ -340,20 +345,7 @@ static int socp_reserve_area(struct reserved_mem *rmem)
 /*lint -save -e611*/
 RESERVEDMEM_OF_DECLARE(hisilicon, "hisi_mdmlog", (reservedmem_of_init_fn)socp_reserve_area);
 /*lint -restore +e611*/
-/*****************************************************************************
- 函 数 名  : socp_logbuffer_memremap
- 功能描述  : 用于LOG延迟写入时把数据从SOCP通道的缓冲中发送到VCOM端口把实地址转换成虚地址
-             底软实现，仅做移植到COMM
- 输入参数  : phys_addr:需要REMAP的物理地址
-             size:     需要REMAP的数据大小
- 输出参数  : 无
- 返 回 值  : REMAP后的虚拟地址
 
- 修改历史      :
-  1.日    期   : 2014年8月11日
-    作    者   : h59254
-    修改内容   : V8R1 LOG延迟写入新增
-*****************************************************************************/
 void *socp_logbuffer_memremap(unsigned long phys_addr, size_t size)
 {
     unsigned long i;
@@ -544,8 +536,7 @@ s32 socp_logbuffer_dmalloc(struct device_node* dev)
         socp_printf("socp_ind_delay_init:of_property_read_u32_array get size 0x%x!\n", aulDstChan[SOCP_DST_CHAN_CFG_SIZE]);
         size = aulDstChan[SOCP_DST_CHAN_CFG_SIZE];
     }
-    /* coverity[secure_coding] */
-    memset(&dev1,0,sizeof(dev1));
+    memset_s(&dev1,sizeof(dev1),0,sizeof(dev1));
     pucBuf =(u8 *) dma_alloc_coherent(&dev1, (size_t)size, &ulAddress, GFP_KERNEL);
 
     if(BSP_NULL == pucBuf)
@@ -648,15 +639,7 @@ s32 bsp_socp_logbuffer_init(struct device_node* dev)
 *****************************************************************************/
 void bsp_socp_timeout_init(void)
 {
-    /*如果配置延时上报，需要配置超时寄存器*/
-    if(SOCP_DST_CHAN_DELAY == g_stEncDstBufLogConfig.logOnFlag)
-    {
-        bsp_socp_set_timeout(SOCP_TIMEOUT_TRF, g_stEncDstBufLogConfig.overTime*2289/1000);
-    }
-    else
-    {
-        bsp_socp_set_timeout(SOCP_TIMEOUT_TRF, SOCP_MIN_TIMEOUT*2289/1000);
-    }
+    bsp_socp_set_timeout(SOCP_TIMEOUT_TRF,  SOCP_MIN_TIMEOUT*2289/1000);       
 
     return;
 }
@@ -671,7 +654,14 @@ void bsp_socp_set_mode_direct(void)
         return;
     }
 
-    (void)bsp_socp_set_timeout(SOCP_TIMEOUT_TRF, 0x17);
+    if(socp_version < SOCP_206_VERSION)
+    {
+        (void)bsp_socp_set_timeout(SOCP_TIMEOUT_TRF, 0x17);        
+    }
+    else
+    {
+        (void)bsp_socp_set_timeout(SOCP_TIMEOUT_TRF_LONG, SOCP_TIMEOUT_TRF_LONG_MIN);
+    }
     g_stEncDstBufLogConfig.ulCurTimeout = 10;
     bsp_socp_set_enc_dst_threshold((bool)FALSE,SOCP_CODER_DST_OM_IND);
     ret = bsp_socp_encdst_set_cycle(SOCP_CODER_DST_OM_IND, SOCP_IND_MODE_DIRECT);
@@ -700,8 +690,15 @@ void bsp_socp_set_mode_delay(void)
     /* if logbuffer is not configed, can't enable delay mode*/
     if(g_stEncDstBufLogConfig.logOnFlag == SOCP_DST_CHAN_DELAY)
     {
-        time = (g_stEncDstBufLogConfig.overTime * 2289)/1000;
-        (void)bsp_socp_set_timeout(SOCP_TIMEOUT_TRF, time);
+        if(socp_version < SOCP_206_VERSION)
+        {
+            time = (g_stEncDstBufLogConfig.overTime * 2289)/1000;
+            (void)bsp_socp_set_timeout(SOCP_TIMEOUT_TRF, time);            
+        }
+        else
+        {
+           (void)bsp_socp_set_timeout(SOCP_TIMEOUT_TRF_LONG, SOCP_TIMEOUT_TRF_LONG_MAX); 
+        }
         g_stEncDstBufLogConfig.ulCurTimeout = g_stEncDstBufLogConfig.overTime;
         bsp_socp_set_enc_dst_threshold((bool)TRUE,SOCP_CODER_DST_OM_IND);
         ret = bsp_socp_encdst_set_cycle(SOCP_CODER_DST_OM_IND, SOCP_IND_MODE_DELAY);
@@ -797,6 +794,7 @@ s32 bsp_report_ind_mode_ajust(SOCP_IND_MODE_ENUM eMode)
 {
    return  bsp_socp_set_ind_mode(eMode);
 }
+
 /*****************************************************************************
 * 函 数 名  : socp_ind_delay_init
 *
@@ -857,8 +855,9 @@ u32 bsp_socp_read_cur_mode(u32 u32DestChanID)
 {
     u32 u32modestate;
     u32 u32ChanID = SOCP_REAL_CHAN_ID(u32DestChanID);
-    /*lint -save -e647*/
-    u32modestate = SOCP_REG_GETBITS(SOCP_REG_ENCDEST_SBCFG(u32ChanID),1,1); 
+
+    /*lint -save -e647*/    
+    u32modestate = SOCP_REG_GETBITS(SOCP_REG_ENCDEST_SBCFG(u32ChanID),1,1);
     /*lint -restore +e647*/
     return u32modestate;
 }
@@ -886,6 +885,8 @@ void bsp_socp_logbuffer_cfgshow(void)
    
     return;
 }
+EXPORT_SYMBOL(bsp_socp_logbuffer_cfgshow);
+
 /*****************************************************************************
 * 函 数 名  : bsp_deflate_logbuffer_cfgshow
 *
@@ -909,6 +910,8 @@ void bsp_deflate_logbuffer_cfgshow(void)
 
     return;
 }
+EXPORT_SYMBOL(bsp_deflate_logbuffer_cfgshow);
+
 /*****************************************************************************
 * 函 数 名  : socp_logbuffer_early_cfgshow
 *
@@ -932,6 +935,8 @@ void bsp_socp_logbuffer_early_cfgshow(void)
 
     return;
 }
+EXPORT_SYMBOL(bsp_socp_logbuffer_early_cfgshow);
+
 /*****************************************************************************
 * 函 数 名  : socp_logbuffer_memreseve_cfgshow
 *
@@ -954,6 +959,8 @@ void bsp_socp_logbuffer_memreserve_cfgshow(void)
 
     return;
 }
+EXPORT_SYMBOL(bsp_socp_logbuffer_memreserve_cfgshow);
+
 EXPORT_SYMBOL(bsp_socp_get_log_cfg);
 
 

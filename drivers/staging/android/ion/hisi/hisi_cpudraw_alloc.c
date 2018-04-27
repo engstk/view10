@@ -91,7 +91,7 @@ void  memlist_init(void)
 static mem_node_t *split_node(mem_node_t *father, int  bytew, int byteh)
 {
 	int split_mode;
-	mem_node_t *node[2];
+	mem_node_t *node[2] = {NULL};
 	int newbytew[2];
 	int newbyteh[2];
 	int newaddr[2];
@@ -159,6 +159,7 @@ static mem_node_t *node_alloc_direct(struct gen_pool *pool, int size, int stride
 	phy_addr = gen_pool_alloc(pool, size);  //gen_pool_alloc
 	if(phy_addr == 0){
 		kfree(newnode);
+		newnode = NULL;
 		ALOGD("cpubuffer err:no more memory ,need size=%d\n", size);
 		return NULL;
 	}

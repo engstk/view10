@@ -76,6 +76,8 @@ extern "C" {
     (pstNode)->pNext    = VOS_NULL_PTR; \
 }
 
+#define TTF_COPYLINK_UL_MAX_NUM    (100)
+#define TTF_COPYLINK_DL_MAX_NUM    (250)
 
 /******************************************************************************
   3 枚举定义
@@ -85,7 +87,6 @@ extern "C" {
 /******************************************************************************
   4 全局变量声明
 ******************************************************************************/
-
 
 /******************************************************************************
   5 消息头定义
@@ -102,6 +103,44 @@ extern "C" {
 ******************************************************************************/
 #pragma pack(4)
 
+/*****************************************************************************
+ 结构名    : TTF_COPYLINK_STRU
+ 协议表格  :
+ ASN.1描述 :
+ 结构说明  : 链式拷贝数据结构
+*****************************************************************************/
+typedef struct _TTF_COPYLINK_NODE_STRU
+{
+    VOS_UINT8                          *pucSrcData;
+    VOS_UINT8                          *pucDstData;
+    VOS_UINT32                          ulDataLen;
+} TTF_COPYLINK_NODE_STRU;
+
+typedef struct
+{
+    TTF_COPYLINK_NODE_STRU              astCopyLinkNodes[TTF_COPYLINK_DL_MAX_NUM];
+    VOS_UINT32                          ulCopyNodeCnt;
+}TTF_COPYLINK_DL_STRU;
+
+typedef struct
+{
+    TTF_COPYLINK_NODE_STRU              astCopyLinkNodes[TTF_COPYLINK_UL_MAX_NUM];
+    VOS_UINT32                          ulCopyNodeCnt;
+}TTF_COPYLINK_UL_STRU;
+
+
+
+#define    TTF_CPY_LINK_REG_DL(ulPid, pucRegDataDst, pucRegDataSrc, usRegDataLen)        TTF_CopyLink_DL_Reg(ulPid, pucRegDataDst, pucRegDataSrc, usRegDataLen, &g_stTtfCopyLinkDL)
+#define    TTF_CPY_LINK_REG_UL(ulPid, pucRegDataDst, pucRegDataSrc, usRegDataLen)        TTF_CopyLink_UL_Reg(ulPid, pucRegDataDst, pucRegDataSrc, usRegDataLen, &g_stTtfCopyLinkUL)
+
+#define    TTF_CPY_LINK_EXECUTE_DL(ulPid)                                                TTF_CopyLink_DL_Execute(ulPid, &g_stTtfCopyLinkDL)
+#define    TTF_CPY_LINK_EXECUTE_UL(ulPid)                                                TTF_CopyLink_UL_Execute(ulPid, &g_stTtfCopyLinkUL)
+
+#define    TTF_CPY_LINK_DEL_DL()                                                        TTF_CopyLink_DL_Rel(&g_stTtfCopyLinkDL)
+#define    TTF_CPY_LINK_DEL_UL()                                                        TTF_CopyLink_UL_Rel(&g_stTtfCopyLinkUL)
+
+#define    TTF_CPY_LINK_INIT_UL()                                                       (VOS_VOID)TTF_CopyLink_UL_Init(&g_stTtfCopyLinkUL)
+#define    TTF_CPY_LINK_INIT_DL()                                                       (VOS_VOID)TTF_CopyLink_DL_Init(&g_stTtfCopyLinkDL)
 
 /*======================================================*/
 /*
@@ -247,6 +286,41 @@ extern VOS_UINT32   TTF_LinkCnt(VOS_UINT32 ulPid, const TTF_LINK_ST *pLink);
 extern VOS_UINT32   TTF_LinkIsEmpty(VOS_UINT32 ulPid, const TTF_LINK_ST *pLink);
 extern TTF_NODE_ST* TTF_LinkPeekHead(VOS_UINT32 ulPid, const TTF_LINK_ST * pLink);
 /*lint +e830*/
+
+extern VOS_UINT32 TTF_CopyLink_DL_Init(TTF_COPYLINK_DL_STRU *pstTtfCpyLink);
+extern VOS_UINT32 TTF_CopyLink_DL_Reg
+(
+ VOS_UINT32                          ulPid,
+ VOS_UINT8                          *pucRegDataDst,
+ VOS_UINT8                          *pucRegDataSrc,
+ VOS_UINT16                          usRegDataLen,
+ TTF_COPYLINK_DL_STRU                  *pstTtfCpyLink
+ );
+extern VOS_UINT32 TTF_CopyLink_DL_Execute(VOS_UINT32 ulPid, TTF_COPYLINK_DL_STRU *pstTtfCpyLink);
+extern VOS_VOID  TTF_CopyLink_DL_Rel(TTF_COPYLINK_DL_STRU *pstTtfCpyLink );
+
+extern VOS_UINT32 TTF_CopyLink_UL_Init(TTF_COPYLINK_UL_STRU *pstTtfCpyLink);
+extern VOS_UINT32 TTF_CopyLink_UL_Reg
+(
+ VOS_UINT32                          ulPid,
+ VOS_UINT8                          *pucRegDataDst,
+ VOS_UINT8                          *pucRegDataSrc,
+ VOS_UINT16                          usRegDataLen,
+ TTF_COPYLINK_UL_STRU                  *pstTtfCpyLink
+ );
+extern VOS_UINT32 TTF_CopyLink_UL_Execute(VOS_UINT32 ulPid, TTF_COPYLINK_UL_STRU *pstTtfCpyLink);
+extern VOS_VOID  TTF_CopyLink_UL_Rel(TTF_COPYLINK_UL_STRU *pstTtfCpyLink );
+
+
+extern VOS_VOID TTF_InsertSortAsc16bit(VOS_UINT32 ulPid, VOS_UINT16    ausSortElement[], VOS_UINT32 ulElementCnt, VOS_UINT32 ulMaxCnt);
+extern VOS_VOID TTF_RemoveDupElement16bit(VOS_UINT32 ulPid, VOS_UINT16    ausSortElement[], VOS_UINT32 *pulElementCnt, VOS_UINT32 ulMaxCnt);
+extern VOS_VOID TTF_RingBufWrite(VOS_UINT32 ulPid, VOS_UINT32 ulDstRingBufBaseAddr,
+                                 VOS_UINT16 usOffset, VOS_UINT8 *pucSrcData, VOS_UINT16 usDataLen, VOS_UINT16 usModLen);
+
+
+extern TTF_COPYLINK_DL_STRU     g_stTtfCopyLinkDL;
+extern TTF_COPYLINK_UL_STRU     g_stTtfCopyLinkUL;
+
 
 #ifdef __cplusplus
     #if __cplusplus

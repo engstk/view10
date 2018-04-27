@@ -339,7 +339,7 @@ static int mmc_ext_csd_open(struct inode *inode, struct file *filp)
 	u8 *ext_csd;
 	int err, i;
 
-	buf = kmalloc(EXT_CSD_STR_LEN + 1, GFP_KERNEL);
+	buf = kzalloc(EXT_CSD_STR_LEN + 1, GFP_KERNEL);
 	if (!buf)
 		return -ENOMEM;
 

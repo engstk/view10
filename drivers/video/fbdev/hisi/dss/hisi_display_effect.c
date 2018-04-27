@@ -16,6 +16,11 @@
 #include "hisi_dpe_utils.h"
 #include <linux/hisi/hw_cmdline_parse.h>
 
+
+int g_factory_gamma_enable = 0;
+struct mutex g_rgbw_lock;
+
+
 /*lint -e838, -e778, -e845, -e712, -e527, -e30, -e142, -e715, -e655, -e550*/
 static void hisi_effect_module_support (struct hisi_fb_data_type *hisifd)
 {
@@ -383,6 +388,11 @@ static int display_engine_blc_param_get(struct hisi_fb_data_type *hisifd, displa
 
 static int display_engine_blc_param_set(struct hisi_fb_data_type *hisifd, display_engine_blc_param_t *param)
 {
+	struct hisi_fb_panel_data *pdata = NULL;
+	ktime_t current_bl_timestamp = ktime_get();
+	int bl_timeinterval = 16670000;
+	int ret = 0;
+
 	if (NULL == hisifd) {
 		HISI_FB_ERR("[effect] hisifd is NULL\n");
 		return -EINVAL;
@@ -395,7 +405,28 @@ static int display_engine_blc_param_set(struct hisi_fb_data_type *hisifd, displa
 
 	hisifd->de_info.blc_enable = (param->enable == 1) ? true : false;
 	hisifd->de_info.blc_delta = param->delta;
-	return 0;
+
+	pdata = dev_get_platdata(&hisifd->pdev->dev);
+	if (NULL == pdata) {
+		HISI_FB_ERR("pdata is NULL");
+		return -EINVAL;
+	}
+	down(&hisifd->blank_sem);
+
+	if (abs((int)(ktime_to_ns(hisifd->backlight.bl_timestamp) - ktime_to_ns(current_bl_timestamp))) > bl_timeinterval) {
+		HISI_FB_DEBUG("[effect] delta:%d bl:%d enable:%d set\n", hisifd->de_info.blc_delta, hisifd->bl_level, hisifd->de_info.blc_enable);
+		if (hisifd->bl_level > 0) {
+			down(&hisifd->brightness_esd_sem);
+			hisifb_set_backlight(hisifd, hisifd->bl_level, true);
+			up(&hisifd->brightness_esd_sem);
+		}
+	} else {
+		HISI_FB_DEBUG("[effect] delta:%d bl:%d enable:%d skip\n", hisifd->de_info.blc_delta, hisifd->bl_level, hisifd->de_info.blc_enable);
+		ret = 2; // This delta has been skipped, and hal may resent the command.
+	}
+
+	up(&hisifd->blank_sem);
+	return ret;
 }
 
 int display_engine_ddic_color_param_get(struct hisi_fb_data_type *hisifd, display_engine_ddic_color_param_t *param)
@@ -580,37 +611,19 @@ int display_engine_ddic_rgbw_param_set(struct hisi_fb_data_type *hisifd, display
 		return -1;
 	}
 
+	mutex_lock(&g_rgbw_lock);
 	hisifd->de_info.ddic_panel_id = param->ddic_panel_id;
 	hisifd->de_info.ddic_rgbw_mode = param->ddic_rgbw_mode;
-	hisifd->de_info.ddic_rgbw_backlight = param->ddic_rgbw_backlight;
 	hisifd->de_info.rgbw_saturation_control = param->rgbw_saturation_control;
-	hisifd->de_info.frame_gain_limit = param->frame_gain_limit;
 	hisifd->de_info.frame_gain_speed = param->frame_gain_speed;
-	hisifd->de_info.color_distortion_allowance = param->color_distortion_allowance;
-	hisifd->de_info.pixel_gain_limit = param->pixel_gain_limit;
 	hisifd->de_info.pixel_gain_speed = param->pixel_gain_speed;
-	hisifd->de_info.pwm_duty_gain = param->pwm_duty_gain;
-
-	down(&hisifd->blank_sem);
-
-	if (!hisifd->panel_power_on) {
-		HISI_FB_DEBUG("fb%d, panel power off!\n", hisifd->index);
-		ret = -1;
-		goto err_out;
+	if(param->ddic_panel_id != LG_NT36772A_RGBW_ID) {
+		hisifd->de_info.frame_gain_limit = param->frame_gain_limit;
+		hisifd->de_info.pwm_duty_gain = param->pwm_duty_gain;
+		hisifd->de_info.color_distortion_allowance = param->color_distortion_allowance;
+		hisifd->de_info.pixel_gain_limit = param->pixel_gain_limit;
 	}
-
-	if (pdata->lcd_rgbw_set_func) {
-		hisifb_activate_vsync(hisifd);
-		pdata->lcd_rgbw_set_func(hisifd);
-		hisifb_deactivate_vsync(hisifd);
-
-		hisifd->rgbw_bl_count++;
-		HISI_FB_DEBUG("[effect] pdata support lcd_rgbw_set_func\n");
-	}
-
-err_out:
-	up(&hisifd->blank_sem);
-
+	mutex_unlock(&g_rgbw_lock);
 	return ret;
 }
 
@@ -635,6 +648,7 @@ int display_engine_hbm_param_set(struct hisi_fb_data_type *hisifd, display_engin
 	}
 
 	hisifd->de_info.hbm_level = param->level;
+	hisifd->de_info.hbm_dimming = param->dimming == 1 ? true : false;
 	down(&hisifd->blank_sem);
 	if(!hisifd->panel_power_on) {
 		HISI_FB_DEBUG("fb%d, panel power off!\n", hisifd->index);
@@ -652,9 +666,41 @@ int display_engine_hbm_param_set(struct hisi_fb_data_type *hisifd, display_engin
 	}
 
 err_out:
+	hisifd->de_info.last_hbm_level = hisifd->de_info.hbm_level;
 	up(&hisifd->blank_sem);
 	return ret;
 }
+
+int display_engine_amoled_algo_param_set(struct hisi_fb_data_type *hisifd, display_engine_amoled_param_t *param)
+{
+	int ret = 0;
+
+	if(NULL == hisifd) {
+		HISI_FB_ERR("[effect] hisifd is NULL Pointer\n");
+		return -1;
+	}
+	if(NULL == param) {
+		HISI_FB_ERR("[effect] param is NULL Pointer\n");
+		return -1;
+	}
+
+	down(&hisifd->blank_sem);
+	hisifd->de_info.amoled_param.HBMEnable = param->HBMEnable;
+	hisifd->de_info.amoled_param.AmoledDimingEnable= param->AmoledDimingEnable;
+	hisifd->de_info.amoled_param.HBM_Threshold_BackLight= param->HBM_Threshold_BackLight;
+	hisifd->de_info.amoled_param.HBM_Min_BackLight= param->HBM_Min_BackLight;
+	hisifd->de_info.amoled_param.HBM_Max_BackLight= param->HBM_Max_BackLight;
+	hisifd->de_info.amoled_param.HBM_MinLum_Regvalue= param->HBM_MinLum_Regvalue;
+	hisifd->de_info.amoled_param.HBM_MaxLum_Regvalue= param->HBM_MaxLum_Regvalue;
+	hisifd->de_info.amoled_param.Hiac_DBVThres= param->Hiac_DBVThres;
+	hisifd->de_info.amoled_param.Hiac_DBV_XCCThres= param->Hiac_DBV_XCCThres;
+	hisifd->de_info.amoled_param.Hiac_DBV_XCC_MinThres= param->Hiac_DBV_XCC_MinThres;
+	up(&hisifd->blank_sem);
+	HISI_FB_DEBUG("[effect] first screen on ! HBM_Max_BackLight:%d Hiac_DBVThres: %d HBMEnable: %d AmoledDimingEnable : %d\n",param->HBM_Max_BackLight,param->Hiac_DBVThres,param->HBMEnable,param->AmoledDimingEnable);
+
+	return ret;
+}
+
 int display_engine_panel_info_get(struct hisi_fb_data_type *hisifd, display_engine_panel_info_param_t *param) {
 
 	struct hisi_panel_info * pinfo = NULL;
@@ -676,6 +722,22 @@ int display_engine_panel_info_get(struct hisi_fb_data_type *hisifd, display_engi
 	param->minluminance = pinfo->hiace_param.iMinLcdLuminance;
 	param->maxbacklight = pinfo->bl_max;
 	param->minbacklight = pinfo->bl_min;
+
+	if (pinfo->gamma_lut_table_len && g_factory_gamma_enable) {
+		uint32_t i = 0;
+		uint16_t *u16_gm_r = param->factory_gamma;
+		uint16_t *u16_gm_g = u16_gm_r + pinfo->gamma_lut_table_len;
+		uint16_t *u16_gm_b = u16_gm_g + pinfo->gamma_lut_table_len;
+
+		for (i = 0; i < pinfo->gamma_lut_table_len; i++) {
+			u16_gm_r[i] = (uint16_t)pinfo->gamma_lut_table_R[i];
+			u16_gm_g[i] = (uint16_t)pinfo->gamma_lut_table_G[i];
+			u16_gm_b[i] = (uint16_t)pinfo->gamma_lut_table_B[i];
+		}
+		param->factory_gamma_enable = g_factory_gamma_enable;
+	} else {
+		param->factory_gamma_enable = 0;
+	}
 
 	return 0;
 }
@@ -714,7 +776,7 @@ int display_engine_color_rectify_param_get(struct hisi_fb_data_type *hisifd, dis
 		ret = -1;
 		goto err_out;
 	}
-	
+
 	if (pdata->lcd_color_param_get_func) {
 		hisifb_activate_vsync(hisifd);
 		pdata->lcd_color_param_get_func(hisifd);
@@ -733,6 +795,7 @@ int hisifb_display_engine_init(struct fb_info *info, void __user *argp)
 	struct hisi_fb_panel_data *pdata = NULL;
 	display_engine_t de;
 	int ret = 0;
+	const char* wq_name = "fb0_display_engine";
 
 	if (NULL == info) {
 		HISI_FB_ERR("[effect] info is NULL\n");
@@ -758,6 +821,15 @@ int hisifb_display_engine_init(struct fb_info *info, void __user *argp)
 
 	if (!hisifd->de_info.is_ready) {
 		memset(&hisifd->de_info, 0, sizeof(display_engine_info_t));
+		mutex_init(&hisifd->de_info.param_lock);
+
+		hisifd->display_engine_wq = create_singlethread_workqueue(wq_name);
+		if (!hisifd->display_engine_wq) {
+			HISI_FB_ERR("[effect] create display engine workqueue failed!\n");
+			goto ERR_OUT;
+		}
+		INIT_WORK(&hisifd->display_engine_work, hisifb_display_engine_workqueue_handler);
+
 		hisifd->de_info.is_ready = true;
 	}
 
@@ -801,6 +873,13 @@ int hisifb_display_engine_deinit(struct fb_info *info, void __user *argp)
 	}
 
 	if (hisifd->de_info.is_ready) {
+		if (hisifd->display_engine_wq) {
+			destroy_workqueue(hisifd->display_engine_wq);
+			hisifd->display_engine_wq = NULL;
+		}
+
+		mutex_destroy(&hisifd->de_info.param_lock);
+
 		ret = (int)copy_from_user(&de, argp, sizeof(display_engine_t));
 		if (ret) {
 			HISI_FB_ERR("[effect] copy_from_user(display_engine_t) failed! ret=%d.\n", ret);
@@ -879,7 +958,7 @@ int hisifb_display_engine_param_get(struct fb_info *info, void __user *argp)
 	}
 
 	if (de_param.modules & DISPLAY_ENGINE_PANEL_INFO) {
-		HISI_FB_ERR("[effect ] DISPLAY_ENGINE_PANEL_INFO");
+		HISI_FB_INFO("[effect] DISPLAY_ENGINE_PANEL_INFO.\n");
 		ret = display_engine_panel_info_get(hisifd, &de_param.panel_info);
 		if (ret) {
 			HISI_FB_ERR("[effect] failed to get panel info, ret=%d\n", ret);
@@ -888,7 +967,7 @@ int hisifb_display_engine_param_get(struct fb_info *info, void __user *argp)
 	}
 
 	if (de_param.modules & DISPLAY_ENGINE_COLOR_RECTIFY) {
-		HISI_FB_ERR("[effect ] DISPLAY_ENGINE_COLOR_RECTIFY");
+		HISI_FB_INFO("[effect] DISPLAY_ENGINE_COLOR_RECTIFY.\n");
 		ret = display_engine_color_rectify_param_get(hisifd, &de_param.color_param);
 		if (ret) {
 			HISI_FB_ERR("[effect] failed to get color param, ret=%d\n", ret);
@@ -905,11 +984,9 @@ ERR_OUT:
 	return ret;
 }
 
-int hisifb_display_engine_param_set(struct fb_info *info, void __user *argp)
+int hisifb_param_check(struct fb_info *info, void __user *argp)
 {
 	struct hisi_fb_data_type *hisifd = NULL;
-	display_engine_param_t de_param;
-	int ret = 0;
 
 	if (NULL == info) {
 		HISI_FB_ERR("[effect] info is NULL\n");
@@ -932,22 +1009,83 @@ int hisifb_display_engine_param_set(struct fb_info *info, void __user *argp)
 		return -EINVAL;
 	}
 
+	return 0;
+}
+
+int hisifb_runmode_check(display_engine_param_t* de_param)
+{
+	if (de_param->modules & DISPLAY_ENGINE_DDIC_RGBW) {
+		return 0;
+	} else if (runmode_is_factory()) {
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+int hisifb_display_engine_param_set(struct fb_info *info, void __user *argp)
+{
+	struct hisi_fb_data_type *hisifd = NULL;
+	display_engine_param_t de_param;
+	int ret = 0;
+
+	if (hisifb_param_check(info, argp)) {
+		return -EINVAL;
+	}
+
+	hisifd = (struct hisi_fb_data_type *)info->par;
+
 	ret = (int)copy_from_user(&de_param, argp, sizeof(display_engine_param_t));
 	if (ret) {
 		HISI_FB_ERR("[effect] copy_from_user(param) failed! ret=%d.\n", ret);
 		goto ERR_OUT;
 	}
 
+	if (hisifb_runmode_check(&de_param)) {
+		return -EINVAL;
+	}
+
+	mutex_lock(&hisifd->de_info.param_lock);
+	hisifd->de_param = de_param;
+	mutex_unlock(&hisifd->de_info.param_lock);
+	if (hisifd->display_engine_wq) {
+		queue_work(hisifd->display_engine_wq, &hisifd->display_engine_work);
+	}
+
+ERR_OUT:
+	return ret;
+}
+
+void hisifb_display_engine_workqueue_handler(struct work_struct *work)
+{
+	struct hisi_fb_data_type *hisifd = NULL;
+	display_engine_param_t de_param;
+	int ret = 0;
+
+	if (NULL == work) {
+		HISI_FB_ERR("[effect] hisifd is NULL\n");
+		return;
+	}
+
+	hisifd = container_of(work, struct hisi_fb_data_type, display_engine_work);
+	if (NULL == hisifd) {
+		HISI_FB_ERR("[effect] hisifd is NULL\n");
+		return;
+	}
+
+	mutex_lock(&hisifd->de_info.param_lock);
+	de_param = hisifd->de_param;
+	mutex_unlock(&hisifd->de_info.param_lock);
+
 	if (de_param.modules & DISPLAY_ENGINE_BLC) {
 		ret = display_engine_blc_param_set(hisifd, &de_param.blc);
-		if (ret) {
+		if (ret < 0) {
 			HISI_FB_ERR("[effect] failed to set BLC, ret=%d\n", ret);
 			goto ERR_OUT;
 		}
 	}
 
 	if (de_param.modules & DISPLAY_ENGINE_DDIC_CABC) {
-
 		ret = display_engine_ddic_cabc_param_set(hisifd, &de_param.ddic_cabc);
 		if (ret) {
 			HISI_FB_ERR("[effect] failed to set DDIC_CABC, ret=%d\n", ret);
@@ -956,7 +1094,6 @@ int hisifb_display_engine_param_set(struct fb_info *info, void __user *argp)
 	}
 
 	if (de_param.modules & DISPLAY_ENGINE_DDIC_RGBW) {
-
 		ret = display_engine_ddic_rgbw_param_set(hisifd, &de_param.ddic_rgbw);
 		if (ret) {
 			HISI_FB_ERR("[effect] failed to set DDIC_RGBW, ret=%d\n", ret);
@@ -965,23 +1102,32 @@ int hisifb_display_engine_param_set(struct fb_info *info, void __user *argp)
 	}
 
 	if (de_param.modules & DISPLAY_ENGINE_DDIC_COLOR) {
-
 		ret = display_engine_ddic_color_param_set(hisifd, &de_param.ddic_color);
 		if (ret) {
 			HISI_FB_ERR("[effect] failed to set DDIC_COLOR, ret=%d\n", ret);
 			goto ERR_OUT;
 		}
 	}
+
 	if (de_param.modules & DISPLAY_ENGINE_HBM) {
 		ret = display_engine_hbm_param_set(hisifd, &de_param.hbm);
 		if (ret) {
-			HISI_FB_ERR("[effect] failed to set HBW, ret=%d\n", ret);
+			HISI_FB_ERR("[effect] failed to set HBM, ret=%d\n", ret);
+			goto ERR_OUT;
+		}
+	}
+
+	if (de_param.modules & DISPLAY_ENGINE_AMOLED_ALGO) {
+		HISI_FB_DEBUG("[effect] failed to set DISPLAY_ENGINE_AMOLED_ALGO, ret=%d\n", ret);
+		ret = display_engine_amoled_algo_param_set(hisifd, &de_param.amoled_param);
+		if (ret) {
+			HISI_FB_ERR("[effect] failed to set Amoled, ret=%d\n", ret);
 			goto ERR_OUT;
 		}
 	}
 
 ERR_OUT:
-	return ret;
+	return;
 }
 
 /*lint +e838, +e778, +e845, +e712, +e527, +e30, +e142, +e715, +e655, +e550*/

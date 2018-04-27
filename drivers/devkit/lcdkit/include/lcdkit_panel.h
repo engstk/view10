@@ -115,6 +115,8 @@
 #define LCDKIT_FPS_60 (60)
 
 #define LCDKIT_TS_RESUME_AFTER_DIS_ON   BIT(0)
+#define LCDKIT_TS_RESUME_BEFORE_LCD_RST  BIT(1)
+
 
 #define MAX_BUF 60
 #define LCD_REG_LENGTH_MAX 200
@@ -475,6 +477,21 @@ enum
 
 enum
 {
+	RGBW_PANEL_ID_MIN = 0,
+	JDI_NT36860C_PANEL_ID = 1,
+	LG_NT36870_PANEL_ID = 2,
+	SHARP_NT36870_PANEL_ID = 3,
+	JDI_HX83112C_PANLE_ID = 4,
+	SHARP_HX83112C_PANEL_ID = 5,
+	JDI_TD4336_PANEL_ID = 6,
+	SHARP_TD4336_PANEL_ID = 7,
+	LG_NT36772A_PANEL_ID = 8,
+	BOE_HX83112E_PANEL_ID = 9,
+	RGBW_PANEL_ID_MAX,
+};
+
+enum
+{
     COLUMN_INVERSION = 0,
     DOT_INVERSION,
 };
@@ -577,10 +594,19 @@ struct lcdkit_panel_infos
 
     int bl_level_max;
     int bl_level_min;
+    int bl_level_def;
+    int bl_is_shield_backlight;
+    int bl_is_start_second_timer;
 
     /* bl work mode */
     u32 bl_support_mode;
     u32 bl_work_mode;
+
+    /*display parameter config*/
+    bool mipi_clk_config_support;
+    int mipi_clk_config_high;
+    int mipi_clk_config_low;
+    int mipi_clk_config_normal;
 
     /*lcd on command*/
     struct lcdkit_dsi_panel_cmds display_on_cmds;
@@ -633,6 +659,10 @@ struct lcdkit_panel_infos
     struct lcdkit_dsi_panel_cmds pwm_duty_gain_cmds;
     /* enter hbm mode and set brightness level command*/
     struct lcdkit_dsi_panel_cmds enter_hbm_cmds;
+    /* set hbm brightness level command*/
+    struct lcdkit_dsi_panel_cmds hbm_level_cmds;
+    /* set hbm mode command*/
+    struct lcdkit_dsi_panel_cmds hbm_mode_cmds;
     /* Exit hbm mode command*/
     struct lcdkit_dsi_panel_cmds exit_hbm_cmds;
 
@@ -642,8 +672,11 @@ struct lcdkit_panel_infos
     int cabc_mode;
     u8 rgbw_support;
     u8 bias_change_lm36274_from_panel_support;
+    u8 init_lm36923_after_panel_power_on_support;
     u8 hbm_support;
 
+    /*vesa setting flag*/
+    u8 ifbc_vesa3x_set;
     /*mipi tr inversion*/
     struct lcdkit_dsi_panel_cmds dot_inversion_cmds;
     struct lcdkit_dsi_panel_cmds column_inversion_cmds;
@@ -667,12 +700,20 @@ struct lcdkit_panel_infos
     struct lcdkit_dsi_panel_cmds esd_oriic_cmds;
     u8 esd_support;
     u8 esd_check_num;
+    u8 esd_expect_value_type;
     u8 use_second_ic;
 
     /*running test check reg*/
     struct lcdkit_dsi_panel_cmds check_reg_cmds;
     struct lcdkit_array_data check_reg_value;
     u8 check_reg_support;
+
+    /*mipi check commond*/
+    struct lcdkit_dsi_panel_cmds mipi_check_cmds;
+    struct lcdkit_array_data mipi_check_value;
+    u8 mipi_check_support;
+    u8 mipi_error_report_threshold;
+    struct timeval display_on_record_time;
 
     /*display region*/
     struct lcdkit_dsi_panel_cmds display_region_cmds;
@@ -806,6 +847,8 @@ struct lcdkit_panel_infos
     /*se*/
     u8 se_support;
     u8 se_mode;
+    u8 pt_ulps_support;
+
     struct lcdkit_dsi_panel_cmds se_off_cmds;
     struct lcdkit_dsi_panel_cmds se_hd_cmds;
     struct lcdkit_dsi_panel_cmds se_fhd_cmds;
@@ -948,6 +991,7 @@ struct lcdkit_panel_infos
     struct lcdkit_dsi_panel_cmds host_2d_barcode_cmds;
     struct lcdkit_dsi_panel_cmds host_2d_barcode_exit_cmds;
     /*Host project ID support*/
+    u32 eml_read_reg_flag;
     struct lcdkit_dsi_panel_cmds host_project_id_enter_cmds;
     struct lcdkit_dsi_panel_cmds host_project_id_cmds;
     struct lcdkit_dsi_panel_cmds host_project_id_exit_cmds;
@@ -961,7 +1005,9 @@ struct lcdkit_panel_infos
     struct lcdkit_dsi_panel_cmds panel_info_consistency_enter_cmds;
     struct lcdkit_dsi_panel_cmds panel_info_consistency_cmds;
     struct lcdkit_dsi_panel_cmds panel_info_consistency_exit_cmds;
-
+    /*different type white pictures  */
+    struct lcdkit_dsi_panel_cmds rgbw_white_pixel_on_cmds;
+    struct lcdkit_dsi_panel_cmds rgbw_rgb_pixel_on_cmds;
     /*AOD*/
     u8 aod_support;
     struct lcdkit_dsi_panel_cmds panel_enter_aod_cmds;
@@ -992,11 +1038,11 @@ struct lcdkit_panel_infos
     uint32_t delay_bf_bl;
     uint32_t delay_af_blic_init;
 
-
     uint32_t lp8556_bl_channel_config;
     uint32_t lp8556_bl_max_vboost_select;
     uint32_t backlight_ic_common;
-
+    uint32_t iovcc_before_vci;
+    uint32_t bl_byte_order;
     struct lcdbrightnesscoloroeminfo lcd_color_oeminfo;
 
     bool isbulcked;
@@ -1066,6 +1112,7 @@ struct lcdkit_panel_data
     ssize_t (*lcdkit_se_mode_show)(char* buf);
     ssize_t (*lcdkit_se_mode_store)(void* pdata, const char* buf);
     ssize_t (*lcdkit_support_bl_mode_show)(char* buf);
+    ssize_t (*lcdkit_mipi_config_store)(void* pdata, const char* buf);
 };
 
 struct lcdkit_adapt_func
@@ -1103,6 +1150,7 @@ extern int bu21150_otp_read(char *otp_data);
 #define HOST_OEM_BRIGHTNESSANDCOLOR_TYPE 0x04
 #define HOST_OEM_REWORK_TYPE 0x05
 #define HOST_OEM_BRIGHTNESS_COLOROFWHITE_TYPE 0x06
+#define HOST_OEM_RGBW_WHITE_TYPE 0x07
 #define LCD_OEM_BLOCK_NUM 1
 #define LCD_OEM_2DBLOCK_NUM 3
 #define LCD_OEM_BLOCK_LEN 16

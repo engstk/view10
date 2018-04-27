@@ -142,8 +142,6 @@ struct uart_tx_unit {
 #ifdef CONFIG_SERIAL_AMBA_PL011_CONSOLE
 	bool reset;
 	void __iomem *reset_reg_base;
-	void __iomem *reset_clk_reg_base;
-	u32 reset_clk_reg_offset;
 	u32 reset_enable_off;
 	u32 reset_disable_off;
 	u32 reset_status_off;
@@ -176,4 +174,3 @@ int hisi_pl011_resume(struct device *dev);
 int hisi_pl011_pinctrl(struct amba_device *dev, struct uart_amba_port *uap);
 void hisi_pl011_disable_ms(struct uart_port *port);
 #endif
-void uartprint_enable(struct amba_device *dev, struct uart_amba_port *uap);

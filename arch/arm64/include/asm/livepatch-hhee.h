@@ -23,7 +23,7 @@
 #include <asm/cacheflush.h>
 #include <linux/of.h>
 #include <asm/insn.h>
-#ifdef CONFIG_HISI_HHEE
+#ifdef CONFIG_HISI_HHEE_TOKEN
 #include <linux/hisi/hisi_hhee.h>
 #endif
 
@@ -37,7 +37,7 @@ enum aarch64_reloc_stage {
 static inline bool is_hkip_enabled(void)
 {
        bool ret = false;
-#ifdef CONFIG_HISI_HHEE
+#ifdef CONFIG_HISI_HHEE_TOKEN
        if (HHEE_ENABLE == hhee_check_enable())
                ret = true;
 #endif
@@ -46,7 +46,7 @@ static inline bool is_hkip_enabled(void)
 
 static inline int aarch64_insn_patch_text_hkip(void *place, u32 insn, unsigned long token)
 {
-#ifdef CONFIG_HISI_HHEE
+#ifdef CONFIG_HISI_HHEE_TOKEN
 	struct arm_smccc_res res;
 	arm_smccc_hvc(HHEE_HVC_LIVEPATCH, (unsigned long)place,
 			AARCH64_INSN_SIZE, insn, 0, token, 0, 0, &res);
@@ -60,7 +60,7 @@ static inline int aarch64_insn_patch_text_hkip(void *place, u32 insn, unsigned l
 
 static inline int apply_reloc_hkip(void *place, int len, unsigned long val, unsigned long token)
 {
-#ifdef CONFIG_HISI_HHEE
+#ifdef CONFIG_HISI_HHEE_TOKEN
 	struct arm_smccc_res res;
 	arm_smccc_hvc(HHEE_HVC_LIVEPATCH, (unsigned long)place, len, val, 0, token,
              0, 0, &res);
@@ -73,7 +73,7 @@ static inline int apply_reloc_hkip(void *place, int len, unsigned long val, unsi
 static inline unsigned long get_hkip_token(void)
 {
 	unsigned long  token = 0;
-#ifdef CONFIG_HISI_HHEE
+#ifdef CONFIG_HISI_HHEE_TOKEN
 	struct arm_smccc_res res;
 	arm_smccc_hvc(HHEE_HVC_TOKEN, 0, 0,
 			0, 0, 0, 0, 0, &res);

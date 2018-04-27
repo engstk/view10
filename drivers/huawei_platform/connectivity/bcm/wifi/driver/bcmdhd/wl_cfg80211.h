@@ -432,12 +432,22 @@ struct net_info {
 };
 
 /* association inform */
+#ifndef BCM_PATCH_CVE_2017_13292_13303
 #define MAX_REQ_LINE 1024
+#else
+#define MAX_REQ_LINE 1024u
+#endif
 struct wl_connect_info {
 	u8 req_ie[MAX_REQ_LINE];
+#ifndef BCM_PATCH_CVE_2017_13292_13303
 	s32 req_ie_len;
 	u8 resp_ie[MAX_REQ_LINE];
 	s32 resp_ie_len;
+#else
+	u32 req_ie_len;
+	u8 resp_ie[MAX_REQ_LINE];
+	u32 resp_ie_len;
+#endif
 };
 
 /* firmware /nvram downloading controller */

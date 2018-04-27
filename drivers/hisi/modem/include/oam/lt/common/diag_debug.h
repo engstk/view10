@@ -167,11 +167,6 @@ typedef enum
     EN_DIAG_DEBUG_TDS_DSP_CNF,
 
     EN_DIAG_DEBUG_BBP_AGENT_TIME_OUT_ENTRY,
-#if(FEATURE_SOCP_ON_DEMAND == FEATURE_ON)
-    /* DIAG APP SOCP投票 */
-    EN_DIAG_APP_SOCP_VOTE,
-    EN_DIAG_APP_SOCP_VOTE_ERR,
-#endif
     /* DIAG AGENT与LDSP邮箱交互 */
     EN_DIAG_AGENT_LDSP_MB_MSG,
     EN_DIAG_DEBUG_INFO_MAX
@@ -277,15 +272,15 @@ typedef struct
 {
     VOS_UINT32      ulModuleId;
     VOS_UINT32      ulNo;                   /* 序号 */
-    
+
     VOS_UINT32      ulLostTotalNum;         /* 丢包总次数 */
 
     VOS_UINT32      aulCurFailNum[6];    /* 当前时间段内丢包的各类次数 */
-    
+
     VOS_UINT32      ulSrcChnSize;       /* 编码源通道剩余字节数 */
     VOS_UINT32      ulDstChnSize;       /* 编码目的通道剩余字节数 */
     VOS_UINT32      ulDSPChnSize;       /* DSP编码源通道剩余字节数 */
-    
+
     VOS_UINT32      ulThrputPhy;        /* 物理通道吞吐率 */
     VOS_UINT32      ulThrputCb;         /* 回调吞吐率 */
 
@@ -296,7 +291,7 @@ typedef struct
     VOS_UINT32      ulTotalVCOMLen;     /* 向VCOM写入的总字节数 */
     VOS_UINT32      ulTotalVCOMErrLen;  /* 向VCOM写入失败的总字节数 */
     VOS_UINT32      ulVCOMMaxTimeLen;   /* 调用VCOM写接口话费的最大时长 */
-    
+
     VOS_UINT32      ulTotalSOCKETLen;   /* 向SOCKET写入的总字节数 */
 
     VOS_UINT32      aulRreserve[4];     /* 预留 */
@@ -311,15 +306,15 @@ typedef struct
     VOS_UINT32      ulLogNum;           /* Log成功上报次数 */
     VOS_UINT32      ulAirNum;           /* 空口成功上报次数 */
     VOS_UINT32      ulTransNum;         /* 透传成功上报次数 */
-    
+
     VOS_UINT32      ulThrputEnc;        /* 编码源吞吐率 */
-    
+
     VOS_UINT32      ulThrputPhy;        /* 物理通道吞吐率 */
     VOS_UINT32      ulThrputCb;         /* 回调吞吐率 */
 
     VOS_UINT32      ulSrcChnSize;       /* 编码源通道剩余字节数 */
     VOS_UINT32      ulDstChnSize;       /* 编码目的通道剩余字节数 */
-    
+
     VOS_UINT32      ulTotalLostTimes;   /* 丢包次数 */
 
     VOS_UINT32      ulTotalUSBLen;      /* 向USB写入的总字节数 */
@@ -327,9 +322,9 @@ typedef struct
     VOS_UINT32      ulTotalVCOMLen;     /* 向VCOM写入的总字节数 */
     VOS_UINT32      ulTotalVCOMErrLen;  /* 向VCOM写入失败的总字节数 */
     VOS_UINT32      ulVCOMMaxTimeLen;   /* 调用VCOM写接口话费的最大时长 */
-    
+
     VOS_UINT32      ulTotalSOCKETLen;   /* 向SOCKET写入的总字节数 */
-    
+
     VOS_UINT32      aulReserve[4];      /* 预留 */
 
     VOS_UINT32      aulToolreserve[12]; /* 给工具预留的64个字节，用于在工具上显示工具的维测信息 */
@@ -377,8 +372,8 @@ typedef struct
     VOS_UINT32      ulLeftSize;         /*通道剩余大小*/
     VOS_UINT32      ulDeltaTime;        /*上报时间间隔*/
 
-    VOS_UINT32      ulDeltaLostTimes;   /*上报时间段内的丢次数*/        
-    VOS_UINT32      ulDeltaLostLen;     /*上报时间段内丢弃数据长度*/        
+    VOS_UINT32      ulDeltaLostTimes;   /*上报时间段内的丢次数*/
+    VOS_UINT32      ulDeltaLostLen;     /*上报时间段内丢弃数据长度*/
 
     VOS_UINT32      aulCurFailNum[EN_DIAG_SRC_LOST_MAX];    /* 当前时间段内丢包的各类次数 */
     VOS_UINT32      aulCurFailLen[EN_DIAG_SRC_LOST_MAX];    /* 当前时间段内丢包的总数据长度 */
@@ -388,9 +383,9 @@ typedef struct
     VOS_UINT32      ulLogNum;           /* Log成功上报次数 */
     VOS_UINT32      ulAirNum;           /* 空口成功上报次数 */
     VOS_UINT32      ulTransNum;         /* 透传成功上报次数 */
-    
+
     VOS_UINT32      ulThrputEnc;        /* 编码源吞吐率 */
-        
+
     VOS_UINT32      aulReserve[12];      /* 预留 */
 
     VOS_UINT32      aulToolreserve[12]; /* 给工具预留的64个字节，用于在工具上显示工具的维测信息 */
@@ -399,7 +394,6 @@ typedef struct
 
 typedef struct
 {
-    DIAG_FRAME_INFO_STRU                pstFrameInfo;
     DIAG_MNTN_HEAD_STRU                 pstMntnHead;
     DIAG_MNTN_SRC_INFO_STRU             pstMntnInfo;
 }DIAG_DEBUG_SRC_MNTN_STRU;
@@ -408,7 +402,6 @@ typedef struct
 
 typedef struct
 {
-    DIAG_FRAME_INFO_STRU        pstFrameInfo;
     DIAG_MNTN_HEAD_STRU         pstMntnHead;
     DIAG_MNTN_DST_INFO_STRU     pstMntnInfo;
 }DIAG_DEBUG_DST_LOST_STRU;
@@ -482,6 +475,8 @@ void diag_debug_ind_src_lost(VOS_UINT32 type, VOS_UINT32 len);
 void diag_reset_src_mntn_info(void);
 VOS_VOID diag_ReportSrcMntn(VOS_VOID);
 VOS_VOID diag_ReportDstMntn(VOS_VOID);
+VOS_UINT32 DIAG_ApiTest(VOS_UINT8* pstReq);
+
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

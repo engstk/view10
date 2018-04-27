@@ -836,6 +836,19 @@ ssize_t lcd_func_switch_store(struct device* dev,
     return count;
 }
 
+ssize_t lcd_dynamic_porch_show(struct device* dev,
+        struct device_attribute* attr, char* buf)
+{
+    ssize_t ret = 0;
+    return ret;
+}
+
+ssize_t lcd_dynamic_porch_store(struct device* dev,
+        struct device_attribute* attr, const char* buf, size_t count)
+{
+    return count;
+}
+
 ssize_t lcd_test_config_show(struct device* dev,
         struct lcdkit_panel_data* lcdkit_info, char* buf)
 {
@@ -942,4 +955,17 @@ ssize_t lcdkit_jdi_nt36860_5p88_reg_read_show(void* pdata, char* buf)
 {
     ssize_t ret = 0;
     return ret;	
+}
+
+ssize_t lcd_mipi_config_store(struct device* dev, struct lcdkit_panel_data* lcdkit_info, const char* buf)
+{
+    ssize_t ret = 0;
+
+    if (NULL == dev || NULL == lcdkit_info || NULL == buf)
+    {
+        LCDKIT_ERR("%s: NULL Pointer!\n",__func__);
+        return -1;
+    }
+
+    return ret;
 }

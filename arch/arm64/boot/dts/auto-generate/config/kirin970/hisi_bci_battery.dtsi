@@ -11,5 +11,6 @@
 		temp_throttling = <0>;
 		temp_shutdown = <68>;
 		temp_below_vr_min = <0>;
+		bci_soc_at_term = <100>;
     }; 	
 };

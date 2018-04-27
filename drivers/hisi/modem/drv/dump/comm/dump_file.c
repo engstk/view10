@@ -50,6 +50,7 @@
 #include <linux/syscalls.h>
 #include <linux/kernel.h> 
 #include <asm/string.h>
+#include "securec.h"
 #include "bsp_rfile.h"
 #include "osl_types.h"
 #include "drv_comm.h"
@@ -242,8 +243,8 @@ int dump_create_dir(char *path)
                 dump_fetal("malloc memry fail\n");
                 return BSP_ERROR;
             }
-            memset(dir_name,'\0',(len + 1));
-            memcpy(dir_name,path,(len - 1));
+            memset_s(dir_name,(len + 1),'\0',(len + 1));
+            memcpy_s(dir_name,(len + 1),path,(len - 1));
             fd  = bsp_mkdir(dir_name, 0770);
         }
         else

@@ -20,8 +20,14 @@ struct hisiap_ringbuffer_s {
 	u8 data[1];
 };
 
+#ifdef CONFIG_HISI_BB
 int hisiap_ringbuffer_init(struct hisiap_ringbuffer_s *q, u32 bytes,
 			   u32 fieldcnt, const char *keys);
 void hisiap_ringbuffer_write(struct hisiap_ringbuffer_s *q, u8 *element);
 int  hisiap_is_ringbuffer_full(const void *buffer_addr);
-
+#else
+static inline int hisiap_ringbuffer_init(struct hisiap_ringbuffer_s *q, u32 bytes,
+			   u32 fieldcnt, const char *keys){return 0;}
+static inline void hisiap_ringbuffer_write(struct hisiap_ringbuffer_s *q, u8 *element){ return;}
+static inline int  hisiap_is_ringbuffer_full(const void *buffer_addr){return 0;}
+#endif

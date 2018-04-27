@@ -13,6 +13,7 @@ config HISILICON_PLATFORM_HISI_EASYSHELL
 source "drivers/hisi/mntn/blackbox/Kconfig"
 source "drivers/hisi/mntn/hisee/Kconfig"
 source "drivers/hisi/mntn/bl31/Kconfig"
+source "drivers/hisi/mntn/subpmu/Kconfig"
 
 
 config HISI_VIRT_TO_PHYS

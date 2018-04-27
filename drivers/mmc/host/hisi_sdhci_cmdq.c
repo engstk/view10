@@ -114,7 +114,13 @@ static void sdhci_cmdq_send_cmd48(struct mmc_host *mmc, u32 tag, bool entire)
 	sdhci_writel(host, arg, SDHCI_ARGUMENT);
 
 	opcode = MMC_CMDQ_TASK_MGMT;
-	flags = SDHCI_CMD_RESP_SHORT | SDHCI_CMD_CRC | SDHCI_CMD_INDEX;
+	flags = SDHCI_CMD_CRC | SDHCI_CMD_INDEX;
+	if (host->cq_host->quirks & CMDQ_QUIRK_CHECK_BUSY)
+		/* arasan cannot send R1B cmd */
+		flags |= SDHCI_CMD_RESP_SHORT;
+	else
+		flags |= SDHCI_CMD_RESP_SHORT_BUSY;
+
 	sdhci_writew(host, SDHCI_MAKE_CMD(opcode, flags), SDHCI_COMMAND);
 
 	timeout = 10;

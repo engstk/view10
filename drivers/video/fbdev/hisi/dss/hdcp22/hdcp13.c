@@ -264,8 +264,11 @@ static int hdcp_polling_thread(void *p)
 {
     uint32_t i=0;
     uint32_t temp_value;
+    struct hdcp_params *hparams;
     struct dp_ctrl *dptx;
+
     dptx = (struct dp_ctrl *)p;
+    hparams = &dptx->hparams;
 
     while(!kthread_should_stop()) {
         msleep(1000);
@@ -316,11 +319,22 @@ static int hdcp_polling_thread(void *p)
             if ((temp_value & 0xFFFF) != REPEATER_STATE)
             {
                 HISI_FB_WARNING("Not stop at repeater state A9, at 0x%x!!!\n", temp_value);
+                hparams->auth_fail_count++;
                 //disable output
                 HDCP13_enable(dptx, 0);
-                if(dptx->hisifd->secure_ctrl.hdcp_enc_mode)
-				dptx->hisifd->secure_ctrl.hdcp_enc_mode(1);
-                hdcp_polling_flag = 0;
+                if (hparams->auth_fail_count > DPTX_HDCP_MAX_REPEATER_AUTH_RETRY)
+                {
+                    if(dptx->hisifd->secure_ctrl.hdcp_enc_mode)
+                        dptx->hisifd->secure_ctrl.hdcp_enc_mode(1);
+                    hdcp_polling_flag = 0;
+                    HISI_FB_ERR("Disable DP output becasue of reach max allowed retries count=%d.\n", hparams->auth_fail_count);
+                }
+                else
+                {
+                    HISI_FB_INFO("Repeater state error, Re-try auth again:%d!!\n", hparams->auth_fail_count);
+                    msleep(10);
+                    HDCP13_enable(dptx, 1);
+                }
                 i = 0;
                 continue;
             }

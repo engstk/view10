@@ -266,8 +266,13 @@ extern struct ST_PART_TBL * ptable_get_ram_data(void);
 #define PTABLE_NVDLD_LEN                (PRODUCT_CFG_FLASH_NV_DLD_LEN)
 #define PTABLE_NVDLD_END                (PTABLE_NVDLD_START + PTABLE_NVDLD_LEN)
 
+/* NvCust */
+#define PTABLE_NVCUST_START              PTABLE_NVDLD_END
+#define PTABLE_NVCUST_LEN                (PRODUCT_CFG_FLASH_NV_CUST_LEN)
+#define PTABLE_NVCUST_END                (PTABLE_NVCUST_START + PTABLE_NVCUST_LEN)
+
 /* SecStorage */
-#define PTABLE_SEC_STORAGE_START        PTABLE_NVDLD_END
+#define PTABLE_SEC_STORAGE_START        PTABLE_NVCUST_END
 #define PTABLE_SEC_STORAGE_LEN          (PRODUCT_CFG_FLASH_SEC_STORAGE_LEN)
 #define PTABLE_SEC_STORAGE_END          (PTABLE_SEC_STORAGE_START + PTABLE_SEC_STORAGE_LEN)
 
@@ -292,26 +297,14 @@ extern struct ST_PART_TBL * ptable_get_ram_data(void);
 #define PTABLE_MISC_END                 (PTABLE_MISC_START + PTABLE_MISC_LEN)
 
 /* dts */
-#ifdef PRODUCT_CFG_FLASH_DTIMG_LEN
 #define PTABLE_DTS_START                PTABLE_MISC_END
 #define PTABLE_DTS_LEN                  (PRODUCT_CFG_FLASH_DTIMG_LEN)
 #define PTABLE_DTS_END                  (PTABLE_DTS_START + PTABLE_DTS_LEN)
-#else
-#define PTABLE_DTS_START                PTABLE_MISC_END
-#define PTABLE_DTS_LEN                  (0)
-#define PTABLE_DTS_END                  (PTABLE_DTS_START + PTABLE_DTS_LEN)
-#endif
 
 /* teeos */
-#ifdef PRODUCT_CFG_FLASH_TEEOS_LEN
 #define PTABLE_TEEOS_START                PTABLE_DTS_END
 #define PTABLE_TEEOS_LEN                  (PRODUCT_CFG_FLASH_TEEOS_LEN)
 #define PTABLE_TEEOS_END                  (PTABLE_TEEOS_START + PTABLE_TEEOS_LEN)
-#else
-#define PTABLE_TEEOS_START                PTABLE_DTS_END
-#define PTABLE_TEEOS_LEN                  (0)
-#define PTABLE_TEEOS_END                  (PTABLE_TEEOS_START + PTABLE_TEEOS_LEN)
-#endif
 
 /* kernel */
 #define PTABLE_BOOTIMAGE_START          PTABLE_TEEOS_END
@@ -400,17 +393,17 @@ extern struct ST_PART_TBL * ptable_get_ram_data(void);
 
 
 /* hac*/
-#ifdef  CONFIG_HAS_HAC
 #define PTABLE_HACLD_START              PTABLE_MULTI_CARRIER_END
 #define PTABLE_HACLD_LEN                (PRODUCT_CFG_FLASH_HAC_IMG_LEN)
 #define PTABLE_HACLD_END                (PTABLE_HACLD_START + PTABLE_HACLD_LEN)
 
+/* trsted_fw  */
+#define PTABLE_TRUSTED_FW_START                (PTABLE_HACLD_END)
+#define PTABLE_TRUSTED_FW_LEN                  (PRODUCT_CFG_FLASH_TRUSTED_FW_LEN)
+#define PTABLE_TRUSTED_FW_END                  (PTABLE_TRUSTED_FW_START + PTABLE_TRUSTED_FW_LEN)
 
 /* ISO  */
-#define PTABLE_ISO_START                (PTABLE_HACLD_END)
-#else
-#define PTABLE_ISO_START                (PTABLE_MULTI_CARRIER_END)
-#endif
+#define PTABLE_ISO_START                (PTABLE_TRUSTED_FW_END)
 #define PTABLE_ISO_LEN                  (PRODUCT_CFG_FLASH_ISO_LEN)
 #define PTABLE_ISO_END                  (PTABLE_ISO_START + PTABLE_ISO_LEN)
 
@@ -422,6 +415,7 @@ extern struct ST_PART_TBL * ptable_get_ram_data(void);
 #define PTABLE_NVBACK_NM    "nvbacklte"
 #define PTABLE_NVIMG_NM     "nvimg"
 #define PTABLE_NVDLOAD_NM   "nvdload"
+#define PTABLE_NVCUST_NM    "nvcust"
 #define PTABLE_HACLOAD_NM   "hacload"
 #define PTABLE_SEC_STORAGE_NM   "sec_storage"
 #define PTABLE_NVDEFAULT_NM "nvdefault"
@@ -448,6 +442,7 @@ extern struct ST_PART_TBL * ptable_get_ram_data(void);
 #define PTABLE_RECOVERYB_NM "recovery-b"
 #define PTABLE_TEEOS_NM      "teeos"
 #define PTABLE_MODEM_FW_NM   "modem_fw"
+#define PTABLE_TRUSTED_FW_NM "trusted_fw"
 #define PTABLE_UBIUSE_NM     "ubi_use"
 #ifdef __cplusplus
 }

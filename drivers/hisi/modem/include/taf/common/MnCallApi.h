@@ -85,26 +85,19 @@ extern "C" {
 /* 10.5.4.8 Called party subaddress */
 #define MN_CALL_MAX_SUBADDR_INFO_LEN     (20)
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, begin */
 #define MN_CALL_RPT_CFG_MAX_SIZE        (8)
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, end */
 #define     MN_CALL_NET_RAT_TYPE_WCDMA      (0)           /* 当前驻留为W */
 #define     MN_CALL_NET_RAT_TYPE_GSM        (1)           /* 当前驻留为G */
 #define     MN_CALL_NET_RAT_TYPE_LTE        (2)           /* 当前驻留模为L */
 
-/* Added by l00198894 for V9R1 STK升级, 2013/07/11, begin */
 #define TAF_CALL_DTMF_MIN_ONLENGTH              (65)                            /* DTMF音最小时长 */
 #define TAF_CALL_DTMF_DEFAULT_ONLENGTH          (60000)                         /* 默认DTMF音时长60s */
-/* Added by l00198894 for V9R1 STK升级, 2013/07/11, end */
 
 #define TAF_CALL_DTMF_DEFAULT_OFFLENGTH          (75)                           /* stop dtmf ack和start dtmf req之间时间间隔大于70毫秒小于600毫秒,默认75毫秒 */
 
-/* Added by w00176964 for VoLTE_PhaseIII 项目, 2013-12-30, begin */
 #define TAF_CALL_MAX_BC_NUM                             (2)                     /* 最大BC个数 */
 #define TAF_CALL_MIN_BC_NUM                             (1)                     /* 最小BC个数 */
-/* Added by w00176964 for VoLTE_PhaseIII 项目, 2013-12-30, end */
 
-/* Added by y00245242 for V3R3C60_eCall项目, 2014-4-1, begin */
 #if (FEATURE_ON == FEATURE_ECALL)
 #define  TAF_ECALL_REDIAL_PERIOD_TIMER_LENGTH           (120000)                /* 120s */
 #define  TAF_ECALL_REDIAL_INTERVAL_TIMER_LENGTH         (5000)                  /* 5s */
@@ -114,7 +107,6 @@ extern "C" {
 #define  TAF_CALL_T9_MIN_TIMER_LENGTH                   (1)                     /* T9最小时长为1小时 */
 #define  TAF_CALL_T9_MAX_TIMER_LENGTH                   (12)                    /* T9最大时长为12消息 */
 #endif
-/* Added by y00245242 for V3R3C60_eCall项目, 2014-4-1, end */
 
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, begin */
 #define TAF_CALL_MAX_NUM_DIGIT_LEN                          (64)
@@ -160,6 +152,8 @@ extern "C" {
 
 #define TAF_CALL_ERROR_INFO_TEXT_STRING_SZ                 (129)
 
+#define TAF_CALL_EMC_CATEGORY_MAX_VALID_BIT_CNT             (7)
+
 #define   MN_CALL_FILL_MSG_HEADER(pSendMsg, RecvPid)    \
         (pSendMsg)->ulSenderCpuId   = VOS_LOCAL_CPUID; \
         (pSendMsg)->ulSenderPid     = WUEPS_PID_TAF; \
@@ -167,11 +161,6 @@ extern "C" {
         (pSendMsg)->ulReceiverPid   = RecvPid;
 
 #define TAF_CALL_CNAP_NAME_STR_MAX_LENGTH                   (161)               /* CNAP主叫名称字段最大长度 */
-
-/* Added by z00385378 for T310定制, 2017-1-9, begin */
-#define TAF_CALL_MAX_CC_TIMEROUT_NUM                        (1)                 /* 最多能记的Cc定时器超时原因数量 */
-                                                                                /* 目前只有310超时重拨使用 */
-/* Added by z00385378 for T310定制, 2017-1-9, end */
 
 /*****************************************************************************
   3类型定义
@@ -241,13 +230,7 @@ enum NAS_CC_MPTY_AUX_STATE_ENUM                                                 
 typedef VOS_UINT8   NAS_CC_MPTY_AUX_STATE_ENUM_U8;
 
 
-/*****************************************************************************
- 枚举名    : NAS_CC_CALL_TYPE_ENUM_U8
- 枚举说明  : 呼叫类型
- 1.日    期   : 2014年6月18日
-   作    者   : w00242748
-   修改内容   : 新建
-*****************************************************************************/
+
 enum NAS_CC_CALL_TYPE
 {
     NAS_CC_CALL_TYPE_MO_NORMAL_CALL,                    /* 主叫正常呼 */
@@ -259,16 +242,7 @@ typedef VOS_UINT8  NAS_CC_CALL_TYPE_ENUM_U8;
 
 /* Added by f62575 for AT Project, 2011-11-1, end */
 
-/* Added by w00176964 for VoLTE_PhaseII 项目, 2013-9-12, begin */
-/*****************************************************************************
- 枚举名称: TAF_CALL_VOICE_DOMAIN_ENUM
- 枚举说明: 呼叫域类型
 
- 修改历史      :
-  1.日    期   : 2013年09月08日
-    作    者   : Y00213812
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum TAF_CALL_VOICE_DOMAIN_ENUM
 {
     TAF_CALL_VOICE_DOMAIN_3GPP   = 0,
@@ -281,14 +255,7 @@ enum TAF_CALL_VOICE_DOMAIN_ENUM
 };
 typedef VOS_UINT8   TAF_CALL_VOICE_DOMAIN_ENUM_UINT8;
 
-/* Added by w00176964 for VoLTE_PhaseII 项目, 2013-9-12, end */
-/*****************************************************************************
- 枚举名    : TAF_CALL_EMC_DOMAIN_ENUM
- 枚举说明  : 紧急呼拨号域枚举
- 1.日    期   : 2016年7月13日
-   作    者   : m00217266
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_CALL_EMC_DOMAIN_ENUM
 {
     TAF_CALL_EMC_DOMAIN_CS                  = 0,                            /* CS域紧急呼 */
@@ -298,28 +265,17 @@ enum TAF_CALL_EMC_DOMAIN_ENUM
 };
 typedef VOS_UINT8   TAF_CALL_EMC_DOMAIN_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名     : TAF_CALL_SERVICE_TYPE_ENUM
-结构说明   : 业务类型枚举
-1.日    期   : 2016年11月25日
-  作    者   : f00179208
-  修改内容   : 创建
-*****************************************************************************/
+
 enum TAF_CALL_SERVICE_TYPE_ENUM
 {
     TAF_CALL_SERVICE_TYPE_NONE          = 0,                              /* 非WPS CALL */
     TAF_CALL_SERVICE_TYPE_WPS           = 1,                              /* WPS CALL */
+    TAF_CALL_SERVICE_TYPE_TEST          = 2,                              /* 用运营商的测试号码做呼叫 */
     TAF_CALL_SERVICE_TYPE_BUTT
 };
 typedef VOS_UINT8 TAF_CALL_SERVICE_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名     : TAF_CALL_PEER_VIDEO_SUPPORT_ENUM
-结构说明   : 对端视频能力类型枚举
-1.日    期   : 2017年07月03日
-  作    者   : w00316404
-  修改内容   : 创建
-*****************************************************************************/
+
 enum TAF_CALL_PEER_VIDEO_SUPPORT_ENUM
 {
     TAF_CALL_PEER_VIDEO_UNSUPPORT           = 0,                                /* 对端视频能力不支持 */
@@ -329,14 +285,18 @@ enum TAF_CALL_PEER_VIDEO_SUPPORT_ENUM
 typedef VOS_UINT8 TAF_CALL_PEER_VIDEO_SUPPORT_ENUM_UINT8;
 
 
+enum TAF_CALL_IMS_DOMAIN_ENUM
+{
+    TAF_CALL_IMS_DOMAIN_NULL           = 0,                                     /* 不是IMS电话 */
+    TAF_CALL_IMS_DOMAIN_LTE            = 1,                                     /* IMS电话在VOLTE上 */
+    TAF_CALL_IMS_DOMAIN_WIFI           = 2,                                     /* IMS电话在VOWIFI上 */
+    TAF_CALL_IMS_DOMAIN_BUTT
+};
+typedef VOS_UINT8 TAF_CALL_IMS_DOMAIN_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : NAS_CC_STATE_INFO_STRU
-结构说明  : CC对外提供的内部状态
-1.日    期   : 2011年10月22日
-  作    者   : o00132663
-  修改内容   : 创建
-*****************************************************************************/
+
+
+
 typedef struct
 {
     VOS_UINT8                           ucCallId;           /* 呼叫ID */
@@ -361,14 +321,7 @@ typedef struct
     NAS_CC_STATE_INFO_STRU              astCcStateInfoList[MN_CALL_MAX_NUM];                          /* 消息内容 */
 } AT_CC_STATE_QRY_CNF_MSG_STRU;
 
-/*****************************************************************************
-枚举名    : MN_CALL_380_CS_CALL_TYPE_ENUM
-结构说明  : 电话去CS域重拨时呼叫类型
 
-  1.日    期   : 2017年10月30日
-    作    者   : w00209387
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum MN_CALL_380_CS_CALL_TYPE_ENUM
 {
     MN_CALL_380_CS_CALL_TYPE_NORMAL             = 0x0,
@@ -393,18 +346,15 @@ enum MN_CALL_TYPE_ENUM
     MN_CALL_TYPE_FAX,                                                           /* group 3 fax */
     MN_CALL_TYPE_CS_DATA,                                                       /* CS data call*/
     MN_CALL_TYPE_EMERGENCY = 9,                                                 /* emergency call */
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-4-17, begin */
     MN_CALL_TYPE_MIEC,                                                          /* manually initiated ecall */
     MN_CALL_TYPE_AIEC,                                                          /* automatic initiated ecall */
     MN_CALL_TYPE_TEST,                                                          /* test ecall */
     MN_CALL_TYPE_RECFGURATION,                                                  /* reconfiguration call */
     MN_CALL_TYPE_PSAP_ECALL,                                                    /* 设置PSAP回呼的呼叫类型 */
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-4-17, end */
     MN_CALL_TYPE_BUTT
 };
 typedef VOS_UINT8  MN_CALL_TYPE_ENUM_U8;
 
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-18, begin */
 /* 紧急呼叫的Category,3gpp 31102中定义*/
 typedef enum MN_CALL_EMER_CATEGORY_TYPE
 {
@@ -413,7 +363,6 @@ typedef enum MN_CALL_EMER_CATEGORY_TYPE
     MN_CALL_EMER_CATEGORG_FIRE_BRIGADE      = 0x04,
     MN_CALL_EMER_CATEGORG_MARINE_GUARD      = 0x08,
     MN_CALL_EMER_CATEGORG_MOUNTAIN_RESCUE   = 0x10,
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, begin */
     MN_CALL_EMER_CATEGORG_MAN_INIT_ECALL    = 0x20,
     MN_CALL_EMER_CATEGORG_AUTO_INIT_ECALL   = 0x40,
 
@@ -424,13 +373,11 @@ typedef enum MN_CALL_EMER_CATEGORY_TYPE
     MN_CALL_EMER_EXT_CATEGORG_CONTRABANDS_REPORT                = 0x09,
 
     MN_CALL_EMER_CATEGORG_MAX               = 0x80,
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, end */
 
     MN_CALL_EMER_CATEGORG_ERR_VALUE         = 0xFF,
 
 }MN_CALL_EMER_CATEGORY_TYPE_ENUM;
 typedef VOS_UINT8 MN_CALL_EMER_CATEGORG_TYPE_ENUM_U8;
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-18, end */
 
 enum MN_CALL_EX_STATE_ENUM
 {
@@ -444,9 +391,7 @@ enum MN_CALL_EX_STATE_ENUM
     MN_CALL_S_CCBS_WAITING_ACTIVE,                                              /*CCBS等待激活态*/
     MN_CALL_S_CCBS_WAITING_RECALL,                                              /*CCBS等待回呼态*/
     MN_CALL_S_UNKNOWN,                                                          /* unknown state */
-    /* Deleted by w00176964 for VoLTE_PhaseIII 项目, 2013-12-14, begin */
 
-    /* Deleted by w00176964 for VoLTE_PhaseIII 项目, 2013-12-14, end */
     MN_CALL_S_WAITING_ACCEPT,                                                   /* 该状态为SRVCC过程前用户接听失败，成功后在GU下发送connect */
     MN_CALL_S_WAITING_SRV_ACQ,                                                  /* 等待业务捕获确认 */
     MN_CALL_S_WAITING_RF_AVAIL,                                                 /* 等待RF资源可用 */
@@ -456,13 +401,7 @@ enum MN_CALL_EX_STATE_ENUM
 typedef VOS_UINT8  MN_CALL_STATE_ENUM_U8;
 
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_SUB_STATE_ENUM_UINT8
- 结构说明  : 呼叫子状态
- 1.日    期   : 2014年6月13日
-   作    者   : z00161729
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_CALL_SUB_STATE_ENUM
 {
     TAF_CALL_SUB_STATE_NULL,
@@ -651,9 +590,7 @@ enum MN_CALL_SUPS_CMD_ENUM
     MN_CALL_SUPS_CMD_REL_ALL_EXCEPT_WAITING_CALL,                               /* Releases all calls (if any exist) except waiting call */
     MN_CALL_SUPS_CMD_REL_HELD,                                                  /* Releases all held calls*/
     MN_CALL_SUPS_CMD_REL_ACTIVE,                                                /* Releases all active calls */
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-4-22, begin */
     MN_CALL_SUPS_CMD_REL_ECALL,                                                 /* Releases eCall*/
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-4-22, end */
     MN_CALL_SUPS_CMD_ECONF_REL_USER,                                            /* Releases member in econf  */
     MN_CALL_SUPS_CMD_ECONF_MERGE_CALL,                                          /* Merge econf and normal call */
     MN_CALL_SUPS_CMD_ACPT_WAITING_CALL,
@@ -903,7 +840,6 @@ typedef struct
     MN_CALL_ECT_IND_STRU                stEctIndicator;                         /* */
 } MN_CALL_SS_NOTIFY_STRU;
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, begin */
 /* 设置CSSN的类型,激活或去激活 */
 enum MN_CALL_SET_CSSN_TYPE_ENUM
 {
@@ -921,7 +857,6 @@ enum MN_CALL_CUUS1_FLG_ENUM
 };
 typedef VOS_UINT32 MN_CALL_CUUS1_FLG_ENUM_U32;
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, end */
 
 /* 设置UUS1的类型,激活或去激活 */
 enum MN_CALL_SET_UUS1_TYPE_ENUM
@@ -949,9 +884,7 @@ enum MN_CALL_UUS1_MSG_TYPE_ENUM
 typedef VOS_UINT32 MN_CALL_UUS1_MSG_TYPE_ENUM_U32;
 
 #define MN_CALL_MAX_UUS1_MSG_NUM        (7)
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, begin */
 #define MN_CALL_MAX_CSSN_MSG_NUM        (2)
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, end */
 
 /*The user-user is a type 4 information element with a minimum length of 3 octets
 and a maximum length of either 35 or 131 octets. In the SETUP message the
@@ -1001,18 +934,14 @@ enum MN_CALL_EVENT_ENUM
     MN_CALL_EVT_RELEASED            = 0x04,                                     /* Call Released */
     MN_CALL_EVT_INCOMING            = 0x05,                                     /* Incoming Call */
     MN_CALL_EVT_SS_CMD_PROGRESS     = 0x06,                                     /* Call Related Command is in progress */
-    /* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-09, begin */
     MN_CALL_EVT_SS_CMD_RSLT         = 0x07,                                     /* Call Related Command is Completed */
     MN_CALL_EVT_SS_NOTIFY           = 0x08,                                     /* SS Notify */
     MN_CALL_EVT_START_DTMF_CNF      = 0x09,                                     /* Start DTMF tempooralily response */
     MN_CALL_EVT_STOP_DTMF_CNF       = 0x0b,                                     /* Stop DTMF tempooralily response */
-    /* Deleted by s00217060 for VoLTE_PhaseI  项目, 2013-07-20, begin */
-    /* Deleted by s00217060 for VoLTE_PhaseI  项目, 2013-07-20, end */
     MN_CALL_EVT_CCBS_POSSIBLE       = 0x0d,                                     /* 可以激活CCBS*/
     MN_CALL_EVT_TIME_EXPIRED        = 0x0e,                                     /*超时*/
     MN_CALL_EVT_UUS1_INFO           = 0x0f,                                     /* UUS1信息上报 */
     MN_CALL_EVT_GET_CDUR_CNF        = 0x10,                                     /* 通话时长 */
-    /* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-09, end */
     MN_CALL_EVT_CLCC_INFO           = 0x11,                                     /* 当前所有呼叫的信息 */
     MN_CALL_EVT_ALL_RELEASED        = 0x12,                                     /* Call All Released */
     MN_CALL_EVT_SET_UUS1_INFO_CNF   = 0x13,                                     /* 设置用户服务信令1信息 */
@@ -1027,29 +956,19 @@ enum MN_CALL_EVENT_ENUM
 
     MN_CALL_EVT_CLPR_SET_CNF        = 0x1a,
 
-    /* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, begin */
     MN_CALL_EVT_CHANNEL_INFO_IND    = 0x1c,
-    /* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, end */
 
     MN_CALL_EVT_XLEMA_CNF           = 0x1d,
 
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, begin */
     MN_CALL_EVT_SET_CSSN_CNF        = 0x1e,
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, end */
 
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-09, begin */
     MN_CALL_EVT_CALL_ORIG_CNF       = 0x1f,
     MN_CALL_EVT_SUPS_CMD_CNF        = 0x20,
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-09, end */
 
-    /* Modified by l00198894 for V9R1 STK升级, 2013/07/11, begin */
     MN_CALL_EVT_START_DTMF_RSLT     = 0x22,
     MN_CALL_EVT_STOP_DTMF_RSLT      = 0x23,
-    /* Modified by l00198894 for V9R1 STK升级, 2013/07/11, end */
 
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, begin */
     MN_CALL_EVT_QRY_ECALL_INFO_CNF  = 0x24,
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, end */
 
     MN_CALL_EVT_CALL_MODIFY_CNF     = 0x25,
     MN_CALL_EVT_CALL_ANSWER_REMOTE_MODIFY_CNF   = 0x26,
@@ -1093,7 +1012,6 @@ enum MN_CALL_EVENT_ENUM
 };
 typedef  VOS_UINT32  MN_CALL_EVENT_ENUM_U32;
 
-/* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-08, begin */
 /* 把原有的枚举定义进行调整 */
 /* TAF_CS_CAUSE需与NAS_CC_CAUSE对应 添加时注意 */
 #define TAF_CS_CAUSE_CC_NW_SECTION_BEGIN    (0x0000)
@@ -1112,37 +1030,14 @@ typedef  VOS_UINT32  MN_CALL_EVENT_ENUM_U32;
 #define TAF_CS_CAUSE_VC_BEGIN               (0x0D00)
 #define TAF_CS_CAUSE_IMS_BEGIN              (0x4800)
 #define TAF_CS_CAUSE_IMSA_BEGIN             (0x4C00)
-/* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-08, end */
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, begin */
 #define TAF_CS_CAUSE_XCALL_BEGIN            (0x9000)
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, end */
 
 
-/*****************************************************************************
- 枚举名    : TAF_CS_CAUSE_ENUM
- 结构说明  : CS域错误码
 
-  1.日    期   : 2012年11月16日
-    作    者   : Y00213812
-    修改内容   : STK补充特性及DCM需求开发项目新增枚举
-  2.日    期   : 2012年11月16日
-    作    者   : Y00213812
-    修改内容   : DTS2011111401720,删除CS_DETACH原因值
-  3.日    期   : 2013年07月09日
-    作    者   : s00217060
-    修改内容   : VoLTE_PhaseI项目:枚举定义进行调整
-                (1)CC层（网络）的原因值从1~255（目前协议规定最大127）
-                (2)CALL模块内部的原因值从256~511
-                (3)IMS原因值范围512~767
-                (4)IMSA模块内部原因值768~1023
-  3.日    期   : 2015年03月28日
-    作    者   : n00269697
-    修改内容   : CHR 优化项目：补充协议规定的原因值枚举
-
-*****************************************************************************/
 enum TAF_CS_CAUSE_ENUM
 {
-    /* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-17, begin */
     TAF_CS_CAUSE_SUCCESS                                                        = (TAF_CS_CAUSE_CC_NW_SECTION_BEGIN + 0),
 
     /* CS域网络上报的错误原因值 */
@@ -1355,6 +1250,9 @@ enum TAF_CS_CAUSE_ENUM
     TAF_CS_CAUSE_MM_INTER_ERR_REEST_FAIL                            = (TAF_CS_CAUSE_MM_INTER_ERR_BEGIN + 24),   /* MM reest状态收到est_cnf(失败)或rel ind,不重拨 */
     TAF_CS_CAUSE_MM_INTER_ERR_CC_REL_REQ                            = (TAF_CS_CAUSE_MM_INTER_ERR_BEGIN + 25),
     TAF_CS_CAUSE_MM_INTER_ERR_LTE_LIMITED_SERVICE                   = (TAF_CS_CAUSE_MM_INTER_ERR_BEGIN + 26),
+    TAF_CS_CAUSE_MM_INTER_ERR_GU_LIMITED_SERVICE                    = (TAF_CS_CAUSE_MM_INTER_ERR_BEGIN + 27),
+    TAF_CS_CAUSE_MM_INTER_ERR_INTER_RAT_SYSTEM_CHANGE_CSFB_MT_EXIST = TAF_CS_CAUSE_MM_INTER_ERR_BEGIN + 28,
+    TAF_CS_CAUSE_MM_INTER_ERR_OUT_OF_COVERAGE_CSFB_MT_EXIST         = TAF_CS_CAUSE_MM_INTER_ERR_BEGIN + 29,
 
 
     /* 平台内部的错误原因值 */
@@ -1381,14 +1279,11 @@ enum TAF_CS_CAUSE_ENUM
     TAF_CS_CAUSE_DOMAIN_SELECTION_TIMER_EXPIRED                     = (TAF_CS_CAUSE_CALL_BEGIN + 23),           /* 业务域选择缓存超时 */
     TAF_CS_CAUSE_MODEM_POWER_OFF                                    = (TAF_CS_CAUSE_CALL_BEGIN + 24),           /* MODEM关机 */
     TAF_CS_CAUSE_CS_NOT_SUPPORT_ENCRYPT                             = (TAF_CS_CAUSE_CALL_BEGIN + 25),           /* CS域不支持语音加密 */
-    /* Added by y00245242 for VoLTE_PhaseII 项目, 2013-10-17, end */
 
-    /* Added by s00261364 for V3R360_eCall项目, 2014-4-3, begin */
     TAF_CS_CAUSE_ECALL_MODE_NOT_ALLOWED                             = (TAF_CS_CAUSE_CALL_BEGIN + 26),           /* ECALL呼叫模式不允许 */
     TAF_CS_CAUSE_ECALL_CACHE_MSG_FAIL                               = (TAF_CS_CAUSE_CALL_BEGIN + 27),           /* 缓存消息失败 */
     TAF_CS_CAUSE_ECALL_LOWERPOWER_POWER_ON_FAIL                     = (TAF_CS_CAUSE_CALL_BEGIN + 28),           /* 温保状态下开机失败 */
     TAF_CS_CAUSE_CALL_NUMBER_NOT_EXIST                              = (TAF_CS_CAUSE_CALL_BEGIN + 29),
-    /* Added by s00261364 for V3R360_eCall项目, 2014-4-3, end */
 
     TAF_CS_CAUSE_NO_RF                                              = (TAF_CS_CAUSE_CALL_BEGIN + 30),
 
@@ -1412,12 +1307,7 @@ enum TAF_CS_CAUSE_ENUM
     TAF_CS_CAUSE_ECALL_CALL_MODE_NOT_ALLOW                          = (TAF_CS_CAUSE_CALL_BEGIN + 44),           /* ECALL的呼叫模式不对 */
     TAF_CS_CAUSE_ECONF_CALL_TYPE_NOT_ALLOW                          = (TAF_CS_CAUSE_CALL_BEGIN + 45),           /* 增强型通话的呼叫类型不对 */
     TAF_CS_CAUSE_REPEAT_ASYNC_ANS_NOT_ALLOW                         = (TAF_CS_CAUSE_CALL_BEGIN + 46),           /* 重复异步接听 */
-
-    /* Added by z00385378 for T310定制, 2017-1-9, begin */
-    TAF_CS_CAUSE_CC_INTER_ERR_T310_TIME_OUT                         = (TAF_CS_CAUSE_CALL_BEGIN + 47),
-    /* Added by z00385378 for T310定制, 2017-1-9, end */
-
-    TAF_CS_CAUSE_CALL_SRV_ACQ_FAIL_NO_RF                            = (TAF_CS_CAUSE_CALL_BEGIN + 48),
+    TAF_CS_CAUSE_CALL_SRV_ACQ_FAIL_NO_RF                            = (TAF_CS_CAUSE_CALL_BEGIN + 47),
 
     TAF_CS_CAUSE_UNKNOWN                                            = (TAF_CS_CAUSE_CALL_BEGIN + 0xFF),         /* 未知错误 */
 
@@ -1431,6 +1321,7 @@ enum TAF_CS_CAUSE_ENUM
     TAF_CS_CAUSE_VC_ERR_SET_VOLUME_FAIL                             =  (TAF_CS_CAUSE_VC_BEGIN + 5),             /* 设置音量失败 */
     TAF_CS_CAUSE_VC_ERR_SAMPLE_RATE_FAIL                            =  (TAF_CS_CAUSE_VC_BEGIN + 6),             /* 速率采样失败 */
     TAF_CS_CAUSE_VC_ERR_TI_START_EXPIRED                            =  (TAF_CS_CAUSE_VC_BEGIN + 7),             /* start保护定时器超时 */
+    TAF_CS_CAUSE_VC_ERR_SET_CODEC_FAIL                              =  (TAF_CS_CAUSE_VC_BEGIN + 8),             /* 设置codec失败 */
 
     /* IMS的错误原因值 */
     TAF_CS_CAUSE_IMS_OK                                             = (TAF_CS_CAUSE_IMS_BEGIN + 200),
@@ -1515,7 +1406,6 @@ enum TAF_CS_CAUSE_ENUM
     TAF_CS_CAUSE_IMSA_CMCC_TCALL_TIMEOUT                            = (TAF_CS_CAUSE_IMSA_BEGIN + 12),           /* 中国移动需求, Tcall超时后CS域重播*/
     TAF_CS_CAUSE_IMSA_CMCC_TQOS_TIMEOUT                             = (TAF_CS_CAUSE_IMSA_BEGIN + 13),           /* 中国移动需求, Tqos超时后CS域重播*/
     TAF_CS_CAUSE_IMSA_STRM_RTP_BREAK                                = (TAF_CS_CAUSE_IMSA_BEGIN + 14),           /* 通话中没有语音包 */
-    /* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-17, end */
     /* 新增原因值, 该原因值用于不用去CS域重播时的IMS内部原因值转换 */
     TAF_CS_CAUSE_IMSA_IMS_ERROR                                     = (TAF_CS_CAUSE_IMSA_BEGIN + 15),
     TAF_CS_CAUSE_IMSA_NO_RF                                         = (TAF_CS_CAUSE_IMSA_BEGIN + 16),           /* DSDS没有申请到资源 */
@@ -1531,6 +1421,7 @@ enum TAF_CS_CAUSE_ENUM
     TAF_CS_CAUSE_IMSA_CS_AND_IMS_CALL_CONFILICT                     = (TAF_CS_CAUSE_IMSA_BEGIN + 26),
     TAF_CS_CAUSE_IMSA_STRM_RTP_BREAK_WIFI_SIGNAL_BAD                = (TAF_CS_CAUSE_IMSA_BEGIN + 27),           /* WIFI信号差引发的RTP break导致VOWIFI电话掉话 */
     TAF_CS_CAUSE_IMSA_STRM_RTP_BREAK_WIFI_CONGEST                   = (TAF_CS_CAUSE_IMSA_BEGIN + 28),           /* WIFI信号差拥塞引发的RTP break导致VOWIFI电话掉话 */
+    TAF_CS_CAUSE_IMSA_IMS_IGNORE_ERROR                              = (TAF_CS_CAUSE_IMSA_BEGIN + 29),           /* 仅用作IMSA上报给TAF的可忽略错误原因值 */
 
     /* XCALL 错误原因值 */
     TAF_CS_CAUSE_XCALL_NO_SERVICE                                   = (TAF_CS_CAUSE_XCALL_BEGIN + 1),           /* No Service\x{ff0c}Call Redial */
@@ -1603,6 +1494,15 @@ enum TAF_CS_CAUSE_ENUM
     TAF_CS_CAUSE_XCALL_POWER_DOWN_POWER_SAVE,                                                                    /* power save 引起的主叫失败 */
 
     TAF_CS_CAUSE_XCALL_INTER_ABORT,
+
+    /* 将TAF_CS_CAUSE_XCALL_CLIENT_END拆分 */
+    TAF_CS_CAUSE_XCALL_CLIENT_END_REDIAL_INTERVAL_RUNNING,
+    TAF_CS_CAUSE_XCALL_CLIENT_END_WAITING_RF_AVAIL,
+    TAF_CS_CAUSE_XCALL_CLIENT_END_WAITING_SRV_ACQ,
+    TAF_CS_CAUSE_XCALL_CLIENT_END_DIALING,
+    TAF_CS_CAUSE_XCALL_CLIENT_END_ALERTING,
+    TAF_CS_CAUSE_XCALL_CLIENT_END_ACTIVE,
+
     TAF_CS_CAUSE_BUTT                                               = (0xFFFFFFFF)
 };
 typedef  VOS_UINT32  TAF_CS_CAUSE_ENUM_UINT32;
@@ -1628,13 +1528,7 @@ enum MN_CALL_PRESENTATION_IND_ENUM                                              
 };
 typedef VOS_UINT8   MN_CALL_PRESENTATION_IND_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_PRESENTATION_IND_ENUM
- 枚举说明  : present indication
-  1.日    期   : 2015年8月10日
-    作    者   : f00279542
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 /*============================================================================*/
 /* Table 2.7.4.41. /3GPP2 C.S005-A v6.0: Calling party number */
 enum TAF_CALL_PRESENTATION_IND_ENUM                                                                   /* Presentation indicator (octet 3a) */
@@ -1651,13 +1545,7 @@ typedef VOS_UINT8   TAF_CALL_PRESENTATION_IND_ENUM_UINT8;
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, begin */
 
 /* 移枚举定义到tafAppCall.h文件中 */
-/*****************************************************************************
- 枚举名    : TAF_CALL_DIGIT_MODE_ENUM
- 枚举说明  : Digit mode
- 1.日    期   : 2014年09月04日
-   作    者   : l60609
-   修改内容   : 新增
-*****************************************************************************/
+
 enum TAF_CALL_DIGIT_MODE_ENUM
 {
     TAF_CALL_DIGIT_MODE_DTMF            = 0x00,
@@ -1666,13 +1554,7 @@ enum TAF_CALL_DIGIT_MODE_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_DIGIT_MODE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_NUMBER_PLAN_ENUM
- 枚举说明  : Number plan
- 1.日    期   : 2014年09月04日
-   作    者   : l60609
-   修改内容   : 新增
-*****************************************************************************/
+
 enum TAF_CALL_NUMBER_PLAN_ENUM
 {
     TAF_CALL_NUMBER_PLAN_UNKNOW         = 0x00,
@@ -1684,13 +1566,7 @@ enum TAF_CALL_NUMBER_PLAN_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_NUMBER_PLAN_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_NUMBER_TYPE_ENUM
- 枚举说明  : Number type
- 1.日    期   : 2014年09月04日
-   作    者   : l60609
-   修改内容   : 新增
-*****************************************************************************/
+
 enum TAF_CALL_NUMBER_TYPE_ENUM
 {
     TAF_CALL_NUMBER_TYPE_UNKNOW                             = 0x00,
@@ -1706,14 +1582,7 @@ enum TAF_CALL_NUMBER_TYPE_ENUM
 typedef VOS_UINT8 TAF_CALL_NUMBER_TYPE_ENUM_UINT8;
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, end */
 
-/*****************************************************************************
-枚举名    : MN_CALL_MODIFY_STATUS_ENUM
-结构说明  : SPM和AT的之间MODIFY过程中的状态
 
-  1.日    期   : 2013年6月23日
-    作    者   : f00179208
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum MN_CALL_MODIFY_STATUS_ENUM
 {
     MN_CALL_MODIFY_REMOTE_USER_REQUIRE_TO_MODIFY,                               /* 远程用户发起的modify */
@@ -1724,13 +1593,7 @@ enum MN_CALL_MODIFY_STATUS_ENUM
 typedef  VOS_UINT8  MN_CALL_MODIFY_STATUS_ENUM_UINT8;
 
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_SEND_FLASH_CNF_STRU
-结构说明    : Send Burst DTMF请求回复消息内容
-  1.日    期   : 2014年11月10日
-    作    者   : f279542
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum TAF_CALL_SEND_BURST_DTMF_CNF_RESULT_ENUM
 {
     TAF_CALL_SEND_BURST_DTMF_CNF_RESULT_SUCCESS         = 0,
@@ -1743,13 +1606,7 @@ enum TAF_CALL_SEND_BURST_DTMF_CNF_RESULT_ENUM
 };
 typedef VOS_UINT8   TAF_CALL_SEND_BURST_DTMF_CNF_RESULT_ENUM_U8;
 
-/********************************************************************
- 枚举名    : TAF_CALL_REJ_CAUSE_ENUM
- 结构说明  : 拒绝来电原因值枚举，软银定制需求新增
-  1.日    期   : 2016年9月20日
-    作    者   : s00370485
-    修改内容   : 新增枚举
-********************************************************************/
+
 enum TAF_CALL_REJ_CAUSE_ENUM
 {
     TAF_CALL_REJ_CAUSE_USER_BUSY        = 0,        /* CS域挂断电话原因值为#17 User Busy, IMS域挂断电话原语为486 Busy Here */
@@ -1761,13 +1618,7 @@ typedef VOS_UINT8 TAF_CALL_REJ_CAUSE_ENUM_UINT8;
 
 /* Added by f62575 for STK&DCM Project, 2012/09/18, begin */
 
-/*****************************************************************************
-结构名      : MN_CALL_CF_CAUSE_ENUM
-结构说明    : 前转呼叫转移原因值枚举类型
-  1.日    期   : 2016年07月05日
-    作    者   : w00316404
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum MN_CALL_CF_CAUSE_ENUM
 {
     MN_CALL_CF_CAUSE_NONE               = 0,
@@ -1783,13 +1634,7 @@ enum MN_CALL_CF_CAUSE_ENUM
 };
 typedef VOS_UINT8  MN_CALL_CF_CAUSE_ENUM_UINT8;
 
-/*****************************************************************************
-结构名      : MN_CALL_HOLD_TONE_ENUM
-结构说明    : 是否播放本地提示音枚举类型
-  1.日    期   : 2016年09月24日
-    作    者   : w00316404
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 enum MN_CALL_HOLD_TONE_ENUM
 {
     MN_CALL_HOLD_TONE_DISABLE                   = 0,
@@ -1799,13 +1644,7 @@ enum MN_CALL_HOLD_TONE_ENUM
 };
 typedef VOS_UINT8  MN_CALL_HOLD_TONE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_CCWA_CTRL_MODE_ENUM
- 枚举说明  : 呼叫等待控制模式枚举
- 1.日    期   : 2015年8月24日
-   作    者   : n00269697
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_CALL_CCWA_CTRL_MODE_ENUM
 {
     TAF_CALL_CCWA_CTRL_BY_NW            = 0,
@@ -1815,14 +1654,7 @@ enum TAF_CALL_CCWA_CTRL_MODE_ENUM
 };
 typedef VOS_UINT8   TAF_CALL_CCWA_CTRL_MODE_ENUM_U8;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_CCWAI_MODE_ENUM
- 枚举说明  : 呼叫等待设置模式
 
- 1.日    期   : 2016年02月16日
-   作    者   : n00269697
-   修改内容   : DTS2016021506132，ccwai设置由call处理，call给ims提供接口来查询
-*****************************************************************************/
 enum TAF_CALL_CCWAI_MODE_ENUM
 {
     TAF_CALL_CCWAI_MODE_DISABLE               = 0,
@@ -1832,13 +1664,7 @@ enum TAF_CALL_CCWAI_MODE_ENUM
 };
 typedef  VOS_UINT8  TAF_CALL_CCWAI_MODE_ENUM_UINT8;
 
-/*********************************************************************
- 枚举名    : TAF_CALL_CNI_VALIDITY_ENUM
- 枚举说明  : +CNAP命令主动上报参数<CNI_Validity>对应枚举
- 1.日    期  : 2016年11月10日
-   作    者  : l00198894
-   修改内容  : 新增枚举
-*********************************************************************/
+
 enum TAF_CALL_CNI_VALIDITY_ENUM
 {
     TAF_CALL_CNI_VALIDITY_VALID             = 0,                                /* CNI Valid */
@@ -1848,13 +1674,7 @@ enum TAF_CALL_CNI_VALIDITY_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_CNI_VALIDITY_ENUM_UINT8;
 
-/*********************************************************************
- 枚举名    : TAF_CALL_DCS_ENUM
- 枚举说明  : +CNAP命令<name>参数的Data Coding Scheme
- 1.日    期  : 2016年11月10日
-   作    者  : l00198894
-   修改内容  : 新增枚举
-*********************************************************************/
+
 enum TAF_CALL_DCS_ENUM
 {
     TAF_CALL_DCS_7BIT                   = 0,                                    /* 7 bit */
@@ -1864,13 +1684,7 @@ enum TAF_CALL_DCS_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_DCS_ENUM_UINT8;
 
-/*********************************************************************
- 枚举名    : TAF_CALL_MODIFY_REASON_ENUM
- 枚举说明  : 远程用户发起MODIFY事件原因
- 1.日    期  : 2017年07月06日
-   作    者  : w00316404
-   修改内容  : 新增枚举
-*********************************************************************/
+
 enum TAF_CALL_MODIFY_REASON_ENUM
 {
     TAF_CALL_MODIFY_REASON_REMOTE                   = 0,
@@ -1881,13 +1695,17 @@ enum TAF_CALL_MODIFY_REASON_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_MODIFY_REASON_ENUM_UINT8;
 
-/*********************************************************************
- 结构名    : TAF_CALL_CNAP_STRU
- 结构说明  : Callinfo中CNAP主叫名称信息结构体
- 1.日    期  : 2016年11月10日
-   作    者  : l00198894
-   修改内容  : 新增枚举
-*********************************************************************/
+
+enum TAF_CALL_ECBM_DOMAIN_ENUM
+{
+    TAF_CALL_ECBM_DOMAIN_3GPP                       = 0,
+    TAF_CALL_ECBM_DOMAIN_WIFI                       = 1,
+
+    TAF_CALL_ECBM_DOMAIN_BUTT
+};
+typedef VOS_UINT8 TAF_CALL_ECBM_DOMAIN_ENUM_UINT8;
+
+
 typedef struct
 {
     VOS_UINT8                           ucExistFlag;                            /* 网络是否携带CNAP信息标志 */
@@ -1899,14 +1717,7 @@ typedef struct
 } TAF_CALL_CNAP_STRU;
 
 
-/*****************************************************************************
- 结构名    : MN_CALL_SUBADDR_STRU
- 结构说明  : 呼叫子地址设置结构
 
-  1.日    期   : 2012年09月18日
-    作    者   : f62575
-    修改内容   : STK&DCM 项目新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           IsExist;
@@ -1919,14 +1730,7 @@ typedef struct
 
 #define MN_CALL_MAX_CALLED_BCD_NUM_LEN      (40)                                /* 3GPP TS 24.008 10.5.4.7 */
 #define MN_CALL_MAX_CALLED_ASCII_NUM_LEN    (MN_CALL_MAX_CALLED_BCD_NUM_LEN * 2)
-/*****************************************************************************
- 结构名    : MN_CALL_CALLED_NUM_STRU
- 结构说明  : 被叫号码结构体
 
-  1.日    期   : 2012年10月29日
-    作    者   : l00198894
-    修改内容   : DTS2012100901666: 新增被叫号码结构体
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_NUM_TYPE_ENUM_U8            enNumType;
@@ -1939,42 +1743,18 @@ typedef struct
 
 }MN_CALL_CALLED_NUM_STRU;
 
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-15, begin */
-/*****************************************************************************
- 结构名    : MN_CALL_EMERGENCY_CAT_STRU
- 结构说明  : 紧急呼叫CATEGORY，参考24008协议的10.5.4.33 Service category
-             bExist             是否存在紧急呼叫CATEGORY；
-             ucEmergencyCat     紧急呼叫的CAT
- 1.日    期   : 2012年09月18日
-   作    者   : f62575
-   修改内容   : 新生成函数
- 2.日    期   : 2013年07月27日
-   作    者   : s00217060
-   修改内容   : VoLTE_PhaseI项目
-*****************************************************************************/
+
 typedef struct
 {
     VOS_BOOL                            bExist;
     VOS_UINT8                           ucEmergencyCat;
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-27, begin */
     VOS_UINT8                           aucReserve[3];
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-27, end */
 }MN_CALL_EMERGENCY_CAT_STRU;
 
-/* Deleted by w00176964 for VoLTE_PhaseIII 项目, 2013-12-31, begin */
 
-/* Deleted by w00176964 for VoLTE_PhaseIII 项目, 2013-12-31, end */
 
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-07-15, end */
 
-/*****************************************************************************
- 结构名    : MN_CALL_CALLED_NUM_STRU
- 结构说明  : 被叫号码结构体
 
-  1.日    期   : 2013年01月26日
-    作    者   : Y00213812
-    修改内容   : 新增挂断方向结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucIsUser;
@@ -1982,14 +1762,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }MN_CALL_DISC_DIR;
 
-/*****************************************************************************
- 结构名    : MN_CALL_DISPLAY_NAME_STRU
- 结构说明  : DISPLAY NAME结构体
 
-  1.日    期   : 2016年01月15日
-    作    者   : W00316404
-    修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucNumLen;
@@ -2006,13 +1779,7 @@ typedef struct
     VOS_UINT8                                   aucReserved[3];
 }TAF_CALL_EVT_SEND_BURST_DTMF_CNF_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_SEND_FLASH_RSLT_STRU
-结构说明    : Send Burst DTMF请求结果消息内容
-  1.日    期   : 2014年11月10日
-    作    者   : f279542
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -2020,14 +1787,7 @@ typedef struct
     VOS_UINT8                           ucResult;
 }TAF_CALL_EVT_SEND_BURST_DTMF_RSLT_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_ERROR_INFO_TEXT_STRU
- 结构说明  : ERROR INFO TEXT结构体
 
-  1.日    期   : 2016年11月24日
-    作    者   : f00179208
-    修改内容   : 新生成函数
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucTextLen;
@@ -2036,22 +1796,13 @@ typedef struct
 }TAF_CALL_ERROR_INFO_TEXT_STRU;
 
 
-/* Added by z00385378 for T310定制, 2017-1-9, begin */
-/*****************************************************************************
- 结构名    : TAF_CALL_CC_TIMEROUT_RECORD_STRU
- 结构说明  : CC 定时器超时记录 结构体
-
-  1.日    期   : 2017年1月25日
-    作    者   : z00385378
-    修改内容   : 新生成函数
-*****************************************************************************/
 typedef struct
 {
-    VOS_UINT8                           ucRecordNum;                            /* 定时器超时次数 */
-    VOS_UINT8                           aucReserved[3];
-    VOS_UINT32                          aulCause[TAF_CALL_MAX_CC_TIMEROUT_NUM]; /* 记录Cc侧定时器超时原因 */
-}TAF_CALL_CC_TIMEROUT_RECORD_STRU;
-/* Added by z00385378 for T310定制, 2017-1-9, end */
+    VOS_UINT8                           ucIsEcbmAllowed;    /* 是否允许进入ECBM */
+    TAF_CALL_ECBM_DOMAIN_ENUM_UINT8     enEcbmDomain;       /* ECBM域:  3GPP, WIFI */
+    VOS_UINT8                           aucReserved[2];
+}TAF_CALL_ECBM_INFO_STRU;
+
 
 /* Call Info Structure */
 typedef struct
@@ -2064,9 +1815,9 @@ typedef struct
     MN_CALL_TYPE_ENUM_U8                enCallType;                             /* Call Type */
     MN_CALL_MODE_ENUM_U8                enCallMode;                             /* Call Mode */
     MN_CALL_DIR_ENUM_U8                 enCallDir;                              /* Call Direction(MO/MT) */
-    MN_CALL_PRESENTATION_IND_ENUM_UINT8 enCallingPI;
+    MN_CALL_PRESENTATION_IND_ENUM_UINT8 enCallingNumPI;
+    MN_CALL_PRESENTATION_IND_ENUM_UINT8 enRedirectNumPI;
     TAF_CALL_SUB_STATE_ENUM_UINT8       enCallSubState;
-    VOS_UINT8                           ucEconfFlag;
     MN_CALL_CS_DATA_CFG_INFO_STRU       stDataCfgInfo;                          /* Data Configuration */
     MN_CALL_BCD_NUM_STRU                stCallNumber;                           /* Call Number */
     MN_CALL_SUBADDR_STRU                stSubCallNumber;                        /* Call SubAddress */
@@ -2113,13 +1864,15 @@ typedef struct
     TAF_CALL_ERROR_INFO_TEXT_STRU       stErrInfoText;                          /* 异常信息文本 */
     VOS_UINT8                           ucStartHifiFlag;                        /* IMSA指示是否开启HIFI的标识 */
     TAF_CALL_SERVICE_TYPE_ENUM_UINT8    enServiceType;
-    VOS_UINT8                           aucReserved[2];
+    VOS_UINT8                           ucEconfFlag;
+    VOS_UINT8                           aucReserved[1];
+
+    TAF_CALL_ECBM_INFO_STRU             stEcbmInfo;
 } MN_CALL_INFO_STRU;
 
 
 typedef struct
 {
-    /* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-15, begin */
     MN_CALL_TYPE_ENUM_U8                enCallType;                             /* Call Type */
     MN_CALL_CLIR_CFG_ENUM_U8            enClirCfg;                              /* CLIR Configuration */
     MN_CALL_MODE_ENUM_U8                enCallMode;                             /* Call Mode */
@@ -2130,7 +1883,6 @@ typedef struct
     MN_CALL_SUBADDR_STRU                stSubaddr;                              /* Subaddress */
 
     MN_CALL_EMERGENCY_CAT_STRU          stEmergencyCat;                         /* Emergency Catory */
-    /* Modified by s00217060 for VoLTE_PhaseI  项目, 2013-07-15, end */
 
     VOS_UINT8                           ucImsInvitePtptFlag;                    /* IMS 邀请第三方通话标记 */
 
@@ -2161,16 +1913,7 @@ typedef struct
 } MN_CALL_ANS_PARAM_STRU;
 
 /* Modified by f62575 for V9R1 STK升级, 2013-6-26, begin */
-/*****************************************************************************
- 结构名    : TAF_CALL_DTMF_PARAM_STRU
- 结构说明  : APP与TAF的DTMF请求消息信息字段结构
- 1.日    期  : 2013年07月11日
-   作    者  : l00198894
-   修改内容  : V9R1 STK升级，增加ulTimerName
- 2.日    期   :2013年10月24日
-   作    者   :z00161729
-   修改内容   :DTS2013102403705:dtmf不支持off_length参数，SBM IOT认证需要stop dtmf req和下一个start dtmf req间隔大于70ms小于600ms
-*****************************************************************************/
+
 typedef struct
 {
     MN_CALL_ID_T                        CallId;                                 /* 呼叫ID，0: 代表当前默认呼叫 */
@@ -2193,31 +1936,15 @@ typedef struct
     MN_CALL_CALLED_NUM_STRU             stRemoveNum;                            /* 增强型会议中需要移除的与会者号码 */
 } MN_CALL_SUPS_PARAM_STRU;
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, begin */
-/*****************************************************************************
- 结构名    : MN_CALL_SET_CSSN_REQ_STRU
- 结构说明  : AT与CS AT+Cssn命令设置结构
 
-  1.日    期   : 2013年3月25日
-    作    者   : s00217060
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulActNum;                               /* 需要设置的CSSN的个数 */
     MN_CALL_SET_CSSN_TYPE_ENUM_U32      aenSetType[MN_CALL_MAX_CSSN_MSG_NUM];   /* aenSetType[0]:CSSI是否需要激活，enSetType[1]:CSSU是否需要激活 */
 }MN_CALL_SET_CSSN_REQ_STRU;
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, end */
 
-/*****************************************************************************
- 结构名    : MN_CALL_MODIFY_REQ_STRU
- 结构说明  : modify请求结构
 
-  1.日    期   : 2014年06月16日
-    作    者   : f00179208
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_TYPE_ENUM_U8                enCurrCallType;                         /* 当前呼叫类型 */
@@ -2225,14 +1952,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }MN_CALL_MODIFY_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_MODIFY_CNF_STRU
- 结构说明  : Modify回复消息
 
-  1.日    期   : 2014年06月16日
-    作    者   : f00179208
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;                                /* 回复的事件类型 */
@@ -2242,14 +1962,7 @@ typedef struct
     TAF_CS_CAUSE_ENUM_UINT32            enCause;                                /* 错误码 */
 }MN_CALL_MODIFY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_EVT_MODIFY_STATUS_IND_STRU
- 结构说明  : Modify状态指示
 
-  1.日    期   : 2014年06月16日
-    作    者   : f00179208
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32                          enEvent;                    /* 事件名 */
@@ -2266,14 +1979,7 @@ typedef struct
 } MN_CALL_EVT_MODIFY_STATUS_IND_STRU;
 
 
-/*****************************************************************************
- 结构名    : MN_CALL_CS_UUS1_SET_STRU
- 结构说明  : AT与CS AT+CUUS1命令设置结构
 
-  1.日    期   : 2011年10月08日
-    作    者   : c00173809
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_CUUS1_FLG_ENUM_U32          enCuus1IFlg;                            /* CUUS1I标志 */
@@ -2283,14 +1989,7 @@ typedef struct
     MN_CALL_UUS1_INFO_STRU              stUus1Info[MN_CALL_MAX_UUS1_MSG_NUM]; /*设置的用户服务信令信息*/
 }MN_CALL_UUS1_PARAM_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PH_SET_UUS1_INFO_CNF_STRU
- 结构说明  : 设置UUS1 INFO回复消息
 
- 1.日    期 : 2011年10月17日
-   作    者 : c00173809
-   修改内容 : 新增结构
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32  enEvent;    /*回复的事件类型*/
@@ -2300,14 +1999,7 @@ typedef struct
     VOS_UINT32              ulRet;      /*回复结果*/
 }TAF_PH_SET_UUS1_INFO_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_PH_QRY_UUS1_INFO_CNF_STRU
- 结构说明  : 查询UUS1 INFO回复消息
 
- 1.日    期 : 2011年10月17日
-   作    者 : c00173809
-   修改内容 : 新增结构
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32  enEvent;                                /*回复的事件类型*/
@@ -2317,33 +2009,17 @@ typedef struct
     VOS_UINT32              ulRet;                                  /*回复结果*/
     VOS_UINT32              ulActNum;                               /*用户服务信令1的个数*/
     MN_CALL_UUS1_INFO_STRU  stUus1Info[MN_CALL_MAX_UUS1_MSG_NUM];   /*用户服务信令1的信息*/
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, begin */
     MN_CALL_SET_UUS1_TYPE_ENUM_U32      aenSetType[MN_CALL_MAX_UUS1_MSG_NUM];  /*要设置的用户服务信令1类型 */
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, end */
 }TAF_PH_QRY_UUS1_INFO_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_ALS_PARAM_STRU
- 结构说明  : AT与CS AT^ALS命令查询结构
 
-1.日    期   : 2011年10月08日
-  作    者   : c00173809
-  修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_ALS_LINE_NO_ENUM_U8         enAlsLine;          /*要使用的线路号*/
     VOS_UINT8                           aucReserved[3];     /*保留字段*/
 }MN_CALL_SET_ALS_PARAM_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_SET_ALS_CNF_STRU
- 结构说明  : 设置ALS回复消息
 
- 1.日    期 : 2011年10月17日
-   作    者 : c00173809
-   修改内容 : 新增结构
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32  enEvent;    /*回复的事件类型*/
@@ -2353,14 +2029,7 @@ typedef struct
     VOS_UINT32              ulRet;      /*回复结果*/
 }MN_CALL_SET_ALS_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_ALS_QRY_RSP_STRU
- 结构说明  : AT与CS AT^ALS命令查询结构
 
-1.日    期   : 2011年10月08日
-  作    者   : c00173809
-  修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32          enEvent;                                    /*回复的事件类型*/
@@ -2372,13 +2041,7 @@ typedef struct
     VOS_UINT8                       aucReserved2[3];                            /* 保留字段 */
 }MN_CALL_QRY_ALS_CNF_STRU;
 
-/*****************************************************************************
-结构名    : MN_CALL_ECC_LIST_INFO_STRU
-结构说明  : CALL向AT上报当前所有的紧急呼号码列表
-1.日    期   : 2012年06月11日
-  作    者   : w00166186
-  修改内容   : AT&T&DCM项目新增函数
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucIndex;                                /* 定制紧急呼号码索引 */
@@ -2389,17 +2052,7 @@ typedef struct
     VOS_UINT32                          ulMcc;                                  /* MCC,3 bytes */
 } MN_CALL_ECC_LIST_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_INFO_PARAM_STRU
- 结构说明  : AT与MN Call模块间获取Call部分信息的消息结构
 
-  1.日    期   : 2011年10月22日
-    作    者   : f00179209
-    修改内容   : AT融合项目
-  2.日    期   : 2012年10月29日
-    作    者   : l00198894
-    修改内容   : DTS2012100901666: 增加被叫号码
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          bitOpPeerVideoSupport       : 1;
@@ -2420,17 +2073,11 @@ typedef struct
     MN_CALL_DISPLAY_NAME_STRU           stDisplayName;
 
     TAF_CALL_PEER_VIDEO_SUPPORT_ENUM_UINT8  enPeerVideoSupport;
-    VOS_UINT8                           aucReserved[3];
+    TAF_CALL_IMS_DOMAIN_ENUM_UINT8      enImsDomain;
+    VOS_UINT8                           aucReserved[2];
 }MN_CALL_INFO_PARAM_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_ECONF_CALL_LIST_STRU
- 结构说明  : 增强型多方通话被叫号码结构体
 
- 1.日    期   : 2014年11月28日
-   作    者   : f00179208
-   修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulCallNum;
@@ -2438,13 +2085,7 @@ typedef struct
     MN_CALL_SUBADDR_STRU                astSubaddr[TAF_CALL_MAX_ECONF_CALLED_NUM];
 }TAF_CALL_ECONF_CALL_LIST_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_ECONF_DIAL_REQ_STRU
- 结构说明  : SPM发起增强型多方通话时，携带的被叫信息
- 1.日    期  : 2014年11月28日
-   作    者  : f00179208
-   修改内容  : 新增
-*****************************************************************************/
+
 typedef struct
 {
     MN_CALL_TYPE_ENUM_U8                enCallType;                             /* Call Type */
@@ -2458,14 +2099,7 @@ typedef struct
     TAF_CALL_ECONF_CALL_LIST_STRU       stEconfCalllist;                        /* 邀请参加多方通话会议者的信息 */
 } TAF_CALL_ECONF_DIAL_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_ECONF_DIAL_CNF_STRU
- 结构说明  : Modify回复消息
 
-  1.日    期   : 2014年11月28日
-    作    者   : f00179208
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;                                /* 回复的事件类型 */
@@ -2475,13 +2109,7 @@ typedef struct
     TAF_CS_CAUSE_ENUM_UINT32            enCause;                                /* 错误码 */
 }TAF_CALL_ECONF_DIAL_CNF_STRU;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_ECONF_STATE_ENUM
- 结构说明  : 增强型多方通话与会者状态
- 1.日    期   : 2014年11月28日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 enum TAF_CALL_ECONF_STATE_ENUM
 {
     TAF_CALL_ECONF_STATE_DISCONNECTED,
@@ -2493,13 +2121,7 @@ enum TAF_CALL_ECONF_STATE_ENUM
 };
 typedef VOS_UINT8  TAF_CALL_ECONF_STATE_ENUM_U8;
 
-/*****************************************************************************
-枚举名    : CALL_IMSA_GET_CALL_INFO_REQ_TYPE_ENMU
-结构说明  : 获取CALL信息的请求类型
-  1.日    期   : 2013年9月11日
-    作    者   : w00176964
-    修改内容   : 新建
-*****************************************************************************/
+
 enum CALL_IMSA_GET_CALL_INFO_REQ_TYPE_ENMU
 {
     CALL_IMSA_GET_CALL_INFO_REQ_TYPE_CLCC        = 0,     /* CLCC查询请求获取CALL信息 */
@@ -2508,14 +2130,7 @@ enum CALL_IMSA_GET_CALL_INFO_REQ_TYPE_ENMU
 };
 typedef VOS_UINT8  CALL_IMSA_GET_CALL_INFO_REQ_TYPE_ENMU_UINT8;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_ECONF_INFO_PARAM_STRU
- 结构说明  : AT与SPM模块间获取ECONF部分信息的消息结构
 
-  1.日    期   : 2014年11月28日
-    作    者   : f00179208
-    修改内容   : ECONF项目
-*****************************************************************************/
 typedef struct
 {
     TAF_CALL_ECONF_STATE_ENUM_U8   enCallState;                                 /* Call State */
@@ -2526,14 +2141,7 @@ typedef struct
     VOS_UINT8                      auReserve2[7];
 }TAF_CALL_ECONF_INFO_PARAM_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_ECONF_INFO_QRY_CNF_STRU
- 结构说明  : AT与MN Call模块间获取增强型多方通话信息的消息结构
 
-  1.日    期   : 2014年11月28日
-    作    者   : j00174725
-    修改内容   : ECONF项目
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32                                  enEvent;            /* 事件名 */
@@ -2543,14 +2151,7 @@ typedef struct
     TAF_CALL_ECONF_INFO_PARAM_STRU                          astCallInfo[TAF_CALL_MAX_ECONF_CALLED_NUM];     /* 所用正在通话的信息 */
 }TAF_CALL_ECONF_INFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_EVT_ECONF_NOTIFY_IND_STRU
- 结构说明  : 增强型会议的状态指示
 
-  1.日    期   : 2014年11月28日
-    作    者   : f00179208
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32                          enEvent;                    /* 事件名 */
@@ -2560,14 +2161,7 @@ typedef struct
     TAF_CALL_ECONF_INFO_PARAM_STRU                  astCallInfo[TAF_CALL_MAX_ECONF_CALLED_NUM];     /* 所用正在通话的信息 */
 } TAF_CALL_EVT_ECONF_NOTIFY_IND_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_INFO_PARAM_STRU
- 结构说明  : AT与MN Call模块间获取Call信息的消息结构
 
-  1.日    期   : 2011年10月17日
-    作    者   : f00179209
-    修改内容   : AT融合项目
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;                                /* 事件名 */
@@ -2577,14 +2171,7 @@ typedef struct
     MN_CALL_INFO_PARAM_STRU             astCallInfos[MN_CALL_MAX_NUM];           /* 所用正在通话的信息 */
 } MN_CALL_INFO_QRY_CNF_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_APP_CUSTOM_ECC_NUM_REQ
- 结构说明  : AT向CALL发送运营商定制紧急呼号码结构
 
-  1.日    期   : 2012年06月11日
-    作    者   : w00166186
-    修改内容   : AT&T & DCM定制需求
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucIndex;                                /* 定制紧急呼号码索引 */
@@ -2597,14 +2184,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }MN_CALL_APP_CUSTOM_ECC_NUM_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_CUSTOM_ECC_NUM_STRU
- 结构说明  : 运营商定制紧急呼号码结构
- 1.日    期   : 2012年06月11日
-   作    者   : W00166186
-   修改内容   : AT&T&DCM项目新增结构
 
-****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucCategory;                             /* 紧急呼号码类型 */
@@ -2615,13 +2195,7 @@ typedef struct
     VOS_UINT32                          ulMcc;                                  /* MCC,3 bytes */
 } MN_CALL_CUSTOM_ECC_NUM_STRU;
 
-/*****************************************************************************
-结构名    : MN_CALL_ECC_NUM_INFO_STRU
-结构说明  : CALL向AT上报当前所有的紧急呼号码列表
-1.日    期   : 2012年06月11日
-  作    者   : w00166186
-  修改内容   : AT&T&DCM项目新增函数
-*****************************************************************************/
+
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;                                /* 事件名 */
@@ -2633,16 +2207,7 @@ typedef struct
 
 
 
-/*****************************************************************************
- 枚举名    : MN_CALL_CODEC_TYPE_ENUM_U8
- 枚举说明  : CALL CODEC类型接口的定义，需要与RRMM接口定义一致
- 1.日    期   : 2012年2月9日
-   作    者   : zhoujun 40661
-   修改内容   : modify
- 2.日    期   : 2013年08月16日
-   作    者   : s00217060
-   修改内容   : VoLTE_PhaseI项目
-*****************************************************************************/
+
 
 enum MN_CALL_CODEC_TYPE_ENUM
 {
@@ -2654,12 +2219,8 @@ enum MN_CALL_CODEC_TYPE_ENUM
     /* Added by z40661 for AMR-WB , 2012-02-09, begin */
     MN_CALL_CODEC_TYPE_AMRWB,
     /* Added by z40661 for AMR-WB , 2012-02-09, end */
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-16, begin */
     MN_CALL_CODEC_TYPE_G711,
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-16, end */
-    /* Added by wx270776 for EVS声码器, 2016-6-15, begin */
     MN_CALL_CODEC_TYPE_EVS,
-    /* Added by wx270776 for EVS声码器, 2016-6-15, end */
     MN_CALL_CODEC_TYPE_BUTT                 /* invalid value */
 };
 typedef VOS_UINT8  MN_CALL_CODEC_TYPE_ENUM_U8;
@@ -2668,9 +2229,7 @@ enum MN_CALL_RADIO_MODE_ENUM
 {
     MN_CALL_RADIO_MODE_GSM,
     MN_CALL_RADIO_MODE_WCDMA,
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-16, begin */
     MN_CALL_RADIO_MODE_IMS_EUTRAN,
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-16, end */
     MN_CALL_RADIO_MODE_BUTT
 };
 typedef VOS_UINT8  MN_CALL_RADIO_MODE_ENUM_U8;
@@ -2689,14 +2248,7 @@ enum MN_CALL_CHANNEL_RATE_ENUM
 };
 typedef VOS_UINT8  MN_CALL_CHANNEL_RATE_ENUM_U8;
 
-/* Added by y00245242 for V3R3C60_eCall项目, 2014-5-20, begin */
-/*****************************************************************************
- 枚举名    : TAF_CALL_TYPE_ENUM_UINT16
- 枚举说明  : ECALL的呼叫类型
-1.日    期   : 2014年4月20日
-  作    者   : y00245242
-  修改内容   : V3R3C60_eCall项目
-*****************************************************************************/
+
 enum TAF_CALL_TYPE_ENUM
 {
     TAF_CALL_TYPE_NORMAL_CALL,
@@ -2704,15 +2256,12 @@ enum TAF_CALL_TYPE_ENUM
     TAF_CALL_TYPE_BUTT
 };
 typedef VOS_UINT16 TAF_CALL_TYPE_ENUM_UINT16;
-/* Added by y00245242 for V3R3C60_eCall项目, 2014-5-20, end */
 
 typedef struct
 {
     MN_CALL_RADIO_MODE_ENUM_U8          enMode;       /*GSM|WCDMA*/
     MN_CALL_CODEC_TYPE_ENUM_U8          enCodecType;  /* codec type */
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-4-18, begin */
     TAF_CALL_TYPE_ENUM_UINT16           enCallType;   /* eCall type */
-    /* Added by y00245242 for V3R3C60_eCall项目, 2014-4-18, end */
 } MN_CALL_CHANNEL_PARAM_STRU;
 
 typedef struct
@@ -2746,14 +2295,7 @@ typedef struct
 } MN_CALL_APP_EC_KMC_DATA_STRU;
 
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_CCWAI_MODE_ENUM
- 结构说明  : 呼叫等待设置业务类型
 
- 1.日    期   : 2016年02月16日
-   作    者   : n00269697
-   修改内容   : DTS2016021506132，ccwai设置由call处理，call给ims提供接口来查询
-*****************************************************************************/
 enum TAF_CALL_CCWAI_SRV_CLASS_ENUM
 {
     TAF_CALL_CCWAI_SRV_CLASS_VOICE               = 1,
@@ -2763,14 +2305,7 @@ enum TAF_CALL_CCWAI_SRV_CLASS_ENUM
     TAF_CALL_CCWAI_SRV_CLASS_BUTT
 };
 typedef  VOS_UINT8  TAF_CALL_CCWAI_SRV_CLASS_ENUM_UINT8;
-/*****************************************************************************
- 结构名    : MN_CALL_APP_REQ_PARM_UNION
- 结构说明  : 应用请求所携带的参数的联合
 
- 1.日    期   : 2016年02月16日
-   作    者   : n00269697
-   修改内容   : DTS2016021506132，ccwai设置由call处理，call给ims提供接口来查询
-*****************************************************************************/
 typedef struct
 {
     TAF_CALL_CCWAI_MODE_ENUM_UINT8                          enMode;
@@ -2778,34 +2313,20 @@ typedef struct
     VOS_UINT8                                               aucReserve[2];
 }TAF_CALL_CCWAI_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_APP_REQ_PARM_UNION
- 结构说明  : 应用请求所携带的参数的联合
 
- 1.日    期   : 2011年10月08日
-   作    者   : c00173809
-   修改内容   : 修改
- 2.日    期   : 2013年07月11日
-   作    者   : l00198894
-   修改内容   : V9R1 STK升级项目，修改DTMF结构
-*****************************************************************************/
 typedef union
 {
     MN_CALL_ORIG_PARAM_STRU             stOrig;
     MN_CALL_END_PARAM_STRU              stEnd;
     MN_CALL_ANS_PARAM_STRU              stAns;
-    /* Modified by l00198894 for V9R1 STK升级项目, 2013/07/11, begin */
     TAF_CALL_DTMF_PARAM_STRU            stDtmf;
-    /* Modified by l00198894 for V9R1 STK升级项目, 2013/07/11, end */
     MN_CALL_SUPS_PARAM_STRU             stCallMgmtCmd;
     MN_CALL_UUS1_PARAM_STRU             stUus1Info;   /* 设置UUS1信息结构 */
     MN_CALL_SET_ALS_PARAM_STRU          stSetAls;     /* 设置ALS NO结构   */
 
     MN_CALL_APP_CUSTOM_ECC_NUM_REQ_STRU stEccNumReq;
 
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, begin */
     MN_CALL_SET_CSSN_REQ_STRU           stCssnReq;
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, begin */
 
     MN_CALL_MODIFY_REQ_STRU             stModifyReq;
 
@@ -2826,104 +2347,68 @@ typedef struct
     MN_CALL_APP_REQ_PARM_UNION          unParm;
 } MN_CALL_APP_REQ_MSG_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_EVT_HOLD_STRU
- 结构说明  : 呼叫保持事件上报结构体
 
- 1.日    期   : 2012年09月15日
-   作    者   : l00198894
-   修改内容   : 新建
-
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;                                /* 事件名 */
     MN_CLIENT_ID_T                      usClientId;
-    /* Added by Y00213812 for VoLTE_PhaseII 项目, 2013-9-12, begin */
     TAF_CALL_VOICE_DOMAIN_ENUM_UINT8    enVoiceDomain;                          /* VOICE DOMAIN */
-    /* Added by Y00213812 for VoLTE_PhaseII 项目, 2013-9-12, end */
     VOS_UINT8                           aucReserve[1];
     VOS_UINT8                           ucCallNum;
     VOS_UINT8                           aucCallId[MN_CALL_MAX_NUM];
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, begin */
     VOS_UINT8                           aucCurcRptCfg[MN_CALL_RPT_CFG_MAX_SIZE];        /* CURC设置的主动上报标识 */
     VOS_UINT8                           aucUnsolicitedRptCfg[MN_CALL_RPT_CFG_MAX_SIZE]; /* 单个命令设置的主动上报标识 */
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, end */
 } MN_CALL_EVT_HOLD_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_EVT_RETRIEVE_STRU
- 结构说明  : 呼叫保持事件上报结构体
 
- 1.日    期   : 2012年09月15日
-   作    者   : l00198894
-   修改内容   : 新建
-
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;                                /* 事件名 */
     MN_CLIENT_ID_T                      usClientId;
-    /* Added by Y00213812 for VoLTE_PhaseII 项目, 2013-9-12, begin */
     TAF_CALL_VOICE_DOMAIN_ENUM_UINT8    enVoiceDomain;                          /* VOICE DOMAIN */
-    /* Added by Y00213812 for VoLTE_PhaseII 项目, 2013-9-12, end */
     VOS_UINT8                           aucReserve[1];
     VOS_UINT8                           ucCallNum;
     VOS_UINT8                           aucCallId[MN_CALL_MAX_NUM];
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, begin */
     VOS_UINT8                           aucCurcRptCfg[MN_CALL_RPT_CFG_MAX_SIZE];        /* CURC设置的主动上报标识 */
     VOS_UINT8                           aucUnsolicitedRptCfg[MN_CALL_RPT_CFG_MAX_SIZE]; /* 单个命令设置的主动上报标识 */
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-3-25, end */
 } MN_CALL_EVT_RETRIEVE_STRU;
 
-/*****************************************************************************
- 结构名    : MN_CALL_REDIRECT_INFO
- 结构说明  :
 
-  1.日    期   : 2012年09月18日
-    作    者   : y00213812
-    修改内容   : STK&DCM 项目新增
-*****************************************************************************/
 typedef struct
 {
-    VOS_UINT32                          bitOpPI                 :1;
-    VOS_UINT32                          bitOpNoCLICause         :1;
+    VOS_UINT32                          bitOpRedirectNumPI      :1;
     VOS_UINT32                          bitOpRedirectNum        :1;
     VOS_UINT32                          bitOpRedirectSubaddr    :1;
-    VOS_UINT32                          bitOpSpare              :28;
-    MN_CALL_PRESENTATION_IND_ENUM_UINT8 enPI;
-    MN_CALL_NO_CLI_CAUSE_ENUM_U8        enNoCLICause;
-    VOS_UINT8                           aucRsv[2];
+    VOS_UINT32                          bitOpSpare              :29;
+    MN_CALL_PRESENTATION_IND_ENUM_UINT8 enRedirectNumPI;
+    VOS_UINT8                           aucRsv[3];
     MN_CALL_BCD_NUM_STRU                stRedirectNum;                          /* BCD number */
     MN_CALL_SUBADDR_STRU                stRedirectSubaddr;                      /* Subaddress */
 }MN_CALL_REDIRECT_INFO;
 
-/*****************************************************************************
- 结构名    : MN_CALL_CLPR_GET_CNF_STRU
- 结构说明  : 查询呼叫源号码回复结果
 
-  1.日    期   : 2012年09月18日
-    作    者   : y00213812
-    修改内容   : STK&DCM 项目新增
-*****************************************************************************/
+typedef struct
+{
+    VOS_UINT32                          bitOpCallingNumPI       :1;
+    VOS_UINT32                          bitOpNoCLICause         :1;
+    VOS_UINT32                          bitOpSpare              :30;
+    MN_CALL_PRESENTATION_IND_ENUM_UINT8 enCallingNumPI;
+    MN_CALL_NO_CLI_CAUSE_ENUM_U8        enNoCLICause;
+    VOS_UINT8                           aucRsv[2];
+    MN_CALL_REDIRECT_INFO               stRedirectInfo;
+}MN_CALL_CLPR_INFO_STRU;
+
+
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;                                /*回复的事件类型*/
     VOS_UINT32                          ulRet;
     AT_APPCTRL_STRU                     stAppCtrl;
-    MN_CALL_REDIRECT_INFO               stRedirectInfo;
+    MN_CALL_CLPR_INFO_STRU              stClprInfo;
 }MN_CALL_CLPR_GET_CNF_STRU;
 
 
-/*****************************************************************************
- 结构名  : MN_CALL_ERR_IND_STRU
- 结构说明: MN_CALL_EVT_ERR_IND事件结构
 
- 修改历史      :
-  1.日    期   : 2012年9月25日
-    作    者   : A00165503
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEventId;          /* 事件类型   */
@@ -2932,16 +2417,7 @@ typedef struct
     TAF_CS_CAUSE_ENUM_UINT32            enCause;            /* 错误码     */
 } MN_CALL_EVT_ERR_IND_STRU;
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, begin */
-/*****************************************************************************
- 结构名  : MN_CALL_SET_CSSN_CNF_STRU
- 结构说明: MN_CALL_EVT_SET_CSSN_CNF事件结构
 
- 修改历史      :
-  1.日    期   : 2013年4月8日
-    作    者   : s00217060
-    修改内容   : 新增结构
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_EVENT_ENUM_U32              enEvent;        /*回复的事件类型*/
@@ -2950,8 +2426,6 @@ typedef struct
     MN_OPERATION_ID_T                   OpId;           /*操作ID*/
     VOS_UINT8                           ucReserved;     /* 保留字段 */
 } MN_CALL_SET_CSSN_CNF_STRU;
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-8, end */
-/* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, begin */
 
 typedef struct
 {
@@ -2967,17 +2441,8 @@ typedef struct
 
 
 
-/* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, end */
 
-/* Added by l00198894 for V9R1 STK升级, 2013/07/11, begin */
-/*****************************************************************************
- 枚举名    : TAF_CALL_DTMF_STATE_ENUM
- 结构说明  : CALL模块DTMF当前状态枚举
 
-  1.日    期   : 2013年07月11日
-    作    者   : l00198894
-    修改内容   : V9R1 STK升级项目新增
-*****************************************************************************/
 enum TAF_CALL_DTMF_STATE_ENUM
 {
     TAF_CALL_DTMF_IDLE                  = 0,                                    /* 当前DTMF空闲 */
@@ -2991,13 +2456,7 @@ enum TAF_CALL_DTMF_STATE_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_DTMF_STATE_ENUM_UINT8;
 
-/*****************************************************************************
-结构名    : TAF_CALL_EVT_DTMF_CNF_STRU
-结构说明  : CALL模块回复DTMF操作事件结果数据结构
-1.日    期  : 2013年07月11日
-  作    者  : l00198894
-  修改内容  : V9R1 STK升级项目新增
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3011,15 +2470,8 @@ typedef struct
     VOS_UINT8                           aucReserved2[1];
 
 } TAF_CALL_EVT_DTMF_CNF_STRU;
-/* Added by l00198894 for V9R1 STK升级, 2013/07/11, end */
 
-/*****************************************************************************
-结构名    : TAF_CALL_EVT_CCWAI_CNF_STRU
-结构说明  : CALL模块回复CCWAI设置事件结果数据结构
-1.日    期  : 2016年02月16日
-  作    者  : n00269697
-  修改内容  : DTS2016021506132，ccwai设置由call处理，call给ims提供接口来查询
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3028,15 +2480,7 @@ typedef struct
     VOS_UINT32                          ulResult;
 } TAF_CALL_EVT_CCWAI_CNF_STRU;
 
-/* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, begin */
-/*****************************************************************************
- 结构名       : MN_CALL_QRY_ECALL_INFO_REQ_STRU
- 结构说明     : 查询ECALL呼叫相关信息结构
 
- 1.日    期   : 2014年03月29日
-   作    者   : y00245242
-   修改内容   : 为eCall feature增加
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER
@@ -3046,16 +2490,8 @@ typedef struct
     VOS_UINT8                           ucOpId;                                 /* Operation ID */
     VOS_UINT8                           aucReserve2[1];                         /* 保留 */
 }MN_CALL_QRY_ECALL_INFO_REQ_STRU;
-/* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, end */
 
-/*****************************************************************************
- 枚举名       : MN_CALL_ECALL_INFO_PARA_STRU
- 结构说明     : ECALL呼叫消息参数
 
- 1.日    期   : 2014年03月29日
-   作    者   : y00245242
-   修改内容   : 为eCall feature增加
-*****************************************************************************/
 typedef struct
 {
     MN_CALL_ID_T                        ucCallId;                               /* 当前的call ID */
@@ -3065,14 +2501,7 @@ typedef struct
     MN_CALL_CALLED_NUM_STRU             stDialNumber;                           /* 呼叫号码 */
 }MN_CALL_ECALL_INFO_PARA_STRU;
 
-/*****************************************************************************
- 结构名       : MN_CALL_ECALL_INFO_STRU
- 结构说明     : ECALL呼叫信息
 
- 1.日    期   : 2014年03月29日
-   作    者   : y00245242
-   修改内容   : 为eCall feature增加
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8                           ucNumOfEcall;                           /* 当前eCall呼叫个数 */
@@ -3080,13 +2509,7 @@ typedef struct
     MN_CALL_ECALL_INFO_PARA_STRU        astEcallInfos[MN_CALL_MAX_NUM];         /* eCall信息参数 */
 }MN_CALL_ECALL_INFO_STRU;
 
-/*****************************************************************************
-结构名      : MN_CALL_EVT_QRY_ECALL_INFO_CNF_STRU
-结构说明    : 回复AT查询当前ECALL的相关信息
-1.日    期  : 2014年03月29日
-  作    者  : y00245242
-  修改内容  : 为eCall feature增加
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usClientId;
@@ -3094,17 +2517,10 @@ typedef struct
     VOS_UINT8                           aucReserved[1];
     MN_CALL_ECALL_INFO_STRU             stEcallInfo;
 }MN_CALL_EVT_QRY_ECALL_INFO_CNF_STRU;
-/* Added by y00245242 for V3R3C60_eCall项目, 2014-3-29, end */
 
 
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, begin */
-/*****************************************************************************
-结构名      : TAF_CALL_FLASH_PARA_STRU
-结构说明    : FLASH请求参数
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucDigitNum;
@@ -3114,13 +2530,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }TAF_CALL_FLASH_PARA_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_SEND_FLASH_REQ_STRU
-结构说明    : FLASH请求消息结构
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                  /*_H2ASN_Skip*/
@@ -3132,13 +2542,7 @@ typedef struct
     TAF_CALL_FLASH_PARA_STRU            stFlashPara;
 }TAF_CALL_APP_SEND_FLASH_REQ_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_SEND_FLASH_RSLT_STRU
-结构说明    : FLASH请求结果消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : 新增
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3147,13 +2551,7 @@ typedef struct
 }TAF_CALL_EVT_SEND_FLASH_RSLT_STRU;
 
 /* Added by f279542 for CDMA 1X Iteration 4, 2014-11-10, begin */
-/*****************************************************************************
- 结构名    : TAF_CALL_BURST_DTMF_PARA_STRU
- 结构说明  : Send Burst DTMF消息信息字段结构
- 1.日    期   : 2014年11月10日
-    作    者   : f279542
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     MN_CALL_ID_T                        ucCallId;                                   /* 呼叫ID，如果携带该参数，必须是当前呼叫的呼叫ID */
@@ -3164,13 +2562,7 @@ typedef struct
     VOS_UINT32                          ulOffLength;                                /* DTMF音发送的最小时间间隔(单位ms)  */
 }TAF_CALL_BURST_DTMF_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_BURST_DTMF_REQ_MSG_STRU
- 结构说明  : APP与TAF的Burst DTMF请求消息信息字段结构
- 1.日    期   : 2014年11月10日
-    作    者   : f279542
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                                 /*_H2ASN_Skip*/
@@ -3183,13 +2575,7 @@ typedef struct
 } TAF_CALL_BURST_DTMF_REQ_MSG_STRU;
 /* Added by f279542 for CDMA 1X Iteration 4, 2014-11-10, end */
 
-/*****************************************************************************
- 结构名    : TAF_CALL_SND_CCLPR_REQ_MSG_STRU
- 结构说明  : APP与TAF的CCLPR请求消息信息字段结构
- 1.日    期   : 2015年8月20日
-    作    者   : f279542
-    修改内容   : 新生成函数
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                                 /*_H2ASN_Skip*/
@@ -3200,16 +2586,7 @@ typedef struct
     VOS_UINT8                           ucCallId;
 } TAF_CALL_SND_CCLPR_REQ_MSG_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_CALLED_NUM_INFO_IND_STRU
-结构说明    : CALLED NUM INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : Called Party Number Info Rec as defined in C.S0005 section 3.7.5.2
-2.日    期  : 2014年11月10日
-  作    者  : y00307564
-  修改内容  : 1X SS Project 修改
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3222,16 +2599,7 @@ typedef struct
     VOS_UINT8                           aucDigit[TAF_CALL_MAX_CALLED_NUMBER_CHARI_OCTET_NUM];
 }TAF_CALL_EVT_CALLED_NUM_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_CALLING_NUM_INFO_IND_STRU
-结构说明    : CALLING NUM INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : Calling Party Number Info Rec as defined in C.S0005 section 3.7.5.3
-2.日    期  : 2014年11月10日
-  作    者  : y00307564
-  修改内容  : 1X SS Project 修改
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3246,17 +2614,7 @@ typedef struct
     VOS_UINT8                           aucDigit[TAF_CALL_MAX_CALLING_NUMBER_CHARI_OCTET_NUM];
 }TAF_CALL_EVT_CALLING_NUM_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_DISPLAY_INFO_IND_STRU
-结构说明    : DISPLAY INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : Display Info Rec as defined in C.S0005 section 3.7.5.1
-              ^CDISPRCD: 0, len, data
-2.日    期  : 2014年11月10日
-  作    者  : y00307564
-  修改内容  : 1X SS Project 修改
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3267,13 +2625,7 @@ typedef struct
     VOS_UINT8                           aucDigit[TAF_CALL_MAX_DISPALY_CHARI_OCTET_NUM];
 }TAF_CALL_EVT_DISPLAY_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_EXT_DISPLAY_INFO_DATA_STRU
-结构说明    : EXT DISPLAY INFO 中display_tag,display_len,ichar结构内容
-1.日    期  : 2014年11月12日
-  作    者  : y00307564
-  修改内容  : 1X SS Project
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucDispalyTag;
@@ -3283,22 +2635,7 @@ typedef struct
     VOS_UINT8                           aucDigit[TAF_CALL_MAX_EXTENDED_DISPALY_CHARI_OCTET_NUM];
 }TAF_CALL_EVT_EXT_DISPLAY_INFO_DATA_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_EXT_DISPLAY_INFO_IND_STRU
-结构说明    : EXT DISPLAY INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : Extended Display Info Rec as defined in C.S0005 section 3.7.5.16
-              Note: the Extended Display info rec contains multiple records of the form:
-              display_tag, display_len, and display_len occurrences of the
-              chari field if the display_tag is not 10000000 or 10000001.
-              To save space, the records are stored consecutively in a byte buffer.
-              The display_tag, display_len and chari fields are all 1 byte.
-              ^CDISPRCD: 1, len, data
-2.日    期  : 2014年11月10日
-  作    者  : y00307564
-  修改内容  : 1X SS Project 修改
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                                          usClientId;
@@ -3311,16 +2648,7 @@ typedef struct
     TAF_CALL_EVT_EXT_DISPLAY_INFO_DATA_STRU                 aucInfoRecsData[TAF_CALL_MAX_EXT_DISPLAY_DATA_NUM];
 }TAF_CALL_EVT_EXT_DISPLAY_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_CONN_NUM_INFO_IND_STRU
-结构说明    : CONN NUM INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : Connected Number Info Rec as defined in C.S0005 section 3.7.5.4
-2.日    期  : 2014年11月10日
-  作    者  : y00307564
-  修改内容  : 1X SS Project 修改
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3335,17 +2663,7 @@ typedef struct
     VOS_UINT8                           aucDigit[TAF_CALL_MAX_CONNECTED_NUMBER_CHARI_OCTET_NUM];
 }TAF_CALL_EVT_CONN_NUM_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_REDIR_NUM_INFO_IND_STRU
-结构说明    : REDIR NUM INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : Number Information Record as defined in C.S0005 section 3.7.5.11
-              ^CREDIRNUMRCD: RedirReason, number_type, number_plan, pi, si, len, data
-2.日    期  : 2014年11月10日
-  作    者  : y00307564
-  修改内容  : 1X SS Project 修改
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3365,14 +2683,7 @@ typedef struct
     VOS_UINT8                           aucDigitNum[TAF_CALL_MAX_REDIRECTING_NUMBER_CHARI_OCTET_NUM];
 }TAF_CALL_EVT_REDIR_NUM_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_SIGNAL_INFO_IND_STRU
-结构说明    : SIGNAL INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : CDMA Signal Information Record as defined in C.S0005 section 3.7.5.5
-              ^CSIGTONE: SignalType, AlertPitch, Signal
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3384,14 +2695,7 @@ typedef struct
     VOS_UINT8                           aucRsved[1];
 }TAF_CALL_EVT_SIGNAL_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_LINE_CTRL_INFO_IND_STRU
-结构说明    : LINE CTRL INFO IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  : Line Control Information Record as defined in C.S0005 section 3.7.5.15
-              ^LCTR: PolarityIncluded, LineCtrlToggle, LineCtrlReverse,LineCtrlPowerDenial
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3406,13 +2710,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }TAF_CALL_EVT_LINE_CTRL_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_CALL_WAITING_IND_STRU
-结构说明    : CALL WAITING IND消息内容
-1.日    期  : 2014年09月04日
-  作    者  : l60609
-  修改内容  :
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3424,16 +2722,7 @@ typedef struct
 
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-3, end */
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_CCWAC_INFO_IND_STRU
-结构说明    : CALLING NUM INFO IND && signal消息内容
-1.日    期  : 2014年11月11日
-  作    者  : y00307564
-  修改内容  : Calling Party Number Info Rec as defined in C.S0005 section 3.7.5.3 && 3.7.5.5
-2.日    期  : 2015年1月17日
-  作    者  : y00307564
-  修改内容  : 增加PI, SI字段的上报
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3452,13 +2741,7 @@ typedef struct
     VOS_UINT8                           aucDigit[TAF_CALL_MAX_CALLING_NUMBER_CHARI_OCTET_NUM + 1];
 }TAF_CALL_EVT_CCWAC_INFO_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_CUSTOM_DIAL_PARA_STRU
-结构说明    : 自定义拨号参数
-1.日    期  : 2015年4月8日
-  作    者  : w00242748
-  修改内容  : 新增
-*****************************************************************************/
+
 typedef struct
 {
     MN_CALL_CALLED_NUM_STRU             stDialNumber;
@@ -3467,13 +2750,7 @@ typedef struct
     VOS_UINT8                           aucReserved[3];
 }TAF_CALL_CUSTOM_DIAL_PARA_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_APP_SEND_CUSTOM_DIAL_REQ_STRU
-结构说明    : CUSTOM DIAL请求消息结构
-1.日    期  : 2015年4月8日
-  作    者  : w00242748
-  修改内容  : 新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                  /*_H2ASN_Skip*/
@@ -3486,13 +2763,7 @@ typedef struct
 }TAF_CALL_APP_SEND_CUSTOM_DIAL_REQ_STRU;
 
 
-/*****************************************************************************
-结构名      : TAF_CALL_CONT_DTMF_SWITCH_ENUM_ENUM_U8
-结构说明    : Send CONT DTMF Switch值
-  1.日    期   : 2015年7月28日
-    作    者   : l00324781
-    修改内容   : 新生成枚举
-*****************************************************************************/
+
 enum TAF_CALL_CONT_DTMF_SWITCH_ENUM
 {
     TAF_CALL_CONT_DTMF_STOP         = 0,
@@ -3502,13 +2773,7 @@ enum TAF_CALL_CONT_DTMF_SWITCH_ENUM
 typedef VOS_UINT8   TAF_CALL_CONT_DTMF_SWITCH_ENUM_U8;
 
 
-/*****************************************************************************
- 结构名    : TAF_CALL_CONT_DTMF_PARA_STRU
- 结构说明  : Send Cont DTMF消息信息字段结构
- 1.日    期   : 2015年7月24日
-    作    者   : l00324781
-    修改内容   : 新生成结构体
-*****************************************************************************/
+
 typedef struct
 {
     MN_CALL_ID_T                        ucCallId;                                   /* 呼叫ID, 当前呼叫的呼叫ID */
@@ -3517,13 +2782,7 @@ typedef struct
     VOS_UINT8                           ucReserved;
 }TAF_CALL_CONT_DTMF_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_CONT_DTMF_REQ_MSG_STRU
- 结构说明  : APP与TAF的CONT DTMF请求消息信息字段结构
- 1.日    期   : 2015年7月24日
-    作    者   : l00324781
-    修改内容   : 新生成结构体
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                                 /*_H2ASN_Skip*/
@@ -3535,13 +2794,7 @@ typedef struct
     TAF_CALL_CONT_DTMF_PARA_STRU        stContDTMFPara;
 } TAF_CALL_CONT_DTMF_REQ_MSG_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_SEND_CONT_DTMF_CNF_RESULT_ENUM_U8
-结构说明    : Send CONT DTMF请求回复消息内容
-  1.日    期   : 2015年7月24日
-    作    者   : l00324781
-    修改内容   : 新生成枚举
-*****************************************************************************/
+
 enum TAF_CALL_SEND_CONT_DTMF_CNF_RESULT_ENUM
 {
     TAF_CALL_SEND_CONT_DTMF_CNF_RESULT_SUCCESS         = 0,
@@ -3554,13 +2807,7 @@ enum TAF_CALL_SEND_CONT_DTMF_CNF_RESULT_ENUM
 };
 typedef VOS_UINT8   TAF_CALL_SEND_CONT_DTMF_CNF_RESULT_ENUM_U8;
 
-/*****************************************************************************
- 结构名    : TAF_CALL_EVT_SEND_CONT_DTMF_CNF_STRU
- 结构说明  : TAF与APP的CONT DTMF响应消息信息字段结构
- 1.日    期   : 2015年7月24日
-    作    者   : l00324781
-    修改内容   : 新生成结构体
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                              usClientId;
@@ -3570,13 +2817,7 @@ typedef struct
     VOS_UINT8                                   aucReserved[3];
 }TAF_CALL_EVT_SEND_CONT_DTMF_CNF_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_SEND_CONT_DTMF_RSLT_STRU
-结构说明    : Send Cont DTMF请求结果消息内容
-  1.日    期   : 2015年7月24日
-    作    者   : l00324781
-    修改内容   : 新生成结构体
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3585,13 +2826,7 @@ typedef struct
 }TAF_CALL_EVT_SEND_CONT_DTMF_RSLT_STRU;
 
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_RCV_CONT_DTMF_IND_STRU
-结构说明    : Rcv Cont DTMF 指示结果消息内容
-  1.日    期   : 2015年7月24日
-    作    者   : l00324781
-    修改内容   : 新生成结构体
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3602,13 +2837,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }TAF_CALL_EVT_RCV_CONT_DTMF_IND_STRU;
 
-/*****************************************************************************
-结构名      : TAF_CALL_EVT_RCV_BURST_DTMF_IND_STRU
-结构说明    : Rcv Cont DTMF 指示结果消息内容
-  1.日    期   : 2015年7月24日
-    作    者   : l00324781
-    修改内容   : 新生成结构体
-*****************************************************************************/
+
 typedef struct
 {
     MN_CLIENT_ID_T                      usClientId;
@@ -3619,14 +2848,7 @@ typedef struct
     VOS_UINT32                          ulOnLength;                                 /**<  refers to S.0005 3.7.3.3.2.9 */
     VOS_UINT32                          ulOffLength;                                /**<  refers to S.0005 3.7.3.3.2.9 */
 }TAF_CALL_EVT_RCV_BURST_DTMF_IND_STRU;
-/*****************************************************************************
- 结构名    : TAF_CALL_EVT_CCLPR_GET_CNF_STRU
- 结构说明  : 查询呼叫源号码回复结果
 
-  1.日    期   : 2015年08月10日
-    作    者   : f00279542
-    修改内容   : 新增
-*****************************************************************************/
 typedef struct
 {
     MN_CLIENT_ID_T                              usClientId;
@@ -3637,14 +2859,7 @@ typedef struct
     VOS_UINT8                                   aucReserved[3];
 }TAF_CALL_EVT_CCLPR_GET_CNF_STRU;
 
-/*****************************************************************************
- 枚举名    : TAF_CALL_CHANNEL_TYPE_ENUM
- 结构说明  : 内音频带信息
 
-  1.日    期   : 2016年09月22日
-    作    者   : s00370485
-    修改内容   : 软银定制需求新增枚举
-*****************************************************************************/
 enum TAF_CALL_CHANNEL_TYPE_ENUM
 {
     TAF_CALL_CHANNEL_TYPE_NONE   = 0x00,                 /* 无带内音信息 */
@@ -3655,14 +2870,7 @@ enum TAF_CALL_CHANNEL_TYPE_ENUM
 };
 typedef VOS_UINT8 TAF_CALL_CHANNEL_TYPE_ENUM_UINT8;
 
-/*******************************************************************************
- 结构名    : TAF_APP_CHANNEL_INFO_QRY_CNF_STRU
- 结构说明  : ID_TAF_APP_CHANNEL_INFO_QRY_CNF的消息结构
 
- 1.日    期   : 2016年09月27日
-   作    者   : s00370485
-   修改内容   : 软银定制需求新增结构体
-*******************************************************************************/
 typedef struct
 {
     AT_APPCTRL_STRU                     stAppCtrl;
@@ -3672,14 +2880,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }TAF_APP_CHANNEL_INFO_QRY_CNF_STRU;
 
-/*******************************************************************************
- 结构名    : TAF_SPM_CHANNEL_INFO_STRU
- 结构说明  : 语音带宽信息
 
- 1.日    期   : 2016年11月14日
-   作    者   : s00370485
-   修改内容   : 新增结构体
-*******************************************************************************/
 typedef struct
 {
     TAF_CALL_CHANNEL_TYPE_ENUM_UINT8    enChannelType;                       /* 当前的语音类型 */
@@ -3813,6 +3014,7 @@ VOS_VOID MN_CALL_RcvAtClprGetReq(MN_CALL_APP_REQ_MSG_STRU            *pstCallMsg
 VOS_UINT8 GMM_GetCurNetwork(VOS_VOID);
 
 /* Added by f279542 for CDMA 1X Iteration 4, 2014-11-12, begin */
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32  TAF_XCALL_SendBurstDtmf(
     MN_CLIENT_ID_T                      clientId,
     MN_OPERATION_ID_T                   opId,
@@ -3909,6 +3111,7 @@ VOS_UINT32 TAF_XCALL_QryPrivacyModePreferred(
     MN_CLIENT_ID_T                                          usClientId,
     MN_OPERATION_ID_T                                       opId
 );
+#endif
 
 
 VOS_UINT32 TAF_CALL_QryCnap(

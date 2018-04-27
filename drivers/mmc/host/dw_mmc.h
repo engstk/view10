@@ -76,6 +76,7 @@
 /*Flag that we need to chang sd clk to ppll3*/
 #ifdef CONFIG_SD_SDIO_CRC_RETUNING
 #define SD_RETUNING_ON  0x1
+#define SD_RETUNING_OFF  0x0
 #endif
 
 /*

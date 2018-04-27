@@ -94,7 +94,13 @@
 			};
 			hi6421v600_coul_spmi: hi6421v600_coul_spmi@1 {
                                  status = "ok";
-                        };
+            };
+		};
+		subpmic: subpmic@6 {
+			gpios = <&gpio24 5 0>;
+			pinctrl-names = "default", "idle";
+			pinctrl-0 = <&gpio197_pmx_func &gpio197_cfg_func>;
+			pinctrl-1 = <&gpio197_pmx_idle &gpio197_cfg_idle>;
 		};
 	};
 
@@ -596,7 +602,6 @@
 	};
 
 	hisi_dp {
-		swing2_pe0_value = <0xAF88>;
 		status = "ok";
 	};
 
@@ -609,6 +614,8 @@
 
 	/* audio device beg */
 	codec_controller: codec_controller@e82b9000 {
+		slimbusclk_io_driver = <0x5>;
+		slimbusdata_io_driver = <0x5>;
 		status = "ok";
 
 		hi64xx_irq: hi64xx_irq@0 {
@@ -688,7 +695,7 @@
 				&gpio192_cfg_idle
 				&gpio193_cfg_idle>;
 		asp_power_state_offset = <0x06c>;
-		slimbusclk_io_driver = <0xa0>;
+		slimbusclk_io_driver = <0xa8>;
 		slimbusdata_io_driver = <0xa3>;
 		slimbusclk_offset = <0x038>;
 		slimbusdata_offset = <0x03c>;

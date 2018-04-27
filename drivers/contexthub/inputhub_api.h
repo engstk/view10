@@ -18,6 +18,8 @@ extern int inputhub_mcu_write_cmd_nolock(const void *buf, unsigned int length);
 extern int register_iom3_recovery_notifier(struct notifier_block *nb);
 #endif
 
+#define CONTEXTHUB_HEADER_SIZE (sizeof(pkt_header_t) + sizeof(unsigned int))
+
 extern int register_mcu_event_notifier(int tag, int cmd, int (*notify)(const pkt_header_t *head));
 extern int unregister_mcu_event_notifier(int tag, int cmd, int (*notify) (const pkt_header_t *head));
 extern int getSensorMcuMode(void);

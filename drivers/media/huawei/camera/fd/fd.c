@@ -89,9 +89,14 @@ void  fd_top_cfg(struct fd_device *devp)
         fd_err("%s(%d) remap failed",__func__, __LINE__);
         return;
     }
-    writel(0x00000003,top_vir_base+0x74);
-    writel(0x00020011,top_vir_base+0x40);
-    writel(0x02605550,top_vir_base+0x007C);
+    writel(0x00000007,top_vir_base+0x74);
+    if (1 == devp->smmu_flag)
+        writel(0x00020015,top_vir_base+0x40);
+    else
+        writel(0x00020011,top_vir_base+0x40);
+    if (0 == devp->ram_config) {
+        writel(0x02605550,top_vir_base+0x007C);
+    }
     iounmap(top_vir_base);
 }
 
@@ -120,7 +125,9 @@ static int fd_poweron(struct fd_device *devp)
         goto fd_pwr_err_1;
     }
     fd_top_cfg(devp);
-    writel(0x02605550,devp->mstr_vir_base+0x0008);
+    if (0 == devp->ram_config) {
+        writel(0x02605550,devp->mstr_vir_base+0x0008);
+    }
     devp->fd_power_ref++;
     return ret;
 
@@ -783,13 +790,13 @@ _read_exit:
 static long AHFD_Wait_Result(struct fd_device *pdev, unsigned int cmd, unsigned long arg)
 {
     long rc = 0;
-    unsigned int waitType;
+    int waitType;
     if(!access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd)))
     {
         fd_err("AHFD_GET_VERSION !access_ok");
         return -EFAULT;
     }
-    if(__get_user(waitType,&arg))
+    if(__get_user(waitType, (int*)arg))
     {
         fd_err("AHFD_Wait_Result can't get from user");
         return  -EFAULT;
@@ -838,7 +845,7 @@ static long AHFD_Set_Mode(struct fd_device *pdev, unsigned int cmd, unsigned lon
         fd_err("AHFD_GET_VERSION !access_ok");
         return -EFAULT;
     }
-    if(__get_user(mode,&arg))
+    if(__get_user(mode, (int*)arg))
     {
         fd_err("AHFD_Set_Mode can't get from user");
         return  -EFAULT;
@@ -1064,6 +1071,7 @@ static void fd_get_dt_data(struct platform_device *Ddev, struct fd_device *fd_de
     int ret;
     u32 flag = 0;
     u32 clk_rate = 0;
+    u32 ram_config = 0;
     uint32_t base_array[2] = {0};
     struct device *pdev = &(Ddev->dev);
     struct device_node *np = pdev->of_node;
@@ -1129,6 +1137,15 @@ static void fd_get_dt_data(struct platform_device *Ddev, struct fd_device *fd_de
     if(fd_devp->smmu_flag == 1)
     {
          fd_get_pgd_base(fd_devp);
+    }
+
+    ret = of_property_read_u32(np, "huawei,ram-config", &ram_config);
+    if (ret) {
+        fd_warn("get ram config failed, ret:%d", ret);
+        fd_devp->ram_config = 0;
+    } else {
+        fd_info("get ram-config:%u", ram_config);
+        fd_devp->ram_config = ram_config;
     }
 }
 

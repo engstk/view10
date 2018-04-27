@@ -50,6 +50,7 @@
 #define __OSM_H__
 
 #include "vos.h"
+#include "TafTypeDef.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -61,9 +62,7 @@ typedef struct
 {
     VOS_UINT32 ulMsgId;
     VOS_UINT32 ulParam2;            /* 记录ulLen信息 */
-    /* Added by w00316404 for 双L后邮箱机制修改, 2016-09-30, begin */
     VOS_UINT32 ulParam3;            /* 记录RcvPid信息 */
-    /* Added by w00316404 for 双L后邮箱机制修改, 2016-09-30, begin */
     VOS_UINT8 *ulParam1;
 } OS_MSG_STRU;
 
@@ -75,8 +74,8 @@ typedef struct
 
 
 #define HAL_SDMLOG  (VOS_VOID)vos_printf
-#define MSP_MEMCPY(dst, dst_size, src, count)   VOS_MemCpy_s(dst, dst_size, src, count)
-#define MSP_MEMSET(dst, dst_size, val, count) VOS_MemSet_s(dst, dst_size, val, count)
+#define MSP_MEMCPY(dst, dst_size, src, count)   TAF_STD_MemCpy_s(dst, dst_size, src, count, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__))
+#define MSP_MEMSET(dst, dst_size, val, count)   TAF_STD_MemSet_s(dst, dst_size, val, count, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__))
 
 #ifdef __cplusplus
     #if __cplusplus

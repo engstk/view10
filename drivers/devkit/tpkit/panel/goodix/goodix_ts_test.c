@@ -27,8 +27,8 @@
 #define MODULE_SWITCH_DK_OFFSET	(0x8057 - 0x8050)
 #define MODULE_SWITCH_SK_OFFSET	(0x805A - 0x8050)
 
-#define MAX_DRV_NUM		32
-#define MAX_SEN_NUM		32
+#define MAX_DRV_NUM		42
+#define MAX_SEN_NUM		30
 #define FLOAT_AMPLIFIER 1000
 #define PACKAGE_SIZE    256
 #define GTP_SHORTCIRCUT_TEST_IMAMGE_BUFF_MAX (1024*6)
@@ -131,6 +131,53 @@
 #define BOOT_FUNCTION_ADDR2_PARA2		0xFF
 
 #define SHORT_FILE_PATH		"goodix_shortcircut.bin"
+
+
+/*
+*0x8860 or 0xA0D2 short_data:
+*short_head + adc_signal + checksum
+*
+*short_head(first 3bytes)
+*  1st byte: short pins([7] 1:Tx short 0:Rx short [0~6]:short channel nums)
+*  2bytes: reserve
+*
+*adc_signal(other words)
+*
+*checksum(last 2bytes)
+*/
+#define SHORT_HEAD      3
+
+/*
+ * GT917D short test, map to real drv&sen pins
+ */
+#define _CHANNEL_TX_FLAG                0x80
+
+typedef struct {
+	unsigned char master;	// Pin No.
+	unsigned char position;	//If TX Pin No. > 26, position = master-1 as SE1.
+	unsigned char slave;
+	unsigned short short_code;
+}strShortRecord;
+
+static const u8 ChannelPackage_TX[42] =  { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                          10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                                          20, 21, 22, 23, 24, 25,/*26,*/27, 28, 29,
+                                          30, 31, 32, 33, 34, 35, 36, 37, 38, 39,
+                                          40, 41, 42};
+
+static const u8 GT917D_DRV_MAP[] = {0, 2, 4, 5, 6, 8, 10, 12, 14, 30,
+                                   31, 32, 34, 36, 40, 41, 42};
+
+static const u8 GT917D_SEN_MAP[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+                                   10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                                   20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+
+
+
+/*------------------------------------ NOISE TEST PARA--------------------------------------*/
+#define NOISE_TEST_RETRY                    5
+#define GTP_SWITCH_NORMAL_MODE              0x00
+#define GTP_SWITCH_RAWDATA_MODE             0x01
 
 /*------------------------------------ CSVFILE PARA--------------------------------------*/
 #define CSV_FILE_NAME_LENS                  64
@@ -1041,8 +1088,20 @@ static int goodix_noise_test(struct goodix_ts_test *ts_test,
 				struct ts_rawdata_info *info)
 {
 	int i = 0, ret = 0;
-	int retry = 5, used_offset = 0;
+	u8 cmd = GTP_SWITCH_RAWDATA_MODE;
+	int retry = NOISE_TEST_RETRY;
+	int used_offset = 0;
 	u32 delta = 0;
+
+	/*
+	 * normal config auto hopping,send before noise test to avoid lcd noise.
+	 */
+	if (ts_test->ts->ops.send_cfg)
+		ret = ts_test->ts->ops.send_cfg(&ts_test->ts->normal_config);
+
+	GTP_INFO("switch to rawdata mode");
+	if(ts_test->ts->ops.i2c_write)
+		ret = ts_test->ts->ops.i2c_write(GTP_REG_CMD, &cmd, 1);
 
 	while(retry--) {
 		ret = goodix_cache_noisedata(ts_test);
@@ -1455,8 +1514,8 @@ static int goodix_updata_short_FW(struct goodix_ts_test *ts_test)
 /* short test */
 static int goodix_short_test_prepare(struct goodix_ts_test *ts_test)
 {
-	u8 sen_data[32];
-	u8 drv_data[32];
+	u8 sen_data[MAX_SEN_NUM];
+	u8 drv_data[MAX_DRV_NUM];
 	int ret;
 	u16 drv_offest, sen_offest, drv_index, sen_index;
 	u8 chksum = 0x00;
@@ -1487,7 +1546,11 @@ static int goodix_short_test_prepare(struct goodix_ts_test *ts_test)
 
 	memset(sen_data, 0xFF, sizeof(sen_data));
 	memset(drv_data, 0xFF, sizeof(drv_data));
-	drv_offest = 0x80d7 - 0x8047;
+
+	/*
+	 * sen_data and drv_data offset in test_config
+	 */
+	drv_offest = 0x80d5 - 0x8047;
 	sen_offest = 0x80b7 - 0x8047;
 
 	for(i = 0; i < ts_test->test_params.sen_num; i++) {
@@ -1503,11 +1566,12 @@ static int goodix_short_test_prepare(struct goodix_ts_test *ts_test)
 	for (i = 0; i < sizeof(drv_data); i++)
 		chksum += drv_data[i];
 	chksum = 0 - chksum;
-	ret = ts_test->ts->ops.i2c_write(0x8808,&drv_data[0], 32);
+
+	ret = ts_test->ts->ops.i2c_write(0x8808,&drv_data[0], MAX_DRV_NUM);
 	if (ret < 0)
 		return ret;
 
-	ret = ts_test->ts->ops.i2c_write(0x8832, &sen_data[0], 32);
+	ret = ts_test->ts->ops.i2c_write(0x8832, &sen_data[0], MAX_SEN_NUM);
 	if (ret < 0)
 		return ret;
 
@@ -1531,65 +1595,109 @@ static int goodix_short_test_prepare(struct goodix_ts_test *ts_test)
 	return 0;
 }
 
+/*
+ * GT917D map short nums to real sen&drv pins
+ * @short_nums: short nums info read from ic
+ */
+static int get_short_channel(u8 short_nums)
+{
+    int  i = 0;
+    int channel_index = 0;
+    int drv_map_size = sizeof(GT917D_DRV_MAP);
+    int sen_map_size = sizeof(GT917D_SEN_MAP);
+
+    /*bit7 1:Tx short 0:Rx short [0~6]:short channel nums*/
+    if ((short_nums & _CHANNEL_TX_FLAG) == _CHANNEL_TX_FLAG) {
+        for (i = 0; i < drv_map_size; i++) {
+            if (GT917D_DRV_MAP[i] == (short_nums & 0x7f)) {
+                channel_index = i;
+                break;
+            }
+        }
+    } else {
+        for (i = 0; i < sen_map_size; i++) {
+            if (GT917D_SEN_MAP[i] == short_nums) {
+                channel_index = i;
+                break;
+            }
+        }
+    }
+
+    return channel_index;
+}
+
 /**
  * goodix_calc_resisitance - calculate resistance
+ * @r_data:short record
  * @self_capdata: self-capacitance value
  * @adc_signal: ADC signal value
  * return: resistance value
  */
-static inline long goodix_calc_resisitance(u16 self_capdata, u16 adc_signal)
+static inline long goodix_calc_resisitance(strShortRecord* r_data,u16 self_capdata, u16 adc_signal)
 {
-	return (long)self_capdata * 81 * FLOAT_AMPLIFIER /
-				adc_signal - (81 * FLOAT_AMPLIFIER);
+	long r = 0;
+	u8 master = r_data->master;
+	u8 slave = r_data->slave;
+
+	if((((master >= (_CHANNEL_TX_FLAG|14)) && (master <= (_CHANNEL_TX_FLAG|28)))
+	        && ((slave >= (_CHANNEL_TX_FLAG|14)) && (slave <= (_CHANNEL_TX_FLAG|28))))
+	        ||(((master >= (_CHANNEL_TX_FLAG|29)) && (master <= (_CHANNEL_TX_FLAG|42)))
+	        && ((slave >= (_CHANNEL_TX_FLAG|29)) && (slave <= (_CHANNEL_TX_FLAG|42))))) {
+	    r = (long)(self_capdata * 40 * FLOAT_AMPLIFIER / adc_signal - 40 * FLOAT_AMPLIFIER);//ABIST
+	} else if((slave&(_CHANNEL_TX_FLAG|0x01)) == 0x01) {
+	    r = (long)(self_capdata * 60 * FLOAT_AMPLIFIER / adc_signal - 40 * FLOAT_AMPLIFIER);
+	} else { //Others
+	    r = (long)(self_capdata * 60 * FLOAT_AMPLIFIER / adc_signal - 60 * FLOAT_AMPLIFIER);
+	}
+
+	return r;
 }
 
 static int goodix_check_resistance_to_gnd(struct ts_test_params *test_params,
 				u16 adc_signal, u8 pos)
 {
-	int max_drvs = 32;
-	long r;
+	long long r;
 	u16 r_th, avdd_value;
+	u16 short_val;
 
 	avdd_value = test_params->avdd_value;
 	if (adc_signal == 0 || adc_signal == 0x8000)
 		adc_signal |= 1;
 
 	if ((adc_signal & 0x8000) == 0)	/* short to GND */
-		r = (long)(5266285) / (adc_signal & (~0x8000)) -
-			40 * 100;	//52662.85/code-40
+		r = (long long)(52662850) * 10 / (adc_signal & (~0x8000)) -
+			40 * FLOAT_AMPLIFIER * 10;	//52662.85/code-40
 	else	/* short to VDD */
-		r = (long)36864 * (avdd_value - 9) *
-			100 / ((adc_signal & (~0x8000)) * 7) -
-			40 * 100;
+		r = (long long)40 * 9 * 1024 * (avdd_value - 9) *
+			FLOAT_AMPLIFIER / ((adc_signal & (~0x8000)) * 7) -
+			40 * FLOAT_AMPLIFIER * 10;
 
-	r *= 2;
-	r = r / 100;
+	r = r / FLOAT_AMPLIFIER;
+
 	if(r > 65535)
 		r = 65535;
-	else if (r < 0) {
-		r = 0;
-	}
+	short_val = (r >= 0 ? r : 0);
 
-	if (pos < max_drvs)
+	if (pos < MAX_DRV_NUM)
 		r_th = test_params->r_drv_gnd_threshold;
 	else
 		r_th = test_params->r_sen_gnd_threshold;
 
-	if (r < r_th) {
+	if (short_val < (r_th * 10)) {
 		if ((adc_signal & (0x8000)) == 0) {
-			if (pos < max_drvs)
+			if (pos < MAX_DRV_NUM)
 				GTP_ERROR("Tx%d shortcircut to GND,R=%ldK,R_Threshold=%dK",
-					pos, r, r_th);
+					get_short_channel(ChannelPackage_TX[pos] | _CHANNEL_TX_FLAG), short_val/10, r_th);
 			else
 				GTP_ERROR("Rx%d shortcircut to GND,R=%ldK,R_Threshold=%dK",
-					pos - max_drvs, r, r_th);
+					get_short_channel(pos - MAX_DRV_NUM), short_val/10, r_th);
 		} else {
-			if (pos < max_drvs)
+			if (pos < MAX_DRV_NUM)
 				GTP_ERROR("Tx%d shortcircut to VDD,R=%ldK,R_Threshold=%dK",
-					pos, r, r_th);
+					get_short_channel(ChannelPackage_TX[pos] | _CHANNEL_TX_FLAG), short_val/10, r_th);
 			else
 				GTP_ERROR("Rx%d shortcircut to VDD,R=%ldK,R_Threshold=%dK",
-					pos - max_drvs, r, r_th);
+					get_short_channel(pos - MAX_DRV_NUM), short_val/10, r_th);
 		}
 
 		return -1;
@@ -1598,7 +1706,7 @@ static int goodix_check_resistance_to_gnd(struct ts_test_params *test_params,
 	return 0;
 }
 
-static int goodix_check_short_resistance(u16 self_capdata, u16 adc_signal,
+static int goodix_check_short_resistance(strShortRecord* r_data, u16 self_capdata, u16 adc_signal,
 				unsigned short short_r_th)
 {
 	unsigned short short_val;
@@ -1608,15 +1716,15 @@ static int goodix_check_short_resistance(u16 self_capdata, u16 adc_signal,
 	if (self_capdata == 0xffff || self_capdata == 0) 
 		return 0;
 
-	r = goodix_calc_resisitance(self_capdata, adc_signal);
-	r = r / FLOAT_AMPLIFIER;
+	r = goodix_calc_resisitance(r_data, self_capdata, adc_signal);
+	r = r * 10 / FLOAT_AMPLIFIER;
 	if (r > 65535)
 		r = 65535;
 	short_val = (r >= 0 ? r : 0);
 
-	if (short_val < short_r_th) {
+	if (short_val < (short_r_th * 10)) {
 		GTP_ERROR("Short circut:R=%dK,R_Threshold=%dK",
-					short_val, short_r_th);
+					short_val/10, short_r_th);
 		ret = -1;
 	}
 
@@ -1626,8 +1734,8 @@ static int goodix_check_short_resistance(u16 self_capdata, u16 adc_signal,
 static int goodix_shortcircut_analysis(struct goodix_ts_test *ts_test, u8 short_flag)
 {
 	u8 *data_buf = NULL, short_status[3];
-	int max_drvs = 32, max_sens  = 32;
-	u16 self_capdata[max_drvs + max_sens], short_pin_num;
+	u16 self_capdata[(MAX_DRV_NUM + MAX_SEN_NUM) * 2];
+	strShortRecord r_data;
 	u16 adc_signal, data_addr;
 	int ret = 0, err = 0;
 	u16 r_threshold;
@@ -1644,7 +1752,7 @@ static int goodix_shortcircut_analysis(struct goodix_ts_test *ts_test, u8 short_
 	if ((short_flag & 0x08) == 0x08) {
 		/* read diff code, diff code will be used to calculate
 			resistance between channel and GND */
-		size = (max_drvs + max_sens) * 2;
+		size = (MAX_DRV_NUM + MAX_SEN_NUM) * 2;
 		ret = ts_test->ts->ops.i2c_read(0xA531,  data_buf, size);
 		if (ret < 0)
 			goto exit_kfree;
@@ -1659,48 +1767,69 @@ static int goodix_shortcircut_analysis(struct goodix_ts_test *ts_test, u8 short_
 	}
 
 	/* read self-capdata+ */
-	size = (max_drvs + max_sens) * 2;
+	size = (MAX_DRV_NUM + MAX_SEN_NUM) * 2;
 	ret = ts_test->ts->ops.i2c_read(0xA4A1, data_buf, size);
 	if (ret < 0)
 		goto exit_kfree;
 
-	for (i = 0;i < max_drvs + max_sens; i++)
-		{
-		self_capdata_offset =i * 2;
+	for (i = 0;i < MAX_DRV_NUM + MAX_SEN_NUM; i++) {
+		self_capdata_offset = i * 2;
 		self_capdata[i] = be16_to_cpup((__be16*)&data_buf[self_capdata_offset]) & 0x7fff;
-		}
+	}
 	/* read self-capdata- */
 
 	/* read tx tx short number */
-	ret = ts_test->ts->ops.i2c_read(0x8802, &short_status[0], 3);
+	ret = ts_test->ts->ops.i2c_read(0x8802, &short_status[0], 2);
 	if (ret < 0)
 		goto exit_kfree;
-	GTP_INFO("Tx&Tx:%d,Rx&Rx:%d,Tx&Rx:%d",short_status[0],
-					short_status[1],short_status[2]);
+	GTP_INFO("short nums,Tx&Tx/Tx&Rx:%d,Rx&Rx:%d",short_status[0], short_status[1]);
 
 	/* drv&drv shortcircut check */
 	data_addr = 0x8800 + 0x60;
+	/* bit7 1:Tx short 0:Rx short [0~6]:short channel nums */
 	for (i = 0; i < short_status[0]; i++) {
-		size = 4 + max_drvs * 2 + 2;
+		size = SHORT_HEAD + (MAX_DRV_NUM + MAX_SEN_NUM) * 2 + 2;
 		ret = ts_test->ts->ops.i2c_read(data_addr, data_buf, size);
 		if (ret < 0)
 			goto exit_kfree;
 
 		r_threshold = ts_test->test_params.r_drv_drv_threshold;
-		short_pin_num = be16_to_cpup((__be16 *)&data_buf[0]);
-		if (short_pin_num > max_drvs + max_sens)
-			continue;
 
-		for (j = i + 1; j < max_drvs; j++) {
-			adc_signal_offset = 4 + j * 2;
+		for (j = i + 1; j < MAX_DRV_NUM; j++) {
+			adc_signal_offset = SHORT_HEAD + j * 2;
 			adc_signal = be16_to_cpup((__be16 *)&data_buf[adc_signal_offset]);
 			if (adc_signal > ts_test->test_params.short_threshold) {
-				ret = goodix_check_short_resistance(
-						self_capdata[short_pin_num], adc_signal,
+				r_data.master = data_buf[0];
+				r_data.position = j;
+				r_data.slave = ChannelPackage_TX[j] | _CHANNEL_TX_FLAG;//TX
+				r_data.short_code = adc_signal;
+				ret = goodix_check_short_resistance(&r_data,
+						self_capdata[j], adc_signal,
 						r_threshold);
 				if (ret < 0) {
 					err |= ret;
-					GTP_ERROR("Tx%d-Tx%d shortcircut", short_pin_num, j);
+					GTP_ERROR("Tx%d-Tx%d shortcircut", get_short_channel(r_data.master),
+						get_short_channel(r_data.slave));
+				}
+			}
+		}
+
+		/*drv&sen short */
+		for (j = 0; j < MAX_SEN_NUM; j++) {
+			adc_signal_offset = SHORT_HEAD + MAX_DRV_NUM * 2 + j * 2;
+			adc_signal = be16_to_cpup((__be16 *)&data_buf[adc_signal_offset]);
+			if (adc_signal > ts_test->test_params.short_threshold) {
+				r_data.master = data_buf[0];
+				r_data.position = j + MAX_DRV_NUM;
+				r_data.slave = j;
+				r_data.short_code = adc_signal;
+				ret = goodix_check_short_resistance(&r_data,
+						self_capdata[j], adc_signal,
+						r_threshold);
+				if (ret < 0) {
+					err |= ret;
+					GTP_ERROR("Tx%d-Rx%d shortcircut", get_short_channel(r_data.master),
+						get_short_channel(r_data.slave));
 				}
 			}
 		}
@@ -1709,60 +1838,32 @@ static int goodix_shortcircut_analysis(struct goodix_ts_test *ts_test, u8 short_
 
 	/* sen&sen shortcircut check */
 	data_addr = 0xA0D2;
+	/* bit7 1:Tx short 0:Rx short [0~6]:short channel nums */
 	for (i = 0; i < short_status[1]; i++) {
-		size = 4 + max_sens * 2 + 2;
+		size = SHORT_HEAD + MAX_SEN_NUM * 2 + 2;
 		ret = ts_test->ts->ops.i2c_read(data_addr, data_buf, size);
 		if (ret < 0)
 			goto exit_kfree;
 
 		r_threshold = ts_test->test_params.r_sen_sen_threshold;
-		short_pin_num = be16_to_cpup((__be16 *)&data_buf[0]) + max_drvs;
-		if (short_pin_num > max_drvs + max_sens)
-			continue;
 
-		for (j = 0; j < max_sens; j++) {
+		for (j = 0; j < MAX_SEN_NUM; j++) {
 			if(j == i || (j < i && (j & 0x01) == 0))
 				continue;
-			adc_signal_offset = 4 + j * 21;
+			adc_signal_offset = SHORT_HEAD + j * 2;
 			adc_signal = be16_to_cpup((__be16 *)&data_buf[adc_signal_offset]);
 			if (adc_signal > ts_test->test_params.short_threshold) {
-				ret = goodix_check_short_resistance(
-						self_capdata[short_pin_num], adc_signal,
+				r_data.master 	= data_buf[0];
+				r_data.position	= j + MAX_DRV_NUM;
+				r_data.slave = j;
+				r_data.short_code = adc_signal;
+				ret = goodix_check_short_resistance(&r_data,
+						self_capdata[j], adc_signal,
 						r_threshold);
 				if (ret < 0) {
 					err |= ret;
-					GTP_ERROR("Rx%d-Rx%d shortcircut",
-							short_pin_num - max_drvs, j);
-				}
-			}
-		}
-		data_addr += size;
-	}
-
-	/* sen&drv shortcircut check */
-	data_addr = 0x99e0;
-	for (i = 0; i < short_status[2]; i++) {
-		size = 4 + max_sens * 2 + 2;
-		ret = ts_test->ts->ops.i2c_read(data_addr, data_buf, size);
-		if (ret < 0)
-			goto exit_kfree;
-
-		r_threshold = ts_test->test_params.r_drv_sen_threshold;
-		short_pin_num = be16_to_cpup((__be16 *)&data_buf[0]) + max_drvs;
-		if (short_pin_num > max_drvs + max_sens)
-			continue;
-
-		for (j = 0; j < max_drvs; j++) {
-			adc_signal_offset = 4 + j * 21;
-			adc_signal = be16_to_cpup((__be16 *)&data_buf[adc_signal_offset]);
-			if (adc_signal > ts_test->test_params.short_threshold) {
-				ret = goodix_check_short_resistance(
-						self_capdata[short_pin_num], adc_signal,
-						r_threshold);
-				if (ret < 0) {
-					err |= ret;
-					GTP_ERROR("Rx%d-Tx%d shortcircut",
-							short_pin_num - max_drvs, j);
+					GTP_ERROR("Rx%d-Rx%d shortcircut", get_short_channel(r_data.master),
+						get_short_channel(r_data.slave));
 				}
 			}
 		}
@@ -1782,11 +1883,11 @@ static int goodix_shortcircut_test(struct goodix_ts_test *ts_test)
 	int count = GTP_SHORTCIRCUT_RETRY;
 	u8 short_flag = 0;
 
-	ret = goodix_updata_short_FW(ts_test);
-	if (ret < 0)
-		goto end_test;
-
 	while (count--) {
+		ret = goodix_updata_short_FW(ts_test);
+		if (ret < 0)
+			goto end_test;
+
 		ret = goodix_short_test_prepare(ts_test);
 		if (ret < 0)
 			goto end_test;
@@ -1802,11 +1903,11 @@ static int goodix_shortcircut_test(struct goodix_ts_test *ts_test)
 			GTP_DEBUG("waitting...:%d", retry);
 		}
 
-	if (retry <= 0) {
-		GTP_ERROR("Wait short test finish timeout");
-		ret = -1;
-		goto end_test;
-	}
+		if (retry <= 0) {
+			GTP_ERROR("Wait short test finish timeout");
+			ret = -1;
+			goto end_test;
+		}
 
 		ret = ts_test->ts->ops.i2c_read(0x8801,  &short_flag, 1);
 		if (ret < 0) {
@@ -1817,7 +1918,7 @@ static int goodix_shortcircut_test(struct goodix_ts_test *ts_test)
 				GTP_INFO("Shortcircut test judge pass");
 				goto end_test;
 			} else {
-				GTP_ERROR("Shortcircut test judge failed");
+				GTP_INFO("Shortcircut test judge maybe fail");
 			}
 		}
 

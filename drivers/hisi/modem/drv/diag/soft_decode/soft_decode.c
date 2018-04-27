@@ -55,6 +55,7 @@
 #include <osl_sem.h>
 #include <osl_thread.h>
 #include <osl_malloc.h>
+#include <securec.h>
 #include "scm_ind_src.h"
 #include "scm_ind_dst.h"
 #include "scm_cnf_src.h"
@@ -94,18 +95,7 @@ SCM_SOFTDECODE_INFO_STRU   g_stScmSoftDecodeInfo;
   4 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : SCM_SoftDecodeCfgDataRcv
- 功能描述  : OM配置信息接收函数
- 输入参数  : pucBuffer:数据内容
-             ulLen:数据长度
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-   1.日    期  : 2014年5月21日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 u32 SCM_SoftDecodeCfgDataRcv(u8 *pucBuffer, u32 ulLen)
 {
     u32                          ulRstl;
@@ -120,19 +110,7 @@ u32 SCM_SoftDecodeCfgDataRcv(u8 *pucBuffer, u32 ulLen)
     return ulRstl;
 }
 
-/*****************************************************************************
- 函 数 名  : SCM_SoftDecodeDataRcv
- 功能描述  : SCM软解码数据接收函数
- 输入参数  : pucBuffer:数据内容
-             ulLen:数据长度
-             ulTaskId:SCM软解码任务ID
- 输出参数  : 无
- 返 回 值  : BSP_OK/ERR_MSP_FAILURE
- 修改历史  :
-   1.日    期  : 2014年5月21日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 u32 SCM_SoftDecodeDataRcv(u8 *pucBuffer, u32 ulLen)
 {
     s32                           sRet;
@@ -163,19 +141,7 @@ u32 SCM_SoftDecodeDataRcv(u8 *pucBuffer, u32 ulLen)
     return ERR_MSP_FAILURE;
 }
 
-/*****************************************************************************
- 函 数 名  : SCM_SoftDecodeAcpuRcvData
- 功能描述  : SCM软解码数据接收函数
- 输入参数  : pstHdlcCtrl: HDLC控制结构
-             pucData:   需要发送的数据内容
-             ulLen: 数据长度
- 输出参数  : 无
- 返 回 值  : ERR_MSP_FAILURE/BSP_OK
- 修改历史  :
-   1.日    期  : 2014年5月21日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 u32 SCM_SoftDecodeAcpuRcvData(
     OM_HDLC_STRU                       *pstHdlcCtrl,
     u8                          *pucData,
@@ -218,17 +184,7 @@ u32 SCM_SoftDecodeAcpuRcvData(
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : SCM_SoftDecodeCfgHdlcInit
- 功能描述  : SCM软解码HDLC解封装初始化函数
- 输入参数  : pstHdlc:指向HDLC控制结构的指针
- 输出参数  : 无
- 返 回 值  : BSP_OK/ERR_MSP_FAILURE
- 修改历史  :
-   1.日    期  : 2014年5月21日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 u32 SCM_SoftDecodeCfgHdlcInit(OM_HDLC_STRU *pstHdlc)
 {
     /* 申请用于HDLC解封装的缓存 */
@@ -250,20 +206,7 @@ u32 SCM_SoftDecodeCfgHdlcInit(OM_HDLC_STRU *pstHdlc)
     return BSP_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : SCM_SoftDecodeCfgRcvSelfTask
- 功能描述  : SCM软解码OM配置数据接收任务
- 输入参数  : ulPara1:参数1
-             ulPara2:参数2
-             ulPara3:参数3
-             ulPara4:参数4
- 输出参数  : 无
- 返 回 值  : 无
- 修改历史  :
-   1.日    期  : 2014年5月21日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 void SCM_SoftDecodeCfgRcvSelfTask(void)
 {
     s32                           sRet;
@@ -345,17 +288,7 @@ void SCM_SoftDecodeCfgRcvSelfTask(void)
 }
 
 
-/*****************************************************************************
- 函 数 名  : SCM_SoftDecodeCfgRcvTaskInit
- 功能描述  : SCM软解码OM配置数据接收函数初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : BSP_OK/ERR_MSP_FAILURE
- 修改历史  :
-   1.日    期  : 2014年5月21日
-     作    者  : h59254
-     修改内容  : Creat Function
-*****************************************************************************/
+
 int SCM_SoftDecodeCfgRcvTaskInit(void)
 {
     u32                              ulRslt;
@@ -385,8 +318,7 @@ int SCM_SoftDecodeCfgRcvTaskInit(void)
         return BSP_ERROR;
     }
 
-    /* coverity[secure_coding] */
-    (void)memset(&g_stScmSoftDecodeInfo, 0, sizeof(SCM_SOFTDECODE_INFO_STRU));
+    (void)memset_s(&g_stScmSoftDecodeInfo, sizeof(g_stScmSoftDecodeInfo), 0, sizeof(g_stScmSoftDecodeInfo));
 
     if (BSP_OK != SCM_SoftDecodeCfgHdlcInit(&g_stScmHdlcSoftDecodeEntity))
     {
@@ -446,7 +378,7 @@ void SCM_SoftDecodeInfoShow(void)
 
     (void)soft_decode_printf("\r\nCPM Reg Logic Rcv Func Success Times %d:\r\n", g_stScmSoftDecodeInfo.ulCpmRegLogicRcvSuc);
 }
-
+EXPORT_SYMBOL(SCM_SoftDecodeInfoShow);
 
 
 

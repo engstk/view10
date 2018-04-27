@@ -17,6 +17,7 @@
 #include "../hisi_dp.h"
 
 #define AUDIO_INFOFREAME_HEADER 0x441B8400
+#define VIDEO_DEFAULT_MODE_MAX 4
 
 void dptx_audio_params_reset(struct audio_params *aparams);
 void dptx_audio_config(struct dp_ctrl *dptx);
@@ -29,12 +30,14 @@ void dptx_audio_inf_type_change(struct dp_ctrl *dptx);
 void dptx_audio_num_ch_change(struct dp_ctrl *dptx);
 void dptx_audio_data_width_change(struct dp_ctrl *dptx);
 
-int dptx_dtd_fill(struct dtd *mdtd, uint8_t code, uint32_t refresh_rate,
+bool dptx_dtd_fill(struct dtd *mdtd, uint8_t code, uint32_t refresh_rate,
 		  uint8_t video_format);
 void dwc_dptx_dtd_reset(struct dtd *mdtd);
 int dptx_dtd_parse(struct dp_ctrl *dptx, struct dtd *mdtd, uint8_t data[18]);
 void dptx_video_params_reset(struct video_params *params);
 void dptx_video_timing_change(struct dp_ctrl *dptx);
+int dptx_change_video_mode_tu_fail(struct dp_ctrl *dptx);
+int dptx_change_video_mode_user(struct dp_ctrl *dptx);
 int dptx_video_mode_change(struct dp_ctrl *dptx, uint8_t vmode);
 int dptx_video_config(struct dp_ctrl *dptx);
 void dptx_video_core_config(struct dp_ctrl *dptx);
@@ -58,5 +61,6 @@ void dptx_video_reset(struct dp_ctrl *dptx, int enable);
 void dptx_audio_clock_freq_change(struct dp_ctrl *dptx, uint8_t freq_id);
 void dptx_audio_samp_freq_config(struct dp_ctrl *dptx);
 void dptx_audio_infoframe_sdp_send(struct dp_ctrl *dptx);
+bool dptx_check_low_temperature(struct dp_ctrl *dptx);
 
 #endif

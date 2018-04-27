@@ -339,6 +339,7 @@ struct usb_phy_ops {
 	void (*close)(struct otg_dev *otg_device);
 	int (*enable_clk)(struct otg_dev *otg_device);
 	void (*disable_clk)(struct otg_dev *otg_device);
+	void (*check_voltage)(struct otg_dev *otg_device);
 };
 
 struct hiusb_event_queue {
@@ -401,6 +402,7 @@ struct otg_dev {
 	struct hiusb_event_queue event_queue;
 
 	unsigned int need_disable_vdp;
+	unsigned int check_voltage;
 };
 
 #ifdef CONFIG_PM
@@ -429,6 +431,8 @@ static inline struct usb_phy_ops *get_usb_phy_ops(struct otg_dev *dev_p)
  */
 #define BC_AGAIN_DELAY_TIME_1 200
 #define BC_AGAIN_DELAY_TIME_2 8000
+#define BC_AGAIN_ONCE	1
+#define BC_AGAIN_TWICE	2
 void notify_charger_type(struct otg_dev *dev_p);
 void schdule_bc_again(struct otg_dev *dev_p);
 void cancel_bc_again(struct otg_dev *dev_p, int sync);

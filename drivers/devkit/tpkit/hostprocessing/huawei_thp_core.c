@@ -45,6 +45,9 @@
 #endif
 
 struct thp_core_data *g_thp_core;
+static u8 *spi_sync_tx_buf = NULL;
+static u8 *spi_sync_rx_buf = NULL;
+
 #if defined (CONFIG_TEE_TUI)
 struct thp_tui_data thp_tui_info;
 EXPORT_SYMBOL(thp_tui_info);
@@ -66,6 +69,11 @@ struct dsm_client *dsm_thp_dclient;
 #define THP_DEVICE_NAME	"huawei_thp"
 #define THP_MISC_DEVICE_NAME "thp"
 
+int thp_project_id_provider(char* project_id)
+{
+	return 0;
+}
+EXPORT_SYMBOL(thp_project_id_provider);
 
 struct thp_core_data *thp_get_core_data(void)
 {
@@ -120,6 +128,36 @@ static int thp_wait_frame_waitq(struct thp_core_data *cd)
 #endif
 
 	return -ETIMEDOUT;
+}
+
+int thp_set_status(int type, int status)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+
+	mutex_lock(&cd->status_mutex);
+	status ? __set_bit(type, &cd->status) :
+		__clear_bit(type, &cd->status);
+	mutex_unlock(&cd->status_mutex);
+
+	thp_mt_wrapper_wakeup_poll();
+
+	THP_LOG_INFO("%s:type=%d value=%d\n",
+			__func__, type, status);
+	return 0;
+}
+
+int thp_get_status(int type)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+
+	return test_bit(type, &cd->status);
+}
+
+u32 thp_get_status_all(void)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+
+	return cd->status;
 }
 
 static void thp_clear_frame_buffer(struct thp_core_data *cd)
@@ -231,10 +269,12 @@ static int thp_lcdkit_notifier_callback(struct notifier_block* self,
 	switch (pm_type) {
 	case LCDKIT_TS_EARLY_SUSPEND:
 		THP_LOG_INFO("%s: early suspend\n", __func__);
-		thp_daemeon_suspend_resume_notify(THP_SUSPEND);
+		thp_set_status(THP_STATUS_POWER, THP_SUSPEND);
+		break;
 
 	case LCDKIT_TS_SUSPEND_DEVICE :
 		THP_LOG_DEBUG("%s: suspend\n", __func__);
+		thp_clean_fingers();
 		break;
 
 	case LCDKIT_TS_BEFORE_SUSPEND :
@@ -249,7 +289,7 @@ static int thp_lcdkit_notifier_callback(struct notifier_block* self,
 
 	case LCDKIT_TS_AFTER_RESUME:
 		THP_LOG_INFO("%s: after resume\n", __func__);
-		thp_daemeon_suspend_resume_notify(THP_RESUME);
+		thp_set_status(THP_STATUS_POWER, THP_RESUME);
 		break;
 
 	default :
@@ -277,7 +317,7 @@ static int thp_open(struct inode *inode, struct file *filp)
 	cd->open_count++;
 	mutex_unlock(&cd->thp_mutex);
 
-	cd->reset_flag = 0;
+	cd->reset_flag = 0;//current isn't in reset status
 	cd->get_frame_block_flag = THP_GET_FRAME_BLOCK;
 
 	cd->frame_size = THP_MAX_FRAME_SIZE;
@@ -311,6 +351,27 @@ static int thp_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+static int  thp_spi_sync_alloc_mem(void)
+{
+	if(!spi_sync_rx_buf && !spi_sync_tx_buf ){
+		spi_sync_rx_buf = kzalloc(THP_SYNC_DATA_MAX, GFP_KERNEL);
+		if(!spi_sync_rx_buf){
+			THP_LOG_ERR("%s:spi_sync_rx_buf request memory fail,sync_data.size = %d\n", __func__);
+			goto exit;
+		}
+		spi_sync_tx_buf = kzalloc(THP_SYNC_DATA_MAX, GFP_KERNEL);
+		if(!spi_sync_tx_buf){
+			THP_LOG_ERR("%s:spi_sync_tx_buf request memory fail,sync_data.size = %d\n", __func__);
+			kfree(spi_sync_rx_buf);
+			spi_sync_rx_buf = NULL;
+			goto exit;
+		}
+	}
+	return  0;
+
+exit :
+	return  -ENOMEM;
+}
 
 static long thp_ioctl_spi_sync(void __user *data)
 {
@@ -341,13 +402,25 @@ static long thp_ioctl_spi_sync(void __user *data)
 		return -EINVAL;
 	}
 
-	rx_buf = kzalloc(sync_data.size, GFP_KERNEL);
-	tx_buf = kzalloc(sync_data.size, GFP_KERNEL);
-	if (!rx_buf || !tx_buf) {
-		THP_LOG_ERR("%s:buf request memory fail\n", __func__);
-		goto exit;
+	if(cd->need_huge_memory_in_spi){
+		rc = thp_spi_sync_alloc_mem();
+		if(!rc ){
+			rx_buf = spi_sync_rx_buf;
+			tx_buf = spi_sync_tx_buf;
+		}
+		else{
+			THP_LOG_ERR("%s:buf request memory fail.\n", __func__);
+			goto exit;
+		}
 	}
-
+	else{
+		rx_buf = kzalloc(sync_data.size, GFP_KERNEL);
+		tx_buf = kzalloc(sync_data.size, GFP_KERNEL);
+		if (!rx_buf || !tx_buf) {
+			THP_LOG_ERR("%s:buf request memory fail,sync_data.size = %d\n", __func__,sync_data.size);
+			goto exit;
+		}
+	}
 	rc = copy_from_user(tx_buf, sync_data.tx, sync_data.size);
 	if (rc) {
 		THP_LOG_ERR("%s:copy in buff fail\n", __func__);
@@ -369,8 +442,16 @@ static long thp_ioctl_spi_sync(void __user *data)
 	}
 
 exit:
-	kfree(rx_buf);
-	kfree(tx_buf);
+	if(!cd->need_huge_memory_in_spi){
+		if(rx_buf){
+			kfree(rx_buf);
+			rx_buf = NULL;
+		}
+		if(tx_buf){
+			kfree(tx_buf);
+			tx_buf = NULL;
+		}
+	}
 	return rc;
 }
 
@@ -408,8 +489,7 @@ static long thp_ioctl_get_frame(unsigned long arg, unsigned int f_flag)
 		THP_LOG_ERR("%s:input buf invalid\n", __func__);
 		return -EINVAL;
 	}
-
-	if (data.size < cd->frame_size)
+	//if (data.size < cd->frame_size)
 		cd->frame_size = data.size;
 
 	thp_set_irq_status(cd, THP_IRQ_ENABLE);
@@ -464,7 +544,7 @@ static long thp_ioctl_reset(unsigned long reset)
 	gpio_set_value(cd->gpios.rst_gpio, !!reset);
 
 	cd->frame_waitq_flag = WAITQ_WAIT;
-	cd->reset_flag = !!reset;
+	cd->reset_flag = !reset;
 
 	return 0;
 }
@@ -500,6 +580,16 @@ static long thp_ioctl_set_block(unsigned long arg)
 	return 0;
 }
 
+
+static long thp_ioctl_set_irq(unsigned long arg)
+{
+	struct thp_core_data *ts = thp_get_core_data();
+	unsigned int irq_en = (unsigned int)arg;
+	thp_set_irq_status(ts, irq_en);
+	return 0;
+}
+
+
 static long thp_ioctl(struct file *filp, unsigned int cmd,
 				unsigned long arg)
 {
@@ -527,6 +617,10 @@ static long thp_ioctl(struct file *filp, unsigned int cmd,
 		break;
 	case THP_IOCTL_CMD_SET_BLOCK:
 		ret = thp_ioctl_set_block(arg);
+		break;
+
+	case THP_IOCTL_CMD_SET_IRQ:
+		ret = thp_ioctl_set_irq(arg);
 		break;
 
 	default:
@@ -594,9 +688,10 @@ static irqreturn_t thp_irq_thread(int irq, void *dev_id)
 	u8 *read_buf = (u8 *)cd->frame_read_buf;
 	int rc;
 
-	if (cd->reset_flag || cd->suspended)
+	if (cd->reset_flag || cd->suspended){
+		THP_LOG_ERR("%s: ignore this irq.\n", __func__);
 		return IRQ_HANDLED;
-
+	}
 	disable_irq_nosync(cd->irq);
 	/* get frame */
 	rc = cd->thp_dev->ops->get_frame(cd->thp_dev, read_buf, cd->frame_size);
@@ -640,22 +735,28 @@ EXPORT_SYMBOL(thp_spi_cs_set);
 static int thp_charger_detect_notifier_callback(struct notifier_block *self,
 					unsigned long event, void *data)
 {
-	struct thp_core_data *cd = thp_get_core_data();
-
-	THP_LOG_INFO("%s called, charger type: %d\n", __func__, event);
+	int charger_stat_before = thp_get_status(THP_STATUS_CHARGER);
+	int charger_state_new = charger_stat_before;
+	THP_LOG_DEBUG("%s called, charger type: %d\n", __func__, event);
 
 	switch (event) {
 	case VCHRG_START_USB_CHARGING_EVENT :
 	case VCHRG_START_AC_CHARGING_EVENT:
 	case VCHRG_START_CHARGING_EVENT:
-		cd->charger_state = 1;
+		charger_state_new = 1;
 		break;
 	case VCHRG_STOP_CHARGING_EVENT:
-		cd->charger_state = 0;
+		charger_state_new = 0;
 		break;
 	default:
 		break;
 	}
+
+	if(charger_stat_before != charger_state_new){
+		THP_LOG_INFO("%s, set new status: %d\n", __func__, charger_state_new);
+		thp_set_status(THP_STATUS_CHARGER, charger_state_new);
+	}
+
 	return 0;
 }
 #endif
@@ -685,6 +786,11 @@ static struct thp_ic_name thp_ic_table[] = {
 	{"32", "rohm"},
 	{"47", "rohm"},
 	{"49", "novatech"},
+	{"59", "himax"},
+	{"60", "himax"},
+	{"61", "himax"},
+	{"62", "synaptics"},
+	{"65", "novatech"},
 };
 
 static int thp_projectid_to_vender_name(char *project_id,
@@ -781,7 +887,7 @@ static int thp_setup_gpio(struct thp_core_data *cd)
 {
 	int rc;
 
-	THP_LOG_ERR("%s: called\n", __func__);
+	THP_LOG_INFO("%s: called\n", __func__);
 
 	rc = gpio_request(cd->gpios.rst_gpio, "thp_reset");
 	if (rc) {
@@ -798,7 +904,7 @@ static int thp_setup_gpio(struct thp_core_data *cd)
 		return rc;
 	}
 	gpio_direction_output(cd->gpios.cs_gpio, GPIO_HIGH);
-	THP_LOG_ERR("%s:set cs gpio(%d) deault hi\n", __func__,
+	THP_LOG_INFO("%s:set cs gpio(%d) deault hi\n", __func__,
 				cd->gpios.cs_gpio);
 
 	rc = gpio_request(cd->gpios.irq_gpio, "thp_int");
@@ -834,6 +940,7 @@ static int thp_setup_spi(struct thp_core_data *cd)
 	if (!cd->spi_config.mode)
 		cd->spi_config.mode = SPI_MODE_0;
 	if (!cd->spi_config.bits_per_word)
+		/*spi_config.bits_per_word default value*/
 		cd->spi_config.bits_per_word = 8;
 
 	cd->sdev->mode = cd->spi_config.mode;
@@ -862,17 +969,16 @@ void thp_tui_secos_init(void)
 		THP_LOG_ERR("%s: core not inited\n", __func__);
 		return;
 	}
-	cd->thp_ta_waitq_flag = WAITQ_WAIT;
-	disable_irq(cd->irq);
+
 	/*NOTICE: should not change this path unless ack daemon*/
-	kobject_uevent(
-		&(g_thp_misc_device.this_device->kobj),
-		KOBJ_OFFLINE);
+	thp_set_status(THP_STATUS_TUI, 1);
+	cd->thp_ta_waitq_flag = WAITQ_WAIT;
+
 	THP_LOG_INFO("%s: busid=%d. diable irq=%d\n", __func__, cd->spi_config.bus_id,cd->irq);
 	t = wait_event_interruptible_timeout(cd->thp_ta_waitq,
 				(cd->thp_ta_waitq_flag == WAITQ_WAKEUP),HZ);
 	THP_LOG_INFO("%s: wake up finish \n",__func__);
-
+	disable_irq(cd->irq);
 	spi_init_secos(cd->spi_config.bus_id);
 	thp_tui_info.enable = 1;
 	return;
@@ -889,9 +995,7 @@ void thp_tui_secos_exit(void)
 	thp_tui_info.enable = 0;
 	spi_exit_secos(cd->spi_config.bus_id);
 	enable_irq(cd->irq);
-	kobject_uevent(
-		&(g_thp_misc_device.this_device->kobj),
-		KOBJ_ONLINE);
+	thp_set_status(THP_STATUS_TUI, 0);
 	return;
 }
 
@@ -937,6 +1041,7 @@ static int thp_core_init(struct thp_core_data *cd)
 	mutex_init(&cd->mutex_frame);
 	mutex_init(&cd->irq_mutex);
 	mutex_init(&cd->thp_mutex);
+	mutex_init(&cd->status_mutex);
 
 	dev_set_drvdata(&cd->sdev->dev, cd);
 
@@ -1000,6 +1105,7 @@ static int thp_core_init(struct thp_core_data *cd)
 #endif
 
 	atomic_set(&cd->register_flag, 1);
+	thp_set_status(THP_STATUS_POWER, 1);
 	return 0;
 
 err_setip_irq:
@@ -1138,7 +1244,7 @@ int thp_parse_spi_config(struct device_node *spi_cfg_node,
 	rc = of_property_read_u32(spi_cfg_node, "bits-per-word", &value);
 	if (!rc) {
 		spi_config->bits_per_word = value;
-		THP_LOG_INFO("%s:spi-mode configed %d\n", __func__, value);
+		THP_LOG_INFO("%s:bits-per-word configed %d\n", __func__, value);
 	}
 
 	value = 0;
@@ -1265,6 +1371,25 @@ int thp_parse_timing_config(struct device_node *timing_cfg_node,
 }
 EXPORT_SYMBOL(thp_parse_timing_config);
 
+
+ int thp_parse_feature_config(struct device_node *thp_node,
+			struct thp_core_data *cd)
+ {
+	int rc = 0;
+	unsigned int value = 0;
+	THP_LOG_DEBUG("%s:Enter!\n",__func__);
+
+	rc = of_property_read_u32(thp_node,"need_huge_memory_in_spi", &value);
+	if (!rc) {
+		cd->need_huge_memory_in_spi = value;
+		THP_LOG_INFO("%s:need_huge_memory_in_spi configed %d\n",__func__, value);
+	}
+
+	return  0;
+}
+
+EXPORT_SYMBOL(thp_parse_feature_config);
+
 static int thp_parse_config(struct thp_core_data *cd,
 					struct device_node *thp_node)
 {
@@ -1311,6 +1436,8 @@ static int thp_parse_config(struct thp_core_data *cd,
 		THP_LOG_ERR("%s: get cs_gpio failed\n", __func__);
 		return rc;
 	}
+	thp_parse_feature_config(thp_node , cd);
+
 	cd->gpios.cs_gpio = value;
 
 	cd->thp_node = thp_node;
@@ -1379,7 +1506,20 @@ static int thp_remove(struct spi_device *sdev)
 		mutex_destroy(&cd->mutex_frame);
 		thp_mt_wrapper_exit();
 	}
-	kfree(cd);
+
+	if(spi_sync_rx_buf){
+		kfree(spi_sync_rx_buf);
+		spi_sync_rx_buf = NULL;
+	}
+	if(spi_sync_tx_buf){
+		kfree(spi_sync_tx_buf);
+		spi_sync_tx_buf = NULL;
+	}
+	if(cd){
+		kfree(cd);
+		cd = NULL;
+	}
+
 
 #if defined (CONFIG_TEE_TUI)
 	unregister_tui_driver("tp");

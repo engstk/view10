@@ -33,6 +33,9 @@
 #include <huawei_platform/power/direct_charger.h>
 #endif
 #include <linux/hisi/usb/hisi_usb.h>
+#ifdef CONFIG_USB_ANALOG_HS_INTERFACE
+#include <huawei_platform/audio/usb_analog_hs_interface.h>
+#endif
 
 #define FUSB3601_PWCTRL   0x1c
 #define FUSB3601_AUTO_DISCH_EN 0x10
@@ -57,7 +60,9 @@
 #define FUSB3601_CHIP_RESET 0x40
 #define FUSB3601_SCP_ENABLE1_INIT 0x80
 #define FUSB3601_SCP_ENABLE2 0x81
-#define FUSB3601_SCP_ENABLE2_INIT 0x81
+#define FUSB3601_MST_RESET_MSK 0x02
+#define FUSB3601_SCP_ENABLE2_INIT 0xa1
+#define FUSB3601_DPD_DISABLE 0x81
 #define FUSB3601_SCP_INT1_MASK 0x82
 #define FUSB3601_SCP_INT1_MASK_INIT 0x00
 #define FUSB3601_SCP_INT2_MASK 0x83
@@ -78,11 +83,14 @@
 #define FUSB3601_MSM_EN_HIGH 0xfe
 #define FUSB3601_MSM_EN_LOW 0xfd
 #define FUSB3601_FM_CONTROL3 0xde
+#define FUSB3601_FM_CONTROL4 0xdf
+#define FUSB3601_DIS_VBUS_DETECTION_MSK 0xdf
 #define FUSB3601_VOUT_ENABLE 0x7b
 #define FUSB3601_VOUT_DISABLE 0x73
 #define MUS_CONTRAL2 0xd2
 #define FUSB3601_DCP_DETECT 0x40
 #define FUSB3601_SCP_OR_FCP_DETECT 0x19
+#define FUSB3601_SCP_B_DETECT 0x08
 
 static struct mutex FUSB3601_accp_detect_lock;
 static struct mutex FUSB3601_accp_adaptor_reg_lock;
@@ -98,6 +106,10 @@ static u32 FUSB3601_scp_error_flag = 0;/*scp error flag*/
 
 static int FUSB3601_is_support_fcp(void);
 void FUSB3601_scp_initialize(void);
+static int FUSB3601_scp_get_adapter_vendor_id(void);
+extern int state_machine_need_resched;
+static int FUSB3601_accp_adapter_reg_write(int val, int reg);
+static int FUSB3601_accp_adapter_reg_read(int* val, int reg);
 /****************************************************************************
   Function:     FUSB3601_fcp_stop_charge_config
   Description:  fcp stop charge config
@@ -119,10 +131,7 @@ static void FUSB3601_clear_scp_event1(void)
 static int FUSB3601_fcp_stop_charge_config(void)
 {
 #ifdef CONFIG_DIRECT_CHARGER
-	if (!direct_charge_get_cutoff_normal_flag())
-	{
-		FUSB3601_clear_scp_event1();
-	}
+	FUSB3601_clear_scp_event1();
 #endif
     return 0;
 }
@@ -130,7 +139,18 @@ int FUSB3601_vout_enable(int enable)
 {
 	int ret;
 	FSC_U8 data;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	struct Port *port;
 
+	if (!chip) {
+		pr_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+		return -1;
+	}
+	port = &chip->port;
+	if (!port) {
+		pr_err("FUSB  %s - port structure is NULL!\n", __func__);
+		return -1;
+	}
 	ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_FM_CONTROL3,&data);
 	hwlog_info("%s:FM_CONTROL3 befor writing is : [0x%x], ret = %d\n", __func__, data,ret);
 	if (enable) {
@@ -200,6 +220,34 @@ static int FUSB3601_chip_reset_nothing(void)
 {
 	return 0;
 }
+static int FUSB3601_fcp_adapter_reset(void)
+{
+	int ret = 0;
+	FSC_U8 data;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	if (!chip) {
+		pr_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+		return -1;
+	}
+
+	ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_SCP_ENABLE2,&data);
+	if (!ret) {
+		return -1;
+	}
+	hwlog_info("%s\n", __func__);
+	data |= FUSB3601_MST_RESET_MSK;
+	ret = FUSB3601_fusb_I2C_WriteData(FUSB3601_SCP_ENABLE2, 1, &data);
+	if (!ret) {
+		return -1;
+	}
+	data &= ~FUSB3601_MST_RESET_MSK;
+	ret = FUSB3601_fusb_I2C_WriteData(FUSB3601_SCP_ENABLE2, 1, &data);
+	if (!ret) {
+		return -1;
+	}
+	FUSB3601_core_redo_bc12(&chip->port);
+	return 0;
+}
 static int FUSB3601_dcd_timout_disable(void)
 {
 	int ret;
@@ -233,7 +281,7 @@ static int FUSB3601_clear_event2_and_event3(void)
 	    return -1;
 	}
 }
-static void FUSB3601_dump_register(void)
+void FUSB3601_dump_register(void)
 {
 	FSC_U8 i = 0;
 	FSC_U8 data;
@@ -349,6 +397,11 @@ static int FUSB3601_accp_adapter_reg_read(int* val, int reg)
 	FSC_U8 addr;
 	FSC_U8 data;
 	FSC_U8 cmd = ACCP_CMD_SBRRD;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	if (!chip) {
+		pr_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+		return -1;
+	}
 
 	if (reg > MAX_U8 || reg < 0) {
 		hwlog_err("%s: reg addr = 0x%x\n", __func__, reg);
@@ -390,6 +443,13 @@ static int FUSB3601_accp_adapter_reg_read(int* val, int reg)
 			msleep(20);
 		}
 	}
+	ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_SCP_EVENT_1, &data);
+	if (ret) {
+		hwlog_info("%s,%d,data = 0x%x\n", __func__, __LINE__,data);
+		if (data & FUSB3601_SCP_B_DETECT) {
+			FUSB3601_core_redo_bc12(&chip->port);
+		}
+	}
 	mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
 	return -1;
 }
@@ -406,6 +466,7 @@ static int FUSB3601_accp_adapter_reg_read(int* val, int reg)
 static int FUSB3601_accp_adapter_reg_write(int val, int reg)
 {
 	int ret;
+	int i;
 	FSC_U8 addr;
 	FSC_U8 data;
 	FSC_U8 cmd = ACCP_CMD_SBRWR;
@@ -419,31 +480,33 @@ static int FUSB3601_accp_adapter_reg_write(int val, int reg)
 	data = (FSC_U8)val;
 
 	mutex_lock(&FUSB3601_accp_adaptor_reg_lock);
-	/*before send cmd, clear event2 and event3*/
-	ret = FUSB3601_clear_event2_and_event3();
-	if (ret) {
-		mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
-		return -1;
+	for (i = 0; i< FCP_RETRY_MAX_TIMES; i++) {
+		/*before send cmd, clear event2 and event3*/
+		ret = FUSB3601_clear_event2_and_event3();
+		if (ret) {
+			mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
+			return -1;
+		}
+		ret = FUSB3601_fusb_I2C_WriteData(FUSB3601_REG_ACCP_RT_TX0, 1, &data);
+		ret &= FUSB3601_fusb_I2C_WriteData(FUSB3601_REG_ACCP_RT_ADDR, 1, &addr);
+		ret &= FUSB3601_fusb_I2C_WriteData(FUSB3601_REG_ACCP_RT_CMD, 1, &cmd);
+		if (!ret) {
+			mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
+			return -1;
+		}
+		if (0 == FUSB3601_accp_transfer_check()) {
+			msleep(20);
+			ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_REG_ACCP_RT_ACK_RX,&data);
+			ret &= FUSB3601_fusb_I2C_ReadData(FUSB3601_REG_ACCP_RT_RX0,&data);
+			mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
+			return 0;
+		}
+		else {
+			msleep(20);
+		}
 	}
-	ret = FUSB3601_fusb_I2C_WriteData(FUSB3601_REG_ACCP_RT_TX0, 1, &data);
-	ret &= FUSB3601_fusb_I2C_WriteData(FUSB3601_REG_ACCP_RT_ADDR, 1, &addr);
-	ret &= FUSB3601_fusb_I2C_WriteData(FUSB3601_REG_ACCP_RT_CMD, 1, &cmd);
-	if (!ret) {
-		mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
-		return -1;
-	}
-	if (0 == FUSB3601_accp_transfer_check()) {
-		msleep(20);
-		ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_REG_ACCP_RT_ACK_RX,&data);
-		ret &= FUSB3601_fusb_I2C_ReadData(FUSB3601_REG_ACCP_RT_RX0,&data);
-		mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
-		return 0;
-	}
-	else {
-		msleep(20);
-		mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
-		return -1;
-	}
+	mutex_unlock(&FUSB3601_accp_adaptor_reg_lock);
+	return -1;
 }
 
 static int FUSB3601_scp_adapter_reg_read(int* val, int reg)
@@ -513,7 +576,7 @@ static int FUSB3601_accp_adapter_detect(void)
 			//redo_bc12();
 			FUSB3601_core_redo_bc12(&chip->port);
 			hwlog_info("%s,DEVICE_TYPE = 0x%x\n", __func__,data);
-			return -1;
+			return 1;
 		}
 	} else {
 		hwlog_info("%s,%d\n", __func__, __LINE__);
@@ -532,7 +595,7 @@ static int FUSB3601_accp_adapter_detect(void)
 		}
 		msleep(ACCP_POLL_TIME);
 	}
-	FUSB3601_core_redo_bc12(&chip->port);
+	FUSB3601_core_redo_bc12_limited(&chip->port);
 	return -1;
 }
 static int FUSB3601_fcp_adapter_detect(void)
@@ -960,66 +1023,147 @@ static int FUSB3601_scp_set_watchdog_timer(int second)
     }
     return 0;
 }
-static int FUSB3601_scp_init(struct scp_init_data * sid)
+static int FUSB3601_scp_set_dp_delitch(void)
 {
-    /*open 5v boost*/
-    int ret;
     int val;
+    int ret;
 
-    FUSB3601_scp_error_flag = 0;
-    ret = FUSB3601_scp_output_mode_enable(sid->scp_mode_enable);
-    if(ret)
-        return ret;
-    ret = FUSB3601_scp_set_watchdog_timer(sid->watchdog_timer);
-    if(ret)
-        return ret;
-    ret = FUSB3601_scp_config_vset_boundary(sid->vset_boundary);
-    if(ret)
-        return ret;
-    ret = FUSB3601_scp_config_iset_boundary(sid->iset_boundary);
-    if(ret)
-        return ret;
-    ret = FUSB3601_scp_set_adaptor_voltage(sid->init_adaptor_voltage);
-    if(ret)
-        return ret;
-    ret = FUSB3601_scp_adapter_reg_read(&val, SCP_CTRL_BYTE0);
-    if(ret)
-        return ret;
-    hwlog_info("%s : CTRL_BYTE0 = 0x%x \n ",__func__, val);
     ret = FUSB3601_scp_adapter_reg_read(&val, SCP_CTRL_BYTE1);
     if(ret)
-        return ret;
-    hwlog_info("%s : CTRL_BYTE1 = 0x%x \n ",__func__, val);
-    ret = FUSB3601_scp_adapter_reg_read(&val, SCP_STATUS_BYTE0);
-    if(ret)
-        return ret;
-    hwlog_info("%s : STATUS_BYTE0 = 0x%x \n ",__func__, val);
-    ret = FUSB3601_scp_adapter_reg_read(&val, SCP_STATUS_BYTE1);
-    if(ret)
-        return ret;
-    hwlog_info("%s : STATUS_BYTE1 = 0x%x \n ",__func__, val);
-    ret = FUSB3601_scp_adapter_reg_read(&val, SCP_VSET_BOUNDARY_H);
-    if(ret)
-        return ret;
-    hwlog_info("%s : VSET_BOUNDARY_H = 0x%x \n ",__func__, val);
-    ret = FUSB3601_scp_adapter_reg_read(&val, SCP_VSET_BOUNDARY_L);
-    if(ret)
-        return ret;
-    hwlog_info("%s : VSET_BOUNDARY_L = 0x%x \n ",__func__, val);
-    ret = FUSB3601_scp_adapter_reg_read(&val, SCP_ISET_BOUNDARY_H);
-    if(ret)
-        return ret;
-    hwlog_info("%s : ISET_BOUNDARY_H = 0x%x \n ",__func__, val);
-    ret = FUSB3601_scp_adapter_reg_read(&val, SCP_ISET_BOUNDARY_L);
-    if(ret)
-        return ret;
-    hwlog_info("%s : ISET_BOUNDARY_L = 0x%x \n ",__func__, val);
-    return ret;
+    {
+        hwlog_err("%s : read failed ,ret = %d \n",__func__,ret);
+        return -1;
+    }
+    hwlog_info("[%s]val befor is %d \n", __func__, val);
+    val &= ~(SCP_DP_DELITCH_MASK);
+    val |= SCP_DP_DELITCH_5_MS;
+    hwlog_info("[%s]val after is %d \n", __func__, val);
+    ret = FUSB3601_scp_adapter_reg_write(val, SCP_CTRL_BYTE1);
+    if(ret < 0)
+    {
+        hwlog_err("%s : failed \n ",__func__);
+        return -1;
+    }
+    return 0;
+}
+
+static int FUSB3601_scp_init(struct scp_init_data * sid)
+{
+	int ret;
+	int val;
+	FSC_U8 data;
+	FUSB3601_scp_error_flag = 0;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	struct Port* port;
+	if (!chip) {
+		hwlog_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+		return -1;
+	}
+	port = &chip->port;
+	if (!port) {
+		hwlog_err("FUSB  %s - port structure is NULL!\n", __func__);
+		return -1;
+	}
+	if (get_dpd_enable()) {
+#ifdef CONFIG_USB_ANALOG_HS_INTERFACE
+		ret = FUSB3601_scp_get_adapter_vendor_id();
+		if (IWATT_ADAPTER == ret || WELTREND_ADAPTER == ret || ID0X32_ADAPTER == ret) {
+			usb_analog_hs_plug_in_out_handle(DIRECT_CHARGE_IN);
+			hwlog_info("%s :  config rd on Dm for IWATT\n ",__func__);
+		}
+#endif
+		data = FUSB3601_SCP_ENABLE2_INIT;
+		ret = FUSB3601_fusb_I2C_WriteData(FUSB3601_SCP_ENABLE2, 1, &data);
+		FUSB3601_ReadRegister(port, regFM_CONTROL4);
+		port->registers_.FMControl4.VBUS_DETATCH_DET = 0;
+		FUSB3601_WriteRegister(port, regFM_CONTROL4);
+		FUSB3601_ReadRegister(port, regFM_CONTROL4);
+		hwlog_info("%s:FM_CONTROL4 after writing is : [0x%x]\n", __func__, port->registers_.FMControl4);
+	}
+	ret = FUSB3601_scp_output_mode_enable(sid->scp_mode_enable);
+	if(ret)
+		return ret;
+	if (RICHTEK_ADAPTER == FUSB3601_scp_get_adapter_vendor_id()) {
+		FUSB3601_scp_set_dp_delitch();
+	}
+	ret = FUSB3601_scp_set_watchdog_timer(sid->watchdog_timer);
+	if(ret)
+		return ret;
+	ret = FUSB3601_scp_config_vset_boundary(sid->vset_boundary);
+	if(ret)
+		return ret;
+	ret = FUSB3601_scp_config_iset_boundary(sid->iset_boundary);
+	if(ret)
+		return ret;
+	ret = FUSB3601_scp_set_adaptor_voltage(sid->init_adaptor_voltage);
+	if(ret)
+		return ret;
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_CTRL_BYTE0);
+	if(ret)
+		return ret;
+	hwlog_info("%s : CTRL_BYTE0 = 0x%x \n ",__func__, val);
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_CTRL_BYTE1);
+	if(ret)
+		return ret;
+	hwlog_info("%s : CTRL_BYTE1 = 0x%x \n ",__func__, val);
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_STATUS_BYTE0);
+	if(ret)
+		return ret;
+	hwlog_info("%s : STATUS_BYTE0 = 0x%x \n ",__func__, val);
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_STATUS_BYTE1);
+	if(ret)
+		return ret;
+	hwlog_info("%s : STATUS_BYTE1 = 0x%x \n ",__func__, val);
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_VSET_BOUNDARY_H);
+	if(ret)
+		return ret;
+	hwlog_info("%s : VSET_BOUNDARY_H = 0x%x \n ",__func__, val);
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_VSET_BOUNDARY_L);
+	if(ret)
+		return ret;
+	hwlog_info("%s : VSET_BOUNDARY_L = 0x%x \n ",__func__, val);
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_ISET_BOUNDARY_H);
+	if(ret)
+		return ret;
+	hwlog_info("%s : ISET_BOUNDARY_H = 0x%x \n ",__func__, val);
+	ret = FUSB3601_scp_adapter_reg_read(&val, SCP_ISET_BOUNDARY_L);
+	if(ret)
+		return ret;
+	hwlog_info("%s : ISET_BOUNDARY_L = 0x%x \n ",__func__, val);
+	return ret;
 }
 static int FUSB3601_scp_exit(struct direct_charge_device* di)
 {
 	int ret;
+	FSC_U8 data;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	struct Port* port;
+	if (!chip) {
+		hwlog_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+		return -1;
+	}
+	port = &chip->port;
+	if (!port) {
+		hwlog_err("FUSB  %s - port structure is NULL!\n", __func__);
+		return -1;
+	}
 	ret = FUSB3601_scp_output_mode_enable(0);
+	FUSB3601_vout_enable(1);
+	if (get_dpd_enable()) {
+#ifdef CONFIG_USB_ANALOG_HS_INTERFACE
+		hwlog_info("%s :  disable rd on Dm\n ",__func__);
+		usb_analog_hs_plug_in_out_handle(DIRECT_CHARGE_OUT);
+#endif
+		data = FUSB3601_DPD_DISABLE;
+		ret = FUSB3601_fusb_I2C_WriteData(FUSB3601_SCP_ENABLE2, 1, &data);
+		FUSB3601_ReadRegister(port, regFM_CONTROL4);
+		port->registers_.FMControl4.VBUS_DETATCH_DET = 1;
+		FUSB3601_WriteRegister(port, regFM_CONTROL4);
+		FUSB3601_ReadRegister(port, regFM_CONTROL4);
+		hwlog_info("%s:FM_CONTROL4 after writing is : [0x%x]\n", __func__, port->registers_.FMControl4);
+		state_machine_need_resched = 1;
+		queue_work(chip->highpri_wq,&chip->sm_worker);
+	}
 	switch(di->adaptor_vendor_id)
 	{
 		case IWATT_ADAPTER:
@@ -1030,9 +1174,8 @@ static int FUSB3601_scp_exit(struct direct_charge_device* di)
 	}
 	msleep(50);
 	hwlog_err("%s\n",__func__);
-	ret |= FUSB3601_chip_reset();
 	FUSB3601_scp_error_flag = 0;
-	return ret;
+	return 0;
 }
 static int FUSB3601_scp_get_adaptor_voltage(void)
 {
@@ -1243,6 +1386,12 @@ static int FUSB3601_scp_get_adapter_vendor_id(void)
 		case VENDOR_ID_IWATT:
 			hwlog_info("[%s]adapter is iwatt \n", __func__);
 			return IWATT_ADAPTER;
+		case VENDOR_ID_WELTREND:
+			hwlog_info("[%s]adapter is weltrend \n", __func__);
+			return WELTREND_ADAPTER;
+		case VENDOR_ID_0X32:
+			hwlog_info("[%s]adapter id is 0x32 \n", __func__);
+			return ID0X32_ADAPTER;
 		default:
 			hwlog_info("[%s]this adaptor vendor id is not found!\n", __func__);
 			return val;
@@ -1278,6 +1427,11 @@ static enum hisi_charger_type FUSB3601_get_charger_type(void)
 	enum hisi_charger_type charger_type = CHARGER_TYPE_NONE;
 	FSC_U8 data;
 	int ret;
+	struct fusb3601_chip* chip = fusb3601_GetChip();
+	if (!chip) {
+		pr_err("FUSB  %s - Chip structure is NULL!\n", __func__);
+		return -1;
+	}
 
 	ret = FUSB3601_fusb_I2C_ReadData(FUSB3601_DEVICE_TYPE,&data);
 	if (ret) {
@@ -1286,6 +1440,7 @@ static enum hisi_charger_type FUSB3601_get_charger_type(void)
 			charger_type = CHARGER_TYPE_DCP;
 		} else {
 			hwlog_info("%s,DEVICE_TYPE = 0x%x\n", __func__,data);
+			FUSB3601_core_redo_bc12(&chip->port);
 		}
 	} else {
 		hwlog_info("%s,error!\n", __func__);
@@ -1331,7 +1486,7 @@ struct fcp_adapter_device_ops FUSB3601_fcp_ops = {
     .detect_adapter             = FUSB3601_fcp_adapter_detect,
     .is_support_fcp             = FUSB3601_is_support_fcp,
     .switch_chip_reset          = FUSB3601_chip_reset_nothing,
-    .fcp_adapter_reset          = NULL,
+    .fcp_adapter_reset          = FUSB3601_fcp_adapter_reset,
     .stop_charge_config        = FUSB3601_fcp_stop_charge_config,
     .is_fcp_charger_type    = NULL,
     .fcp_read_adapter_status = FUSB3601_fcp_read_adapter_status,
@@ -1350,8 +1505,6 @@ void FUSB3601_scp_initialize(void)
 
 	data = FUSB3601_SCP_ENABLE1_INIT;
 	ret = FUSB3601_fusb_I2C_WriteData(FUSB3601_SCP_ENABLE1, 1, &data);
-	data = FUSB3601_SCP_ENABLE2_INIT;
-	ret &= FUSB3601_fusb_I2C_WriteData(FUSB3601_SCP_ENABLE2, 1, &data);
 	data = FUSB3601_SCP_INT1_MASK_INIT;
 	ret &= FUSB3601_fusb_I2C_WriteData(FUSB3601_SCP_INT1_MASK, 1, &data);
 	data = FUSB3601_SCP_INT2_MASK_INIT;
@@ -1380,7 +1533,6 @@ void FUSB3601_charge_register_callback(void)
     hwlog_info(" %s++!\n", __func__);
     mutex_init(&FUSB3601_accp_detect_lock);
     mutex_init(&FUSB3601_accp_adaptor_reg_lock);
-
 
     if( 0 == FUSB3601_is_support_fcp() && 0 ==fcp_adapter_ops_register(&FUSB3601_fcp_ops))
     {

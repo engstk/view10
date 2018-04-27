@@ -14,6 +14,25 @@
 		water_check_enabled = <0>;
 		fcp_vindpm = <4600>;
 		pd_cur_trans_ratio = <88>;
+		non_standard_charger_dsm = <0>;
+		charger_removed_dsm = <0>;
+		status = "disabled";
+	};
+	wireless_charger: wireless_charger {
+		compatible = "huawei,wireless_charger";
+		status = "disabled";
+	};
+	wireless_otg: wireless_otg {
+		compatible = "huawei,wireless_otg";
+		status = "disabled";
+	};
+	wired_channel_switch: wired_channel_switch {
+		compatible = "huawei,wired_channel_switch";
+		status = "disabled";
+	};
+	ncp3902_channel_switch: ncp3902_channel_switch {
+		compatible = "huawei,ncp3902_channel_switch";
+		support_cutoff_wired_channel = <0>;
 		status = "disabled";
 	};
 	vbat_ovp: vbat_ovp{
@@ -54,6 +73,10 @@
 	dual_loadswitch: dual_loadswitch{
 		compatible = "dual_loadswitch";
 		status = "disabled";
+	};
+	retail_demo_capacity_limit_control: retail_demo_capacity_limit_control{
+		max_cap_limit = "75";
+		min_cap_limit = "55";
 	};
 	huawei_dual_charger: huawei_dual_charger{
 		compatible = "huawei,dual_charger";
@@ -213,6 +236,16 @@
 				fcp_support = <0>;
 				status = "disabled";
             };
+			wireless_itdp9221_i2c6: wireless_idtp9221_i2c6@61 {
+				compatible = "huawei, wireless_idtp9221";
+				reg = <0x61>;
+				gpio_int = <&gpio18 0 0>;
+				gpio_en = <&gpio6 2 0>;
+				gpio_sleep_en = <&gpio20 1 0>;
+				rx_fod_5v = <5313 4256 4248 4248 4251 4252 5140 0>;
+				rx_fod_9v = <11670 11656 10376 10374 6534 6534 0 0>;
+				status = "disabled";
+			};
 		};
 	};
 };

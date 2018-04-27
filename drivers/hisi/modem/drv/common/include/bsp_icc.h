@@ -73,8 +73,10 @@ s32 BSP_ICC_Debug_Register(u32 u32ChanId, FUNCPTR_1 debug_routine, int param);
 #define ICC_BUSY              (0x03 | NOTIFY_STOP_MASK)
 #define ICC_OK                (0)
 #define ICC_ERR               (-1)
+#define ICC_CHANNEL_IS_FULL_FLAG               (0xFF)
 
 /* CPU ID 分配 */
+#ifndef __OS_NRCCPU__
 enum CPU_ID
 {
 	ICC_CPU_MIN = IPC_CORE_ACORE,
@@ -85,7 +87,21 @@ enum CPU_ID
 	ICC_CPU_HIFI = IPC_CORE_HiFi,
 	ICC_CPU_MAX
 };
+#else
+enum CPU_ID
+{
+	ICC_CPU_APP = -1,
+	ICC_CPU_HIFI = -1,
+	ICC_CPU_HL1C = IPC_CORE_HL1C,
+	ICC_CPU_MODEM = IPC_CORE_NRCCORE,
+	ICC_CPU_L2HAC = IPC_CORE_L2HAC,
+	ICC_CPU_LL1C = IPC_CORE_LL1C,
+	ICC_CPU_ACORE = IPC_CORE_ACORE,
+	ICC_CPU_MCORE = IPC_CORE_MCORE,
 
+	ICC_CPU_MAX
+};
+#endif
 /* 错误码定义 */
 enum ICC_ERR_NO
 {
@@ -140,6 +156,7 @@ enum ICC_CHN_ID
 	ICC_CHN_SEC_RFILE,     /* RFILE安全OS与ccore物理通道 */
 	ICC_CHN_IPC_EXTEND,      /* 私有IPC无任务直接回调处理函数，扩展IPC 中断，acore 与ccore物理通道 */
 	ICC_CHN_DYNAMIC,    /* 共享IPC无任务直接回调处理函数，ICC 动态建立专属通道 */
+	ICC_CHN_IQI,
 #ifdef ICC_DFC_CHN_ENABLED
 	ICC_CHN_CCORE_TPHY_PS,
 	ICC_CHN_CCORE_TPHY_OM,
@@ -174,6 +191,8 @@ enum ICC_RECV_FUNC_ID{
 	IFC_RECV_FUNC_SYS_BUS,
 	IFC_RECV_FUNC_LOADPS,
 	IFC_RECV_FUNC_MPERF,
+	IFC_RECV_FUNC_IQI,
+	IFC_RECV_FUNC_FREQ,
 	/* 若要在ICC_CHN_IFC物理通道上定义子通道,请在该注释行之前定义 */
 	IFC_RECV_FUNC_TEST1,
 	IFC_RECV_FUNC_ID_MAX,
@@ -215,8 +234,8 @@ enum ICC_RECV_FUNC_ID{
 	/* 若要在ICC_CHN_CSHELL物理通道上定义子通道,请在该注释行之前定义 */
 	CSHELL_RECV_FUNC_ID_MAX,
 
-    AC_PANRPC_ID = 0,
-    ECDC_PANRPC_ID = 1,
+      AC_PANRPC_ID= 0,
+      ECDC_PANRPC_ID = 1,
     /* 若要在ICC_CHN_AC_PANRPC物理通道上定义子通道,请在该注释行之前定义 */
     AC_PANRPC_RECV_FUNC_ID_MAX,
 
@@ -263,9 +282,10 @@ enum ICC_RECV_FUNC_ID{
 	CCPU_HIFI_VOS_MSG_URG,
 	CCPU_HIFI_VOS_MSG_MAX,
 
-    //VT_VOIP_FUNC_ID_TEST = 0,
-    //VT_VOIP_FUNC_ID_MAX
-
+	VT_VOIP_FUNC_VT_VOIP = 0,
+	VT_VOIP_FUNC_RCS_SERV,
+	VT_VOIP_FUNC_ID_MAX,
+		
 	SEC_IFC_RECV_FUNC_MODULE_VERIFY = 0,
 
 	/* 若要在物理通道上定义子通道,请在该注释行之前定义 */
@@ -289,7 +309,12 @@ enum ICC_RECV_FUNC_ID{
 	
 	DYNAMIC_ICC_FUNC_TEST = 0,
 	/* 若要在动态通道上定义子通道,请在该注释行之前定义 */
-	DYNAMIC_ICC_FUNC_ID_MAX
+	DYNAMIC_ICC_FUNC_ID_MAX,
+	
+	IQI_ICC_FUNC_TEST = 0,
+	/* 若要在动态通道上定义子通道,请在该注释行之前定义 */
+	IQI_ICC_FUNC_ID_MAX,
+	IQI_LOGIC_CHAN_AC = 0,
 };
 
 
@@ -355,6 +380,38 @@ struct icc_dynamic_para
 typedef s32 (*read_cb_func)(u32 channel_id , u32 len, void* context);
 typedef s32 (*write_cb_func)(u32 channel_id , void* context);
 /* 对外接口声明start */
+/*****************************************************************************
+* 函 数 名  : bsp_icc_get_idle_space
+* 功能描述  :获取icc通道的剩余空间
+* 输入参数  : u32 channel_id  channel_id = 通道id << 16 || function_id, 使用约束:
+                               1) channel_id高16bit为通道标识ID，使用enum ICC_CHN_ID的枚举值
+                               2) 低16bit为回调函数标识ID，使用ICC_RECV_FUNC_ID对应通道id的枚举值
+* 输出参数  : 无
+* 返 回 值  : 通道的空闲大小
+*****************************************************************************/
+s32 bsp_icc_get_idle_space(u32 channel_id);
+
+/*****************************************************************************
+* 函 数 名  : bsp_icc_get_data_space
+* 功能描述  :获取icc通道还有多少数据没有读走
+* 输入参数  : u32 channel_id  channel_id = 通道id << 16 || function_id, 使用约束:
+                               1) channel_id高16bit为通道标识ID，使用enum ICC_CHN_ID的枚举值
+                               2) 低16bit为回调函数标识ID，使用ICC_RECV_FUNC_ID对应通道id的枚举值
+* 输出参数  : 无
+* 返 回 值  : 没有读走数据的长度
+*****************************************************************************/
+s32 bsp_icc_get_data_space(u32 channel_id);
+
+/*****************************************************************************
+* 函 数 名  : bsp_icc_get_first_package_lenth
+* 功能描述  :获取icc通道里没有读走数据的第一包的长度
+* 输入参数  : u32 channel_id  channel_id = 通道id << 16 || function_id, 使用约束:
+                               1) channel_id高16bit为通道标识ID，使用enum ICC_CHN_ID的枚举值
+                               2) 低16bit为回调函数标识ID，使用ICC_RECV_FUNC_ID对应通道id的枚举值
+* 输出参数  : 无
+* 返 回 值  : 没有读走数据的第一包的长度
+*****************************************************************************/
+s32 bsp_icc_get_first_package_lenth(u32 channel_id);
 /*****************************************************************************
 * 函 数 名  : bsp_icc_send
 * 功能描述  : icc异步发送数据接口
@@ -507,6 +564,7 @@ char * icc_dump_addr_get(void);
 #define ICC_VT_VOIP_SIZE      (SZ_4K)
 #define ICC_IPC_EXTEND_SIZE      (SZ_512)
 #define ICC_DYNAMIC_SIZE       (SZ_512)
+#define ICC_IQI_SIZE       (SZ_4K)
 #define ICC_RESERVED_STATIC_SIZE       (SZ_512)
 
 
@@ -578,8 +636,10 @@ char * icc_dump_addr_get(void);
 #define ADDR_DYNAMIC_SEND       (ADDR_IPC_EXTEND_RECV + STRU_SIZE + ICC_IPC_EXTEND_SIZE)
 #define ADDR_DYNAMIC_RECV       (ADDR_DYNAMIC_SEND + STRU_SIZE + ICC_DYNAMIC_SIZE)
 
+#define ADDR_IQI_SEND       (ADDR_DYNAMIC_RECV + STRU_SIZE + ICC_DYNAMIC_SIZE)
+#define ADDR_IQI_RECV       (ADDR_IQI_SEND + STRU_SIZE + ICC_IQI_SIZE)
 
-#define ICC_SDDR_DYNAMIC_START_ADDR_ON_THIS_CORE       (ADDR_DYNAMIC_RECV + STRU_SIZE + ICC_RESERVED_STATIC_SIZE)
+#define ICC_SDDR_DYNAMIC_START_ADDR_ON_THIS_CORE       (ADDR_IQI_RECV + STRU_SIZE + ICC_RESERVED_STATIC_SIZE)
 
 
 

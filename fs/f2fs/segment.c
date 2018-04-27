@@ -18,6 +18,7 @@
 #include <linux/timer.h>
 #include <linux/random.h>
 #include <linux/delay.h>
+#include <linux/freezer.h>
 
 #include "f2fs.h"
 #include "segment.h"
@@ -258,7 +259,11 @@ static int __revoke_inmem_pages(struct inode *inode,
 				goto next;
 			}
 			get_node_info(sbi, dn.nid, &ni);
-			f2fs_replace_block(sbi, &dn, dn.data_blkaddr,
+			if (cur->old_addr == NEW_ADDR) {
+				invalidate_blocks(sbi, dn.data_blkaddr);
+				f2fs_update_data_blkaddr(&dn, NEW_ADDR);
+			} else
+				f2fs_replace_block(sbi, &dn, dn.data_blkaddr,
 					cur->old_addr, ni.version, true, true);
 			f2fs_put_dnode(&dn);
 		}
@@ -331,6 +336,9 @@ static int __commit_inmem_pages(struct inode *inode,
 		.op = REQ_OP_WRITE,
 		.op_flags = REQ_SYNC | REQ_NOIDLE | REQ_PRIO,
 		.encrypted_page = NULL,
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+		.sp_type = SP_UNSET,
+#endif
 	};
 	pgoff_t last_idx = ULONG_MAX;
 	int err = 0;
@@ -835,6 +843,9 @@ static struct discard_cmd *__create_discard_cmd(struct f2fs_sb_info *sbi,
 	dc->ref = 0;
 	dc->state = D_PREP;
 	dc->error = 0;
+#ifdef CONFIG_F2FS_STAT_FS
+	dc->discard_time = 0;
+#endif
 	init_completion(&dc->wait);
 	list_add_tail(&dc->list, pend_list);
 	atomic_inc(&dcc->discard_cmd_cnt);
@@ -883,6 +894,17 @@ static void __remove_discard_cmd(struct f2fs_sb_info *sbi,
 
 	f2fs_bug_on(sbi, dc->ref);
 
+#ifdef CONFIG_F2FS_STAT_FS
+	if (dc->state == D_DONE && !dc->error && dc->discard_time) {
+		bd_mutex_lock(&sbi->bd_mutex);
+		inc_bd_val(sbi, discard_blk_cnt, dc->len);
+		inc_bd_val(sbi, discard_cnt, 1);
+		inc_bd_val(sbi, discard_time, dc->discard_time);
+		max_bd_val(sbi, max_discard_time, dc->discard_time);
+		bd_mutex_unlock(&sbi->bd_mutex);
+	}
+#endif
+
 	if (dc->error == -EOPNOTSUPP)
 		dc->error = 0;
 
@@ -899,6 +921,15 @@ static void f2fs_submit_discard_endio(struct bio *bio)
 
 	dc->error = bio->bi_error;
 	dc->state = D_DONE;
+#ifdef CONFIG_F2FS_STAT_FS
+	if (dc->discard_time) {
+		u64 discard_end_time = local_clock();
+		if (discard_end_time > dc->discard_time)
+			dc->discard_time = discard_end_time - dc->discard_time;
+		else
+			dc->discard_time = 0;
+	}
+#endif
 	complete_all(&dc->wait);
 	bio_put(bio);
 }
@@ -965,7 +996,11 @@ static int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
 		bio = f2fs_bio_alloc(1);
 		bio->bi_iter.bi_sector = sector;
 		bio->bi_bdev = bdev;
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+		bio_set_op_attrs(bio, op, 0, SP_UNSET);
+#else
 		bio_set_op_attrs(bio, op, 0);
+#endif
 
 		bio->bi_iter.bi_size = req_sects << 9;
 		nr_sects -= req_sects;
@@ -998,11 +1033,15 @@ void __check_sit_bitmap(struct f2fs_sb_info *sbi,
 		sentry = get_seg_entry(sbi, segno);
 		offset = GET_BLKOFF_FROM_SEG0(sbi, blk);
 
-		size = min((unsigned long)(end - blk), max_blocks);
+		if (end < START_BLOCK(sbi, (segno + 1)))
+			size = GET_BLKOFF_FROM_SEG0(sbi, end);
+		else
+			size = max_blocks;
+
 		map = (unsigned long *)(sentry->cur_valid_map);
 		offset = __find_rev_next_bit(map, size, offset);
 		f2fs_bug_on(sbi, offset != size);
-		blk += size;
+		blk = START_BLOCK(sbi, (segno + 1));
 	}
 }
 
@@ -1024,6 +1063,9 @@ static void __submit_discard_cmd(struct f2fs_sb_info *sbi,
 	if (!dc->error) {
 		/* should keep before submission to avoid D_DONE right away */
 		dc->state = D_SUBMIT;
+#ifdef CONFIG_F2FS_STAT_FS
+		dc->discard_time = local_clock();
+#endif
 		atomic_inc(&dcc->issued_discard);
 		atomic_inc(&dcc->issing_discard);
 		if (bio) {
@@ -1482,6 +1524,7 @@ static int issue_discard_thread(void *data)
 	struct discard_sub_policy *spolicy;
 	int issued;
 
+	set_freezable();
 repeat:
 	if (kthread_should_stop())
 		return 0;
@@ -1522,9 +1565,11 @@ repeat:
 
 next:
 	wait_event_interruptible(*q, kthread_should_stop() ||
+					freezing(current) ||
 		/* FIXME: need to wakeup due to current policy */
 				atomic_read(&dcc->discard_cmd_cnt) ||
 				test_bit(DEV_IS_IDLE, &dcc->flag));
+	try_to_freeze();
 	goto repeat;
 }
 
@@ -1594,7 +1639,6 @@ static int f2fs_issue_discard(struct f2fs_sb_info *sbi,
 	unsigned int offset;
 	block_t i;
 	int err = 0;
-	u64 begin, end, total = 0;
 
 	bdev = f2fs_target_device(sbi, blkstart, NULL);
 
@@ -1604,11 +1648,8 @@ static int f2fs_issue_discard(struct f2fs_sb_info *sbi,
 				f2fs_target_device(sbi, i, NULL);
 
 			if (bdev2 != bdev) {
-				begin = local_clock();
 				err = __issue_discard_async(sbi, bdev,
 						start, len);
-				end = local_clock();
-				total += end - begin;
 				if (err)
 					return err;
 				bdev = bdev2;
@@ -1620,27 +1661,12 @@ static int f2fs_issue_discard(struct f2fs_sb_info *sbi,
 		se = get_seg_entry(sbi, GET_SEGNO(sbi, i));
 		offset = GET_BLKOFF_FROM_SEG0(sbi, i);
 
-		if (!f2fs_test_and_set_bit(offset, se->discard_map)) {
+		if (!f2fs_test_and_set_bit(offset, se->discard_map))
 			sbi->discard_blks--;
-			bd_mutex_lock(&sbi->bd_mutex);
-			inc_bd_val(sbi, discard_blk_cnt, 1);
-			bd_mutex_unlock(&sbi->bd_mutex);
-		}
 	}
 
-	if (len) {
-		begin = local_clock();
+	if (len)
 		err = __issue_discard_async(sbi, bdev, start, len);
-		end = local_clock();
-		total += end - begin;
-	}
-	if (err == 0) {
-		bd_mutex_lock(&sbi->bd_mutex);
-		inc_bd_val(sbi, discard_cnt, 1);
-		inc_bd_val(sbi, discard_time, total);
-		max_bd_val(sbi, max_discard_time, total);
-		bd_mutex_unlock(&sbi->bd_mutex);
-	}
 	return err;
 }
 
@@ -1945,7 +1971,10 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 	struct seg_entry *se;
 	unsigned int segno, offset;
 	long int new_vblocks;
-
+	bool exist;
+#ifdef CONFIG_F2FS_CHECK_FS
+	bool mir_exist;
+#endif
 	if (blkaddr < MAIN_BLKADDR(sbi) || blkaddr >= MAX_BLKADDR(sbi)) {
 		f2fs_msg(sbi->sb, KERN_ERR, "Invalid blkaddr 0x%x\n", blkaddr);
 		set_extra_flag(sbi, EXTRA_NEED_FSCK_FLAG);
@@ -1960,8 +1989,12 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 	new_vblocks = se->valid_blocks + del;
 	offset = GET_BLKOFF_FROM_SEG0(sbi, blkaddr);
 
-	f2fs_bug_on(sbi, (new_vblocks >> (sizeof(unsigned short) << 3) ||
-				(new_vblocks > sbi->blocks_per_seg)));
+	if (new_vblocks >> (sizeof(unsigned short) << 3) ||
+				(new_vblocks > sbi->blocks_per_seg)) {
+		f2fs_msg(sbi->sb, KERN_ERR, "Invalid blk count %ld, blkaddr = 0x%x, bitmap is %s\n",
+				new_vblocks, blkaddr, f2fs_test_bit(offset, se->cur_valid_map) ? "set" : "not set");
+		f2fs_bug_on(sbi, 1);
+	}
 
 	se->valid_blocks = new_vblocks;
 	se->mtime = get_mtime(sbi);
@@ -1969,7 +2002,18 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 
 	/* Update valid block bitmap */
 	if (del > 0) {
-		if (f2fs_test_and_set_bit(offset, se->cur_valid_map)) {
+		exist = f2fs_test_and_set_bit(offset, se->cur_valid_map);
+#ifdef CONFIG_F2FS_CHECK_FS
+		mir_exist = f2fs_test_and_set_bit(offset,
+						se->cur_valid_map_mir);
+		if (unlikely(exist != mir_exist)) {
+			f2fs_msg(sbi->sb, KERN_ERR, "Inconsistent err"
+				"when setting bitmap, blk:%u, exist:%d\n",
+				blkaddr, exist);
+			f2fs_bug_on(sbi, 1);
+		}
+#endif
+		if (unlikely(exist)) {
 			struct curseg_info *curseg = CURSEG_I(sbi, se->type);
 			f2fs_msg(sbi->sb,KERN_ERR,
 				"%s: alloc blkaddr error: %d, segno: %d (all: %d),\
@@ -1977,17 +2021,9 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 				__func__, blkaddr, segno,
 				MAIN_SEGS(sbi), offset, new_vblocks,
 				se->type, curseg->alloc_type ? "SSR": "LFS");
-
-#ifdef CONFIG_F2FS_CHECK_FS
-			if (f2fs_test_and_set_bit(offset,
-						se->cur_valid_map_mir))
-				f2fs_bug_on(sbi, 1);
-			else
-				WARN_ON(1);
-#else
 			f2fs_bug_on(sbi, 1);
-#endif
 		}
+
 		if (f2fs_discard_en(sbi) &&
 			!f2fs_test_and_set_bit(offset, se->discard_map))
 			sbi->discard_blks--;
@@ -1998,7 +2034,19 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 				se->ckpt_valid_blocks++;
 		}
 	} else {
-		if (!f2fs_test_and_clear_bit(offset, se->cur_valid_map)) {
+		exist = f2fs_test_and_clear_bit(offset, se->cur_valid_map);
+#ifdef CONFIG_F2FS_CHECK_FS
+		mir_exist = f2fs_test_and_clear_bit(offset,
+						se->cur_valid_map_mir);
+		if (unlikely(exist != mir_exist)) {
+			f2fs_msg(sbi->sb, KERN_ERR, "Inconsistent error "
+				"when clearing bitmap, blk:%u, exist:%d",
+				blkaddr, exist);
+			f2fs_bug_on(sbi, 1);
+		}
+
+#endif
+		if (unlikely(!exist)) {
 			struct curseg_info *curseg = CURSEG_I(sbi, se->type);
 			f2fs_msg(sbi->sb,KERN_ERR,
 				"%s: delete blkaddr error: %d, segno: %d (all: %d),\
@@ -2006,17 +2054,9 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 				__func__, blkaddr, segno,
 				MAIN_SEGS(sbi), offset, new_vblocks,
 				se->type, curseg->alloc_type ? "SSR": "LFS");
-
-#ifdef CONFIG_F2FS_CHECK_FS
-			if (!f2fs_test_and_clear_bit(offset,
-						se->cur_valid_map_mir))
-				f2fs_bug_on(sbi, 1);
-			else
-				WARN_ON(1);
-#else
 			f2fs_bug_on(sbi, 1);
-#endif
 		}
+
 		if (f2fs_discard_en(sbi) &&
 			f2fs_test_and_clear_bit(offset, se->discard_map))
 			sbi->discard_blks++;
@@ -2611,6 +2651,38 @@ static int __get_segment_type(struct page *page, enum page_type p_type)
 	return __get_segment_type_6(page, p_type);
 }
 
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+void set_sp_type(struct f2fs_io_info *fio, int type)
+{
+	if (IS_DATASEG(type) && IS_ATOMIC_WRITTEN_PAGE(fio->page)) {
+		fio->sp_type = SP_HOT_DATA;
+		return;
+	}
+	switch (type) {
+	case CURSEG_HOT_DATA:
+		fio->sp_type = SP_WARM_DATA;
+		break;
+	case CURSEG_WARM_DATA:
+		fio->sp_type = SP_WARM_DATA;
+		break;
+	case CURSEG_COLD_DATA:
+		fio->sp_type = SP_COLD_DATA;
+		break;
+	case CURSEG_HOT_NODE:
+		fio->sp_type = SP_HOT_NODE;
+		break;
+	case CURSEG_WARM_NODE:
+		fio->sp_type = SP_WARM_NODE;
+		break;
+	case CURSEG_COLD_NODE:
+		fio->sp_type = SP_COLD_NODE;
+		break;
+	default:
+		fio->sp_type = SP_UNSET;
+	}
+}
+#endif
+
 void allocate_data_block(struct f2fs_sb_info *sbi, struct page *page,
 		block_t old_blkaddr, block_t *new_blkaddr,
 		struct f2fs_summary *sum, int type)
@@ -2670,17 +2742,29 @@ static void do_write_page(struct f2fs_summary *sum, struct f2fs_io_info *fio)
 	int type = __get_segment_type(fio->page, fio->type);
 	int err;
 
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	set_sp_type(fio, type);
+#endif
+
 	if (fio->type == NODE || fio->type == DATA)
 		mutex_lock(&fio->sbi->wio_mutex[fio->type]);
 reallocate:
 	allocate_data_block(fio->sbi, fio->page, fio->old_blkaddr,
 					&fio->new_blkaddr, sum, type);
 
-	/* writeout dirty page into bdev */
-	err = f2fs_submit_page_mbio(fio);
-	if (err == -EAGAIN) {
-		fio->old_blkaddr = fio->new_blkaddr;
-		goto reallocate;
+	if (!f2fs_get_remap_gc_write(fio)) {
+		/* remove the mapping about the old address */
+		f2fs_gc_remove_remap_entry(fio->sbi, fio->old_blkaddr);
+
+		/* writeout dirty page into bdev */
+		err = f2fs_submit_page_mbio(fio);
+		if (err == -EAGAIN) {
+			fio->old_blkaddr = fio->new_blkaddr;
+			goto reallocate;
+		}
+	} else {
+		clear_cold_data(fio->page);
+		end_page_writeback(fio->page);
 	}
 
 	if (fio->type == NODE || fio->type == DATA)
@@ -2699,6 +2783,9 @@ void write_meta_page(struct f2fs_sb_info *sbi, struct page *page)
 		.new_blkaddr = page->index,
 		.page = page,
 		.encrypted_page = NULL,
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+		.sp_type = SP_META,
+#endif
 	};
 
 	if (unlikely(page->index >= MAIN_BLKADDR(sbi)))
@@ -2743,6 +2830,17 @@ void write_data_page(struct dnode_of_data *dn, struct f2fs_io_info *fio)
 void rewrite_data_page(struct f2fs_io_info *fio)
 {
 	struct f2fs_sb_info *sbi = fio->sbi;
+#ifdef CONFIG_F2FS_HOTCOLD_DRIVER
+	int type = __get_segment_type(fio->page, fio->type);
+
+	set_sp_type(fio, type);
+#endif
+
+	/*
+	 * Remapping to old address is useless, new block in device will be
+	 * allocated in this routine. Remove it.
+	 */
+	f2fs_gc_remove_remap_entry(sbi, fio->old_blkaddr);
 
 	fio->new_blkaddr = fio->old_blkaddr;
 	stat_inc_inplace_blocks(fio->sbi);
@@ -3142,28 +3240,19 @@ static struct page *get_next_sit_page(struct f2fs_sb_info *sbi,
 					unsigned int start)
 {
 	struct sit_info *sit_i = SIT_I(sbi);
-	struct page *src_page, *dst_page;
+	struct page *page;
 	pgoff_t src_off, dst_off;
-	void *src_addr, *dst_addr;
 
 	src_off = current_sit_addr(sbi, start);
 	dst_off = next_sit_addr(sbi, src_off);
 
-	/* get current sit block page without lock */
-	src_page = get_meta_page(sbi, src_off);
-	dst_page = grab_meta_page(sbi, dst_off);
-	f2fs_bug_on(sbi, PageDirty(src_page));
+	page = grab_meta_page(sbi, dst_off);
+	seg_info_to_sit_page(sbi, page, start);
 
-	src_addr = page_address(src_page);
-	dst_addr = page_address(dst_page);
-	memcpy(dst_addr, src_addr, PAGE_SIZE);
-
-	set_page_dirty(dst_page);
-	f2fs_put_page(src_page, 1);
-
+	set_page_dirty(page);
 	set_to_next_sit(sit_i, start);
 
-	return dst_page;
+	return page;
 }
 
 static struct sit_entry_set *grab_sit_entry_set(void)
@@ -3313,6 +3402,11 @@ void flush_sit_entries(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 
 			se = get_seg_entry(sbi, segno);
 
+#ifdef CONFIG_F2FS_CHECK_FS
+			if (memcmp(se->cur_valid_map, se->cur_valid_map_mir,
+						SIT_VBLOCK_MAP_SIZE))
+				f2fs_bug_on(sbi, 1);
+#endif
 			/* add discard candidates */
 			if (!(cpc->reason & CP_DISCARD)) {
 				cpc->trim_start = segno;
@@ -3325,10 +3419,18 @@ void flush_sit_entries(struct f2fs_sb_info *sbi, struct cp_control *cpc)
 				f2fs_bug_on(sbi, offset < 0);
 				segno_in_journal(journal, offset) =
 							cpu_to_le32(segno);
+				/*lint -save -e613*/
+				check_block_count(sbi, segno,
+						   &sit_in_journal(journal, offset));
+				/*lint -restore*/
 				seg_info_to_raw_sit(se,
 					&sit_in_journal(journal, offset));
 			} else {
 				sit_offset = SIT_ENTRY_OFFSET(sit_i, segno);
+				/*lint -save -e613*/
+				check_block_count(sbi, segno,
+						   &raw_sit->entries[sit_offset]);
+				/*lint -restore*/
 				seg_info_to_raw_sit(se,
 						&raw_sit->entries[sit_offset]);
 			}

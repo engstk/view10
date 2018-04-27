@@ -236,15 +236,19 @@ int dwc3_gadget_resize_tx_fifos(struct dwc3 *dwc)
 	return 0;
 }
 
-void dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
+/* This function must be called while dwc->lock hold */
+void __dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
 		int status)
 {
 	struct dwc3			*dwc = dep->dwc;
 	int				i;
+	struct dwc3_trb			*trb;
 
 	if (req->queued) {
 		i = 0;
 		do {
+			trb = &dep->trb_pool[dep->busy_slot & DWC3_TRB_MASK];
+			trb->ctrl &= ~DWC3_TRB_CTRL_HWO;
 			dep->busy_slot++;
 			/*
 			 * Skip LINK TRB. We can't use req->trb and check for
@@ -253,19 +257,23 @@ void dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
 			 */
 			if (((dep->busy_slot & DWC3_TRB_MASK) ==
 				DWC3_TRB_NUM- 1) &&
-				usb_endpoint_xfer_isoc(dep->endpoint.desc))
+				usb_endpoint_xfer_isoc(dep->endpoint.desc)) {
 				dep->busy_slot++;
+			}
 		} while(++i < req->request.num_mapped_sgs);
 		req->queued = false;
 
 		/* free the zlp trb */
 		if (unlikely(req->send_zlp)) {
 			req->send_zlp = 0;
+			trb = &dep->trb_pool[dep->busy_slot & DWC3_TRB_MASK];
+			trb->ctrl &= ~DWC3_TRB_CTRL_HWO;
 			dep->busy_slot++;
 			if (((dep->busy_slot & DWC3_TRB_MASK) ==
 				DWC3_TRB_NUM - 1) &&
-				usb_endpoint_xfer_isoc(dep->endpoint.desc))
+				usb_endpoint_xfer_isoc(dep->endpoint.desc)) {
 				dep->busy_slot++;
+			}
 		}
 
 	}
@@ -288,6 +296,15 @@ void dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
 	dev_dbg(dwc->dev, "request %p from %s completed %d/%d ===> %d\n",
 			req, dep->name, req->request.actual,
 			req->request.length, status);
+}
+
+void dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
+		int status)
+{
+	struct dwc3			*dwc = dep->dwc;
+
+	__dwc3_gadget_giveback(dep, req, status);
+
 	trace_dwc3_gadget_giveback(req);
 
 	spin_unlock(&dwc->lock);
@@ -432,7 +449,7 @@ int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
 			return -ETIMEDOUT;
 		}
 
-		udelay(1);
+		udelay(10);
 	} while (1);
 }
 
@@ -1040,7 +1057,7 @@ static void dwc3_prepare_trbs(struct dwc3_ep *dep, bool starting)
 	if (!trbs_left) {
 		if (!starting) {
 			if (!usb_endpoint_xfer_isoc(dep->endpoint.desc)) {
-				pr_warn("no trbs_left when update transfer\n");
+				pr_warn_ratelimited("no trbs_left when update transfer\n");
 				return;
 			} else if (!dwc3_calc_trbs_left(dep)) {
 				pr_warn("no trbs_left when update isoc transfer\n");
@@ -1059,10 +1076,7 @@ static void dwc3_prepare_trbs(struct dwc3_ep *dep, bool starting)
 		 * processed from the first TRB until the last one. Since we
 		 * don't wrap around we have to start at the beginning.
 		 */
-		if (usb_endpoint_xfer_isoc(dep->endpoint.desc)) {
-			dep->busy_slot = 1;
-			dep->free_slot = 1;
-		} else {
+		if (!usb_endpoint_xfer_isoc(dep->endpoint.desc)) {
 			dep->busy_slot = 0;
 			dep->free_slot = 0;
 		}
@@ -1302,21 +1316,8 @@ static int __dwc3_gadget_kick_transfer(struct dwc3_ep *dep, u16 cmd_param,
 				WARN_ON_ONCE(!dep->resource_index);
 			}
 			dwc3_stop_active_transfer(dwc, dep->number, true);
-			return ret;
 		}
 
-		/*
-		 * FIXME we need to iterate over the list of requests
-		 * here and stop, unmap, free and del each of the linked
-		 * requests instead of what we do now.
-		 */
-		if (req->mapped) {
-			usb_gadget_unmap_request(&dwc->gadget, &req->request,
-					req->direction);
-			req->request.dma = DMA_ADDR_INVALID;
-		}
-
-		list_del(&req->list);
 		return ret;
 	}
 
@@ -1367,6 +1368,40 @@ static void dwc3_gadget_start_isoc(struct dwc3 *dwc,
 	cur_uf = event->parameters & mask;
 
 	__dwc3_gadget_start_isoc(dwc, dep, cur_uf);
+}
+
+static int __dwc3_ep_queue_fail_cleanup(struct dwc3_ep *dep,
+		struct dwc3_request *req, int ret)
+{
+	struct dwc3 *dwc = dep->dwc;
+	struct dwc3_request *req_kicked;
+
+	req_kicked = next_request(&dep->req_queued);
+	if (req_kicked != req) {
+		if (!req->queued) {
+			dev_err_ratelimited(dwc->dev,
+					"%s: delete req %pK from request_list\n",
+					__func__, &req->list);
+			if (req->mapped) {
+				usb_gadget_unmap_request(&dwc->gadget, &req->request,
+						req->direction);
+				req->request.dma = DMA_ADDR_INVALID;
+				req->mapped = 0;
+			}
+			list_del(&req->list);
+		} else {
+			dev_err_ratelimited(dwc->dev,
+					"%s: kicked req is another, just return 0\n",
+					__func__);
+			ret = 0;
+		}
+	} else {
+		dev_err_ratelimited(dwc->dev, "%s: req %pK was kicked, giveback\n",
+				__func__, &req->list);
+		__dwc3_gadget_giveback(dep, req, ret);
+	}
+
+	return ret;
 }
 
 static int __dwc3_gadget_ep_queue(struct dwc3_ep *dep, struct dwc3_request *req)
@@ -1481,9 +1516,11 @@ static int __dwc3_gadget_ep_queue(struct dwc3_ep *dep, struct dwc3_request *req)
 		ret = __dwc3_gadget_kick_transfer(dep, 0, true);
 
 out:
-	if (ret && ret != -EBUSY)
-		dev_dbg(dwc->dev, "%s: failed to kick transfers\n",
-				dep->name);
+	if (ret && ret != -EBUSY) {
+		dev_err_ratelimited(dwc->dev, "%s: failed to kick transfers, ret %d\n",
+				dep->name, ret);
+		ret = __dwc3_ep_queue_fail_cleanup(dep, req, ret);
+	}
 	if (ret == -EBUSY)
 		ret = 0;
 
@@ -1502,7 +1539,7 @@ static int dwc3_gadget_ep_queue(struct usb_ep *ep, struct usb_request *request,
 	int				ret;
 
 	spin_lock_irqsave(&dwc->lock, flags);
-	if (!dep->endpoint.desc) {
+	if (!dep->endpoint.desc || dwc->pcd_suspended) {
 		dev_dbg(dwc->dev, "trying to queue request %p to disabled %s\n",
 				request, ep->name);
 		ret = -ESHUTDOWN;

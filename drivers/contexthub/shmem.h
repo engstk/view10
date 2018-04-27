@@ -13,5 +13,6 @@ extern int shmem_notifier_unregister(obj_tag_t module_id);
 extern int shmem_send(obj_tag_t module_id, const void *usr_buf, unsigned int usr_buf_size);
 extern int contexthub_shmem_init(void);
 extern const pkt_header_t *shmempack(const char *buf, unsigned int length);
+extern unsigned int shmem_get_capacity(void);
 
 #endif

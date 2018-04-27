@@ -59,6 +59,7 @@
 #include  <osl_malloc.h>
 #include  <bsp_slice.h>
 #include  <bsp_rfile.h>
+#include  <securec.h>
 #include  "OmCommonPpm.h"
 #include  "diag_system_debug.h"
 #include  "scm_ind_dst.h"
@@ -77,14 +78,7 @@
 *****************************************************************************/
 DIAG_PTR_INFO_STRU g_stPtrInfo = {0};
 
-/*****************************************************************************
- Function Name   : diag_PTR
- Description     : DIAG打点信息记录接口
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 void diag_PTR(DIAG_PTR_ID_ENUM enType, u32 paraMark, u32 para0, u32 para1)
 {
     g_stPtrInfo.stPtr[g_stPtrInfo.ulCur].enStep     = (u16)enType;
@@ -99,14 +93,7 @@ void diag_PTR(DIAG_PTR_ID_ENUM enType, u32 paraMark, u32 para0, u32 para1)
 }
 
 
-/*****************************************************************************
- Function Name   : DIAG_DebugPTR
- Description     : DIAG处理流程的打点信息
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 void DIAG_DebugPTR(void)
 {
     s32 pFile;
@@ -161,6 +148,7 @@ void DIAG_DebugPTR(void)
 
     return ;
 }
+EXPORT_SYMBOL(DIAG_DebugPTR);
 
 char *g_PtrName[EN_DIAG_PTR_NV_AUTH_FAIL_CNF + 1] =
 {
@@ -194,8 +182,7 @@ void DIAG_DebugShowPTR(u32 ulnum)
         return;
     }
 
-    /* coverity[secure_coding] */
-    (void)memcpy(pPtrTmp, &g_stPtrInfo, sizeof(g_stPtrInfo));
+    (void)memcpy_s(pPtrTmp, sizeof(*pPtrTmp), &g_stPtrInfo, sizeof(g_stPtrInfo));
 
     cur = (pPtrTmp->ulCur - ulnum + DIAG_PTR_NUMBER)%DIAG_PTR_NUMBER;
 
@@ -221,16 +208,9 @@ void DIAG_DebugShowPTR(u32 ulnum)
 
     return ;
 }
+EXPORT_SYMBOL(DIAG_DebugShowPTR);
 
 
-/*****************************************************************************
- Function Name   : DIAG_DebugFileHeader
- Description     : 给debug文件写上文件头
-
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 u32 DIAG_SystemDebugFileHeader(u32 pFile)
 {
     u32 ret;
@@ -288,14 +268,7 @@ u32 DIAG_SystemDebugFileHeader(u32 pFile)
 
 
 
-/*****************************************************************************
- Function Name   : DIAG_DebugFileTail
- Description     : 给debug文件写上文件尾
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 void DIAG_SystemDebugFileTail(u32 pFile, s8 *FilePath)
 {
     u32 ret;
@@ -313,14 +286,7 @@ void DIAG_SystemDebugFileTail(u32 pFile, s8 *FilePath)
 
 DIAG_THRPUT_INFO_STRU g_astThroughput[EN_DIAG_THRPUT_MAX] = {{0,0,0,0,{{0,0},}}};
 
-/*****************************************************************************
- Function Name   : diag_ThroughputIn
- Description     : 吞吐率记录
 
- History         :
-    1.c00326366    2015-07-11 Draft Enact
-
-*****************************************************************************/
 void diag_ThroughputSave(DIAG_THRPUT_ID_ENUM enChn, u32 bytes)
 {
     u32 slice = mdrv_timer_get_normal_timestamp();
@@ -389,14 +355,7 @@ u32 DIAG_GetThrputInfo(DIAG_THRPUT_ID_ENUM type)
     return g_astThroughput[type].stNode[ulptr].ulThroughput;
 }
 
-/*****************************************************************************
- Function Name   : DIAG_Throughput
- Description     : 保存吞吐率信息，用于定位由于PC侧读取的慢造成的丢包问题
 
- History         :
-    1.c00326366    2015-06-21 Draft Enact
-
-*****************************************************************************/
 void DIAG_Throughput(void)
 {
     u32  pFile;
@@ -429,10 +388,9 @@ void DIAG_Throughput(void)
         (void)bsp_close(pFile);
         return ;
     }
-    /* coverity[secure_coding] */
-    (void)memset(aucInfo, 0, DIAG_DEBUG_INFO_LEN);
-    /* coverity[secure_coding] */
-    (void)memcpy(aucInfo, "DIAG Throughput info", strlen("DIAG Throughput info"));
+
+    (void)memset_s(aucInfo, sizeof(aucInfo), 0, sizeof(aucInfo));
+    (void)memcpy_s(aucInfo, sizeof(aucInfo), "DIAG Throughput info", strnlen("DIAG Throughput info", sizeof(aucInfo)-1));
 
     ret = bsp_write(pFile, (s8 *)aucInfo, DIAG_DEBUG_INFO_LEN);
     if(ret != DIAG_DEBUG_INFO_LEN)
@@ -460,6 +418,7 @@ void DIAG_Throughput(void)
 
     return ;
 }
+EXPORT_SYMBOL(DIAG_Throughput);
 
 /*目的端丢包定时上报*************************************************************************/
 DIAG_MNTN_DST_INFO_STRU g_ind_dst_mntn_info = {};
@@ -467,8 +426,7 @@ u32              g_ulSendUSBStartSlice = 0;
 /*复位维测信息记录*/
 void diag_reset_dst_mntn_info(void)
 {
-    /* coverity[secure_coding] */
-    memset(&g_ind_dst_mntn_info, 0, sizeof(g_ind_dst_mntn_info));
+    memset_s(&g_ind_dst_mntn_info, sizeof(g_ind_dst_mntn_info), 0, sizeof(g_ind_dst_mntn_info));
 }
 
 s32 diag_system_debug_event_cb(unsigned int u32ChanID, SOCP_EVENT_ENUM_UIN32 u32Event, unsigned int u32Param)
@@ -501,8 +459,7 @@ s32 diag_system_debug_event_cb(unsigned int u32ChanID, SOCP_EVENT_ENUM_UIN32 u32
 
 void diag_debug_get_dst_mntn_info(DIAG_MNTN_DST_INFO_STRU * dst_mntn)
 {
-    /* coverity[secure_coding] */
-    memcpy(dst_mntn, (void*)&g_ind_dst_mntn_info, sizeof(g_ind_dst_mntn_info));
+    memcpy_s(dst_mntn, sizeof(*dst_mntn), (void*)&g_ind_dst_mntn_info, sizeof(g_ind_dst_mntn_info));
     return;
 }
 
@@ -539,10 +496,9 @@ void diag_save_soft_decode_info(void)
         (void)bsp_close(pFile);
         return ;
     }
-    /* coverity[secure_coding] */
-    (void)memset(aucInfo, 0, DIAG_DEBUG_INFO_LEN);
-    /* coverity[secure_coding] */
-    (void)memcpy(aucInfo, "DIAG SoftDecode info", strlen("DIAG SoftDecode info"));
+
+    (void)memset_s(aucInfo, sizeof(aucInfo), 0, DIAG_DEBUG_INFO_LEN);
+    (void)memcpy_s(aucInfo, sizeof(aucInfo), "DIAG SoftDecode info", strnlen("DIAG SoftDecode info", sizeof(aucInfo)-1));
 
     ret = bsp_write(pFile, (s8 *)aucInfo, DIAG_DEBUG_INFO_LEN);
     if(ret != DIAG_DEBUG_INFO_LEN)
@@ -563,6 +519,6 @@ void diag_save_soft_decode_info(void)
 
     return ;
 }
-
+EXPORT_SYMBOL(diag_save_soft_decode_info);
 
 

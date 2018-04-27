@@ -112,10 +112,6 @@ extern "C" {
   10 º¯ÊýÉùÃ÷
 *****************************************************************************/
 #if (OSA_CPU_CCPU == VOS_OSA_CPU)
-VOS_VOID* GUNAS_FilterImsaToTafMsg(
-    PS_MSG_HEADER_STRU                 *pstMsg
-);
-
 VOS_VOID* GUNAS_FilterWrrToGmmMmMsg(
     PS_MSG_HEADER_STRU                 *pstMsg
 );
@@ -179,7 +175,15 @@ VOS_VOID* GUNAS_OM_LayerMsgFilter(
     struct MsgCB                       *pstMsg
 );
 
-VOS_VOID GUNAS_OM_LayerMsgReplaceCBReg(VOS_VOID);
+#if (OSA_CPU_ACPU == VOS_OSA_CPU)
+VOS_VOID GUNAS_OM_LayerMsgReplaceCBRegACore(VOS_VOID);
+#endif
+
+#if (OSA_CPU_CCPU == VOS_OSA_CPU)
+VOS_VOID I0_GUNAS_OM_LayerMsgReplaceCBRegCcore(VOS_VOID);
+VOS_VOID I1_GUNAS_OM_LayerMsgReplaceCBRegCcore(VOS_VOID);
+VOS_VOID I2_GUNAS_OM_LayerMsgReplaceCBRegCcore(VOS_VOID);
+#endif
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

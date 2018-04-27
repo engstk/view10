@@ -32,7 +32,8 @@
 #include "hw_subdev.h"
 #include "cam_log.h"
 #include <dsm/dsm_pub.h>
-
+//lint -save -e607
+//lint -esym(607,*)
 #define CAMERA_FLASH_MAX	2
 #define CAMERA_FLASH_ARRAY_SIZE	10
 
@@ -131,9 +132,15 @@ struct hw_flash_i2c_client {
 	struct i2c_client *client;
 };
 
+struct hw_flash_i2c_msgs_t {
+    u8 reg;
+    u8 data;
+};
+
 struct hw_flash_i2c_fn_t {
 	int (*i2c_read) (struct hw_flash_i2c_client *, u8, u8 *);
 	int (*i2c_write) (struct hw_flash_i2c_client *, u8, u8);
+	int (*i2c_writex) (struct hw_flash_i2c_client *, struct hw_flash_i2c_msgs_t *, int);
 };
 
 struct hw_flash_ctrl_t {
@@ -171,3 +178,4 @@ void hw_flash_enable_thermal_protect(void);
 void hw_flash_disable_thermal_protect(void);
 
 #endif
+//lint -restore

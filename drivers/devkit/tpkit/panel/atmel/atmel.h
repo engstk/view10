@@ -53,6 +53,9 @@
 #define MAX_FILE_NAME_LENGTH 128
 #define MAX_RAWDATA_SIZE 1024
 
+#define LCD_PANEL_INFO_MAX_LEN  128
+#define LCD_PANEL_TYPE_DEVICE_NODE_NAME     "huawei,lcd_panel_type"
+
 /*#define CONFIG_MXT_DUMMY_CAL_AT_RESUME*/
 /*#define CONFIG_MXT_CAL_TRIGGER_T8_WITH_UNKONW_SOURCE*/
 #define CONFIG_MXT_CAL_TRIGGER_CAL_WHEN_CFG_MATCH
@@ -624,6 +627,8 @@ struct mxt_data {
 
 	char fw_name[MAX_FILE_NAME_LENGTH];
 	char cfg_name[MAX_FILE_NAME_LENGTH];
+	char lcd_module_name[MAX_STR_LEN];
+	char lcd_panel_info[LCD_PANEL_INFO_MAX_LEN];
 	unsigned long alt_chip;
 
 	/* Cached parameters from object table */
@@ -749,6 +754,7 @@ struct mxt_data {
 	int *noise_low_limit_buf;
 	u32 support_get_tp_color;
 	bool is_firmware_broken;
+	bool fw_need_depend_on_lcd;
 };
 
 #define MXT_DRIVER_NEED_UPDATE_MESSAGE 1

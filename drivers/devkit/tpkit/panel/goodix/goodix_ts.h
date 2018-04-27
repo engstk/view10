@@ -156,7 +156,7 @@
 #define GTP_SLEEP_TIME_300		300
 
 /* define rawdata test*/
-#define GTP_SHORTCIRCUT_WATING          60
+#define GTP_SHORTCIRCUT_WATING          150
 #define GTP_SHORTCIRCUT_RETRY           3
 #define GTP_ADC_READ_DELAY              200
 

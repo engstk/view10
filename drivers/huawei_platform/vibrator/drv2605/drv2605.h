@@ -292,7 +292,7 @@
 #define DEFAULT_LRA_AUTOCAL_COMPENSATION    0x06
 #define DEFAULT_LRA_AUTOCAL_BACKEMF         0xDE
 #define DEFAULT_DRIVE_TIME      0x17
-
+#define HIGH_VOL_ERR 1
 /*sw_dev state*/
 #define SW_STATE_IDLE				0x00
 #define SW_STATE_AUDIO2HAPTIC			0x01

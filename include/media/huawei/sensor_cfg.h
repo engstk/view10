@@ -54,6 +54,7 @@ typedef enum _tag_hwsensor_position_kind
     HWSENSOR_POSITION_FORE                      =    1,
     HWSENSOR_POSITION_SUBREAR                   =    2,
     HWSENSOR_POSITION_SUBFORE                   =    3,
+    HWSENSOR_POSITION_REAR_THIRD                =    4,
     HWSENSOR_POSITION_IRIS                      =    8,
     HWSENSOR_POSITION_GAZE = 9,
 } hwsensor_position_kind_t;

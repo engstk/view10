@@ -1,11 +1,13 @@
 #include "lcdkit_panel.h"
 #include "lcdkit_dbg.h"
 #include "lcdkit_parse.h"
+#include "hisi_fb.h"
 #include <huawei_ts_kit.h>
 
 struct lcdkit_adapt_func lcdkit_adapt_func_array[] = {
     {"JDI_NT35696 5.1' CMD TFT 1920 x 1080", lcdkit_jdi_nt35696_5p5_gram_check_show, lcdkit_jdi_nt35696_5p5_reg_read_show},//checksum show
     {"JDI_2LANE_NT36860 5.88' CMD TFT 1440 x 2560", NULL, lcdkit_jdi_nt36860_5p88_reg_read_show}, // gamma calibration show
+    {"JDI_2LANE_NT36860 CUT2 5.88' CMD TFT 1440 x 2560", NULL, lcdkit_jdi_nt36860_5p88_reg_read_show}, // gamma calibration show
     {"JDI_NT36860 5.88' CMD TFT 1440 x 2560", NULL, lcdkit_jdi_nt36860_5p88_reg_read_show}, // gamma calibration show
 };
 uint32_t checksum_start = LCDKIT_CHECKSUM_END;
@@ -26,6 +28,8 @@ void lcdkit_init(struct device_node* np, void* pdata)
     lcdkit_info_init(pdata);
 
     lcdkit_info.panel_infos.display_on_need_send = false;
+    lcdkit_info.panel_infos.bl_is_shield_backlight = false;
+    lcdkit_info.panel_infos.bl_is_start_second_timer = false;
 }
 
 /***********************************************************
@@ -904,17 +908,21 @@ static ssize_t lcdkit_pcd_errflag_check(char* buf )
     ssize_t ret = 0;
     u8 result_value = 0;
 
-    gpio_request(lcdkit_info.panel_infos.gpio_pcd,GPIO_LCDKIT_PCD_NAME);
-    gpio_request(lcdkit_info.panel_infos.gpio_pcd,GPIO_LCDKIT_ERRFLAG_NAME);
+    if(lcdkit_info.panel_infos.gpio_pcd != 0)
+    {
+        gpio_request(lcdkit_info.panel_infos.gpio_pcd,GPIO_LCDKIT_PCD_NAME);
+        gpio_direction_input(lcdkit_info.panel_infos.gpio_pcd);
+        pcd_gpio = gpio_get_value(lcdkit_info.panel_infos.gpio_pcd);
+        gpio_free(lcdkit_info.panel_infos.gpio_pcd);
+    }
 
-    gpio_direction_input(lcdkit_info.panel_infos.gpio_pcd);
-    gpio_direction_input(lcdkit_info.panel_infos.gpio_err_flag);
-
-    pcd_gpio = gpio_get_value(lcdkit_info.panel_infos.gpio_pcd);
-    errflag_gpio = gpio_get_value(lcdkit_info.panel_infos.gpio_err_flag);
-
-    gpio_free(lcdkit_info.panel_infos.gpio_pcd);
-    gpio_free(lcdkit_info.panel_infos.gpio_err_flag);
+    if(lcdkit_info.panel_infos.gpio_err_flag != 0)
+    {
+        gpio_request(lcdkit_info.panel_infos.gpio_err_flag,GPIO_LCDKIT_ERRFLAG_NAME);
+        gpio_direction_input(lcdkit_info.panel_infos.gpio_err_flag);
+        errflag_gpio = gpio_get_value(lcdkit_info.panel_infos.gpio_err_flag);
+        gpio_free(lcdkit_info.panel_infos.gpio_err_flag);
+    }
 
     LCDKIT_INFO("pcd_gpio[%d]= %d, errflag_gpio[%d]= %d \n",lcdkit_info.panel_infos.gpio_pcd,pcd_gpio,lcdkit_info.panel_infos.gpio_err_flag,errflag_gpio);
 
@@ -1082,7 +1090,7 @@ static ssize_t lcdkit_amoled_hbm_ctrl_store(void* pdata, const char* buf)
 
 static ssize_t lcdkit_support_mode_show(char* buf)
 {
-    return snprintf(buf, PAGE_SIZE, "%d\n", lcdkit_info.panel_infos.effect_support_mode);
+    return snprintf(buf, PAGE_SIZE, "%u\n", lcdkit_info.panel_infos.effect_support_mode);
 }
 
 static ssize_t lcdkit_support_mode_store(const char* buf)
@@ -1096,7 +1104,7 @@ static ssize_t lcdkit_support_mode_store(const char* buf)
         return ret;
     }
 
-    lcdkit_info.panel_infos.effect_support_mode = (int)val;
+    lcdkit_info.panel_infos.effect_support_mode = (u32)val;
     return ret;
 }
 
@@ -1690,7 +1698,7 @@ static ssize_t lcdkit_support_bl_mode_show(char* buf)
 
 static ssize_t lcdkit_oem_info_show(void* pdata, char* buf)
 {
-    if (lcdkit_info.panel_infos.is_hostprocessing == 1) {
+    if (lcdkit_info.panel_infos.is_hostprocessing == 1 || (lcdkit_info.panel_infos.effect_support_mode & BITS(31))) {
         return host_panel_oem_info_show(pdata, buf);
     } else {
         LCDKIT_INFO("It is normal panel!\n");
@@ -1700,11 +1708,46 @@ static ssize_t lcdkit_oem_info_show(void* pdata, char* buf)
 
 static ssize_t lcdkit_oem_info_store(void* pdata, const char* buf)
 {
-    if (lcdkit_info.panel_infos.is_hostprocessing == 1) {
+    if (lcdkit_info.panel_infos.is_hostprocessing == 1 || (lcdkit_info.panel_infos.effect_support_mode & BITS(31))) {
         return host_panel_oem_info_store(pdata, buf);
     } else {
         LCDKIT_INFO("It is normal panel!\n");
     }
+    return 0;
+}
+
+#define MIPI_CLK_HIGH "mipi_clk:high"
+#define MIPI_CLK_LOW "mipi_clk:low"
+#define MIPI_CLK_NORMAL "mipi_clk:normal"
+static ssize_t lcdkit_mipi_config_store(void* pdata, const char* buf)
+{
+    if (NULL == pdata || NULL == buf)
+    {
+        LCDKIT_ERR("%s: NULL Pointer!\n",__func__);
+        return -EINVAL;
+    }
+
+    struct hisi_fb_data_type* hisifd = (struct hisi_fb_data_type*) pdata;
+    struct hisi_panel_info *pinfo = &(hisifd->panel_info);
+
+    if (!strncmp(buf, MIPI_CLK_HIGH, sizeof(MIPI_CLK_HIGH)))
+    {
+        hisifd->panel_info.dsi_bit_clk_upt_support = 1;
+        pinfo->mipi.dsi_bit_clk_upt = lcdkit_info.panel_infos.mipi_clk_config_high;
+    } else if ( !strncmp(buf, MIPI_CLK_LOW, sizeof(MIPI_CLK_LOW)))
+    {
+        hisifd->panel_info.dsi_bit_clk_upt_support = 1;
+        pinfo->mipi.dsi_bit_clk_upt = lcdkit_info.panel_infos.mipi_clk_config_low;
+    } else if ( !strncmp(buf, MIPI_CLK_NORMAL, sizeof(MIPI_CLK_NORMAL)))
+    {
+        hisifd->panel_info.dsi_bit_clk_upt_support = 1;
+        pinfo->mipi.dsi_bit_clk_upt = lcdkit_info.panel_infos.mipi_clk_config_normal;
+    } else
+    {
+        LCDKIT_ERR("mipi_clk_config error!\n");
+        return -EINVAL;
+    }
+
     return 0;
 }
 
@@ -1784,4 +1827,5 @@ struct lcdkit_panel_data lcdkit_info =
     .lcdkit_se_mode_show = lcdkit_se_mode_show,
     .lcdkit_se_mode_store = lcdkit_se_mode_store,
     .lcdkit_support_bl_mode_show = lcdkit_support_bl_mode_show,
+    .lcdkit_mipi_config_store = lcdkit_mipi_config_store,
 };

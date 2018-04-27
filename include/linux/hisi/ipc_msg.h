@@ -65,6 +65,9 @@ extern "C" {
 #define TYPE_PWC			14
 #define TYPE_TEST			15
 
+#define TYPE_DDR_TIME 			21
+#define TYPE_DDR_FLUX 			22
+
 /* mail size */
 #define MAX_MAIL_SIZE		8
 #define IPC_CMD(src, obj, cmd, type)	(((src) << 24) | ((obj) << 16) | ((cmd) << 8) | (type))

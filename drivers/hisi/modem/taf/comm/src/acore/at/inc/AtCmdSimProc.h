@@ -73,13 +73,7 @@ extern "C" {
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
- 枚举名    : AT_CARDAPP_ENUM
- 枚举说明  : 卡应用优先级
-  1.日    期   : 2015年06月13日
-    作    者   : h00300778
-    修改内容   : V8R2 UICC MutliApp PhaseIV迭代新增
-*****************************************************************************/
+
 enum AT_CARDAPP_ENUM
 {
     AT_PREFER_APP_CDMA          = 0x00000000,
@@ -106,17 +100,7 @@ typedef TAF_UINT32 AT_CARDAPP_ENUM_UINT32;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*******************************************************************************
- 结构名    : TAF_NV_SCI_CFG_STRU
- 结构说明  :
-  1.日    期   : 2013年7月4日
-    作    者   : s00190137
-    修改内容   : 新生成函数
 
-  2.日    期   : 2015年6月16日
-    作    者   : l00198894
-    修改内容   : TSTS
-*******************************************************************************/
 typedef struct
 {
     VOS_UINT32                          bitCardNum      : 3;
@@ -151,9 +135,11 @@ extern VOS_UINT32 At_QryHvsstPara(
     VOS_UINT8                           ucIndex
 );
 
-extern VOS_UINT16 At_HvsstQueryCnf(
+extern VOS_UINT32 At_HvsstQueryCnf(
     VOS_UINT8                           ucIndex,
-    SI_PIH_EVENT_INFO_STRU             *pstEvent);
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
 
 extern VOS_UINT32 At_SetSciChgPara(
     VOS_UINT8                           ucIndex
@@ -162,13 +148,136 @@ extern VOS_UINT32 At_QrySciChgPara(
     VOS_UINT8                           ucIndex
 );
 
-extern VOS_UINT16 At_SciCfgQueryCnf(
+extern VOS_UINT32 At_SciCfgQueryCnf(
     VOS_UINT8                           ucIndex,
-    SI_PIH_EVENT_INFO_STRU             *pstEvent);
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
 
-extern VOS_UINT16 AT_UiccAuthCnf(TAF_UINT8 ucIndex,SI_PIH_EVENT_INFO_STRU *pstEvent);
-extern VOS_UINT16 AT_UiccAccessFileCnf(TAF_UINT8 ucIndex,SI_PIH_EVENT_INFO_STRU *pstEvent);
+extern VOS_UINT32 At_ProcPihFndBndCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
 
+extern VOS_UINT32 At_ProcPihGenericAccessCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihIsdbAccessCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCchoSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCchpSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCchcSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihSciCfgSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihHvsstSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCglaSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCardAtrQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCardTypeQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCardTypeExQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCardVoltageQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihPrivateCglaSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCrsmSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCrlaSetCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihSessionQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCimiQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 At_ProcPihCcimiQryCnf(
+    VOS_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+
+extern VOS_UINT32 AT_UiccAuthCnf(
+    TAF_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
+extern VOS_UINT32 AT_UiccAccessFileCnf(
+    TAF_UINT8                           ucIndex,
+    SI_PIH_EVENT_INFO_STRU             *pstEvent,
+    VOS_UINT16                         *pusLength
+);
 extern VOS_UINT32 At_SetCrlaPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 At_QryCardSession(VOS_UINT8 ucIndex);
 extern TAF_UINT32 At_QryCardVoltagePara(TAF_UINT8 ucIndex);
@@ -176,6 +285,8 @@ extern TAF_UINT32 At_SetPrivateCglaPara(TAF_UINT8 ucIndex);
 extern TAF_UINT16 At_PrintPrivateCglaResult(
     TAF_UINT8                           ucIndex,
     SI_PIH_EVENT_INFO_STRU             *pstEvent);
+
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern TAF_UINT32 At_SetPrfAppPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32 At_QryPrfAppPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32 At_TestPrfAppPara(TAF_UINT8 ucIndex);
@@ -183,9 +294,11 @@ extern TAF_UINT32 At_TestPrfAppPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32 At_SetUiccPrfAppPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32 At_QryUiccPrfAppPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32 At_TestUiccPrfAppPara(TAF_UINT8 ucIndex);
+#endif
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern TAF_UINT32 At_SetCCimiPara(TAF_UINT8 ucIndex);
-
+#endif
 extern TAF_UINT16 At_CardErrorInfoInd(
     TAF_UINT8                           ucIndex,
     SI_PIH_EVENT_INFO_STRU             *pstEvent);

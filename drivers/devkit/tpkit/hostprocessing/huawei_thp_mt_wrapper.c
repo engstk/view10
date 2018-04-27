@@ -15,6 +15,7 @@
 #include <linux/uaccess.h>
 #include <huawei_platform/log/hw_log.h>
 #include <linux/slab.h>
+#include <linux/poll.h>
 #if defined(CONFIG_FB)
 #include <linux/notifier.h>
 #include <linux/fb.h>
@@ -93,36 +94,17 @@ static long thp_mt_wrapper_ioctl_set_coordinate(unsigned long arg)
 	return ret;
 }
 
-static void thp_mt_wrapper_release_coordinate(void)
+void thp_clean_fingers(void)
 {
 
 	struct input_dev *input_dev = g_thp_mt_wrapper->input_dev;
 	struct thp_mt_wrapper_ioctl_touch_data data;
-	u8 i;
 
 	memset(&data, 0, sizeof(data));
 
-	for (i = 0; i < INPUT_MT_WRAPPER_MAX_FINGERS; i++) {
-		input_report_abs(input_dev, ABS_MT_POSITION_X,
-						 data.touch[i].x);
-		input_report_abs(input_dev, ABS_MT_POSITION_Y,
-						 data.touch[i].y);
-		input_report_abs(input_dev, ABS_MT_PRESSURE,
-						 data.touch[i].pressure);
-		input_report_abs(input_dev, ABS_MT_TRACKING_ID,
-						 data.touch[i].tracking_id);
-		input_report_abs(input_dev, ABS_MT_TOUCH_MAJOR,
-						 data.touch[i].major);
-		input_report_abs(input_dev, ABS_MT_TOUCH_MINOR,
-						 data.touch[i].minor);
-		input_report_abs(input_dev, ABS_MT_ORIENTATION,
-						 data.touch[i].orientation);
-		input_report_abs(input_dev, ABS_MT_TOOL_TYPE,
-						 data.touch[i].tool_type);
-		input_mt_sync(input_dev);
-	}
+	input_mt_sync(input_dev);
+	input_sync(input_dev);
 
-	/* SYN_REPORT */
 	input_report_key(input_dev, BTN_TOUCH, 0);
 	input_sync(input_dev);
 }
@@ -131,6 +113,7 @@ static void thp_mt_wrapper_release_coordinate(void)
 
 static int thp_mt_wrapper_open(struct inode *inode, struct file *filp)
 {
+	THP_LOG_INFO("%s:called\n", __func__);
 	return 0;
 }
 
@@ -140,6 +123,28 @@ static int thp_mt_wrapper_release(struct inode *inode,
 	return 0;
 }
 
+static int thp_mt_wrapper_ioctl_read_status(unsigned long arg)
+{
+	int __user *status = (int *)arg;
+	u32 thp_status = thp_get_status_all();
+
+	THP_LOG_INFO("%s:status=%d\n", __func__, thp_status);
+
+	if(!status) {
+		THP_LOG_ERR("%s:input null\n", __func__);
+		return -EINVAL;
+	}
+
+	if(copy_to_user(status, &thp_status, sizeof(u32))) {
+		THP_LOG_ERR("%s:copy status failed\n", __func__);
+		return -EFAULT;
+	}
+
+	if (atomic_read(&g_thp_mt_wrapper->status_updated) != 0)
+		atomic_dec(&g_thp_mt_wrapper->status_updated);
+
+	return 0;
+}
 static long thp_mt_wrapper_ioctl(struct file *filp, unsigned int cmd,
 				unsigned long arg)
 {
@@ -150,6 +155,10 @@ static long thp_mt_wrapper_ioctl(struct file *filp, unsigned int cmd,
 		ret = thp_mt_wrapper_ioctl_set_coordinate(arg);
 		break;
 
+	case INPUT_MT_WRAPPER_IOCTL_READ_STATUS:
+		ret = thp_mt_wrapper_ioctl_read_status(arg);
+		break;
+
 	default:
 		THP_LOG_ERR("cmd unkown.\n");
 		ret = -EINVAL;
@@ -158,20 +167,28 @@ static long thp_mt_wrapper_ioctl(struct file *filp, unsigned int cmd,
 	return ret;
 }
 
-int thp_daemeon_suspend_resume_notify(int status)
+int thp_mt_wrapper_wakeup_poll(void)
 {
-	struct input_dev *input_dev = g_thp_mt_wrapper->input_dev;
-
-	if (status == THP_RESUME) {
-		THP_LOG_INFO("%s:input_mt_wrapper resume\n", __func__);
-		kobject_uevent(&input_dev->dev.kobj, KOBJ_ONLINE);
-	} else if (status == THP_SUSPEND) {
-		THP_LOG_INFO("%s:input_mt_wrapper suspend\n", __func__);
-		thp_mt_wrapper_release_coordinate();
-		kobject_uevent(&input_dev->dev.kobj, KOBJ_OFFLINE);
+	if(!g_thp_mt_wrapper) {
+		THP_LOG_ERR("%s: wrapper not init\n", __func__);
+		return -ENODEV;
 	}
-
+	atomic_inc(&g_thp_mt_wrapper->status_updated);
+	wake_up_interruptible(&g_thp_mt_wrapper->wait);
 	return 0;
+}
+
+static unsigned int thp_mt_wrapper_poll(struct file *file, poll_table *wait)
+{
+	int mask = 0;
+	THP_LOG_DEBUG("%s:poll call in\n", __func__);
+
+	poll_wait(file, &g_thp_mt_wrapper->wait, wait);
+	if (atomic_read(&g_thp_mt_wrapper->status_updated) > 0)
+		mask |= POLLIN | POLLRDNORM;
+
+	THP_LOG_DEBUG("%s:poll call out, mask = 0x%x\n", __func__, mask);
+	return mask;
 }
 
 static const struct file_operations g_thp_mt_wrapper_fops = {
@@ -179,6 +196,7 @@ static const struct file_operations g_thp_mt_wrapper_fops = {
 	.open = thp_mt_wrapper_open,
 	.release = thp_mt_wrapper_release,
 	.unlocked_ioctl = thp_mt_wrapper_ioctl,
+	.poll = thp_mt_wrapper_poll,
 };
 
 static struct miscdevice g_thp_mt_wrapper_misc_device = {
@@ -303,6 +321,7 @@ int thp_mt_wrapper_init(void)
 		THP_LOG_ERR("%s:out of memory\n", __func__);
 		return -ENOMEM;
 	}
+	init_waitqueue_head(&mt_wrapper->wait);
 
 	input_dev = input_allocate_device();
 	if (!input_dev) {
@@ -363,10 +382,9 @@ int thp_mt_wrapper_init(void)
 
 	mt_wrapper->input_dev = input_dev;
 	g_thp_mt_wrapper = mt_wrapper;
+	atomic_set(&g_thp_mt_wrapper->status_updated, 0);
 	return 0;
 
-fb_notify_reg_err:
-	misc_deregister(&g_thp_mt_wrapper_misc_device);
 misc_dev_reg_err:
 	input_unregister_device(input_dev);
 input_dev_reg_err:

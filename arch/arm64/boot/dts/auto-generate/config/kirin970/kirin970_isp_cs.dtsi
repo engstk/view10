@@ -17,15 +17,17 @@
         interrupts = <0 272 4>;
 
         status = "ok";
-        isp-subsys-rproc-supply = <&ispsubsys>;
-        isp-srt-supply = <&isp_srt>;
+        isp-clockdep-supply = <&ispsubsys>;
+        isp-core-supply = <&isp_srt>;
         hisi,use_secisp = <1>;
+        sec-verify = <1>;
 
         a7-vaddr-boot       = <0xFFFF0000 0x00010000 0x0000001D 0x00010000 0x00000001 0x0 0x0>;
         a7-vaddr-text       = <0xC0000000 0x00400000 0x0000001D 0x00010000 0x00000001 0x0 0x0>;
-        a7-vaddr-data       = <0xC0400000 0x00500000 0x0000001B 0x00410000 0x00000001 0x0 0x0>;
-        a7-vaddr-pgm        = <0xC1000000 0x00004000 0x00000009 0x00000000 0x00000001 0x0 0x0>;
-        a7-vaddr-pte        = <0xC1100000 0x00200000 0x00000009 0x00910000 0x00000001 0x0 0x0>;
+        a7-vaddr-data       = <0xC0400000 0x00700000 0x0000001B 0x00410000 0x00000001 0x0 0x0>;
+        a7-vaddr-pgd        = <0xC1000000 0x00002000 0x00000009 0x00000000 0x00000001 0x0 0x0>;
+        a7-vaddr-pmd        = <0xC1002000 0x00002000 0x00000009 0x00002000 0x00000001 0x0 0x0>;
+        a7-vaddr-pte        = <0xC1100000 0x00200000 0x00000009 0x00B10000 0x00000001 0x0 0x0>;
         a7-vaddr-rdr        = <0xC1800000 0x00040000 0x00000013 0x00000000 0x00000001 0x0 0x0>;
         a7-vaddr-shrd       = <0xC2000000 0x00001000 0x00000003 0x0000C000 0x00000001 0x00001000 0x00001000>;
         a7-vaddr-vq         = <0xC2020000 0x00040000 0x00000003 0x00000000 0x00000001 0x0 0x0>;
@@ -38,8 +40,8 @@
 
         isp-remap-addr = <0x00000000>;
         isp-ipc-addr = <0xC2020000>;
-        isp-iova-start = <0xC5900000>;
-        isp-iova-size = <0xB700000>;
+        isp-iova-start = <0xC8000000>;
+        isp-iova-size = <0x9000000>;
         isp-names = "ISPCPU";
         firmware-names = "isp_fw.elf";
         bootware-names = "isp_bw.elf";
@@ -54,8 +56,10 @@
         ispsmmu-init-byap = <0x0>;
         isp-mdc-flag    = <0x1>;
         isp-wdt-flag    = <0x1>;
-        clk_flag        = <0x1>;
-        clk_dvfs        = <0x1>;
+        useisptop    = <0x00>;
+        useclockdep     = <0x1>;
+        usedvfs         = <0x1>;
+        usepowerdn_clockdn = <0x1>;
         clkdis-dvfs     = <415000000 238000000 110670000 300000000>;
         clkdn-normal    = <830000000 480000000 110670000 415000000>;
         clkdn-svs       = <600000000 300000000 110670000 300000000>;

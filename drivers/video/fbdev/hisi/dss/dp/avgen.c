@@ -13,6 +13,10 @@
 #include "avgen.h"
 #include "../hisi_fb.h"
 #include "../hisi_fb_def.h"
+
+#define FHD_TIMING_H_ACTIVE 1920
+#define FHD_TIMING_V_ACTIVE 1080
+
 /*lint -save -e* */
 static inline uint8_t dptx_bit_field(const uint16_t data, uint8_t shift, uint8_t width)
 {
@@ -74,7 +78,7 @@ int dptx_dtd_parse(struct dp_ctrl *dptx, struct dtd *mdtd, uint8_t data[18])
 	mdtd->h_sync_polarity = dptx_bit_field(data[17], 1, 1) == 0;
 	if (mdtd->interlaced == 1)
 		mdtd->v_active /= 2;
-	HISI_FB_INFO("DTD pixel_clock: %d interlaced: %d\n",
+	HISI_FB_INFO("DTD pixel_clock: %llu interlaced: %d\n",
 		 mdtd->pixel_clock, mdtd->interlaced);
 	HISI_FB_INFO("h_active: %d h_blanking: %d h_sync_offset: %d\n",
 		 mdtd->h_active, mdtd->h_blanking, mdtd->h_sync_offset);
@@ -443,11 +447,6 @@ void dptx_audio_inf_type_change(struct dp_ctrl *dptx)
 
 	aparams = &dptx->aparams;
 
-	if (dptx->dptx_vr) {
-		aparams->inf_type = 1;
-		HISI_FB_INFO("dp selete spdif\n");
-	}
-
 	reg = (uint32_t)dptx_readl(dptx, DPTX_AUD_CONFIG1);
 	reg &= ~DPTX_AUD_CONFIG1_INF_TYPE_MASK;
 	reg |= aparams->inf_type << (unsigned int)DPTX_AUD_CONFIG1_INF_TYPE_SHIFT;
@@ -498,6 +497,34 @@ void dptx_audio_data_width_change(struct dp_ctrl *dptx)
 	reg |= aparams->data_width << (unsigned int)DPTX_AUD_CONFIG1_DATA_WIDTH_SHIFT;
 	dptx_writel(dptx, DPTX_AUD_CONFIG1, reg);
 }
+
+bool dptx_check_low_temperature(struct dp_ctrl *dptx)
+{
+	uint32_t perictrl4;
+	struct hisi_fb_data_type *hisifd;
+
+	if (dptx == NULL) {
+		HISI_FB_ERR("NULL Pointer\n");
+		return FALSE;
+	}
+
+	hisifd = dptx->hisifd;
+
+	if (hisifd == NULL) {
+		HISI_FB_ERR("NULL Pointer\n");
+		return FALSE;
+	}
+
+	perictrl4 = inp32(hisifd->pmctrl_base + MIDIA_PERI_CTRL4);
+	perictrl4 &= PMCTRL_PERI_CTRL4_TEMPERATURE_MASK;
+	perictrl4 = (perictrl4 >> PMCTRL_PERI_CTRL4_TEMPERATURE_SHIFT);
+	HISI_FB_INFO("Get current temperature: %d \n", perictrl4);
+
+	if (perictrl4 != NORMAL_TEMPRATURE)
+		return TRUE;
+	else
+		return FALSE;
+}
 /*
  * Video Generation
  */
@@ -514,11 +541,30 @@ void dptx_video_timing_change(struct dp_ctrl *dptx)
 	dptx_enable_default_video_stream(dptx);
 }
 
-int dptx_video_mode_change(struct dp_ctrl *dptx, uint8_t vmode)
+int dptx_change_video_mode_tu_fail(struct dp_ctrl *dptx)
 {
-	int retval;
+	struct dtd *mdtd;
+	mdtd = &dptx->vparams.mdtd;
+
+	if ((mdtd->pixel_clock > 500000) && (mdtd->h_active >= 3840)) {	/*4k 60HZ*/
+		if (((dptx->link.lanes == 2) && (dptx->link.rate == DPTX_PHYIF_CTRL_RATE_HBR2)) ||
+			((dptx->link.lanes == 4) && (dptx->link.rate == DPTX_PHYIF_CTRL_RATE_HBR)))
+			return 95;	/*4k 30HZ*/
+	}
+	if(mdtd->h_active > 1920)
+		return 16;/*1920*1080*/
+	if(mdtd->h_active > 1280)
+		return 4;/*1280*720*/
+	if(mdtd->h_active > 640)
+		return 1;/*640*480*/
+	return 1;
+}
+
+int dptx_change_video_mode_user(struct dp_ctrl *dptx)
+{
 	struct video_params *vparams;
-	struct dtd mdtd;
+	int retval;
+	bool needchanged;
 
 	if (dptx == NULL) {
 		HISI_FB_ERR("NULL Pointer\n");
@@ -526,19 +572,84 @@ int dptx_video_mode_change(struct dp_ctrl *dptx, uint8_t vmode)
 	}
 
 	vparams = &dptx->vparams;
-	if (!dptx_dtd_fill(&mdtd, vmode, vparams->refresh_rate,
-			   vparams->video_format)) {
-		HISI_FB_ERR("Invalid video mode value %d\n",
-						vmode);
+	needchanged = FALSE;
+	if (!dptx->same_source) {
+		if((vparams->mdtd.h_active > FHD_TIMING_H_ACTIVE) || (vparams->mdtd.v_active > FHD_TIMING_V_ACTIVE)) {
+			vparams->video_format = VCEA;
+			vparams->mode = 16; /*Siwtch to 1080p on PC mode*/
+			needchanged = TRUE;
+			HISI_FB_INFO("Video mode is changed by different source!\n");
+		}
+	}
+
+	if(dptx->user_mode != 0) {
+		vparams->video_format = dptx->user_mode_format;
+		vparams->mode = dptx->user_mode; /*Siwtch to user setting*/
+		needchanged = TRUE;
+		HISI_FB_INFO("Video mode is changed by user setting!\n");
+	}
+
+	if (needchanged) {
+		retval = dptx_video_mode_change(dptx, vparams->mode);
+		if (retval) {
+			HISI_FB_ERR("Change mode error!\n");
+			return retval;
+		}
+	}
+
+	if (dptx_check_low_temperature(dptx)) {
+		if((vparams->mdtd.h_active > FHD_TIMING_H_ACTIVE) || (vparams->mdtd.v_active > FHD_TIMING_V_ACTIVE)) {
+			vparams->video_format = VCEA;
+			vparams->mode = 16; /*Siwtch to 1080p on PC mode*/
+			HISI_FB_INFO("Video mode is changed by low temperature!\n");
+
+			retval = dptx_video_mode_change(dptx, vparams->mode);
+			if (retval) {
+				HISI_FB_ERR("Change mode error!\n");
+				return retval;
+			}
+		}
+	}
+
+	dp_imonitor_set_param(DP_PARAM_SOURCE_MODE, &(dptx->same_source));
+	dp_imonitor_set_param(DP_PARAM_USER_MODE,   &(vparams->mode));
+	dp_imonitor_set_param(DP_PARAM_USER_FORMAT, &(vparams->video_format));
+	return 0;
+}
+
+int dptx_video_mode_change(struct dp_ctrl *dptx, uint8_t vmode)
+{
+	int retval;
+	int i;
+	struct video_params *vparams;
+	struct dtd mdtd;
+
+	if (dptx == NULL) {
+		HISI_FB_ERR("NULL Pointer\n");
 		return -EINVAL;
 	}
-	retval = dptx_video_ts_calculate(dptx, dptx->link.lanes,
-					 dptx->link.rate, vparams->bpc,
-					 vparams->pix_enc, mdtd.pixel_clock);
-	if (retval)
-		return retval;
-	vparams->mdtd = mdtd;
+	vparams = &dptx->vparams;
 	vparams->mode = vmode;
+
+	for(i = 0; i < VIDEO_DEFAULT_MODE_MAX; i++)
+	{
+		if (!dptx_dtd_fill(&mdtd, vparams->mode, vparams->refresh_rate,
+				   vparams->video_format)) {
+			HISI_FB_ERR("Invalid video mode value %d\n",
+							vparams->mode);
+			return -EINVAL;
+		}
+		vparams->mdtd = mdtd;
+		retval = dptx_video_ts_calculate(dptx, dptx->link.lanes,
+						 dptx->link.rate, vparams->bpc,
+						 vparams->pix_enc, mdtd.pixel_clock);
+		if(retval == 0)
+			break;
+		if(vparams->mode == 1)
+			return retval;
+		vparams->mode = dptx_change_video_mode_tu_fail(dptx);
+		HISI_FB_INFO("The mode is changed as [%d]\n", vparams->mode);
+	}
 
 	return retval;
 }
@@ -740,7 +851,8 @@ int dptx_video_ts_calculate(struct dp_ctrl *dptx, int lane_num, int rate,
 
 	ts = (8 * color_dep * pixel_clock) / (lane_num * link_rate);
 	tu  = ts / 1000;
-	dptx->m_dsm_info.tu = tu;
+	dp_imonitor_set_param(DP_PARAM_TU, &tu);
+
 	if (tu >= 65) {
 		HISI_FB_ERR("tu(%d) > 65", tu);
 		return -EINVAL;
@@ -748,22 +860,17 @@ int dptx_video_ts_calculate(struct dp_ctrl *dptx, int lane_num, int rate,
 
 	tu_frac = ts / 100 - tu * 10;
 
-	if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-		if (tu < 6)
-			vparams->init_threshold = 32;
-		else if ((encoding == RGB || encoding == YCBCR444) &&
-			 mdtd->h_blanking <= 80)
-			vparams->init_threshold = 12;
-		else
-			vparams->init_threshold = 15;
+	if (tu < 6)
+		vparams->init_threshold = 32;
+	else if ((encoding == RGB || encoding == YCBCR444) &&
+		 mdtd->h_blanking <= 80)
+		vparams->init_threshold = 12;
+	else
+		vparams->init_threshold = 15;
 
-		HISI_FB_INFO("tu = %d\n", tu);
+	HISI_FB_INFO("tu = %d\n", tu);
 
-		vparams->aver_bytes_per_tu = (uint8_t)tu;
-	} else {
-		HISI_FB_ERR("ERROR chip set");
-		return -EINVAL;
-	}
+	vparams->aver_bytes_per_tu = (uint8_t)tu;
 
 	vparams->aver_bytes_per_tu_frac = (uint8_t)tu_frac;
 
@@ -790,11 +897,10 @@ void dptx_video_ts_change(struct dp_ctrl *dptx)
 	reg = reg | (vparams->aver_bytes_per_tu_frac <<
 		       DPTX_VIDEO_CONFIG5_TU_FRAC_SHIFT);
 
-	if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-		reg = reg & (~DPTX_VIDEO_CONFIG5_INIT_THRESHOLD_MASK);
-		reg = reg | (vparams->init_threshold <<
-				DPTX_VIDEO_CONFIG5_INIT_THRESHOLD_SHIFT);
-	}
+	reg = reg & (~DPTX_VIDEO_CONFIG5_INIT_THRESHOLD_MASK);
+	reg = reg | (vparams->init_threshold <<
+			DPTX_VIDEO_CONFIG5_INIT_THRESHOLD_SHIFT);
+
 	dptx_writel(dptx, DPTX_VIDEO_CONFIG5, reg);
 }
 
@@ -1106,7 +1212,7 @@ void dptx_audio_params_reset(struct audio_params *params)
 	params->iec_orig_samp_freq = 12;
 	params->data_width = 16;
 	params->num_channels = 2;
-	params->inf_type = 0;
+	params->inf_type = 1;
 	params->ats_ver = 17;
 	params->mute = 0;
 }
@@ -1160,12 +1266,12 @@ void dwc_dptx_dtd_reset(struct dtd *mdtd)
 	mdtd->h_sync_polarity = 0;
 }
 
-int dptx_dtd_fill(struct dtd *mdtd, uint8_t code, uint32_t refresh_rate,
+bool dptx_dtd_fill(struct dtd *mdtd, uint8_t code, uint32_t refresh_rate,
 		  uint8_t video_format)
 {
 	if (mdtd == NULL) {
 		HISI_FB_ERR("NULL Pointer\n");
-		return -EINVAL;
+		return false;
 	}
 
 	dwc_dptx_dtd_reset(mdtd);

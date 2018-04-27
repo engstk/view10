@@ -73,29 +73,73 @@ extern "C" {
 #define APP_ERR_NOT_STARTED_YET                             (APP_ERR_COMMON_SECTION_BEGIN + 25)
 
 /* MM与APP错误码*/
-#define APP_ERR_MM_ATTACH_FAIL_ACCESS_BARRED                (APP_ERR_MM_SECTION_BEGIN + 0)
-#define APP_ERR_MM_ATTACH_FAIL_LIMITE_SERVICE               (APP_ERR_MM_SECTION_BEGIN + 1)
-#define APP_ERR_MM_ATTACH_FAIL_UNSPECIFIED_ABNORMAL         (APP_ERR_MM_SECTION_BEGIN + 2)
-#define APP_ERR_MM_ATTACH_FAIL_ACT_DEFAULT_BEARER_FAIL      (APP_ERR_MM_SECTION_BEGIN + 3)
+#define APP_ERR_MM_NW_BEAR_NOT_SYNC                         (APP_ERR_MM_SECTION_BEGIN + 0)
+#define APP_ERR_MM_REL_IND                                  (APP_ERR_MM_SECTION_BEGIN + 1)
+#define APP_ERR_MM_AUTH_TIME_OUT                            (APP_ERR_MM_SECTION_BEGIN + 2)
+#define APP_ERR_MM_T3410_TIME_OUT                           (APP_ERR_MM_SECTION_BEGIN + 3)
+#define APP_ERR_MM_LINK_ERR                                 (APP_ERR_MM_SECTION_BEGIN + 4)
+#define APP_ERR_MM_AUTH_FAIL                                (APP_ERR_MM_SECTION_BEGIN + 5)
+#define APP_ERR_MM_THROT                                    (APP_ERR_MM_SECTION_BEGIN + 6)
+#define APP_ERR_MM_PLMN_SRCH_INTERRUPT                      (APP_ERR_MM_SECTION_BEGIN + 7)
+#define APP_ERR_MM_SYS_INFO_INTERRUPT                       (APP_ERR_MM_SECTION_BEGIN + 8)
+#define APP_ERR_MM_SUSPEND_INTERRUPT                        (APP_ERR_MM_SECTION_BEGIN + 9)
+#define APP_ERR_MM_DETACH                                   (APP_ERR_MM_SECTION_BEGIN + 10)
+#define APP_ERR_MM_LRRC_ERR_IND                             (APP_ERR_MM_SECTION_BEGIN + 11)
+#define APP_ERR_MM_IMSI_PAGING_DETACH                       (APP_ERR_MM_SECTION_BEGIN + 12)
+#define APP_ERR_MM_ATTACH_EST_FAIL                          (APP_ERR_MM_SECTION_BEGIN + 13)
+#define APP_ERR_MM_STATUS_CANT_TRIGGER                      (APP_ERR_MM_SECTION_BEGIN + 14)
+#define APP_ERR_MM_POWER_OFF                                (APP_ERR_MM_SECTION_BEGIN + 15)
+#define APP_ERR_MM_AREA_LOST                                (APP_ERR_MM_SECTION_BEGIN + 16)
+#define APP_ERR_MM_SYS_CFG_OR_UE_CAP_CHG                    (APP_ERR_MM_SECTION_BEGIN + 17)
+#define APP_ERR_MM_GU_ATTACH_FAIL                           (APP_ERR_MM_SECTION_BEGIN + 18)
+#define APP_ERR_MM_GU_DETACH                                (APP_ERR_MM_SECTION_BEGIN + 19)
+#define APP_ERR_MM_ATTACH_MMC_REL                           (APP_ERR_MM_SECTION_BEGIN + 20)
+#define APP_ERR_MM_ATTACH_CS_CALL_INTERRUPT                 (APP_ERR_MM_SECTION_BEGIN + 21)
+#define APP_ERR_MM_USIM_PULL_OUT                            (APP_ERR_MM_SECTION_BEGIN + 22)
+
+#define APP_ERR_MM_UNKNOWN                                  (APP_ERR_MM_SECTION_BEGIN + 199)
 
 /* MM与网侧错误码*/
- #define APP_ERR_MM_NW_REJ_ILLEGAL_UE                       (APP_ERR_MM_NW_SECTION_BEGIN + 0)
- #define APP_ERR_MM_NW_REJ_ILLEGAL_ME                       (APP_ERR_MM_NW_SECTION_BEGIN + 1)
- #define APP_ERR_MM_NW_REJ_EPS_SERV_NOT_ALLOW               (APP_ERR_MM_NW_SECTION_BEGIN + 2)
- #define APP_ERR_MM_NW_REJ_EPS_SERV_AND_NON_EPS_SERV_NOT_ALLOW  (APP_ERR_MM_NW_SECTION_BEGIN + 3)
- #define APP_ERR_MM_NW_REJ_PLMN_NOT_ALLOW                   (APP_ERR_MM_NW_SECTION_BEGIN + 4)
- #define APP_ERR_MM_NW_REJ_TA_NOT_ALLOW                     (APP_ERR_MM_NW_SECTION_BEGIN + 5)
- #define APP_ERR_MM_NW_REJ_ROAM_NOT_ALLOW                   (APP_ERR_MM_NW_SECTION_BEGIN + 6)
- #define APP_ERR_MM_NW_REJ_EPS_SERV_NOT_ALLOW_IN_PLMN       (APP_ERR_MM_NW_SECTION_BEGIN + 7)
- #define APP_ERR_MM_NW_REJ_NO_SUITABL_CELL                  (APP_ERR_MM_NW_SECTION_BEGIN + 8)
- #define APP_ERR_MM_NW_REJ_ESM_FAILURE                      (APP_ERR_MM_NW_SECTION_BEGIN + 9)
- #define APP_ERR_MM_NW_REJ_NOT_AUTHORIZED_FOR_THIS_CSG      (APP_ERR_MM_NW_SECTION_BEGIN + 10)
- #define APP_ERR_MM_NW_REJ_SEMANTICALLY_INCORRECT_MSG       (APP_ERR_MM_NW_SECTION_BEGIN + 11)
- #define APP_ERR_MM_NW_REJ_INVALID_MANDATORY_INF            (APP_ERR_MM_NW_SECTION_BEGIN + 12)
- #define APP_ERR_MM_NW_REJ_MSG_NONEXIST_NOTIMPLEMENTE       (APP_ERR_MM_NW_SECTION_BEGIN + 13)
- #define APP_ERR_MM_NW_REJ_IE_NONEXIST_NOTIMPLEMENTED       (APP_ERR_MM_NW_SECTION_BEGIN + 14)
- #define APP_ERR_MM_NW_REJ_PROTOCOL_ERROR                   (APP_ERR_MM_NW_SECTION_BEGIN + 15)
- #define APP_ERR_MM_NW_REJ_OTHERS                           (APP_ERR_MM_NW_SECTION_BEGIN + 16)
+/*协议定义的网络拒绝原因值*/
+
+#define APP_ERR_MM_NW_REJ_NULL                              (APP_ERR_MM_NW_SECTION_BEGIN + 0)
+#define APP_ERR_MM_NW_REJ_IMSI_UNKNOWN_IN_HSS               (APP_ERR_MM_NW_SECTION_BEGIN + 2)
+#define APP_ERR_MM_NW_REJ_ILLEGAL_UE                        (APP_ERR_MM_NW_SECTION_BEGIN + 3)
+#define APP_ERR_MM_NW_REJ_IMEI_NOT_ACCEPTED                 (APP_ERR_MM_NW_SECTION_BEGIN + 5)
+#define APP_ERR_MM_NW_REJ_ILLEGAL_ME                        (APP_ERR_MM_NW_SECTION_BEGIN + 6)
+#define APP_ERR_MM_NW_REJ_EPS_SERV_NOT_ALLOW                (APP_ERR_MM_NW_SECTION_BEGIN + 7)
+#define APP_ERR_MM_NW_REJ_EPS_SERV_AND_NON_EPS_SERV_NOT_ALLOW  (APP_ERR_MM_NW_SECTION_BEGIN + 8)
+#define APP_ERR_MM_NW_REJ_UE_ID_NOT_DERIVED                 (APP_ERR_MM_NW_SECTION_BEGIN + 9)
+#define APP_ERR_MM_NW_REJ_IMPLICIT_DETACHED                 (APP_ERR_MM_NW_SECTION_BEGIN + 10)
+#define APP_ERR_MM_NW_REJ_PLMN_NOT_ALLOW                    (APP_ERR_MM_NW_SECTION_BEGIN + 11)
+#define APP_ERR_MM_NW_REJ_TA_NOT_ALLOW                      (APP_ERR_MM_NW_SECTION_BEGIN + 12)
+#define APP_ERR_MM_NW_REJ_ROAM_NOT_ALLOW                    (APP_ERR_MM_NW_SECTION_BEGIN + 13)
+#define APP_ERR_MM_NW_REJ_EPS_SERV_NOT_ALLOW_IN_PLMN        (APP_ERR_MM_NW_SECTION_BEGIN + 14)
+#define APP_ERR_MM_NW_REJ_NO_SUITABL_CELL                   (APP_ERR_MM_NW_SECTION_BEGIN + 15)
+#define APP_ERR_MM_NW_REJ_MSC_UNREACHABLE                   (APP_ERR_MM_NW_SECTION_BEGIN + 16)
+#define APP_ERR_MM_NW_REJ_NETWORK_FAILURE                   (APP_ERR_MM_NW_SECTION_BEGIN + 17)
+#define APP_ERR_MM_NW_REJ_CS_NOT_AVAIL                      (APP_ERR_MM_NW_SECTION_BEGIN + 18)
+#define APP_ERR_MM_NW_REJ_ESM_FAILURE                       (APP_ERR_MM_NW_SECTION_BEGIN + 19)
+#define APP_ERR_MM_NW_REJ_MAC_FAILURE                       (APP_ERR_MM_NW_SECTION_BEGIN + 20)
+#define APP_ERR_MM_NW_REJ_SYNCH_FAILURE                     (APP_ERR_MM_NW_SECTION_BEGIN + 21)
+#define APP_ERR_MM_NW_REJ_PROCEDURE_CONGESTION              (APP_ERR_MM_NW_SECTION_BEGIN + 22)
+#define APP_ERR_MM_NW_REJ_UE_SECU_CAP_MISMATCH              (APP_ERR_MM_NW_SECTION_BEGIN + 23)
+#define APP_ERR_MM_NW_REJ_SECU_MODE_REJECTED_UNSPECIFIED    (APP_ERR_MM_NW_SECTION_BEGIN + 24)
+#define APP_ERR_MM_NW_REJ_NOT_AUTHORIZED_FOR_THIS_CSG       (APP_ERR_MM_NW_SECTION_BEGIN + 25)
+#define APP_ERR_MM_NW_REJ_REQUESTED_SER_OPTION_NOT_AUTHORIZED_IN_PLMN   (APP_ERR_MM_NW_SECTION_BEGIN + 35)
+#define APP_ERR_MM_NW_REJ_CS_FALLBACK_CALL_EST_NOT_ALLOWED  (APP_ERR_MM_NW_SECTION_BEGIN + 38)
+#define APP_ERR_MM_NW_REJ_CS_DOMAIN_TMP_NOT_ALLOWED         (APP_ERR_MM_NW_SECTION_BEGIN + 39)
+#define APP_ERR_MM_NW_REJ_NO_EPS_BEARER_CONTEXT_ACTIVATED   (APP_ERR_MM_NW_SECTION_BEGIN + 40)
+#define APP_ERR_MM_NW_REJ_SERVER_NETWORK_FAILURE            (APP_ERR_MM_NW_SECTION_BEGIN + 42)
+#define APP_ERR_MM_NW_REJ_SEMANTICALLY_INCORRECT_MSG        (APP_ERR_MM_NW_SECTION_BEGIN + 95)
+#define APP_ERR_MM_NW_REJ_INVALID_MANDATORY_INF             (APP_ERR_MM_NW_SECTION_BEGIN + 96)
+#define APP_ERR_MM_NW_REJ_MSG_NONEXIST_NOTIMPLEMENTE        (APP_ERR_MM_NW_SECTION_BEGIN + 97)
+#define APP_ERR_MM_NW_REJ_MSG_TYPE_NOT_COMPATIBLE           (APP_ERR_MM_NW_SECTION_BEGIN + 98)
+#define APP_ERR_MM_NW_REJ_IE_NONEXIST_NOTIMPLEMENTED        (APP_ERR_MM_NW_SECTION_BEGIN + 99)
+#define APP_ERR_MM_NW_REJ_CONDITIONAL_IE_ERROR              (APP_ERR_MM_NW_SECTION_BEGIN + 100)
+#define APP_ERR_MM_NW_REJ_MSG_NOT_COMPATIBLE                (APP_ERR_MM_NW_SECTION_BEGIN + 101)
+#define APP_ERR_MM_NW_REJ_PROTOCOL_ERROR                    (APP_ERR_MM_NW_SECTION_BEGIN + 111)
+#define APP_ERR_MM_NW_REJ_OTHERS                            (APP_ERR_MM_NW_SECTION_BEGIN + 255)
 
 
 /* SM与APP错误码 */
@@ -150,9 +194,15 @@ extern "C" {
 #define APP_ERR_SM_NAS_MO_SIG_ACCESS_BAR                    (APP_ERR_SM_SECTION_BEGIN + 44)
 #define APP_ERR_SM_MAX_EPS_NUM_REACHED                      (APP_ERR_SM_SECTION_BEGIN + 45)
 #define APP_ERR_SM_THROT_BACKOFF_IS_RUNNING                 (APP_ERR_SM_SECTION_BEGIN + 46)
+#define APP_ERR_SM_MM_NOT_SYNC                              (APP_ERR_SM_SECTION_BEGIN + 47)
+#define APP_ERR_SM_NW_RECONFIGURE                           (APP_ERR_SM_SECTION_BEGIN + 48)
+#define APP_ERR_SM_DELETE_SDF                               (APP_ERR_SM_SECTION_BEGIN + 49)
+#define APP_ERR_SM_NOT_IN_ACL_LIST                          (APP_ERR_SM_SECTION_BEGIN + 50)
+#define APP_ERR_SM_APN_DISABLE                              (APP_ERR_SM_SECTION_BEGIN + 51)
+#define APP_ERR_SM_IMS_DEREG_NOT_ATTACH                     (APP_ERR_SM_SECTION_BEGIN + 52)
+#define APP_ERR_SM_BEARER_ALLOC_NOT_ALLOWED     (APP_ERR_SM_SECTION_BEGIN + 53)
 
-
-
+#define APP_ERR_SM_BEARER_MOD_NOT_ALLOWED     (APP_ERR_SM_SECTION_BEGIN + 54)
 
 /* SM与网侧错误码 */
 #define APP_ERR_SM_NW_OPERATOR_DETERMINED_BARRING           (APP_ERR_SM_NW_SECTION_BEGIN + 0)
@@ -238,9 +288,7 @@ extern "C" {
 
 #define MAX_SUPPORTED_CODEC_NUM         10
 
-/*self-adaption NW cause modify begin for leili*/
-#define NAS_LMM_MAX_CAUSE_NUM            10
-/*self-adaption NW cause modify end for leili*/
+#define NAS_LMM_MAX_CAUSE_NUM           20
 
 #define NAS_MM_MAX_PDP_REJ_CAUSE_NUM         16
 #define NAS_MM_DAM_MAX_PLMN_NUM              16
@@ -1289,6 +1337,15 @@ typedef struct
     NAS_MM_PLMN_ID_STRU                 stPlmnId;                               /* 受控制的PLMN ID */
     VOS_UINT32                          ulT3396RemainLenForCustom;              /* 关机时Timer暂停状态下的剩余时长(UNIT: ms)*/
 }NAS_PLMN_T3396_STRU;
+/*****************************************************************************
+ 结构名    : ESM_APP_ERR_CODE_MAP_STRU
+ 结构说明  : ESM和APS间原因值转换
+*****************************************************************************/
+typedef struct
+{
+    VOS_UINT32                          enEsmCuase;
+    VOS_UINT32                          ulAppCause;
+} ESM_APP_ERR_CODE_MAP_STRU;
 
 /*****************************************************************************
   6 UNION

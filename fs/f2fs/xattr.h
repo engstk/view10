@@ -38,14 +38,41 @@
 /* Should be same as EXT4_XATTR_INDEX_ENCRYPTION */
 #define F2FS_XATTR_INDEX_ENCRYPTION		9
 
+#define F2FS_XATTR_INDEX_ECE_ENCRYPTION	10
+
+
 #define F2FS_XATTR_NAME_ENCRYPTION_CONTEXT		"c"
+
+/*means xattr sdp ece crypt is enabled*/
+#define F2FS_XATTR_SDP_ECE_ENABLE_FLAG           1
+/*means xattr sdp ece crypt is be config, but may not be enabled*/
+#define F2FS_XATTR_SDP_ECE_CONFIG_FLAG           2
+/*means xattr sdp sece crypt is enabled*/
+#define F2FS_XATTR_SDP_SECE_ENABLE_FLAG          4
+/*means xattr sdp sece crypt is be config, but may not be enabled*/
+#define F2FS_XATTR_SDP_SECE_CONFIG_FLAG          8
 
 struct f2fs_xattr_header {
 	__le32  h_magic;        /* magic number for identification */
 	__le32  h_refcount;     /* reference count */
 	__le32	h_ctx_crc;	/* crc for fscrypt, zero if not used */
-	__u32   h_reserved[3];  /* zero right now */
+	__le32	h_xattr_flags;	/* flags to  check the xattr entry*/
+	__u32   h_reserved[2];  /* zero right now */
 };
+#define F2FS_INODE_IS_CONFIG_SDP_ECE_ENCRYPTION(flag)    \
+	((flag) & (F2FS_XATTR_SDP_ECE_CONFIG_FLAG))
+#define F2FS_INODE_IS_CONFIG_SDP_SECE_ENCRYPTION(flag)   \
+	((flag) & (F2FS_XATTR_SDP_SECE_CONFIG_FLAG))
+#define F2FS_INODE_IS_CONFIG_SDP_ENCRYPTION(flag)        \
+	(((flag) & (F2FS_XATTR_SDP_SECE_CONFIG_FLAG))    \
+	 || ((flag) & (F2FS_XATTR_SDP_ECE_CONFIG_FLAG)))
+#define F2FS_INODE_IS_ENABLED_SDP_ECE_ENCRYPTION(flag)   \
+	((flag) & (F2FS_XATTR_SDP_ECE_ENABLE_FLAG))
+#define F2FS_INODE_IS_ENABLED_SDP_SECE_ENCRYPTION(flag)  \
+	((flag) & (F2FS_XATTR_SDP_SECE_ENABLE_FLAG))
+#define F2FS_INODE_IS_ENABLED_SDP_ENCRYPTION(flag)       \
+	(((flag) & (F2FS_XATTR_SDP_ECE_ENABLE_FLAG))     \
+	 || ((flag) & (F2FS_XATTR_SDP_SECE_ENABLE_FLAG)))
 
 struct f2fs_xattr_entry {
 	__u8    e_name_index;

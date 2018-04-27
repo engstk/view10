@@ -65,7 +65,7 @@ void scsi_eh_wakeup(struct Scsi_Host *shost)
 	if (atomic_read(&shost->host_busy) == shost->host_failed) {
 		trace_scsi_eh_wakeup(shost);
 		wake_up_process(shost->ehandler);
-		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
+		SCSI_LOG_ERROR_RECOVERY(3, shost_printk(KERN_INFO, shost,
 			"Waking error handler thread\n"));
 	}
 }
@@ -315,6 +315,9 @@ int scsi_block_when_processing_errors(struct scsi_device *sdev)
 	wait_event(sdev->host->host_wait, !scsi_host_in_recovery(sdev->host));
 
 	online = scsi_device_online(sdev);
+
+	SCSI_LOG_ERROR_RECOVERY(5, sdev_printk(KERN_INFO, sdev,
+		"%s: rtn: %d\n", __func__, online));
 
 	return online;
 }
@@ -600,8 +603,8 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
 
 	case HARDWARE_ERROR:
 		if (sshdr.asc == 0x1 &&
-			sshdr.ascq == 0x0) {/*for hiVV internel error*/
-			pr_err("%s: hiVV hwerror\n", __func__);
+			sshdr.ascq == 0x0) {/*for hi1861 internel error*/
+			pr_err("%s: hi1861 hwerror\n", __func__);
 			return FAILED;
 		}
 		if (scmd->device->retry_hwerror) {
@@ -1820,7 +1823,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
 	 * up to the top level.
 	 */
 	if (!scsi_device_online(scmd->device)) {
-		SCSI_LOG_ERROR_RECOVERY(5, scmd_printk(KERN_INFO, scmd,
+		SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
 			"%s: device offline - report as SUCCESS\n", __func__));
 		return SUCCESS;
 	}
@@ -2384,10 +2387,10 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
 	struct request req;
 	unsigned long flags;
 	int error = 0, rtn, val;
-
+#ifndef BYPASS_AUTHORITY_VERIFY
 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
 		return -EACCES;
-
+#endif
 	error = get_user(val, arg);
 	if (error)
 		return error;

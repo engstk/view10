@@ -70,6 +70,7 @@
 #include <asm/traps.h>
 #include "product_config.h"
 #include <linux/syscalls.h>
+#include "securec.h"
 #include "osl_types.h"
 #include "osl_io.h"
 #include "osl_bio.h"
@@ -171,7 +172,7 @@ void dump_save_usr_data(char *data, u32 length)
         if(addr != NULL)
         {
             /*coverity[secure_coding]*/
-            memcpy((void *)addr, (const void * )(uintptr_t)data, (size_t)len);
+            memcpy_s((void *)addr, len,(const void * )(uintptr_t)data, (size_t)len);
         }
 
         if(pfield)
@@ -226,7 +227,7 @@ void system_error(u32 mod_id, u32 arg1, u32 arg2, char *data, u32 length)
         dump_fetal("modem dump has not init\n");
         return;
     }
-    
+
     dump_set_reboot_contex(DUMP_CPU_APP, DUMP_REASON_NORMAL);
 
 
@@ -253,31 +254,31 @@ void system_error(u32 mod_id, u32 arg1, u32 arg2, char *data, u32 length)
         dump_save_modem_sysctrl();
         dump_save_balong_rdr_info(rdr_mod_id);
     }
-    
+
     if((RDR_MODEM_CP_RESET_RILD_MOD_ID == rdr_mod_id)
           || (RDR_MODEM_CP_RESET_3RD_MOD_ID == rdr_mod_id)
           || (RDR_MODEM_CP_RESET_DLOCK_MOD_ID == rdr_mod_id)
           || (RDR_MODEM_CP_WDT_MOD_ID == rdr_mod_id)
           || (RDR_MODEM_AP_DRV_MOD_ID== rdr_mod_id))
-    {  
+    {
         dump_fetal("modem ap trig modem single reset\n");
         if(BSP_OK == dump_check_reset_timestamp(rdr_mod_id))
         {
             rdr_system_error(rdr_mod_id, arg1, arg2);
         }
         else
-        {            
+        {
             dump_set_exc_flag(false);
             dump_fetal("modem reset too many times,stop\n");
         }
-        
+
     }
     else
-    {        
+    {
         dump_fetal("modem ap trig system reset\n");
         rdr_system_error(rdr_mod_id, arg1, arg2);
     }
-    
+
     return;
 }
 
@@ -302,7 +303,7 @@ s32 __init bsp_dump_init(void)
     dump_config_init();
 
     dump_mdmap_field_init();
-    
+
     dump_set_init_phase(DUMP_INIT_FLAG_CONFIG);
 
     ret = dump_base_info_init();

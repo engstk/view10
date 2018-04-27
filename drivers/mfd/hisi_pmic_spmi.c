@@ -49,13 +49,21 @@
 #define HISI_BITS			8
 #define PMIC_FPGA_FLAG          1
 
+/*define the first group interrupt register number*/
+#define HISI_PMIC_FIRST_GROUP_INT_NUM        2
+
+#ifdef CONFIG_HISI_DIEID
+#define HISI_PMIC_DIEID_BUF        (100)
+#define HISI_PMIC_DIEID_TEM_SAVE_BUF        (4)
+#endif
+
 static struct bit_info g_pmic_vbus = {0};
 #ifndef BIT
 #define BIT(x)		(0x1U << (x))
 #endif
 
 static struct hisi_pmic *g_pmic;
-
+static unsigned int g_extinterrupt_flag  = 0;
 static struct of_device_id of_hisi_pmic_match_tbl[] = {
 	{
 		.compatible = "hisilicon-hisi-pmic-spmi",
@@ -119,6 +127,103 @@ void hisi_pmic_write(struct hisi_pmic *pmic, int reg, u32 val)
 EXPORT_SYMBOL(hisi_pmic_write);
 
 #ifdef CONFIG_HISI_DIEID
+static int get_pmic_dieid_tree_data(struct spmi_device *pdev, struct hisi_pmic *pmic)
+{
+	int ret = 0;
+	struct device_node *root = NULL;
+	struct device *dev = &pdev->dev;
+	struct device_node *np = dev->of_node;
+
+	root = of_find_compatible_node(np, NULL, "hisilicon-hisi-pmic-dieid");
+	if (!root) {
+		pr_err("[%s]no hisilicon-hisi-pmic-dieid root node.\n", __func__);
+		return -ENODEV;
+	}
+
+	pmic->dieid_name = (char *)devm_kzalloc(dev, sizeof(*pmic->dieid_name), GFP_KERNEL);
+	if (!pmic->dieid_name) {
+		pr_err("[%s]kzalloc dieid_name failed.\n", __func__);
+		return -ENOMEM;
+	}
+	ret = of_property_read_string(root, "hisilicon,hisi-pmic-dieid-name",(const char **)&(pmic->dieid_name));
+	if (ret) {
+		pr_err("no hisilicon,hisi-pmic-dieid-name property set\n");
+		devm_kfree(dev,pmic->dieid_name);
+		return -ENODEV;
+	}
+
+	ret = of_property_read_u32(root, "hisilicon,hisi-pmic-dieid-reg-num",
+				(u32 *)&(pmic->dieid_reg_num));
+	if (ret) {
+		pr_err("no hisilicon,hisi-pmic-dieid-reg-num property set\n");
+		devm_kfree(dev,pmic->dieid_name);
+		return -ENODEV;
+	}
+	pmic->dieid_regs = (u32 *)devm_kzalloc(dev, sizeof(u32)*pmic->dieid_reg_num, GFP_KERNEL);
+	if (!pmic->dieid_regs) {
+		pr_err("[%s]kzalloc dieid_regs buffer failed.\n", __func__);
+		devm_kfree(dev,pmic->dieid_name);
+		return -ENOMEM;
+	}
+	ret = of_property_read_u32_array(root, "hisilicon,hisi-pmic-dieid-regs", pmic->dieid_regs, pmic->dieid_reg_num);
+	if (ret) {
+		pr_err("[%s]get hisi-pmic-dieid-regs attribute failed.\n", __func__);
+		devm_kfree(dev,pmic->dieid_name);
+		devm_kfree(dev,pmic->dieid_regs);
+		return -ENODEV;
+	}
+	return ret;
+}
+
+int hisi_pmic_get_dieid(char *dieid, unsigned int len)
+{
+	int ret = 0;
+	unsigned int i;
+	unsigned char value =0;
+	unsigned int length =0;
+	char  pmu_buf[HISI_PMIC_DIEID_BUF] ={0};
+	char  buf[HISI_PMIC_DIEID_TEM_SAVE_BUF] = {0};
+
+	if (NULL == dieid) {
+		pr_err("%s  dieid  is NULL\n",__func__);
+		return  -ENOMEM;
+	}
+
+	if(NULL == g_pmic){
+		pr_err("%s g_pmic  is NULL\n",__func__);
+		return  -ENOMEM;
+	}
+
+	ret = snprintf(pmu_buf,sizeof(pmu_buf),"%s%s%s","\r\n",g_pmic->dieid_name,":0x");/* [false alarm]:snprintf is safe  */
+	if( ret < 0){
+		pr_err("%s read main pmu dieid head fail.\n",__func__);
+		return ret;
+	}
+
+	for(i=0;i<g_pmic->dieid_reg_num;i++){
+		value = hisi_pmic_reg_read(g_pmic->dieid_regs[i]);
+		ret = snprintf(buf,sizeof(buf),"%02x",value);/* [false alarm]:snprintf is safe  */
+		if( ret < 0){
+			pr_err("%s read main pmu dieid fail.\n",__func__);
+			return ret;
+		}
+		strncat(pmu_buf,buf,strlen(buf));
+	}
+
+	strncat(pmu_buf,"\r\n",strlen("\r\n"));
+
+	length = strlen(pmu_buf);
+	if(len >= length){
+		strncat(dieid,pmu_buf,length);
+	}else{
+		pr_err("%s:dieid buf length is not enough!\n", __func__);
+		return length;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(hisi_pmic_get_dieid);
+
 u32 hisi_pmic_read_sub_pmu(u8 sid, int reg)
 {
 	u32 ret;
@@ -294,6 +399,24 @@ static irqreturn_t hisi_irq_handler(int irq, void *data)
 		}
 	}
 
+	/*Handle the second group irq if analysis the second group irq from dtsi*/
+	if (1 == g_extinterrupt_flag){
+		for (i = 0; i < pmic->irqarray1; i++) {
+			pending = hisi_pmic_reg_read((i + pmic->irq_addr1.start_addr));
+			pending &= HISI_MASK_FIELD;
+			if (pending != 0) {
+				pr_info("pending1[%d]=0x%lx\n\r", i, pending);
+			}
+
+			hisi_pmic_reg_write((i + pmic->irq_addr1.start_addr), pending);
+
+			if (pending) {
+				for_each_set_bit(offset, &pending, HISI_BITS)
+					generic_handle_irq(pmic->irqs[offset + (i+HISI_PMIC_FIRST_GROUP_INT_NUM) * HISI_BITS]);/*lint !e679 */
+			}
+		}
+	}
+
 	return IRQ_HANDLED;
 }
 
@@ -308,7 +431,15 @@ static void hisi_irq_mask(struct irq_data *d)
 		return;
 	}
 
-	offset = (irqd_to_hwirq(d) >> 3) + pmic->irq_mask_addr.start_addr;
+	offset = (irqd_to_hwirq(d) >> 3);
+	if (1==g_extinterrupt_flag){
+		if ( offset < HISI_PMIC_FIRST_GROUP_INT_NUM)
+			offset += pmic->irq_mask_addr.start_addr;
+		else/*Change addr when irq num larger than 16 because interrupt addr is nonsequence*/
+			offset = offset+(pmic->irq_mask_addr1.start_addr)-HISI_PMIC_FIRST_GROUP_INT_NUM;
+	}else{
+		offset += pmic->irq_mask_addr.start_addr;
+	}
 	spin_lock_irqsave(&g_pmic->lock, flags);
 	data = hisi_pmic_reg_read(offset);
 	data |= (1 << (irqd_to_hwirq(d) & 0x07));
@@ -327,7 +458,15 @@ static void hisi_irq_unmask(struct irq_data *d)
 		return;
 	}
 
-	offset = (irqd_to_hwirq(d) >> 3) + pmic->irq_mask_addr.start_addr;
+	offset = (irqd_to_hwirq(d) >> 3);
+	if (1==g_extinterrupt_flag){
+		if ( offset < HISI_PMIC_FIRST_GROUP_INT_NUM)
+			offset += pmic->irq_mask_addr.start_addr;
+		else
+			offset = offset+(pmic->irq_mask_addr1.start_addr)-HISI_PMIC_FIRST_GROUP_INT_NUM;
+	}else{
+		offset += pmic->irq_mask_addr.start_addr;
+	}
 	spin_lock_irqsave(&g_pmic->lock, flags);
 	data = hisi_pmic_reg_read(offset);
 	data &= ~(1 << (irqd_to_hwirq(d) & 0x07)); /*lint !e502 */
@@ -431,6 +570,84 @@ static int get_pmic_device_tree_data(struct device_node *np, struct hisi_pmic *p
 	return ret;
 }/*lint -restore*/
 
+
+/*lint -e570 -e64*/
+static int get_pmic_device_tree_data1(struct device_node *np, struct hisi_pmic *pmic)
+{
+	int ret = 0;
+
+	/*get pmic irq num*/
+	ret = of_property_read_u32_array(np, "hisilicon,hisi-pmic-irq-num1",
+						&(pmic->irqnum1), 1);
+	if (ret) {
+		pr_err("no hisilicon,hisi-pmic-irq-num1 property set\n");
+		ret = -ENODEV;
+		pmic->irqnum1 = 0;
+		return ret;
+	}
+
+	/*get pmic irq array number*/
+	ret = of_property_read_u32_array(np, "hisilicon,hisi-pmic-irq-array1",
+						&(pmic->irqarray1), 1);
+	if (ret) {
+		pr_err("no hisilicon,hisi-pmic-irq-array1 property set\n");
+		ret = -ENODEV;
+		return ret;
+	}
+
+	/*SOC_PMIC_IRQ_MASK_0_ADDR*/
+	ret = of_property_read_u32_array(np, "hisilicon,hisi-pmic-irq-mask-addr1",
+						(int *)&pmic->irq_mask_addr1, 2);
+	if (ret) {
+		pr_err("no hisilicon,hisi-pmic-irq-mask-addr1 property set\n");
+		ret = -ENODEV;
+		return ret;
+	}
+
+	/*SOC_PMIC_IRQ0_ADDR*/
+	ret = of_property_read_u32_array(np, "hisilicon,hisi-pmic-irq-addr1",
+						(int *)&pmic->irq_addr1, 2);
+	if (ret) {
+		pr_err("no hisilicon,hisi-pmic-irq-addr1 property set\n");
+		ret = -ENODEV;
+		return ret;
+	}
+
+	g_extinterrupt_flag = 1;
+	return ret;
+}/*lint -restore*/
+
+static int get_pmic_device_tree_all_data(struct spmi_device *pdev, struct hisi_pmic *pmic)
+{
+	int ret =0;
+	int ret1= 0;
+	struct device *dev = &pdev->dev;
+	struct device_node *np = dev->of_node;
+
+#ifdef CONFIG_HISI_DIEID
+	/*get pmic dieid dts info*/
+	ret = get_pmic_dieid_tree_data(pdev, pmic);
+	if (ret) {
+		dev_err(&pdev->dev, "Error reading hisi pmic dieid dts \n");
+	}
+#endif
+
+	/*get pmic dts the second group irq*/
+	ret = get_pmic_device_tree_data1(np, pmic);
+	if (ret) {
+		dev_err(&pdev->dev, "the platform don't support ext-interrupt.\n");
+	}
+
+	/*get pmic dts the first group irq*/
+	ret1 = get_pmic_device_tree_data(np, pmic);
+	if (ret1) {
+		dev_err(&pdev->dev, "Error reading hisi pmic dts \n");
+		return ret1;
+	}
+
+	return ret1;
+}
+
 int hisi_get_pmic_irq_byname(unsigned int pmic_irq_list)
 {
 	if ( NULL == g_pmic ) {
@@ -459,6 +676,37 @@ int hisi_pmic_get_vbus_status(void)
 }
 EXPORT_SYMBOL(hisi_pmic_get_vbus_status);
 
+static void hisi_pmic_irq_prc(struct hisi_pmic *pmic)
+{
+	int i;
+	for (i = 0 ; i < pmic->irq_mask_addr.array; i++) {
+		hisi_pmic_write(pmic, pmic->irq_mask_addr.start_addr + i, HISI_MASK_STATE);
+	}
+
+	for (i = 0 ; i < pmic->irq_addr.array; i++) {
+		unsigned int pending = hisi_pmic_read(pmic, pmic->irq_addr.start_addr + i);
+		pr_debug("PMU IRQ address value:irq[0x%x] = 0x%x\n", pmic->irq_addr.start_addr + i, pending);
+		hisi_pmic_write(pmic, pmic->irq_addr.start_addr + i, HISI_MASK_STATE);
+	}
+
+}
+
+static void hisi_pmic_irq1_prc(struct hisi_pmic *pmic)
+{
+	int i;
+	if(1 == g_extinterrupt_flag){
+		for (i = 0 ; i < pmic->irq_mask_addr1.array; i++) {
+			hisi_pmic_write(pmic, pmic->irq_mask_addr1.start_addr + i, HISI_MASK_STATE);
+		}
+
+		for (i = 0 ; i < pmic->irq_addr1.array; i++) {
+			unsigned int pending1 = hisi_pmic_read(pmic, pmic->irq_addr1.start_addr + i);
+			pr_debug("PMU IRQ address1 value:irq[0x%x] = 0x%x\n", pmic->irq_addr1.start_addr + i, pending1);
+			hisi_pmic_write(pmic, pmic->irq_addr1.start_addr + i, HISI_MASK_STATE);
+		}
+	}
+}
+
 static int hisi_pmic_probe(struct spmi_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -477,9 +725,9 @@ static int hisi_pmic_probe(struct spmi_device *pdev)
 	}
 
 	/*TODO: get pmic dts info*/
-	ret = get_pmic_device_tree_data(np, pmic);
+	ret = get_pmic_device_tree_all_data(pdev, pmic);
 	if (ret) {
-		dev_err(&pdev->dev, "Error reading hisi pmic dts \n");
+		dev_err(&pdev->dev, "Error reading hisi pmic  all dts \n");
 		return ret;
 	}
 
@@ -488,6 +736,14 @@ static int hisi_pmic_probe(struct spmi_device *pdev)
 
 	pmic->dev = dev;
 	g_pmic = pmic;
+
+	/*get spmi sid*/
+	ret = of_property_read_u32(np, "slave_id", (u32 *)&(pdev->sid));
+	if (ret) {
+		pr_err("no slave_id property set, use default value\n");
+		pdev->sid = 0;
+	}
+
 	ret = of_property_read_u32_array(np, "hisilicon,pmic_fpga_flag", &fpga_flag, 1);
 	if (ret) {
 		pr_err("no hisilicon,hisi-pmic-irq-mask-addr property set\n");
@@ -510,16 +766,13 @@ static int hisi_pmic_probe(struct spmi_device *pdev)
 	}
 
 	pmic->irq = gpio_to_irq(pmic->gpio);
-	/* mask && clear IRQ status */
-	for (i = 0 ; i < pmic->irq_mask_addr.array; i++) {
-		hisi_pmic_write(pmic, pmic->irq_mask_addr.start_addr + i, HISI_MASK_STATE);
-	}
 
-	for (i = 0 ; i < pmic->irq_addr.array; i++) {
-		unsigned int pending = hisi_pmic_read(pmic, pmic->irq_addr.start_addr + i);
-		pr_debug("PMU IRQ address value:irq[0x%x] = 0x%x\n", pmic->irq_addr.start_addr + i, pending);
-		hisi_pmic_write(pmic, pmic->irq_addr.start_addr + i, HISI_MASK_STATE);
-	}
+	/* mask && clear IRQ status */
+	hisi_pmic_irq_prc(pmic);
+	/*clear && mask the new adding irq*/
+	hisi_pmic_irq1_prc(pmic);
+
+	pmic->irqnum += pmic->irqnum1;
 
 	pmic->irqs = (unsigned int *)devm_kmalloc(dev, pmic->irqnum * sizeof(int), GFP_KERNEL);
 	if (!pmic->irqs) {

@@ -54,6 +54,7 @@
 #include "msp_service.h"
 #include "soc_socp_adapter.h"
 #include "diag_acore_common.h"
+#include "msp_diag_comm.h"
 #include  <linux/wakelock.h>
 
 
@@ -76,6 +77,8 @@ typedef struct
 {
     DIAG_SERVICE_HEAD_STRU  stHead;
     VOS_UINT32              ulSlice;        /* 创建节点的时间戳，用于检测超时 */
+    VOS_UINT32              ulFrameDataLen;
+    VOS_UINT32              ulFrameOffset;
     LIST_S                  FrameList;
     DIAG_FRAME_INFO_STRU    *pFrame;
 } DIAG_SRVC_FRAME_NODE_STRU;
@@ -85,16 +88,25 @@ DIAG_DFR_INFO_STRU g_stDFRreq;
 
 DIAG_SRVC_MAIN_STRU  g_stDiagSrvc;
 
+VOS_VOID diag_SrvcFillServiceHead(DIAG_SRVICE_HEAD_BASE_INFO *pstServInfo, DIAG_FRAME_INFO_STRU *stFrame)
+{
+    stFrame->stService.sid8b       = MSP_SID_DIAG_SERVICE;
+    stFrame->stService.ssid4b      = pstServInfo->ssid;
+    stFrame->stService.mdmid3b     = pstServInfo->mdmid;
+    stFrame->stService.rsv1b       = 0;
+    stFrame->stService.sessionid8b = MSP_SERVICE_SESSION_ID;
 
+    stFrame->stService.ff1b        = pstServInfo->split;
+    stFrame->stService.eof1b       = pstServInfo->end;
+    stFrame->stService.index4b     = pstServInfo->index;
 
-/*****************************************************************************
- Function Name   : diag_PktTimeoutClear
- Description     : 查看链表中是否有超时的节点，如果有则删除
+    stFrame->stService.mt2b        = pstServInfo->dirction;
+    stFrame->stService.ulMsgTransId  = pstServInfo->ulMsgTransId;
 
- History         :
-    1.c00326366         2015-08-27  Draft Enact
+    (VOS_VOID)VOS_MemCpy_s(stFrame->stService.aucTimeStamp, (VOS_UINT32)sizeof(stFrame->stService.aucTimeStamp),
+                    pstServInfo->aucTimeStamp, sizeof(stFrame->stService.aucTimeStamp));
+}
 
-*****************************************************************************/
 VOS_VOID diag_PktTimeoutClear(VOS_VOID)
 {
     LIST_S* me = NULL;
@@ -143,8 +155,15 @@ VOS_VOID diag_SrvcCreatePkt(DIAG_FRAME_INFO_STRU *pFrame)
     LIST_S* me = NULL;
     DIAG_SRVC_FRAME_NODE_STRU *pTempNode;
 
+    /*消息长度不能大于最大长度*/
+    if(pFrame->ulMsgLen + sizeof(DIAG_FRAME_INFO_STRU) > DIAG_FRAME_SUM_LEN)
+    {
+        diag_error("msg len too large, msglen = 0x%x\n", pFrame->ulMsgLen);
+        return;
+    }
+
     /* 如果链表中已经有相同transid的节点则直接退出 */
-    (VOS_VOID)VOS_SmP(g_stDiagSrvc.ListSem,0);
+    (VOS_VOID)VOS_SmP(g_stDiagSrvc.ListSem, 0);
 
     blist_for_each(me, &g_stDiagSrvc.ListHeader)
     {
@@ -168,20 +187,24 @@ VOS_VOID diag_SrvcCreatePkt(DIAG_FRAME_INFO_STRU *pFrame)
                                                             sizeof(DIAG_SRVC_FRAME_NODE_STRU));
     if(VOS_NULL_PTR == pTempNode)
     {
+        diag_error("malloc pTempNode fail\n");
         return ;
     }
 
+    pTempNode->ulFrameDataLen = pFrame->ulMsgLen + sizeof(DIAG_FRAME_INFO_STRU);
+    pTempNode->ulFrameOffset = 0;
     pTempNode->pFrame = (DIAG_FRAME_INFO_STRU*)VOS_MemAlloc(MSP_PID_DIAG_APP_AGENT, DYNAMIC_MEM_PT,
-                                                            pFrame->ulMsgLen + sizeof(DIAG_FRAME_INFO_STRU));
+                                                            pTempNode->ulFrameDataLen);
     if(VOS_NULL_PTR == pTempNode->pFrame)
     {
+        diag_error("malloc pFrame fail\n");
         VOS_MemFree(MSP_PID_DIAG_APP_AGENT, pTempNode);
         return ;
     }
 
     (VOS_VOID)VOS_SmP(g_stDiagSrvc.ListSem,0);
 
-    VOS_MemCpy_s(&pTempNode->stHead, (VOS_UINT32)sizeof(DIAG_SERVICE_HEAD_STRU), &pFrame->stService, sizeof(DIAG_SERVICE_HEAD_STRU));
+    VOS_MemCpy_s(&pTempNode->stHead, (VOS_UINT32)sizeof(pTempNode->stHead), &pFrame->stService, sizeof(pFrame->stService));
 
     blist_add_tail(&pTempNode->FrameList, &g_stDiagSrvc.ListHeader);
 
@@ -189,7 +212,7 @@ VOS_VOID diag_SrvcCreatePkt(DIAG_FRAME_INFO_STRU *pFrame)
 
     (VOS_VOID)VOS_SmV(g_stDiagSrvc.ListSem);
 
-    return ; 
+    return ;
 
 }
 /*lint -restore*/
@@ -202,12 +225,13 @@ VOS_VOID diag_SrvcCreatePkt(DIAG_FRAME_INFO_STRU *pFrame)
     1.c64416         2015-03-18  Draft Enact
 
 *****************************************************************************/
-DIAG_FRAME_INFO_STRU * diag_SrvcSavePkt(DIAG_FRAME_INFO_STRU *pFrame)
+DIAG_FRAME_INFO_STRU * diag_SrvcSavePkt(DIAG_FRAME_INFO_STRU *pFrame, VOS_UINT32 ulDataLen)
 {
     LIST_S* me = NULL;
     DIAG_SRVC_FRAME_NODE_STRU *pTempNode;
     VOS_UINT32 ulLen = 0;
     VOS_UINT32 uloffset = 0;
+    VOS_UINT32 ulLocalLen = 0;
 
     (VOS_VOID)VOS_SmP(g_stDiagSrvc.ListSem,0);
 
@@ -222,6 +246,7 @@ DIAG_FRAME_INFO_STRU * diag_SrvcSavePkt(DIAG_FRAME_INFO_STRU *pFrame)
             return VOS_NULL_PTR;
         }
 
+        /* 此处注意stService有4G 和5G的区别 */
         pTempNode->stHead.index4b = pFrame->stService.index4b;
         pTempNode->stHead.eof1b   = pFrame->stService.eof1b;
         pTempNode->stHead.ff1b    = pFrame->stService.ff1b;
@@ -230,20 +255,21 @@ DIAG_FRAME_INFO_STRU * diag_SrvcSavePkt(DIAG_FRAME_INFO_STRU *pFrame)
             if(0 == pFrame->stService.index4b)  /* 第0帧 */
             {
                 /* 第0帧需要拷贝header, cmdid, meglen and data */
-                (VOS_VOID)VOS_MemCpy_s(pTempNode->pFrame, DIAG_FRAME_MAX_LEN, pFrame, DIAG_FRAME_MAX_LEN);
-
-                diag_SaveDFR(&g_stDFRreq, (VOS_UINT8*)pFrame, DIAG_FRAME_MAX_LEN);
+                (VOS_VOID)VOS_MemCpy_s(pTempNode->pFrame, pTempNode->ulFrameDataLen, pFrame, ulDataLen);
+                pTempNode->ulFrameOffset = ulDataLen;
+                diag_SaveDFR(&g_stDFRreq, (VOS_UINT8*)pFrame, ulDataLen);
             }
             else if(pFrame->stService.eof1b)  /* 最后1帧 */
             {
                 /* 除最后一帧外，已存储的数据长度 */
-                ulLen = (pFrame->stService.index4b * (DIAG_FRAME_MAX_LEN - sizeof(DIAG_SERVICE_HEAD_STRU)))
-                        - sizeof(pFrame->ulCmdId) - sizeof(pFrame->ulMsgLen);
+                ulLen = pTempNode->ulFrameOffset - sizeof(DIAG_FRAME_INFO_STRU);
+                ulLocalLen = ulDataLen - sizeof(DIAG_SERVICE_HEAD_STRU);
 
                 if(     (VOS_NULL_PTR == pTempNode->pFrame)
-                    ||  (pTempNode->pFrame->ulMsgLen > DIAG_FRAME_SUM_LEN)
-                    ||  (pTempNode->pFrame->ulMsgLen < ulLen))
+                    ||  (pTempNode->ulFrameOffset + ulLocalLen > DIAG_FRAME_SUM_LEN)
+                    ||  (pTempNode->pFrame->ulMsgLen != ulLen + ulLocalLen))
                 {
+                    diag_error("rev data len error, ulLen:0x%x ulLocalLen:0x%x\n", ulLen, ulLocalLen);
                     (VOS_VOID)VOS_SmV(g_stDiagSrvc.ListSem);
                     return VOS_NULL_PTR;
                 }
@@ -252,38 +278,36 @@ DIAG_FRAME_INFO_STRU * diag_SrvcSavePkt(DIAG_FRAME_INFO_STRU *pFrame)
                 ulLen = pTempNode->pFrame->ulMsgLen - ulLen;
 
                 /* 当前缓存区的偏移 */
-                uloffset = sizeof(DIAG_SERVICE_HEAD_STRU) + (pFrame->stService.index4b * (DIAG_FRAME_MAX_LEN - sizeof(DIAG_SERVICE_HEAD_STRU)));
+                uloffset = pTempNode->ulFrameOffset;
 
                 /* 最后一帧只需要拷贝剩余data */
-                (VOS_VOID)VOS_MemCpy_s( ((VOS_UINT8*)pTempNode->pFrame) + uloffset,ulLen,
-                            ((VOS_UINT8*)pFrame) + sizeof(DIAG_SERVICE_HEAD_STRU),
-                            ulLen);
-
-                diag_SaveDFR(&g_stDFRreq, (VOS_UINT8*)pFrame, (ulLen + sizeof(DIAG_SERVICE_HEAD_STRU)));
+                (VOS_VOID)VOS_MemCpy_s( ((VOS_UINT8*)pTempNode->pFrame) + uloffset, pTempNode->ulFrameDataLen - pTempNode->ulFrameOffset,
+                            ((VOS_UINT8*)pFrame) + sizeof(DIAG_SERVICE_HEAD_STRU),  ulLen);
+                pTempNode->ulFrameOffset += ulLen;
+                diag_SaveDFR(&g_stDFRreq, (VOS_UINT8*)pFrame, ulDataLen);
             }
             else
             {
                 /* 当前缓存区的偏移 */
-                uloffset = sizeof(DIAG_SERVICE_HEAD_STRU) + (pFrame->stService.index4b * (DIAG_FRAME_MAX_LEN - sizeof(DIAG_SERVICE_HEAD_STRU)));
+                uloffset = pTempNode->ulFrameOffset;
+                ulLocalLen = ulDataLen - sizeof(DIAG_SERVICE_HEAD_STRU);
 
                 if(     (VOS_NULL_PTR == pTempNode->pFrame)
-                    ||  (pTempNode->pFrame->ulMsgLen > DIAG_FRAME_SUM_LEN)
-                    ||  (pTempNode->pFrame->ulMsgLen < (uloffset \
-                                                        - sizeof(DIAG_SERVICE_HEAD_STRU) \
-                                                        - sizeof(DIAG_MSG_INFO_STRU) \
-                                                        + DIAG_FRAME_MAX_LEN - sizeof(DIAG_SERVICE_HEAD_STRU))))
+                    ||  (uloffset + ulLocalLen > DIAG_FRAME_SUM_LEN)
+                    ||  (pTempNode->pFrame->ulMsgLen < (uloffset - sizeof(DIAG_FRAME_INFO_STRU) + ulLocalLen)))
                 {
+                    diag_error("msg len error, uloffset:0x%x ulLocallen:0x%x\n", uloffset, ulLocalLen);
                     (VOS_VOID)VOS_SmV(g_stDiagSrvc.ListSem);
                     return VOS_NULL_PTR;
                 }
 
                 /* 中间的帧不拷贝cmdid和长度，只需要拷贝data */
                 (VOS_VOID)VOS_MemCpy_s( ((VOS_UINT8*)pTempNode->pFrame) + uloffset,
-                            (VOS_UINT32)(DIAG_FRAME_MAX_LEN - sizeof(DIAG_SERVICE_HEAD_STRU)),
+                            (VOS_UINT32)(pTempNode->ulFrameDataLen - uloffset),
                             ((VOS_UINT8*)pFrame) + sizeof(DIAG_SERVICE_HEAD_STRU),
-                            DIAG_FRAME_MAX_LEN - sizeof(DIAG_SERVICE_HEAD_STRU));
-
-                diag_SaveDFR(&g_stDFRreq, (VOS_UINT8*)pFrame, DIAG_FRAME_MAX_LEN);
+                            ulLocalLen);
+                pTempNode->ulFrameOffset += ulLocalLen;
+                diag_SaveDFR(&g_stDFRreq, (VOS_UINT8*)pFrame, ulDataLen);
             }
 
             (VOS_VOID)VOS_SmV(g_stDiagSrvc.ListSem);
@@ -321,6 +345,7 @@ VOS_VOID diag_SrvcDestroyPkt(DIAG_FRAME_INFO_STRU *pFrame)
             return ;
         }
 
+        /* 此处注意stService有4G 和5G的区别 */
         pTempNode->stHead.index4b = pFrame->stService.index4b;
         pTempNode->stHead.eof1b   = pFrame->stService.eof1b;
         pTempNode->stHead.ff1b    = pFrame->stService.ff1b;
@@ -356,11 +381,16 @@ VOS_VOID diag_SrvcDestroyPkt(DIAG_FRAME_INFO_STRU *pFrame)
     1.c64416         2014-11-18  Draft Enact
 
 *****************************************************************************/
-VOS_UINT32 diag_ServiceProc(MSP_SERVICE_HEAD_STRU *pData)
+VOS_UINT32 diag_ServiceProc(MSP_SERVICE_HEAD_STRU *pData, VOS_UINT32 ulDatalen)
 {
     VOS_UINT32 ulRet = VOS_ERR;
     DIAG_FRAME_INFO_STRU *pHeader;
     DIAG_FRAME_INFO_STRU *pProcHead = VOS_NULL_PTR;
+
+    /*if((VOS_NULL_PTR == pData)||(ulDatalen < sizeof(DIAG_FRAME_INFO_STRU)))
+    {
+        return VOS_ERR;
+    }*/
 
     if(VOS_NULL_PTR == pData)
     {
@@ -372,7 +402,7 @@ VOS_UINT32 diag_ServiceProc(MSP_SERVICE_HEAD_STRU *pData)
     mdrv_diag_PTR(EN_DIAG_PTR_SERVICE_IN, 1, pHeader->ulCmdId, 0);
 
     /* 只处理DIAG服务 */
-    if(MSP_SID_DIAG_SERVICE == pData->sid8b)
+    if(MSP_SID_DIAG_SERVICE == SERVICE_HEAD_SID(pData))
     {
         mdrv_diag_PTR(EN_DIAG_PTR_SERVICE_1, 1, pHeader->ulCmdId, 0 );
 
@@ -383,26 +413,42 @@ VOS_UINT32 diag_ServiceProc(MSP_SERVICE_HEAD_STRU *pData)
             /* 每次有分包时检测是否有超时的节点 */
             diag_PktTimeoutClear();
 
+            /* index4b永远不会大于16, 单消息最大帧个数不超过16,因此index不可能大于16 */
             if(0 == pHeader->stService.index4b)
             {
                 diag_SrvcCreatePkt(pHeader);
-                (VOS_VOID)diag_SrvcSavePkt(pHeader);
+                (VOS_VOID)diag_SrvcSavePkt(pHeader, ulDatalen);
                 wake_unlock(&diag_wakelock);
                 return VOS_OK;
             }
             else if(pHeader->stService.eof1b)
             {
-                pProcHead = diag_SrvcSavePkt(pHeader);
+                pProcHead = diag_SrvcSavePkt(pHeader, ulDatalen);
+                if(pProcHead == NULL)
+                {
+                    wake_unlock(&diag_wakelock);
+                    return ((VOS_UINT32)VOS_NULL_PARA);
+                }
+                /* 5G中分包的节点一定是走的5G格式,4G下分包一定是走的4G的格式 */
+                ulDatalen = pProcHead->ulMsgLen + sizeof(DIAG_FRAME_INFO_STRU);
             }
             else
             {
-                (VOS_VOID)diag_SrvcSavePkt(pHeader);
+                (VOS_VOID)diag_SrvcSavePkt(pHeader, ulDatalen);
                 wake_unlock(&diag_wakelock);
                 return VOS_OK;
             }
         }
         else
         {
+            /*if(ulDatalen < pHeader->ulMsgLen + sizeof(DIAG_FRAME_INFO_STRU))
+            {
+                wake_unlock(&diag_wakelock);
+                diag_error("rev tools data len error, rev:0x%x except:0x%x\n", \
+                    ulDatalen, pHeader->ulMsgLen + (VOS_UINT32)sizeof(DIAG_FRAME_INFO_STRU));
+                return ERR_MSP_INVALID_PARAMETER;
+            }
+            */
             pProcHead = pHeader;
 
             diag_SaveDFR(&g_stDFRreq, (VOS_UINT8*)pHeader, (sizeof(DIAG_FRAME_INFO_STRU) + pHeader->ulMsgLen));
@@ -503,6 +549,8 @@ VOS_UINT32 diag_SrvcPackFirst(DIAG_MSG_REPORT_HEAD_STRU *pData, VOS_UINT8 *pucti
     SCM_CODER_SRC_PACKET_HEADER_STRU* pstCoderSrc;
     SOCP_BUFFER_RW_STRU stSocpBuf = {VOS_NULL, VOS_NULL, 0, 0};
     SCM_CODER_SRC_MEMCPY_STRU stCpy;
+    DIAG_SRVICE_HEAD_BASE_INFO stServInfo = {};
+    VOS_UINT32 ulDataSize = 0;
 
     ulTmpLen = (sizeof(DIAG_FRAME_INFO_STRU) + pData->ulHeaderSize + pData->ulDataSize);
 
@@ -516,23 +564,22 @@ VOS_UINT32 diag_SrvcPackFirst(DIAG_MSG_REPORT_HEAD_STRU *pData, VOS_UINT8 *pucti
         ulSplit = 0;
     }
 
-    stFrame.stService.sid8b       = MSP_SID_DIAG_SERVICE;
-    stFrame.stService.ssid4b      = pData->ulSsid;
-    stFrame.stService.mdmid3b     = pData->ulModemId;
-    stFrame.stService.rsv1b       = 0;
-    stFrame.stService.sessionid8b = MSP_SERVICE_SESSION_ID;
+    stServInfo.mdmid    = pData->ulModemId;
+    stServInfo.ssid     = pData->ulSsid;
+    stServInfo.dirction = pData->ulDirection;
+    stServInfo.index    = 0;
+    stServInfo.end      = 0;
+    stServInfo.split    = ulSplit;
+    stServInfo.ulMsgTransId = pData->ulMsgTransId;
 
-    stFrame.stService.ff1b        = ulSplit;
-    stFrame.stService.eof1b       = 0;
-    stFrame.stService.index4b     = 0;
+    (VOS_VOID)VOS_MemCpy_s(stServInfo.aucTimeStamp, (VOS_UINT32)sizeof(stServInfo.aucTimeStamp),
+                            puctime, sizeof(stServInfo.aucTimeStamp));
 
-    stFrame.stService.mt2b        = pData->ulDirection;
-    stFrame.stService.ulMsgTransId= pData->ulMsgTransId;
+    diag_SrvcFillServiceHead(&stServInfo, &stFrame);
+
     stFrame.ulCmdId               = pData->u.ulID;
     stFrame.ulMsgLen              = pData->ulDataSize + pData->ulHeaderSize;
 
-    (VOS_VOID)VOS_MemCpy_s(stFrame.stService.aucTimeStamp, (VOS_UINT32)sizeof(stFrame.stService.aucTimeStamp), 
-                            puctime, sizeof(stFrame.stService.aucTimeStamp));
     if(SCM_CODER_SRC_LOM_IND == pData->ulChanId)
     {
         VOS_SpinLockIntLock(&g_stScmIndSrcBuffSpinLock, ulLockLevel);
@@ -558,11 +605,15 @@ VOS_UINT32 diag_SrvcPackFirst(DIAG_MSG_REPORT_HEAD_STRU *pData, VOS_UINT8 *pucti
             mdrv_scm_ind_src_buff_mempy(&stCpy, &stSocpBuf);
         }
 
-        stCpy.pHeader   = pstCoderSrc;
-        stCpy.pSrc      = pData->pData;
-        stCpy.uloffset  = SCM_HISI_HEADER_LENGTH + sizeof(stFrame) + pData->ulHeaderSize;
-        stCpy.ulLen     = (ulTmpLen - sizeof(DIAG_FRAME_INFO_STRU) - pData->ulHeaderSize);
-        mdrv_scm_ind_src_buff_mempy(&stCpy, &stSocpBuf);
+        ulDataSize = (ulTmpLen - sizeof(DIAG_FRAME_INFO_STRU) - pData->ulHeaderSize);
+        if((pData->pData)&&(ulDataSize))
+        {
+            stCpy.pHeader   = pstCoderSrc;
+            stCpy.pSrc      = pData->pData;
+            stCpy.uloffset  = SCM_HISI_HEADER_LENGTH + sizeof(stFrame) + pData->ulHeaderSize;
+            stCpy.ulLen     = ulDataSize;
+            mdrv_scm_ind_src_buff_mempy(&stCpy, &stSocpBuf);
+        }
 
         ret = mdrv_scm_send_ind_src_data((VOS_UINT8*)pstCoderSrc, ulTmpLen);
 
@@ -639,6 +690,7 @@ VOS_UINT32 diag_SrvcPackOther(DIAG_PACKET_INFO_STRU *pPacket, DIAG_MSG_REPORT_HE
     SCM_CODER_SRC_PACKET_HEADER_STRU * pstCoderSrc;
     SOCP_BUFFER_RW_STRU stSocpBuf = {VOS_NULL, VOS_NULL, 0, 0};
     SCM_CODER_SRC_MEMCPY_STRU stCpy;
+    DIAG_SRVICE_HEAD_BASE_INFO stServInfo = {};
 
     ulTmpLen = pPacket->ulLen + sizeof(DIAG_SERVICE_HEAD_STRU);
 
@@ -647,21 +699,18 @@ VOS_UINT32 diag_SrvcPackOther(DIAG_PACKET_INFO_STRU *pPacket, DIAG_MSG_REPORT_HE
         return ERR_MSP_FAILURE;
     }
 
-    stFrame.stService.sid8b       = MSP_SID_DIAG_SERVICE;
-    stFrame.stService.ssid4b      = pstMsg->ulSsid;
-    stFrame.stService.mdmid3b     = pstMsg->ulModemId;
-    stFrame.stService.rsv1b       = 0;
-    stFrame.stService.sessionid8b = MSP_SERVICE_SESSION_ID;
+    stServInfo.mdmid    = pstMsg->ulModemId;
+    stServInfo.ssid     = pstMsg->ulSsid;
+    stServInfo.dirction = pstMsg->ulDirection;
+    stServInfo.index    = pPacket->ulIndex;
+    stServInfo.end      = pPacket->ulEnd;
+    stServInfo.split    = 1;
+    stServInfo.ulMsgTransId = pstMsg->ulMsgTransId;
 
-    stFrame.stService.ff1b        = 1;
-    stFrame.stService.eof1b       = pPacket->ulEnd;
-    stFrame.stService.index4b     = pPacket->ulIndex;
+    (VOS_VOID)VOS_MemCpy_s(stServInfo.aucTimeStamp, (VOS_UINT32)sizeof(stServInfo.aucTimeStamp),
+                       pPacket->auctime, sizeof(pPacket->auctime));
 
-    stFrame.stService.mt2b        = pstMsg->ulDirection;
-    stFrame.stService.ulMsgTransId= pstMsg->ulMsgTransId;
-
-    (VOS_VOID)VOS_MemCpy_s(stFrame.stService.aucTimeStamp, (VOS_UINT32)sizeof(stFrame.stService.aucTimeStamp), 
-                           pPacket->auctime, sizeof(stFrame.stService.aucTimeStamp));
+    diag_SrvcFillServiceHead(&stServInfo, &stFrame);
 
     if(SCM_CODER_SRC_LOM_IND == pstMsg->ulChanId)
     {

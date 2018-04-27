@@ -14,10 +14,6 @@ ifeq ($(TARGET_BOARD_PLATFORM), hi3660)
 EXTRA_CFLAGS += -DPLATFORM_HI3660
 endif
 
-ifeq ($(TARGET_BOARD_PLATFORM), kirin970)
-EXTRA_CFLAGS += -DPLATFORM_KIRIN970
-endif
-
 obj-$(CONFIG_HI_VCODEC_VENC_HI3660) += hi_omxvenc.o
 hi_omxvenc-objs :=  venc_regulator.o     \
                     drv_venc_intf.o      \

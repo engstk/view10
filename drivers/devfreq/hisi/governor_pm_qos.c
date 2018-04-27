@@ -277,22 +277,24 @@ static int devfreq_pm_qos_gov_init(struct devfreq *df)
 
 static void devfreq_pm_qos_gov_exit(struct devfreq *df)
 {
-	struct devfreq_pm_qos_notifier_block *pq_nb;
+	struct devfreq_pm_qos_notifier_block *pq_nb, *tmp;
 	struct devfreq_pm_qos_data *data;
+
+	sysfs_remove_files(&df->dev.kobj, governor_pm_qos_attrs);
 
 	mutex_lock(&devfreq_pm_qos_mutex);
 
-	list_for_each_entry(pq_nb, &devfreq_pm_qos_list, node) {
+	list_for_each_entry_safe(pq_nb, tmp, &devfreq_pm_qos_list, node) {
 		if (pq_nb->df == df) {
 			data = pq_nb->df->data;
 			pm_qos_remove_notifier(data->pm_qos_class, &pq_nb->nb);
-			goto out;
+			list_del(&pq_nb->node);
+			kfree(pq_nb);
+			break;
 		}
 	}
 
-out:
 	mutex_unlock(&devfreq_pm_qos_mutex);
-	kfree(pq_nb);
 }
 
 static int devfreq_pm_qos_handler(struct devfreq *devfreq,

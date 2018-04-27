@@ -151,16 +151,6 @@ typedef struct
 VOS_UINT32 diag_DspMsgProc(DIAG_FRAME_INFO_STRU *pData);
 VOS_UINT32 diag_AppTransPhyProc(MsgBlock* pMsgBlock);
 VOS_VOID   diag_DspMsgInit(VOS_VOID);
-VOS_VOID   diag_DspNotifySocpState(DIAG_SOCP_STATE_ENUM_U32 state);
-VOS_VOID   diag_DspMailboxSelfTask(VOS_VOID);
-VOS_VOID   diag_DspConnMsgProc(DIAG_CONNECT_CMD_ENUM_U32 connCmd);
-
-#if (VOS_OS_VER != VOS_LINUX)
-VOS_UINT32 diag_DspSendMsg(MAILBOX_SERVICE_TYPE_E serType,VOS_UINT8* pstReq ,VOS_UINT32 ulCmdId,VOS_UINT32 ulDataLen);
-VOS_VOID   diag_DspMailboxCb(VOS_UINT32 len);
-#endif
-VOS_UINT32 diag_DspSocpVoteCnfMsgProc(MsgBlock * pMsgBlock);
-VOS_VOID diag_DspVoteToSocp(SOCP_VOTE_TYPE_ENUM_U32 voteType);
 /*****************************************************************************
   9 OTHERS
 *****************************************************************************/

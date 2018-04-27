@@ -102,6 +102,12 @@ u64 rdr_check_coreid(u64 core_id)
 	return 0;
 }
 
+static inline void rdr_get_module_infonve(int ret, struct rdr_register_module_result *retinfo)
+{
+	if (ret >= 0)
+		retinfo->nve = rdr_get_nve();
+}
+
 int rdr_get_module_info(u64 coreid, struct rdr_register_module_result *retinfo)
 {
 	int ret = -1;
@@ -145,12 +151,15 @@ int rdr_get_module_info(u64 coreid, struct rdr_register_module_result *retinfo)
 	case RDR_HISEE:
 		ret = rdr_get_areainfo(RDR_AREA_HISEE, retinfo);
 		break;
+	case RDR_NPU:
+		ret = rdr_get_areainfo(RDR_AREA_NPU, retinfo);
+		break;
 	default:
 		ret = -1;
 	}
 
-	if (ret >= 0)
-		retinfo->nve = rdr_get_nve();
+	rdr_get_module_infonve(ret, retinfo);
+
 	return ret;
 }
 
@@ -158,9 +167,9 @@ int rdr_get_module_info(u64 coreid, struct rdr_register_module_result *retinfo)
  * func name: rdr_register_module_ops
  * func args:
  *   u32 core_id,       core id;
- *      .
  *   struct rdr_module_ops_pub* ops;
  *   struct rdr_register_module_result* retinfo;
+ *
  * return value		e_modid
  *	< 0 error
  *	>=0 success
@@ -376,7 +385,8 @@ void rdr_notify_module_reset(u32 modid, struct rdr_exception_info_s *e_info)
 				BB_PRINT_ERR("reboot now!\n");
 				spin_unlock_irqrestore(&__rdr_module_ops_list_lock, lock_flag);
 				(*(p_module_ops->s_ops.ops_reset)) (modid,
-								    e_info->e_exce_type, e_info->e_from_core);
+								    e_info->e_exce_type, 
+								    e_info->e_from_core);
 				spin_lock_irqsave(&__rdr_module_ops_list_lock, lock_flag);
 			} else if ((mask & p_module_ops->s_core_id)
 				   && !rdr_syserr_list_empty()) {
@@ -389,7 +399,8 @@ void rdr_notify_module_reset(u32 modid, struct rdr_exception_info_s *e_info)
 				     rdr_get_exception_core(p_module_ops->s_core_id));
 			spin_unlock_irqrestore(&__rdr_module_ops_list_lock, lock_flag);
 			(*(p_module_ops->s_ops.ops_reset)) (modid,
-							    e_info->e_exce_type, e_info->e_from_core);
+							    e_info->e_exce_type,
+							    e_info->e_from_core);
 			spin_lock_irqsave(&__rdr_module_ops_list_lock, lock_flag);
 			BB_PRINT_ERR("reset module [%s] end!\n",
 				     rdr_get_exception_core(p_module_ops->s_core_id));
@@ -411,7 +422,7 @@ void rdr_notify_module_reset(u32 modid, struct rdr_exception_info_s *e_info)
  *	 NULL
  */
 u64 rdr_notify_onemodule_dump(u32 modid, u64 core, u32 type,
-			      u64 formcore, char *path)
+			      u64 fromcore, char *path)
 {
 	struct rdr_module_ops_s *p_module_ops = NULL;
 	struct list_head *cur = NULL;
@@ -445,7 +456,7 @@ u64 rdr_notify_onemodule_dump(u32 modid, u64 core, u32 type,
 			spin_unlock_irqrestore(&__rdr_module_ops_list_lock,
 					       lock_flag);
 			(*(p_module_ops->s_ops.ops_dump)) (modid, type,
-							   formcore, path,
+							   fromcore, path,
 							   rdr_dump_done);
 			spin_lock_irqsave(&__rdr_module_ops_list_lock,
 					  lock_flag);
@@ -564,17 +575,20 @@ void rdr_print_all_ops(void)
 			continue;
 		}
 		BB_PRINT_DBG("==========[%.2d]-start==========\n", index);
-		BB_PRINT_DBG(" core-id:    [0x%llx]\n",
+		BB_PRINT_DBG(" core-id:        [0x%llx]\n",
 			     p_module_ops->s_core_id);
-		BB_PRINT_DBG(" dump-fn:    [0x%pK]\n",
+		BB_PRINT_DBG(" dump-fn:        [0x%pK]\n",
 			     p_module_ops->s_ops.ops_dump);
-		BB_PRINT_DBG(" reset-fn:   [0x%pK]\n",
+		BB_PRINT_DBG(" reset-fn:       [0x%pK]\n",
 			     p_module_ops->s_ops.ops_reset);
 		BB_PRINT_DBG("==========[%.2d]-e n d==========\n", index);
 		index++;
 	}
 	spin_unlock(&__rdr_module_ops_list_lock);
 
+	rdr_cleartext_print_ops();
+
 	BB_PRINT_END();
 	return;
 }
+

@@ -814,6 +814,10 @@ static ssize_t cyttsp_debug_enable_store(struct device *dev,
 	int data_int = 0;
 	struct cyttsp_button_data *data = NULL;
 
+	if(NULL == dev) {
+		hwlog_err("%s: dev is NULL, just return!\n", __func__);
+		goto err_device_null;
+	}
 	if(NULL == buf) {
 		hwlog_err("%s: buf is NULL, just return!\n", __func__);
 		goto err_buf_null;
@@ -876,6 +880,7 @@ err_write_reg:
 err_data_null:
 err_i2c_client_null:
 err_buf_null:
+err_device_null:
 	return -EIO;
 }
 
@@ -1589,6 +1594,8 @@ static int cyttsp_fw_update_proc(struct cyttsp_button_data *data)
 	bool need_update = false;
 	const unsigned char *tmp_buf;
 	const char *fw_info = "ts/touch_key/stf_cyp_psoc4000.cyacd";
+	unsigned char val = 0;
+	int error = 0;
 
 	/* btld entrance: 0x04
 	* cmd sequence to switch into btld mode: 0x2B, 0x2B, 0xFE, 0xFA
@@ -1647,6 +1654,12 @@ static int cyttsp_fw_update_proc(struct cyttsp_button_data *data)
 	data->app_addr = data->client->addr;
 	data->bl_addr = pdata->bl_addr;
 	data->client->addr = data->bl_addr;
+
+	error = cyttsp_i2c_recv(dev, 1, &val);
+	if (error != 0) {
+		data->client->addr = CYTTSP_NEW_BL_ADDR;
+	}
+	hwlog_info("%s: connect to bootloader addr is 0x%02x\n", __func__,data->client->addr);
 
 	/* 1. enter into bootloader */
 	ret = cyttsp_send_command(data, CYTTSP_CMD_ENTER_BTLD, NULL, 0, 0);
@@ -1735,7 +1748,7 @@ static int cyttsp_fw_update_proc(struct cyttsp_button_data *data)
 		}
 		i++;
 	}
-
+	hwlog_err("%s: touch key update FW success\n", __func__);
 exit_bootloader:
 	/* 4. Exit bootloader mode */
 	cmd[0] = 0;
@@ -1943,56 +1956,57 @@ static int cyttsp_button_probe(struct i2c_client *client)
 	error = cyttsp_i2c_read_block(dev, CYTTSP_REG_TOUCHMODE, 1, &val);
 	if (error < 0) {
 		pollution = data->client->addr;
-		hwlog_info("%s-%d: restore new app client addr = 0x%02x\n", __func__, __LINE__,
-			pollution);
-		data->client->addr = CYTTSP_POLLUTION_SLAVE_ADDR;
-		hwlog_info("%s-%d: switch to old client addr = 0x%02x\n", __func__, __LINE__,
+		hwlog_info("%s-%d: restore new app client addr = 0x%02x\n", __func__, __LINE__,pollution);
+		data->app_addr = pollution;
+		data->bl_addr = pdata->bl_addr;
+		data->client->addr = data->bl_addr;
+		hwlog_info("%s-%d: client addr = 0x%02x\n", __func__, __LINE__,
 			data->client->addr);
-		mdelay(CYTTSP_WAKE_DELAY_COUNT);
-		error = cyttsp_i2c_read_block(dev, CYTTSP_REG_WORKMODE, 1, &val);
-		if (error < 0) {
-			hwlog_warn("%s: fail to read from app slave addr\n", __func__);
-			hwlog_warn("%s: switch to btld slave addr to read\n", __func__);
-
-			data->app_addr = pollution;
-			data->bl_addr = pdata->bl_addr;
-			data->client->addr = data->bl_addr;
-			hwlog_info("%s-%d: client addr = 0x%02x\n", __func__, __LINE__,
-				data->client->addr);
-
+		/*to read old*/
+		error = cyttsp_i2c_recv(dev, 1, &val);
+		if (error != 0) {
+			data->client->addr = CYTTSP_NEW_BL_ADDR;
+			/*if old version bootloader addr is not connect ,then to read new*/
 			error = cyttsp_i2c_recv(dev, 1, &val);
 			if (error != 0) {
 				cyp_report_dmd(CYTTSP_DSM_PROBE_I2C_ERR_1, DSM_TOUCHKEY_PROBE_I2C_ERR);
-				hwlog_err("%s: fail to read btld slave addr\n", __func__);
+				hwlog_err("%s: fail to read new btld slave addr\n", __func__);
 				hwlog_err("%s: button's not on site\n", __func__);
 				goto err_write_no_sleep_mode;
-			} else {
+			}else {
+				pdata->bl_addr = CYTTSP_NEW_BL_ADDR;
+				data->client->addr = pollution;
+				in_bootloader = true;
+				hwlog_info("%s-%d: succ to read from new btld addr, in btld mode\n", __func__, __LINE__);
+			}
+		} else {
+			/*check it is old version bootloader addr or new version app addr.*/
+			error = cyttsp_i2c_read_block(dev, CYTTSP_REG_LOCKDOWN_INFO, 1, &val);
+			/*it is new version app addr,need go back bootloader mode*/
+			if(CYTTSP_NEW_VERSION_APP == val){
+				unsigned char switch_to_new_btld_cmd[CYTTSP_BTLD_CMD_BUFF] = {0x06, 0x2B, 0x2B, 0xFE, 0xFA};
+				error = cyttsp_i2c_send(dev, sizeof(switch_to_new_btld_cmd), switch_to_new_btld_cmd);
+				if (error) {
+					cyp_report_dmd(CYTTSP_DSM_PROBE_I2C_ERR_2, DSM_TOUCHKEY_PROBE_I2C_ERR);
+					hwlog_err("%s-%d: fail to switch to new bootloader\n", __func__, __LINE__);
+				} else {
+					hwlog_info("%s-%d: switch to new btld ops mode already\n", __func__, __LINE__);
+					pdata->bl_addr = CYTTSP_NEW_BL_ADDR;
+					data->client->addr = pollution;
+					in_bootloader = true;
+				}
+			}else{
 				in_bootloader = true;
 				data->client->addr = data->app_addr;
 				hwlog_info("%s-%d: get back client addr = 0x%02x\n", __func__, __LINE__,
 					data->client->addr);
 				hwlog_info("%s-%d: succ to read from btld addr, in btld mode\n", __func__, __LINE__);
 			}
-		} else {
-			/* cmd sequence to switch into btld mode: 0x2B, 0x2B, 0xFE, 0xFA */
-			unsigned char switch_to_btld_cmd[5] = {0x04, 0x2B, 0x2B, 0xFE, 0xFA};
-			error = cyttsp_i2c_send(dev, sizeof(switch_to_btld_cmd), switch_to_btld_cmd);
-			if (error) {
-				cyp_report_dmd(CYTTSP_DSM_PROBE_I2C_ERR_2, DSM_TOUCHKEY_PROBE_I2C_ERR);
-				hwlog_err("%s-%d: fail to switch to bootloader\n", __func__, __LINE__);
-				goto err_write_no_sleep_mode;
-			} else {
-				hwlog_info("%s-%d: switch to btld ops mode already\n", __func__, __LINE__);
-			}
-			data->client->addr = pollution;
-			in_bootloader = true;
-                  	hwlog_info("%s-%d: data->client->addr = 0x%02x\n", __func__, __LINE__,
-					data->client->addr);
 		}
-	} else {
+	}else {
 		hwlog_info("%s: succ to read from app addr, in app mode\n", __func__);
-                hwlog_info("%s-%d: data->client->addr = 0x%02x\n", __func__, __LINE__,
-				data->client->addr);
+		hwlog_info("%s-%d: data->client->addr = 0x%02x\n", __func__, __LINE__,
+			data->client->addr);
 
 		/* wake ic up from deep sleep mode */
 		mdelay(CYTTSP_WAKE_DELAY_COUNT);

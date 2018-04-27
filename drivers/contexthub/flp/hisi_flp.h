@@ -8,12 +8,14 @@
  * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation.
  */
+
+
 /*ioctrl cmd type*/
 #define FLP_TAG_FLP         0
 #define FLP_TAG_GPS         1
 
 #define FLP_GPS_BATCHING_MAX_SIZE   50
-#define FLP_GEOFENCE_MAX_NUM        48
+#define FLP_GEOFENCE_MAX_NUM        200
 
 #define FLP_IOCTL_CMD_MASK              (0xFFFF00FF)
 
@@ -27,6 +29,7 @@
 #define FLP_IOCTL_TYPE_PDR              (0x464C0000)
 #define FLP_IOCTL_TYPE_GEOFENCE         (0x464C0020)
 #define FLP_IOCTL_TYPE_BATCHING         (0x464C0030)
+#define FLP_IOCTL_TYPE_CELLFENCE         (0x464C0040)
 #define FLP_IOCTL_TYPE_COMMON           (0x464C00F0)
 
 #define FLP_IOCTL_PDR_START(x)          (0x464C0000 + ((x) * 0x100) + 1)
@@ -42,6 +45,7 @@
 #define FLP_IOCTL_GEOFENCE_ADD                  (0x464C0000 + 0x21)
 #define FLP_IOCTL_GEOFENCE_REMOVE               (0x464C0000 + 0x22)
 #define FLP_IOCTL_GEOFENCE_MODIFY               (0x464C0000 + 0x23)
+#define FLP_IOCTL_GEOFENCE_STATUS (0x464C0000 + 0x24)
 
 #define FLP_IOCTL_BATCHING_START                (0x464C0000 + 0x31)
 #define FLP_IOCTL_BATCHING_STOP                 (0x464C0000 + 0x32)
@@ -51,16 +55,24 @@
 #define FLP_IOCTL_BATCHING_FLUSH                (0x464C0000 + 0x36)
 #define FLP_IOCTL_BATCHING_INJECT               (0x464C0000 + 0x37)
 #define FLP_IOCTL_BATCHING_GET_SIZE             (0x464C0000 + 0x38)
-#define FLP_IOCTL_COMMON_HW_RESET               (0x464C0000 + 0x39)
+#define FLP_IOCTL_BATCHING_SEND_GNSS_STATUS (0x464C0000 + 0x39)
+
+#define FD_IOCTL_CELLFENCE_ADD (FLP_IOCTL_TAG_FLP + 0x41)
+#define FD_IOCTL_CELLFENCE_OPERATE (FLP_IOCTL_TAG_FLP + 0x42)
+#define FD_IOCTL_TRAJECTORY_CONFIG (FLP_IOCTL_TAG_FLP + 0x43)
+#define FD_IOCTL_TRAJECTORY_REQUEST (FLP_IOCTL_TAG_FLP + 0x44)
+#define FD_IOCTL_CELLFENCE_INJECT_RESULT (FLP_IOCTL_TAG_FLP + 0x45)
 
 /*common ioctrl*/
-#define FLP_IOCTL_COMMON_GET_UTC            (0x464C0000 + 0xFFF1)
-#define FLP_IOCTL_COMMON_SLEEP              (0x464C0000 + 0xFFF2)
-#define FLP_IOCTL_COMMON_AWAKE_RET          (0x464C0000 + 0xFFF3)
-#define FLP_IOCTL_COMMON_SETPID             (0x464C0000 + 0xFFF4)
-#define FLP_IOCTL_COMMON_CLOSE_SERVICE      (0x464C0000 + 0xFFF5)
-#define FLP_IOCTL_COMMON_HOLD_WAKELOCK      (0x464C0000 + 0xFFF6)
-#define FLP_IOCTL_COMMON_RELEASE_WAKELOCK   (0x464C0000 + 0xFFF7)
+#define FLP_IOCTL_COMMON_GET_UTC            		(0x464C0000 + 0xFFF1)
+#define FLP_IOCTL_COMMON_SLEEP              		(0x464C0000 + 0xFFF2)
+#define FLP_IOCTL_COMMON_AWAKE_RET          		(0x464C0000 + 0xFFF3)
+#define FLP_IOCTL_COMMON_SETPID             		(0x464C0000 + 0xFFF4)
+#define FLP_IOCTL_COMMON_CLOSE_SERVICE      		(0x464C0000 + 0xFFF5)
+#define FLP_IOCTL_COMMON_HOLD_WAKELOCK      		(0x464C0000 + 0xFFF6)
+#define FLP_IOCTL_COMMON_RELEASE_WAKELOCK   	(0x464C0000 + 0xFFF7)
+#define FLP_IOCTL_COMMON_STOP_SERVICE_TYPE		(0x464C0000 + 0xFFF8)
+#define FLP_IOCTL_COMMON_WIFI_CFG			(0x464C0000 + 0xFFF9)
 
 enum {
     FLP_SERVICE_RESET,
@@ -124,30 +136,14 @@ typedef struct gps_batching_report{
     iomcu_location location[FLP_GPS_BATCHING_MAX_SIZE];
 } __packed gps_batching_report_t;
 
-/*Geofence event report*/
-typedef struct geofencing_transition {
-    int geofence_id;
-    int transition;
-    unsigned int sources_used;
-    unsigned long timestamp;
-    iomcu_location location;
-} __packed geofencing_transition_t;
-
-/*Geofence status report*/
-typedef struct geofencing_monitor_status {
-    unsigned char status;
-    unsigned int source;
-    iomcu_location last_location;
-}__packed geofencing_monitor_status_t;
-
 /*modify Geofence*/
 typedef struct geofencing_option_info {
-    unsigned char  virtual_id;
-    unsigned char last_transition;
-    unsigned char monitor_transitions;
-    unsigned char reserved;
-    int unknown_timer_ms;
-    unsigned int sources_to_use;
+	unsigned int  virtual_id;
+	unsigned char last_transition;
+	unsigned char monitor_transitions;
+	unsigned char accuracy;
+	int unknown_timer_ms;
+	unsigned int sources_to_use;
 }__packed  geofencing_option_info_t;
 
 typedef struct {
@@ -157,28 +153,28 @@ double radius_m;
 }__packed geofencing_circle_t;
 
 typedef struct {
-    unsigned char geofence_type;
-    union {
-        geofencing_circle_t circle;
-    };
+	double latitude;
+	double longitude;
+}__packed geofencing_point_t;
+
+#define POLYGON_POINT_NUM_MAX 8
+typedef struct {
+	int polynum;
+	geofencing_point_t point[POLYGON_POINT_NUM_MAX];
+}__packed geofencing_polygon_t;
+
+typedef struct {
+	unsigned char geofence_type;
+	union {
+		geofencing_circle_t circle;
+		geofencing_polygon_t polygon;
+	}geofence;
 }__packed geofencing_data_t;
 
 typedef struct geofencing_useful_data {
     geofencing_option_info_t  opt;
     geofencing_data_t info;
 }__packed   geofencing_useful_data_t;
-
-/*add Geofence*/
-typedef struct geofencing_add_config {
-    unsigned char  number_of_geofences;
-    geofencing_useful_data_t geofences[FLP_GEOFENCE_MAX_NUM];
-}__packed  geofencing_add_config_t;
-
-/*remove Geofence*/
-typedef struct geofencing_remove_config {
-    unsigned char  number_of_geofences;
-    unsigned char index_id[FLP_GEOFENCE_MAX_NUM];
-}__packed  geofencing_remove_config_t;
 
 typedef struct geofencing_hal_config {
     unsigned int  length;
@@ -200,6 +196,31 @@ typedef struct batching_config {
     FlpBatchOptions opt;
 } __packed  batching_config_t;
 
+
+/***************cellfence -s*********************/
+#define CELLFENCE_ADD_INFO_BUF_SIZE (500*1024)
+typedef struct {
+	unsigned int len;
+	char __user *buf;
+}CELLFENCE_IOCTRL_HDR_TYPE;
+
+enum {
+	FLP_SHMEM_ADD_GEOFENCE = 0x1,
+	FLP_SHMEM_ADD_CELLFENCE
+};
+
+
+#define FLP_IOMCU_SHMEM_TAG			(0xABAB)
+typedef struct {
+	unsigned short int tag;/*0xABAB*/
+	unsigned short int cmd;/*shmem cmd*/
+	unsigned int data_len;
+	char data[0];
+}FLP_IOMCU_SHMEM_TYPE;
+
+/***************cellfence -e********************/
+
+
 /********************************************
             define flp netlink
 ********************************************/
@@ -214,18 +235,19 @@ enum {
 #define FLP_GENL_ATTR_MAX (__FLP_GENL_ATTR_MAX - 1)
 
 enum {
-    FLP_GENL_CMD_UNSPEC,
-    FLP_GENL_CMD_PDR_DATA,
-    FLP_GENL_CMD_AR_DATA,
-    FLP_GENL_CMD_PDR_UNRELIABLE,
-    FLP_GENL_CMD_NOTIFY_TIMEROUT,
-    FLP_GENL_CMD_AWAKE_RET,
-    FLP_GENL_CMD_GEOFENCE_TRANSITION,
-    FLP_GENL_CMD_GEOFENCE_MONITOR,
-    FLP_GENL_CMD_GNSS_LOCATION,
-    FLP_GENL_CMD_IOMCU_RESET,
-    FLP_GENL_CMD_ENV_DATA,
-    __FLP_GENL_CMD_MAX,
+	FLP_GENL_CMD_UNSPEC,
+	FLP_GENL_CMD_PDR_DATA,
+	FLP_GENL_CMD_AR_DATA,
+	FLP_GENL_CMD_PDR_UNRELIABLE,
+	FLP_GENL_CMD_NOTIFY_TIMEROUT,
+	FLP_GENL_CMD_AWAKE_RET,
+	FLP_GENL_CMD_GEOFENCE_TRANSITION,
+	FLP_GENL_CMD_GEOFENCE_MONITOR,
+	FLP_GENL_CMD_GNSS_LOCATION,
+	FLP_GENL_CMD_IOMCU_RESET,
+	FLP_GENL_CMD_CELLTRANSITION,
+	FLP_GENL_CMD_TRAJECTORY_REPORT,
+	__FLP_GENL_CMD_MAX,
 };
 #define FLP_GENL_CMD_MAX (__FLP_GENL_CMD_MAX - 1)
 

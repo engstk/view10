@@ -41,6 +41,8 @@
 #define THP_IOCTL_CMD_FINISH_NOTIFY	_IO(THP_IO_TYPE, 0x05)
 #define THP_IOCTL_CMD_SET_BLOCK	_IOW(THP_IO_TYPE, 0x06, u32)
 
+#define THP_IOCTL_CMD_SET_IRQ	_IOW(THP_IO_TYPE, 0x07, u32)
+
 #define GPIO_LOW  (0)
 #define GPIO_HIGH (1)
 #define DUR_RESET_HIGH	(1)
@@ -54,7 +56,7 @@
 #define THP_LIST_MAX_FRAMES			20
 
 #define THP_PROJECT_ID_LEN 10
-#define THP_SYNC_DATA_MAX	(4096*8)
+#define THP_SYNC_DATA_MAX	(4096*32)
 
 #define ROI_DATA_LENGTH		49
 #define ROI_DATA_STR_LENGTH		(ROI_DATA_LENGTH * 10)
@@ -74,6 +76,17 @@
 #define THP_DEV_COMPATIBLE "huawei,thp"
 #define THP_SPI_DEV_NODE_NAME "thp_spi_dev"
 #define THP_TIMING_NODE_NAME "thp_timing"
+
+enum thp_status_type {
+	THP_STATUS_POWER = 0,
+	THP_STATUS_TUI = 1,
+	THP_STATUS_CHARGER = 2,
+	THP_STATUS_HOLSTER = 3,
+	THP_STATUS_GLOVE = 4,
+	THP_STATUS_ROI = 5,
+	THP_STAUTS_WINDOW_UPDATE = 6,
+	THP_STATUS_MAX,
+};
 
 struct thp_ioctl_get_frame_data {
 	char __user *buf;
@@ -112,6 +125,8 @@ struct thp_tui_data {
 extern struct thp_tui_data thp_tui_info;
 #endif
 
+struct thp_device;
+
 struct thp_device_ops {
 	int (*init)(struct thp_device *tdev);
 	int (*detect)(struct thp_device *tdev);
@@ -147,6 +162,14 @@ struct thp_gpios {
 
 };
 
+struct thp_window_info
+{
+	int x0;
+	int y0;
+	int x1;
+	int y1;
+};
+
 struct thp_device {
 	char *ic_name;
 	struct thp_device_ops *ops;
@@ -173,7 +196,9 @@ struct thp_core_data {
 	struct mutex irq_mutex;
 	struct mutex thp_mutex;
 	struct mutex spi_mutex;
+	struct mutex status_mutex;
 	atomic_t register_flag;
+	u32 status;
 	int open_count;
 	int frame_count;
 	unsigned int frame_size;
@@ -193,17 +218,16 @@ struct thp_core_data {
 	struct host_dsm_info dsm_info;
 #endif
 #if defined(THP_CHARGER_FB)
-	int charger_state;
 	struct notifier_block charger_detect_notify;
 #endif
 	char project_id[THP_PROJECT_ID_LEN + 1];
 	const char *ic_name;
 	const char *vendor_name;
-	int tui_flag;
 	int get_frame_block_flag;
-	char roi_enabled;
 	short host_roi_data_report[ROI_DATA_LENGTH];
 	bool is_udp;
+	unsigned int need_huge_memory_in_spi;
+	struct thp_window_info window;
 };
 
 extern u8 g_thp_log_cfg;
@@ -227,5 +251,12 @@ extern int thp_parse_timing_config(struct device_node *timing_cfg_node,
 			struct thp_timing_config *timing);
 extern void thp_spi_cs_set(u32 control);
 extern int thp_daemeon_suspend_resume_notify(int status);
+
+extern int thp_set_status(int type, int status);
+extern int thp_get_status(int type);
+extern u32 thp_get_status_all(void);
+extern  int thp_parse_feature_config(struct device_node *thp_node,
+			struct thp_core_data *cd);
+
 #endif /* _THP_H_ */
 

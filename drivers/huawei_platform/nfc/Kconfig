@@ -12,6 +12,7 @@ menuconfig NFC_DEVICES
 
 source "drivers/huawei_platform/nfc/NXP_PN547_64/Kconfig"
 source "drivers/huawei_platform/nfc/nfc_bcm20793/Kconfig"
+source "drivers/huawei_platform/nfc/cxd224x/Kconfig"
 
 endmenu
 

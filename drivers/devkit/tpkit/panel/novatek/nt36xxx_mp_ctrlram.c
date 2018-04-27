@@ -415,12 +415,12 @@ static int32_t nvt_load_mp_ctrlram_ini(void)
 						goto exit_free;
 					}
 					ptr = strstr(ptr, "\nRAW_BASE_ADDR=");
-					ptr++; // skip first byte '\n'
 					if (ptr == NULL) {
 						TS_LOG_ERR("%s: \"[TableType0_GLOBAL0] RAW_BASE_ADDR\" not found!\n", __func__);
 						retval = -12;
 						goto exit_free;
 					}
+					ptr++; // skip first byte '\n'
 					copy_this_line(ctrlram_data_buf, ptr);
 					sscanf(ctrlram_data_buf, "RAW_BASE_ADDR=%127s", ctrlram_item_str);
 					TableType0_GLOBAL0_RAW_BASE_ADDR = str_to_hex(ctrlram_item_str + 2); // skip "0x"
@@ -434,12 +434,12 @@ static int32_t nvt_load_mp_ctrlram_ini(void)
 						goto exit_free;
 					}
 					ptr = strstr(ptr, "\nRAW_BASE_ADDR=");
-					ptr++; // skip first byte '\n'
 					if (ptr == NULL) {
 						TS_LOG_ERR("%s: \"[TableType1_GLOBAL0] RAW_BASE_ADDR\" not found!\n", __func__);
 						retval = -14;
 						goto exit_free;
 					}
+					ptr++; // skip first byte '\n'
 					copy_this_line(ctrlram_data_buf, ptr);
 					sscanf(ctrlram_data_buf, "RAW_BASE_ADDR=%127s", ctrlram_item_str);
 					TableType1_GLOBAL0_RAW_BASE_ADDR = str_to_hex(ctrlram_item_str + 2); // skip "0x"
@@ -1735,6 +1735,8 @@ static int32_t nvt_tddi_read_fw_noise(int32_t *xdata)
 	}
 	TS_LOG_INFO("%s: frame_num=%d\n", __func__, frame_num);
 	nvt_tddi_enable_noise_collect(frame_num);
+	//need wait PS_Config_Diff_TEST_Frame*8.3ms
+	msleep(frame_num*83);
 
 	if (nvt_polling_hand_shake_status()) {
 		return -EAGAIN;

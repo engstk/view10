@@ -71,16 +71,7 @@ extern "C" {
   3 枚举定义
 *****************************************************************************/
 
-/*****************************************************************************
- 枚举名    : NAS_ERR_LOG_ALM_ID_ENUM
- 枚举说明  : 故障告警ID
- 1.日    期   : 2013年08月27日
-   作    者   : f00179208
-   修改内容   : 新建
- 2.日    期   : 2014年09月16日
-   作    者   : f00179208
-   修改内容   : CS ERRLOG项目新增告警ID
-*****************************************************************************/
+
 enum NAS_ERR_LOG_ALM_ID_ENUM
 {
     NAS_ERR_LOG_ALM_CS_REG_FAIL                             = 0x01,             /* CS域注册失败 */
@@ -136,9 +127,6 @@ enum NAS_ERR_LOG_ALM_ID_ENUM
 
     NAS_ERR_LOG_ALM_CC_DECODE_FAIL                          = 0x26,             /* CC解码失败 */
 
-    /* Added by z00385378 for T310定制, 2017-1-9, begin */
-    NAS_ERR_LOG_ALM_CC_TIMER_INFO                           = 0x27,             /* 定时器时长上报 */
-    /* Added by z00385378 for T310定制, 2017-1-9, end */
     NAS_ERR_LOG_ALM_MM_MT_S12_DISCARD_SYSINFO_INFO          = 0x28,             /* 被叫在S12时忽略系统消息的场景记录 */
 
     NAS_ERR_LOG_ALM_CC_INCOMPATIBLE_INFO                    = 0x29,             /* 冲突场景上报 */
@@ -148,6 +136,8 @@ enum NAS_ERR_LOG_ALM_ID_ENUM
     NAS_ERR_LOG_ALM_TIMER_ERR                               = 0x2b,             /* 定时器异常 */
 
     NAS_ERR_LOG_ALM_NETWORK_PARA_CLT                        = 0x2c,             /* 网络参数收集 */
+
+    NAS_ERR_LOG_ALM_SIM_INFO_CLT                            = 0x2d,            /* 卡文件中网络参数信息收集 */
 
     /****************************************************************************************************************************
     **********************************    GUNAS 与CNAS CHR原因值分界线    *******************************************************
@@ -204,6 +194,8 @@ enum NAS_ERR_LOG_ALM_ID_ENUM
 
     NAS_ERR_LOG_ALM_CNAS_KEY_PARAMETER_INFO                 = 0x9a,             /*  CNAS模块关键参数信息 */
 
+    NAS_ERR_LOG_ALM_CNAS_1X_RESEL_INFO                      = 0x9b,             /*  CNAS模块1x Resel 参数信息 */
+    NAS_ERR_LOG_ALM_CNAS_ENC_VOICE_FAIL_INFO                = 0x9c,             /* 语音加密失败信息*/
     NAS_ERR_LOG_ALM_ID_BUTT
 };
 typedef VOS_UINT16  NAS_ERR_LOG_ALM_ID_ENUM_U16;

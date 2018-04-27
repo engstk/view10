@@ -2,6 +2,8 @@ subdir-ccflags-y += -Wall -Werror
 
 EXTRA_CFLAGS += -Idrivers/hisi/hi64xx_dsp/
 EXTRA_CFLAGS += -Idrivers/hisi/soundtrigger/
+EXTRA_CFLAGS += -Isound/soc/codecs/hisi/hi6xxx_fpga_test/
+EXTRA_CFLAGS += -Isound/soc/codecs/hisi/hs_auto_calib/
 
 ifeq ($(CLT_IV), true)
 EXTRA_CFLAGS += -DCLT_AUDIO
@@ -14,9 +16,15 @@ endif
 
 ifneq ($(TARGET_BUILD_VARIANT),user)
 EXTRA_CFLAGS += -DENABLE_HI64XX_CODEC_DEBUG
+
+#ifeq ($(CONFIG_SND_SOC_CODEC_STUB),y)
+#EXTRA_CFLAGS += -DHI6XXX_FPGA_CODEC_STUB
+#endif
+
 endif
 
 ccflags-y += -Idrivers/devkit/audiokit/
+
 obj-y += hi_cdc_ctrl.o
 obj-y += hi_cdc_ssi.o
 obj-y += hi64xx_resmgr.o

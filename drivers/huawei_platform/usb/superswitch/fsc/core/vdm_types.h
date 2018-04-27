@@ -11,7 +11,7 @@
 #include "platform.h"
 
 #define STRUCTURED_VDM_VERSION 0
-#define MAX_NUM_SVIDS 3
+#define MAX_NUM_SVIDS 30
 #define MAX_MODES_PER_SVID 3
 
 /* enumeration of SVIDs */
@@ -300,4 +300,3 @@ typedef struct {
 #endif /* FSC_HAVE_VDM */
 
 #endif /* FSCPM_VDM_TYPES_H_ */
-

@@ -7,8 +7,8 @@ config CONTEXTHUB
 
 config CONTEXTHUB_SHMEM
 	bool "Sensor CONTEXTHUB SHMEM driver"
-	depends on CONTEXTHUB
-	default n
+	depends on INPUTHUB || INPUTHUB_20
+	default y
 	help
 	Say yes here if you want to configure contexthub share memory
 
@@ -19,12 +19,6 @@ config CONTEXTHUB_SHELL
 	help
 	Say yes here if you want to use contexthub shell dbg function
 
-config CONTEXTHUB_PD
-	bool "Sensor CONTEXTHUB PD driver"
-	default n
-	help
-	Say yes here if you want to use contexthub pd function
-
 config CONTEXTHUB_PLAYBACK
 	bool "Sensor CONTEXTHUB playback driver"
 	depends on CONTEXTHUB
@@ -34,6 +28,13 @@ config CONTEXTHUB_PLAYBACK
 
 config CONTEXTHUB_LOADMONITOR
 	bool "Sensor CONTEXTHUB LOADMONITOR driver"
+	depends on CONTEXTHUB
+	default n
+	help
+	Say yes here if you want to use contexthub shell dbg function
+
+config CONTEXTHUB_CHRE
+	bool "Sensor CONTEXTHUB CHRE driver"
 	depends on CONTEXTHUB
 	default n
 	help

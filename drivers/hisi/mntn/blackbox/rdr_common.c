@@ -15,11 +15,20 @@
 #include <linux/version.h>
 
 #include <linux/hisi/rdr_pub.h>
+#include <mntn_subtype_exception.h>
+#include <asm/tlbflush.h>
 
 #include "rdr_inner.h"
 #include "rdr_field.h"
 #include "rdr_print.h"
 #include "rdr_debug.h"
+
+#undef __REBOOT_REASON_MAP
+#define __REBOOT_REASON_MAP(x,y) {#x, x, #y, y},
+struct cmdword reboot_reason_map[] = {
+	#include <mntn_reboot_reason_map.h>
+};
+#undef __REBOOT_REASON_MAP
 
 
 
@@ -175,129 +184,6 @@ char *rdr_get_timestamp(void)
 	return databuf;
 }
 
-/*Add, please keep the same as definition in reboot_reason.c in fastboot !!!!*/
-struct cmdword reboot_reason_map[] = {
-	{"AP_S_COLDBOOT", AP_S_COLDBOOT},
-	{"bootloader", BOOTLOADER},
-	{"recovery", RECOVERY},
-	{"resetfactory", RESETFACTORY},
-	{"resetuser", RESETUSER},
-	{"sdupdate", SDUPDATE},
-	{"chargereboot", CHARGEREBOOT},
-	{"resize", RESIZE},
-	{"erecovery", ERECOVERY},
-	{"usbupdate", USBUPDATE},
-	{"cust", CUST},
-	{"oem_rtc", OEM_RTC},
-	{"unknown", UNKNOWN},
-	{"mountfail", MOUNTFAIL},
-	{"hungdetect", HUNGDETECT},
-	{"coldboot", COLDBOOT},
-	{"updatedataimg", UPDATEDATAIMG},
-	{"AP_S_FASTBOOTFLASH", AP_S_FASTBOOTFLASH},
-	{"AP_S_ABNORMAL", AP_S_ABNORMAL},
-	{"AP_S_TSENSOR0", AP_S_TSENSOR0},
-	{"AP_S_TSENSOR1", AP_S_TSENSOR1},
-	{"AP_S_AWDT", AP_S_AWDT},
-	{"CHARGER_S_WDT", CHARGER_S_WDT},
-	{"G3D_S_G3DTSENSOR", G3D_S_G3DTSENSOR},
-	{"LPM3_S_LPMCURST", LPM3_S_LPMCURST},
-	{"CP_S_CPTSENSOR", CP_S_CPTSENSOR},
-	{"IOM3_S_IOMCURST", IOM3_S_IOMCURST},
-	{"ASP_S_ASPWD", ASP_S_ASPWD},
-	{"CP_S_CPWD", CP_S_CPWD},
-	{"IVP_S_IVPWD", IVP_S_IVPWD},
-	{"ISP_S_ISPWD", ISP_S_ISPWD},
-	{"AP_S_DDR_UCE_WD", AP_S_DDR_UCE_WD},
-	{"AP_S_DDR_FATAL_INTER", AP_S_DDR_FATAL_INTER},
-	{"OCBC_S_WD", OCBC_S_WD},
-	{"AP_S_PANIC", AP_S_PANIC},
-	{"AP_S_NOC", AP_S_NOC},
-	{"AP_S_RESUME_SLOWY", AP_S_RESUME_SLOWY},
-	{"AP_S_DDRC_SEC", AP_S_DDRC_SEC},
-	{"AP_S_F2FS", AP_S_F2FS},
-	{"AP_S_COMBINATIONKEY", AP_S_COMBINATIONKEY},
-	{"AP_S_BL31_PANIC", AP_S_BL31_PANIC},
-	{"AP_S_MAILBOX", AP_S_MAILBOX},
-	{"AP_S_HHEE_PANIC", AP_S_HHEE_PANIC},
-	{"CP_S_MODEMDMSS", CP_S_MODEMDMSS},
-	{"CP_S_MODEMAP", CP_S_MODEMAP},
-	{"CP_S_MODEMNOC", CP_S_MODEMNOC},
-	{"CP_S_EXCEPTION", CP_S_EXCEPTION},
-	{"CP_S_RESETFAIL", CP_S_RESETFAIL},
-	{"CP_S_NORMALRESET", CP_S_NORMALRESET},
-	{"CP_S_RILD_EXCEPTION", CP_S_RILD_EXCEPTION},
-	{"CP_S_DRV_EXC",CP_S_DRV_EXC},
-	{"CP_S_PAM_EXC", CP_S_PAM_EXC},
-	{"CP_S_GUAS_EXC",CP_S_GUAS_EXC},
-	{"CP_S_CTTF_EXC", CP_S_CTTF_EXC},
-	{"CP_S_CAS_CPROC_EXC", CP_S_CAS_CPROC_EXC},
-	{"CP_S_GUDSP_EXC",CP_S_GUDSP_EXC},
-	{"CP_S_TLPS_EXC", CP_S_TLPS_EXC},
-	{"CP_S_TLDSP_EXC",CP_S_TLDSP_EXC},
-	{"CP_S_CPHY_EXC", CP_S_CPHY_EXC},
-	{"CP_S_GUCNAS_EXC",CP_S_GUCNAS_EXC},
-	{"CP_S_3RD_EXCEPTION", CP_S_3RD_EXCEPTION},
-	{"LPM3_S_EXCEPTION", LPM3_S_EXCEPTION},
-	{"SOCHIFI_S_EXCEPTION", SOCHIFI_S_EXCEPTION},
-	{"HIFI_S_RESETFAIL", HIFI_S_RESETFAIL},
-	{"ISP_S_EXCEPTION", ISP_S_EXCEPTION},
-	{"IVP_S_EXCEPTION", IVP_S_EXCEPTION},
-	{"IOM3_S_EXCEPTION", IOM3_S_EXCEPTION},
-	{"TEE_S_EXCEPTION", TEE_S_EXCEPTION},
-	{"MMC_S_EXCEPTION", MMC_S_EXCEPTION},
-	{"CODECHIFI_S_EXCEPTION", CODECHIFI_S_EXCEPTION},
-	{"IOM3_S_USER_EXCEPTION", IOM3_S_USER_EXCEPTION},
-	{"HISEE_S_EXCEPTION", HISEE_S_EXCEPTION},
-	{"reserved4", RESERVED4},
-	{"AP_S_PMU", AP_S_PMU},
-	{"AP_S_SMPL", AP_S_SMPL},
-	{"AP_S_SCHARGER", AP_S_SCHARGER},
-	{"VolUsbUpdate", BR_KEY_VOLUMN_DOWN_UP_UPDATE_USB},
-	{"ForceSdUpdate", BR_KEY_VOLUMN_DOWN_UP_UPDATE_SD_FORCE},
-	{"VolUpRecovery", BR_KEY_VOLUMN_UP},
-	{"press1s", BR_KEY_POWERON_PRESS_1S},
-	{"press10s", BR_KEY_POWERON_PRESS_10S},
-	{"CheckpointRecovery", BR_CHECKPOINT_RECOVERY},
-	{"CheckpointErecovery", BR_CHECKPOINT_ERECOVERY},
-	{"CheckpointSdUpdate", BR_CHECKPOINT_SDUPDATE},
-	{"CheckpointUsbUpdate", BR_CHECKPOINT_USBUPDATE},
-	{"CheckpointResetFactory", BR_CHECKPOINT_RESETFACTORY},
-	{"CheckpointHotaUpdate", BR_CHECKPOINT_HOTAUPDATE},
-	{"PoweronNoBat", BR_POWERON_BY_USB_NO_BAT},
-	{"nogui", BR_NOGUI},
-	{"Factory", BR_FACTORY_VERSION},
-	{"ResetHappen", BR_RESET_HAPPEN},
-	{"OemRtc", BR_POWEROFF_ALARM},
-	{"PoweroffCharging", BR_POWEROFF_CHARGE},
-	{"SMPL", BR_POWERON_BY_SMPL},
-	{"CheckpointUpdateDataimg", BR_CHECKPOINT_UPDATEDATAIMG},
-	{"CPU_BUCK", BR_REBOOT_CPU_BUCK},
-	{"XLOADER_S_DDRINIT_FAIL", XLOADER_S_DDRINIT_FAIL},
-	{"XLOADER_S_EMMCINIT_FAIL", XLOADER_S_EMMCINIT_FAIL},
-	{"XLOADER_S_LOAD_FAIL", XLOADER_S_LOAD_FAIL},
-	{"XLOADER_S_VERIFY_FAIL", XLOADER_S_VERIFY_FAIL},
-	{"XLOADER_S_WATCHDOG", XLOADER_S_WATCHDOG},
-	{"FASTBOOT_EMMCINIT_FAIL", FASTBOOT_S_EMMCINIT_FAIL},
-	{"FASTBOOT_S_PANIC", FASTBOOT_S_PANIC},
-	{"FASTBOOT_S_WATCHDOG", FASTBOOT_S_WATCHDOG},
-	{"AP_S_PRESS6S", AP_S_PRESS6S},
-	{"FASTBOOT_S_OCV_VOL_ERR", FASTBOOT_S_OCV_VOL_ERR},
-	{"FASTBOOT_S_BAT_TEMP_ERR", FASTBOOT_S_BAT_TEMP_ERR},
-	{"FASTBOOT_S_MISC_ERR", FASTBOOT_S_MISC_ERR},
-	{"FB_S_LD_DTIMG_ERR", FASTBOOT_S_LOAD_DTIMG_ERR},
-	{"FB_S_LD_OTHR_IMGS_ERR", FASTBOOT_S_LOAD_OTHER_IMGS_ERR},
-	{"FB_S_KERNEL_IMG_ERR", FASTBOOT_S_KERNEL_IMG_ERR},
-	{"FASTBOOT_LOADLPMCU_FAIL", FASTBOOT_S_LOADLPMCU_FAIL},
-	{"FASTBOOT_VERIFY_FAIL", FASTBOOT_S_IMG_VERIFY_FAIL},
-	{"FASTBOOT_SOC_TEMP_HIGH", FASTBOOT_S_SOC_TEMP_ERR},
-	{"FASTBOOT_FLASHCERT_FAIL", FASTBOOT_S_FLASH_PROTECTION_PANIC},
-	{"BFM_S_NATIVE_BOOT_FAIL", BFM_S_BOOT_NATIVE_BOOT_FAIL},
-	{"BFM_S_BOOT_TIMEOUT", BFM_S_BOOT_TIMEOUT},
-	{"BFM_S_FW_BOOT_FAIL", BFM_S_BOOT_FRAMEWORK_BOOT_FAIL},
-	{"BFM_S_NATIVE_DATA_FAIL", BFM_S_BOOT_NATIVE_DATA_FAIL},
-};
-
 struct blackbox_modid_list g_modid_list[] = {
 	{HISI_BB_MOD_MODEM_DRV_START, HISI_BB_MOD_MODEM_DRV_END, "MODEM DRV"},
 	{HISI_BB_MOD_MODEM_OSA_START, HISI_BB_MOD_MODEM_OSA_END, "MODEM OSA"},
@@ -328,6 +214,8 @@ struct blackbox_modid_list g_modid_list[] = {
 	{(unsigned int)HISI_BB_MOD_MODEM_LPS_START, (unsigned int)HISI_BB_MOD_MODEM_LPS_END, "MODEM LPS"},
 	{(unsigned int)HISI_BB_MOD_MODEM_LMSP_START, (unsigned int)HISI_BB_MOD_MODEM_LMSP_END,
 	 "MODEM LMSP"},
+	{(unsigned int)HISI_BB_MOD_NPU_START, (unsigned int)HISI_BB_MOD_NPU_END, "NPU"},
+     /* delow end */
 	{(unsigned int)HISI_BB_MOD_RANDOM_ALLOCATED_START, (unsigned int)HISI_BB_MOD_RANDOM_ALLOCATED_END,
 	 "blackbox random allocated"},
 };
@@ -375,6 +263,7 @@ char *exception_core[RDR_CORE_MAX + 1] = {
 	"REGULATOR",
 	"BFM",
 	"HISEE",
+	"NPU",
 	"UNDEF",
 };
 
@@ -433,8 +322,11 @@ char *rdr_get_exception_core(u64 coreid)
 	case RDR_HISEE:
 		core = exception_core[13];
 		break;
-	default:
+	case RDR_NPU:
 		core = exception_core[14];
+		break;
+	default:
+		core = exception_core[15];
 		break;
 	}
 	return core;
@@ -771,9 +663,13 @@ void *hisi_bbox_map(phys_addr_t paddr, size_t size)
 	}
 
 	if (pfn_valid(RESERVED_RDR_PHYMEM_ADDR >> PAGE_SHIFT)) {
+		flush_tlb_all();
 		vaddr = bbox_vmap(paddr, size);
+		flush_tlb_all();
 	} else {
+		flush_tlb_all();
 		vaddr = ioremap_wc(paddr, size);
+		flush_tlb_all();
 	}
 
 	return vaddr;

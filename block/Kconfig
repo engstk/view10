@@ -172,13 +172,6 @@ config HISI_MQ_DEBUG
 	depends on HISI_BLK_MQ
 	default n
 
-config HISI_BLK_MQ_DUMP
-	bool "HISI blk-mq dump"
-	depends on BLOCK
-	depends on HISI_BLK_CORE
-	depends on HISI_BLK_MQ
-	default n
-
 config HISI_MQ_DISPATCH_DECISION
 	bool "HISI Multi Queue dispatch strategy"
 	depends on BLOCK
@@ -242,12 +235,26 @@ config HISI_PARTITION_HI3660
         help
            config partition for hi3660 platform
 
+config HISI_PARTITION_LIBRA
+        bool "libra partition"
+        depends on HISI_PARTITION
+        default n
+        help
+           config partition for libra platform
+
 config HISI_PARTITION_KIRIN970
         bool "kirin970 partition"
         depends on HISI_PARTITION
         default n
         help
            config partition for kirin970 platform
+
+config HISI_PARTITION_CANCER
+        bool "cancer partition"
+        depends on HISI_PARTITION
+        default n
+        help
+           config partition for cancer platform
 
 config HW_SYSTEM_WR_PROTECT
 	bool "write protection function of system partitions."

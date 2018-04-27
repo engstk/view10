@@ -362,7 +362,7 @@ static ssize_t bq25892_sysfs_store(struct device *dev,
 		info->reg = info2->reg;
 	}
 	if (!strncmp(("reg_addr"), attr->attr.name, strlen("reg_addr"))) {
-		if (v < (u8) BQ25892_REG_TOTAL_NUM && v >= (u8) 0x00) {
+		if (v < (u8) BQ25892_REG_TOTAL_NUM) {
 			info->reg = v;
 			return count;
 		} else {

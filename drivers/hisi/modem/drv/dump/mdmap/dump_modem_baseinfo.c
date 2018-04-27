@@ -50,6 +50,7 @@
 #include <linux/syscalls.h>
 #include <linux/kernel.h>
 #include <asm/string.h>
+#include "securec.h"
 #include "bsp_dump.h"
 #include "bsp_slice.h"
 #include "dump_print.h"
@@ -95,7 +96,7 @@ void dump_save_base_info(u32 mod_id, u32 arg1, u32 arg2, char *data, u32 length)
         if(in_interrupt())
         {
             g_mdm_dump_base_info->reboot_task = (u32)(-1);
-            memset(g_mdm_dump_base_info->taskName, 0, sizeof(g_mdm_dump_base_info->taskName));
+            memset_s(g_mdm_dump_base_info->taskName,sizeof(g_mdm_dump_base_info->taskName), 0, sizeof(g_mdm_dump_base_info->taskName));
 
             if(DUMP_MBB == dump_get_product_type())
             {
@@ -125,9 +126,9 @@ void dump_save_base_info(u32 mod_id, u32 arg1, u32 arg2, char *data, u32 length)
             if(task != NULL)
             {
                 /*coverity[secure_coding]*/
-                memset(g_mdm_dump_base_info->taskName,0,16);
+                memset_s(g_mdm_dump_base_info->taskName,sizeof(g_mdm_dump_base_info->taskName),0,16);
                 /*coverity[secure_coding]*/
-                memcpy(g_mdm_dump_base_info->taskName,((struct task_struct *)(task))->comm, 16);
+                memcpy_s(g_mdm_dump_base_info->taskName,sizeof(g_mdm_dump_base_info->taskName),((struct task_struct *)(task))->comm, 16);
                 dump_fetal("g_mdm_dump_base_info->taskName = %s\n",g_mdm_dump_base_info->taskName);
             }
             g_mdm_dump_base_info->reboot_int = (u32)(-1);
@@ -167,7 +168,7 @@ void dump_save_momdem_reset_baseinfo(u32 modid,char* name)
     {
         len = strlen(name);
         /*coverity[secure_coding]*/
-        memcpy(g_mdm_dump_base_info->taskName,name,len > 16 ? 16 : len);
+        memcpy_s(g_mdm_dump_base_info->taskName,sizeof(g_mdm_dump_base_info->taskName),name,len > 16 ? 16 : len);
     }
     g_mdm_dump_base_info->reboot_context = DUMP_CTX_TASK;
     g_mdm_dump_base_info->reboot_int= 0xFFFFFFFF;
@@ -195,7 +196,7 @@ s32 dump_base_info_init(void)
     if(g_mdm_dump_base_info != NULL)
     {
         /*coverity[secure_coding]*/
-        memset(g_mdm_dump_base_info, 0, sizeof(dump_base_info_t));
+        memset_s(g_mdm_dump_base_info, sizeof(*g_mdm_dump_base_info),0, sizeof(*g_mdm_dump_base_info));
         g_mdm_dump_base_info->vec = 0xff;
     }
     else

@@ -44,6 +44,7 @@ struct hi_cdc_ctrl_priv {
 	struct reg_ops reg_ops;
 	struct clk *cdc_mclk;
 	struct regulator *supplies[CDC_SUP_MAX];
+	struct regulator *ldo8;
 	/* for debug */
 	struct reg_op_item op_rec[128];
 	int rec_wr_idx;
@@ -302,19 +303,44 @@ void hi_cdc_bus_type_select(struct hi_cdc_ctrl_priv *priv,
 
 }
 
-void hi_cdc_platform_type_read(struct platform_device *pdev, struct hi_cdc_ctrl_priv *priv)
+void hi_cdc_ioparam_read(struct platform_device *pdev, struct hi_cdc_ctrl_priv *priv)
 {
-	const char *platformtype;
+	uint32_t   slimbusclk_drv = 0;
+	uint32_t   slimbusdata_drv = 0;
 
-	priv->cdc_ctrl.platform_type = HI_CDCCTRL_PLATFORM_PHONE;
+	/* default 16ma */
+	priv->cdc_ctrl.slimbusclk_cdc_drv = 0x5;
+	priv->cdc_ctrl.slimbusdata_cdc_drv = 0x5;
 
-	if (!of_property_read_string(pdev->dev.of_node, "platform-type", &platformtype)) {
-		if (!strncmp(platformtype, "UDP", 3))
-			priv->cdc_ctrl.platform_type = HI_CDCCTRL_PLATFORM_UDP;
-		else if (!strncmp(platformtype, "FPGA", 4))
-			priv->cdc_ctrl.platform_type = HI_CDCCTRL_PLATFORM_FPGA;
+	if (!of_property_read_u32(pdev->dev.of_node, "slimbusclk_io_driver", &slimbusclk_drv)) {
+		priv->cdc_ctrl.slimbusclk_cdc_drv = slimbusclk_drv;
 	}
 
+	if (!of_property_read_u32(pdev->dev.of_node, "slimbusdata_io_driver", &slimbusdata_drv)) {
+		priv->cdc_ctrl.slimbusdata_cdc_drv = slimbusdata_drv;
+	}
+
+	return;
+}
+
+static void hi_cdc_get_regulator(struct device *dev, struct hi_cdc_ctrl_priv *priv)
+{
+	unsigned int val = 0;
+	struct device_node *np = dev->of_node;
+
+	if (!of_property_read_u32(np, "hisilicon,ldo8_supply", &val)) {
+		dev_info(dev, "ldo8 supply is %d\n", val);
+		if (val == 1) {
+			priv->ldo8 = devm_regulator_get(dev, "codec_ldo8");
+			if (IS_ERR(priv->ldo8))
+				priv->ldo8 = NULL;
+			else
+				if (regulator_enable(priv->ldo8))
+					dev_err(dev, "failed to enable ldo8 supply\n");
+		}
+	} else {
+		dev_info(dev, "ldo8 is not support\n");
+	}
 }
 
 static int hi_cdcctrl_probe(struct platform_device *pdev)
@@ -339,7 +365,7 @@ static int hi_cdcctrl_probe(struct platform_device *pdev)
 
 	hi_cdc_bus_type_select(priv, dev, np);
 
-	hi_cdc_platform_type_read(pdev, priv);
+	hi_cdc_ioparam_read(pdev, priv);
 
 	ret = of_property_read_u32(np, "hisilicon,reg-8bit-begin-addr", &priv->regaddr8_begin);
 	if (ret) {
@@ -417,7 +443,10 @@ static int hi_cdcctrl_probe(struct platform_device *pdev)
 		pm_runtime_enable(&pdev->dev);
 	}
 
-	dev_info(dev, "codec-controller probe ok, platform_type:%d, pm_runtime_support:%d\n", priv->cdc_ctrl.platform_type, priv->cdc_ctrl.pm_runtime_support);
+	hi_cdc_get_regulator(dev, priv);
+
+	dev_info(dev, "codec-controller probe ok, slimbusclk_drv:%d, slimbusdata_drv:%d, pm_runtime_support:%d\n",
+				priv->cdc_ctrl.slimbusclk_cdc_drv, priv->cdc_ctrl.slimbusdata_cdc_drv, priv->cdc_ctrl.pm_runtime_support);
 
 	return 0;
 
@@ -430,7 +459,7 @@ err_exit:
 			dev_err(dev, "regulator_disable: %d", ret);
 	}
 
-	dev_err(dev, "codec-controller probe fail, platform_type:%d\n", priv->cdc_ctrl.platform_type);
+	dev_err(dev, "codec-controller probe fail\n");
 	return ret;
 }
 
@@ -452,6 +481,11 @@ static int hi_cdcctrl_remove(struct platform_device *pdev)
 		int ret = regulator_disable(priv->supplies[CDC_SUP_MAIN]);
 		if (ret != 0)
 			dev_err(dev, "regulator_disable: %d", ret);
+	}
+
+	if (priv->ldo8) {
+		if (regulator_disable(priv->ldo8))
+			dev_err(dev, "lodo8 regulator disable failed");
 	}
 
 	clk_disable_unprepare(priv->cdc_mclk);

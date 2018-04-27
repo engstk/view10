@@ -294,6 +294,7 @@ static void mb_dbg_remove_entry(unsigned int idx)
 	list_for_each_entry(pos, &mb_dbg_list, node) {
 		if (pos->idx == idx) {
 			mailbox_free(pos->ptr);
+			list_del(&pos->node);
 			kfree(pos);
 			mutex_unlock(&mb_dbg_lock);
 			return;

@@ -5,6 +5,7 @@
 #include <linux/gpio.h>
 #include <linux/of_gpio.h>
 #include <linux/interrupt.h>
+#include <linux/ctype.h>
 #include <linux/regulator/consumer.h>
 #include "../../huawei_ts_kit_algo.h"
 #include "../../tpkit_platform_adapter.h"
@@ -14,6 +15,52 @@
 #define MXT_FW_RESET_TIME 250
 #define CONFIG_MXT_UPDATE_BY_OBJECT
 #define OBJECT_CFG_HEAD_SIZE 16
+
+extern struct mxt_data *mxt_core_data;
+static int atmel_get_lcd_panel_info(void);
+static int atmel_get_lcd_module_name(void);
+//parse lcd dts for get lcd panel info
+static int atmel_get_lcd_panel_info(void)
+{
+	struct device_node *dev_node = NULL;
+	char *lcd_type = NULL;
+	dev_node = of_find_compatible_node(NULL, NULL, LCD_PANEL_TYPE_DEVICE_NODE_NAME);
+	if (!dev_node) {
+		TS_LOG_ERR("%s: NOT found device node[%s]!\n", __func__, LCD_PANEL_TYPE_DEVICE_NODE_NAME);
+		return -EINVAL;
+	}
+	lcd_type = (char*)of_get_property(dev_node, "lcd_panel_type", NULL);
+	if(!lcd_type){
+		TS_LOG_ERR("%s: Get lcd panel type faile!\n", __func__);
+		return -EINVAL ;
+	}
+
+	strncpy(mxt_core_data->lcd_panel_info, lcd_type, LCD_PANEL_INFO_MAX_LEN-1);
+	TS_LOG_INFO("lcd_panel_info = %s.\n", mxt_core_data->lcd_panel_info);
+	return 0;
+}
+//parse lcd panel info for lcd module name
+static int  atmel_get_lcd_module_name(void)
+{
+	char temp[LCD_PANEL_INFO_MAX_LEN] = {0};
+	int i = 0;
+	if(!mxt_core_data || !mxt_core_data->lcd_panel_info) {
+		TS_LOG_ERR("%s, data is NULL\n", __func__);
+		return -EINVAL;
+	}
+	memset(mxt_core_data->lcd_module_name, 0 , MAX_STR_LEN);
+	strncpy(temp, mxt_core_data->lcd_panel_info, LCD_PANEL_INFO_MAX_LEN-1);
+	for(i=0;i<(LCD_PANEL_INFO_MAX_LEN -1) && (i < (MAX_STR_LEN -1));i++)
+	{
+		if(temp[i] == '_')
+		{
+			break;
+		}
+		mxt_core_data->lcd_module_name[i] = tolower(temp[i]);
+	}
+	TS_LOG_INFO("lcd_module_name = %s.\n", mxt_core_data->lcd_module_name);
+	return 0;
+}
 
 /*
  *Function for enabling T37 diagnostic mode through T6.
@@ -744,6 +791,7 @@ release:
 int atmel_update_fw_file_name(struct mxt_data *data, char *file_name)
 {
 	int offset = 0;
+	int ret = NO_ERR;
 	if(data == NULL || file_name == NULL || !data->atmel_chip_data
 		|| !data->atmel_chip_data->ts_platform_data) {
 		TS_LOG_ERR("%s, param invalid\n", __func__);
@@ -774,7 +822,23 @@ int atmel_update_fw_file_name(struct mxt_data *data, char *file_name)
 		offset +=
 		    snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset,
 			     data->module_id);
-
+		if(data->fw_need_depend_on_lcd && !data->is_firmware_broken) {
+			ret = atmel_get_lcd_panel_info();
+			if(ret < 0){
+				TS_LOG_ERR("get lcd panel info faild\n");
+			}
+			ret = atmel_get_lcd_module_name();
+			if(ret < 0){
+				TS_LOG_ERR("get_lcd_module name failed\n");
+			} else {
+				offset +=
+					snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset,
+						"_");
+				offset +=
+					snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset,
+						data->lcd_module_name);
+			}
+		}
 		snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset,
 			 "_firmware.fw");
 	} else {//sd update
@@ -819,6 +883,14 @@ void atmel_update_config_file_name(struct mxt_data *data, char *file_name)
 		offset +=
 		    snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset,
 			     data->module_id);
+		if(data->fw_need_depend_on_lcd && !data->is_firmware_broken) {//if firmware is broken, use default config name
+			offset +=
+				snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset,
+					"_");
+			offset +=
+				snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset,
+					data->lcd_module_name);
+		}
 		snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - 1 - offset, "_config.raw");
 	} else {//sd update
 		offset =

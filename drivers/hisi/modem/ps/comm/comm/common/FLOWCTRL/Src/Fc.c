@@ -58,12 +58,6 @@
 #include "TTFUtil.h"
 
 
-#ifdef STATIC
-#undef STATIC
-#endif
-
-#define STATIC
-
 
 /*****************************************************************************
     协议栈打印打点方式下的.C文件宏定义
@@ -166,104 +160,8 @@ VOS_UINT32                              g_ulFcDebugLevel = (VOS_UINT32)PS_PRINT_
 ******************************************************************************/
 
 /*lint -save -e958 */
-VOS_VOID     FC_LOG
-(
-    VOS_UINT32          ulLevel,
-    const VOS_CHAR     *pcString
-)
-{
-    /*lint -e64*/
-    TTF_LOG(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM, ulLevel, pcString);
-    /*lint +e64*/
-
-    return;
-}
-
-VOS_VOID     FC_LOG1
-(
-    VOS_UINT32            ulLevel,
-    const VOS_CHAR       *pcString,
-    VOS_INT32             lPara1
-)
-{
-    /*lint -e64*/
-    TTF_LOG1(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM,
-           ulLevel, pcString, lPara1);
-    /*lint -e64*/
 
 
-    return;
-}
-
-VOS_VOID     FC_LOG2
-(
-    VOS_UINT32            ulLevel,
-    const VOS_CHAR       *pcString,
-    VOS_INT32             lPara1,
-    VOS_INT32             lPara2
-)
-{
-    /*lint -e64*/
-    TTF_LOG2(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM,
-           ulLevel, pcString, lPara1, lPara2);
-    /*lint +e64*/
-
-
-    return;
-}
-
-VOS_VOID     FC_LOG3
-(
-    VOS_UINT32              ulLevel,
-    const VOS_CHAR         *pcString,
-    VOS_INT32               lPara1,
-    VOS_INT32               lPara2,
-    VOS_INT32               lPara3
-)
-{
-    /*lint -e64*/
-    TTF_LOG3(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM,
-           ulLevel, pcString, lPara1, lPara2, lPara3);
-    /*lint +e64*/
-
-
-    return;
-}
-
-VOS_VOID     FC_LOG4
-(
-    VOS_UINT32          ulLevel,
-    const VOS_CHAR     *pcString,
-    VOS_INT32           lPara1,
-    VOS_INT32           lPara2,
-    VOS_INT32           lPara3,
-    VOS_INT32           lPara4
-)
-{
-    /*lint -e64*/
-    TTF_LOG4(UEPS_PID_FLOWCTRL, DIAG_MODE_COMM,
-           ulLevel, pcString, lPara1, lPara2, lPara3, lPara4);
-    /*lint +e64*/
-
-
-    return;
-}
-
-/*****************************************************************************
- 函 数 名  : FC_MNTN_TraceEvent
- 功能描述  : 输出可维可测
- 输入参数  : pMsg  --  可维可测消息
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2011年12月5日
-    作    者   :
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_VOID FC_MNTN_TraceEvent(VOS_VOID *pMsg)
 {
    DIAG_TraceReport(pMsg);
@@ -271,23 +169,7 @@ STATIC VOS_VOID FC_MNTN_TraceEvent(VOS_VOID *pMsg)
    return;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_MNTN_TracePointFcEvent
- 功能描述  : 流控执行可维可测
- 输入参数  : enMsgName  --  流控或解流控消息
-             stFcPoint  --  流控点
-             ulResult   --  流控执行情况
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月5日
-    作    者   :
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID FC_MNTN_TracePointFcEvent
 (
     FC_MNTN_EVENT_TYPE_ENUM_UINT16      enMsgName,
@@ -344,21 +226,7 @@ VOS_VOID FC_MNTN_TracePointFcEvent
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_MNTN_TracePolicy
- 功能描述  : 输出流控策略的可维可测
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月19日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_MNTN_TracePolicy(FC_MNTN_EVENT_TYPE_ENUM_UINT16 enMsgName, FC_POLICY_STRU *pPolicy )
 {
     FC_MNTN_POLICY_STRU                 stFcMntnPolicy;
@@ -404,21 +272,7 @@ STATIC VOS_UINT32  FC_MNTN_TracePolicy(FC_MNTN_EVENT_TYPE_ENUM_UINT16 enMsgName,
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_MNTN_TraceCpuLoad
- 功能描述  : 输出当前CPULoad
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年1月31日
-    作    者   : w68271
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_MNTN_TraceCpuLoad(FC_MNTN_EVENT_TYPE_ENUM_UINT16 enMsgName, VOS_UINT32  ulCpuLoad )
 {
     FC_MNTN_CPULOAD_STRU                stFcMntnCpuLoad;
@@ -438,22 +292,7 @@ VOS_UINT32  FC_MNTN_TraceCpuLoad(FC_MNTN_EVENT_TYPE_ENUM_UINT16 enMsgName, VOS_U
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_MNTN_TraceDrvAssemPara
- 功能描述  : 输出当前调整组包方案
- 输入参数  : FC_DRV_ASSEM_PARA_STRU  pstDrvAssenPara 当前组包参数
 
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2012年5月17日
-    作    者   : t00148005
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_MNTN_TraceDrvAssemPara(FC_DRV_ASSEM_PARA_STRU *pstDrvAssenPara)
 {
     FC_MNTN_DRV_ASSEM_PARA_STRU     stFcMntnDrvAssemPara;
@@ -478,23 +317,7 @@ VOS_UINT32  FC_MNTN_TraceDrvAssemPara(FC_DRV_ASSEM_PARA_STRU *pstDrvAssenPara)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_IsPolicyEnable
- 功能描述  : 判断流控内部策略是否使能
- 输入参数  : ulPointPolicyMask       --  流控策略掩码
-             enModemId               --  该策略对应的Modem ID
- 输出参数  : 无
- 返 回 值  : 0     --  流控策略未使能
-             非0   --  流控策略使能
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月13日
-    作    者   : w68271
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 /* add by wangrong */
 STATIC VOS_UINT32 FC_IsPolicyEnable(VOS_UINT32 ulPointPolicyMask, MODEM_ID_ENUM_UINT16 enModemId)
 {
@@ -514,22 +337,7 @@ STATIC VOS_UINT32 FC_IsPolicyEnable(VOS_UINT32 ulPointPolicyMask, MODEM_ID_ENUM_
 }
 /* add by wangrong */
 
-/*****************************************************************************
- 函 数 名  : FC_RegPoint
- 功能描述  : 请求添加注册流控点,供外部模块调用
- 输入参数  : pstFcRegPoint --  流控点参数
- 输出参数  :
- 返 回 值  : VOS_OK     --  成功
-             VOS_ERR    --  失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月5日
-    作    者   :
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_RegPoint
 (
     FC_REG_POINT_STRU                  *pstFcRegPoint
@@ -613,22 +421,7 @@ VOS_UINT32  FC_RegPoint
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_DeRegPoint
- 功能描述  : 请求去注册流控点
- 输入参数  : pulFcId       --  流控点ID
- 输出参数  : 无
- 返 回 值  : VOS_OK     --  成功
-             VOS_ERR    --  失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月5日
-    作    者   :
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_DeRegPoint
 (
     FC_ID_ENUM_UINT8                   enFcId,
@@ -685,21 +478,7 @@ VOS_UINT32  FC_DeRegPoint
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_ChangePoint
- 功能描述  : 更改流控点
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月8日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_ChangePoint
 (
     FC_ID_ENUM_UINT8                   enFcId,
@@ -758,21 +537,7 @@ VOS_UINT32  FC_ChangePoint
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POINT_Get
- 功能描述  : 根据流控Id来获取流控点
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月9日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC FC_POINT_STRU *FC_POINT_Get(FC_ID_ENUM_UINT8 enFcId)
 {
     VOS_UINT32                          ulFcIdIdxLoop;
@@ -797,21 +562,7 @@ STATIC FC_POINT_STRU *FC_POINT_Get(FC_ID_ENUM_UINT8 enFcId)
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POINT_Add
- 功能描述  : 添加流控点
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月14日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_POINT_Add
 (
     FC_REG_POINT_STRU                  *pstFcRegPoint
@@ -872,21 +623,7 @@ STATIC VOS_UINT32  FC_POINT_Add
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POINT_Del
- 功能描述  : 从流控点管理模块删除某一个流控点
- 输入参数  : enFcId -- 流控ID
- 输出参数  : 流控点管理实体
- 返 回 值  : 成功VOS_OK，失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月16日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_POINT_Del(FC_ID_ENUM_UINT8 enFcId )
 {
     VOS_UINT32                          ulFcIdIdxLoop;
@@ -925,21 +662,7 @@ VOS_UINT32  FC_POINT_Del(FC_ID_ENUM_UINT8 enFcId )
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_PointSetFc
- 功能描述  : 请求对应ID的流控点启动流控
- 输入参数  : enFcId --  流控点ID
- 输出参数  : 无
- 返 回 值  : 见FC_PRI_OPER_ENUM_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月5日
-    作    者   :
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 FC_PRI_OPER_ENUM_UINT32 FC_POINT_SetFc
 (
     VOS_UINT32                          ulPolicyMask,
@@ -989,21 +712,7 @@ FC_PRI_OPER_ENUM_UINT32 FC_POINT_SetFc
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_PointClrFc
- 功能描述  : 请求对应ID的流控点解除流控
- 输入参数  : enFcId --  流控点ID
- 输出参数  : 无
- 返 回 值  : 见FC_PRI_OPER_ENUM_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月5日
-    作    者   :
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 FC_PRI_OPER_ENUM_UINT32 FC_POINT_ClrFc(VOS_UINT32 ulPolicyMask, FC_ID_ENUM_UINT8 enFcId)
 {
     /*  根据ID找到流控点实例，执行实例的流控解除函数 */
@@ -1054,21 +763,7 @@ FC_PRI_OPER_ENUM_UINT32 FC_POINT_ClrFc(VOS_UINT32 ulPolicyMask, FC_ID_ENUM_UINT8
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POINT_Reg
- 功能描述  : 流控点注册内部处理函数
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月12日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_POINT_Reg
 (
     FC_REG_POINT_STRU                  *pstFcRegPoint
@@ -1107,21 +802,7 @@ VOS_UINT32  FC_POINT_Reg
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POINT_DeReg
- 功能描述  : 去注册流控点
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月15日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_POINT_DeReg(FC_ID_ENUM_UINT8 enFcId, MODEM_ID_ENUM_UINT16  enModemId)
 {
     FC_POINT_STRU                      *pFcPoint;
@@ -1166,23 +847,7 @@ VOS_UINT32  FC_POINT_DeReg(FC_ID_ENUM_UINT8 enFcId, MODEM_ID_ENUM_UINT16  enMode
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POINT_Change
- 功能描述  : 更改POINT属性
- 输入参数  : enFcId     -- 流控ID
-              enPolicyId --  流控策略ID
-              enNewPri   -- 新的优先级
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月16日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_POINT_Change
 (
     FC_ID_ENUM_UINT8                   enFcId,
@@ -1229,41 +894,13 @@ VOS_UINT32  FC_POINT_Change
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POINT_Init
- 功能描述  : 流控点模块初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月20日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_VOID  FC_POINT_Init( VOS_VOID )
 {
     PSACORE_MEM_SET(&g_stFcPointMgr, sizeof(FC_POINT_MGR_STRU), 0, sizeof(FC_POINT_MGR_STRU));
 }
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_TrimInvalidPri
- 功能描述  : 去除该流控策略当前优先级及更低的无效优先级
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月24日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_VOID  FC_POLICY_TrimInvalidPri( FC_POLICY_STRU *pFcPolicy )
 {
     FC_PRI_STRU                        *pstPri;
@@ -1292,21 +929,7 @@ STATIC VOS_VOID  FC_POLICY_TrimInvalidPri( FC_POLICY_STRU *pFcPolicy )
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_UpWithOnePri
- 功能描述  : 执行一次当前优先级的所有流控点的流控操作
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月9日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC FC_PRI_OPER_ENUM_UINT32 FC_POLICY_UpWithOnePri
 (
     FC_POLICY_STRU                     *pFcPolicy,
@@ -1331,21 +954,7 @@ STATIC FC_PRI_OPER_ENUM_UINT32 FC_POLICY_UpWithOnePri
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_DownForOnePri
- 功能描述  : 执行一次当前优先级的所有流控点的解流控操作
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月17日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC FC_PRI_OPER_ENUM_UINT32  FC_POLICY_DownWithOnePri
 (
     FC_POLICY_STRU                     *pPolicy,
@@ -1369,21 +978,7 @@ STATIC FC_PRI_OPER_ENUM_UINT32  FC_POLICY_DownWithOnePri
     return FC_PRI_CHANGE_AND_BREAK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_Up
- 功能描述  : 流控级别递增一个有效级别
- 输入参数  : pPolicy -- 流控策略实体
- 输出参数  : pPolicy -- 流控策略级别更改，并执行相应的流控函数
- 返 回 值  : 成功VOS_OK,失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月7日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 FC_POLICY_Up(FC_POLICY_STRU *pPolicy)
 {
     FC_PRI_STRU                        *pstPri;
@@ -1416,22 +1011,7 @@ VOS_UINT32 FC_POLICY_Up(FC_POLICY_STRU *pPolicy)
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_UpToTargetPri
- 功能描述  : 流控到指定流控级别
- 输入参数  : pFcPolicy   --  流控策略实体指针
-              enTargetPri -- 目标流控级别
- 输出参数  : None
- 返 回 值  : 成功VOS_OK，失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月16日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_POLICY_UpToTargetPri(FC_POLICY_STRU *pFcPolicy, FC_PRI_ENUM_UINT8 enTargetPri )
 {
     FC_PRI_STRU                    *pstPri;
@@ -1467,21 +1047,7 @@ VOS_UINT32  FC_POLICY_UpToTargetPri(FC_POLICY_STRU *pFcPolicy, FC_PRI_ENUM_UINT8
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_Down
- 功能描述  : 流控级别递减一个有效级别
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月7日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 FC_POLICY_Down(FC_POLICY_STRU *pFcPolicy)
 {
     FC_PRI_STRU                        *pstPri;
@@ -1515,21 +1081,7 @@ VOS_UINT32 FC_POLICY_Down(FC_POLICY_STRU *pFcPolicy)
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_DownToTargetPri
- 功能描述  : 解除流控到指定流控级别
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月16日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_POLICY_DownToTargetPri(FC_POLICY_STRU *pFcPolicy, FC_PRI_ENUM_UINT8 enTargetPri )
 {
     FC_PRI_STRU                        *pstPri;
@@ -1558,21 +1110,7 @@ VOS_UINT32  FC_POLICY_DownToTargetPri(FC_POLICY_STRU *pFcPolicy, FC_PRI_ENUM_UIN
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_UpdateHighestPri
- 功能描述  : 更新该流控策略的最高优先级
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月24日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_VOID  FC_POLICY_UpdateHighestPri( FC_POLICY_STRU *pPolicy )
 {
     FC_PRI_ENUM_UINT8                  enPri;
@@ -1591,21 +1129,7 @@ STATIC VOS_VOID  FC_POLICY_UpdateHighestPri( FC_POLICY_STRU *pPolicy )
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_AddPointForPri
- 功能描述  : 添加流控点
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月16日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_POLICY_AddPointForPri
 (
     FC_POLICY_STRU                     *pPolicy,
@@ -1662,21 +1186,7 @@ STATIC VOS_UINT32  FC_POLICY_AddPointForPri
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_DelPointForPri
- 功能描述  : 删除流控点
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月16日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_POLICY_DelPointForPri
 (
     FC_POLICY_STRU                     *pPolicy,
@@ -1725,21 +1235,7 @@ STATIC VOS_UINT32  FC_POLICY_DelPointForPri
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_AddPoint
- 功能描述  : 流控策略增加流控点
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月15日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_POLICY_AddPoint
 (
     FC_PRIVATE_POLICY_ID_ENUM_UINT8     enPolicyId,
@@ -1777,21 +1273,7 @@ STATIC VOS_UINT32  FC_POLICY_AddPoint
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_GetPriWithFcId
- 功能描述  : 通过FcId获得流控优先级
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月22日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC FC_PRI_ENUM_UINT8  FC_POLICY_GetPriWithFcId
 (
     FC_PRIVATE_POLICY_ID_ENUM_UINT8     enPolicyId,
@@ -1832,21 +1314,7 @@ STATIC FC_PRI_ENUM_UINT8  FC_POLICY_GetPriWithFcId
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_DelPoint
- 功能描述  : 删除流控策略的流控ID
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月15日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_POLICY_DelPoint
 (
     FC_PRIVATE_POLICY_ID_ENUM_UINT8     enPolicyId,
@@ -1885,21 +1353,7 @@ STATIC VOS_UINT32  FC_POLICY_DelPoint
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_ChangePoint
- 功能描述  : 更改流控点的优先级
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月16日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_POLICY_ChangePoint
 (
     FC_PRIVATE_POLICY_ID_ENUM_UINT8     enPolicyId,
@@ -1946,42 +1400,7 @@ STATIC VOS_UINT32  FC_POLICY_ChangePoint
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_POLICY_GetPriCnt
- 功能描述  : 获取流控策略优先级个数
- 输入参数  : pFcPolicy -- 流控策略实体
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月12日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-STATIC VOS_UINT32  FC_POLICY_GetPriCnt(FC_POLICY_STRU *pFcPolicy)
-{
-    return (pFcPolicy->ucPriCnt);
-}
-
-
-/*****************************************************************************
- 函 数 名  : FC_POLICY_Init
- 功能描述  : 流控策略实体初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 成功VOS_OK,失败VOS_ERR
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2011年12月20日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_POLICY_Init( VOS_VOID )
 {
     FC_POLICY_ID_ENUM_UINT8             enPolicyId;
@@ -2000,21 +1419,7 @@ STATIC VOS_UINT32  FC_POLICY_Init( VOS_VOID )
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_CFG_CheckCpuParam
- 功能描述  : CPU流控NV参数合法性检查
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月20日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_CFG_CheckCpuParam( FC_CFG_CPU_STRU *pstFcCfgCpu )
 {
     if ( pstFcCfgCpu->ulCpuOverLoadVal < pstFcCfgCpu->ulCpuUnderLoadVal)
@@ -2036,21 +1441,7 @@ STATIC VOS_UINT32  FC_CFG_CheckCpuParam( FC_CFG_CPU_STRU *pstFcCfgCpu )
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_CFG_CheckMemParam
- 功能描述  : 内存流控NV参数合法性检查
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月20日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_CFG_CheckMemParam( FC_CFG_MEM_STRU *pstFcCfgMem )
 {
     VOS_UINT32                          ulThresholdLoop;
@@ -2083,21 +1474,7 @@ STATIC VOS_UINT32  FC_CFG_CheckMemParam( FC_CFG_MEM_STRU *pstFcCfgMem )
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_CFG_CheckUlRateParam
- 功能描述  : 上行限制流控NV参数合法性检查
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月20日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_CFG_CheckUlRateParam( FC_CFG_UM_UL_RATE_STRU *pstFcCfgUmUlRate )
 {
     if ( FC_UL_RATE_MAX_LEV <  pstFcCfgUmUlRate->ucRateCnt)
@@ -2113,21 +1490,7 @@ STATIC VOS_UINT32  FC_CFG_CheckUlRateParam( FC_CFG_UM_UL_RATE_STRU *pstFcCfgUmUl
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_CFG_CheckParam
- 功能描述  : NV参数合法性检查
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月20日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_CFG_CheckParam( FC_CFG_STRU *pstFcCfg )
 {
     /* 设计约束，A核需要判断是否因为速传引起CPU占用率高，第一次CPU占用率
@@ -2172,21 +1535,7 @@ STATIC VOS_UINT32  FC_CFG_CheckParam( FC_CFG_STRU *pstFcCfg )
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_CFG_SetDefaultValue
- 功能描述  : 设置NV默认值
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年1月12日
-    作    者   : l00164359
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_CFG_SetDefaultValue( FC_CFG_STRU *pstFcCfg )
 {
     FC_LOG(PS_PRINT_WARNING, "FC_CFG_SetDefaultValue, Set Default NV Value.\n");
@@ -2248,21 +1597,7 @@ STATIC VOS_UINT32  FC_CFG_SetDefaultValue( FC_CFG_STRU *pstFcCfg )
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_CFG_SetNvValue
- 功能描述  : 设置NV默认值
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年1月12日
-    作    者   : l00164359
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_CFG_SetNvValue( FC_CFG_NV_STRU  *pstFcCfgNv )
 {
     FC_CFG_STRU         *pstFcCfg = &g_stFcCfg;
@@ -2303,21 +1638,7 @@ STATIC VOS_UINT32  FC_CFG_SetNvValue( FC_CFG_NV_STRU  *pstFcCfgNv )
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_CFG_Init
- 功能描述  : 流控配置初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 成功VOS_OK,失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月20日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32  FC_CFG_Init( VOS_VOID )
 {
     VOS_UINT32                          ulResult;
@@ -2327,7 +1648,7 @@ STATIC VOS_UINT32  FC_CFG_Init( VOS_VOID )
     PSACORE_MEM_SET(&stFcCfgNv, sizeof(stFcCfgNv), 0x0, sizeof(stFcCfgNv));
     PSACORE_MEM_SET(&g_stFcCfg, sizeof(FC_CFG_STRU), 0, sizeof(FC_CFG_STRU));
 
-    ulResult = NV_ReadEx(MODEM_ID_0, en_NV_Item_Flow_Ctrl_Config,\
+    ulResult = GUCTTF_NV_Read(MODEM_ID_0, en_NV_Item_Flow_Ctrl_Config,\
                        &stFcCfgNv, sizeof(FC_CFG_NV_STRU));
 
     if ( NV_OK != ulResult )
@@ -2359,21 +1680,7 @@ STATIC VOS_UINT32  FC_CFG_Init( VOS_VOID )
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_SndCpuMsg
- 功能描述  : 发送CPU流控消息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月12日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 FC_SndCpuMsg
 (
     FC_MSG_TYPE_ENUM_UINT16 usMsgName,
@@ -2391,7 +1698,7 @@ VOS_UINT32 FC_SndCpuMsg
     if(VOS_NULL_PTR == pstMsg)
     {
         /* 该函数会在中断中被调用，故使用LogPrint */
-        LogPrint("FC_SndIntraCpuMsg, ERROR, Alloc Msg Fail\n");
+        FC_LOG(PS_PRINT_ERROR, "FC_SndIntraCpuMsg, ERROR, Alloc Msg Fail\n");
         return VOS_ERR;
     }
 
@@ -2407,28 +1714,14 @@ VOS_UINT32 FC_SndCpuMsg
     if (VOS_OK != ulResult)
     {
         /* 该函数会在中断中被调用，故使用LogPrint */
-        LogPrint("FC_SndIntraCpuMsg, ERROR, Send Msg Fail\n");
+        FC_LOG(PS_PRINT_ERROR, "FC_SndIntraCpuMsg, ERROR, Send Msg Fail\n");
         return VOS_ERR;
     }
 
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_SndRegPointMsg
- 功能描述  : 发送注册流控点消息
- 输入参数  : pstFcRegPoint -- 流控点结构信息指针
- 输出参数  : None
- 返 回 值  : 成功VOS_OK，失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月12日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32 FC_SndRegPointMsg
 (
     FC_REG_POINT_STRU                  *pstFcRegPoint
@@ -2464,21 +1757,7 @@ STATIC VOS_UINT32 FC_SndRegPointMsg
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_SndDeRegPointMsg
- 功能描述  : 发送注册流控点消息
- 输入参数  : enFcId -- 流控ID
- 输出参数  : None
- 返 回 值  : 成功VOS_OK，失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月12日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32 FC_SndDeRegPointMsg
 (
     FC_ID_ENUM_UINT8                   enFcId,
@@ -2514,23 +1793,7 @@ STATIC VOS_UINT32 FC_SndDeRegPointMsg
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : FC_SndChangePointMsg
- 功能描述  : 流控点优先级改变消息
- 输入参数  : enFcId     -- 流控ID
-              enPolicyId -- 策略ID
-              enPri      -- 新的流控优先级
- 输出参数  : 消息
- 返 回 值  : 成功VOS_OK,失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月12日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 STATIC VOS_UINT32 FC_SndChangePointMsg
 (
     FC_ID_ENUM_UINT8                   enFcId,
@@ -2571,21 +1834,7 @@ STATIC VOS_UINT32 FC_SndChangePointMsg
 }
 
 
-/*****************************************************************************
- 函 数 名  : FC_CommInit
- 功能描述  : 两核流控模块初始化
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 成功VOS_OK,失败VOS_ERR
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年12月7日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  FC_CommInit( VOS_VOID )
 {
     VOS_UINT32                          ulResult;
@@ -2608,268 +1857,6 @@ VOS_UINT32  FC_CommInit( VOS_VOID )
     return VOS_OK;
 }
 
-
-/*****************************************************************************
- 函 数 名  : FC_SetDebugLev
- 功能描述  : 更改流控打印级别
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2012年2月9日
-    作    者   : g45205
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-STATIC VOS_UINT32  FC_SetDebugLev( VOS_UINT32 ulLev )
-{
-    g_ulFcDebugLevel    = ulLev;
-
-    return g_ulFcDebugLevel;
-}
-
-
-/*****************************************************************************
- 函 数 名  : FC_SetFcEnableMask
- 功能描述  : 设置流控掩码函数
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2012年2月9日
-    作    者   : FC_RecoverUlGradeProcess
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-STATIC VOS_UINT32  FC_SetFcEnableMask( VOS_UINT32 ulEnableMask )
-{
-    g_stFcCfg.ulFcEnbaleMask    = ulEnableMask;
-
-    return (g_stFcCfg.ulFcEnbaleMask);
-}
-
-
-/*****************************************************************************
- 函 数 名  : FC_SetThreshold
- 功能描述  : 设置门限
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2012年2月10日
-    作    者   : 高财
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-STATIC VOS_UINT32  FC_SetThreshold
-(
-    VOS_UINT32                          ulPolicyId,
-    VOS_UINT32                          ulParam1,
-    VOS_UINT32                          ulSetThreshold,
-    VOS_UINT32                          ulStopThreshold
-)
-{
-    switch(ulPolicyId)
-    {
-        case FC_POLICY_ID_MEM:
-            g_stFcCfg.stFcCfgMem.astThreshold[ulParam1].ulSetThreshold  = ulSetThreshold;
-            g_stFcCfg.stFcCfgMem.astThreshold[ulParam1].ulStopThreshold = ulStopThreshold;
-            break;
-
-        case FC_POLICY_ID_CPU_A:
-            g_stFcCfg.stFcCfgCpuA.ulCpuOverLoadVal  = ulSetThreshold;
-            g_stFcCfg.stFcCfgCpuA.ulCpuUnderLoadVal = ulStopThreshold;
-            break;
-
-        case FC_POLICY_ID_CDS:
-            break;
-
-        case FC_POLICY_ID_CST:
-            g_stFcCfg.stFcCfgCst.stThreshold.ulSetThreshold     = ulSetThreshold;
-            g_stFcCfg.stFcCfgCst.stThreshold.ulStopThreshold    = ulStopThreshold;
-            break;
-
-        case FC_POLICY_ID_GPRS:
-            if ( 0 == ulParam1) /* R_ITF_FLOW_CTRL_TYPE_MEM_CNT */
-            {
-                g_stFcCfg.stFcCfgGprs.stThresholdMemCnt.ulSetThreshold      = ulSetThreshold;
-                g_stFcCfg.stFcCfgGprs.stThresholdMemCnt.ulStopThreshold     = ulStopThreshold;
-            }
-            else    /* R_ITF_FLOW_CTRL_TYPE_MEM_SIZE */
-            {
-                g_stFcCfg.stFcCfgGprs.stThresholdMemSize.ulSetThreshold     = ulSetThreshold;
-                g_stFcCfg.stFcCfgGprs.stThresholdMemSize.ulStopThreshold    = ulStopThreshold;
-            }
-            break;
-
-        case FC_POLICY_ID_TMP:
-            break;
-
-        case FC_POLICY_ID_CPU_C:
-            g_stFcCfg.stFcCfgCpuC.ulCpuOverLoadVal  = ulSetThreshold;
-            g_stFcCfg.stFcCfgCpuC.ulCpuUnderLoadVal = ulStopThreshold;
-            break;
-
-        default:
-            break;
-    }
-
-    return VOS_OK;
-} /* FC_SetThreshold */
-
-
-/*****************************************************************************
- 函 数 名  : FC_Help
- 功能描述  : 流控当前信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2012年2月9日
-    作    者   : FC_RecoverUlGradeProcess
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-STATIC VOS_UINT32  FC_Help( VOS_VOID )
-{
-    FC_PRIVATE_POLICY_ID_ENUM_UINT8     enPolicyId;
-    FC_PRI_ENUM_UINT8                  enFcPri;
-    FC_POLICY_STRU                     *pPolicy;
-    FC_PRI_STRU                        *pPri;
-    VOS_UINT32                          ulFcIdIndex;
-    VOS_UINT32                          ulFcIdLoop;
-    FC_POINT_STRU                      *pFcPoint;
-
-
-    (VOS_VOID)vos_printf("\n================POLICY ID define start================\n");
-    (VOS_VOID)vos_printf("0 : FC_POLICY_ID_MEM\n");
-    (VOS_VOID)vos_printf("1 : FC_POLICY_ID_CPU_A\n");
-    (VOS_VOID)vos_printf("2 : FC_POLICY_ID_CDS\n");
-    (VOS_VOID)vos_printf("3 : FC_POLICY_ID_CST\n");
-    (VOS_VOID)vos_printf("4 : FC_POLICY_ID_GPRS\n");
-    (VOS_VOID)vos_printf("5 : FC_POLICY_ID_TMP\n");
-    (VOS_VOID)vos_printf("6 : FC_POLICY_ID_CPU_C\n");
-    (VOS_VOID)vos_printf("7 : FC_POLICY_ID_CDMA\n");
-    (VOS_VOID)vos_printf("================POLICY ID define end================\n");
-
-    (VOS_VOID)vos_printf("\n================FC ID define start================\n");
-    (VOS_VOID)vos_printf("0  : FC_ID_BRIDGE_FORWARD_DISACRD\n");
-    (VOS_VOID)vos_printf("1  : FC_ID_USB_ETH\n");
-    (VOS_VOID)vos_printf("2  : FC_ID_WIFI_ETH\n");
-    (VOS_VOID)vos_printf("3  : FC_ID_NIC_1\n");
-    (VOS_VOID)vos_printf("4  : FC_ID_NIC_2\n");
-    (VOS_VOID)vos_printf("5  : FC_ID_NIC_3\n");
-    (VOS_VOID)vos_printf("6  : FC_ID_NIC_4\n");
-    (VOS_VOID)vos_printf("7  : FC_ID_NIC_5\n");
-    (VOS_VOID)vos_printf("8  : FC_ID_NIC_6\n");
-    (VOS_VOID)vos_printf("9  : FC_ID_NIC_7\n");
-    (VOS_VOID)vos_printf("10 : FC_ID_NIC_8\n");
-    (VOS_VOID)vos_printf("11 : FC_ID_NIC_9\n");
-    (VOS_VOID)vos_printf("12 : FC_ID_NIC_10\n");
-    (VOS_VOID)vos_printf("13 : FC_ID_NIC_11\n");
-    (VOS_VOID)vos_printf("14 : FC_ID_MODEM\n");
-    (VOS_VOID)vos_printf("15 : FC_ID_UL_RATE_1_FOR_CPU\n");
-    (VOS_VOID)vos_printf("16 : FC_ID_UL_RATE_2_FOR_CPU\n");
-    (VOS_VOID)vos_printf("17 : FC_ID_UL_RATE_3_FOR_CPU\n");
-    (VOS_VOID)vos_printf("18 : FC_ID_UL_RATE_4_FOR_CPU\n");
-    (VOS_VOID)vos_printf("19 : FC_ID_UL_RATE_5_FOR_CPU\n");
-    (VOS_VOID)vos_printf("20 : FC_ID_UL_RATE_6_FOR_CPU\n");
-    (VOS_VOID)vos_printf("21 : FC_ID_UL_RATE_7_FOR_CPU\n");
-    (VOS_VOID)vos_printf("22 : FC_ID_UL_RATE_8_FOR_CPU\n");
-    (VOS_VOID)vos_printf("23 : FC_ID_UL_RATE_9_FOR_CPU\n");
-    (VOS_VOID)vos_printf("24 : FC_ID_UL_RATE_10_FOR_CPU\n");
-    (VOS_VOID)vos_printf("25 : FC_ID_UL_RATE_11_FOR_CPU\n");
-    (VOS_VOID)vos_printf("26 : FC_ID_UL_RATE_1_FOR_TMP\n");
-    (VOS_VOID)vos_printf("27 : FC_ID_UL_RATE_2_FOR_TMP\n");
-    (VOS_VOID)vos_printf("28 : FC_ID_UL_RATE_3_FOR_TMP\n");
-    (VOS_VOID)vos_printf("29 : FC_ID_UL_RATE_4_FOR_TMP\n");
-    (VOS_VOID)vos_printf("30 : FC_ID_UL_RATE_5_FOR_TMP\n");
-    (VOS_VOID)vos_printf("31 : FC_ID_UL_RATE_6_FOR_TMP\n");
-    (VOS_VOID)vos_printf("32 : FC_ID_UL_RATE_7_FOR_TMP\n");
-    (VOS_VOID)vos_printf("33 : FC_ID_UL_RATE_8_FOR_TMP\n");
-    (VOS_VOID)vos_printf("34 : FC_ID_UL_RATE_9_FOR_TMP\n");
-    (VOS_VOID)vos_printf("35 : FC_ID_UL_RATE_10_FOR_TMP\n");
-    (VOS_VOID)vos_printf("36 : FC_ID_UL_RATE_11_FOR_TMP\n");
-    (VOS_VOID)vos_printf("================FC ID define end================\n");
-
-
-    (VOS_VOID)vos_printf("\n================FC Debug func start================\n");
-    (VOS_VOID)vos_printf("FC SetThreshold Func        : FC_SetThreshold (ulPolicyId, ulParam1, ulSetThreshold, ulStopThreshold)\n");
-    (VOS_VOID)vos_printf("FC SetDevLev Func           : FC_SetDebugLev (ulLev)\n");
-    (VOS_VOID)vos_printf("FC SetEnableMask Func       : FC_SetFcEnableMask (ulEnableMask)\n");
-    (VOS_VOID)vos_printf("================FC Debug func end================\n");
-
-
-    (VOS_VOID)vos_printf("\n================FC Point information start================\n");
-    (VOS_VOID)vos_printf("FC Point information Start\n");
-    (VOS_VOID)vos_printf("FC Point Num            : %d\n", g_stFcPointMgr.ulPointNum);
-
-    for (ulFcIdLoop = 0; ulFcIdLoop < g_stFcPointMgr.ulPointNum; ulFcIdLoop++)
-    {
-        pFcPoint    = &(g_stFcPointMgr.astFcPoint[ulFcIdLoop]);
-
-        (VOS_VOID)vos_printf("FC ID                   : %d\n", pFcPoint->enFcId);
-        (VOS_VOID)vos_printf("Modem ID                : %d\n", pFcPoint->enModemId);
-        (VOS_VOID)vos_printf("ulPolicyMask        : 0x%x\n", pFcPoint->ulPolicyMask);
-        (VOS_VOID)vos_printf("ulFcMask            : 0x%x\n", pFcPoint->ulFcMask);
-        (VOS_VOID)vos_printf("ulParam1            : 0x%x\n", pFcPoint->ulParam1);
-        (VOS_VOID)vos_printf("ulParam2            : 0x%x\n", pFcPoint->ulParam2);
-        (VOS_VOID)vos_printf("pSetFunc            : %p\n", pFcPoint->pSetFunc);
-        (VOS_VOID)vos_printf("pClrFunc            : %p\n", pFcPoint->pClrFunc);
-    }
-    (VOS_VOID)vos_printf("================FC Point information end================\n");
-
-
-
-    (VOS_VOID)vos_printf("\n================FC POLICY STATUS Start================\n");
-    (VOS_VOID)vos_printf("FC EnableMask           : 0x%x\n", g_stFcCfg.ulFcEnbaleMask);
-
-    for (enPolicyId = FC_PRIVATE_POLICY_ID_MEM_MODEM_0; enPolicyId < FC_PRIVATE_POLICY_ID_BUTT; enPolicyId++)
-    {
-        pPolicy = FC_POLICY_Get(enPolicyId);
-
-        (VOS_VOID)vos_printf("POLICY ID               : %d\n", enPolicyId);
-        (VOS_VOID)vos_printf("PriCnt              : %d\n", pPolicy->ucPriCnt);
-        (VOS_VOID)vos_printf("enHighestPri        : %d\n", pPolicy->enHighestPri);
-        (VOS_VOID)vos_printf("enDonePri           : %d\n", pPolicy->enDonePri);
-        (VOS_VOID)vos_printf("pAdjustForUpFunc    : %p\n", pPolicy->pAdjustForUpFunc);
-        (VOS_VOID)vos_printf("pAdjustForDownFunc  : %p\n", pPolicy->pAdjustForDownFunc);
-        (VOS_VOID)vos_printf("pPostFunc           : %p\n", pPolicy->pPostFunc);
-
-        for (enFcPri = FC_PRI_1; enFcPri < FC_PRI_BUTT; enFcPri++)
-        {
-            pPri    = &(pPolicy->astFcPri[enFcPri]);
-
-            if (PS_TRUE == pPri->ucValid)
-            {
-                (VOS_VOID)vos_printf("FcID of Pri %d       : ", enFcPri);
-
-                for (ulFcIdIndex = 0; ulFcIdIndex < pPri->ucFcIdCnt; ulFcIdIndex++)
-                {
-                    (VOS_VOID)vos_printf("%d, ", pPri->aenFcId[ulFcIdIndex]);
-                }
-
-                (VOS_VOID)vos_printf("\n");
-            }
-        }
-    }
-
-    (VOS_VOID)vos_printf("================FC POLICY STATUS End================\n");
-
-    return VOS_OK;
-}
 /*lint -restore */
 /*lint +e534*/
 

@@ -128,7 +128,7 @@
 
 		camera_heap: camera-mem {
 			size  = <0x0 0x28000000>;
-			alignment = <0x0 0x100000>;
+			alignment = <0x0 0x400000>;
 			alloc-ranges = <0x1 0x0 0x1 0x0>;
 			compatible = "hisi-camera-pool";
 			reusable;

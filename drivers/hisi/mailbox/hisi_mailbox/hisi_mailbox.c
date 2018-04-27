@@ -142,10 +142,10 @@ EXPORT_SYMBOL(hisi_mbox_task_alloc);
 static inline int set_status(struct hisi_mbox_device *mdev, int status)
 {
 	int ret = 0;
-
-	spin_lock(&mdev->status_lock);
+	unsigned long flags = 0;
+	spin_lock_irqsave(&mdev->status_lock, flags);
 	if ((MDEV_DEACTIVATED & mdev->status)) {
-		spin_unlock(&mdev->status_lock);
+		spin_unlock_irqrestore(&mdev->status_lock, flags);
 		MBOX_PR_INFO("an unexpected ipc caused by %s\n", mdev->name);
 		/* WARN_ON(1); */
 		ret = -ENODEV;
@@ -154,24 +154,25 @@ static inline int set_status(struct hisi_mbox_device *mdev, int status)
 		mdev->status |= status;
 
 		while ((MDEV_SYNC_SENDING & mdev->status) || (MDEV_ASYNC_ENQUEUE & mdev->status)) {
-			spin_unlock(&mdev->status_lock);
+			spin_unlock_irqrestore(&mdev->status_lock, flags);
 			msleep(5);
-			spin_lock(&mdev->status_lock);
+			spin_lock_irqsave(&mdev->status_lock, flags);
 		}
 	} else {
 		mdev->status |= status;
 	}
 
-	spin_unlock(&mdev->status_lock);
+	spin_unlock_irqrestore(&mdev->status_lock, flags);
 out:
 	return ret;
 }
 
 static inline void clr_status(struct hisi_mbox_device *mdev, int status)
 {
-	spin_lock(&mdev->status_lock);
+	unsigned long flags = 0;
+	spin_lock_irqsave(&mdev->status_lock, flags);
 	mdev->status &= ~status;/*lint !e502*/
-	spin_unlock(&mdev->status_lock);
+	spin_unlock_irqrestore(&mdev->status_lock, flags);
 	return;
 }
 

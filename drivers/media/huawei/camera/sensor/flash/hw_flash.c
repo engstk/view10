@@ -197,13 +197,13 @@ static int hw_flash_register_attribute(struct hw_flash_ctrl_t *flash_ctrl, struc
     rc = device_create_file(dev, &hw_flash_lowpower_protect);
     if (rc < 0) {
         cam_err("%s failed to creat flash lowpower protect attribute.", __func__);
-        return rc;
+        goto err_out;
     }
 
     rc = device_create_file(flash_ctrl->cdev_torch.dev, &hw_flash_thermal_protect);
     if (rc < 0) {
         cam_err("%s failed to creat flash lowpower protect attribute.", __func__);
-        return rc;
+        goto err_create_flash_thermal_protect_file;
     }
 
     /* check flash led open or short */
@@ -211,10 +211,16 @@ static int hw_flash_register_attribute(struct hw_flash_ctrl_t *flash_ctrl, struc
     rc = device_create_file(flash_ctrl->cdev_torch.dev, &hw_flash_led_fault);
     if(rc < 0) {
         cam_err("%s failed to create flash led fault attribute.", __func__);
-        return rc;
+        goto err_create_flash_led_fault_file;
     }
 
     return 0;
+err_create_flash_led_fault_file:
+    device_remove_file(dev, &hw_flash_thermal_protect);
+err_create_flash_thermal_protect_file:
+    device_remove_file(dev, &hw_flash_lowpower_protect);
+err_out:
+    return rc;
 }
 
 static int hw_flash_mix_register_attribute(struct hw_flash_ctrl_t *flash_ctrl, struct device *dev)
@@ -229,7 +235,7 @@ static int hw_flash_mix_register_attribute(struct hw_flash_ctrl_t *flash_ctrl, s
     rc = device_create_file(flash_ctrl->cdev_torch1.dev, &hw_flash_thermal_protect);
     if (rc < 0) {
         cam_err("%s failed to creat flash mix lowpower protect attribute.", __func__);
-        return rc;
+        goto err_out;
     }
 
     /* check flash led open or short */
@@ -237,10 +243,15 @@ static int hw_flash_mix_register_attribute(struct hw_flash_ctrl_t *flash_ctrl, s
     rc = device_create_file(flash_ctrl->cdev_torch1.dev, &hw_flash_led_fault);
     if(rc < 0) {
         cam_err("%s failed to create flash mix led fault attribute.", __func__);
-        return rc;
+        goto err_create_flash_led_fault_file;
     }
 
     return 0;
+
+err_create_flash_led_fault_file:
+    device_remove_file(dev, &hw_flash_thermal_protect);
+err_out:
+    return rc;
 }
 
 int hw_flash_get_dt_data(struct hw_flash_ctrl_t *flash_ctrl)

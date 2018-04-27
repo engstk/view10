@@ -34,7 +34,11 @@
 #define IPA_SENSOR_SYSTEM_H "system_h"
 #define IPA_SENSOR_MAXID    255
 #define IPA_INIT_OK  0x05a5a5a5b
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+#define NUM_CLUSTERS 3
+#else
 #define NUM_CLUSTERS 2
+#endif
 #define IPA_SOC_INIT_TEMP  (85000)
 #ifdef CONFIG_HISI_THERMAL_SPM
 #define MAX_SHOW_STR 5
@@ -278,6 +282,33 @@ static bool setfreq_available(unsigned int idx , u32 freq) {
 	int ret = false;
 
 	switch (idx) {
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+			case 0: //Little core
+				table = cpufreq_frequency_get_table(0);
+				if (!table) {
+					pr_err("%s: Unable to find freq table(0)\n", __func__);
+					return false;
+				}
+				break;
+			case 1: //middle core
+				table = cpufreq_frequency_get_table(4);
+				if (!table) {
+					pr_err("%s: Unable to find freq table(4)\n", __func__);
+					return false;
+				}
+				break;
+			case 2: //Big core
+				table = cpufreq_frequency_get_table(6);
+				if (!table) {
+					pr_err("%s: Unable to find freq table(6)\n", __func__);
+					return false;
+				}
+				break;
+
+			case 3: //GPU
+					ret = true;
+					break;
+#else
 		case 0: //Little core
 			table = cpufreq_frequency_get_table(0);
 			if (!table) {
@@ -295,20 +326,30 @@ static bool setfreq_available(unsigned int idx , u32 freq) {
 		case 2: //GPU
 			ret = true;
 			break;
+#endif
 		default:
 			break;
 	}
-
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+	if (idx == 0 || idx == 1 || idx == 2){
+#else
 	if (idx == 0 || idx == 1){
+#endif
 		cpufreq_for_each_valid_entry(pos, table) {
-		if(freq == pos->frequency)
-			ret = true;
+			if(freq == pos->frequency)
+				ret = true;
 		}
+		if (ret!=true)
+			pr_err("idx %d : freq %d don't match any available freq.\n ", idx, freq);
 	}
 
 	return ret;
 }
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+#define MAX_POWERHAL_ACTOR	4UL
+#else
 #define MAX_POWERHAL_ACTOR	3UL
+#endif
 unsigned int powerhal_profiles[3][MAX_POWERHAL_ACTOR];
 
 // cppcheck-suppress *
@@ -953,19 +994,19 @@ static int of_parse_thermal_zone_caps(void)
 			return -ENODEV;
 		}
 
-		ret = of_property_read_u32_array(np, "hisilicon,cluster_dyn_capacitance", g_caps.cluster_dyn_capacitance, (unsigned long)0x2);
+		ret = of_property_read_u32_array(np, "hisilicon,cluster_dyn_capacitance", g_caps.cluster_dyn_capacitance, (unsigned long)NUM_CLUSTERS);
 		if (ret) {
 			pr_err("%s actor_dyn_capacitance read err\n", __func__);
 			goto node_put;
 		}
 
-		ret = of_property_read_u32_array(np, "hisilicon,cluster_static_capacitance", g_caps.cluster_static_capacitance, (unsigned long)0x2);
+		ret = of_property_read_u32_array(np, "hisilicon,cluster_static_capacitance", g_caps.cluster_static_capacitance, (unsigned long)NUM_CLUSTERS);
 		if (ret) {
 			pr_err("%s actor_dyn_capacitance read err\n", __func__);
 			goto node_put;
 		}
 
-		ret = of_property_read_u32_array(np, "hisilicon,cache_capacitance", g_caps.cache_capacitance, (unsigned long)0x2);
+		ret = of_property_read_u32_array(np, "hisilicon,cache_capacitance", g_caps.cache_capacitance, (unsigned long)NUM_CLUSTERS);
 		if (ret) {
 			pr_err("%s actor_dyn_capacitance read err\n", __func__);
 			goto node_put;
@@ -1324,7 +1365,13 @@ static int powerhal_cfg_init(void)
 }
 #endif
 
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+#define MAX_WEIGHTSL_ACTOR	4UL
+#define IPA_CLUSTER2_WEIGHT_VALUE      (256)
+#define IPA_CLUSTER2_WEIGHT_BOOST      (256)
+#else
 #define MAX_WEIGHTSL_ACTOR	3UL
+#endif
 #define IPA_CLUSTER0_WEIGHT_VALUE      (768)  //default value
 #define IPA_CLUSTER1_WEIGHT_VALUE      (256)
 #define IPA_GPU_WEIGHT_VALUE           (256)
@@ -1332,18 +1379,23 @@ static int powerhal_cfg_init(void)
 #define IPA_CLUSTER1_WEIGHT_BOOST      (256)
 #define IPA_GPU_WEIGHT_BOOST           (768)
 
+
 unsigned int weights_profiles[2][MAX_WEIGHTSL_ACTOR] = {
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+		{IPA_CLUSTER0_WEIGHT_VALUE,IPA_CLUSTER1_WEIGHT_VALUE,IPA_CLUSTER2_WEIGHT_VALUE,IPA_GPU_WEIGHT_VALUE},
+		{IPA_CLUSTER0_WEIGHT_BOOST,IPA_CLUSTER1_WEIGHT_BOOST,IPA_CLUSTER2_WEIGHT_BOOST,IPA_GPU_WEIGHT_BOOST}};
+#else
                                             {IPA_CLUSTER0_WEIGHT_VALUE,IPA_CLUSTER1_WEIGHT_VALUE,IPA_GPU_WEIGHT_VALUE},
                                             {IPA_CLUSTER0_WEIGHT_BOOST,IPA_CLUSTER1_WEIGHT_BOOST,IPA_GPU_WEIGHT_BOOST}};
+#endif
+extern unsigned int g_ipa_gpu_boost_weights[IPA_ACTOR_MAX];
+extern unsigned int g_ipa_normal_weights[IPA_ACTOR_MAX];
 
-#ifdef CONFIG_HISI_THERMAL_SPM
 static int ipa_weights_cfg_init(void)
 {
 	struct device_node *node;
 	int ret;
-	unsigned int data[2][MAX_WEIGHTSL_ACTOR] = {
-	                                {IPA_CLUSTER0_WEIGHT_VALUE,IPA_CLUSTER1_WEIGHT_VALUE,IPA_GPU_WEIGHT_VALUE},
-	                                {IPA_CLUSTER0_WEIGHT_BOOST,IPA_CLUSTER1_WEIGHT_BOOST,IPA_GPU_WEIGHT_BOOST}};
+	unsigned int data[2][MAX_WEIGHTSL_ACTOR] = {{0}, {0}};
 
 #if CONFIG_OF
 	node = of_find_compatible_node(NULL, NULL, "hisi,weights");
@@ -1373,7 +1425,6 @@ static int ipa_weights_cfg_init(void)
 
 	return 0;
 }
-#endif
 
 void dynipa_get_weights_cfg(unsigned int * weight0, unsigned int * weight1)
 {
@@ -1382,26 +1433,27 @@ void dynipa_get_weights_cfg(unsigned int * weight0, unsigned int * weight1)
 }
 EXPORT_SYMBOL(dynipa_get_weights_cfg);
 
-#if defined(CONFIG_HISI_THERMAL_SPM) || defined(CONFIG_HISI_THERMAL_HOTPLUG)
 static int hisi_thermal_init(void)
 {
 	int ret = 0;
 
+	if (ipa_weights_cfg_init()) {
+		pr_err("%s: ipa_weights_init error, use default value.\n", __func__);
+	}
+
+	dynipa_get_weights_cfg(g_ipa_normal_weights, g_ipa_gpu_boost_weights);
+
+#if defined(CONFIG_HISI_THERMAL_SPM) || defined(CONFIG_HISI_THERMAL_HOTPLUG)
 	thermal_info.hisi_thermal_class = class_create(THIS_MODULE, "hisi_thermal");  //lint !e64
 	if (IS_ERR(thermal_info.hisi_thermal_class)) {
 		pr_err("Hisi thermal class create error\n");
 		return (int)PTR_ERR(thermal_info.hisi_thermal_class);
 	}
+#endif
 
 #ifdef CONFIG_HISI_THERMAL_SPM
 	if (powerhal_cfg_init()) {
 		pr_err("%s: powerhal_init error\n", __func__);
-		ret = -ENODEV;
-		goto class_destroy;
-	}
-
-	if (ipa_weights_cfg_init()) {
-		pr_err("%s: ipa_weights_init error\n", __func__);
 		ret = -ENODEV;
 		goto class_destroy;
 	}
@@ -1472,6 +1524,7 @@ static int hisi_thermal_init(void)
 #endif
 	return 0;
 
+#if defined(CONFIG_HISI_THERMAL_SPM) || defined(CONFIG_HISI_THERMAL_HOTPLUG)
 device_destroy:
 	device_destroy(thermal_info.hisi_thermal_class, 0);
 class_destroy:
@@ -1479,14 +1532,17 @@ class_destroy:
 	thermal_info.hisi_thermal_class = NULL;
 
 	return ret;
+#endif
 }
 
 static void hisi_thermal_exit(void)
 {
+#if defined(CONFIG_HISI_THERMAL_SPM) || defined(CONFIG_HISI_THERMAL_HOTPLUG)
 	if (thermal_info.hisi_thermal_class) {
 		device_destroy(thermal_info.hisi_thermal_class, 0);
 		class_destroy(thermal_info.hisi_thermal_class);
 	}
+#endif
 }
 
 /*lint -e528 -esym(528,*)*/
@@ -1495,4 +1551,3 @@ module_exit(hisi_thermal_exit);
 /*lint -e528 +esym(528,*)*/
 
 MODULE_LICENSE("GPL");
-#endif

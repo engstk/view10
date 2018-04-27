@@ -15,7 +15,7 @@
 /* Length of the hostcomm buffer, needed in both core and platform */
 #define FSC_HOSTCOMM_BUFFER_SIZE    64
 
-#if defined(FSC_PLATFORM_LINUX)
+//#if defined(FSC_PLATFORM_LINUX)
 
 /* Specify an extension for GCC based compilers */
 #if defined(__GNUC__)
@@ -64,7 +64,7 @@ typedef __u32               FSC_U32;    /* 32-bit unsigned */
 
 #undef __EXTENSION
 
-#endif /* FSC_PLATFORM_LINUX */
+//#endif /* FSC_PLATFORM_LINUX */
  
 #endif /* _FUSB30X_FSCTYPES_H_ */
 

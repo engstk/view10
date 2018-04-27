@@ -159,15 +159,15 @@ extern "C" {
     ( TAF_SUCCESS == At_PppId2PsRab((usPppId), pucRabId) )
 
 #define PPP_MNTN_LOG(ModulePID, SubMod, Level, String) \
-            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%s \r\n", String))
+            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "\r\n"))
 #define PPP_MNTN_LOG1(ModulePID, SubMod, Level, String, Para1) \
-            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%s, %d \r\n", String, Para1))
+            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%d \r\n", Para1))
 #define PPP_MNTN_LOG2(ModulePID, SubMod, Level, String, Para1, Para2) \
-            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%s, %d, %d \r\n", String, Para1, Para2))
+            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%d, %d \r\n", Para1, Para2))
 #define PPP_MNTN_LOG3(ModulePID, SubMod, Level, String, Para1, Para2, Para3) \
-            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%s, %d, %d, %d \r\n", String, Para1, Para2, Para3))
+            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%d, %d, %d \r\n", Para1, Para2, Para3))
 #define PPP_MNTN_LOG4(ModulePID, SubMod, Level, String, Para1, Para2, Para3, Para4) \
-            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%s, %d, %d, %d, %d \r\n", String, Para1, Para2, Para3, Para4))
+            ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(MODEM_ID_0, DIAG_MODE_COMM, Level), (ModulePID), __FILE__, __LINE__, "%d, %d, %d, %d \r\n", Para1, Para2, Para3, Para4))
 
 /* --------------零拷贝操作相关宏-------------- */
 typedef IMM_ZC_STRU      PPP_ZC_STRU;
@@ -178,7 +178,7 @@ typedef IMM_ZC_HEAD_STRU PPP_ZC_QUEUE_STRU;
 #define PPP_ZC_DL_RESERVE_LEN                (0)                                /* 下行方向不需要保留 */
 
 #define PPP_ZC_MEM_ALLOC(ulLen)              (IMM_ZcStaticAlloc(ulLen))
-#define PPP_ZC_MEM_FREE(pstMem)              (IMM_ZcFree(pstMem))
+#define PPP_ZC_MEM_FREE(pstMem)              (IMM_ZcFreeAny(pstMem))
 #define PPP_ZC_GET_DATA_PTR(pstImmZc)        ((VOS_UINT8 *)IMM_ZcGetDataPtr(pstImmZc))
 #define PPP_ZC_GET_DATA_LEN(pstImmZc)        ((VOS_UINT16)IMM_ZcGetUsedLen(pstImmZc))
 #define PPP_ZC_GET_DATA_APP(pstImmZc)        ((VOS_UINT16)IMM_ZcGetUserApp(pstImmZc))
@@ -281,12 +281,12 @@ struct ppp_in_addr
 *****************************************************************************/
 extern PPP_ZC_STRU *PPP_MemAlloc(VOS_UINT16 usLen, VOS_UINT16 usReserveLen);
 extern PPP_ZC_STRU *PPP_MemCopyAlloc(VOS_UINT8 *pSrc, VOS_UINT16 usLen, VOS_UINT16 usReserveLen);
-extern VOS_VOID     PPP_MemWriteData(PPP_ZC_STRU *pstMem, VOS_UINT8 *pucSrc, VOS_UINT16 usLen);
+extern VOS_VOID     PPP_MemWriteData(PPP_ZC_STRU *pstMem, VOS_UINT16 usDstLen, VOS_UINT8 *pucSrc, VOS_UINT16 usLen);
 extern VOS_VOID     PPP_MemFree(PPP_ZC_STRU *pstData);
 extern VOS_UINT32   PPP_MemGet(PPP_ZC_STRU *pMemSrc, VOS_UINT16 usOffset, VOS_UINT8 *pDest, VOS_UINT16 usLen);
 extern VOS_UINT32   PPP_MemCutTailData(PPP_ZC_STRU **ppMemSrc, VOS_UINT8 *pDest, VOS_UINT16 usLen, VOS_UINT16 usReserveLen);
 extern VOS_UINT32   PPP_MemCutHeadData(PPP_ZC_STRU **ppMemSrc, VOS_UINT8 *pDest, VOS_UINT16 usLen);
-extern VOS_VOID     PPP_MemSingleCopy(VOS_UINT8 *pucDest, VOS_UINT8 *pucSrc, VOS_UINT32 ulLen);
+extern VOS_VOID     PPP_MemSingleCopy(VOS_UINT8 *pucDest, VOS_UINT32 ulDstLen, VOS_UINT8 *pucSrc, VOS_UINT32 ulLen);
 extern VOS_VOID     Ppp_ReleasePpp(PPP_ID usPppId);
 extern VOS_VOID     PPP_GetSecurityRand
 (

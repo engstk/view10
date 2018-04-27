@@ -63,24 +63,10 @@
 #include "bsp_dump.h"
 
 /* NV工作分区白名单 */
-s8 g_nv_img_white_list[][RFILE_NAME_MAX] = 
+s8 g_nv_img_white_list[][RFILE_NAME_MAX] =
 {
     "/mnvm2:0/nv.bin",
-    "/mnvm2:0/modem_nv/nv.bin",
-    "/mnvm2:0/SC/Pers/CKFile.bin",
-    "/mnvm2:0/SC/Pers/DKFile.bin",
-    "/mnvm2:0/SC/Pers/AKFile.bin",
-    "/mnvm2:0/SC/Pers/PIFile.bin",
-    "/mnvm2:0/SC/Pers/ImeiFile_I0.bin",
-    "/mnvm2:0/SC/Pers/ImeiFile_I1.bin",
-    "/mnvm2:0/SC/Pers/ImeiFile_I2.bin",
-    "/mnvm2:0/SC/Pers/CKSign.hash",
-    "/mnvm2:0/SC/Pers/DKSign.hash",
-    "/mnvm2:0/SC/Pers/AKSign.hash",
-    "/mnvm2:0/SC/Pers/PISign.hash",
-    "/mnvm2:0/SC/Pers/ImeiFile_I0.hash",
-    "/mnvm2:0/SC/Pers/ImeiFile_I1.hash",
-    "/mnvm2:0/SC/Pers/ImeiFile_I2.hash"
+    "/mnvm2:0/modem_nv/nv.bin"
 };
 
 u32 s_delet_ret = NV_OK;
@@ -116,12 +102,12 @@ bool nv_img_is_white_file(const s8 * pfile)
 {
     u32 index;
     u32 file_num;
-   
+
     file_num = nv_img_get_white_list_num();
 
     for(index = 0; index < file_num; index++)
     {
-        if(0 == strncmp((char *)pfile, (char *)g_nv_img_white_list[index], 
+        if(0 == strncmp((char *)pfile, (char *)g_nv_img_white_list[index],
                                 strlen((char *)g_nv_img_white_list[index]) + 1))
         {
             return TRUE;
@@ -155,7 +141,7 @@ u32 nv_img_check_white_list(const s8 * source, u32 depth)
 
     s8 * pdir_rent = NULL;
     s8 * pdir_name = NULL;
-   
+
     struct rfile_stat_stru s_stat;
     RFILE_DIRENT_STRU * pdirent;
 
@@ -180,7 +166,7 @@ u32 nv_img_check_white_list(const s8 * source, u32 depth)
             s_delet_ret = BSP_ERR_NV_NO_FILE;
             return NV_OK;
         }
-       
+
         /* 缓存子目录的名称 */
         pdir_rent = vmalloc((unsigned long)MAX_DIRENT_LEN);
         if(NULL == pdir_rent)
@@ -200,7 +186,7 @@ u32 nv_img_check_white_list(const s8 * source, u32 depth)
             s_delet_ret = BSP_ERR_NV_NO_FILE;
             return NV_OK;
         }
-        
+
         /* 遍历处理当前目录下所有的文件，包括子目录，如果是空目录删除 */
         for(sub_index = 0; sub_index < ret; )
         {
@@ -209,15 +195,15 @@ u32 nv_img_check_white_list(const s8 * source, u32 depth)
             /*lint -restore*/
             sub_index += pdirent->d_reclen;
 
-            if((0 == strncmp((char*)pdirent->d_name, ".", sizeof("."))) 
+            if((0 == strncmp((char*)pdirent->d_name, ".", sizeof(".")))
                     || (0 == strncmp((char*)pdirent->d_name, "..", sizeof(".."))))
             {
                 continue;
             }
 
-            /* 分配存储子文件/目录路径的缓存区 */   
+            /* 分配存储子文件/目录路径的缓存区 */
             src_len = (unsigned long)(strlen((char*)source)+1+strlen((char*)pdirent->d_name)+1);
-    
+
             pdir_name = vmalloc(src_len);
             if(NULL == pdir_name)
             {
@@ -232,15 +218,15 @@ u32 nv_img_check_white_list(const s8 * source, u32 depth)
             strncpy(pdir_name, source, src_len);
             strncat(pdir_name, "/", src_len);
             strncat(pdir_name, (char*)pdirent->d_name, src_len);
-            
+
             // cppcheck-suppress *
             chk_ret = nv_img_check_white_list(pdir_name, depth+1);
             if(NV_ERROR == chk_ret)
             {
-                 vfree(pdir_name); 
+                 vfree(pdir_name);
                  break;
             }
-            vfree(pdir_name);          
+            vfree(pdir_name);
         }
 
         /* 释放分配内存,关闭当前文件目录，删除空目录 */
@@ -250,7 +236,7 @@ u32 nv_img_check_white_list(const s8 * source, u32 depth)
         if(depth){
             bsp_rmdir((s8*)source);
         }
- 
+
     }
     /* 如果是源文件，做对应的处理 */
     else
@@ -286,7 +272,7 @@ u32 nv_img_boot_check(const s8 * pdir)
     u32 file_num;
 
     file_num = nv_img_get_white_list_num();
-    
+
     /* 检查文件路径是否超过长度限制 */
     for(index = 0; index < file_num; index++)
     {
@@ -305,7 +291,7 @@ u32 nv_img_boot_check(const s8 * pdir)
         return NV_ERROR;
     }
 
-    /* 异常处理复位特性，目前手机不复位, MBB复位 */    
+    /* 异常处理复位特性，目前手机不复位, MBB复位 */
 
     return OK;
 }
@@ -354,7 +340,7 @@ u32 nv_img_write(u8* pdata, u32 len, u32 file_offset)
         }
     }
     nv_debug_record(NV_DEBUG_FLUSHEX_OPEN_END);
-    
+
     (void)nv_file_seek(fp, file_offset ,SEEK_SET);/*jump to write*/
     ret = (u32)nv_file_write((u8*)pdata,1,len,fp);
     nv_file_close(fp);
@@ -384,7 +370,7 @@ u32 nv_img_flush_all(void)
 
     nv_create_flag_file((s8*)NV_IMG_FLAG_PATH);
     nv_debug(NV_API_FLUSH,0,0,0,0);
-    
+
     fp = nv_file_open((s8*)NV_IMG_PATH,(s8*)NV_FILE_WRITE);
     if(NULL == fp)
     {
@@ -412,6 +398,7 @@ nv_flush_err:
     nv_help(NV_API_FLUSH);
     return ret;
 }
+
 
 /*****************************************************************************
  函 数 名  : nv_resume_item_from_img
@@ -485,7 +472,7 @@ u32 nv_img_resume_item(nv_item_info_s *item_info, u32 modem_id)
         nv_record("resume nvid vmalloc fail 0x%x ...%s %s \n", item_info->itemid, __DATE__,__TIME__);
         return BSP_ERR_NV_MALLOC_FAIL;
     }
-    
+
     ret = nv_read_file(NV_IMG_PATH, file_offset, temp_buff, &buff_size);
     if(ret)
     {
@@ -514,7 +501,7 @@ u32 nv_img_resume_item(nv_item_info_s *item_info, u32 modem_id)
         vfree(temp_buff);
         return ret;
     }
-    
+
     /* coverity[secure_coding] */
     nv_memcpy(resume_data, temp_buff, (size_t)resume_size);
     nv_flush_cache(resume_data, resume_size);

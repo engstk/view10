@@ -312,6 +312,7 @@ extern unsigned long task_statm(struct mm_struct *,
 				unsigned long *, unsigned long *);
 extern void task_mem(struct seq_file *, struct mm_struct *);
 #ifdef CONFIG_HISI_SWAP_ZDATA
+extern bool process_reclaim_need_abort(struct mm_walk *walk);
 extern struct reclaim_result *process_reclaim_result_cache_alloc(gfp_t gfp);
 extern void process_reclaim_result_cache_free(struct reclaim_result *result);
 extern int process_reclaim_result_read(struct seq_file *m,

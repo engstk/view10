@@ -45,17 +45,14 @@ struct rdr_exception_info_s hhee_excetption_info[] = {
 	}/*lint !e785*/
 };
 
-int hhee_panic_handle(unsigned short handle, int len, char *buf)
+int hhee_panic_handle(unsigned int len, void *buf)
 {
-	pr_info("hhee_panic %u, %d\n", handle, len);
-
-	while (1) {
-		pr_err("hhee panic trigger system_error.\n");
-		rdr_syserr_process_for_ap((u32)MODID_AP_S_HHEE_PANIC, 0ULL, 0ULL);
-		break;
-	}
-	return 0;/*lint !e533*/
-}/*lint !e715*/
+	pr_err("hhee panic trigger system_error.\n");
+	(void)len;
+	(void)buf;
+	rdr_syserr_process_for_ap((u32)MODID_AP_S_HHEE_PANIC, 0ULL, 0ULL);
+	return 0;
+}
 
 /*check hhee enable*/
 static int g_hhee_enable = HHEE_ENABLE;
@@ -72,7 +69,7 @@ static int hisi_hhee_probe(struct platform_device *pdev)
 	int ret, irq;
 	struct device *dev = &pdev->dev;
 
-	pr_info("hhee panic probe\n");
+	pr_info("hisi hhee probe\n");
 
 	if (HHEE_DISABLE == hhee_check_enable())
 		return 0;
@@ -80,23 +77,22 @@ static int hisi_hhee_probe(struct platform_device *pdev)
 	/*irq num get and register*/
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0) {
-		pr_err("hhee: get irq failed\n");
+		dev_err(dev, "get irq failed\n");
 		return -ENXIO;
 	}
 	ret = devm_request_irq(dev, (unsigned int)irq,
 						hhee_irq_handle, 0ul, "hisi-hhee", pdev);
 	if (ret < 0) {
-		pr_err("devm request irq failed\n");
+		dev_err(dev, "devm request irq failed\n");
 		return -EINVAL;
 	}
 	if(cpu_online(CPU_MASK) && (irq_set_affinity(irq, cpumask_of(CPU_MASK)) < 0)){
-		pr_err("set affinity failed\n");
-		return -ENXIO;
+		dev_err(dev, "set affinity failed\n");
 	}
 	/*rdr struct register*/
 	ret = (s32)rdr_register_exception(&hhee_excetption_info[0]);
 	if (!ret)
-		pr_err("register hhee exception fail.\n");
+		dev_err(dev, "register hhee exception fail.\n");
 
 	ret = hhee_logger_init();
 	if (ret < 0) {
@@ -105,22 +101,19 @@ static int hisi_hhee_probe(struct platform_device *pdev)
 	}
 
 
-	if (!hhee_open_msg("Crash", hhee_panic_handle)) {
-		pr_err("create hhee_panic_handle faild.\n");
-		ret = -EINVAL;
+	ret = hhee_msg_init();
+	if (ret)
 		goto err_free_hhee;
-	}
+
+	ret = hhee_msg_register_handler(HHEE_MSG_ID_CRASH, hhee_panic_handle);
+	if (ret)
+		goto err_free_hhee;
 
 	pr_info("hhee probe done\n");
 	return 0;
 
 err_free_hhee:
 	return ret;
-}
-
-void hhee_version(void)
-{
-	hhee_fn_hvc((unsigned long)ARM_STD_HVC_VERSION, 0UL, 0UL, 0UL);
 }
 
 static int hisi_hhee_remove(struct platform_device *pdev)
@@ -154,7 +147,7 @@ static int __init hisi_hhee_cmd_get(char *arg)
 		g_hhee_enable = HHEE_DISABLE;
 	}
 
-	pr_err("hhee enable = %d \n", g_hhee_enable);
+	pr_err("hhee enable = %d.\n", g_hhee_enable);
 	return 0;
 }
 early_param("hhee_enable", hisi_hhee_cmd_get); /*lint -e528 */
@@ -163,7 +156,7 @@ static int __init hisi_hhee_panic_init(void)
 {
 	int ret;
 
-	pr_info("hhee panic init\n");
+	pr_info("hhee probe init\n");
 	ret = platform_driver_register(&hisi_hhee_driver);/*lint !e64*/
 	if (ret)
 		pr_err("register hhee driver fail\n");

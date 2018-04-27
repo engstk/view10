@@ -27,6 +27,13 @@
 
 #include <linux/of_device.h>
 
+#ifdef CONFIG_HW_LED_CONFIG
+extern void led_config_get_current_setting(struct hisi_led_platform_data* hisi_leds);
+#else
+void led_config_get_current_setting(struct hisi_led_platform_data* hisi_leds)
+{	pr_info("%s enter,not need to set irset for tp color, using default!\n", __func__); }
+#endif
+
 extern struct atomic_notifier_head panic_notifier_list;
 
 #ifdef CONFIG_HISI_LEDS_BLUE_TP_COLOR_SWITCH
@@ -234,8 +241,8 @@ static void hisi_led_set_enable_blink(u8 brightness_set, u8 id)
     brightness_config.hisi_led_start_address = hisi_leds.leds[id].dr_start_del;
     brightness_config.hisi_led_tim_address = hisi_leds.leds[id].dr_time_config0;
     brightness_config.hisi_led_tim1_address = hisi_leds.leds[id].dr_time_config1;
-    brightness_config.hisi_led_dr_ctl = hisi_led_dr_ctl | (0x1 << id);/*lint !e647*/
-    brightness_config.hisi_led_dr_out_ctl = hisi_led_dr_out_ctl & LED_OUT_CTRL_VAL(id);/*lint !e502*/
+    brightness_config.hisi_led_dr_ctl = hisi_led_dr_ctl | (0x1 << id);
+    brightness_config.hisi_led_dr_out_ctl = hisi_led_dr_out_ctl & LED_OUT_CTRL_VAL(id);
 
     printk(KERN_INFO "hisi_led_set_enable_blink, Led_id=[%d], brightness_set=%d\n", id, brightness_set);
 
@@ -251,33 +258,30 @@ static int hisi_led_set(struct hisi_led_data *led, u8 brightness)
 	u8 iset;
 	struct hisi_led_drv_data *data = hisi_led_pdata;
 
-	if (brightness != LED_OFF && brightness != LED_HALF && brightness != LED_FULL) {
-		pr_err("hisi_led_set brightness:%d is error\n", brightness);
-		ret = -EINVAL;
-		return ret;
-	}
-
 	mutex_lock(&data->lock);
+
+	led_config_get_current_setting(&hisi_leds);
 
 	switch (id) {
 
 	case HISI_LED0:
 	case HISI_LED1:
 	case HISI_LED2:
-        if (brightness == LED_OFF) {
-            /* set led off */
-            hisi_led_set_disable(id);
-            printk(KERN_INFO "[%s] off id is %d\n", __FUNCTION__, id);
-        } else if (brightness == LED_HALF) {
-            /* set led half brightness */
-            hisi_led_set_enable(DR_BRIGHTNESS_HALF, id);
-            printk(KERN_INFO "[%s] half id is %d\n", __FUNCTION__, id);
-        } else {
-            /* set led brightness */
-            iset = hisi_leds.leds[id].each_maxdr_iset;
-            hisi_led_set_enable(iset, id);
-            printk(KERN_INFO "[%s] full id is %d, iset:%d\n", __FUNCTION__, id, iset);
-        }
+	if (brightness == LED_OFF) {
+		/* set led off */
+		hisi_led_set_disable(id);
+		printk(KERN_INFO "[%s] off id is %d\n", __FUNCTION__, id);
+	} else if (brightness == LED_FULL) {
+		/* set led brightness */
+		iset = hisi_leds.leds[id].each_maxdr_iset;
+		hisi_led_set_enable(iset, id);
+		printk(KERN_INFO "[%s] full id is %d, iset:%d\n", __FUNCTION__, id, iset);
+	} else {
+		printk(KERN_INFO "[%s] half id is %d\n", __FUNCTION__, id);
+		/* set led half brightness */
+		hisi_led_set_enable(DR_BRIGHTNESS_HALF, id);
+		printk(KERN_INFO "[%s] half id is %d\n", __FUNCTION__, id);
+	}
         break;
 	default:
 		pr_err("hisi_led_set id:%d is error\n", id);
@@ -731,4 +735,3 @@ module_platform_driver(hisi_led_driver);
 MODULE_ALIAS("platform:hisi-leds");
 MODULE_DESCRIPTION("hisi LED driver");
 MODULE_LICENSE("GPL");
-

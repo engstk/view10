@@ -218,6 +218,34 @@ struct rdr_exception_info_s hisee_excetption_info[] = {
 		.e_desc             = "HISEE",
 	},
 	{
+		.e_modid            = (u32)MODID_HISEE_EXC_SWP,
+		.e_modid_end        = (u32)MODID_HISEE_EXC_SWP,
+		.e_process_priority = RDR_ERR,
+		.e_reboot_priority  = RDR_REBOOT_NO,
+		.e_notify_core_mask = RDR_HISEE,
+		.e_reset_core_mask  = RDR_HISEE,
+		.e_from_core        = RDR_HISEE,
+		.e_reentrant        = (u32)RDR_REENTRANT_DISALLOW,
+		.e_exce_type        = HISEE_S_EXCEPTION,
+		.e_upload_flag      = (u32)RDR_UPLOAD_YES,
+		.e_from_module      = "HISEE SWP",
+		.e_desc             = "HISEE",
+	},
+	{
+		.e_modid            = (u32)MODID_HISEE_EXC_COS,
+		.e_modid_end        = (u32)MODID_HISEE_EXC_COS,
+		.e_process_priority = RDR_ERR,
+		.e_reboot_priority  = RDR_REBOOT_NO,
+		.e_notify_core_mask = RDR_HISEE,
+		.e_reset_core_mask  = RDR_HISEE,
+		.e_from_core        = RDR_HISEE,
+		.e_reentrant        = (u32)RDR_REENTRANT_DISALLOW,
+		.e_exce_type        = HISEE_S_EXCEPTION,
+		.e_upload_flag      = (u32)RDR_UPLOAD_YES,
+		.e_from_module      = "HISEE COS",
+		.e_desc             = "HISEE",
+	},
+	{
 		.e_modid            = (u32)MODID_HISEE_EXC_SECENG_TRNG,
 		.e_modid_end        = (u32)MODID_HISEE_EXC_SECENG_TRNG,
 		.e_process_priority = RDR_ERR,
@@ -779,46 +807,57 @@ int rdr_hisee_msg_handler(struct notifier_block *nb,
 	unsigned long action,
 	void *msg)
 {
+	struct ipc_msg *p_ipcmsg;
+
 	if (NULL == msg) {
 		pr_err("%s:msg is NULL!\n", __func__);
 		return 0;
 	}
 
-	g_msg = *(struct ipc_msg *)msg;
-	switch (g_msg.data[0]) {
+	p_ipcmsg = (struct ipc_msg *)msg;
+
+	switch (p_ipcmsg->data[0]) {
 	case HISEE_VOTE_RES:
-		g_vote_val_lpm3 = g_msg.data[6];
+		g_vote_val_lpm3 = p_ipcmsg->data[6];
 		pr_err("%s:vote val from lpm3 is 0x%x!\n", __func__, g_vote_val_lpm3);
+
 		complete(&hisee_pwrdebug_complete);
 		break;
 	case HISEE_LOG_OUT:
-		g_log_out_offset = g_msg.data[1];
+		g_log_out_offset = p_ipcmsg->data[1];
 		g_hisee_mntn_state = HISEE_STATE_LOG_OUT;
+
 		complete(&hisee_mntn_complete);
 		break;
 	case HISEE_EXCEPTION:
-		hisee_exception_modid = g_msg.data[1] + MODID_HISEE_START;
+		hisee_exception_modid = p_ipcmsg->data[1] + MODID_HISEE_START;
 		if (hisee_exception_modid >= (u32)MODID_HISEE_EXC_BOTTOM)
 			hisee_exception_modid = (u32)MODID_HISEE_EXC_UNKNOWN;
 
 		g_hisee_mntn_state = HISEE_STATE_HISEE_EXC;
-		g_vote_val_lpm3 = g_msg.data[6];
+		g_vote_val_lpm3 = p_ipcmsg->data[6];
+
+		g_msg = *p_ipcmsg;
 		complete(&hisee_mntn_complete);
 		break;
 	case HISEE_IRQ:
-		hisee_exception_modid = translate_exc_type(g_msg.data[1]);
+		hisee_exception_modid = translate_exc_type(p_ipcmsg->data[1]);
 		g_hisee_mntn_state = HISEE_STATE_HISEE_EXC;
-		g_vote_val_lpm3 = g_msg.data[6];
+		g_vote_val_lpm3 = p_ipcmsg->data[6];
+
+		g_msg = *p_ipcmsg;
 		complete(&hisee_mntn_complete);
 		break;
 	case HISEE_TIME:
 		pr_err("%s:sync time with hisee, mark value is:%d\n",
-				__func__, g_msg.data[1]);
+				__func__, p_ipcmsg->data[1]);
 		break;
 	default:
 		/*nothing to do, other modules' msg*/
+		/* pr_err("not ipc msg for hisee %x, %x\n", p_ipcmsg->data[0], p_ipcmsg->data[1]); */
 		break;
 	}
+
 	return 0;
 }
 /*lint +e715*/
@@ -1066,14 +1105,14 @@ void hisee_mntn_print_cos_info(void)
 	int	i;
 
 	pr_err("%s:%x %llx", __func__, curr_ver_mntn.magic, (u64)curr_ver_mntn.img_timestamp.value);
-	for (i = 0;i < HISEE_MAX_COS_IMAGE_NUMBER;i++) {
+	for (i = 0;i < HISEE_SUPPORT_COS_FILE_NUMBER;i++) {
 		pr_err(" %d", curr_ver_mntn.img_version_num[i]);
 	}
 	pr_err("\n");
 
 	/*print misc info*/
 	pr_err("misc info: %s:%x %llx", __func__, misc_version_mntn.magic, (u64)misc_version_mntn.img_timestamp.value);
-	for (i = 0;i < HISEE_MAX_COS_IMAGE_NUMBER;i++) {
+	for (i = 0;i < HISEE_SUPPORT_COS_FILE_NUMBER;i++) {
 		pr_err(" %d", misc_version_mntn.img_version_num[i]);
 	}
 	pr_err("\n");
@@ -1086,9 +1125,16 @@ input:	NA
 output:	NA
 return:	HISEE_OK: allow to power; HISEE_ERROR: don't allow to power up hisee
 ********************************************************************/
+
+extern bool g_hisee_is_fpga;
 int hisee_mntn_can_power_up_hisee(void)
 {
-	int	ret = HISEE_OK;
+	int ret = HISEE_OK;
+
+	if (g_hisee_is_fpga) {
+	      return ret;
+	}
+
 	/*get the current mode*/
 	if (0 == hisee_lcs_mode_mntn) {
 		if (HISEE_OK != get_hisee_lcs_mode(&hisee_lcs_mode_mntn)) {

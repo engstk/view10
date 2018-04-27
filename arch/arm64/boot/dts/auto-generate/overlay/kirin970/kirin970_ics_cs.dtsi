@@ -18,9 +18,20 @@
 		ics-platform = "kirin970_cs";
 		clocks = <&clk_gate_ics>;
 		clock-names = "clk-ics";
-		ics-clk-start-rate = <900000000>;
-		ics-clk-stop-rate = <332000000>;
 		status = "ok";
+		ipu-and-vcodecbus-clock-rate {
+			start-rate = <900000000>;
+			stop-rate = <332000000>;
+			ipu-low = <384000000>;
+			ipu-middle = <600000000>;
+			ipu-high = <900000000>;
+			ipu-low-temperature = <600000000>;
+			vcodecbus-low = <185000000>;
+			vcodecbus-middle = <332000000>;
+			vcodecbus-high = <450000000>;
+			vcodecbus-default = <415000000>;
+			vcodecbus-high2default = <225000000>;
+		};
 		iommu_info {
 			start-addr = <0x40000>;
 			iova-align = <0x1000>;
@@ -95,6 +106,7 @@
 			qos-type = <0x000c>;
 			factor = <0x0010>;
 			saturation = <0x0014>;
+			qos_extcontrol = <0x0018>;
 		};
 		pmctrl {
 			base-addr = <0xfff31000>;

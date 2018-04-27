@@ -79,7 +79,9 @@ struct sensor_cfg_data;
 #define LDO_VOLTAGE_1P05V           1050000
 #define LDO_VOLTAGE_1P1V            1100000
 #define LDO_VOLTAGE_1P13V           1130000
+#define LDO_VOLTAGE_1P145V          1145000
 #define LDO_VOLTAGE_1P2V            1200000
+#define LDO_VOLTAGE_1P25V           1250000
 #define LDO_VOLTAGE_1P27V           1270000
 #define LDO_VOLTAGE_1P5V            1500000
 #define LDO_VOLTAGE_1P8V            1800000
@@ -96,6 +98,8 @@ struct sensor_cfg_data;
 #define LDO_VOLTAGE_V1P12V          1120000
 #define LDO_VOLTAGE_V1P125V         1125000
 #define LDO_VOLTAGE_V1P15V          1150000
+#define LDO_VOLTAGE_V1P14V          1140000
+#define LDO_VOLTAGE_V1P2V           1200000
 #define LDO_VOLTAGE_V1P25V          1250000
 #define LDO_VOLTAGE_V0P9V           900000
 #define LDO_VOLTAGE_V0P95V          950000
@@ -328,6 +332,7 @@ typedef enum {
 typedef struct _tag_hwsensor_board_info
 {
     const char *name;   /* sensor name */
+    struct device *dev;
 
     /* interface_type : MIPI or DVP */
     data_interface_t interface_type;
@@ -413,8 +418,6 @@ int hw_sensor_power_up(sensor_t *s_ctrl);
 int hw_sensor_power_down(sensor_t *s_ctrl);
 int hw_sensor_i2c_read(sensor_t *s_ctrl, void *data);
 int hw_sensor_i2c_write(sensor_t *s_ctrl, void *data);
-int hw_sensor_i2c_read_seq(sensor_t *s_ctrl, void *data);
-int hw_sensor_i2c_write_seq(sensor_t *s_ctrl, void *data);
 int hisi_sensor_apply_expo_gain(sensor_t *s_ctrl, void *data);
 int hisi_sensor_suspend_eg_task(sensor_t *s_ctrl);
 int hw_sensor_get_dt_data(struct platform_device *pdev, sensor_t *sensor);

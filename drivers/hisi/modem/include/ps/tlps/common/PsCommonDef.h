@@ -78,14 +78,19 @@ extern "C" {
 /*消息发送*/
 #ifdef LINUX_PC_LINT
 #define PS_SEND_MSG(ulPid, pMsg)                            (free((VOS_VOID*)pMsg), ulPid)
+#define PS_CHR_RPT_SEND_MSG(ulPid, pMsg)                    (free((VOS_VOID*)pMsg), ulPid)
 
 #else
 /*lint -emacro({58}, PS_SEND_MSG)*/
 /*lint -emacro({64}, PS_SEND_MSG)*/
 /*lint -emacro({144}, PS_SEND_MSG)*/
 /*lint -emacro({586}, PS_SEND_MSG)*/
+/*lint -emacro({516}, PS_SEND_MSG)*/
 #define PS_SEND_MSG(ulPid, pMsg)                            free(pMsg)
 
+/*lint -emacro({64}, PS_CHR_RPT_SEND_MSG)*/
+/*lint -emacro({144}, PS_CHR_RPT_SEND_MSG)*/
+#define PS_CHR_RPT_SEND_MSG(ulPid, pMsg)                    free(pMsg)
 #endif
 
 /*消息发送,由于PS_POST_MSG之后,需要使用者显示的释放消息包,因此这里不将其转定义为free*/
@@ -171,7 +176,9 @@ extern "C" {
 #define PS_POST_MSG(ulPid, pMsg)                            VOS_PostMsg(ulPid,pMsg)
 /* pengzhipeng add for clear define end*/
 /*lint -emacro({586}, PS_SEND_MSG)*/
+/*lint -emacro({516}, PS_SEND_MSG)*/
 #define PS_SEND_MSG(ulPid, pMsg)                            free(pMsg)
+#define PS_CHR_RPT_SEND_MSG(ulPid, pMsg)                    free(pMsg)
 /*lint -emacro({586}, PS_MEM_FREE)*/
 #define PS_MEM_FREE(ulPid, pAddr )                          free(pAddr)
 /*lint -emacro({586}, PS_MEM_ALLOC)*/
@@ -241,11 +248,15 @@ extern "C" {
 
         #define PS_SEND_MSG(ulPid, pMsg) \
             Ps_SendMsg((VOS_INT8 *)__FILE__, __LINE__, ulPid, pMsg)
+            
+        #define PS_CHR_RPT_SEND_MSG(ulPid, pMsg)  Ps_SendMsg((VOS_INT8 *)__FILE__, __LINE__, ulPid, pMsg)
         #endif
     #else
     /*消息发送*/
     #define PS_SEND_MSG(ulPid, pMsg) \
             VOS_SendMsg( ulPid, pMsg)
+
+    #define PS_CHR_RPT_SEND_MSG(ulPid, pMsg)  Chr_MsgReport(pMsg)
     #endif
 
 /*消息发送*/
@@ -396,12 +407,15 @@ extern VOS_UINT32 PS_OM_SendMsg(VOS_UINT32 Pid, VOS_VOID *pMsg);
 #define    LPS_CacheFlush(pDataAddr, ulDataLen)         (VOS_VOID)OSAL_CacheFlush(OSAL_DATA_CACHE, (VOS_VOID *)(pDataAddr), (ulDataLen))
 #define    LPS_CacheInvalidate(pDataAddr, ulDataLen)    (VOS_VOID)OSAL_CacheInvalid(OSAL_DATA_CACHE, (VOS_VOID *)(pDataAddr), (ulDataLen))
 #endif
+/* #else: VOS_UnCacheMemAlloc --> VOS_UnCacheMemAllocDebug */
+/* #if: OSAL_CacheDmaMalloc --> VOS_UnCacheMemAllocDebug */
+/* #if: OSAL_CacheDmaFree --> VOS_UnCacheMemFree */
 #if (VOS_OS_VER == VOS_RTOSCK)
-#define    LPS_CacheDmaMalloc(ulSize,pDataAddr)          OSAL_CacheDmaMalloc(ulSize)
-#define    LPS_CacheDmaFree(pBuf,ulSize)                 (VOS_VOID)OSAL_CacheDmaFree(pBuf)
+#define    LPS_CacheDmaMalloc(ulSize,pDataAddr,uwCookie)        VOS_UnCacheMemAllocDebug(ulSize,pDataAddr,uwCookie)
+#define    LPS_CacheDmaFree(pBuf,ulSize)                        VOS_UnCacheMemFree(pBuf,pBuf,ulSize)
 #else
-#define    LPS_CacheDmaMalloc(ulSize,pDataAddr)         VOS_UnCacheMemAlloc(ulSize,pDataAddr)
-#define    LPS_CacheDmaFree(pBuf,ulSize)                VOS_UnCacheMemFree(pBuf,pBuf,ulSize)
+#define    LPS_CacheDmaMalloc(ulSize,pDataAddr,uwCookie)        VOS_UnCacheMemAllocDebug(ulSize,pDataAddr,uwCookie)
+#define    LPS_CacheDmaFree(pBuf,ulSize)                        VOS_UnCacheMemFree(pBuf,pBuf,ulSize)
 #endif
 #endif
 
@@ -411,7 +425,11 @@ extern VOS_UINT32 PS_OM_SendMsg(VOS_UINT32 Pid, VOS_VOID *pMsg);
 #endif
 
 #ifndef STATIC
-  #define STATIC static
+  #if (VOS_OS_VER == VOS_WIN32)
+    #define STATIC
+  #else
+    #define STATIC static
+  #endif
 #endif
 
 

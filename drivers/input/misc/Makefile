@@ -12,6 +12,16 @@ ifeq ($(ENABLE_MINI_BUGREPORT),true)
 	ccflags-y += -DINPUT_MINI_BUGREPORT_TRIGGER
 endif
 endif
+ifeq ($(CONFIG_HISI_POWERKEY_SPMI),y)
+ifeq ($(TARGET_BUILD_VARIANT),eng)
+        CONFIG_INPUT_KEYCHORD := y
+        CONFIG_MINI_BUGREPORT := y
+endif
+ifeq ($(ENABLE_MINI_BUGREPORT),true)
+        CONFIG_INPUT_KEYCHORD := y
+        CONFIG_MINI_BUGREPORT := y
+endif
+endif
 # Each configuration option enables a list of files.
 
 obj-$(CONFIG_INPUT_88PM860X_ONKEY)	+= 88pm860x_onkey.o
@@ -48,6 +58,7 @@ obj-$(CONFIG_INPUT_GPIO)		+= gpio_event.o gpio_matrix.o gpio_input.o gpio_output
 obj-$(CONFIG_HISI_POWERKEY)	    += hisi_powerkey.o
 obj-$(CONFIG_HISI_POWERKEY_SPMI) 	+= hisi_powerkey_spmi.o
 obj-$(CONFIG_HISI_POWERKEY_SPMI)	+= hisi_powerkey_event.o
+obj-$(CONFIG_MINI_BUGREPORT)		+= mini_bugreport_notifier.o
 obj-$(CONFIG_HP_SDC_RTC)		+= hp_sdc_rtc.o
 obj-$(CONFIG_INPUT_IMS_PCU)		+= ims-pcu.o
 obj-$(CONFIG_INPUT_IXP4XX_BEEPER)	+= ixp4xx-beeper.o
@@ -91,5 +102,7 @@ obj-$(CONFIG_INPUT_XEN_KBDDEV_FRONTEND)	+= xen-kbdfront.o
 obj-$(CONFIG_INPUT_YEALINK)		+= yealink.o
 obj-$(CONFIG_INPUT_IDEAPAD_SLIDEBAR)	+= ideapad_slidebar.o
 obj-$(CONFIG_HISI_VIBRATOR)		+= hisi_vibrator.o
+obj-$(CONFIG_HISI_PMIC_VIBRATOR)	+= hisi_pmic_vibrator.o
 
 EXTRA_CFLAGS += -Idrivers/hisi/tzdriver
+EXTRA_CFLAGS += -Idrivers/hisi/tzdriver/libhwsecurec

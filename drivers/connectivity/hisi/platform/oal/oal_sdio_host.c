@@ -1309,21 +1309,7 @@ oal_void oal_unregister_gpio_intr(struct oal_sdio *hi_sdio)
     hi_sdio->gpio_rx_tsk = NULL;
 }
 
-/*****************************************************************************
- 函 数 名  : oal_wlan_gpio_intr_enable
- 功能描述  : 使能/关闭 WLAN GPIO 中断
- 输入参数  : 1:enable; 0:disenable
- 输出参数  : 无
- 返 回 值  : 成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 oal_void oal_wlan_gpio_intr_enable(struct oal_sdio *hi_sdio,oal_uint32  ul_en)
 {
     oal_uint            flags;
@@ -1700,21 +1686,7 @@ failed_sdio_alloc:
 }
 
 #if 0
-/*****************************************************************************
- 函 数 名  : oal_sdio_wake_release_lock
- 功能描述  : 释放指定次数wakelock锁
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_int  oal_sdio_wake_release_lock(struct oal_sdio *pst_hi_sdio, oal_uint32 ul_locks)
 {
@@ -1752,21 +1724,7 @@ oal_int  oal_sdio_wake_release_lock(struct oal_sdio *pst_hi_sdio, oal_uint32 ul_
 }
 #endif
 
-/*****************************************************************************
- 函 数 名  : oal_sdio_wakelocks_release_detect
- 功能描述  : 强行释放wakelock锁
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 成功或失败原因
- 调用函数  : 无
- 被调函数  : 无
 
- 修改历史      :
-  1.日    期   : 2015年5月20日
-    作    者   : zourong 00274374
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 
 oal_void oal_sdio_wakelocks_release_detect(struct oal_sdio *pst_hi_sdio)
 {

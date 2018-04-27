@@ -123,9 +123,8 @@ struct rpmsg_hisp160_service {
 enum hisp160_mem_pool_attr
 {
     MEM_POOL_ATTR_READ_WRITE_CACHE = 0,
-#if defined(SUPPORT_IRIS_SMP)
     MEM_POOL_ATTR_READ_WRITE_SECURITY,
-#endif
+    MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE,
     MEM_POOL_ATTR_MAX,
 };
 
@@ -459,6 +458,7 @@ char const *hisp160_get_name(hisp_intf_t *i)
 
 static int hisp160_unmap_a7isp_addr(void *cfg)
 {
+#ifdef CONFIG_HISI_CAMERA_ISP_SECURE
     struct hisp_cfg_data *pcfg = NULL;
     if (NULL == cfg){
 		cam_err("func %s: cfg is NULL",__func__);
@@ -469,12 +469,15 @@ static int hisp160_unmap_a7isp_addr(void *cfg)
 
     cam_info("func %s: a7 %x, size %x",__func__, pcfg->param.moduleAddr, pcfg->param.size);
     a7_mmu_unmap(pcfg->param.moduleAddr, pcfg->param.size);
-
     return 0;
+#else
+    return -ENODEV;
+#endif
 }
 
 static int hisp160_get_a7isp_addr(void *cfg)
 {
+#ifdef CONFIG_HISI_CAMERA_ISP_SECURE
     struct hisp_cfg_data *pcfg = NULL;
     struct scatterlist *sg;
     struct sg_table *table;
@@ -523,6 +526,7 @@ err_ion_sg_table:
     ion_free(s_hisp160.ion_client, hdl);
 err_ion_client:
     mutex_unlock(&hisi_rpmsg_service_mutex);
+#endif
     return -ENODEV;
 }
 
@@ -558,6 +562,7 @@ static int hisp160_init_r8isp_memory_pool(void *cfg)
     struct sg_table *table;
     struct ion_handle* hdl = NULL;
     struct ion_client *ion_client;
+    enum mapType enMapType;
 
     if (NULL == cfg){
         cam_err("func %s: cfg is NULL",__func__);
@@ -568,24 +573,29 @@ static int hisp160_init_r8isp_memory_pool(void *cfg)
 
     pcfg = (struct hisp_cfg_data *)cfg;
 
-    cam_info("func %s: pool cfg vaddr=0x%pK, iova=0x%x, size=0x%x, prot=0x%x align=0x%zd sec=0x%x",__func__, pcfg->param.vaddr,
+    cam_info("func %s: pool cfg vaddr=0x%pK, iova=0x%x, size=0x%x, type=%d, prot=0x%x align=0x%zd sec=0x%x",__func__, pcfg->param.vaddr,
             pcfg->param.iova,
             pcfg->param.size,
+            pcfg->param.type,
             pcfg->param.prot,
             pcfg->param.pool_align_size,
             pcfg->param.security_isp_mode);
 
     // find suitable mem pool
-    for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
-    {
-        if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
-            break;
+    if(pcfg->param.type == MAP_TYPE_RAW2YUV){
+        ipool =  MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE;
+    }else{
+        for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
+        {
+            if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
+                break;
+            }
         }
-    }
 
-    if (ipool >= MEM_POOL_ATTR_MAX) {
-        cam_err("func %s: no pool hit",__func__);
-        goto err_ion_client;
+        if (ipool >= MEM_POOL_ATTR_MAX) {
+            cam_err("func %s: no pool hit",__func__);
+            goto err_ion_client;
+        }
     }
 
     s_hisp160.mem_pool[ipool].ap_va= pcfg->param.vaddr;
@@ -594,9 +604,22 @@ static int hisp160_init_r8isp_memory_pool(void *cfg)
     s_hisp160.mem_pool[ipool].align_size  = pcfg->param.pool_align_size;
     s_hisp160.mem_pool[ipool].security_isp_mode  = pcfg->param.security_isp_mode;
 
+    if(ipool == MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE)
+    {
+        char ion_name[32];
+
+        memset(ion_name, 0, sizeof(ion_name));
+        snprintf(ion_name, sizeof(ion_name), "hwcam-hisp160-%d", ipool);
+        s_hisp160.mem_pool[ipool].ion_client = hisi_ion_client_create(ion_name);
+        if (IS_ERR_OR_NULL(s_hisp160.mem_pool[ipool].ion_client  )) {
+            cam_err("failed to create ion client %s\n", ion_name);
+            goto err_ion_client;
+        }
+    }
+
     ion_client = s_hisp160.mem_pool[ipool].ion_client;
     if (IS_ERR_OR_NULL(ion_client)) {
-        cam_err("func %s: s_hisp160.ion_client is NULL or ERR",__func__);
+        cam_err("func %s: s_hisp160.ion_client[%d] is NULL or ERR",__func__,ipool);
         goto err_ion_client;
     }
 
@@ -606,7 +629,7 @@ static int hisp160_init_r8isp_memory_pool(void *cfg)
         goto err_ion_client;
     }
 
-    if (check_buffer_vaild(ion_client, hdl, pcfg->param.iova, pcfg->param.size)) {
+    if ((!pcfg->param.security_isp_mode) && check_buffer_vaild(ion_client, hdl, pcfg->param.iova, pcfg->param.size)) {
         cam_err("check buffer fail!");
         goto err_ion_sg_table;
     }
@@ -619,12 +642,22 @@ static int hisp160_init_r8isp_memory_pool(void *cfg)
 
     sg = table->sgl;
 
-    s_hisp160.mem_pool[ipool].r8_iova  = hisp_mem_map_steup(sg, pcfg->param.iova,
+    if(ipool == MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE){
+        s_hisp160.mem_pool[ipool].r8_iova  = hisp_mem_map_steup(sg, pcfg->param.iova,
             pcfg->param.size,
             pcfg->param.prot,
             (unsigned int)ipool,
-            MAP_TYPE_DYNAMIC,
+            MAP_TYPE_RAW2YUV,
             (unsigned int)(pcfg->param.pool_align_size));
+    }else{
+        enMapType = pcfg->param.security_isp_mode ? MAP_TYPE_STATIC_SEC : MAP_TYPE_DYNAMIC;
+        s_hisp160.mem_pool[ipool].r8_iova  = hisp_mem_map_steup(sg, pcfg->param.iova,
+            pcfg->param.size,
+            pcfg->param.prot,
+            (unsigned int)ipool,
+            enMapType,
+            (unsigned int)(pcfg->param.pool_align_size));
+    }
     if (!s_hisp160.mem_pool[ipool].r8_iova) {
         cam_err("func %s: hisp_mem_map_steup failed",__func__);
         goto err_ion_sg_table;
@@ -662,19 +695,31 @@ static int hisp160_deinit_r8isp_memory_pool(void *cfg)
     pcfg = (struct hisp_cfg_data *)cfg;
 
     // find suitable mem pool
-    for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
-    {
-        if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
-            break;
+    if(pcfg->param.type == MAP_TYPE_RAW2YUV){
+        ipool =  MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE;
+    }else{
+        for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
+        {
+            if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
+                break;
+            }
+        }
+
+        if (ipool >= MEM_POOL_ATTR_MAX) {
+            cam_err("func %s: no pool hit",__func__);
+            goto err_ion_client;
         }
     }
 
-    if (ipool >= MEM_POOL_ATTR_MAX) {
-        cam_err("func %s: no pool hit",__func__);
-        goto err_ion_client;
-    }
-
     hisp_mem_pool_destroy((unsigned int)ipool);
+
+    if(s_hisp160.mem_pool[ipool].ion_client
+        && (ipool == MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE))
+    {
+        cam_debug("%s deinit memory pool ion client %d\n", __func__, ipool);
+        ion_client_destroy(s_hisp160.mem_pool[ipool].ion_client);
+        s_hisp160.mem_pool[ipool].ion_client = NULL;
+    }
 
     mutex_unlock(&hisi_rpmsg_service_mutex);
 
@@ -692,7 +737,7 @@ static int hisp160_deinit_r8isp_memory_pool_force(void)
 {
     int ipool;
 
-    cam_debug("func %s", __func__);
+    cam_info("func %s", __func__);
 
     mutex_lock(&hisi_rpmsg_service_mutex);
 
@@ -700,6 +745,14 @@ static int hisp160_deinit_r8isp_memory_pool_force(void)
     {
         if (s_hisp160.mem_pool[ipool].active) {
             hisp_mem_pool_destroy((unsigned int)ipool);
+        }
+
+        if(s_hisp160.mem_pool[ipool].ion_client
+            && (ipool == MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE))
+        {
+            cam_debug("%s deinit memory pool ion client %d\n", __func__, ipool);
+            ion_client_destroy(s_hisp160.mem_pool[ipool].ion_client);
+            s_hisp160.mem_pool[ipool].ion_client = NULL;
         }
     }
 
@@ -715,6 +768,7 @@ static int hisp160_alloc_r8isp_addr(void *cfg)
     size_t  offset;
     struct hisp_cfg_data *pcfg;
     int rc = 0;
+    bool bSecureMode = false;
 
     if (NULL == cfg){
         cam_err("func %s: cfg is NULL",__func__);
@@ -726,14 +780,18 @@ static int hisp160_alloc_r8isp_addr(void *cfg)
     pcfg = (struct hisp_cfg_data *)cfg;
 
     //handle static memory, just return r8 reserved iova address == map only
-    if (pcfg->param.type == MAP_TYPE_STATIC ||
-            pcfg->param.type == MAP_TYPE_STATIC_SEC)
+    if (pcfg->param.type == MAP_TYPE_STATIC)
     {
+#ifndef CONFIG_HISI_CAMERA_ISP_SECURE
+        mutex_unlock(&hisi_rpmsg_service_mutex);
+        return -ENODEV;
+#else
         cam_debug("func %s static", __func__);
         pcfg->param.iova = a7_mmu_map(NULL, pcfg->param.size,
                 pcfg->param.prot, pcfg->param.type);
         mutex_unlock(&hisi_rpmsg_service_mutex);
         return 0;
+#endif
     }
 
 	// handle dynamic carveout alloc
@@ -744,19 +802,30 @@ static int hisp160_alloc_r8isp_addr(void *cfg)
         return 0;
     }
 
-
-    // hanlde dynamic memory alloc
     for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
     {
-        if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
+        if (s_hisp160.mem_pool[ipool].security_isp_mode) {
+            bSecureMode = true;
             break;
         }
     }
 
-    if (ipool >= MEM_POOL_ATTR_MAX) {
-        cam_err("func %s: no pool hit",__func__);
-        rc = -EINVAL;
-        goto alloc_err;
+    // hanlde dynamic memory alloc
+    if(pcfg->param.type == MAP_TYPE_RAW2YUV){
+        ipool =  MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE;
+    }else{
+        for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
+        {
+            if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
+                break;
+            }
+        }
+
+        if (ipool >= MEM_POOL_ATTR_MAX) {
+            cam_err("func %s: no pool hit",__func__);
+            rc = -EINVAL;
+            goto alloc_err;
+        }
     }
 
     r8_iova = (unsigned int)hisp_mem_pool_alloc_iova(pcfg->param.size, (unsigned int)ipool);
@@ -769,14 +838,16 @@ static int hisp160_alloc_r8isp_addr(void *cfg)
     // offset calculator
     // security mode, pool base is r8_iova, is security address, not align
     // normal mode, pool base is ion_iova, is normal address,  align by isp.
-    if (s_hisp160.mem_pool[ipool].security_isp_mode)
-    {
-         offset = r8_iova - s_hisp160.mem_pool[ipool].r8_iova;
+    if(pcfg->param.type == MAP_TYPE_RAW2YUV){
+        offset = r8_iova - s_hisp160.mem_pool[ipool].r8_iova;
+    }else{
+        if (bSecureMode) {
+            offset = r8_iova - s_hisp160.mem_pool[ipool].r8_iova;
+        } else {
+            offset = r8_iova - s_hisp160.mem_pool[ipool].ion_iova;
+        }
+
     }
-    else
-    {
-         offset = r8_iova - s_hisp160.mem_pool[ipool].ion_iova;
-     }
 
     if (offset > s_hisp160.mem_pool[ipool].size) {
         cam_err("func %s: r8_iova invalid",__func__);
@@ -812,12 +883,16 @@ static int hisp160_free_r8isp_addr(void *cfg)
     pcfg = (struct hisp_cfg_data *)cfg;
 
     //handle static memory, unmap only
-    if (pcfg->param.type == MAP_TYPE_STATIC ||
-            pcfg->param.type == MAP_TYPE_STATIC_SEC) {
+    if (pcfg->param.type == MAP_TYPE_STATIC) {
+#ifndef CONFIG_HISI_CAMERA_ISP_SECURE
+        mutex_unlock(&hisi_rpmsg_service_mutex);
+        return -ENODEV;
+#else
         cam_debug("func %s static", __func__);
         a7_mmu_unmap(pcfg->param.iova, pcfg->param.size);
         mutex_unlock(&hisi_rpmsg_service_mutex);
         return 0;
+#endif
     }
 
 
@@ -833,22 +908,26 @@ static int hisp160_free_r8isp_addr(void *cfg)
     }
 
     // hanlde dynamic memory alloc
-    for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
-    {
-        if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
-            break;
+    if(pcfg->param.type == MAP_TYPE_RAW2YUV){
+        ipool =  MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE;
+    }else{
+        for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
+        {
+            if (s_hisp160.mem_pool[ipool].prot == pcfg->param.prot) {
+                break;
+            }
         }
-    }
 
-    if (ipool >= MEM_POOL_ATTR_MAX) {
-        cam_err("func %s: no pool hit",__func__);
-        rc = -EINVAL;
-        goto free_err;
+        if (ipool >= MEM_POOL_ATTR_MAX) {
+            cam_err("func %s: no pool hit",__func__);
+            rc = -EINVAL;
+            goto free_err;
+        }
     }
 
     rc = (int)hisp_mem_pool_free_iova((unsigned int)ipool, pcfg->param.iova, pcfg->param.size);
     if (rc) {
-	cam_err("func %s: hisp_mem_pool_free_iova error",__func__);
+        cam_err("func %s: hisp_mem_pool_free_iova error",__func__);
         rc = -EFAULT;
         goto free_err;
     }
@@ -867,6 +946,8 @@ static int hisp160_mem_pool_pre_init(void)
     int prot;
     char ion_name[32];
 
+    cam_info("func %s", __func__);
+
     for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
     {
         memset(&(s_hisp160.mem_pool[ipool]), 0, sizeof(struct hisp160_mem_pool));
@@ -874,14 +955,13 @@ static int hisp160_mem_pool_pre_init(void)
         switch (ipool)
         {
             case MEM_POOL_ATTR_READ_WRITE_CACHE:
+            case MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE:
                 prot = POOL_IOMMU_READ | POOL_IOMMU_WRITE|POOL_IOMMU_CACHE;
                 break;
 
-#if defined(SUPPORT_IRIS_SMP)
             case MEM_POOL_ATTR_READ_WRITE_SECURITY:
                 prot = POOL_IOMMU_READ | POOL_IOMMU_WRITE|POOL_IOMMU_CACHE|POOL_IOMMU_SEC;
                 break;
-#endif
 
             default:
                 prot = -1;
@@ -897,12 +977,15 @@ static int hisp160_mem_pool_pre_init(void)
 
         s_hisp160.mem_pool[ipool].prot = (unsigned int)prot;
 
-        memset(ion_name, 0, sizeof(ion_name));
-        snprintf(ion_name, sizeof(ion_name), "hwcam-hisp160-%d", ipool);
-        s_hisp160.mem_pool[ipool].ion_client = hisi_ion_client_create(ion_name);
-        if (IS_ERR_OR_NULL(s_hisp160.mem_pool[ipool].ion_client  )) {
-            cam_err("failed to create ion client %s\n", ion_name);
-            return -ENOMEM;
+        if(ipool != MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE)
+        {
+            memset(ion_name, 0, sizeof(ion_name));
+            snprintf(ion_name, sizeof(ion_name), "hwcam-hisp160-%d", ipool);
+            s_hisp160.mem_pool[ipool].ion_client = hisi_ion_client_create(ion_name);
+            if (IS_ERR_OR_NULL(s_hisp160.mem_pool[ipool].ion_client  )) {
+                cam_err("failed to create ion client %s\n", ion_name);
+                return -ENOMEM;
+            }
         }
     }
 
@@ -913,13 +996,15 @@ static int hisp160_mem_pool_pre_init(void)
 static int hisp160_mem_pool_later_deinit(void)
 {
     int ipool;
-    cam_debug("%s", __func__);
+    cam_info("func %s", __func__);
 
     for (ipool = 0; ipool < MEM_POOL_ATTR_MAX; ipool++)
     {
-        if (s_hisp160.mem_pool[ipool].ion_client) {
+        if (s_hisp160.mem_pool[ipool].ion_client
+            && (ipool != MEM_POOL_ATTR_READ_WRITE_CACHE_OFF_LINE)) {
             cam_debug("%s deinit memory pool ion client %d\n", __func__, ipool);
             ion_client_destroy(s_hisp160.mem_pool[ipool].ion_client);
+            s_hisp160.mem_pool[ipool].ion_client = NULL;
         }
 
         memset(&(s_hisp160.mem_pool[ipool]), 0, sizeof(struct hisp160_mem_pool));
@@ -1629,9 +1714,10 @@ static struct rpmsg_driver rpmsg_hisp160_driver = {
 	.remove = hisp160_rpmsg_remove,
 };
 
-
+#ifdef CONFIG_HISI_DEBUG_FS
 static struct device_attribute hisp_ddr_freq_ctrl_attr =
-    __ATTR(ddr_freq_ctrl, 0664, hisp_ddr_freq_ctrl_show, hisp_ddr_freq_store);
+    __ATTR(ddr_freq_ctrl, 0660, hisp_ddr_freq_ctrl_show, hisp_ddr_freq_store);
+#endif /* CONFIG_HISI_DEBUG_FS */
 
 static int32_t
 hisp160_platform_probe(
@@ -1668,6 +1754,7 @@ hisp160_platform_probe(
     s_hisp160.pdev = pdev;
     s_hisp160.ion_client = NULL;
 
+#ifdef CONFIG_HISI_DEBUG_FS
 	ret = device_create_file(&pdev->dev, &hisp_ddr_freq_ctrl_attr);
 	if (ret < 0) {
 		cam_err("%s failed to creat hisp ddr freq ctrl attribute.", __func__);
@@ -1675,6 +1762,7 @@ hisp160_platform_probe(
 		hisp_unregister(&s_hisp160.intf);
 		goto error;
 	}
+#endif
 	return 0;
 
 error:

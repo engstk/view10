@@ -129,6 +129,9 @@ enum ocv_level {
 	OCV_LEVEL_7,
 	OCV_LEVEL_MAX,
 };
+
+
+
 #define INVALID_SAVE_OCV_LEVEL  (OCV_LEVEL_MAX)
 #define LOW_PRECISION_OCV_LEVEL (OCV_LEVEL_4)
 #define CURR2UPDATE_OCV_TIME (10*60)
@@ -262,9 +265,9 @@ enum ocv_level {
 #define FCC_UPDATE_MAX_OCV_INTERVAL   12
 
 #define ISCD_SAMPLE_RETYR_CNT    3
-#define ISCD_SMAPLE_TIME_MIN  3*3600 //3h
+#define ISCD_SMAPLE_TIME_MIN  (3*3600) //3h
 #define ISCD_SMAPLE_LEN_MAX 30
-#define ISCD_SAMPLE_INTERVAL_MAX  12*3600  //12h
+#define ISCD_SAMPLE_INTERVAL_MAX  (12*3600)  //12h
 #define ISCD_SAMPLE_INTERVAL_DELTA 20 //s
 #define ISCD_DEFAULT_OCV_MIN 4000000  //4V
 #define ISCD_DEFAULT_TBATT_MIN 100
@@ -325,6 +328,20 @@ enum ISCD_LEVEL_CONFIG {
     ISCD_LEVEL_CONFIG_CNT
 };
 
+enum CHIP_TEMP_TYPE{
+    PU_OCV,
+    ECO_OUT,
+    NORMAL,
+    TYPE_CNT
+};
+
+#define DCR_FIFO_LEN (10)
+
+struct dcr_info {
+    int vol_uv[DCR_FIFO_LEN];
+    int curr_ua[DCR_FIFO_LEN];
+};
+
 #define TIMESTAMP_STR_SIZE 32
 #define DSM_BUFF_SIZE_MAX 1024
 #define INDEX_MAX 3
@@ -362,18 +379,22 @@ struct ss_coul_nv_info{
 };
 
 struct vcdata{
-int avg_v; //mv
-int avg_c; //ma
-int min_c; //ma
-int max_c; //ma
+    int avg_v; //mv
+    int avg_c; //ma
+    int min_c; //ma
+    int max_c; //ma
 };
-
+struct pd_ocvinfo{
+    int ocv_vol_uv;
+    int ocv_curr_ua;
+    unsigned int ocv_rtc;
+    int ocv_temp;
+};
 struct coul_device_ops{
     int   (*calculate_cc_uah)(void);
     void  (*save_cc_uah)(int cc_uah);
-    int   (*convert_regval2ua)(short reg_val);
-    int   (*convert_regval2uv)(short reg_val);
-    short (*convert_uv2regval)(int uv_val);
+    int   (*convert_ocv_regval2ua)(short reg_val);
+    int   (*convert_ocv_regval2uv)(short reg_val);
     int   (*is_battery_moved)(void);
     void  (*set_battery_moved_magic_num)(int);
     void  (*get_fifo_avg_data)(struct vcdata *vc);
@@ -417,8 +438,16 @@ struct coul_device_ops{
     void  (*clear_last_soc_flag)(void);
     void  (*get_last_soc_flag)(bool *valid);
     void  (*cali_auto_off)(void);
-	void  (*save_ocv_level)(u8 level);
-	void  (*get_ocv_level)(u8 *level);
+    void  (*save_ocv_level)(u8 level);
+    void  (*get_ocv_level)(u8 *level);
+
+    void  (*set_i_in_event_gate)(int ma);
+    void  (*set_i_out_event_gate)(int ma);
+    void  (*enable_pd_ocv)(int enable);
+    void  (*get_pd_ocv_info)(struct pd_ocvinfo *ocv_info, int index);
+    int    (*get_chip_temp)(enum CHIP_TEMP_TYPE type);
+    void  (*enable_dcr)(int enable);
+    int    (*get_dcr_info)(struct dcr_info *dcr);
 };
 
 enum coul_fault_type{
@@ -427,8 +456,12 @@ enum coul_fault_type{
     COUL_FAULT_CL_INT,
     COUL_FAULT_CL_IN,
     COUL_FAULT_CL_OUT,
+    COUL_FAULT_I_OUT,
+    COUL_FAULT_I_IN,
     COUL_FAULT_TOTAL,
 };
+
+
 struct coul_cali_nv_info
 {
     int v_offset_a;
@@ -565,7 +598,8 @@ struct smartstar_coul_device
     int soc_unlimited;
     int soc_monitor_flag;
     int soc_monitor_limit;
-	unsigned char last_ocv_level;
+    unsigned char last_ocv_level;
+    unsigned int low_vol_filter_cnt;
 #ifdef SMARTSTAR_DEBUG
     unsigned int dbg_ocv_cng_0; /*ocv change count by wake up*/
     unsigned int dbg_ocv_cng_1; /*ocv change count by full charged*/

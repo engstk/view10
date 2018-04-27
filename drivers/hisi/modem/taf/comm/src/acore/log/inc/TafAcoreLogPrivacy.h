@@ -120,7 +120,7 @@ VOS_VOID* AT_AcoreMsgLogPrivacyMatchProc(
 VOS_VOID* TAF_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 );
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_VOID* TAF_XSMS_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 );
@@ -128,7 +128,7 @@ VOS_VOID* TAF_XSMS_AcoreMsgLogPrivacyMatchProc(
 VOS_VOID* TAF_XPDS_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 );
-
+#endif
 VOS_VOID* TAF_MTA_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 );

@@ -377,7 +377,11 @@ flush_out:
 	clear_inode_flag(inode, FI_UPDATE_WRITE);
 	if (S_ISDIR(inode->i_mode) && !is_sbi_flag_set(sbi, SBI_IS_DIRTY))
 		goto out;
+#ifdef CONFIG_F2FS_CLOSE_FUA
+	if (!atomic || blk_flush_async_support(sbi->sb->s_bdev)) {
+#else
 	if (!atomic) {
+#endif
 		flush_begin = local_clock();
 		ret = f2fs_issue_flush(sbi);
 		flush_end = local_clock();
@@ -397,7 +401,7 @@ out:
 		else if (S_ISDIR(inode->i_mode))
 			inc_bd_val(sbi, fsync_dir_cnt, 1);
 		inc_bd_val(sbi, fsync_time, fsync_end - fsync_begin);
-		max_bd_val(sbi, fsync_time, fsync_end - fsync_begin);
+		max_bd_val(sbi, max_fsync_time, fsync_end - fsync_begin);
 		inc_bd_val(sbi, fsync_wr_file_time, wr_file_end - fsync_begin);
 		max_bd_val(sbi, max_fsync_wr_file_time, wr_file_end - fsync_begin);
 		inc_bd_val(sbi, fsync_cp_time, cp_end - cp_begin);
@@ -1570,6 +1574,22 @@ static int f2fs_release_file(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+static int f2fs_file_flush(struct file *file, fl_owner_t id)
+{
+	struct inode *inode = file_inode(file);
+
+	/*
+	 * If the process doing a transaction is crashed, we should do
+	 * roll-back. Otherwise, other reader/write can see corrupted database
+	 * until all the writers close its file. Since this should be done
+	 * before dropping file lock, it needs to do in ->flush.
+	 */
+	if (f2fs_is_atomic_file(inode) &&
+			F2FS_I(inode)->inmem_task == current)
+		drop_inmem_pages(inode);
+	return 0;
+}
+
 #define F2FS_REG_FLMASK		(~(FS_DIRSYNC_FL | FS_TOPDIR_FL))
 #define F2FS_OTHER_FLMASK	(FS_NODUMP_FL | FS_NOATIME_FL | FS_UNRM_FL)
 
@@ -1673,17 +1693,22 @@ static int f2fs_ioc_start_atomic_write(struct file *filp)
 	f2fs_update_time(F2FS_I_SB(inode), REQ_TIME);
 
 	if (!get_dirty_pages(inode))
-		goto out;
+		goto inc_stat;
 
 	f2fs_msg(F2FS_I_SB(inode)->sb, KERN_INFO,
 		"Unexpected flush for atomic writes: ino=%lu, npages=%u",
 					inode->i_ino, get_dirty_pages(inode));
 	ret = filemap_write_and_wait_range(inode->i_mapping, 0, LLONG_MAX);
-	if (ret)
+	if (ret) {
 		clear_inode_flag(inode, FI_ATOMIC_FILE);
-out:
+		goto out;
+	}
+
+inc_stat:
+	F2FS_I(inode)->inmem_task = current;
 	stat_inc_atomic_write(inode);
 	stat_update_max_atomic_write(inode);
+out:
 	inode_unlock(inode);
 	mnt_drop_write_file(filp);
 	return ret;
@@ -2362,6 +2387,17 @@ err_out:
 	return err;
 }
 
+static int f2fs_ioc_get_features(struct file *filp, unsigned long arg)
+{
+	struct inode *inode = file_inode(filp);
+	u32 sb_feature = le32_to_cpu(F2FS_I_SB(inode)->raw_super->feature);
+
+	/* Must validate to set it with SQLite behavior in Android. */
+	sb_feature |= F2FS_FEATURE_ATOMIC_WRITE;
+
+	return put_user(sb_feature, (u32 __user *)arg);
+}
+
 long f2fs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	switch (cmd) {
@@ -2399,6 +2435,16 @@ long f2fs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		return f2fs_ioc_defragment(filp, arg);
 	case F2FS_IOC_MOVE_RANGE:
 		return f2fs_ioc_move_range(filp, arg);
+	case F2FS_IOC_GET_FEATURES:
+		return f2fs_ioc_get_features(filp, arg);
+#if DEFINE_F2FS_FS_SDP_ENCRYPTION
+	case F2FS_IOC_SET_SDP_ENCRYPTION_POLICY:
+		return f2fs_ioc_set_sdp_encryption_policy(filp, arg);
+	case F2FS_IOC_GET_SDP_ENCRYPTION_POLICY:
+		return f2fs_ioc_get_sdp_encryption_policy(filp, arg);
+	case F2FS_IOC_GET_ENCRYPTION_POLICY_TYPE:
+		return f2fs_ioc_get_encryption_policy_type(filp, arg);
+#endif
 	default:
 		return -ENOTTY;
 	}
@@ -2425,6 +2471,7 @@ static ssize_t f2fs_file_write_iter(struct kiocb *iocb, struct iov_iter *from)
 
 		err = f2fs_preallocate_blocks(iocb, from);
 		if (err) {
+			clear_inode_flag(inode, FI_NO_PREALLOC);
 			inode_unlock(inode);
 			return err;
 		}
@@ -2469,8 +2516,14 @@ long f2fs_compat_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case F2FS_IOC_GARBAGE_COLLECT:
 	case F2FS_IOC_WRITE_CHECKPOINT:
 	case F2FS_IOC_DEFRAGMENT:
+#if DEFINE_F2FS_FS_SDP_ENCRYPTION
+	case F2FS_IOC_SET_SDP_ENCRYPTION_POLICY:
+	case F2FS_IOC_GET_ENCRYPTION_POLICY_TYPE:
+	case F2FS_IOC_GET_SDP_ENCRYPTION_POLICY:
+#endif
 		break;
 	case F2FS_IOC_MOVE_RANGE:
+	case F2FS_IOC_GET_FEATURES:
 		break;
 	default:
 		return -ENOIOCTLCMD;
@@ -2486,6 +2539,7 @@ const struct file_operations f2fs_file_operations = {
 	.open		= f2fs_file_open,
 	.release	= f2fs_release_file,
 	.mmap		= f2fs_file_mmap,
+	.flush		= f2fs_file_flush,
 	.fsync		= f2fs_sync_file,
 	.fallocate	= f2fs_fallocate,
 	.unlocked_ioctl	= f2fs_ioctl,

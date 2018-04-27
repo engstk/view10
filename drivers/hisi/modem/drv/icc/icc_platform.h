@@ -103,9 +103,8 @@ do {                               \
         icc_print_error(fmt, ##__VA_ARGS__);\
 } while (0)
 
-#define icc_safe_memset(dest, destMax, val, count) memset(dest, val, count)
-#define icc_safe_memcpy(dest, destMax, src, count) memcpy(dest, src, count)
-#define icc_safe_sprintf(buf, max_dst_size, fmt, ...)   sprintf(buf, fmt, ...)
+//#define icc_safe_memset(dest, destMax, val, count) memset_s(dest, destMax, val, count)
+//#define icc_safe_memcpy(dest, destMax, src, count) memcpy_s(dest, destMax, src, count)
 
 typedef struct task_struct*  icc_task_id;
 

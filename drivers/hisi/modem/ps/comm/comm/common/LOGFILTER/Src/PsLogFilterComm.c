@@ -79,24 +79,7 @@ PS_OM_LAYER_MSG_REPLACE_STATISTIC_STRU  g_stLayerMsgFilterStatistic = {0,0,0,0};
 ******************************************************************************/
 
 
-/*****************************************************************************
- 函 数 名  : PS_OM_LocalCpuLayerMsgCommReplace
- 功能描述  : 本核层间消息匹配过滤接口
- 输入参数  :
-             PS_OM_PER_PID_REG_CTRL_STRU    *pstLocalCpuPerPidCtrl,
-             VOS_VOID                                    *pMsg
 
- 输出参数  : 无
- 返 回 值  : VOS_VOID*
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年3月22日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* PS_OM_LocalCpuLayerMsgCommReplace
 (
     PS_OM_PER_PID_REG_CTRL_STRU    *pstLocalCpuPerPidCtrl,
@@ -135,22 +118,7 @@ VOS_VOID* PS_OM_LocalCpuLayerMsgCommReplace
 
 
 
-/*****************************************************************************
- 函 数 名  : PS_OM_DiffCpuLayerMsgCommReplace
- 功能描述  : 跨核层间消息匹配过滤接口
- 输入参数  : PS_OM_DIFF_CPU_LAYER_MSG_FILTER_CTRL_STRU    *pstDiffCpuLayerMsgFilter,
-             MsgBlock                                     *pRevMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID*
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月22日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* PS_OM_DiffCpuLayerMsgCommReplace
 (
     PS_OM_CPU_LAYER_MSG_FILTER_CTRL_STRU       *pstDiffCpuLayerMsgFilter,
@@ -197,23 +165,7 @@ VOS_VOID* PS_OM_DiffCpuLayerMsgCommReplace
     return pResult;
 }
 
-/*****************************************************************************
- 函 数 名  : PS_OM_CpuLayerMsgCommReplace
- 功能描述  : C核层间消息替换接口，区分是同核消息还是跨核消息
- 输入参数  :
-             VOS_VOID                           *pMsg,
-             PS_OM_LAYER_MSG_REPLACE_CTRL_STRU           *pstLayerMsgReplaceCtrl
- 输出参数  : 无
- 返 回 值  : VOS_VOID*
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月23日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* PS_OM_CpuLayerMsgCommReplace
 (
     VOS_VOID                                    *pMsg,
@@ -254,26 +206,7 @@ VOS_VOID* PS_OM_CpuLayerMsgCommReplace
 
 
 
-/*****************************************************************************
- 函 数 名  : PS_OM_LayerMsgReplaceMemExpand
- 功能描述  : 为注册接口申请内存
- 输入参数  :
-             VOS_UINT32                                  ulSendPid,
-             VOS_UINT16                                  usElementSize,
-             VOS_UINT16                                  usExpandCnt,
-             VOS_UINT16                                 *pusElementCnt,
-             VOS_VOID                                  **ppStartAddr
- 输出参数  : 无
- 返 回 值  : PS_SUCC\PS_FAIL
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月20日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 PS_OM_LayerMsgReplaceMemExpand
 (
     VOS_UINT32                                  ulSendPid,
@@ -315,70 +248,7 @@ VOS_UINT32 PS_OM_LayerMsgReplaceMemExpand
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : PS_OM_LayerMsgCheckPara
- 功能描述  : 入参合法性检查
- 输入参数  : PS_OM_LAYER_MSG_REPLACE_CB                 pFunc,
-             VOS_UINT32                                 ulSendPid
- 输出参数  : 无
- 返 回 值  : PS_ERR\PS_OK
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月20日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-VOS_UINT32 PS_OM_LayerMsgCheckPara
-(
-    PS_OM_LAYER_MSG_REPLACE_CB                 pFunc,
-    VOS_UINT32                                 ulSendPid
-)
-{
-    VOS_UINT16                          usCpuId;
-
-
-    if (VOS_NULL_PTR == pFunc)
-    {
-        return VOS_ERR;
-    }
-    usCpuId = VOS_GET_CPU_ID(ulSendPid);
-    if (((VOS_CPU_ID_CCPU == usCpuId)&&(VOS_CPU_ID_0_PID_BUTT <= ulSendPid))
-            || ((VOS_CPU_ID_ACPU == usCpuId)&&(VOS_CPU_ID_1_PID_BUTT <= ulSendPid))
-            || ((VOS_CPU_ID_GUDSP == usCpuId)&&(VOS_CPU_ID_2_PID_BUTT <= ulSendPid))
-            || ((VOS_CPU_ID_MEDDSP == usCpuId)&&(VOS_CPU_ID_3_PID_BUTT <= ulSendPid))
-            || ((VOS_CPU_ID_MCU == usCpuId)&&(VOS_CPU_ID_4_PID_BUTT <= ulSendPid))
-            || ((VOS_CPU_ID_BBE16 == usCpuId)&&(VOS_CPU_ID_5_PID_BUTT <= ulSendPid)))
-    {
-        return VOS_ERR;
-    }
-
-    return VOS_OK;
-}
-
-
-
-/*****************************************************************************
- 函 数 名  : PS_OM_OnePidFilterFuncCommReg
- 功能描述  : 过滤函数注册
- 输入参数  :
-             VOS_UINT32                                  ulSendPid,
-             PS_OM_LAYER_MSG_REPLACE_CB                  pFunc,
-             PS_OM_CPU_LAYER_MSG_FILTER_CTRL_STRU       *pstCpuFilter,
-             PS_OM_PER_PID_REG_CTRL_STRU                *pstPidFilter
- 输出参数  : 无
- 返 回 值  : PS_ERR\PS_OK
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年03月20日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 PS_OM_OnePidFilterFuncCommReg
 (
     VOS_UINT32                                  ulSendPid,
@@ -420,30 +290,7 @@ VOS_UINT32 PS_OM_OnePidFilterFuncCommReg
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : PS_OM_LocalLayerMsgReplaceFuncCommReg
- 功能描述  : A C核非跨核层间消息匹配过滤函数注册接口
- 输入参数  :
-                PS_OM_LAYER_MSG_REPLACE_CB                 pFunc,
-                PS_OM_LAYER_MSG_REPLACE_CTRL_STRU         *pstLayerMsgReplaceCtrl,
-                VOS_UINT32                                 ulSendPid
-输入参数回调接口规则:
-             1.如果注册回调内部没有对消息进行处理，则需要将入参指针返回
-             2.如果注册回调内部对消息进行了处理，则返回值能够实现两个功能:
-               ①返回VOS_NULL，则将此消息进行完全过滤，不会再勾取出来
-               ②返回与入参指针不同的另一个指针，则勾取的消息将会使用返回的指
-                 针内容替换原消息的内容。
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月20日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 PS_OM_LocalLayerMsgReplaceFuncCommReg
 (
     PS_OM_LAYER_MSG_REPLACE_CB                 pFunc,
@@ -488,31 +335,7 @@ VOS_UINT32 PS_OM_LocalLayerMsgReplaceFuncCommReg
 
 
 
-/*****************************************************************************
- 函 数 名  : PS_OM_DiffCpuLayerMsgReplaceFuncCommReg
- 功能描述  : A C核跨核层间消息匹配过滤函数注册接口
- 输入参数  :
-                PS_OM_LAYER_MSG_REPLACE_CB                  pFunc,
-                PS_OM_LAYER_MSG_REPLACE_CTRL_STRU          *pstLayerMsgReplaceCtrl,
-                VOS_UINT32                                  ulSendPid
-输入参数回调接口规则:
-             1.如果注册回调内部没有对消息进行处理，则需要将入参指针返回，否则
-               本模块不知道是否需要将此消息传递给下一个注册回调进行处理
-             2.如果注册回调内部对消息进行了处理，则返回值能够实现两个功能:
-               ①返回VOS_NULL，则将此消息进行完全过滤，不会再勾取出来
-               ②返回与入参指针不同的另一个指针，则勾取的消息将会使用返回的指
-                 针内容替换原消息的内容。
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月20日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 PS_OM_DiffCpuLayerMsgReplaceFuncCommReg
 (
     PS_OM_LAYER_MSG_REPLACE_CB                  pFunc,
@@ -561,24 +384,7 @@ VOS_UINT32 PS_OM_DiffCpuLayerMsgReplaceFuncCommReg
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : PS_OM_LayerMsgReplaceCBCommReg
- 功能描述  : A/C核注册层间消息匹配过滤回调接口，建议由消息发送方统一使用发送PID
-             进行匹配过滤接口注册，原则上一个发送PID只允许注册一个匹配过滤接口，
-             但是对跨核消息，透传转发消息等特殊场景，允许发送方或接收方使用
-             发送PID注册多个匹配过滤接口
- 输入参数  : PS_OM_LAYER_MSG_REPLACE_CTRL_STRU*pstLayerMsgCtrl
-             VOS_UINT32                        ulSendPid
-             PS_OM_LAYER_MSG_REPLACE_CB        pFunc
- 输出参数  : 无
- 返 回 值  : VOS_OK or VOS_ERR
 
- 修改历史      :
-  1.日    期   : 2017年3月18日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 PS_OM_LayerMsgReplaceCBCommReg
 (
     PS_OM_LAYER_MSG_REPLACE_CTRL_STRU          *pstLayerMsgCtrl,
@@ -589,8 +395,7 @@ VOS_UINT32 PS_OM_LayerMsgReplaceCBCommReg
     VOS_UINT32                      ulResult;
 
     /*入参合法性检查、PID范围检查*/
-    if ((VOS_NULL_PTR == pstLayerMsgCtrl)
-        || (VOS_OK != PS_OM_LayerMsgCheckPara(pFunc, ulSendPid)))
+    if ((VOS_NULL_PTR == pstLayerMsgCtrl) || (VOS_NULL_PTR == pFunc))
     {
         g_stLayerMsgFilterStatistic.ulRegFailCnt++;
         return VOS_ERR;
@@ -616,41 +421,6 @@ VOS_UINT32 PS_OM_LayerMsgReplaceCBCommReg
     }
 
     return ulResult;
-}
-
-/*****************************************************************************
- 函 数 名  : PS_OM_LogFilterCommShow
- 功能描述  : 显示LogFilter的注册信息
- 输入参数  : PS_OM_LAYER_MSG_REPLACE_CTRL_STRU*pstLayerMsgCtrl
- 输出参数  : 无
- 返 回 值  : 无
-
- 修改历史      :
-  1.日    期   : 2017年3月18日
-    作    者   : c00368566
-    修改内容   : 新生成函数
-
-*****************************************************************************/
-VOS_VOID PS_OM_LogFilterCommShow
-(
-    PS_OM_LAYER_MSG_REPLACE_CTRL_STRU           *pstLayerMsgCtrl
-)
-{
-    if (VOS_NULL_PTR != pstLayerMsgCtrl)
-    {
-        vos_printf("CurCpuMaxPidCnt:   %d\n", pstLayerMsgCtrl->usLocalCpuMaxPidCnt);
-        vos_printf("CurCpuId:          %d\n", pstLayerMsgCtrl->ucLocalCpuId);
-        vos_printf("LocalMaxCnt:       %d\n", pstLayerMsgCtrl->stLocalCpuLayerMsgFilter.usMaxCnt);
-        vos_printf("LocalUseCnt:       %d\n", pstLayerMsgCtrl->stLocalCpuLayerMsgFilter.usUseCnt);
-        vos_printf("DiffMaxCnt:        %d\n", pstLayerMsgCtrl->stDiffCpuLayerMsgFilter.usMaxCnt);
-        vos_printf("DiffUseCnt:        %d\n", pstLayerMsgCtrl->stDiffCpuLayerMsgFilter.usUseCnt);
-        vos_printf("RegSuccCnt:        %d\n", g_stLayerMsgFilterStatistic.ulRegSuccCnt);
-        vos_printf("RegFailCnt:        %d\n", g_stLayerMsgFilterStatistic.ulRegFailCnt);
-        vos_printf("LocalCpuFilterCnt: %d\n", g_stLayerMsgFilterStatistic.ulLocalCpuFilterCnt);
-        vos_printf("DiffCpuFilterCnt:  %d\n", g_stLayerMsgFilterStatistic.ulDiffCpuFilterCnt);
-    }
-
-    return;
 }
 
 

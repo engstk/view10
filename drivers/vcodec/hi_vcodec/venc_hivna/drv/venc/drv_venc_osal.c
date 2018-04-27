@@ -1,6 +1,5 @@
 #include <linux/kthread.h>
 #include <linux/delay.h>
-
 #include "drv_venc_osal.h"
 #include "hi_drv_mem.h"
 
@@ -108,6 +107,7 @@ HI_U64 get_sys_time(HI_VOID)
 HI_S32 VENC_DRV_OsalWaitEvent(VEDU_OSAL_EVENT *pEvent, HI_U32 msWaitTime)
 {
 	HI_S32 l_ret = 0;
+	HI_U32 cnt   = 0;
 
 	HI_U64 start_time, cur_time;
 	start_time = get_sys_time();
@@ -117,12 +117,17 @@ HI_S32 VENC_DRV_OsalWaitEvent(VEDU_OSAL_EVENT *pEvent, HI_U32 msWaitTime)
 		if (l_ret < 0) {
 			cur_time = get_sys_time();
 			if (TIME_PERIOD(start_time, cur_time) > (HI_U64)msWaitTime) {
-				HI_FATAL_VENC("wait event time out, time : %lld\n", TIME_PERIOD(start_time, cur_time));
+				HI_FATAL_VENC("wait event time out, time : %lld, cnt: %d\n", TIME_PERIOD(start_time, cur_time), cnt);
 				l_ret = 0;
 				break;
 			}
 		}
+		cnt++;
 	} while ((pEvent->flag == 0) && (l_ret < 0));
+
+	if (cnt > 100) {
+		HI_FATAL_VENC("the max cnt of wait_event interrupts by singal is %d\n", cnt);
+	}
 
 	if (l_ret  == 0) {
 		HI_FATAL_VENC("wait pEvent signal timeout\n");

@@ -131,7 +131,6 @@ int kernel_dump_init(void)
 	cb->kern_map_offset = (UL(0xffffffffffffffff) << VA_BITS);/*lint !e648*/
 
 	cb->ttbr = virt_to_phys(init_mm.pgd);
-	pr_info("%s: ttbr:%pK\n", __FUNCTION__, (void *)cb->ttbr);
 
 	cb->mb_cb = (struct memblock_type *)virt_to_phys(&memblock.memory);
 	print_mb_cb = &memblock.memory;
@@ -146,7 +145,7 @@ int kernel_dump_init(void)
 	pr_info("cb->phys_offset is 0x%llx\n", cb->phys_offset);
 	pr_info("cb->page_offset is 0x%llx\n", cb->page_offset);
 	pr_info("cb->pfn_offset is 0x%llx\n", cb->pfn_offset);
-	pr_info("cb->ttbr is 0x%llx\n", cb->ttbr);
+	pr_info("cb->ttbr is ttbr:%pK\n", (void *)cb->ttbr);
 	pr_info("cb->mb_cb is 0x%llx\n", (unsigned long long)(cb->mb_cb));
 	pr_info("cb->section_size is 0x%llx\n", cb->section_size);
 	pr_info("cb->pmd_size is 0x%llx\n", cb->pmd_size);

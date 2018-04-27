@@ -1,6 +1,6 @@
 /{
 	ufs: ufs@FF3c0000 {
-		compatible = "hisilicon,kirin-ufs-v21";
+		compatible = "hisilicon,kirin-ufs";
 		reg = <0x0 0xff3c0000 0x0 0x20000>,	/* 0: HCI standard */
 			<0x0 0xff3e0000 0x0 0x1000>;	/* 1: UFS SYS CTRL */
 		interrupt-parent = <&gic>;
@@ -8,9 +8,8 @@
 		clock-names = "clk_ufsio_ref";
 		clocks = <&clk_gate_ufsio_ref>;
 		vcc-supply = <&ldo15>;
-		ufs-kirin-sysbus-207m;
 		ufs-kirin-ssu-by-self;
-		kirin970-ufs-memory-repair-workround;
+		reset_retry_max = <3>;
 		status = "ok";
 
 		1861 {

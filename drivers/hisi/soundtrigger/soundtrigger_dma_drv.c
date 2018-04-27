@@ -653,6 +653,7 @@ static int32_t dma_start(struct st_fast_status * fast_status)
 	struct soundtrigger_pcm_info *pcm_info = NULL;
 	struct soundtrigger_dma_drv_info *dma_drv_info = g_dma_drv_info;
 	slimbus_track_param_t  slimbus_params;
+	slimbus_device_type_t device_type = SLIMBUS_DEVICE_NUM;
 	int ret = 0;
 
 	if (!dma_drv_info) {
@@ -672,19 +673,18 @@ static int32_t dma_start(struct st_fast_status * fast_status)
 
 	if (CODEC_HI6402 == dma_drv_info->type) {
 		slimbus_params.channels = 2;
-		ret = slimbus_track_activate(SLIMBUS_DEVICE_HI6402, SLIMBUS_TRACK_SOUND_TRIGGER, &slimbus_params);
+		device_type = SLIMBUS_DEVICE_HI6402;
 	} else {
 		slimbus_params.channels = 1;
-		(void)hi64xx_request_pll_resource(HI_FREQ_SCENE_FASTTRANS);
-		msleep(2);
-		ret = slimbus_track_activate(SLIMBUS_DEVICE_HI6403, SLIMBUS_TRACK_SOUND_TRIGGER, &slimbus_params);
-		logi("dma start request pll resource and switch to codec\n");
+		device_type = SLIMBUS_DEVICE_HI6403;
 	}
+	(void)hi64xx_request_pll_resource(HI_FREQ_SCENE_FASTTRANS);
+	msleep(2);
+	ret = slimbus_track_activate(device_type, SLIMBUS_TRACK_SOUND_TRIGGER, &slimbus_params);
+	logi("dma start request pll resource and switch to codec\n");
 	if (ret != 0) {
 		logi("soundtrigger activate fail\n");
-		if (CODEC_HI6402 != dma_drv_info->type) {
-			hi64xx_release_pll_resource(HI_FREQ_SCENE_FASTTRANS);
-		}
+		hi64xx_release_pll_resource(HI_FREQ_SCENE_FASTTRANS);
 		return ret;
 	}
 	dma_drv_info->is_slimbus_enable = 1;
@@ -733,7 +733,7 @@ static int32_t dma_open(struct st_fast_status * fast_status)
 		return -EAGAIN;
 
 	/*get fast buffer*/
-	memset(fast_info->fast_buffer, 0x00, FAST_BUFFER_SIZE);
+	memset(fast_info->fast_buffer, 0x00, sizeof(uint16_t) * FAST_BUFFER_SIZE);
 
 	fast_info->fast_read_complete_flag = READ_NOT_COMPLETE;
 	fast_info->fast_buffer_size = FAST_BUFFER_SIZE;
@@ -804,6 +804,7 @@ int32_t hi64xx_soundtrigger_dma_close(void)
 	struct normal_tran_info *normal_info = NULL;
 	struct soundtrigger_pcm_info *fast_pcm_info = NULL;
 	struct soundtrigger_pcm_info *normal_pcm_info = NULL;
+	slimbus_device_type_t device_type = SLIMBUS_DEVICE_NUM;
 	int32_t err;
 
 	if (!dma_drv_info) {
@@ -832,14 +833,12 @@ int32_t hi64xx_soundtrigger_dma_close(void)
 	}
 
 	if (dma_drv_info->is_slimbus_enable) {
-		if (CODEC_HI6402 == dma_drv_info->type) {
-			slimbus_track_deactivate(SLIMBUS_DEVICE_HI6402, SLIMBUS_TRACK_SOUND_TRIGGER, NULL);
-		} else {
-			slimbus_track_deactivate(SLIMBUS_DEVICE_HI6403, SLIMBUS_TRACK_SOUND_TRIGGER, NULL);
-			msleep(2);
-			hi64xx_release_pll_resource(HI_FREQ_SCENE_FASTTRANS);
-			logi("soundtrigger dma release pll resource and switch to soc\n");
-		}
+		device_type = (CODEC_HI6402 == dma_drv_info->type) ?
+			SLIMBUS_DEVICE_HI6402 : SLIMBUS_DEVICE_HI6403;
+		slimbus_track_deactivate(device_type, SLIMBUS_TRACK_SOUND_TRIGGER, NULL);
+		msleep(2);
+		hi64xx_release_pll_resource(HI_FREQ_SCENE_FASTTRANS);
+		logi("soundtrigger dma release pll resource and switch to soc\n");
 		dma_drv_info->is_slimbus_enable = 0;
 	}
 
@@ -863,7 +862,7 @@ int32_t hi64xx_soundtrigger_dma_close(void)
 	normal_info->normal_tran_count = 0;
 
 	/* memset fast and free normal channel pcm buffer */
-	memset(fast_info->fast_buffer, 0x00, FAST_BUFFER_SIZE);
+	memset(fast_info->fast_buffer, 0x00, sizeof(uint16_t) * FAST_BUFFER_SIZE);
 
 	Static_RingBuffer_DeInit();
 

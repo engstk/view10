@@ -46,21 +46,7 @@
  *
  */
 
-/************************************************************************
-Copyright   : 2005-2008, Huawei Tech. Co., Ltd.
-File name   : STKApi.c
-Author      : m00128685
-Version     : V200R001
-Date        : 2008-12-28
-Description : 该文件定义了STK模块的对外接口
 
-Description :
-History     :
-
-1.日    期  : 2008年12月28日
-  作    者  : m00128685
-  修改内容  : Create
-************************************************************************/
 
 #include "siappstk.h"
 #include "si_stk.h"
@@ -84,19 +70,7 @@ SI_STK_TAGLIST_STRU gastEnvelopeDecodeList[2]
                                             {SI_STK_ENVELOPE_SMSCRTL,           sizeof(gucMOSMSCtrlRsp),    gucMOSMSCtrlRsp     }
                                          };
 
-/*****************************************************************************
-函 数 名  : GetMainMenu
-功能描述  : 获取STK功能的主菜单
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2009年7月6日
-  作    者  : H9254
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STK_SendReqMsg(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -108,6 +82,7 @@ VOS_UINT32 SI_STK_SendReqMsg(
     SI_STK_REQ_STRU         *pstSTKReq;
     VOS_UINT32              ulSendPid;
     VOS_UINT32              ulReceiverPid;
+
     MODEM_ID_ENUM_UINT16    enModemID;
 
     ulSendPid = WUEPS_PID_AT;
@@ -131,7 +106,6 @@ VOS_UINT32 SI_STK_SendReqMsg(
     {
         ulReceiverPid = I0_MAPS_STK_PID;
     }
-
 
     pstSTKReq = (SI_STK_REQ_STRU *)VOS_AllocMsg(ulSendPid, sizeof(SI_STK_REQ_STRU)- VOS_MSG_HEAD_LENGTH + DataLen);
 
@@ -161,19 +135,8 @@ VOS_UINT32 SI_STK_SendReqMsg(
     return VOS_OK;
 }
 
-/*****************************************************************************
-函 数 名  : GetMainMenu
-功能描述  : 获取STK功能的主菜单
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2009年7月6日
-  作    者  : H9254
-  修改内容  : Create
-*****************************************************************************/
+
+
 VOS_UINT32 SI_STK_GetMainMenu(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -181,19 +144,7 @@ VOS_UINT32 SI_STK_GetMainMenu(
     return SI_STK_SendReqMsg(ClientId,OpId, SI_STK_GETMAINMNUE, SI_STK_NOCMDDATA,0,VOS_NULL_PTR);
 }
 
-/*****************************************************************************
-函 数 名  : SI_STK_GetSTKCommand
-功能描述  : 获取缓存的STK主动命令
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : z00100318
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STK_GetSTKCommand(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -202,19 +153,7 @@ VOS_UINT32 SI_STK_GetSTKCommand(
     return SI_STK_SendReqMsg(ClientId,OpId, SI_STK_GETCOMMAND, CmdType,0,VOS_NULL_PTR);
 }
 
-/*****************************************************************************
-函 数 名  : SI_STK_QuerySTKCommand
-功能描述  : 查询最后一次SIM卡上报的主动命令
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : z00100318
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STK_QuerySTKCommand(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -222,19 +161,7 @@ VOS_UINT32 SI_STK_QuerySTKCommand(
     return VOS_ERR;
 }
 
-/*****************************************************************************
-函 数 名  : SI_STK_DataSendSimple
-功能描述  : 终端给予下发数据函数
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : z00100318
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STK_DataSendSimple(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -245,19 +172,7 @@ VOS_UINT32 SI_STK_DataSendSimple(
     return SI_STK_SendReqMsg(ClientId,OpId, SI_STK_SIMPLEDOWN,SendType,DataLen,pData);
 }
 
-/*****************************************************************************
-函 数 名  : SI_STK_TerminalResponse
-功能描述  : 终端给予响应函数
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : z00100318
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STK_TerminalResponse(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId,
@@ -267,19 +182,7 @@ VOS_UINT32 SI_STK_TerminalResponse(
 }
 
 
-/*****************************************************************************
-函 数 名  : SI_STKDualIMSIChangeReq
-功能描述  : 触发IMSI切换流程，沃达丰定制流程
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2010年02月10日
-  作    者  : m00128685
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STKDualIMSIChangeReq(
     MN_CLIENT_ID_T                      ClientId,
     MN_OPERATION_ID_T                   OpId)
@@ -287,37 +190,13 @@ VOS_UINT32 SI_STKDualIMSIChangeReq(
     return TAF_FAILURE;
 }
 
-/*****************************************************************************
-函 数 名  : SI_STKIsDualImsiSupport
-功能描述  : 判断是否支持Dual IMSI切换
-输入参数  : 无
-输出参数  : 无
-返 回 值  : 执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2010年02月11日
-  作    者  : m00128685
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STKIsDualImsiSupport(VOS_VOID)
 {
     return TAF_FAILURE;
 }
 
-/*****************************************************************************
-函 数 名  : SI_STK_MenuSelection
-功能描述  : STK功能ENVELOP下载函数
-输入参数  : 无
-输出参数  : 无
-返 回 值  : VOS_UINT32函数执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2008年10月18日
-  作    者  : z00100318
-  修改内容  : Create
-*****************************************************************************/
+
 
 VOS_UINT32 SI_STK_MenuSelection(
     MN_CLIENT_ID_T                      ClientId,
@@ -327,19 +206,7 @@ VOS_UINT32 SI_STK_MenuSelection(
     return TAF_FAILURE;
 }
 
-/*****************************************************************************
-函 数 名  : SI_STK_SetUpCallConfirm
-功能描述  : 用户回复是否允许发起呼叫
-输入参数  : ulAction -- 用户回复结果
-输出参数  : 无
-返 回 值  : 执行结果
-调用函数  : 无
-被调函数  : 外部接口
-History     :
-1.日    期  : 2012年9月14日
-  作    者  : j00168360
-  修改内容  : Create
-*****************************************************************************/
+
 VOS_UINT32 SI_STK_SetUpCallConfirm(
     MN_CLIENT_ID_T                      ClientId,
     SI_STK_SETUPCALLCONFIRM_ENUM_UINT32 enAction)

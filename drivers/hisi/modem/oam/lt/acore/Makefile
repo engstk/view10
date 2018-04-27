@@ -75,6 +75,7 @@ subdir-ccflags-y  += -I$(MODEM_DIR)/oam/inc/gu/ccore/sleep/
 
 #lt only INC
 subdir-ccflags-y  += -I$(MODEM_DIR)/oam/inc/lt/acore/diag/
+subdir-ccflags-y  += -I$(MODEM_DIR)/oam/inc/lt/acore/chr/
 subdir-ccflags-y  += -I$(MODEM_DIR)/oam/inc/lt/comm/list/
 subdir-ccflags-y  += -I$(MODEM_DIR)/oam/inc/lt/comm/diag/
 subdir-ccflags-y  += -I$(MODEM_DIR)/oam/inc/lt/comm/type/
@@ -100,7 +101,6 @@ obj-y				+= chr/
 obj-y				+= debug/
 obj-y				+= list/
 obj-y				+= diag/
-obj-y				+= mode/
 obj-y				+= service/
 
 subdir-ccflags-y += -Werror

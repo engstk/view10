@@ -77,13 +77,7 @@ extern "C" {
   3 枚举定义
 *****************************************************************************/
 
-/*****************************************************************************
- 枚举名    : RNIC_DAIL_EVENT_TYPE_ENUM
- 枚举说明  : 上报拨号事件
- 1.日    期   : 2012年1月31日
-   作    者   : W00199382
-   修改内容   : 创建
-*****************************************************************************/
+
 enum RNIC_DAIL_EVENT_TYPE_ENUM
 {
     RNIC_DAIL_EVENT_UP                  = 0x0600,                               /*需要触发拨号*/
@@ -93,13 +87,7 @@ enum RNIC_DAIL_EVENT_TYPE_ENUM
 };
 typedef VOS_UINT32 RNIC_DAIL_EVENT_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : RNIC_DIAL_MODE_ENUM
- 枚举说明  : 设置拨号模式
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum RNIC_DIAL_MODE_ENUM
 {
     RNIC_DIAL_MODE_MANUAL,                                                      /*Manual dial mode*/
@@ -109,13 +97,7 @@ enum RNIC_DIAL_MODE_ENUM
 };
 typedef VOS_UINT32 RNIC_DIAL_MODE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : RNIC_DIAL_EVENT_REPORT_FLAG_ENUM
- 枚举说明  : 事件上报给应用的标识
- 1.日    期   : 2012年1月31日
-   作    者   : w00199382
-   修改内容   : 创建
-*****************************************************************************/
+
 enum RNIC_DIAL_EVENT_REPORT_FLAG_ENUM
 {
     RNIC_FORBID_EVENT_REPORT            = 0x0000,                               /*不给应用上报*/
@@ -125,13 +107,7 @@ enum RNIC_DIAL_EVENT_REPORT_FLAG_ENUM
 };
 typedef VOS_UINT32 RNIC_DIAL_EVENT_REPORT_FLAG_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : RNIC_MSG_ID_ENUM
- 枚举说明  : RNIC自发自收的消息
-  1.日    期   : 2014年01月06日
-    作    者   : m00217266
-    修改内容   : 创建
-*****************************************************************************/
+
 enum RNIC_MSG_ID_ENUM
 {
     ID_RNIC_CCPU_RESET_START_IND        = 0x1001,                               /* _H2ASN_MsgChoice RNIC_CCPU_RESET_IND_STRU */
@@ -182,17 +158,7 @@ typedef VOS_UINT32 (*RNIC_RCV_TI_EXPRIED_PROC_FUNC)(
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*****************************************************************************
- 结构名    : RNIC_DIAL_MODE_STRU
- 结构说明  : 拨号模式及按需拨号时间
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 创建
- 2.日    期   : 2012年1月31日
-   作    者   : w00199382
-   修改内容   : 增加是否事件上报域
 
-*****************************************************************************/
 typedef struct
 {
     RNIC_DIAL_MODE_ENUM_UINT32                              enDialMode;         /* Dial模式 */
@@ -201,67 +167,31 @@ typedef struct
     VOS_UINT32                                              ulReserved;
 }RNIC_DIAL_MODE_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_NOTIFY_MSG_STRU
- 结构说明  : RNIC内部消息头部结构
- 1.日    期   : 2011年12月08日
-   作    者   : f00179208
-   修改内容   : 新建
- 1.日    期   : 2012年1月31日
-   作    者   : w00199382
-   修改内容   : 增加按需拨号结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */        /*_H2ASN_Skip*/
-    /* Modified by m00217266 for L-C互操作项目, 2014-2-11, begin */
     RNIC_MSG_ID_ENUM_UINT32             enMsgId;                                /*消息类型*/        /*_H2ASN_Skip*/
-    /* Modified by m00217266 for L-C互操作项目, 2014-2-11, end */
     RNIC_DIAL_MODE_STRU                 stDialInfo;                             /*按需拨号配置内容*/
 }RNIC_NOTIFY_MSG_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_MNTN_DIAL_EVT_STRU
- 协议表格  :
- 结构说明  : 按需拨号可维可测消息结构
-  1.日    期   : 2012年6月6日
-    作    者   : A00165503
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
-    /* Modified by m00217266 for L-C互操作项目, 2014-2-11, begin */
     RNIC_MSG_ID_ENUM_UINT32             enMsgId;                                /* 消息ID */    /* _H2ASN_Skip */
-    /* Modified by m00217266 for L-C互操作项目, 2014-2-11, end */
 } RNIC_MNTN_DIAL_CONN_EVT_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_MNTN_DIAL_EVT_STRU
- 协议表格  :
- 结构说明  : 按需拨号可维可测消息结构
-  1.日    期   : 2012年6月6日
-    作    者   : A00165503
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
-    /* Modified by m00217266 for L-C互操作项目, 2014-2-11, begin */
     RNIC_MSG_ID_ENUM_UINT32             enMsgId;                                /* 消息ID */    /* _H2ASN_Skip */
-    /* Modified by m00217266 for L-C互操作项目, 2014-2-11, end */
     VOS_UINT32                          ulPktNum;
     VOS_UINT32                          ulUsrExistFlg;
 } RNIC_MNTN_DIAL_DISCONN_EVT_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_RCV_TI_EXPRIED_PROC_STRU
- 结构说明  : 类型与对应处理函数的结构
 
-  1.日    期   : 2012年11月28日
-    作    者   : f00179208
-    修改内容   : Added for DSDA Phase I
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulMsgId;
@@ -269,14 +199,7 @@ typedef struct
 }RNIC_RCV_TI_EXPRIED_PROC_STRU;
 
 /* Modified by l60609 for L-C互操作项目, 2014-01-06, Begin */
-/*****************************************************************************
- 结构名    : RNIC_CCPU_RESET_IND_STRU
- 协议表格  :
- 结构说明  : C核复位后给RNIC的消息指示
-  1.日    期   : 2013年04月11日
-    作    者   : f00179208
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
@@ -284,14 +207,7 @@ typedef struct
 }RNIC_CCPU_RESET_IND_STRU;
 /* Modified by l60609 for L-C互操作项目, 2014-01-06, End */
 
-/*****************************************************************************
- 结构名    : RNIC_IMS_DATA_PROC_IND_STRU
- 协议表格  :
- 结构说明  : 触发发数指示
-  1.日    期   : 2015年11月28日
-    作    者   : n00269697
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */    /* _H2ASN_Skip */
@@ -420,14 +336,33 @@ VOS_UINT32 RNIC_ProcImsaPdnDeactInd_Lte(
     MODEM_ID_ENUM_UINT16                enModemId,
     IMSA_RNIC_PDN_EMC_IND_ENUM_UINT8    enEmcInd
 );
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-21, begin */
 VOS_UINT8 RNIC_GetImsRmnetId(
     IMSA_RNIC_IMS_RAT_TYPE_ENUM_UINT8   enRatType,
     MODEM_ID_ENUM_UINT16                enModemId,
     IMSA_RNIC_PDN_EMC_IND_ENUM_UINT8    enEmcInd
 );
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-21, end */
 
+VOS_UINT8 RNIC_GetImsEmcBearRmnetId(
+    IMSA_RNIC_IMS_RAT_TYPE_ENUM_UINT8   enRatType,
+    MODEM_ID_ENUM_UINT16                enModemId
+);
+
+VOS_UINT8 RNIC_GetImsNormalBearRmnetId(
+    IMSA_RNIC_IMS_RAT_TYPE_ENUM_UINT8   enRatType,
+    MODEM_ID_ENUM_UINT16                enModemId
+);
+
+VOS_UINT32 RNIC_RcvImsaReservedPortsCfgInd(
+    MsgBlock                           *pstMsg
+);
+
+VOS_UINT32 RNIC_RcvImsaSocketExceptionInd(
+    MsgBlock                           *pstMsg
+);
+
+VOS_UINT32 RNIC_RcvImsaSipPortRangeInd(
+    MsgBlock                           *pstMsg
+);
 #endif
 
 #if (FEATURE_ON == FEATURE_RNIC_NAPI_GRO)
@@ -436,6 +371,10 @@ VOS_VOID RNIC_RegNapiSchedualCallback(
     VOS_UINT8                           ucRmNetId
 );
 #endif
+
+VOS_UINT32 RNIC_RcvAtUsbTetherInfoInd(
+    MsgBlock                           *pstMsg
+);
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

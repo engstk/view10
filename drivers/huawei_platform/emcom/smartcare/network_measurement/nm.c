@@ -317,6 +317,11 @@ void nm_nse(struct sock *sk, struct sk_buff *skb, int protocol, int direction,
 		NM_DEBUG("Unknown protocol=%u.", protocol);
 	}
 
+	if ((!virt_addr_valid(data)) || (!virt_addr_valid(data + pktlen))) {
+		NM_DEBUG("Invalid data address.");
+		return;
+	}
+
 	getnstimeofday(&ts);
 	epoch = (unsigned long)timespec_to_ns(&ts);
 

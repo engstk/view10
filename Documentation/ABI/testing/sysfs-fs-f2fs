@@ -112,3 +112,36 @@ Date:		January 2016
 Contact:	"Shuoran Liu" <liushuoran@huawei.com>
 Description:
 		 Shows total written kbytes issued to disk.
+
+What:		/sys/fs/f2fs/<disk>/reserved_blocks
+Date:		June 2017
+Contact:	"Chao Yu" <yuchao0@huawei.com>
+Description:
+		 Controls target reserved blocks in system, the threshold
+		 is soft, it could exceed current available user space.
+
+What:		/sys/fs/f2fs/<disk>/current_reserved_blocks
+Date:		October 2017
+Contact:	"Yunlong Song" <yunlong.song@huawei.com>
+Contact:	"Chao Yu" <yuchao0@huawei.com>
+Description:
+		 Shows current reserved blocks in system, it may be temporarily
+		 smaller than target_reserved_blocks, but will gradually
+		 increase to target_reserved_blocks when more free blocks are
+		 freed by user later.
+
+What:		/sys/fs/f2fs/<disk>/ovp_reserved_blocks
+Date:		December 2017
+Contact:	"Yunlong Song" <yunlong.song@huawei.com>
+Description:
+		 Controls target ovp reserved blocks in system, the threshold
+		 is soft, it could exceed current available user space.
+
+What:		/sys/fs/f2fs/<disk>/ovp_current_reserved_blocks
+Date:		December 2017
+Contact:	"Yunlong Song" <yunlong.song@huawei.com>
+Description:
+		 Shows current ovp reserved blocks in system, it may be temporarily
+		 smaller than target ovp_reserved_blocks, but will gradually
+		 increase to target ovp_reserved_blocks when more free blocks are
+		 freed by user later.

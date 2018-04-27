@@ -17,6 +17,15 @@ enum func_id {
 	RPMB_FUNC_ID_MAX,
 };
 
+enum rpmb_version {
+	RPMB_VER_INVALID = 0,
+	RPMB_VER_MMC_51,
+	RPMB_VER_UFS_20,
+	RPMB_VER_UFS_21,
+	RPMB_VER_UFS_30,
+	RPMB_VER_MAX,
+};
+
 struct storage_blk_ioc_data {
 	unsigned char *buf;
 	u64 buf_bytes;
@@ -52,4 +61,5 @@ struct ufs_blk_ioc_rpmb_data {
 extern struct mutex rpmb_counter_lock;
 extern struct mutex rpmb_ufs_cmd_lock;
 extern void hisi_rpmb_active(void);
+extern int rpmb_get_dev_ver(enum rpmb_version *ver);
 #endif /* __RPMB_H__ */

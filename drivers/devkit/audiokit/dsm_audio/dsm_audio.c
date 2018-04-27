@@ -33,25 +33,37 @@ static struct dsm_dev dsm_anc_hs = {
 	.buff_size = DSM_ANC_HS_BUF_SIZE,
 };
 
+static struct dsm_audio_client {
+	struct dsm_client * dsm_client;
+	char * dsm_str_info_buffer;
+};
+
 //lint -save -e578 -e605  -e715 -e528 -e753
-static struct dsm_client *dsm_client_table[AUDIO_DEVICE_MAX] = {NULL};
+static struct dsm_audio_client *dsm_audio_client_table = NULL;
 static struct dsm_dev *dsm_dev_table[AUDIO_DEVICE_MAX] = {&dsm_audio, &dsm_smartpa, &dsm_anc_hs};
 
-static int audio_dsm_register(struct dsm_client **dsm_audio_client, struct dsm_dev *dsm_audio)
+static int audio_dsm_register(struct dsm_audio_client *dsm_client, struct dsm_dev *dsm_audio)
 {
-	if(NULL == dsm_audio || NULL == dsm_audio_client )
+	if(NULL == dsm_audio || NULL == dsm_client )
 		return -EINVAL;
 
-	*dsm_audio_client = dsm_register_client(dsm_audio);
-	if(NULL == *dsm_audio_client) {
-		*dsm_audio_client = dsm_find_client(dsm_audio->name);
-		if(NULL == *dsm_audio_client) {
+	dsm_client->dsm_client = dsm_register_client(dsm_audio);
+	if(NULL == dsm_client->dsm_client) {
+		dsm_client->dsm_client = dsm_find_client(dsm_audio->name);
+		if(NULL == dsm_client->dsm_client) {
 			dsm_loge("dsm_audio_client register failed!\n");
 			return -ENOMEM;
 		} else {
 			dsm_loge("dsm_audio_client find in dsm_server\n");
 		}
 	}
+
+    dsm_client->dsm_str_info_buffer = kzalloc(dsm_audio->buff_size, GFP_KERNEL);
+    if (!dsm_client->dsm_str_info_buffer) {
+        dsm_loge("dsm audio %s malloc buffer failed!\n", dsm_audio->name);
+        return -ENOMEM;
+    }
+
 	return 0;
 }
 //lint -restore
@@ -61,17 +73,42 @@ static int audio_dsm_init(void)
 	int i = 0;
 	int ret = 0;
 
+
+	if (!dsm_audio_client_table) {
+		dsm_audio_client_table = kzalloc(sizeof(struct dsm_audio_client) * AUDIO_DEVICE_MAX, GFP_KERNEL);
+		if (!dsm_audio_client_table) {
+			dsm_loge("dsm_audio_client table malloc failed!\n");
+			return -ENOMEM;
+		}
+	}
+
 	for(i = 0; i < AUDIO_DEVICE_MAX; i++) {
-		if (NULL != dsm_client_table[i] || NULL == dsm_dev_table[i]) {
+		if (NULL != dsm_audio_client_table[i].dsm_client || NULL == dsm_dev_table[i]) {
 			continue;
 		}
-		ret = audio_dsm_register(&dsm_client_table[i], dsm_dev_table[i]);
+		ret = audio_dsm_register(dsm_audio_client_table + i, dsm_dev_table[i]);
 		if(ret) {
 			dsm_loge("dsm dev %s register failed %d\n",dsm_dev_table[i]->name, ret);
 		}
 	}
 #endif
 	return 0;
+}
+static void audio_dsm_deinit(void)
+{
+#ifdef CONFIG_HUAWEI_DSM
+	int i;
+    if (!dsm_audio_client_table)
+        return;
+	for (i = 0; i < AUDIO_DEVICE_MAX; i++) {
+		if (dsm_audio_client_table[i].dsm_str_info_buffer) {
+			kfree(dsm_audio_client_table[i].dsm_str_info_buffer);
+			dsm_audio_client_table[i].dsm_str_info_buffer = NULL;
+		}
+	}
+    kfree(dsm_audio_client_table);
+    dsm_audio_client_table = NULL;
+#endif
 }
 
 //lint -save -e578 -e605  -e715 -e528 -e753
@@ -80,12 +117,12 @@ int audio_dsm_report_num(enum audio_device_type dev_type, int error_no, unsigned
 #ifdef CONFIG_HUAWEI_DSM
 	int err = 0;
 
-	if(NULL == dsm_client_table[dev_type]) {
+	if(NULL == dsm_audio_client_table[dev_type].dsm_client) {
 		dsm_loge("dsm_audio_client did not register!\n");
 		return -EINVAL;
 	}
 
-	err = dsm_client_ocuppy(dsm_client_table[dev_type]);
+	err = dsm_client_ocuppy(dsm_audio_client_table[dev_type].dsm_client);
 	if(0 != err) {
 		dsm_loge("user buffer is busy!\n");
 		return -EBUSY;
@@ -93,8 +130,8 @@ int audio_dsm_report_num(enum audio_device_type dev_type, int error_no, unsigned
 
 	dsm_logi("report error_no=0x%x, mesg_no=0x%x!\n",
 			error_no, mesg_no);
-	err = dsm_client_record(dsm_client_table[dev_type], "Message code = 0x%x.\n", mesg_no);
-	dsm_client_notify(dsm_client_table[dev_type], error_no);
+	dsm_client_record(dsm_audio_client_table[dev_type].dsm_client, "Message code = 0x%x.\n", mesg_no);
+	dsm_client_notify(dsm_audio_client_table[dev_type].dsm_client, error_no);
 #endif
 	return 0;
 }
@@ -108,27 +145,18 @@ int audio_dsm_report_info(enum audio_device_type dev_type, int error_no, char *f
 	va_list args;
 
     dsm_logi("begin,errorno %d,dev_type %d ",error_no, dev_type);
-	if(NULL == dsm_client_table[dev_type]) {
+	if(NULL == dsm_audio_client_table[dev_type].dsm_client) {
 		dsm_loge("dsm_audio_client did not register!\n");
 		ret = -EINVAL;
 		goto out;
 	}
 
-	//if dsm_client_table[dev_type] is ok,then dsm_dev_table is also ok.
-	dsm_report_buffer = kzalloc(dsm_dev_table[dev_type]->buff_size, GFP_KERNEL);
-	if (NULL == dsm_report_buffer) {
-		dsm_loge("dsm_report_buffer malloc failed\n");
-		ret = -ENOMEM;
-		goto out;
-	}
-
-    dsm_logi("begin,errorno %d,dev_type %d ",error_no, dev_type);
 	va_start(args, fmt);
-	ret = vsnprintf(dsm_report_buffer, dsm_dev_table[dev_type]->buff_size, fmt, args);
+	ret = vsnprintf(dsm_audio_client_table[dev_type].dsm_str_info_buffer, dsm_dev_table[dev_type]->buff_size, fmt, args);
 	va_end(args);
     dsm_logi("begin,errorno %d,dev_type %d ",error_no, dev_type);
 
-	err = dsm_client_ocuppy(dsm_client_table[dev_type]);
+	err = dsm_client_ocuppy(dsm_audio_client_table[dev_type].dsm_client);
 	if(0 != err) {
 		dsm_loge("user buffer is busy!\n");
 		ret = -EBUSY;
@@ -136,14 +164,10 @@ int audio_dsm_report_info(enum audio_device_type dev_type, int error_no, char *f
 	}
 
 	dsm_logi("report dsm_error_no = %d, %s\n",
-			error_no, dsm_report_buffer);
-	dsm_client_record(dsm_client_table[dev_type], "%s\n", dsm_report_buffer);
-	dsm_client_notify(dsm_client_table[dev_type], error_no);
+			error_no, dsm_audio_client_table[dev_type].dsm_str_info_buffer);
+	dsm_client_record(dsm_audio_client_table[dev_type].dsm_client, "%s\n", dsm_audio_client_table[dev_type].dsm_str_info_buffer);
+	dsm_client_notify(dsm_audio_client_table[dev_type].dsm_client, error_no);
 out:
-	if(dsm_report_buffer) {
-		kfree(dsm_report_buffer);
-		dsm_report_buffer = NULL;
-	}
 #endif
 	return ret;
 }
@@ -152,6 +176,7 @@ EXPORT_SYMBOL(audio_dsm_report_num);
 EXPORT_SYMBOL(audio_dsm_report_info);
 
 subsys_initcall_sync(audio_dsm_init);
+module_exit(audio_dsm_deinit);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Huawei dsm audio");
 MODULE_AUTHOR("<penghongxing@huawei.com>");

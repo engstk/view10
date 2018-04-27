@@ -2052,6 +2052,27 @@ static void mmc_detect(struct mmc_host *host)
 		mmc_release_host(host);
 	}
 }
+#define MICRON_3D_CID_MASK_LEN	9
+#define CONVERTED_CID_LEN	12
+static u8 micron_mmc_pon_cid1[MICRON_3D_CID_MASK_LEN] = {0x13, 0x01, 0x4e, 0x53, 0x30, 0x4a, 0x39, 0x46, 0x38};
+static u8 micron_mmc_pon_cid2[MICRON_3D_CID_MASK_LEN] = {0x13, 0x01, 0x4e, 0x53, 0x30, 0x4a, 0x39, 0x42, 0x37};
+static u8 micron_mmc_pon_cid3[MICRON_3D_CID_MASK_LEN] = {0x13, 0x01, 0x4e, 0x53, 0x30, 0x4a, 0x33, 0x38, 0x59};
+static bool mmc_abort_send_pon(struct mmc_card *card)
+{
+	char converted_cid[CONVERTED_CID_LEN] = {0};
+
+	if (!card)
+		return false;
+
+	/* convert ending */
+	((int *)converted_cid)[0] = be32_to_cpu(card->raw_cid[0]);
+	((int *)converted_cid)[1] = be32_to_cpu(card->raw_cid[1]);
+	((int *)converted_cid)[2] = be32_to_cpu(card->raw_cid[2]);
+
+	return !memcmp(converted_cid, micron_mmc_pon_cid1, MICRON_3D_CID_MASK_LEN) ||
+		   !memcmp(converted_cid, micron_mmc_pon_cid2, MICRON_3D_CID_MASK_LEN) ||
+		   !memcmp(converted_cid, micron_mmc_pon_cid3, MICRON_3D_CID_MASK_LEN);
+}
 /*suspend operation on hisi platform, conclude disable cmdq
  *swich to normal partion and so on
  */
@@ -2093,7 +2114,11 @@ static int _mmc_suspend(struct mmc_host *host, bool is_suspend)
 	if (mmc_can_sleep(host->card)){
 		if (mmc_can_poweroff_notify(host->card) &&
 			((host->caps2 & MMC_CAP2_FULL_PWR_CYCLE && mmc_can_sleep_notify(host->card)) || !is_suspend)) {
-			err = mmc_poweroff_notify(host->card, notify_type);
+			if (is_suspend || !mmc_abort_send_pon(host->card)) {
+				err = mmc_poweroff_notify(host->card, notify_type);
+			} else {
+				pr_err("ignore pon for micron 3D \n");
+			}
 			if (err)
 				goto out;
 		}

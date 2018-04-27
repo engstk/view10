@@ -1,22 +1,5 @@
 
-/******************************************************************************
 
-				  版权所有 (C), 2014, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : Emcom_xengine.h
-  版 本 号   : 初稿
-  作	者   : z00371705
-  生成日期   : 2017年03月13日
-  最近修改   :
-  功能描述   : 处理快抢技术Kernel层事件
-  函数列表   :
-  修改历史   :
-  1.日	期   : 2017年03月13日
-	作	者   : z00371705
-	修改内容   : 建立文件
-
-******************************************************************************/
 #ifndef __EMCOM_XENGINE_H__
 #define __EMCOM_XENGINE_H__
 /*****************************************************************************
@@ -60,6 +43,9 @@
 		size = (speedCtrlInfo).ulSize; \
 		spin_unlock_bh(&(speedCtrlInfo.stLocker)); \
 	}
+
+#define HICOM_SOCK_FLAG_FINTORST  0x00000001
+
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
@@ -69,7 +55,10 @@ typedef enum {
 	EMCOM_XENGINE_ACC_HIGH,
 } Emcom_Xengine_acc_state;
 
-
+typedef enum {
+	EMCOM_XENGINE_MPIP_TYPE_BIND_NEW = 0,
+	EMCOM_XENGINE_MPIP_TYPE_BIND_RANDOM,
+} Emcom_Xengine_mpip_type;
 /*****************************************************************************
   4 结构定义
 *****************************************************************************/
@@ -88,7 +77,10 @@ struct Emcom_Xengine_speed_ctrl_data {
 	uid_t     lUid; /* The uid of foreground Application */
 	uint32_t  ulSize; /* The grade of speed control */
 };
-
+struct Emcom_Xengine_mpip_config{
+	uid_t     lUid; /* The uid of foreground Application */
+	uint32_t  ulType; /* The type of mpip speed up*/
+};
 /*****************************************************************************
   5 类定义
 *****************************************************************************/
@@ -116,6 +108,11 @@ void Emcom_Xengine_UdpEnqueue(struct sk_buff *skb);
 void Emcom_Xengine_EvtProc(int32_t event, uint8_t *pdata, uint16_t len);
 
 void Emcom_Xengine_Mpip_Bind2Device(struct sock *pstSock);
+int Emcom_Xengine_SetProxyUid(struct sock *sk, char __user *optval, int optlen);
+int Emcom_Xengine_GetProxyUid(struct sock *sk, char __user *optval, int __user *optlen, int len);
+int Emcom_Xengine_SetSockFlag(struct sock *sk, char __user *optval, int optlen);
+void Emcom_Xengine_NotifySockError(struct sock *sk);
+
 /*****************************************************************************
   9 OTHERS定义
 *****************************************************************************/

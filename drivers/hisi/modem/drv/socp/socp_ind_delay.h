@@ -58,8 +58,8 @@ extern "C"
 #endif
 
 #define INDDELAY_NULL                        (void*)0
-#define SOCP_MAX_MEM_SIZE                          50 *1024 *1024
-#define SOCP_MIN_MEM_SIZE                          1 *1024 *1024
+#define SOCP_MAX_MEM_SIZE                          (50 *1024 *1024)
+#define SOCP_MIN_MEM_SIZE                          (1 *1024 *1024)
 #define SOCP_MAX_TIMEOUT                           1200     /*MS*/
 #define SOCP_MIN_TIMEOUT                           10       /*MS*/
 #define SOCP_RESERVED_TRUE                          1
@@ -88,6 +88,11 @@ typedef struct _socp_mem_reserve_stru
 s32  bsp_socp_ind_delay_init(void);
 s32  bsp_socp_dst_init(void);
 u32 bsp_socp_read_cur_mode(u32 u32DestChanID);
+void bsp_socp_logbuffer_cfgshow(void);
+void bsp_deflate_logbuffer_cfgshow(void);
+void bsp_socp_logbuffer_early_cfgshow(void);
+void bsp_socp_logbuffer_memreserve_cfgshow(void);
+
 #ifdef __cplusplus
 }
 #endif

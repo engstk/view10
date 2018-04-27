@@ -51,6 +51,7 @@
 #define HI6403_CMD1_ADDR                   (HI6403_AP_DSP_CMD_ADDR + 0x004 * 1)
 #define HI6403_CMD2_ADDR                   (HI6403_AP_DSP_CMD_ADDR + 0x004 * 2)
 #define HI6403_CMD3_ADDR                   (HI6403_AP_DSP_CMD_ADDR + 0x004 * 3)
+#define HI6403_CMD4_ADDR                   (HI6403_AP_DSP_CMD_ADDR + 0x004 * 4)
 
 /* regs */
 #define HI6403_DSP_I2S_DSPIF_CLK_EN        (HI64xx_DSP_SCTRL_BASE + 0x0F0)

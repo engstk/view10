@@ -202,9 +202,15 @@ static __inline__ int osl_sem_ccreate (osl_sem_id *mutex,int count, int options)
 #include "sre_callstack.h"
 #include "osl_complier.h"
 
+#ifndef SEM_FULL
 #define SEM_FULL       OS_SEM_FULL
+#endif
+#ifndef SEM_EMPTY
 #define SEM_EMPTY      OS_SEM_EMPTY
+#endif
+#ifndef WAIT_FOREVER
 #define WAIT_FOREVER   OS_WAIT_FOREVER
+#endif
 #define OSL_SEM_INVERSION_SAFE  0x08
 
 #define OSL_SEM_Q_FIFO         SEM_MODE_FIFO    /* first in first out queue */

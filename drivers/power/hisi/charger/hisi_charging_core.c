@@ -471,6 +471,48 @@ static int charge_core_battery_data(struct charge_core_info *di)
 
     return 0;
 }
+
+static void config_vdpm_para(struct charge_core_info *di, int i, int idata)
+{
+        switch (i % VDPM_PARA_TOTAL)
+        {
+            case VDPM_PARA_CAP_MIN:
+                if ((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX))
+                {
+                    hwlog_err("the vdpm_para cap_min is out of range!!\n");
+                    return -EINVAL;
+                }
+                di->vdpm_para[ i/ (VDPM_PARA_TOTAL)].cap_min = idata;
+                break;
+            case VDPM_PARA_CAP_MAX:
+                if((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX))
+                {
+                    hwlog_err("the vdpm_para cap_max is out of range!!\n");
+                    return -EINVAL;
+                }
+                di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_max = idata;
+                break;
+            case VDPM_PARA_DPM:
+                if((idata < VDPM_VOLT_MIN) || (idata > VDPM_VOLT_MAX))
+                {
+                    hwlog_err("the vdpm_para vin_dpm is out of range!!\n");
+                    return -EINVAL;
+                }
+                di->vdpm_para[i / (VDPM_PARA_TOTAL)].vin_dpm = idata;
+                break;
+            case VDPM_PARA_CAP_BACK:
+                if((idata < 0) || (idata > VDPM_CAP_DETA))
+                {
+                    hwlog_err("the vdpm_para cap_back is out of range!!\n");
+                    return -EINVAL;
+                }
+                di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_back = idata;
+                break;
+            default:
+                hwlog_err("vdpm_para not match\n");
+                break;
+        }
+}
 /**********************************************************
 *  Function:       charge_core_parse_dts
 *  Discription:    parse the module dts config value
@@ -607,44 +649,7 @@ static int charge_core_parse_dts(struct device_node* np, struct charge_core_info
         }
 
         idata = simple_strtol(chrg_data_string, NULL, 10);
-        switch (i % VDPM_PARA_TOTAL)
-        {
-            case VDPM_PARA_CAP_MIN:
-                if ((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX))
-                {
-                    hwlog_err("the vdpm_para cap_min is out of range!!\n");
-                    return -EINVAL;
-                }
-                di->vdpm_para[ i/ (VDPM_PARA_TOTAL)].cap_min = idata;
-                break;
-            case VDPM_PARA_CAP_MAX:
-                if((idata < VDPM_CBAT_MIN) || (idata > VDPM_CBAT_MAX))
-                {
-                    hwlog_err("the vdpm_para cap_max is out of range!!\n");
-                    return -EINVAL;
-                }
-                di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_max = idata;
-                break;
-            case VDPM_PARA_DPM:
-                if((idata < VDPM_VOLT_MIN) || (idata > VDPM_VOLT_MAX))
-                {
-                    hwlog_err("the vdpm_para vin_dpm is out of range!!\n");
-                    return -EINVAL;
-                }
-                di->vdpm_para[i / (VDPM_PARA_TOTAL)].vin_dpm = idata;
-                break;
-            case VDPM_PARA_CAP_BACK:
-                if((idata < 0) || (idata > VDPM_CAP_DETA))
-                {
-                    hwlog_err("the vdpm_para cap_back is out of range!!\n");
-                    return -EINVAL;
-                }
-                di->vdpm_para[i / (VDPM_PARA_TOTAL)].cap_back = idata;
-                break;
-            default:
-                hwlog_err("vdpm_para not match\n");
-                break;
-        }
+        config_vdpm_para(di, i, idata);
         hwlog_debug("di->vdpm_para[%d][%d] = %d\n", i / (VDPM_PARA_TOTAL),
                    i % (VDPM_PARA_TOTAL), idata);
     }

@@ -40,6 +40,7 @@
 #define FOUR_BITS						0xf
 #define NOUSE_READ_REG		0
 #define FREQ_OFFSET_ADD		1000000 /*For 184.444M to 185M*/
+#define LOW_TEMPERATURE_PROPERTY	1
 #define NORMAL_TEMPRATURE		0
 #define ELOW_TEMPERATURE		0xE558
 #define USB_POLL_ID				28
@@ -71,6 +72,8 @@ struct peri_dvfs_clk {
 	unsigned long			rate;
 	unsigned long			sensitive_freq[DVFS_MAX_FREQ_NUM];
 	unsigned int			sensitive_volt[DVFS_MAX_VOLT_NUM];
+	unsigned long			low_temperature_freq;
+	unsigned int			low_temperature_property;
 	u32					sensitive_level;
 	u32					block_mode;
 	u32					div;
@@ -102,9 +105,9 @@ extern int __clk_enable(struct clk *clk);
 extern void __clk_disable(struct clk *clk);
 extern int IS_FPGA(void);
 
-#ifdef CONFIG_HISI_PERIDVFS
-/*for 970 get  temprature*/
-static int clk_peri_get_temperature(struct peri_volt_poll *pvp)
+#ifdef CONFIG_HISI_CLK_LOW_TEMPERATURE_JUDGE_BY_VOLT
+/*for boston get  temprature*/
+static int clk_peri_get_temprature(struct peri_volt_poll *pvp)
 {
 	unsigned int temprature = 0;
 	int ret = 0;
@@ -126,7 +129,29 @@ static int clk_peri_get_temperature(struct peri_volt_poll *pvp)
 	hwspin_unlock((struct hwspinlock *)pvp->priv);
 	return ret;
 }
+#endif
 
+#ifdef CONFIG_HISI_PERIDVFS
+static int peri_temperature(struct peri_dvfs_clk *pclk)
+{
+	struct peri_volt_poll *pvp = NULL;
+	int ret = 0;
+	if(LOW_TEMPERATURE_PROPERTY != pclk->low_temperature_property) {
+		return 0;
+	}
+
+	pvp = peri_volt_poll_get(pclk->id, NULL);
+	if (!pvp) {
+		pr_err("[%s]pvp get failed!\n", __func__);
+		return -EINVAL;
+	}
+
+	if(NORMAL_TEMPRATURE != peri_get_temperature(pvp)) {
+		ret = -1;
+	}
+
+	return ret;
+}
 static int peri_dvfs_set_rate_nolock(struct clk *friend_clk, unsigned long divider_rate, unsigned long rate, unsigned int dev_id)
 {
 	int ret = 0;
@@ -278,13 +303,11 @@ static int peri_dvfs_clk_determine_rate(struct clk_hw *hw,
 			     struct clk_rate_request *req)
 {
 #ifdef CONFIG_HISI_PERIDVFS
-	/*for 970 low temperature dvfs*/
-	struct peri_volt_poll *pvp = NULL;
 	struct peri_dvfs_clk *dfclk = container_of(hw, struct peri_dvfs_clk, hw);
-	if (!dfclk) {
-		pr_err("[%s]dfclk container failed!\n", __func__);
-		return -EINVAL;
-	}
+
+#ifdef CONFIG_HISI_CLK_LOW_TEMPERATURE_JUDGE_BY_VOLT
+	struct peri_volt_poll *pvp = NULL;
+	/*for boston low temperature dvfs*/
 	if (__clk_is_enabled(hw->clk) == false) {
 		return 0;
 	}
@@ -296,13 +319,21 @@ static int peri_dvfs_clk_determine_rate(struct clk_hw *hw,
 		pr_err("[%s]pvp get failed!\n", __func__);
 		return -EINVAL;
 	}
-	if(clk_peri_get_temperature(pvp)) {
-		/*low temperature and clk need less than or equal to 0.75V freq*/
+	if(clk_peri_get_temprature(pvp)) {
 		if(req->rate > (dfclk->sensitive_freq[1]* 1000)) {
 			pr_err("[%s]: cur_freq(%lu) > low_temperature_freq(%lu)!\n", __func__, req->rate, dfclk->sensitive_freq[1]);
 			return -ELOW_TEMPERATURE;
 		}
 	}
+#endif
+
+	if(peri_temperature(dfclk)) {
+		if(req->rate > (dfclk->low_temperature_freq * 1000)) {
+			pr_err("[%s]: clk name =%s, cur_freq(%lu) > low_temperature_freq(%lu)!\n", __func__, hw->core->name, req->rate, dfclk->low_temperature_freq);
+			return -ELOW_TEMPERATURE;
+		}
+	}
+
 #endif
 	return 0;
 }
@@ -415,12 +446,14 @@ static int peri_dvfs_set(struct peri_dvfs_clk *dfclk, unsigned long rate, unsign
 		if(dfclk->divider && (freq_old % dfclk->divider))
 			divider_rate = divider_rate + FREQ_OFFSET_ADD; 	/*Example:For 184.444M to 185M*/
 	}
-/*1、非阻塞方式直接起work执行;解决非阻塞方式频率和电压不匹配的问题；
-   2、阻塞方式需要判断是升频还是降频
-   	升频：先升压，后设频；
-	降频：先降频，再设压*/
 
-	/*unblock mode*/
+	/*
+	* UNBLOCK_MODE:
+	*	schedule a work to set freq and volt, it relyed on the system schedule;
+ 	* BLOCK_MODE:
+ 	* 	raise frequency: raise voltage, set frequency
+ 	* 	reduce frequency: reduce frequency, set voltage
+ 	*/
 	if(HS_UNBLOCK_MODE == dfclk->block_mode){
 		/*rasing or dropping rate and volt*/
 		mutex_lock(&dvfs_lock);
@@ -433,7 +466,7 @@ static int peri_dvfs_set(struct peri_dvfs_clk *dfclk, unsigned long rate, unsign
 		mutex_unlock(&dvfs_lock);
 		schedule_work(&dfclk->sw_up.updata);
 	}else{
-		//block mode
+		/* block mode */
 		if(rate > freq_old){
 			ret = peri_set_volt(pvp, volt);
 			if (ret < 0) {
@@ -490,6 +523,12 @@ static int peri_dvfs_clk_set_rate(struct clk_hw *hw, unsigned long rate,
 						__func__, ret, __LINE__);
 	}
 #else
+	if(peri_temperature(dfclk)) {
+		if(rate > (dfclk->low_temperature_freq * 1000)) {
+			pr_err("[%s]: cur_rate(%lu) > low_temperature_freq (%lu)!\n", __func__, rate, dfclk->low_temperature_freq);
+			return -ELOW_TEMPERATURE;
+		}
+	}
 	if (__clk_is_enabled(friend_clk) == false) {
 		ret = clk_set_rate_nolock(friend_clk, rate);
 		if (ret < 0)
@@ -540,6 +579,7 @@ static int peri_volt_change(u32 id, u32 volt)
 	ret = dvfs_block_func(pvp, volt);
 	return ret;
 }
+
 static int hisi_peri_dvfs_prepare(struct peri_dvfs_clk *pclk)
 {
 	unsigned long cur_rate = 0;
@@ -547,11 +587,17 @@ static int hisi_peri_dvfs_prepare(struct peri_dvfs_clk *pclk)
 	unsigned int i = 0;
 	unsigned int level = pclk->sensitive_level;
 
-	if(pclk->sensitive_freq[0] > 0){
-		cur_rate = clk_get_rate(pclk->hw.clk);
-		if (!cur_rate)
-			pr_err("[%s]soft rate: must not be 0,please check!\n", __func__);
+	cur_rate = clk_get_rate(pclk->hw.clk);
+	if (!cur_rate)
+		pr_err("[%s]soft rate: must not be 0,please check!\n", __func__);
+	if(peri_temperature(pclk)) {
+		if(cur_rate > (pclk->low_temperature_freq * 1000)) {
+			pr_err("[%s]: cur_freq(%lu) > low_temperature_freq(%lu)!\n", __func__, cur_rate, pclk->low_temperature_freq);
+			return -ELOW_TEMPERATURE;
+		}
+	}
 
+	if(pclk->sensitive_freq[0] > 0){
 		for(i = 0; i < level; i++){
 			if(cur_rate > pclk->sensitive_freq[i] * 1000)
 				continue;
@@ -612,6 +658,9 @@ static int peri_dvfs_clk_prepare(struct clk_hw *hw)
 	}
 #ifdef CONFIG_HISI_PERIDVFS
 	ret = hisi_peri_dvfs_prepare(dfclk);
+	if(ret < 0) {
+		clk_core_unprepare(friend_clk->core);
+	}
 #endif
 	return ret;
 }
@@ -683,10 +732,6 @@ static struct clk_ops peri_dvfs_clk_ops = {
 	.disable	= peri_dvfs_clk_disable,
 };
 
-/*
- *.setup is for vdec or edc
- */
-
 static void __init hisi_peri_dvfs_clk_setup(struct device_node *np)
 {
 	struct clk *clk;
@@ -702,6 +747,7 @@ static void __init hisi_peri_dvfs_clk_setup(struct device_node *np)
 	u32 block_mode = 0;
 	u32 recal_mode = 0;
 	u32 divider = 0;
+	u32 low_temperature_freq = 0;
 
 	unsigned int base_addr_type = HS_CRGCTRL;
 	void __iomem *reg_base;
@@ -770,6 +816,7 @@ static void __init hisi_peri_dvfs_clk_setup(struct device_node *np)
 		pr_err("[%s] node %s doesn't have sensitive-volt property!\n", __func__, np->name);
 		goto err_clk;
 	}
+
 	parent_names = kzalloc(sizeof(char *) * MUX_SOURCE_NUM, GFP_KERNEL);
 	if (!parent_names) {
 		pr_err("[%s] fail to alloc parent_names!\n", __func__);
@@ -804,6 +851,19 @@ static void __init hisi_peri_dvfs_clk_setup(struct device_node *np)
 		devfreq_clk->mux_bits = data[1];
 		devfreq_clk->mux_bits_offset = data[2];
 	}
+
+	if (of_property_read_bool(np, "low_temperature_property")) {
+		if (of_property_read_u32(np, "hisilicon,low-temperature-freq", &low_temperature_freq)) {
+			pr_err("[%s] node have no low-temperature-freq\n", __func__);
+			goto err_parent_name;
+		}
+		devfreq_clk->low_temperature_property = 1;
+		devfreq_clk->low_temperature_freq = (unsigned long)low_temperature_freq;
+	} else {
+		devfreq_clk->low_temperature_property = 0;
+		devfreq_clk->low_temperature_freq = 0;
+	}
+
 	reg_base = hs_clk_base(base_addr_type);
 	if (!reg_base) {
 		pr_err("[%s] fail to get reg_base!\n", __func__);

@@ -18,6 +18,8 @@
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/slab.h>
+#include <linux/hisi/hisi_idle_sleep.h>
+#include <linux/io.h>
 
 #include <asm/cpuidle.h>
 #include <asm/suspend.h>
@@ -30,7 +32,7 @@
 
 enum {
 	LITTLE_CLUSTER_ID = 0,
-#ifdef CONFIG_IDLE_TRIPPLE_DRIVERS
+#ifdef CONFIG_CPU_IDLE_TRIPPLE_DRIVERS
 	MID_CLUSTER_ID,
 #endif
 	BIG_CLUSTER_ID,
@@ -56,6 +58,35 @@ bool hisi_cluster_cpu_all_pwrdn(void)
 	return !!all_pwrdn;
 }
 EXPORT_SYMBOL(hisi_cluster_cpu_all_pwrdn);
+
+static void __iomem *idle_flag_addr[NR_CPUS] = {0};
+static u32 idle_flag_bit[NR_CPUS] = {0};
+
+/*
+ * get core-idle-flag
+ *
+ * failed: return 0
+ * success: return core-idle-flag
+ * */
+u32 hisi_get_idle_cpumask(void)
+{
+	u32 i, tmp_flag, core_idle_flag = 0;
+
+	for(i = 0; i < NR_CPUS; ++i) {
+		tmp_flag = 0;
+
+		if(!idle_flag_addr[i]) {
+			pr_err("get pwron cpumask : flag addr%d error.\n", i);
+			return 0;
+		}
+
+		tmp_flag = readl(idle_flag_addr[i]) & BIT(idle_flag_bit[i]);
+		if(tmp_flag)
+			core_idle_flag |= BIT(i);
+	}
+
+	return core_idle_flag;
+}
 
 /*
  * hisi_enter_idle_state - Programs CPU to enter the specified state
@@ -148,7 +179,7 @@ static struct cpuidle_driver hisi_little_cluster_idle_driver = {
 		.desc                   = "ARM64 WFI",
 	}
 };
-#ifdef CONFIG_IDLE_TRIPPLE_DRIVERS
+#ifdef CONFIG_CPU_IDLE_TRIPPLE_DRIVERS
 static struct cpuidle_driver hisi_middle_cluster_idle_driver = {
 	.name = "hisi_middle_cluster_idle",
 	.owner = THIS_MODULE,
@@ -283,6 +314,53 @@ static int __init hisi_multidrv_idle_init(struct cpuidle_driver *drv, int cluste
 	return 0;
 }
 
+static int __init get_idle_mask_init(void)
+{
+	int ret;
+	struct device_node *np = NULL;
+	u32 i, reg_base_addr, flag_data[2] = {0};
+	char filename[64] = {0};
+	void __iomem *base_addr;
+
+	np = of_find_compatible_node(NULL, NULL, "hisilicon,cpu-idle-flag");//lint !e838
+	if (!np) {
+		pr_err("idle_mask_init : get base node error.\n");
+		return -ENODEV;
+	}
+
+	ret = of_property_read_u32(np, "idle-reg-base", &reg_base_addr);
+	if (ret) {
+		pr_err("idle_mask_init : get node idle-reg-base error.\n");
+		return ENODEV;
+	}
+
+	base_addr = ioremap(reg_base_addr, SZ_4K);
+	if (!base_addr) {
+		pr_err("idle_mask_init : ioremap base addr error.\n");
+		return -ENOMEM;
+	}
+
+	for (i = 0; i < NR_CPUS; ++i) {
+		memset(flag_data, 0, sizeof(flag_data)); /* unsafe_function_ignore: memset */
+		memset(filename, 0, sizeof(filename)); /* unsafe_function_ignore: memset */
+
+		snprintf(filename, sizeof(filename), "core-%u-flag", i); /* unsafe_function_ignore: snprintf */
+		ret = of_property_read_u32_array(np, filename, &flag_data[0], 2UL);
+		if (ret)
+			return ENODEV;
+
+		idle_flag_addr[i] = base_addr + flag_data[0];
+		if (!idle_flag_addr[i]) {
+			pr_err("pwron_mask_init : ioremap addr%d error.\n", i);
+			return -ENOMEM;
+		}
+
+		idle_flag_bit[i] = flag_data[1];
+	}
+
+	return 0;
+}
+
 static int cpuidle_decoup_hotplug_notify(struct notifier_block *nb,
 		unsigned long action, void *hcpu)
 {
@@ -325,6 +403,10 @@ static int __init hisi_idle_init(void)
 {
 	int ret;
 
+	ret = get_idle_mask_init();
+	if (ret) {
+		pr_err("pwron mask init err%d\n", ret);
+	}
 	spin_lock_init(&idle_spin_lock);
 	cpumask_clear(&idle_cpus_mask);
 
@@ -334,7 +416,7 @@ static int __init hisi_idle_init(void)
 		return ret;
 	}
 
-#ifdef CONFIG_IDLE_TRIPPLE_DRIVERS
+#ifdef CONFIG_CPU_IDLE_TRIPPLE_DRIVERS
 	ret = hisi_multidrv_idle_init(&hisi_middle_cluster_idle_driver, MID_CLUSTER_ID);
 	if (ret) {
 		pr_err("fail to register middle cluster cpuidle drv.\n");

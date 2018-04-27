@@ -95,7 +95,7 @@ struct smmu_statistic {
 
 extern struct ion_client* ipu_ion_client;
 
-extern void ipu_smmu_init(unsigned long ttbr0, unsigned long smmu_rw_err_phy_addr, bool port_sel);
+extern void ipu_smmu_init(unsigned long ttbr0, unsigned long smmu_rw_err_phy_addr, bool port_sel, bool hardware_start);
 extern void ipu_smmu_deinit(void);
 extern unsigned long ipu_get_smmu_base_phy(struct device *dev);
 extern long ipu_smmu_map(struct map_data *map);

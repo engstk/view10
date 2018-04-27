@@ -176,6 +176,8 @@ int CPM_PortAssociateInit(void);
 u32 CPM_ComSend(CPM_LOGIC_PORT_ENUM_UINT32 enLogicPort, u8 *pucVirData, u8 *pucPHYData, u32 ulLen);
 u32 CPM_ComRcv(CPM_PHY_PORT_ENUM_UINT32 enPhyPort, u8 *pucData, u32 ulLen);
 CPM_PHY_PORT_ENUM_UINT32 CPM_QueryPhyPort(CPM_LOGIC_PORT_ENUM_UINT32 enLogicPort);
+void CPM_Show(void);
+void CPM_ComErrShow(void);
 
 extern u32 PPM_QueryLogPort(u32  *pulLogPort);
 

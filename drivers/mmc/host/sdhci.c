@@ -264,14 +264,8 @@ static void sdhci_do_reset(struct sdhci_host *host, u8 mask)
 
 static void sdhci_set_ios(struct mmc_host *mmc, struct mmc_ios *ios);
 
-/*cppcheck-suppress * */
-static void sdhci_init(struct sdhci_host *host, int soft)
+void sdhci_set_default_irqs(struct sdhci_host *host)
 {
-	if (soft)
-		sdhci_do_reset(host, SDHCI_RESET_CMD|SDHCI_RESET_DATA);
-	else
-		sdhci_do_reset(host, SDHCI_RESET_ALL);
-
 	host->ier = SDHCI_INT_BUS_POWER | SDHCI_INT_DATA_END_BIT |
 		    SDHCI_INT_DATA_CRC | SDHCI_INT_DATA_TIMEOUT |
 		    SDHCI_INT_INDEX | SDHCI_INT_END_BIT | SDHCI_INT_CRC |
@@ -280,6 +274,17 @@ static void sdhci_init(struct sdhci_host *host, int soft)
 
 	sdhci_writel(host, host->ier, SDHCI_INT_ENABLE);
 	sdhci_writel(host, host->ier, SDHCI_SIGNAL_ENABLE);
+}
+
+/*cppcheck-suppress * */
+static void sdhci_init(struct sdhci_host *host, int soft)
+{
+	if (soft)
+		sdhci_do_reset(host, SDHCI_RESET_CMD | SDHCI_RESET_DATA);
+	else
+		sdhci_do_reset(host, SDHCI_RESET_ALL);
+
+	sdhci_set_default_irqs(host);
 
 	if (soft) {
 		/* force clock reconfiguration */
@@ -1276,8 +1281,12 @@ void sdhci_set_clock(struct sdhci_host *host, unsigned int clock)
 	bool switch_base_clk = false;
 
 	host->mmc->actual_clock = 0;
-
+#ifdef CONFIG_MMC_SDHCI_DWC_MSHC
+	sdhci_sctrl_writel(host, GT_CLK_EMMC, SCTRL_PERDIS1);
+	mdelay(1);
+#else
 	sdhci_writew(host, 0, SDHCI_CLOCK_CONTROL);
+#endif
 	if (host->quirks2 & SDHCI_QUIRK2_NEED_DELAY_AFTER_INT_CLK_RST)
 		mdelay(1);
 
@@ -1367,11 +1376,18 @@ clock_set:
 	clk |= (div & SDHCI_DIV_MASK) << SDHCI_DIVIDER_SHIFT;
 	clk |= ((div & SDHCI_DIV_HI_MASK) >> SDHCI_DIV_MASK_LEN)
 		<< SDHCI_DIVIDER_HI_SHIFT;
-	clk |= SDHCI_CLOCK_INT_EN;
 #ifdef CONFIG_MMC_SDHCI_DWC_MSHC
+	clk |= SDHCI_CLOCK_INT_EN;
 	clk |= SDHCI_PLL_ENABLE;
-#endif
 	sdhci_writew(host, clk, SDHCI_CLOCK_CONTROL);
+	mdelay(1);
+
+	sdhci_sctrl_writel(host, GT_CLK_EMMC, SCTRL_PEREN1);
+	mdelay(1);
+#else
+	clk |= SDHCI_CLOCK_INT_EN;
+	sdhci_writew(host, clk, SDHCI_CLOCK_CONTROL);
+#endif
 
 	/* Wait max 20 ms */
 	timeout = 20;
@@ -1581,20 +1597,11 @@ static void sdhci_do_delay_measurement(struct sdhci_host *host, struct mmc_ios *
 {
 	if (((host->quirks2 & SDHCI_QUIRK2_HISI_COMBO_PHY_TC) && is_fpga)
 		|| (!(host->quirks2 & SDHCI_QUIRK2_HISI_COMBO_PHY_TC) && !is_fpga)) {
-
-		if ( host->delay_measure_flag) {
-			if (host->ops->delay_measurement)
-				host->ops->delay_measurement(host, ios);
-
-			host->delay_measure_flag = 0;
+		if ((host->clock == MMC_HS200_MAX_DTR || host->clock == host->mmc->f_max)
+		    && host->ops->delay_measurement) {
+			host->ops->delay_measurement(host, ios);
 		}
 	}
-}
-
-static void  sdhci_clock_change_check(struct sdhci_host *host, struct mmc_ios *ios)
-{
-	if (ios->clock && (ios->clock != host->clock) && (ios->timing >= MMC_TIMING_MMC_HS))
-		host->delay_measure_flag = 1;
 }
 
 static void sdhci_do_set_ios(struct sdhci_host *host, struct mmc_ios *ios)
@@ -1626,9 +1633,6 @@ static void sdhci_do_set_ios(struct sdhci_host *host, struct mmc_ios *ios)
 		(ios->power_mode == MMC_POWER_UP) &&
 		!(host->quirks2 & SDHCI_QUIRK2_PRESET_VALUE_BROKEN))
 		sdhci_enable_preset_value(host, false);
-
-	/* check clock change for delay measurement */
-	sdhci_clock_change_check(host, ios);
 
 	if (!ios->clock || ios->clock != host->clock) {
 		host->ops->set_clock(host, ios->clock);
@@ -2223,7 +2227,27 @@ static int sdhci_execute_tuning(struct mmc_host *mmc, u32 opcode)
 			ctrl &= ~SDHCI_CTRL_EXEC_TUNING;
 			sdhci_writew(host, ctrl, SDHCI_HOST_CONTROL2);
 
+			sdhci_do_reset(host, SDHCI_RESET_CMD);
+			sdhci_do_reset(host, SDHCI_RESET_DATA);
+
 			err = -EIO;
+
+			if (cmd.opcode != MMC_SEND_TUNING_BLOCK_HS200)
+				goto out;
+
+			sdhci_writel(host, host->ier, SDHCI_INT_ENABLE);
+			sdhci_writel(host, host->ier, SDHCI_SIGNAL_ENABLE);
+
+			spin_unlock_irqrestore(&host->lock, flags);
+
+			memset(&cmd, 0, sizeof(cmd));
+			cmd.opcode = MMC_STOP_TRANSMISSION;
+			cmd.flags = MMC_RSP_SPI_R1B | MMC_RSP_R1B | MMC_CMD_AC;
+			cmd.busy_timeout = 50;
+			(void)mmc_wait_for_cmd(mmc, &cmd, 0);
+
+			spin_lock_irqsave(&host->lock, flags);
+
 			goto out;
 		}
 
@@ -3092,7 +3116,9 @@ int sdhci_runtime_resume_host(struct sdhci_host *host)
 	sdhci_init(host, 0);
 #endif
 	/* Force clock and power re-program */
+#ifndef CONFIG_MMC_SDHCI_DWC_MSHC
 	host->pwr = 0;
+#endif
 	host->clock = 0;
 	sdhci_do_start_signal_voltage_switch(host, &host->mmc->ios);
 	sdhci_do_set_ios(host, &host->mmc->ios);

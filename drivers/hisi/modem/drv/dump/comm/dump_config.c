@@ -49,6 +49,7 @@
 #include <linux/of.h>
 #include <linux/delay.h>
 #include <asm/string.h>
+#include "securec.h"
 #include "osl_types.h"
 #include "bsp_version.h"
 #include "bsp_sram.h"
@@ -68,6 +69,7 @@ NV_DUMP_STRU                    g_dump_cfg;
 dump_product_type_t             g_product_type = DUMP_PRODUCT_BUTT;
 enum EDITION_KIND               g_edition = EDITION_MAX;
 DUMP_CP_RESET_CTRL              g_dump_cp_reset_timestamp;
+dump_access_mdmddr_type_t       g_dump_access_ddr_type = DUMP_ACCESS_MDD_DDR_SEC_BUTT;
 
  
 
@@ -305,6 +307,44 @@ void dump_set_cp_reset_freq_feature(u32 onoff)
 * 修改记录  : 2016年1月4日17:05:33   lixiaofan  creat
 *
 *****************************************************************************/
+dump_access_mdmddr_type_t dump_get_access_mdmddr_type(void)
+{
+    struct device_node *node = NULL;
+
+    if(g_dump_access_ddr_type != DUMP_ACCESS_MDD_DDR_SEC_BUTT)
+    {
+        return g_dump_access_ddr_type;
+    }
+    
+    node = of_find_compatible_node(NULL, NULL, "hisilicon,ap_sec_access_mdmddr");
+    if (!node)
+    {
+        dump_fetal("dts ap_sec_access_mdmddr mntn type not found!\n");
+        return DUMP_ACCESS_MDD_DDR_SEC_BUTT;
+    }
+
+    if(of_property_read_u32(node, "ap_sec_access_mdmddr", &g_dump_access_ddr_type))
+    {
+        dump_fetal("read ap_sec_access_mdmddr failed!\n");
+        return DUMP_ACCESS_MDD_DDR_SEC_BUTT;
+    }
+    return g_dump_access_ddr_type;
+}
+
+
+/*****************************************************************************
+* 函 数 名  : dump_get_edition_type
+* 功能描述  : 获取当前的版本类型
+*
+* 输入参数  :
+* 输出参数  :
+
+* 返 回 值  :
+
+*
+* 修改记录  : 2016年1月4日17:05:33   lixiaofan  creat
+*
+*****************************************************************************/
 enum EDITION_KIND dump_get_edition_type(void)
 {
 
@@ -365,7 +405,7 @@ void dump_config_init(void)
         dump_error("bsp_om_debug_init fail\n");
     }
     /*coverity[secure_coding]*/
-    memset(&g_dump_cp_reset_timestamp,0,sizeof(g_dump_cp_reset_timestamp));
+    memset_s(&g_dump_cp_reset_timestamp,sizeof(g_dump_cp_reset_timestamp),0,sizeof(g_dump_cp_reset_timestamp));
 
 }
 /*****************************************************************************
@@ -403,7 +443,7 @@ s32 dump_check_reset_timestamp(u32 modid)
            return BSP_ERROR;
         }
         /*coverity[secure_coding]*/
-        memset(&g_dump_cp_reset_timestamp,0,sizeof(g_dump_cp_reset_timestamp));
+        memset_s(&g_dump_cp_reset_timestamp,sizeof(g_dump_cp_reset_timestamp),0,sizeof(g_dump_cp_reset_timestamp));
     }
     if(modid != RDR_MODEM_CP_RESET_SIM_SWITCH_MOD_ID &&  modid != RDR_MODEM_CP_RESET_USER_RESET_MOD_ID)
     {
@@ -415,4 +455,6 @@ s32 dump_check_reset_timestamp(u32 modid)
 
 }
 
+EXPORT_SYMBOL_GPL(dump_set_cp_reset_feature);
+EXPORT_SYMBOL_GPL(dump_set_cp_reset_freq_feature);
 

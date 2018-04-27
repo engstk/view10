@@ -68,7 +68,7 @@ int mmc_start_cmdq_request(struct mmc_host *host,
 				mrq->data->timeout_clks, cmdq_write_blocks);
 			}
 		}
-		if (mrq->cmdq_req && mrq->cmdq_req->cmdq_req_flags & DCMD && mrq->cmd) {
+		if (mrq->cmdq_req && mrq->cmdq_req->cmdq_req_flags & DCMD) {
 			if (mrq->cmd->opcode == MMC_SWITCH
 				|| mrq->cmd->opcode == MMC_ERASE_GROUP_START
 				|| mrq->cmd->opcode == MMC_ERASE_GROUP_END

@@ -55,8 +55,8 @@ extern "C"
 #endif
 
 #include "osl_types.h"
-#define OSL_ROUND_UP(x, align)     (((long) (x) + (align - 1)) & ~(align - 1))
-#define OSL_ROUND_DOWN(x, align)   ((long)(x) & ~(align - 1))
+#define OSL_ROUND_UP(a, align)     (((long) (a) + (align - 1)) & ~(align - 1))
+#define OSL_ROUND_DOWN(a, align)   ((long)(a) & ~(align - 1))
 
 #ifdef __KERNEL__
 #include <linux/kernel.h>
@@ -68,74 +68,47 @@ extern "C"
 #endif
 
 
-/* 继承自linux: 通过编译保证参数类型一致 */
+
 /*lint +rw( typeof ) */
 /*lint +rw( __typeof__ ) */
-/*lint -dmin(x,y)=(((x)<(y))? (x):(y))*/
-
-#define min(x, y) /*lint +rw( typeof ) -e(160) */  ({				\
-	typeof(x) _min1 = (x);			\
-	typeof(y) _min2 = (y);			\
-	(void) (&_min1 == &_min2);		\
-	_min1 < _min2 ? _min1 : _min2; }) 
+/*lint -dmin(a,b)=(((a)<(b))? (a):(b))*/
 
 
-#define max(x, y) /*lint +rw( typeof ) -e(160) -e(1058)*/ ({				\
-	typeof(x) _max1 = (x);			\
-	typeof(y) _max2 = (y);			\
+#define max(a, b) /*lint +rw( typeof ) -e(160) -e(1058)*/ ({	\
+	typeof(a) _max1 = (a);			\
+	typeof(b) _max2 = (b);			\
 	(void) (&_max1 == &_max2);		\
 	_max1 > _max2 ? _max1 : _max2; })
+    
+#define min(a, b) /*lint +rw( typeof ) -e(160) */  ({	\
+        typeof(a) _min1 = (a);          \
+        typeof(b) _min2 = (b);          \
+        (void) (&_min1 == &_min2);      \
+        _min1 < _min2 ? _min1 : _min2; }) 
 
-#define min3(x, y, z) ({			\
-	typeof(x) _min1 = (x);			\
-	typeof(y) _min2 = (y);			\
-	typeof(z) _min3 = (z);			\
-	(void) (&_min1 == &_min2);		\
-	(void) (&_min1 == &_min3);		\
-	_min1 < _min2 ? (_min1 < _min3 ? _min1 : _min3) : \
-		(_min2 < _min3 ? _min2 : _min3); })
 
-#define max3(x, y, z) ({			\
-	typeof(x) _max1 = (x);			\
-	typeof(y) _max2 = (y);			\
-	typeof(z) _max3 = (z);			\
-	(void) (&_max1 == &_max2);		\
-	(void) (&_max1 == &_max3);		\
-	_max1 > _max2 ? (_max1 > _max3 ? _max1 : _max3) : \
-		(_max2 > _max3 ? _max2 : _max3); })
+#define __constant_swab32(a) ((u32)(				\
+	(((u32)(a) & (u32)0x000000ffUL) << 24) |		\
+	(((u32)(a) & (u32)0x0000ff00UL) <<  8) |		\
+	(((u32)(a) & (u32)0x00ff0000UL) >>  8) |		\
+	(((u32)(a) & (u32)0xff000000UL) >> 24)))
+    
+#define __constant_swab16(a) ((u16)(				\
+        (((u16)(a) & (u16)0x00ffU) << 8) |          \
+        (((u16)(a) & (u16)0xff00U) >> 8)))
 
-/**
- * min_not_zero - return the minimum that is _not_ zero, unless both are zero
- * @x: value1
- * @y: value2
- */
-#define min_not_zero(x, y) ({			\
-	typeof(x) __x = (x);			\
-	typeof(y) __y = (y);			\
-	__x == 0 ? __y : ((__y == 0) ? __x : min(__x, __y)); })
-
-#define ___constant_swab16(x) ((u16)(				\
-	(((u16)(x) & (u16)0x00ffU) << 8) |			\
-	(((u16)(x) & (u16)0xff00U) >> 8)))
-
-#define ___constant_swab32(x) ((u32)(				\
-	(((u32)(x) & (u32)0x000000ffUL) << 24) |		\
-	(((u32)(x) & (u32)0x0000ff00UL) <<  8) |		\
-	(((u32)(x) & (u32)0x00ff0000UL) >>  8) |		\
-	(((u32)(x) & (u32)0xff000000UL) >> 24)))
-
-#define be32_to_cpu ___constant_swab32
-#define cpu_to_be32 ___constant_swab32
-
-static inline u16 be16_to_cpup(const __be16 *p)
-{
-	return ___constant_swab16(*p);
-}
+#define be32_to_cpu __constant_swab32
+#define cpu_to_be32 __constant_swab32
 
 
 static inline u32 be32_to_cpup(const __be32 *p)
 {
-	return ___constant_swab32(*p);
+	return __constant_swab32(*p);
+}
+
+static inline u16 be16_to_cpup(const __be16 *p)
+{
+	return __constant_swab16(*p);
 }
 
 #endif /* __KERNEL__ */

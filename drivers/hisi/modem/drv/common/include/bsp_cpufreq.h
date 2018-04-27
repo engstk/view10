@@ -101,6 +101,15 @@ struct cpufreq_debug_msg {
 	u32 cur_profile;
 	u32 cur_load;
 };
+
+struct cur_freq{	
+    u32 cpu_freq;	
+    u32 l2_freq;	
+    u32 slow_freq;	
+    u32 fast_freq;	
+    u32 cur_volt;	
+};
+
 enum CPUFREQ_LOG_TYPE{
 	CPUFREQ_ICC_LOG,
 	CPUFREQ_VOTE_LOG,
@@ -131,6 +140,7 @@ struct cpufreq_query {
 #define DUMP_EXT_FREQ_SIZE      (0x200)
 #define FREQ_DUMP_SIZE       (10)
 #define FREQ_DUMP_FLOW_SIZE       (5)
+#define FREQ_TEMPP_SIZE     (3)
 struct freq_dump_st
 {
     u32 cpuload_count;
@@ -161,6 +171,8 @@ struct freq_dump_st
     u32 temp_prot_up_time;
     u32 temp_prot_cb_time;
     u32 temp_prot_mark;
+    u32 temp_cb_end_time[FREQ_TEMPP_SIZE];
+    u32 temp_cb_addr[FREQ_TEMPP_SIZE];
     u32 freq_dump_size;
 };
 

@@ -30,7 +30,7 @@ extern int als_para_table;
 extern struct als_platform_data als_data;
 static time_t get_data_last_time;
 static unsigned long sar_service_info = 0;
-
+extern int mag_threshold_for_als_calibrate;
 static aod_display_pos_t *g_aod_pos;
 extern struct sensorlist_info sensorlist_info[SENSOR_MAX];
 static struct class *sensors_class;
@@ -1500,7 +1500,6 @@ static ssize_t store_rpc_motion_req(struct device *dev, struct device_attribute 
 	unsigned long value = 0;
 	if (strict_strtoul(buf, 10, &value)) {
 		hwlog_err("%s: rpc motion request val(%lu) invalid", __FUNCTION__, value);
-		return -EINVAL;
 	}
 
 	hwlog_info("%s: rpc motion request val (%lu)\n", __FUNCTION__, value);
@@ -1702,6 +1701,13 @@ static ssize_t show_als_sensorlist_info(struct device *dev,
 }
 static DEVICE_ATTR(als_sensorlist_info, 0664, show_als_sensorlist_info, NULL);
 
+static ssize_t calibrate_threshold_from_mag_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int val = mag_threshold_for_als_calibrate;
+	return snprintf(buf, PAGE_SIZE, "%d\n", val);
+}
+static DEVICE_ATTR(calibrate_threshold_from_mag, 0664, calibrate_threshold_from_mag_show, NULL);
+
 static ssize_t show_airpress_sensorlist_info(struct device *dev,
 					  struct device_attribute *attr, char *buf)
 {
@@ -1825,6 +1831,7 @@ static struct attribute *als_sensor_attrs[] = {
 	&dev_attr_calibrate_timeout.attr,
 	&dev_attr_sleeve_test_threshhold.attr,
 	&dev_attr_als_sensorlist_info.attr,
+	&dev_attr_calibrate_threshold_from_mag.attr,
 	NULL,
 };
 

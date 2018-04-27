@@ -1,0 +1,42 @@
+/{
+    huawei_batt_info: huawei_batt_info {
+        compatible = "huawei,battery-information";
+        no-limit= "Infinite battery current&voltage";
+        limit-current = <2000>;
+        limit-voltage = <4200>;
+        magic-number0 = <0xB5A481ED 0xBD4055C2 0x68451020 0x30405060
+                         0x708090a0 0x01020304 0x05060708 0x090a0b0c>;
+        magic-number1 = <0xB3923AA9 0x77036EE9 0x09F27F36 0xB56DA4E9
+                         0xC5ECFD8A 0x4887C040 0x233604BA 0x1A81F12A>;
+        status = "disabled";
+	};
+
+    ds28el15: ds28el15 {
+        name = "ds28el15";
+        compatible = "maxim,onewire-sha";
+        phy-ctrl = <&gpio_pl061_ctrl>;
+        rom-id-length = <8>;
+        id-mask = /bits/ 8 <0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00>;
+        id-example = /bits/ 8 <0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00>;
+        block-number = <4>;
+        block-size = <16>;
+        personality-length = <4>;
+        sram-length = <32>;
+        page-number = <2>;
+        page-size = <32>;
+        mac-length = <32>;
+        reset-time-request = <60 8 40>;
+        write-time-request = <2 9 5>;
+        read-time-request = <2 14>;
+        program-time = <10>;
+        secret-program-time = <200>;
+        compute-mac-time  = <3>;
+        status = "disabled";
+    };
+
+    gpio_pl061_ctrl: gpio_pl061_ctrl{
+        compatible = "onewire-phy,pl061,gpio";
+        onewire-gpio = <&gpio6 7 0>;
+        status = "disabled";
+    };
+};

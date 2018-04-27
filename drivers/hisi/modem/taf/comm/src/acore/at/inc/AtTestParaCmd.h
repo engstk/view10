@@ -146,9 +146,7 @@ extern VOS_UINT32 At_TestCgscontrdp(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 At_TestCgtftrdp(VOS_UINT8 ucIndex);
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 extern VOS_UINT32 AT_TestChrgEnablePara(VOS_UINT8 ucIndex);
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 extern VOS_UINT32 AT_TestCmutPara(VOS_UINT8 ucIndex);
 
@@ -183,6 +181,7 @@ extern VOS_UINT32 AT_TestCpmsPara(VOS_UINT8 ucIndex);
 /* Added by f62575 for AT Project, 2011-10-28, end */
 
 extern VOS_UINT32 At_TestCopsPara(TAF_UINT8 ucIndex);
+extern VOS_UINT32 At_TestCesqPara(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 At_TestCpolPara(TAF_UINT8 ucIndex);
 
@@ -215,10 +214,7 @@ VOS_UINT32 AT_TestIfcPara(VOS_UINT8 ucIndex);
 #endif
 
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
 VOS_UINT32 AT_TestMipPara(VOS_UINT8 ucIndex);
-
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
 
 
 #if (VOS_OS_VER == VOS_WIN32)

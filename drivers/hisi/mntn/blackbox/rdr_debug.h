@@ -16,7 +16,7 @@
 #ifdef CONFIG_HISI_BB_DEBUG
 int rdr_debug_init(void);
 #else
-int rdr_debug_init(void)
+static inline int rdr_debug_init(void)
 {
 	return 0;
 }

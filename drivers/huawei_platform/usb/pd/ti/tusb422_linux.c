@@ -285,7 +285,7 @@ static ssize_t tusb422_registers_store(struct device *dev,
 {
 	unsigned i, reg_count, value;
 	int error = 0;
-	char name[30];
+	char name[32] = {0};
 //	struct tusb422_pwr_delivery *data = dev_get_drvdata(dev);
 
 	if (count >= 30) {

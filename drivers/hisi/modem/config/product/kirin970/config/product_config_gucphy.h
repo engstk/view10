@@ -1,4 +1,4 @@
-/* MD5: 7c963bfd58f6ee540f1b81bcdcca11ee*/
+/* MD5: 57521c892cc25fac02b8a7e377d80f9e*/
 #if !defined(__PRODUCT_CONFIG_GUCPHY_H__)
 #define __PRODUCT_CONFIG_GUCPHY_H__
 
@@ -97,10 +97,17 @@
 #define FEATURE_NX_CORE_OPEN FEATURE_OFF 
 #endif 
 
+#ifdef cdma 
+#ifndef FEATURE_CSDR
+#define FEATURE_CSDR FEATURE_OFF 
+#endif 
+
+#else
 #ifndef FEATURE_CSDR
 #define FEATURE_CSDR FEATURE_ON 
 #endif 
 
+#endif
 #ifndef CPHY_PUB_DTCM_BASE	
 #define CPHY_PUB_DTCM_BASE	 0xE3840000 
 #endif 
@@ -164,4 +171,8 @@
 #endif 
 
 #endif
+#ifndef FEATURE_EASYRF
+#define FEATURE_EASYRF FEATURE_OFF 
+#endif 
+
 #endif /*__PRODUCT_CONFIG_H__*/ 

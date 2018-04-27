@@ -9,7 +9,6 @@
 
 #define BLK_PAYLOAD_NUM_OFFSET	6
 #define BLK_PAYLOAD_NUM		0x03
-#define BLK_PAYLOAD_YANGON_NUM		0x4
 
 extern int is_device_reboot;
 const char *default_panel_name;
@@ -19,7 +18,7 @@ extern ssize_t lm36923_set_backlight_reg(uint32_t bl_level);
 extern ssize_t lm36923_chip_initial(void);
 extern ssize_t Is_lm36923_used(void);
 extern ssize_t lp8556_set_backlight_reg(uint32_t bl_level);
-static int flag_ili9881c=0;
+
 void mdss_dsi_panel_bklt_dcs(void *pdata, int bl_level)
 {
     struct lcdkit_dsi_panel_cmds *bl_cmds
@@ -29,19 +28,8 @@ void mdss_dsi_panel_bklt_dcs(void *pdata, int bl_level)
     if (bl_cmds->cmd_cnt != 1)
         return;
 
-	if(flag_ili9881c == 1)
-	{
-		bl_cmds->cmds[0].payload[1] = ((bl_level<<2)&0xf00)>>8;
-		bl_cmds->cmds[0].payload[2] = (bl_level<<2)&0xff;
-	}
-	else if (BLK_PAYLOAD_NUM == bl_cmds->buf[BLK_PAYLOAD_NUM_OFFSET]) {
-		bl_cmds->cmds[0].payload[2] = (bl_level << 4) & 0xF0;
-		bl_cmds->cmds[0].payload[1] = (bl_level >> 4) & 0x0F;
-	}
-	else if(BLK_PAYLOAD_YANGON_NUM == bl_cmds->buf[BLK_PAYLOAD_NUM_OFFSET])
-	{
-		bl_cmds->buf[BLK_PAYLOAD_NUM_OFFSET] = 0x3;
-		flag_ili9881c = 1;
+
+	if (BLK_PAYLOAD_NUM == bl_cmds->cmds[0].dlen) {
 		bl_cmds->cmds[0].payload[1] = ((bl_level<<2)&0xf00)>>8;
 		bl_cmds->cmds[0].payload[2] = (bl_level<<2)&0xff;
 	}

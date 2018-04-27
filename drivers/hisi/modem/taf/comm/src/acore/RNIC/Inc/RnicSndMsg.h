@@ -55,9 +55,7 @@
 #include "RnicProcMsg.h"
 #include "RnicCtx.h"
 
-/* Added by m00217266 for 双VoWiFi项目, 2017-2-18, begin */
 #include "NetMgrCtrlInterface.h"
-/* Added by m00217266 for 双VoWiFi项目, 2017-2-18, end */
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -130,7 +128,6 @@ VOS_VOID RNIC_TrigImsDataProcEvent(RNIC_RMNET_ID_ENUM_UINT8 enRmNetId);
 
 #endif
 
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-13, begin */
 VOS_VOID RNIC_FillNetManagerMsgPdnCfgInfo(
     NM_PDN_INFO_CONFIG_STRU            *pDestPdnInfo,
     IMSA_RNIC_PDN_INFO_CONFIG_STRU     *pSrcPdnInfo
@@ -145,7 +142,20 @@ VOS_VOID RNIC_SndNetManagerPdpModifyInd(
     MsgBlock                           *pstMsg
 );
 VOS_VOID RNIC_SndNetManagerModemResetInd(VOS_VOID);
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-13, end */
+VOS_VOID RNIC_SndNetManagerReservedPortCfgInd(
+    MsgBlock                           *pstMsg
+);
+VOS_VOID RNIC_SndNetManagerBindPidCfgInd(
+    unsigned int                        ulBindPid
+);
+
+VOS_VOID RNIC_SndNetManagerSocketExceptInd(
+    MsgBlock                           *pstMsg
+);
+
+VOS_VOID RNIC_SndNetManagerSipPortRangeInd(
+    MsgBlock                           *pstMsg
+);
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

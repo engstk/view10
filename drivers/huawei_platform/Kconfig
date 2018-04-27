@@ -22,7 +22,7 @@ source "drivers/huawei_platform/ext_modem/Kconfig"
 source "drivers/huawei_platform/inputhub/Kconfig"
 source "drivers/huawei_platform/irda/Kconfig"
 source "drivers/huawei_platform/lcd/Kconfig"
-source "drivers/huawei_platform/log/Kconfig"
+#source "drivers/huawei_platform/log/Kconfig"
 source "drivers/huawei_platform/mm/Kconfig"
 source "drivers/huawei_platform/net/Kconfig"
 source "drivers/huawei_platform/nfc/Kconfig"
@@ -48,7 +48,9 @@ source "drivers/huawei_platform/mm_tuner/Kconfig"
 source "drivers/huawei_platform/dp_aux_switch/Kconfig"
 source "drivers/huawei_platform/oases/Kconfig"
 source "drivers/huawei_platform/dp_source/Kconfig"
+source "drivers/huawei_platform/rilsim/Kconfig"
 source "drivers/huawei_platform/sw/Kconfig"
+source "drivers/huawei_platform/kirin_chipsets/Kconfig"
 endif #HUAWEI_PLATFORM
 
 endmenu

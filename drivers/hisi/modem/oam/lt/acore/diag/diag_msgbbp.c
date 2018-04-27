@@ -58,7 +58,9 @@
 #include "msp_diag_comm.h"
 #include "soc_socp_adapter.h"
 #include "diag_acore_common.h"
+#include "bsp_version.h"
 
+#include <linux/mtd/hisi_nve_interface.h>
 #include "adrv.h"
 
 #include <linux/device.h>
@@ -90,7 +92,7 @@ static int  bbpds_probe(struct platform_device *pdev)
     }
      printk("modem_mem_device_init success!/n" );
     return 0;
-        
+
 }
 static const struct of_device_id bbpds_dev_of_match[] = {
         {.compatible = "hisilion,modem_xmode_region"},
@@ -104,7 +106,7 @@ static struct platform_driver bbpds_driver = {
                    .of_match_table = bbpds_dev_of_match,
         },
         .probe = bbpds_probe,
-                   
+
 };
 /*lint -restore +e785 +e64*/
 
@@ -128,7 +130,7 @@ VOS_UINT32 diag_DrxSampleGetChnSizeProc(DIAG_FRAME_INFO_STRU *pData)
     MSP_DIAG_CNF_INFO_STRU stDiagInfo = {0};
     DIAG_BBP_DS_ADDR_INFO_STRU  *psDrxDsInfo = NULL;
     VOS_UINT32 ulRet ;
-    DIAG_CMD_DRX_SAMPLE_GET_CHNSIZE_CNF_STRU stCnfDrxSample = {0};    
+    DIAG_CMD_DRX_SAMPLE_GET_CHNSIZE_CNF_STRU stCnfDrxSample = {0};
     VOS_UINT32 ulLen;
     DIAG_BBP_MSG_A_TRANS_C_STRU *pstInfo;
     DIAG_CMD_DRX_SAMPLE_GET_CHNSIZE_REQ_STRU *psCdmaSample;
@@ -136,11 +138,17 @@ VOS_UINT32 diag_DrxSampleGetChnSizeProc(DIAG_FRAME_INFO_STRU *pData)
 
     mdrv_diag_PTR(EN_DIAG_PTR_BBP_GET_CHAN_SIZE_PROC, 1, pData->ulCmdId, 0);
 
+    if(pData->ulMsgLen < sizeof(MSP_DIAG_DATA_REQ_STRU) + sizeof(DIAG_CMD_DRX_SAMPLE_GET_CHNSIZE_REQ_STRU))
+    {
+        diag_printf("input len is small than need, ulMsgLen:0x%x\n", pData->ulMsgLen);
+        goto DIAG_ERROR;
+    }
+
     /*lint -save -e826*/
-    psCdmaSample = (DIAG_CMD_DRX_SAMPLE_GET_CHNSIZE_REQ_STRU*)((VOS_UINT8*)(pData->aucData)+sizeof(MSP_DIAG_DATA_REQ_STRU));
-    
+    psCdmaSample = (DIAG_CMD_DRX_SAMPLE_GET_CHNSIZE_REQ_STRU*)((VOS_UINT8*)(pData->aucData) + sizeof(MSP_DIAG_DATA_REQ_STRU));
+
     /*AP在发送给CP命令时，需要把数采地址空间信息一起发送过去*/
-    ulLen = (VOS_UINT32)sizeof(DIAG_BBP_MSG_A_TRANS_C_STRU)-VOS_MSG_HEAD_LENGTH + pData->ulMsgLen+(VOS_UINT32)sizeof(DIAG_BBP_DS_ADDR_INFO_STRU);
+    ulLen = (VOS_UINT32)sizeof(DIAG_BBP_MSG_A_TRANS_C_STRU)-VOS_MSG_HEAD_LENGTH + pData->ulMsgLen +(VOS_UINT32)sizeof(DIAG_BBP_DS_ADDR_INFO_STRU);
     pstInfo = (DIAG_BBP_MSG_A_TRANS_C_STRU*)VOS_AllocMsg(MSP_PID_DIAG_APP_AGENT, ulLen);
     if(VOS_NULL == pstInfo)
     {
@@ -150,10 +158,10 @@ VOS_UINT32 diag_DrxSampleGetChnSizeProc(DIAG_FRAME_INFO_STRU *pData)
     pstInfo->ulReceiverPid  = MSP_PID_DIAG_AGENT;
     pstInfo->ulSenderPid    = MSP_PID_DIAG_APP_AGENT;
     pstInfo->ulMsgId        = DIAG_MSG_BBP_A_TRANS_C_REQ;
-    
+
     ulLen = sizeof(DIAG_FRAME_INFO_STRU)+pData->ulMsgLen;
     (VOS_VOID)VOS_MemCpy_s(&pstInfo->stInfo, ulLen, pData, ulLen);
-    
+
     psDrxDsInfo = (DIAG_BBP_DS_ADDR_INFO_STRU*)((VOS_UINT8*)pstInfo+sizeof(DIAG_BBP_MSG_A_TRANS_C_STRU)+pData->ulMsgLen);
     ulAddrType  = psCdmaSample->eDiagDrxSampleChnSize;
     if(DRX_SAMPLE_BBP_CDMA_DATA_CHNSIZE ==ulAddrType)
@@ -161,15 +169,15 @@ VOS_UINT32 diag_DrxSampleGetChnSizeProc(DIAG_FRAME_INFO_STRU *pData)
         psDrxDsInfo->ulAddr     = g_stBbpXdataDsAddrInfo.ulAddr;
         psDrxDsInfo->ulSize     = g_stBbpXdataDsAddrInfo.ulSize;
         psDrxDsInfo->ulenable   = g_stBbpXdataDsAddrInfo.ulenable;
-        atfd_hisi_service_access_register_smc( ACCESS_REGISTER_FN_MAIN_ID, (VOS_UINT64)g_stBbpXdataDsAddrInfo.ulAddr, 
+        atfd_hisi_service_access_register_smc( ACCESS_REGISTER_FN_MAIN_ID, (VOS_UINT64)g_stBbpXdataDsAddrInfo.ulAddr,
             (VOS_UINT64)g_stBbpXdataDsAddrInfo.ulSize, ACCESS_REGISTER_FN_SUB_ID_DDR_MODEM_SEC);
     }
-       
+
     else if(DRX_SAMPLE_BBP_DMA_LOG0_CHNSIZE ==ulAddrType)
-    {        
+    {
         psDrxDsInfo->ulAddr     = g_stBbpBusAddrInfo.ulAddr;
         psDrxDsInfo->ulSize     = g_stBbpBusAddrInfo.ulSize;
-        psDrxDsInfo->ulenable   = g_stBbpBusAddrInfo.ulenable; 
+        psDrxDsInfo->ulenable   = g_stBbpBusAddrInfo.ulenable;
     }
 
     else
@@ -246,7 +254,7 @@ VOS_UINT32 diag_BbpMsgProc(DIAG_FRAME_INFO_STRU *pData)
         goto DIAG_ERROR;
     }
 
-    /*AP在发送给CP命令时，需要把数采地址空间信息一起发送过去*/
+    /*AP侧需要将TL PHY需要的信息发送到C核，在C核获取相关信息*/
     ulLen = (VOS_UINT32)sizeof(DIAG_BBP_MSG_A_TRANS_C_STRU)-VOS_MSG_HEAD_LENGTH + pData->ulMsgLen;
     pstInfo = (DIAG_BBP_MSG_A_TRANS_C_STRU*)VOS_AllocMsg(MSP_PID_DIAG_APP_AGENT, ulLen);
     if(VOS_NULL == pstInfo)
@@ -278,6 +286,97 @@ DIAG_ERROR:
 
     return ulRet;
 }
+
+#define NVME_WRITE                 0
+#define NVME_READ                  1
+#define NVME_MDMLOG_NUM          285
+#define NVME_MDMLOG_SIZE           4
+#define NVE_MODULE_NAME_STR   "nvme"
+
+int nvme_mdmlog_write(unsigned int index, const unsigned char *data, unsigned int len)
+{
+	int ret;
+	struct hisi_nve_info_user pinfo={0};
+
+	pinfo.nv_operation = NVME_WRITE;
+	pinfo.nv_number = NVME_MDMLOG_NUM;
+	pinfo.valid_size = NVME_MDMLOG_SIZE;
+
+	(void)VOS_MemCpy_s(pinfo.nv_data + index, NVME_MDMLOG_SIZE-index, data, len);
+    /* coverity[var_decl] */
+	ret = hisi_nve_direct_access(&pinfo);
+	if(0 != ret)
+    {
+		diag_printf("nvme_mdmlog_writ: Write nve failed !\n");
+		return VOS_ERROR;
+	}
+    diag_printf("nvme_mdmlog_writ: Write nve success!\n");
+    return VOS_OK;
+}
+
+static int nvme_mdmlog_read(unsigned int index, unsigned char *buf, unsigned long len)
+{
+	int ret;
+	struct hisi_nve_info_user pinfo={0};
+
+	pinfo.nv_operation = NVME_READ;
+	pinfo.nv_number = NVME_MDMLOG_NUM;
+	pinfo.valid_size = NVME_MDMLOG_SIZE;
+
+	/* coverity[var_decl] */
+	ret = hisi_nve_direct_access(&pinfo);
+	if (0 != ret)
+    {
+		diag_printf("nvme_mdmlog_read: Read nve failed !\n");
+		return VOS_ERROR;
+	}
+    diag_printf("nvme_mdmlog_read: Read nve success !\n");
+	(void)VOS_MemCpy_s(buf, NVME_MDMLOG_SIZE, pinfo.nv_data + index, (unsigned int)len);
+
+	return VOS_OK;
+}
+
+int set_mdmlog_nvme(void)
+{
+    int ret;
+    char mdmlog_buf[NVME_MDMLOG_SIZE];
+
+    VOS_MemSet_s(mdmlog_buf, sizeof(mdmlog_buf), 0, sizeof(mdmlog_buf));
+    ret = nvme_mdmlog_read(0, mdmlog_buf, NVME_MDMLOG_SIZE);
+    if(ret)
+    {
+        diag_printf("set_mdmlog_nvme: get_mdmlog_from_nvme failed.\n");
+        return VOS_ERROR;
+    }
+
+    if('1' != mdmlog_buf[0])
+    {
+        mdmlog_buf[0] = '1';
+        ret = nvme_mdmlog_write(0, mdmlog_buf, NVME_MDMLOG_SIZE);
+        if(ret)
+        {
+           printk(KERN_ERR"set_mdmlog_nvme[%d]: set_mdmlog_to_nvme failed.\n", __LINE__);
+           return VOS_ERROR;
+        }
+        printk(KERN_ERR"set_mdmlog_nvme[%d]: set_mdmlog_to_nvme success,mdmlog_buf=%s.\n", __LINE__, mdmlog_buf);
+    }
+    if('1' != mdmlog_buf[2])
+    {
+        mdmlog_buf[2] = '1';
+        ret = nvme_mdmlog_write(0, mdmlog_buf, NVME_MDMLOG_SIZE);
+        if(ret)
+        {
+            printk(KERN_ERR"set_mdmlog_nvme[%d]: set_mdmlog_to_nvme failed.\n", __LINE__);
+            return VOS_ERROR;
+        }
+        printk(KERN_ERR"set_mdmlog_nvme[%d]: set_mdmlog_to_nvme success,mdmlog_buf=%s.\n", __LINE__, mdmlog_buf);
+    }
+
+    printk(KERN_ERR"[%d] mdmlog_buf[0]=%c, mdmlog_buf[1]=%c, mdmlog_buf[2]=%c.\n",__LINE__,
+        mdmlog_buf[0], mdmlog_buf[1], mdmlog_buf[2]);
+    return VOS_OK;
+}
+
 /*lint -save -e423 */
 /*****************************************************************************
  Function Name   : diag_BbpMsgInit
@@ -291,6 +390,7 @@ DIAG_ERROR:
 VOS_VOID diag_BbpMsgInit(VOS_VOID)
 {
     VOS_UINT32 ulRet;
+    const BSP_VERSION_INFO_S *VerInfo;
 
     /* 创建节点保护信号量, Diag Trans Bbp */
     ulRet = VOS_SmBCreate("DTB", 1, VOS_SEMA4_FIFO,&g_stBbpTransHead.TransSem);
@@ -303,7 +403,7 @@ VOS_VOID diag_BbpMsgInit(VOS_VOID)
     blist_head_init(&g_stBbpTransHead.TransHead);
 
     /*注册message消息回调*/
-    DIAG_MsgProcReg(DIAG_MSG_TYPE_BBP,diag_BbpMsgProc); 
+    DIAG_MsgProcReg(DIAG_MSG_TYPE_BBP,diag_BbpMsgProc);
     printk(KERN_ERR"diag modem:modem_reserver define !");
 
     printk(KERN_ERR"diag modem:modem_reserver define!\n");
@@ -313,7 +413,30 @@ VOS_VOID diag_BbpMsgInit(VOS_VOID)
     {
         diag_printf("diag_BbpMsgInit bbpds_driver failed.\n");
     }
-    return; 
+
+    VerInfo = bsp_get_version_info();
+    if(NULL == VerInfo)
+    {
+        diag_printf("%s[%d]: get_version_info fail.\n", __FUNCTION__, __LINE__);
+        return;
+    }
+
+    printk(KERN_ERR"VerInfo->udp_flag = 0x%x\n", VerInfo->udp_flag);
+
+    if(HW_VER_HIONE_UDP_MAGIC == VerInfo->udp_flag) // 通过udp_mask判断硬件形态为udp
+    {
+        ulRet = set_mdmlog_nvme();
+        if(ulRet)
+        {
+            printk(KERN_ERR"diag_BbpMsgInit: set_mdmlog_nvme failed.\n");
+        }
+        else
+        {
+            printk(KERN_ERR"diag_BbpMsgInit: set_mdmlog_nvme success.\n");
+        }
+    }
+
+    return;
 }
 
 extern unsigned long simple_strtoul(const char *cp, char **endp, unsigned int base);
@@ -351,7 +474,7 @@ static int __init diag_BbpDrxDdrEnable(char *pucChar)
     {
         g_stBbpDsAddrInfo.ulenable  = 0;
         g_stBbpDsAddrInfo.ulAddr    = 0;
-        g_stBbpDsAddrInfo.ulSize    = 0; 
+        g_stBbpDsAddrInfo.ulSize    = 0;
 
         g_stBbpBusAddrInfo.ulenable  = 0;
         g_stBbpBusAddrInfo.ulAddr    = 0;
@@ -381,16 +504,16 @@ static int modem_cdma_bbpds_reserve_area(struct reserved_mem *rmem)
     const char* heapname;
     char *status ;
     int namesize = 0;
-    
+
     printk(KERN_ERR"diag modem: modem_cdma_bbpds_reserve_area!\n" );
-    
+
     status = (char *)of_get_flat_dt_prop(rmem->fdt_node, "status", NULL);
     if (status && (strncmp(status, "ok", strlen("ok")) != 0))
     {
          printk(KERN_ERR"status is not ok [%s]!\n",status);
          return 0;
     }
-        
+
 
     heapname = of_get_flat_dt_prop(rmem->fdt_node, "region-name", &namesize);
     if (!heapname || (namesize <= 0)) {
@@ -399,11 +522,11 @@ static int modem_cdma_bbpds_reserve_area(struct reserved_mem *rmem)
 
         return 0;
     }
-    
-    g_stBbpXdataDsAddrInfo.ulenable         = DIAG_BBP_XDATA_DS_ENABLE; 
+
+    g_stBbpXdataDsAddrInfo.ulenable         = DIAG_BBP_XDATA_DS_ENABLE;
     g_stBbpXdataDsAddrInfo.ulSize           = (VOS_UINT32)rmem->size;
     g_stBbpXdataDsAddrInfo.ulAddr           = rmem->base;
-    
+
     printk(KERN_ERR"[%s]:diag modem: kernel reserved buffer is useful, base 0x%llx, size is 0x%llx\n",
                  __FUNCTION__, rmem->base, rmem->size );
     return 0;

@@ -65,7 +65,7 @@ extern "C" {
 #if defined(__OS_RTOSCK__) || defined(__OS_RTOSCK_SMP__)
 #include <string.h>
 #endif
-
+#include "securec.h"
 /*  dump content
 
     ---------------
@@ -134,24 +134,24 @@ enum
 #if !defined(BSP_CONFIG_PHONE_TYPE)
 typedef enum
 {
-	DUMP_AREA_AP,
-	DUMP_AREA_CP,
-	DUMP_AREA_TEEOS,
-	DUMP_AREA_HIFI,
-	DUMP_AREA_LPM3,
-	DUMP_AREA_IOM3,
-	DUMP_AREA_ISP,
-	DUMP_AREA_IVP,
-	DUMP_AREA_EMMC,
-	DUMP_AREA_MDMAP,
-	DUMP_AREA_BUTT
+    DUMP_AREA_AP,
+    DUMP_AREA_CP,
+    DUMP_AREA_TEEOS,
+    DUMP_AREA_HIFI,
+    DUMP_AREA_LPM3,
+    DUMP_AREA_IOM3,
+    DUMP_AREA_ISP,
+    DUMP_AREA_IVP,
+    DUMP_AREA_EMMC,
+    DUMP_AREA_MDMAP,
+    DUMP_AREA_BUTT
 }DUMP_AREA_ID;
 #else
 typedef enum
 {
-	DUMP_AREA_CP,
+    DUMP_AREA_CP,
     DUMP_AREA_MDMAP,
-	DUMP_AREA_BUTT
+    DUMP_AREA_BUTT
 }DUMP_AREA_ID;
 #endif
 
@@ -166,9 +166,9 @@ typedef enum
 /*头部接口要与rdr_area.h中定义格式相同*/
 #define DUMP_GLOBALE_TOP_HEAD_MAGIC          (0x44656164)
 struct dump_global_top_head_s {
-	u32 magic;
-	u32 version;
-	u32 area_number;
+    u32 magic;
+    u32 version;
+    u32 area_number;
     u32 reserve;
     u8 build_time[32];
     u8 product_name[32];
@@ -176,30 +176,31 @@ struct dump_global_top_head_s {
 };
 
 struct dump_global_area_s {
-	u32 offset;
-	u32 length;
+    u32 offset;
+    u32 length;
 };
 
 struct dump_global_base_info_s {
-	u32 modid;
-	u32 arg1;
-	u32 arg2;
-	u32 e_core;
+    u32 modid;
+    u32 arg1;
+    u32 arg2;
+    u32 e_core;
     u32 e_type;
     u32 start_flag;
     u32 savefile_flag;
     u32 reboot_flag;
-	u8	e_module[16];
-	u8	e_desc[48];
+    u8  e_module[16];
+    u8  e_desc[48];
 
     u8 datetime[24];
 };
 
+
 struct dump_global_struct_s {
-	struct dump_global_top_head_s top_head;
+    struct dump_global_top_head_s top_head;
     struct dump_global_base_info_s base_info;
-	struct dump_global_area_s area_info[DUMP_AREA_BUTT];
-	u8 padding2[MNTN_BASEINFO_SIZE
+    struct dump_global_area_s area_info[DUMP_AREA_BUTT];
+    u8 padding2[MNTN_BASE_SIZE
                 - sizeof(struct dump_global_top_head_s)
                 - sizeof(struct dump_global_area_s)*DUMP_AREA_BUTT
                 - sizeof(struct dump_global_base_info_s)];
@@ -243,11 +244,11 @@ struct dump_field_self_info_s
 {
     u32         magic_num;
     u32         reserved;
-    u32         phy_addr;
+    void*       phy_addr;
     void*       virt_addr;
 };
 
-#if defined(__OS_RTOSCK__) || defined(__OS_RTOSCK_SMP__)
+
 #define DUMP_FIXED_FIELD(p, id, name, offset, size) \
 { \
     ((dump_field_map_t*)(p))->field_id    = (id); \
@@ -255,19 +256,10 @@ struct dump_field_self_info_s
     ((dump_field_map_t*)(p))->offset_addr      = (u32)(offset); \
     ((dump_field_map_t*)(p))->version     = 0; \
     ((dump_field_map_t*)(p))->status      = DUMP_FIELD_USED; \
-    (void)memcpy_s((char *)(((dump_field_map_t*)(p))->field_name), 16, (char *)(name),strlen((char *)(name)) < 16 ? strlen((char *)(name)): 16); \
+    (void)memcpy_s((char *)(((dump_field_map_t*)(p))->field_name), sizeof(((dump_field_map_t*)(p))->field_name),\
+                   (char *)(name),strlen((char *)(name)) < sizeof(((dump_field_map_t*)(p))->field_name)? strlen((char *)(name)): sizeof(((dump_field_map_t*)(p))->field_name)); \
 }
-#else
-#define DUMP_FIXED_FIELD(p, id, name, offset, size) \
-{ \
-    ((dump_field_map_t*)(p))->field_id    = (id); \
-    ((dump_field_map_t*)(p))->length      = (size); \
-    ((dump_field_map_t*)(p))->offset_addr = (u32)(offset); \
-    ((dump_field_map_t*)(p))->version     = 0; \
-    ((dump_field_map_t*)(p))->status      = DUMP_FIELD_USED; \
-    memcpy((char *)(((dump_field_map_t*)(p))->field_name), (char *)(name), strlen((char *)(name)) <16 ? strlen((char *)(name)): 16); \
-}
-#endif
+
 
 #ifdef ENABLE_BUILD_OM
 s32 bsp_dump_mem_init(void);

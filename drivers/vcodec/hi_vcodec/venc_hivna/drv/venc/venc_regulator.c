@@ -23,6 +23,22 @@ static  VENC_CLK_TYPE g_currClk = VENC_CLK_RATE_LOW;
 static HI_U32 g_vencQosMode  = 0x2;
 static HI_BOOL g_VencPowerOn = HI_FALSE;
 
+#ifdef VENC_QOS_CFG
+#define VENC_QOS_MODE                0xE894000C
+#define VENC_QOS_BANDWIDTH           0xE8940010
+#define VENC_QOS_SATURATION          0xE8940014
+#define VENC_QOS_EXTCONTROL          0xE8940018
+
+static HI_U32 g_VencQosMode        = 0x1;
+static HI_U32 g_VencQosBandwidth   = 0x1000;
+static HI_U32 g_VencQosSaturation  = 0x20;
+static HI_U32 g_VencQosExtcontrol  = 0x1;
+#endif
+
+#ifdef CONFIG_ES_VENC_LOW_FREQ
+static HI_U32 g_VencLowFreq        = 480000000;
+#endif
+
 /*lint -e838 -e747 -e774 -e845*/
 static int Venc_Enable_Iommu(void)
 {
@@ -136,6 +152,11 @@ static HI_S32 Venc_GetDtsConfigInfo(struct platform_device *pdev, VeduEfl_DTS_CO
 	pDtsConfig->highRate   = rate_h;
 	pDtsConfig->normalRate = rate_n;
 	pDtsConfig->lowRate    = rate_l;
+
+#ifdef CONFIG_ES_VENC_LOW_FREQ
+	pDtsConfig->highRate   = g_VencLowFreq;
+#endif
+
 	HI_INFO_VENC("venc_clk_rate: highRate:%u, normalRate:%u, lowRate:%u\n",  pDtsConfig->highRate, pDtsConfig->normalRate, pDtsConfig->lowRate);
 
 	/* 4 fpga platform */
@@ -182,6 +203,47 @@ static HI_S32 Venc_Regulator_Get(struct platform_device *pdev)
 
 	return HI_SUCCESS;
 }
+
+#ifdef VENC_QOS_CFG
+static HI_S32 Venc_Config_QOS(void)
+{
+	HI_U32 *qos_addr = HI_NULL;
+
+	qos_addr = (HI_U32*)ioremap(VENC_QOS_MODE, 4);
+	if(!qos_addr) {
+		HI_FATAL_VENC("ioremap VENC_QOS_MODE reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VencQosMode, qos_addr);
+	iounmap(qos_addr);
+
+	qos_addr = (HI_U32*)ioremap(VENC_QOS_BANDWIDTH, 4);
+	if(!qos_addr) {
+		HI_FATAL_VENC("ioremap VENC_QOS_BANDWIDTH reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VencQosBandwidth, qos_addr);
+	iounmap(qos_addr);
+
+	qos_addr = (HI_U32*)ioremap(VENC_QOS_SATURATION, 4);
+	if(!qos_addr) {
+		HI_FATAL_VENC("ioremap Venc_QOS_SATURATION reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VencQosSaturation, qos_addr);
+	iounmap(qos_addr);
+
+	qos_addr = (HI_U32*)ioremap(VENC_QOS_EXTCONTROL, 4);
+	if(!qos_addr) {
+		HI_FATAL_VENC("ioremap VENC_QOS_EXTCONTROL reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VencQosExtcontrol, qos_addr);
+	iounmap(qos_addr);
+
+	return HI_SUCCESS;
+}
+#endif
 
 HI_S32 Venc_Regulator_Init(struct platform_device *pdev)
 {
@@ -279,6 +341,15 @@ HI_S32 Venc_Regulator_Enable(HI_VOID)
 		goto on_error_set_rate;
 	}
 	g_VencPowerOn = HI_TRUE;
+
+#ifdef VENC_QOS_CFG
+	ret = Venc_Config_QOS();
+	if (ret != HI_SUCCESS) {
+		HI_FATAL_VENC("%s config qos failed\n", __func__);
+		goto on_error_set_rate;
+	}
+#endif
+
 	HI_INFO_VENC("++\n");
 	return HI_SUCCESS;
 on_error_set_rate:
@@ -338,21 +409,23 @@ HI_S32 Venc_Regulator_Disable(HI_VOID)
 
 HI_S32 Venc_SetClkRate(VENC_CLK_TYPE clk_type)
 {
-	HI_U32 clk;
 	HI_S32 ret = HI_SUCCESS;
+	HI_U32 needClk;
+	HI_U32 currentClk;
+	VENC_CLK_TYPE needClkType;
 
 	if (g_currClk != clk_type) {
 		switch (clk_type) {
 		case VENC_CLK_RATE_LOW :
-			clk = g_VencDtsConfig.lowRate;
+			needClk = g_VencDtsConfig.lowRate;
 			break;
 
 		case VENC_CLK_RATE_NORMAL :
-			clk = g_VencDtsConfig.normalRate;
+			needClk = g_VencDtsConfig.normalRate;
 			break;
 
 		case VENC_CLK_RATE_HIGH :
-			clk = g_VencDtsConfig.highRate;
+			needClk = g_VencDtsConfig.highRate;
 			break;
 
 		default:
@@ -360,13 +433,32 @@ HI_S32 Venc_SetClkRate(VENC_CLK_TYPE clk_type)
 			return HI_FAILURE;
 		}
 
-		HI_INFO_VENC("clk type %d, clk %u\n", clk_type, clk);
-		if (clk != clk_get_rate(g_PvencClk)) {
-			ret = clk_set_rate(g_PvencClk, clk);
-			if (ret == 0)
-				g_currClk = clk_type;
+		HI_INFO_VENC("clk type %d, clk %u\n", clk_type, needClk);
+		currentClk = clk_get_rate(g_PvencClk);
+		if (needClk != currentClk) {
+			needClkType = clk_type;
+			ret = clk_set_rate(g_PvencClk, needClk);
+			if ((0 != ret) && (needClk == g_VencDtsConfig.highRate)
+				&& (currentClk != g_VencDtsConfig.normalRate)) {
+				HI_WARN_VENC("failed set clk to %u Hz,fail code is %d, will reset high\n", needClk, ret);
+				needClk = g_VencDtsConfig.normalRate;
+				needClkType = VENC_CLK_RATE_NORMAL;
+				ret = clk_set_rate(g_PvencClk, needClk);
+			}
+
+#ifdef VENC_AVS_LOW_CFG
+			if ((0 != ret) && (needClk == g_VencDtsConfig.normalRate)
+				&& (currentClk != g_VencDtsConfig.lowRate)) {
+				HI_WARN_VENC("failed set clk to %u Hz,fail code is %d, will reset normal\n", needClk, ret);
+				needClk = g_VencDtsConfig.lowRate;
+				needClkType = VENC_CLK_RATE_LOW;
+				ret = clk_set_rate(g_PvencClk, needClk);
+			}
+#endif
+			if (0 == ret)
+				g_currClk = needClkType;
 			else
-				HI_ERR_VENC("clk_set_rate failed\n");
+				HI_WARN_VENC("failed set clk to %u Hz,fail code is %d\n", needClk, ret);
 		}
 	}
 

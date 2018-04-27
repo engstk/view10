@@ -57,10 +57,12 @@
 #include "bsp_rfile.h"
 #include "bsp_icc.h"
 #include "bsp_slice.h"
-#include "socp_balong.h"
 #include "osl_sem.h"
 #include "osl_thread.h"
 #include <bsp_module.h>
+#include <securec.h>
+
+#include "socp_balong.h"
 
 #define SOCP_ROOT_PATH          "/modem_log/socp/"
 
@@ -105,6 +107,7 @@ void socp_debug_help(void)
     socp_printf("all_clean           :清除所有计数(socp_debug_AllClean)\n");
 }
 
+/* cov_verified_start */
 void socp_debug_sendCmd(char* cmd)
 {
     struct socp_debug_icc_stru icc_req;
@@ -113,11 +116,9 @@ void socp_debug_sendCmd(char* cmd)
     u32 cpu_id;
 
     cpu_id = (u32)ICC_CPU_MODEM;
-    /*coverity[secure_coding]*/
-    Socp_Memset(icc_req.OpsCmd,0,sizeof(icc_req.OpsCmd));
-    
-    /*coverity[secure_coding]*/ /* coverity[overrun-buffer-arg] */ /* coverity[overrun-local] */
-    Socp_Memcpy(icc_req.OpsCmd, cmd, strlen(cmd));/*lint !e666*/
+    memset_s(icc_req.OpsCmd,sizeof(icc_req.OpsCmd),0,sizeof(icc_req.OpsCmd));    
+    /* coverity[overrun-buffer-arg] */ /* coverity[overrun-local] */
+    memcpy_s(icc_req.OpsCmd, sizeof(icc_req.OpsCmd), cmd, strlen(cmd));/*lint !e666*/
     socp_printf("enter here %s  %d\n",__FUNCTION__,__LINE__);
     ret = bsp_icc_send(cpu_id,channel_id, (u8*)&icc_req,sizeof(icc_req));
     if(ret != (int)sizeof(icc_req))
@@ -128,9 +129,7 @@ void socp_debug_sendCmd(char* cmd)
 }
 void socp_debug_ApCountclean(void)
 {
-    /*coverity[secure_coding]*/
-    Socp_Memset(&g_stSocpDebugInfo,0x00,sizeof(g_stSocpDebugInfo));
-	//memset_s(&g_stSocpDebugInfo, sizeof(g_stSocpDebugInfo), 0x00, sizeof(SOCP_DEBUG_INFO_S));
+    memset_s(&g_stSocpDebugInfo,sizeof(g_stSocpDebugInfo),0x00,sizeof(g_stSocpDebugInfo));
 }
 
 void socp_debug_CountStore(char* p,int len)
@@ -142,8 +141,7 @@ void socp_debug_CountStore(char* p,int len)
     /* [false alarm]:alarm */
     int ret;
 
-    /*coverity[secure_coding]*/
-    Socp_Memset(path,0,sizeof(path));
+    memset_s(path,sizeof(path),0,sizeof(path));
 	/*coverity[secure_coding]*/
     snprintf(path,128,"%s%s%d.bin",SOCP_ROOT_PATH,p,bsp_get_slice_value());
 
@@ -181,8 +179,7 @@ void socp_debug_RegStore(void)
     /* [false alarm]:alarm */
     int ret;
 
-    /*coverity[secure_coding]*/
-    Socp_Memset(path,0,sizeof(path));
+    memset_s(path,sizeof(path),0,sizeof(path));
     /*coverity[secure_coding]*/
     snprintf(path,128,"%s%s%d.bin",SOCP_ROOT_PATH,p,bsp_get_slice_value());
     /* [false alarm]:alarm */
@@ -210,9 +207,7 @@ void socp_debug_CpCountStore(void)
 }
 void socp_debug_CpCountClean(void)
 {
-    /*coverity[secure_coding]*/
-    Socp_Memset(&g_stSocpDebugInfo,0x00,sizeof(g_stSocpDebugInfo));
-	//memset_s(&g_stSocpDebugInfo, sizeof(g_stSocpDebugInfo), 0x00, sizeof(SOCP_DEBUG_INFO_S));
+    memset_s(&g_stSocpDebugInfo,sizeof(g_stSocpDebugInfo),0x00,sizeof(g_stSocpDebugInfo));
 }
 void socp_debug_PrintCount(void)
 {
@@ -443,27 +438,7 @@ void socp_show_debug_gbl(void)
     socp_printf(" socp完成APP中断的次数                 : 0x%x\n", (s32)sSocpDebugGblInfo->u32SocpAppSucIntCnt);
 }
 
-/*****************************************************************************
-* 函 数 名  : socp_show_ccore_head_err_cnt
-*
-* 功能描述  : 打印C核编码源通道包头错误统计值
-*
-* 输入参数  : 无
-*
-* 输出参数  : 无
-*
-* 返 回 值   : 无
-*****************************************************************************/
-void socp_show_ccore_head_err_cnt(void)
-{
-    int i;
-    for(i = SOCP_CCORE_ENCSRC_CHN_BASE; i < SOCP_CCORE_ENCSRC_CHN_BASE + SOCP_CCORE_ENCSRC_CHN_NUM; i++)
-    {
-        socp_printf("================== 编码源通道 0x%x  包头错误累计统计值:=================\n", i);
-        socp_printf(" socp ISR 中进入编码源通道包头错误中断次数                  : 0x%x\n",
-            (s32)g_stSocpDebugInfo.sSocpDebugEncSrc.u32SocpEncSrcIsrHeadIntCnt[i]);
-    }
-}
+/* cov_verified_stop */
 
 /*****************************************************************************
 * 函 数 名   : socp_show_enc_src_chan_cur
@@ -758,7 +733,6 @@ void socp_show_enc_dst_chan_all(void)
 
     return;
 }
-
 /*****************************************************************************
 * 函 数 名   : socp_show_dec_src_chan_cur
 *
@@ -1005,6 +979,13 @@ void socp_show_dec_dst_chan_all(void)
     return;
 }
 
+EXPORT_SYMBOL(socp_show_dec_src_chan_cur);
+EXPORT_SYMBOL(socp_show_dec_src_chan_add);
+EXPORT_SYMBOL(socp_show_dec_src_chan_all);
+EXPORT_SYMBOL(socp_show_dec_dst_chan_cur);
+EXPORT_SYMBOL(socp_show_dec_dst_chan_add);
+EXPORT_SYMBOL(socp_show_dec_dst_chan_all);
+
 /*****************************************************************************
 * 函 数 名   : socp_debug_cnt_show
 *
@@ -1032,27 +1013,21 @@ void socp_debug_set_trace(u32 v)
 
 module_init(socp_debug_init);
 
+EXPORT_SYMBOL(socp_debug_help);
+EXPORT_SYMBOL(socp_debug_AllStore);
+EXPORT_SYMBOL(socp_debug_AllClean);
 EXPORT_SYMBOL(socp_debug_set_reg_bits);
 EXPORT_SYMBOL(socp_debug_get_reg_bits);
 EXPORT_SYMBOL(socp_debug_read_reg);
 EXPORT_SYMBOL(socp_debug_write_reg);
-
 EXPORT_SYMBOL(socp_help);
 EXPORT_SYMBOL(socp_show_debug_gbl);
-EXPORT_SYMBOL(socp_show_ccore_head_err_cnt);
 EXPORT_SYMBOL(socp_show_enc_src_chan_cur);
 EXPORT_SYMBOL(socp_show_enc_src_chan_add);
 EXPORT_SYMBOL(socp_show_enc_src_chan_all);
 EXPORT_SYMBOL(socp_show_enc_dst_chan_cur);
 EXPORT_SYMBOL(socp_show_enc_dst_chan_add);
 EXPORT_SYMBOL(socp_show_enc_dst_chan_all);
-EXPORT_SYMBOL(socp_show_dec_src_chan_cur);
-EXPORT_SYMBOL(socp_show_dec_src_chan_add);
-EXPORT_SYMBOL(socp_show_dec_src_chan_all);
-EXPORT_SYMBOL(socp_show_dec_dst_chan_cur);
-EXPORT_SYMBOL(socp_show_dec_dst_chan_add);
-EXPORT_SYMBOL(socp_show_dec_dst_chan_all);
-
 EXPORT_SYMBOL(socp_debug_cnt_show);
 
 

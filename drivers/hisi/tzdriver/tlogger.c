@@ -1,4 +1,4 @@
-﻿
+
 /*******************************************************************************
  * This source code has been made available to you by HUAWEI on an
  * AS-IS basis. Anyone receiving this source code is licensed under HUAWEI
@@ -46,8 +46,6 @@ static size_t m_addr_end;
 #define TEELOGGER_GET_LOG_SIZE		_IO(__TEELOGGERIO, 3)
 /* get the TEE memory status */
 #define TEELOGGER_GET_MEMORY_STATUS		_IO(__TEELOGGERIO, 4)
-/* get the log encode rand array */
-#define TEELOGGER_GET_ENCODE_RAND_ARRAY		_IO(__TEELOGGERIO, 5)
 
 #define LOG_PATH_HISI_LOGS	"/data/hisi_logs/"
 #define LOG_PATH_RUNNING_TRACE	"/data/hisi_logs/running_trace/"
@@ -79,7 +77,6 @@ struct logger_log {
 	wait_queue_head_t wq;
 	struct list_head readers;
 	struct mutex mutex;
-	size_t w_off;
 	size_t head;
 	size_t size;
 	struct list_head logs;
@@ -105,8 +102,7 @@ struct logger_reader {
 	bool r_all;
 	unsigned int r_ver;
 };
-#define RAND_SIZE 16
-static uint8_t rand_array_buffer[RAND_SIZE];	/* Stores data to write out of device */
+
 /*
  * file_get_log - Given a file structure, return the associated log
  *
@@ -153,6 +149,7 @@ static ssize_t tlogger_read(struct file *file, char __user *buf, size_t count, l
 	ssize_t ret;
 	size_t log_len;
 	size_t sub;
+	size_t w_off_reader;
 	bool disjoin_flag;
 	u32 real_addr = 0;
 	u32 ring_flag = 0;
@@ -176,10 +173,10 @@ start:
 			mutex_unlock(&log->mutex);
 			break;
 		}
-		tlogd(" real_addr=0x%x ring_flag=%d\n", real_addr, ring_flag);
-		log->w_off = real_addr + m_addr_start;
 
-		ret = ((log->w_off == reader->r_off)
+		w_off_reader = real_addr + m_addr_start;
+		tlogd(" real_addr=0x%x ring_flag=%d r_off=%zx w_off_reader=%zx\n", real_addr, ring_flag, reader->r_off,w_off_reader);
+		ret = ((w_off_reader == reader->r_off)
 		       && (ring_flag == reader->r_ver));
 
 		mutex_unlock(&log->mutex);
@@ -204,37 +201,34 @@ start:
 	if (ret)
 		return ret;
 
-	mutex_lock(&log->mutex);
 
 	/* is there still something to read or did we race? */
-	if (unlikely(log->w_off == reader->r_off)) {
-		mutex_unlock(&log->mutex);
+	if (unlikely(w_off_reader == reader->r_off)) {
 		goto start;
 	}
 
 	if (ring_flag != reader->r_ver /*ring_flag not same */) {
-		if ((reader->r_off > log->w_off)
+		if ((reader->r_off > w_off_reader)
 			&& ((ring_flag - reader->r_ver) == 1)) {
-			sub = (m_addr_end - reader->r_off) + (log->w_off - m_addr_start);
+			sub = (m_addr_end - reader->r_off) + (w_off_reader - m_addr_start);
 		} else {
-			reader->r_off = log->w_off;
+			reader->r_off = w_off_reader;
 			reader->r_ver = ring_flag - 1;
-			sub = (m_addr_end - reader->r_off) + (log->w_off - m_addr_start);
+			sub = (m_addr_end - reader->r_off) + (w_off_reader - m_addr_start);
 		}
 		disjoin_flag = true;
 	} else {
 		disjoin_flag = false;
-		if (log->w_off < reader->r_off) {
+		if (w_off_reader < reader->r_off) {
 			reader->r_off = m_addr_start;
-			tloge("ERR tlogcat read=0x%lx write=0x%lx\n", reader->r_off, log->w_off);
+			tloge("ERR tlogcat read=0x%lx write=0x%lx\n", reader->r_off, w_off_reader);
 			ret = -1;
 			goto out;
 		}
-		sub = log->w_off - reader->r_off;
+		sub = w_off_reader - reader->r_off;
 		tlogd("sub=%zx  read->r_ver=%d\n", sub, reader->r_ver);
 	}
 	log_len = (sub < PER_LEN) ? sub : PER_LEN;
-	mdelay(200);
 	if (disjoin_flag && ((reader->r_off + log_len) > m_addr_end)) {
 		if (CHECK_BOUNDARY(reader->r_off)) {
 			tloge("1 CHECK_BOUNDARY error reader->r_off=0x%lu\n", reader->r_off);
@@ -243,7 +237,7 @@ start:
 		tlogd("read (m_addr_end-reader->r_off)=%zx ret = %zx\n",
 			(m_addr_end - reader->r_off), ret);
 
-		ret = copy_to_user(buf, (void *)(m_addr_start),
+		ret = copy_to_user(buf + (m_addr_end - reader->r_off), (void *)(m_addr_start),
 				     (log_len - (m_addr_end - reader->r_off)));
 
 		reader->r_ver = ring_flag;
@@ -269,8 +263,6 @@ start:
 	/* return log_len */
 	ret = log_len;
 out:
-	mutex_unlock(&log->mutex);
-
 	return ret;
 }
 
@@ -304,6 +296,7 @@ static int tlogger_open(struct inode *inode, struct file *file)
 	int ret;
 	int real_addr = 0;
 	int ring_flag = 0;
+	size_t w_off_reader;
 
 	tlogd("open logger_open ++\n");
 	/*not support seek */
@@ -318,7 +311,7 @@ static int tlogger_open(struct inode *inode, struct file *file)
 	if (file->f_mode & FMODE_READ) {
 		struct logger_reader *reader;
 
-		reader = kmalloc(sizeof(struct logger_reader), GFP_KERNEL);
+		reader = kzalloc(sizeof(struct logger_reader), GFP_KERNEL);
 		if (!reader)
 			return -ENOMEM;
 
@@ -340,9 +333,10 @@ static int tlogger_open(struct inode *inode, struct file *file)
 		INIT_LIST_HEAD(&reader->list);
 
 		mutex_lock(&log->mutex);
+		w_off_reader = real_addr + m_addr_start;
 		if (reader->r_ver) {
-			reader->r_off = log->w_off + 1;
-			if (log->w_off == (m_addr_end - 1))
+			reader->r_off = w_off_reader + 1;
+			if (w_off_reader == (m_addr_end - 1))
 				reader->r_off = m_addr_end;
 			reader->r_ver--;
 		} else
@@ -394,12 +388,13 @@ static unsigned int tlogger_poll(struct file *file, poll_table *wait)
 	int ring_flag = 0;
 	unsigned int real_offset = 0;
 	unsigned long size_num = 4;
+	size_t w_off_reader = 0;
 	if(memcpy_s(&real_offset, sizeof(real_offset), m_log_buffer, size_num)){
-		ret |= POLLERR; 
+		ret |= POLLERR;
 		return ret;
 	}
 	if(memcpy_s(&ring_flag, sizeof(ring_flag), m_log_buffer + 4, size_num)){
-		ret |= POLLERR; 
+		ret |= POLLERR;
 		return ret;
 	}
 
@@ -410,17 +405,11 @@ static unsigned int tlogger_poll(struct file *file, poll_table *wait)
 
 	reader = file->private_data;
 	log = reader->log;
-
 	poll_wait(file, &log->wq, wait);
-
-	mutex_lock(&log->mutex);
-
-	tlogd("poll before  log->w_off=%zx reader->r_off=%zx\n", log->w_off, reader->r_off);
-	log->w_off = (size_t)(m_log_buffer + real_offset + 64);
-	tlogd("poll after     log->w_off=%zx reader->r_off=%zx\n", log->w_off, reader->r_off);
-	if ((log->w_off != reader->r_off) || (ring_flag != reader->r_ver))
+	w_off_reader = (size_t)(m_log_buffer + real_offset + 64);
+	tlogd("poll after w_off_reader=%zx reader->r_off=%zx real_offset =%x\n", w_off_reader, reader->r_off,real_offset);
+	if ((w_off_reader != reader->r_off) || (ring_flag != reader->r_ver))
 		ret |= POLLIN | POLLRDNORM;
-	mutex_unlock(&log->mutex);
 
 	return ret;
 }
@@ -473,7 +462,6 @@ static long tlogger_ioctl(struct file *file, unsigned int cmd,
 {
 	struct logger_log *log = file_get_log(file);
 	long ret = -EINVAL;
-	int s_ret = 0;
 
 	tlogd("logger_ioctl start ++\n");
 	mutex_lock(&log->mutex);
@@ -492,20 +480,6 @@ static long tlogger_ioctl(struct file *file, unsigned int cmd,
 		break;
 	case TEELOGGER_GET_MEMORY_STATUS:
 		ret = log->size;
-		break;
-	case TEELOGGER_GET_ENCODE_RAND_ARRAY:
-		s_ret = memcpy_s(rand_array_buffer, sizeof(rand_array_buffer), m_log_buffer + OFFSET1 - RAND_SIZE, sizeof(rand_array_buffer));
-		if (EOK != s_ret) {
-			tloge("memset_s error sret is %d.\n", s_ret);
-			mutex_unlock(&log->mutex);
-			return s_ret;
-		}
-		if (copy_to_user((void __user *)arg, rand_array_buffer, sizeof(rand_array_buffer))) {
-			ret = -EFAULT;
-			mutex_unlock(&log->mutex);
-			return ret;
-		}
-		ret = RAND_SIZE;
 		break;
 	default:
 		tloge("ioctl error default\n");
@@ -589,11 +563,9 @@ static int __init create_log(char *log_name, int size)
 	init_waitqueue_head(&log->wq);
 	INIT_LIST_HEAD(&log->readers);
 	mutex_init(&log->mutex);
-	log->w_off = (size_t)(m_log_buffer + OFFSET1);
 	log->head = (size_t)(m_log_buffer + OFFSET1);
 	log->size = size;
-	tlogd("tlocat  log->w_off=%zx log->head=%zx\n",
-		log->w_off, log->head);
+	tlogd("tlocat   log->head=%zx\n", log->head);
 	INIT_LIST_HEAD(&log->logs);
 	list_add_tail(&log->logs, &m_log_list);
 	/* finally, initialize the misc device for this log */
@@ -643,15 +615,10 @@ int tlogger_store_lastmsg(void)
 {
 	struct file *filep;
 	ssize_t write_len;
-	char *tmp_log_buffer = phys_to_virt(m_addr_p);
 	mm_segment_t old_fs;
 	loff_t pos = 0;
 	int ret;
 
-	if (!virt_addr_valid(tmp_log_buffer)) { /*lint !e648 */
-		tloge("tmp_log_buffer is not valid addr\n");
-		return -EFAULT;
-	}
 
 	ret = tee_create_dir(LOG_PATH_HISI_LOGS);
 	if (0 != ret) {
@@ -680,14 +647,13 @@ int tlogger_store_lastmsg(void)
 
 	tlogd("Succeed to filp_open last_teemsg\n");
 
-	old_fs = get_fs();
+	old_fs = get_fs(); /*lint !e501 */
 	set_fs(KERNEL_DS); /*lint !e501 */
 
 	ret = (int)sys_chown((const char __user *)LOG_PATH_TEE_LOG_FILE, ROOT_UID, SYSTEM_GID);
 	if (ret)
 		tloge("Failed to chown last_teemsg\n");
-
-	write_len = vfs_write(filep, (char __user *)tmp_log_buffer, m_rar_mem_len - OFFSET2, &pos);
+	write_len = vfs_write(filep, m_log_buffer, (char*)m_addr_end-m_log_buffer, &pos);
 	if (write_len < 0) {
 		tloge("Failed to write to last_teemsg\n");
 	} else {

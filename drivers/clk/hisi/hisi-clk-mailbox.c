@@ -50,6 +50,9 @@ static int hisi_clkmbox_send_ipc(mbox_msg_t *msg)
 	int ret, rproc_id;
 
 	rproc_id = HISI_RPROC_LPM3_MBX13;
+
+	if(RPROC_IS_SUSPEND(rproc_id))
+		return -ENODEV;
 	/* try again if failing to send */
 	do {
 		ret = RPROC_ASYNC_SEND(rproc_id, (mbox_msg_t *)msg, LPM3_CMD_LEN);/*lint !e64*/
@@ -70,6 +73,9 @@ static int hisi_clkmbox_send_ipc_sync(mbox_msg_t *msg)
 	int ret, rproc_id;
 
 	rproc_id = HISI_RPROC_LPM3_MBX13;
+
+	if(RPROC_IS_SUSPEND(rproc_id))
+		return -ENODEV;
 	/* try again if failing to send */
 	do {
 		ret = RPROC_SYNC_SEND(rproc_id, (mbox_msg_t *)msg, LPM3_CMD_LEN, NULL, 0);/*lint !e64*/

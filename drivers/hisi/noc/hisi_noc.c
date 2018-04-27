@@ -394,7 +394,7 @@ NOC_ERROR_CHECK:
 						/* while(1);
 						dead loop for manually check out what happened
 						on the noc bus */
-						BUG_ON(1);
+						WARN_ON(1);
 					}
 				}
 				break;
@@ -1117,28 +1117,28 @@ static int hisi_noc_part_probe(struct platform_device *pdev,
 
 	for (i = 0; i < (unsigned int)nums; i++) {
 		reg_base[i] = of_iomap(np, i);
-		BUG_ON(!reg_base[i]);
+		WARN_ON(!reg_base[i]);
 	}
 
 	noc_dev->sctrl_base    = reg_base[NOC_SCTRL_BASE];
 	if (!noc_dev->sctrl_base)
-		BUG_ON(1);
+		WARN_ON(1);
 
 	noc_dev->pctrl_base    = reg_base[NOC_PCTRL_BASE];
 	if (!noc_dev->pctrl_base) {
-		BUG_ON(1);
+		WARN_ON(1);
 		goto err_sctrl; /*lint !e527*/
 	}
 
 	noc_dev->pcrgctrl_base = reg_base[NOC_PCRGCTRL_BASE];
 	if (!noc_dev->pcrgctrl_base) {
-		BUG_ON(1);
+		WARN_ON(1);
 		goto err_crgctrl; /*lint !e527*/
 	}
 
 	noc_dev->pmctrl_base   = reg_base[NOC_PMCTRL_BASE];
 	if (!noc_dev->pmctrl_base) {
-		BUG_ON(1);
+		WARN_ON(1);
 		goto err_pmctrl; /*lint !e527*/
 	}
 
@@ -1455,7 +1455,7 @@ static int hisi_noc_probe(struct platform_device *pdev)
 	match = of_match_device(hisi_noc_match, dev);
 	if (NULL == match) {
 		pr_err("hisi_noc_probe: mismatch of hisi noc driver\n\r");
-		BUG_ON(1);
+		WARN_ON(1);
 		goto err; /*lint !e527*/
 	}
 

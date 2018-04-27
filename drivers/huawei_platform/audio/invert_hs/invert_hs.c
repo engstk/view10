@@ -142,7 +142,7 @@ MODULE_DEVICE_TABLE(of, invert_hs_of_match);
 /* load dts config for board difference */
 static void load_invert_hs_config(struct device_node *node)
 {
-	int temp;
+	int temp = 0;
 	/*lint -save -e* */
 	if (!of_property_read_u32(node, "gpio_type", &temp)) {
 	/*lint -restore*/

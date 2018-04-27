@@ -11,6 +11,8 @@ endif
 ccflags-$(CONFIG_USB_PROXY_HCD_DEBUG)	:= -DDEBUG
 ccflags-y += -Idrivers/devkit/audiokit/
 
+obj-$(CONFIG_USB_PROXY_HCD)		+= usbaudio-monitor.o
+
 obj-$(CONFIG_USB_PROXY_HCD)		+= hifiusb.o
 hifiusb-y				+= hifi-usb.o hifi-usb-urb-buf.o
 hifiusb-$(CONFIG_HISI_DEBUG_FS)		+= hifi-usb-debugfs.o

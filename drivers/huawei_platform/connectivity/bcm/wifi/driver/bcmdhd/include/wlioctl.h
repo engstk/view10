@@ -3303,6 +3303,9 @@ typedef struct wl_tcp_keep_set {
 
 #if defined(PKT_FILTER_SUPPORT) && defined(BCM_APF)
 #define WL_APF_INTERNAL_VERSION 1
+#ifdef BCM_PATCH_CVE_2016_8455
+#define WL_APF_PROGRAM_MAX_SIZE (2 * 1024)
+#endif
 #define WL_APF_PROGRAM_FIXED_LEN OFFSETOF(wl_apf_program_t, instrs)
 #define WL_APF_PROGRAM_LEN(apf_program) \
 	(apf_program->instr_len * sizeof(apf_program->instrs[0]))

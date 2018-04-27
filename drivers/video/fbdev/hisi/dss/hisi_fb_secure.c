@@ -362,19 +362,14 @@ void hisi_sec_mctl_set_regs(struct hisi_fb_data_type *hisifd)
 	secure_ctrl = &(hisifd->secure_ctrl);
 	if (DSS_SEC_ENABLE == secure_ctrl->secure_event) {
 		module_base = hisifd->dss_module.mctl_sys_base;
-		if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-			hisifd->set_reg(hisifd, module_base + MCTL_RCH_OV0_SEL1, TUI_SEC_RCH, 4, 0);
-		} else {
-			hisifd->set_reg(hisifd, module_base + MCTL_RCH_OV0_SEL, TUI_SEC_RCH, 4, 24);
-		}
+		hisifd->set_reg(hisifd, module_base + MCTL_RCH_OV0_SEL1, TUI_SEC_RCH, 4, 0);
 	}
 }
 
 void hisi_drm_layer_online_config(struct hisi_fb_data_type *hisifd, dss_overlay_t *pov_req_prev, dss_overlay_t *pov_req)
 {
-	int i = 0, m = 0, j = 0, k = 0;
+	int i = 0, m = 0, j = 0;
 	int compose_mode;
-	bool secure_layer = false;
 	int sec_chn[250] = {DSS_RCHN_NONE};
 	dss_layer_t *layer = NULL;
 	dss_overlay_block_t *pov_h_block_infos = NULL;
@@ -389,9 +384,11 @@ void hisi_drm_layer_online_config(struct hisi_fb_data_type *hisifd, dss_overlay_
 	compose_mode = (hisifd->index == PRIMARY_PANEL_IDX) ? ONLINE_COMPOSE_MODE : OVL1_ONLINE_COMPOSE_MODE;
 
 	if (pov_req == NULL) {
+		hisi_drm_layer_online_clear(hisifd, pov_req_prev, NULL, 0);
 		HISI_FB_DEBUG("pov_req is null!\n");
 		return;
 	}
+
 	pov_h_block_infos = (dss_overlay_block_t *)(pov_req->ov_block_infos_ptr);
 	for (m = 0; m < (int)pov_req->ov_block_nums; m++) {
 		pov_h_block = &(pov_h_block_infos[m]);
@@ -424,18 +421,36 @@ void hisi_drm_layer_online_config(struct hisi_fb_data_type *hisifd, dss_overlay_
 		HISI_FB_INFO("pov_req_prev is null!\n");
 		return;
 	}
-	pov_h_block_infos = (dss_overlay_block_t *)(pov_req_prev->ov_block_infos_ptr);
-	for (m = 0; m < (int)pov_req_prev->ov_block_nums; m++) {
-		pov_h_block = &(pov_h_block_infos[m]);
 
-		for (i = 0; i < (int)pov_h_block->layer_nums; i++) {
+	hisi_drm_layer_online_clear(hisifd, pov_req_prev, sec_chn, j);
+}
+
+void hisi_drm_layer_online_clear(struct hisi_fb_data_type *hisifd, dss_overlay_t *pov_req_prev, int *seclist, int list_max)
+{
+	int i = 0, j = 0, k = 0;
+	bool secure_layer = false;
+	dss_layer_t *layer = NULL;
+	dss_overlay_block_t *pov_h_block_infos = NULL;
+	dss_overlay_block_t *pov_h_block = NULL;
+	struct hisifb_secure *secure_ctrl = NULL;
+	int compose_mode;
+	compose_mode = (hisifd->index == PRIMARY_PANEL_IDX) ? ONLINE_COMPOSE_MODE : OVL1_ONLINE_COMPOSE_MODE;
+
+	secure_ctrl = &(hisifd->secure_ctrl);//lint !e838
+	pov_h_block_infos = (dss_overlay_block_t *)(pov_req_prev->ov_block_infos_ptr);//lint !e838
+
+	for (i = 0; i < (int)pov_req_prev->ov_block_nums; i++) {//lint !e838
+		pov_h_block = &(pov_h_block_infos[i]);
+		for (j = 0; j < (int)pov_h_block->layer_nums; j++) {
 			secure_layer = false;
-			layer = &(pov_h_block->layer_infos[i]);
+			layer = &(pov_h_block->layer_infos[j]);
 			if (layer->img.secure_mode == 1) {
-				for (k = 0; k < j; k++) {
-					if (layer->chn_idx == sec_chn[k]) {
-						secure_layer = true;
-						break;
+				if (seclist != NULL) {
+					for (k = 0; k < list_max; k++) {
+						if (layer->chn_idx == seclist[k]) {
+							secure_layer = true;
+							break;
+						}
 					}
 				}
 
@@ -620,10 +635,9 @@ static bool check_tui_layer_chn_cfg_ok(struct hisi_fb_data_type *hisifd)
 
 	/* use chn V0 for TUI compose except dallas */
 	layer = &(pov_h_block->layer_infos[0]);
-	if (layer->chn_idx == DSS_RCHN_V0) {
+	if (layer->chn_idx == TUI_SEC_RCH) {
 		return false;
 	}
-
 	return true;
 }
 

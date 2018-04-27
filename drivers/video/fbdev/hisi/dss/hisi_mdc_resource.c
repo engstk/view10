@@ -349,6 +349,7 @@ int hisi_mdc_resource_init(struct hisi_fb_data_type *hisifd, unsigned int platfo
 			mdc_ops->mdc_channel[0].status = FREE;
 			break;
 
+		case FB_ACCEL_DSSV320:
 		case FB_ACCEL_HI625x:
 			mdc_ops->chan_num = 1;
 			mdc_ops->mdc_channel[0].cap_available = CAP_BASE | CAP_DIM \
@@ -376,6 +377,7 @@ int hisi_mdc_resource_init(struct hisi_fb_data_type *hisifd, unsigned int platfo
 			break;
 
 		case FB_ACCEL_KIRIN970:
+		case FB_ACCEL_DSSV501:
 			mdc_ops->chan_num = 2;
 			mdc_ops->mdc_channel[0].cap_available = CAP_BASE | CAP_DIM \
 				| CAP_YUV_PACKAGE | CAP_YUV_SEMI_PLANAR \

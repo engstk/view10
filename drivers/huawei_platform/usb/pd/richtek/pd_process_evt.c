@@ -265,6 +265,9 @@ bool pd_process_protocol_error(
 	case PE_BIST_TEST_DATA:
 		PE_DBG("Igrone Unknown Event\r\n");
 		return false;
+	default:
+		PE_DBG("Miss match\r\n");
+		break;
 	};
 
 	if (pd_port->tcpc_dev->pd_wait_hard_reset_complete) {

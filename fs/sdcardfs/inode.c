@@ -179,46 +179,33 @@ out:
 	return ret;
 }
 
-static inline
-struct dentry *__lookup_real_rename_ci(
-	struct dentry *realdir,
-	const char *name,
-	struct dentry *dentry
-) {
-	struct dentry *real;
-	real = lookup_one_len(name, realdir, dentry->d_name.len);
-
-	if (IS_ERR(real)) {
-		if (real == ERR_PTR(-ENOENT))
-			real = NULL;
-	/* hashed (see d_delete) and unhashed(by d_alloc) but negative */
-	} else if (d_is_negative(real)) {
-		dput(real);
-		real = ERR_PTR(-ESTALE);
-	}
-	return real;
-}
-
+#ifdef SDCARDFS_CASE_INSENSITIVE
 static inline
 struct dentry *__lookup_rename_ci(
-	struct dentry *realdir,
-	struct dentry *dentry
-) {
+	struct sdcardfs_sb_info *sbi,
+	struct dentry *dir, struct qstr *name)
+{
 	struct dentry *ret;
-	char *name;
 
-	name = sdcardfs_do_lookup_ci_begin(
-		SDCARDFS_SB(dentry->d_sb)->lower_mnt,
-		realdir, &dentry->d_name, true
-	);
-	if (IS_ERR(name) || name == NULL)
-		return (struct dentry *)name;
+	if (sbi->ci->lookup == NULL)
+		return NULL;
+	else {
+		struct path path = {.dentry = dir, .mnt = sbi->lower_mnt};
 
-	ret = __lookup_real_rename_ci(realdir, name, dentry);
-
-	sdcardfs_do_lookup_ci_end(name);
-	return ret;
+		ret = sbi->ci->lookup(&path, name, true);
+		/* once again sbi->ci->lookup() never returns NULL */
+		if (IS_ERR(ret)) {
+			if (ret == ERR_PTR(-ENOENT))
+				ret = NULL;
+		/* hashed (see d_delete) and unhashed(by d_alloc) but negative */
+		} else if (d_is_negative(ret)) {
+			dput(ret);
+			ret = ERR_PTR(-ESTALE);
+		}
+		return ret;
+	}
 }
+#endif
 
 static int sdcardfs_rename(
 	struct inode *old_dir,
@@ -233,6 +220,14 @@ static int sdcardfs_rename(
 	bool overlapped = true;
 
 	trace_sdcardfs_rename_enter(old_dir, old_dentry, new_dir, new_dentry);
+
+	/* some forbidden filenames should be checked before removing */
+	if (permission_denied_to_remove(old_dir, old_dentry->d_name.name)
+		|| permission_denied_to_create(new_dir, new_dentry->d_name.name)
+		|| permission_denied_to_remove(new_dir, new_dentry->d_name.name)) {
+		err = -EACCES;
+		goto out;
+	}
 
 	/* since old_dir, new_old both have inode_locked, so
 	   it is no need to use dget_parent */
@@ -283,7 +278,9 @@ static int sdcardfs_rename(
 		goto revert_cred_err;
 
 	/* real_target may be a negative unhashed dentry */
-	dentry = __lookup_rename_ci(real_new_parent, new_dentry);
+#ifdef SDCARDFS_CASE_INSENSITIVE
+	dentry = __lookup_rename_ci(SDCARDFS_SB(new_dentry->d_sb),
+		real_new_parent, &new_dentry->d_name);
 	if (IS_ERR(dentry)) {
 		err = PTR_ERR(dentry);
 		goto revert_cred_err;
@@ -297,17 +294,19 @@ static int sdcardfs_rename(
 	} else {
 		if (dentry == real_old_dentry)
 			dput(dentry);
-
 		/* and if dentry == real_old_dentry, new_dentry
 		   could be positive */
+#endif
 		real_new_dentry = lookup_one_len(new_dentry->d_name.name,
 			real_new_parent, new_dentry->d_name.len);
 		if (IS_ERR(real_new_dentry)) {
 			err = PTR_ERR(real_new_dentry);
 			goto revert_cred_err;
 		}
-		overlapped = false;
+		overlapped = d_is_positive(real_new_dentry);
+#ifdef SDCARDFS_CASE_INSENSITIVE
 	}
+#endif
 
 	err = vfs_rename(d_inode(real_old_parent), real_old_dentry,
 		d_inode(real_new_parent), real_new_dentry, NULL, 0);
@@ -331,6 +330,7 @@ dput_err:
 	dput(real_old_parent);
 	dput(real_old_dentry);
 
+out:
 	trace_sdcardfs_rename_exit(old_dir, old_dentry, new_dir, new_dentry, err);
 	return err;
 }
@@ -474,8 +474,13 @@ static int sdcardfs_permission(struct inode *inode, int mask)
 		__fix_derived_permission(te, inode);
 	}
 
+	/* have no access to PERM_JAILHOUSE via sdcardfs */
+	if (unlikely(te->perm == PERM_JAILHOUSE))
+		return -EACCES;
+
 #ifdef SDCARDFS_PLUGIN_PRIVACY_SPACE
 	sbi = SDCARDFS_SB(inode->i_sb);
+
 	if (unlikely(sbi->blocked_userid >= 0)) {
 		uid_t uid = from_kuid(&init_user_ns, current_fsuid()); /*lint !e666*/
 

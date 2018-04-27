@@ -109,12 +109,13 @@ int bastet_set_hb_reply(struct bst_sock_id *guide, uint8_t *data, uint32_t len)
 		err = -ENOENT;
 		goto out_put;
 	}
+	spin_lock_bh(&bsk->hbm.hbm_lock);
 	if (bsk->hbm.reply_content != NULL) {
-		if (memcmp(bsk->hbm.reply_content, data,
-			bsk->hbm.reply_len) == 0) {
+		if ((len == bsk->hbm.reply_len) && (memcmp(bsk->hbm.reply_content, data,
+			bsk->hbm.reply_len) == 0)) {
 			BASTET_LOGI(
-				"heartbeat reply content is exist,sk: %p",
-				sk);
+				"heartbeat reply content is exist,sk: %p",sk);
+			spin_unlock_bh(&bsk->hbm.hbm_lock);
 			goto out_put;
 		} else {
 			/* heartbeat reply content is different,*/
@@ -130,6 +131,7 @@ int bastet_set_hb_reply(struct bst_sock_id *guide, uint8_t *data, uint32_t len)
 
 	bsk->hbm.reply_len = len;
 	bsk->hbm.reply_content = data;
+	spin_unlock_bh(&bsk->hbm.hbm_lock);
 	BASTET_LOGI("add heartbeat reply content, sk: %p", sk);
 out_put:
 	sock_put(sk);

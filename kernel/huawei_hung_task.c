@@ -61,7 +61,7 @@
 #define ONE_MINUTE              (60/HEARTBEAT_TIME)
 #define ONE_AND_HALF_MINUTE     (90/HEARTBEAT_TIME)
 #define TWO_MINUTES         (120/HEARTBEAT_TIME)
-#define THREE_MINUTE		(180/HEARTBEAT_TIME)
+#define THREE_MINUTES		(180/HEARTBEAT_TIME)
 #define TWENTY_SECONDS		(21/HEARTBEAT_TIME)
 #define THIRTY_SECONDS		(30/HEARTBEAT_TIME)
 #define HUNG_ONE_HOUR		(3600/HEARTBEAT_TIME)
@@ -71,7 +71,7 @@
 #define HUNGTASK_DUMP_IN_PANIC_LOOSE	3
 #define HUNGTASK_DUMP_IN_PANIC_STRICT	2
 #define MAX_DUMP_TIMES		10
-#define REFRESH_INTERVAL	THREE_MINUTE
+#define REFRESH_INTERVAL	THREE_MINUTES
 
 #define FLAG_NONE               0
 #define FLAG_DUMP_WHITE         1
@@ -264,7 +264,6 @@ enum hash_turn {
 static struct task_item *find_task(pid_t pid, struct rb_root *root);
 static bool rcu_lock_break(struct task_struct *g, struct task_struct *t);
 extern void sysrq_sched_debug_show(void);
-
 #ifdef CONFIG_HISILICON_PLATFORM
 extern int freezer_info_show_messages(void);
 #else
@@ -442,7 +441,7 @@ static void refresh_zygote_pids(void)
 		}
 		if (!strncmp(t->comm, "main", TASK_COMM_LEN) &&
 			systemserver_pid) {
-			if (zygote64_pid && t->tgid != zygote64_pid) {
+			if (zygote64_pid && !zygote_pid && t->tgid != zygote64_pid) {
 				zygote_pid = t->tgid;
 				pr_err("hungtask: zygote pid-%d.\n", zygote_pid);
 			}
@@ -450,6 +449,7 @@ static void refresh_zygote_pids(void)
 			systemserver_pid = t->tgid;
 			if (t->pid == t->tgid) {
 				zygote64_pid = t->real_parent->tgid;
+				zygote_pid = 0;
 				pr_err("hungtask: zygote64 pid-%d, system_server pid-%d.\n", zygote64_pid, systemserver_pid);
 			}
 		} else if (!strncmp(t->comm, "watchdog", TASK_COMM_LEN)) {
@@ -552,6 +552,7 @@ void show_state_filter_ext(long state_filter)
 {
 	struct task_struct *g, *p;
 	struct task_item *taskitem;
+	int    exist_frozen = 0;
 
 #if BITS_PER_LONG == 32
 	printk(KERN_INFO "  task                PC stack   pid father\n");
@@ -570,6 +571,7 @@ void show_state_filter_ext(long state_filter)
 		    && (ignorelist_hash_locate(p->pid, HASH_FIND, ignorelist) == HASH_ERROR)) {
 			taskitem = find_task(p->pid, &list_tasks);
 			if (unlikely(p->flags & PF_FROZEN)) {
+				exist_frozen++;
 				if (taskitem) {
 					pr_err("hungtask:name=%s,PID=%d,tgid=%d FROZEN for %ds,"
 						"type=%d,SP=0x%08lx,la:%llu/lq:%llu.\n",
@@ -613,6 +615,9 @@ void show_state_filter_ext(long state_filter)
 	 */
 	if (!state_filter)
 		debug_show_all_locks();
+	if (exist_frozen)
+		freezer_info_show_messages();
+	exist_frozen = 0;
 }
 static void jank_print_task_wchan(struct task_struct *task)
 {

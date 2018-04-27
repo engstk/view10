@@ -11,6 +11,8 @@
  */
 
 #include "./include/hw_rscan_scanner.h"
+#include "./include/hw_rscan_utils.h"
+#include "./include/hw_rscan_whitelist.h"
 
 #define VAR_NOT_USED(variable)  do{(void)(variable);}while(0);
 #define KCODE_OFFSET 0
@@ -22,6 +24,9 @@ static DEFINE_MUTEX(scanner_lock);	/* lint -save -e64 -e785 -e708 -e570 */
 static DEFINE_MUTEX(whitelist_lock);	/* lint -save -e64 -e785 -e708 -e570 */
 static const char *TAG = "hw_rscan_scanner";
 static const char *DEFAULT_PROC = "/init";
+static int rs_load_whitelist = RSCAN_UNINIT;
+static int rs_whitelist_ready = RSCAN_UNINIT;
+static char *G_WHITELIST_PROC = RPROC_WHITE_LIST_STR;
 
 struct rscan_skip_flags g_rscan_skip_flag = {
 	.skip_kcode = NOT_SKIP,
@@ -32,13 +37,38 @@ struct rscan_skip_flags g_rscan_skip_flag = {
 };
 
 static struct rscan_result_dynamic g_rscan_clean_scan_result;
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+static int r_p_flag = 0;
+static int test_count = 0;
+static struct rscan_result_dynamic rscan_orig_result;
+struct fault_private {
+	size_t len;
+	char buf[500];
+};
+extern int is_rs_eng_enable(void);
+#endif
 
 static int rscan_dynamic_raw_unlock(uint op_mask,
 					struct rscan_result_dynamic *result)
 {
 	int ret = 0;
 	int error_code = 0;
-
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+	if(r_p_flag == 1) {
+	if(g_rscan_skip_flag.skip_kcode == SKIP) {
+		RSLogDebug(TAG, "skip kcode scan.");
+		}
+	if(g_rscan_skip_flag.skip_syscall == SKIP) {
+		RSLogDebug(TAG, "skip syscall scan.");
+		}
+	if(g_rscan_skip_flag.skip_se_hooks == SKIP) {
+		RSLogDebug(TAG, "skip se hooks scan.");
+		}
+	if(g_rscan_skip_flag.skip_se_status == SKIP) {
+		RSLogDebug(TAG, "skip se status scan.");
+		}
+	}
+#endif
 	if (op_mask & D_RSOPID_KCODE) {
 		ret = kcode_scan(result->kcode);
 		if (ret != 0) {
@@ -237,49 +267,25 @@ int rscan_get_status(struct rscan_status *status)
 
 int load_rproc_whitelist(char *whitelist, size_t len)
 {
-	struct file *filp;
-	mm_segment_t oldfs;
-	ssize_t size = 0;
-	loff_t pos;
+        if (NULL == whitelist) {
+                RSLogError(TAG, "input parameter is invalid");
+                return -EINVAL;
+        }
+        size_t min_len = strlen(G_WHITELIST_PROC);
+        if (min_len >= len)
+        {
+                RSLogWarning(TAG, "The G_WHITELIST_PROC lenth is too long");
+                return -1;
+        }
+        else if (min_len <= 0)
+        {
+                RSLogWarning(TAG, "G_WHITELIST_PROC is null");
+                return -1;
+        }
 
-	if (NULL == whitelist) {
-		RSLogError(TAG, "input parameter is invalid");
-		return -EINVAL;
-	}
-
-	mutex_lock(&whitelist_lock);
-	oldfs = get_fs();
-	set_fs(get_ds());  /* lint -save -e501 */
-	filp = filp_open(FILE_RPROC_WHITE_LIST, O_RDONLY, 0);
-	set_fs(oldfs);
-	if (IS_ERR(filp)) {
-		RSLogError(TAG, "rootscan: opening %s failed.",
-					FILE_RPROC_WHITE_LIST);
-		mutex_unlock(&whitelist_lock);
-		return -1;
-	}
-
-	oldfs = get_fs();
-	set_fs(get_ds());  /* lint -save -e501 */
-	pos = 0;
-	size = vfs_read(filp, whitelist, len, &pos);
-	set_fs(oldfs);
-
-	filp_close(filp, NULL);
-
-	if (size <= 0 || size >= len) {
-		RSLogError(TAG, "rootscan: reading %s failed. size is %d",
-					FILE_RPROC_WHITE_LIST, (int)size);
-		mutex_unlock(&whitelist_lock);
-		return -1;
-	}
-
-	RSLogDebug(TAG, "rootscan: reading %zd bytes from %s",
-				size, FILE_RPROC_WHITE_LIST);
-	whitelist[size] = '\0';
-	mutex_unlock(&whitelist_lock);
-
-	return 0;
+        strncpy(whitelist, G_WHITELIST_PROC, min_len);
+        whitelist[min_len]='\0';
+        return 0;
 }
 
 int rscan_init_data(void)
@@ -291,16 +297,6 @@ int rscan_init_data(void)
 					sizeof(struct rscan_result_dynamic));
 
 	g_rscan_clean_scan_result.seenforcing = 1;
-
-	ret = load_rproc_whitelist(g_rscan_clean_scan_result.rprocs,
-				sizeof(g_rscan_clean_scan_result.rprocs));
-	if (ret != 0
-		|| !init_rprocs_whitelist(g_rscan_clean_scan_result.rprocs)) {
-		RSLogError(TAG, "load root whitelist failed, rproc will skip");
-		strncpy(g_rscan_clean_scan_result.rprocs,
-				DEFAULT_PROC, strlen(DEFAULT_PROC));
-		g_rscan_skip_flag.skip_rprocs = SKIP;
-	}
 
 	ret = rscan_dynamic_raw(D_RSOPID_KCODE
 					| D_RSOPID_SYS_CALL
@@ -334,12 +330,27 @@ int rscan_trigger(void)
 	int dynamic_ops = 0;
 	struct rscan_result_dynamic *scan_result_buf = NULL;
 
-#ifndef RS_DEBUG
-	if (RO_NORMAL != get_ro_secure()) {
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+	if (RO_NORMAL != get_ro_secure() && RSCAN_INIT != is_rs_eng_enable()) {
 		RSLogTrace(TAG, "in engneering mode, root scan stopped");
 		return RSCAN_ERR_SECURE_MODE;
 	}
 #endif
+
+	if ( RSCAN_UNINIT == rs_load_whitelist) {
+		/* this moment rootscan.conf is ready */
+		rs_whitelist_ready = RSCAN_INIT;
+		result = load_rproc_whitelist(g_rscan_clean_scan_result.rprocs,
+					sizeof(g_rscan_clean_scan_result.rprocs));
+		if (result != 0
+			|| !init_rprocs_whitelist(g_rscan_clean_scan_result.rprocs)) {
+			RSLogError(TAG, "load root whitelist failed, rproc will skip");
+			strncpy(g_rscan_clean_scan_result.rprocs,
+					DEFAULT_PROC, strlen(DEFAULT_PROC));
+			g_rscan_skip_flag.skip_rprocs = SKIP;
+		}
+		rs_load_whitelist = RSCAN_INIT;
+	}
 
 	mutex_lock(&scanner_lock);
 	scan_result_buf = vmalloc(sizeof(struct rscan_result_dynamic));
@@ -401,6 +412,9 @@ static int __root_scan_pause(unsigned int op_mask, void *reserved)
 	g_rscan_skip_flag.skip_se_status = SKIP
 		& ((op_mask & D_RSOPID_SE_STATUS) >> SESTATUS_OFFSET);
 	RSLogDebug(TAG, "set scan pause, pause mask %d", op_mask);
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+	r_p_flag = 1;
+#endif
 	return 0;
 }
 
@@ -409,7 +423,9 @@ static int __root_scan_resume(unsigned int op_mask, void *reserved)
 	VAR_NOT_USED(reserved);
 
 	unsigned int resume_mask = 0;
-
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+	r_p_flag = 0;
+#endif
 	if ((op_mask & D_RSOPID_KCODE)
 		&& SKIP == g_rscan_skip_flag.skip_kcode)
 			resume_mask |= D_RSOPID_KCODE;
@@ -436,8 +452,8 @@ int root_scan_pause(unsigned int op_mask, void *reserved)
 	int dynamic_ops = 0;
 	struct rscan_result_dynamic *scan_result_buf = NULL;
 
-#ifndef RS_DEBUG
-	if (RO_NORMAL != get_ro_secure()) {
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+	if (RO_NORMAL != get_ro_secure() && RSCAN_INIT != is_rs_eng_enable()) {
 		RSLogTrace(TAG, "in engneering mode, root scan stopped");
 		return RSCAN_ERR_SECURE_MODE;
 	}
@@ -484,8 +500,8 @@ int root_scan_resume(unsigned int op_mask, void *reserved)
 
 	int result = 0;
 
-#ifndef RS_DEBUG
-	if (RO_NORMAL != get_ro_secure()) {
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+	if (RO_NORMAL != get_ro_secure() && RSCAN_INIT != is_rs_eng_enable()) {
 		RSLogTrace(TAG, "in engneering mode, root scan stopped");
 		return RSCAN_ERR_SECURE_MODE;
 	}
@@ -503,12 +519,618 @@ int root_scan_resume(unsigned int op_mask, void *reserved)
 	return result;
 }
 
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+static int kcode_open (struct inode *inode, struct file *file)
+{
+	struct fault_private *priv;
+	WARN_ON(file->private_data);
+	file->private_data = priv = vmalloc(sizeof(struct fault_private));
+	if (!priv) return -ENOMEM;
+	memset(priv, 0, sizeof(struct fault_private));
+	priv->len = strlen("kernel code scan testing\n");
+	strncpy(priv->buf, "kernel code scan testing\n", priv->len);
+	return 0;
+}
+
+static ssize_t kcode_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    memset(g_rscan_clean_scan_result.kcode, 0, sizeof(g_rscan_clean_scan_result.kcode));
+    //mem_text_write_kernel_word(fp, 0xdeadbeef);
+    RSLogDebug(TAG, "rootscan: dead_code injected\n");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+
+    return tocopy;
+}
+
+static int kcode_release (struct inode *inode, struct file *file)
+{
+
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "xxx. kcode_release succ!");
+    return 0;
+}
+
+static int rs_pause_test_open(struct inode *inode, struct file *file)
+{
+    return 0;
+}
+
+static ssize_t rs_pause_test_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+	size_t tocopy = 0;
+	int test = 0;
+	int pause_result = root_scan_pause(D_RSOPID_KCODE|D_RSOPID_SYS_CALL|D_RSOPID_SE_HOOKS|D_RSOPID_SE_STATUS, &test);
+	test_count++;
+	RSLogDebug(TAG, "root scan test, rs_pause_test, count%d, result:%d", test_count, pause_result);
+
+	return tocopy;
+}
+
+static int rs_pause_test_release (struct inode *inode, struct file *file)
+{
+	vfree(file->private_data);
+	file->private_data = NULL;
+	RSLogDebug(TAG, "xxx. pause release succ!");
+	return 0;
+}
+
+static int rs_resume_test_open(struct inode *inode, struct file *file)
+{
+    return 0;
+}
+
+static ssize_t rs_resume_test_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+	size_t tocopy = 0;
+	int test = 0;
+	int resume_result = root_scan_resume(D_RSOPID_KCODE|D_RSOPID_SYS_CALL|D_RSOPID_SE_HOOKS|D_RSOPID_SE_STATUS, &test);
+	test_count++;
+	RSLogDebug(TAG, "root scan test, rs_resume_test, count%d, result:%d", test_count, resume_result);
+
+	return tocopy;
+}
+
+static int rs_resume_test_release (struct inode *inode, struct file *file)
+{
+	vfree(file->private_data);
+	file->private_data = NULL;
+	RSLogDebug(TAG, "xxx. resume release succ!");
+	return 0;
+}
+
+/*revert kcode test items*/
+static int rev_kcode_open (struct inode *inode, struct file *file)
+{
+    struct fault_private *priv;
+
+    WARN_ON(file->private_data);
+    file->private_data = priv = vmalloc(sizeof(struct fault_private));
+    if (!priv) return -ENOMEM;
+    memset(priv, 0, sizeof(struct fault_private));
+    priv->len = strlen("revert kernel code scan testing\n");
+    strncpy(priv->buf, "revert kernel code scan testing\n", priv->len);
+
+    return 0;
+}
+
+static ssize_t rev_kcode_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    memcpy(g_rscan_clean_scan_result.kcode, rscan_orig_result.kcode, sizeof(rscan_orig_result.kcode));
+    //mem_text_write_kernel_word(fp, 0xdeadbeef);
+    RSLogDebug(TAG, "revert rootscan: dead_code reverted\n");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+	return tocopy;
+}
+
+static int rev_kcode_release (struct inode *inode, struct file *file)
+{
+
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "3. rev_sehooks_release succ!");
+    return 0;
+}
+
+static int se_enforcing_open(struct inode *inode, struct file *file)
+{
+    struct fault_private *priv;
+
+    WARN_ON(file->private_data);
+    file->private_data = priv = vmalloc(sizeof(struct fault_private));
+    if (!priv) return -ENOMEM;
+    memset(priv, 0, sizeof(struct fault_private));
+    priv->len = strlen("se_enforcing scan testing\n");
+    strncpy(priv->buf, "se_enforcing scan testing\n", priv->len);
+
+    return 0;
+}
+
+static ssize_t se_enforcing_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    g_rscan_clean_scan_result.seenforcing = 0;
+    RSLogDebug(TAG, "root scan test, se_enforcing broken");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+
+    return tocopy;
+}
+
+static int se_enforcing_release (struct inode *inode, struct file *file)
+{
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "8. se enforcing release succ!");
+    return 0;
+}
+
+static int syscall_open (struct inode *inode, struct file *file)
+{
+    struct fault_private *priv;
+
+    WARN_ON(file->private_data);
+    file->private_data = priv = vmalloc(sizeof(struct fault_private));
+    if (!priv) return -ENOMEM;
+    memset(priv, 0, sizeof(struct fault_private));
+    priv->len = strlen("system call scan testing\n");
+    strncpy(priv->buf, "system call scan testing\n", priv->len);
+
+    return 0;
+}
+static ssize_t syscall_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    //unsigned long *table = (unsigned long *)sys_call_table;
+    //table[7] = (void *)0xdeadbeef; // 7 is unused
+    //mem_text_write_kernel_word(&table[7], 0xdeadbeef);
+
+    memset(g_rscan_clean_scan_result.syscalls, 0, sizeof(g_rscan_clean_scan_result.syscalls));
+    RSLogDebug(TAG, "rootscan: syscall injected\n");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+
+
+    return tocopy;
+}
+
+static int syscall_release (struct inode *inode, struct file *file)
+{
+    struct fault_private *priv = file->private_data;
+    if (priv == NULL)
+        return 0;
+
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "7. syscall_release succ!");
+    return 0;
+}
+
+/*set selinux hooks to all 0, for test*/
+static int sehooks_open (struct inode *inode, struct file *file)
+{
+    struct fault_private *priv;
+
+    WARN_ON(file->private_data);
+    file->private_data = priv = vmalloc(sizeof(struct fault_private));
+    if (!priv) return -ENOMEM;
+    memset(priv, 0, sizeof(struct fault_private));
+    priv->len = strlen("se_hooks scan testing\n");
+    strncpy(priv->buf, "se_hooks scan testing\n", priv->len);
+
+    return 0;
+}
+
+static ssize_t sehooks_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    //security_ops->sem_semctl = NULL;
+    memset(g_rscan_clean_scan_result.sehooks, 0, sizeof(g_rscan_clean_scan_result.sehooks));
+    RSLogDebug(TAG, "rootscan: sec->sem_semctl injected");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+
+    return tocopy;
+}
+
+static int sehooks_release (struct inode *inode, struct file *file)
+{
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "5. sehooks_release succ!");
+    return 0;
+}
+
+/*revert syscall test items*/
+static int rev_syscall_open (struct inode *inode, struct file *file)
+{
+    struct fault_private *priv;
+
+    WARN_ON(file->private_data);
+    file->private_data = priv = vmalloc(sizeof(struct fault_private));
+    if (!priv) return -ENOMEM;
+    memset(priv, 0, sizeof(struct fault_private));
+    priv->len = strlen("revert system call scan testing\n");
+    strncpy(priv->buf, "revert system call scan testing\n", priv->len);
+
+    return 0;
+}
+static ssize_t rev_syscall_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    //unsigned long *table = (unsigned long *)sys_call_table;
+    //table[7] = (void *)0xdeadbeef; // 7 is unused
+    //mem_text_write_kernel_word(&table[7], 0xdeadbeef);
+
+    memcpy(g_rscan_clean_scan_result.syscalls, rscan_orig_result.syscalls, sizeof(rscan_orig_result.syscalls));
+    RSLogDebug(TAG, "revert rootscan: syscall reverted");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+
+
+    return tocopy;
+}
+
+static int rev_syscall_release (struct inode *inode, struct file *file)
+{
+    struct fault_private *priv = file->private_data;
+    if (priv == NULL)
+        return 0;
+
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "4. rev_syscall_release succ!");
+    return 0;
+}
+
+/*revert selinux test items make selinux hooks data original */
+static int rev_sehooks_open(struct inode *inode, struct file *file)
+{
+    struct fault_private *priv;
+
+    WARN_ON(file->private_data);
+    file->private_data = priv = vmalloc(sizeof(struct fault_private));
+    if (!priv) return -ENOMEM;
+    memset(priv, 0, sizeof(struct fault_private));
+    priv->len = strlen("revert se_hooks scan testing\n");
+    strncpy(priv->buf, "revert se_hooks scan testing\n", priv->len);
+
+    return 0;
+}
+
+static ssize_t rev_sehooks_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    memcpy(g_rscan_clean_scan_result.sehooks, rscan_orig_result.sehooks, sizeof(rscan_orig_result.sehooks));
+    RSLogDebug(TAG, "revert root scan test, sehooks reverted");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+
+    return tocopy;
+}
+
+static int rev_sehooks_release (struct inode *inode, struct file *file)
+{
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "2. rev_sehooks_release succ!");
+    return 0;
+}
+
+/*revert selinux status test items*/
+static int rev_se_enforcing_open(struct inode *inode, struct file *file)
+{
+    struct fault_private *priv;
+
+    WARN_ON(file->private_data);
+    file->private_data = priv = vmalloc(sizeof(struct fault_private));
+    if (!priv) return -ENOMEM;
+    memset(priv, 0, sizeof(struct fault_private));
+    priv->len = strlen("revert se_enforcing scan testing\n");
+    strncpy(priv->buf, "revert se_enforcing scan testing\n", priv->len);
+
+    return 0;
+}
+
+static ssize_t rev_se_enforcing_read(struct file *file, char __user *buf, size_t count, loff_t *offp)
+{
+    struct fault_private *priv = file->private_data;
+    size_t tocopy = 0;
+
+    g_rscan_clean_scan_result.seenforcing = 1;
+    RSLogDebug(TAG, "revert root scan test, se_enforcing reverted");
+
+    if (priv == NULL)
+    {
+        RSLogError(TAG, "priv is NULL");
+        return -ENOMEM;
+    }
+
+    if (*offp < priv->len)
+    {
+        tocopy = (priv->len - *offp) < count ? (priv->len - *offp) : count;
+
+        if (copy_to_user(buf, priv->buf + *offp, tocopy))
+        {
+            RSLogError(TAG, "copy_to_user failed");
+            return -ENOMEM;
+        }
+
+        *offp += tocopy;
+    }
+    else
+    {
+        tocopy = 0;
+    }
+
+    return tocopy;
+}
+
+static int rev_se_enforcing_release (struct inode *inode, struct file *file)
+{
+    vfree(file->private_data);
+    file->private_data = NULL;
+    RSLogDebug(TAG, "1. rev_se_enforcing_release succ!");
+    return 0;
+}
+
+static const struct file_operations rs_pause_test_fops = {
+    .owner = THIS_MODULE,
+    .open  = rs_pause_test_open,
+    .read  = rs_pause_test_read,
+    .release = rs_pause_test_release,
+};
+
+static const struct file_operations rs_resume_test_fops = {
+    .owner = THIS_MODULE,
+    .open  = rs_resume_test_open,
+    .read  = rs_resume_test_read,
+    .release = rs_resume_test_release,
+};
+
+static const struct file_operations kcode_fops = {
+	.owner = THIS_MODULE,
+	.open  = kcode_open,
+	.read  = kcode_read,
+	.release = kcode_release,
+};
+
+static const struct file_operations rev_kcode_fops = {
+    .owner = THIS_MODULE,
+    .open  = rev_kcode_open,
+    .read  = rev_kcode_read,
+    .release = rev_kcode_release,
+};
+
+static const struct file_operations se_enforcing_fops = {
+    .owner = THIS_MODULE,
+    .open  = se_enforcing_open,
+    .read  = se_enforcing_read,
+    .release = se_enforcing_release,
+};
+
+static const struct file_operations syscall_fops = {
+    .owner = THIS_MODULE,
+    .open  = syscall_open,
+    .read  = syscall_read,
+    .release = syscall_release,
+};
+
+static const struct file_operations sehooks_fops = {
+    .owner = THIS_MODULE,
+    .open  = sehooks_open,
+    .read  = sehooks_read,
+    .release = sehooks_release,
+};
+
+static const struct file_operations rev_syscall_fops = {
+    .owner = THIS_MODULE,
+    .open  = rev_syscall_open,
+    .read  = rev_syscall_read,
+    .release = rev_syscall_release,
+};
+
+static const struct file_operations rev_sehooks_fops = {
+    .owner = THIS_MODULE,
+    .open  = rev_sehooks_open,
+    .read  = rev_sehooks_read,
+    .release = rev_sehooks_release,
+};
+
+static const struct file_operations rev_se_enforcing_fops = {
+    .owner = THIS_MODULE,
+    .open  = rev_se_enforcing_open,
+    .read  = rev_se_enforcing_read,
+    .release = rev_se_enforcing_release,
+};
+#endif
+
 int rscan_dynamic_init(void)
 {
 	if (rscan_init_data()) {
 		RSLogError(TAG, "rootscan: rscan init data failed");
 		return RSCAN_ERR_SCANNER_INIT;
 	}
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
+	rscan_orig_result = g_rscan_clean_scan_result;
+	proc_create("rs_pause_test", 0777, NULL, &rs_pause_test_fops);
+	proc_create("rs_resume_test", 0777, NULL, &rs_resume_test_fops);
 
+	proc_create("rev_sehooks", 0777, NULL, &rev_sehooks_fops);
+	proc_create("rev_kcode", 0777, NULL, &rev_kcode_fops);
+	proc_create("rev_syscall", 0777, NULL, &rev_syscall_fops);
+	proc_create("rev_se_enforcing", 0777, NULL, &rev_se_enforcing_fops);
+
+
+	proc_create("rs_se_enforcing", 0777, NULL, &se_enforcing_fops);
+	proc_create("rs_sehooks", 0777, NULL, &sehooks_fops);
+	proc_create("rs_kcode", 0777, NULL, &kcode_fops);
+	proc_create("rs_syscall", 0777, NULL, &syscall_fops);
+#endif
 	return 0;
 }

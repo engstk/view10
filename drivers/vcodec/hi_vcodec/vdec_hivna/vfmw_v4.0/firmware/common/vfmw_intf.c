@@ -31,7 +31,7 @@
 #define IRQF_DISABLED               (0x00000020)
 #endif
 #define VDM_TIMEOUT               (400)//ms
-#define VDM_FPGA_TIMEOUT          (500000)//ms
+#define VDM_FPGA_TIMEOUT          (5000)//ms
 #define SCD_TIMEOUT               (400)//ms
 #define SCD_FPGA_TIMEOUT          (200000)//ms
 #define SCEN_IDENT                (0x828)
@@ -453,12 +453,13 @@ SINT32 VCTRL_VDMHal_Process(OMXVDH_REG_CFG_S *pVdmRegCfg, VDMHAL_BACKUP_S *pVdmR
 		return HI_FAILURE;
 	}
 
+	VFMW_OSAL_InitEvent(G_VDMHWDONEEVENT, 0);
 	ret = VDMHAL_HwDecProc(pVdmRegCfg, pVdhMemMap);
 
 	if (ret) {
 		dprint(PRN_FATAL, "%s config error\n", __func__);
 	} else {
-		ret = VFMW_OSAL_WaitEvent(G_VDMHWDONEEVENT, VDM_TIMEOUT);
+		ret = VFMW_OSAL_WaitEvent(G_VDMHWDONEEVENT, ((0 == gIsFPGA) ? VDM_TIMEOUT : VDM_FPGA_TIMEOUT));
 		if (ret == HI_SUCCESS) {
 			VDMHAL_GetRegState(pVdmRegState);
 		} else {
@@ -501,6 +502,7 @@ SINT32 VCTRL_SCDHal_Process(OMXSCD_REG_CFG_S *pScdRegCfg,SCD_STATE_REG_S *pScdSt
 
 	switch (cmd) {
 	case CONFIG_SCD_REG_CMD:
+		VFMW_OSAL_InitEvent(G_SCDHWDONEEVENT, 0);
 		ret = SCDDRV_WriteReg(&pScdRegCfg->SmCtrlReg, pScdMemMap);
 		if (ret != HI_SUCCESS) {
 			dprint(PRN_FATAL, "SCD busy\n");

@@ -65,6 +65,7 @@ int bfmr_get_device_full_path(char *dev_name, char *path_buf, unsigned int path_
     return 0;
 }
 
+
 /**
     @function: unsigned int bfmr_get_bootup_time(void)
     @brief: get bootup time.

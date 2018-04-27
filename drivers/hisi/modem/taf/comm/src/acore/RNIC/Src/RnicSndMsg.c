@@ -54,9 +54,7 @@
 #include "RnicCdsInterface.h"
 #include "RnicDebug.h"
 
-/* Added by m00217266 for 双VoWiFi项目, 2017-2-18, begin */
 #include "NetMgrCtrlVcom.h"
-/* Added by m00217266 for 双VoWiFi项目, 2017-2-18, end */
 
 
 #define    THIS_FILE_ID        PS_FILE_ID_RNIC_SND_MSG_C
@@ -69,21 +67,7 @@
 /*****************************************************************************
   3 函数实现
 *****************************************************************************/
-/*****************************************************************************
- 函 数 名  : RNIC_SendDialInfoMsg
- 功能描述  : RNIC发送给自己的拨号模式信息用于可维可测
- 输入参数  : RNIC_DEMAND_DIAL_INFO_MSG_ID_ENUM_UINT32                enMsgId
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年2月1日
-    作    者   : w00199382
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_SendDialInfoMsg(
     RNIC_MSG_ID_ENUM_UINT32            enMsgId
 )
@@ -122,22 +106,7 @@ VOS_UINT32 RNIC_SendDialInfoMsg(
 
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_SendCdsImsDataReq
- 功能描述  : 给CDS发送ID_RNIC_CDS_IMS_DATA_REQ
- 输入参数  : struct sk_buff                     *pstSkb
-             RNIC_SPEC_CTX_STRU                 *pstNetCntxt
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月26日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 RNIC_SendCdsImsDataReq(
     struct sk_buff                     *pstSkb,
     RNIC_SPEC_CTX_STRU                 *pstNetCntxt
@@ -165,6 +134,16 @@ VOS_UINT32 RNIC_SendCdsImsDataReq(
 
     /* 填充消息 */
     pstSndMsg->usModemId                = pstNetCntxt->enModemId;
+
+    if (RNIC_RMNET_R_IS_EMC_BEAR(pstNetCntxt->enRmNetId))
+    {
+        pstSndMsg->enDataType           = RNIC_CDS_WIFI_PDN_TYPE_EMC;
+    }
+    else
+    {
+        pstSndMsg->enDataType           = RNIC_CDS_WIFI_PDN_TYPE_NORMAL;
+    }
+
     pstSndMsg->usDataLen                = (VOS_UINT16)pstSkb->len;
 
     TAF_MEM_CPY_S(pstSndMsg->aucData, pstSkb->len, pstSkb->data, pstSkb->len);
@@ -180,21 +159,7 @@ VOS_UINT32 RNIC_SendCdsImsDataReq(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_TrigImsDataProcEvent
- 功能描述  :
- 输入参数  : RNIC_RMNET_ID_ENUM_UINT8 enRmNetId
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月26日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_TrigImsDataProcEvent(RNIC_RMNET_ID_ENUM_UINT8 enRmNetId)
 {
     RNIC_IMS_DATA_PROC_IND_STRU         *pstSndMsg = VOS_NULL_PTR;
@@ -226,22 +191,7 @@ VOS_VOID RNIC_TrigImsDataProcEvent(RNIC_RMNET_ID_ENUM_UINT8 enRmNetId)
     return;
 }
 
-/* Added by m00217266 for 双VoWiFi项目, 2017-2-18, begin */
-/*****************************************************************************
- 函 数 名  : RNIC_FillNetManagerMsgPdnCfgInfo
- 功能描述  : 填写rnic发给netmanager消息中的pdn cfg info
- 输入参数  : pstMsg:IMSA消息
- 输出参数  : 无
- 返 回 值  : VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年2月18日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_FillNetManagerMsgPdnCfgInfo(
     NM_PDN_INFO_CONFIG_STRU            *pDestPdnInfo,
     IMSA_RNIC_PDN_INFO_CONFIG_STRU     *pSrcPdnInfo
@@ -276,21 +226,43 @@ VOS_VOID RNIC_FillNetManagerMsgPdnCfgInfo(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_SndNetManagerPdpActInd
- 功能描述  : RNIC模块发送给NetManager模块的pdp act ind消息
- 输入参数  : pstMsg:IMSA消息
- 输出参数  : 无
- 返 回 值  : VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年2月18日
-    作    者   : m00217266
-    修改内容   : 新生成函数
+VOS_VOID RNIC_FillNetManagerMsgReservedPortCfgInfo(
+    NM_RESERVED_PORTS_CONFIG_STRU      *pDestReservedProtInfo,
+    IMSA_RNIC_IMS_PORT_INFO_STRU       *pSrcReservedProtInfo
+)
+{
+    /* 对stRnicNmMsg中参数进行赋值 */
+    pDestReservedProtInfo->ulImsPortRangeNum = pSrcReservedProtInfo->ulImsPortRangeNum;
+    pDestReservedProtInfo->enModemId         = pSrcReservedProtInfo->enModemId;
 
-*****************************************************************************/
+    TAF_MEM_CPY_S(pDestReservedProtInfo->astImsPortRange,
+                  (sizeof(NM_IMS_PORT_RANGE_STRU) * NM_IMS_PORT_RANGE_GROUP_MAX_NUM),
+                  pSrcReservedProtInfo->astImsPortRange,
+                  (sizeof(IMSA_RNIC_IMS_PORT_RANGE_STRU) * IMSA_RNIC_IMS_PORT_RANGE_GROUP_MAX_NUM));
+
+    return;
+}
+
+
+VOS_VOID RNIC_FillNetManagerMsgSipPortRangeInfo(
+    NM_SIP_PORTS_RANGE_STRU            *pDestSipProtRange,
+    IMSA_RNIC_SIP_PORT_RANGE_IND_STRU  *pSrcSipProtRange
+)
+{
+    /* 对stRnicNmMsg中参数进行赋值 */
+    pDestSipProtRange->usSipPortRangeNum = pSrcSipProtRange->usSipPortRangeNum;
+    pDestSipProtRange->enModemId         = pSrcSipProtRange->enModemId;
+
+    TAF_MEM_CPY_S(pDestSipProtRange->astSipPortRange,
+                  (sizeof(NM_IMS_PORT_RANGE_STRU) * NM_SIP_PORT_RANGE_GROUP_MAX_NUM),
+                  pSrcSipProtRange->astSipPortRange,
+                  (sizeof(IMSA_RNIC_IMS_PORT_RANGE_STRU) * IMSA_RNIC_SIP_PORT_RANGE_GROUP_MAX_NUM));
+
+    return;
+}
+
+
 VOS_VOID RNIC_SndNetManagerPdpActInd(
     MsgBlock                           *pstMsg
 )
@@ -312,21 +284,7 @@ VOS_VOID RNIC_SndNetManagerPdpActInd(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_SndNetManagerPdpDeactInd
- 功能描述  : RNIC模块发送给NetManager模块的pdp deact ind消息
- 输入参数  : pstMsg:IMSA消息
- 输出参数  : 无
- 返 回 值  : VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年2月18日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_SndNetManagerPdpDeactInd(
     MsgBlock                           *pstMsg
 )
@@ -350,21 +308,7 @@ VOS_VOID RNIC_SndNetManagerPdpDeactInd(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_SndNetManagerPdpModifyInd
- 功能描述  : RNIC模块发送给NetManager模块的pdp modify ind消息
- 输入参数  : pstMsg:IMSA消息
- 输出参数  : 无
- 返 回 值  : VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年2月18日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_SndNetManagerPdpModifyInd(
     MsgBlock                           *pstMsg
 )
@@ -386,21 +330,7 @@ VOS_VOID RNIC_SndNetManagerPdpModifyInd(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_SndNetManagerModemResetInd
- 功能描述  : RNIC模块发送给NetManager模块的modem reset ind消息
- 输入参数  : pstMsg:IMSA消息
- 输出参数  : 无
- 返 回 值  : VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年2月18日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID RNIC_SndNetManagerModemResetInd(VOS_VOID)
 {
     NM_MSG_STRU                    stRnicNmMsg;
@@ -415,5 +345,93 @@ VOS_VOID RNIC_SndNetManagerModemResetInd(VOS_VOID)
 
     return;
 }
-/* Added by m00217266 for 双VoWiFi项目, 2017-2-18, end */
+
+
+VOS_VOID RNIC_SndNetManagerReservedPortCfgInd(
+    MsgBlock                           *pstMsg
+)
+{
+    IMSA_RNIC_RESERVED_PORTS_CONFIG_IND_STRU         *pstRcvInd;
+    NM_MSG_STRU                                       stRnicNmMsg;
+
+    TAF_MEM_SET_S(&stRnicNmMsg, sizeof(NM_MSG_STRU), 0x00, sizeof(NM_MSG_STRU));
+
+    pstRcvInd               = (IMSA_RNIC_RESERVED_PORTS_CONFIG_IND_STRU *)pstMsg;
+    stRnicNmMsg.enMsgId     = ID_NM_RESERVED_PORTS_CONFIG_IND;
+    stRnicNmMsg.ulMsgLen    = sizeof(NM_RESERVED_PORTS_CONFIG_STRU);
+
+    RNIC_FillNetManagerMsgReservedPortCfgInfo(&(stRnicNmMsg.unMsgInfo.stPortsCfgInfo), &(pstRcvInd->stImsPortInfo));
+
+    /* 调用虚拟设备提供的发送接口发送消息 */
+    NM_CTRL_SendMsg(&stRnicNmMsg, sizeof(NM_MSG_STRU));
+
+    return;
+}
+
+
+VOS_VOID RNIC_SndNetManagerBindPidCfgInd(
+    unsigned int                        ulBindPid
+)
+{
+    NM_MSG_STRU                                       stRnicNmMsg;
+
+    TAF_MEM_SET_S(&stRnicNmMsg, sizeof(NM_MSG_STRU), 0x00, sizeof(NM_MSG_STRU));
+
+    stRnicNmMsg.enMsgId     = ID_NM_BIND_PID_CONFIG_IND;
+    stRnicNmMsg.ulMsgLen    = sizeof(unsigned int);
+
+    stRnicNmMsg.unMsgInfo.ulBindPid = ulBindPid;
+
+    /* 调用虚拟设备提供的发送接口发送消息 */
+    NM_CTRL_SendMsg(&stRnicNmMsg, sizeof(NM_MSG_STRU));
+
+    return;
+}
+
+
+VOS_VOID RNIC_SndNetManagerSocketExceptInd(
+    MsgBlock                           *pstMsg
+)
+{
+    IMSA_RNIC_SOCKET_EXCEPTION_IND_STRU               *pstRcvInd;
+    NM_MSG_STRU                                        stRnicNmMsg;
+
+    TAF_MEM_SET_S(&stRnicNmMsg, sizeof(NM_MSG_STRU), 0x00, sizeof(NM_MSG_STRU));
+
+    pstRcvInd               = (IMSA_RNIC_SOCKET_EXCEPTION_IND_STRU *)pstMsg;
+    stRnicNmMsg.enMsgId     = ID_NM_SOCKET_EXCEPTION_IND;
+    stRnicNmMsg.ulMsgLen    = sizeof(NM_SOCKET_EXCEPTION_IND_STRU);
+
+    /* 消息体赋值 */
+    stRnicNmMsg.unMsgInfo.stSocketExceptionInd.sSocketErrorNo = pstRcvInd->sSocketErrorNo;
+    RNIC_FillNetManagerMsgPdnCfgInfo(&(stRnicNmMsg.unMsgInfo.stSocketExceptionInd.stPdnInfo), &(pstRcvInd->stPdnInfo));
+
+    /* 调用虚拟设备提供的发送接口发送消息 */
+    NM_CTRL_SendMsg(&stRnicNmMsg, sizeof(NM_MSG_STRU));
+
+    return;
+}
+
+
+VOS_VOID RNIC_SndNetManagerSipPortRangeInd(
+    MsgBlock                           *pstMsg
+)
+{
+    IMSA_RNIC_SIP_PORT_RANGE_IND_STRU  *pstRcvInd;
+    NM_MSG_STRU                         stRnicNmMsg;
+
+    TAF_MEM_SET_S(&stRnicNmMsg, sizeof(NM_MSG_STRU), 0x00, sizeof(NM_MSG_STRU));
+
+    pstRcvInd               = (IMSA_RNIC_SIP_PORT_RANGE_IND_STRU *)pstMsg;
+    stRnicNmMsg.enMsgId     = ID_NM_SIP_PORT_RANGE_IND;
+    stRnicNmMsg.ulMsgLen    = sizeof(NM_SIP_PORTS_RANGE_STRU);
+
+    RNIC_FillNetManagerMsgSipPortRangeInfo(&(stRnicNmMsg.unMsgInfo.stSipPortRangeInd), pstRcvInd);
+
+    /* 调用虚拟设备提供的发送接口发送消息 */
+    NM_CTRL_SendMsg(&stRnicNmMsg, sizeof(NM_MSG_STRU));
+
+    return;
+}
+
 

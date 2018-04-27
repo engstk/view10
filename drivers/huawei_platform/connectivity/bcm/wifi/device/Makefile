@@ -11,3 +11,6 @@ ccflags-y += -DHW_WIFI_DRIVER_NORMALIZE
 ccflags-y += -DBCM_ALLOC_STATIC_10K
 ccflags-y += -DDHD_DEVWAKE_EARLY
 ccflags-y += -DHW_PCIE_NOCLOG
+ifeq ($(TARGET_VERSION_MODE),factory)
+  ccflags-y += -DHW_WIFI_FACTORY_MODE
+endif

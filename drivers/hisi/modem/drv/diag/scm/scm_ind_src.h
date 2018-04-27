@@ -116,6 +116,8 @@ typedef struct
     SOCP_DATA_TYPE_ENUM_UIN32       enDataType;     /* 数据来源类型 */
     SOCP_ENCSRC_CHNMODE_ENUM_UIN32  enCHMode;       /* 通道类型 */
     SOCP_CHAN_PRIORITY_ENUM_UIN32   enCHLevel;      /* 通道优先级 */
+	SOCP_TRANS_ID_EN_ENUM_UINT32    enTransIdEn;    /* SOCP Trans Id使能位 */
+	SOCP_PTR_IMG_EN_ENUM_UINT32     enPtrImgEn;     /* SOCP 指针镜像使能位 */
     u32                             ulSrcBufLen;    /* 编码源通道数据空间大小 */
     u32                             ulRDBufLen;     /* 编码源通道RD数据空间大小 */
     u8                              *pucSrcBuf;     /* 编码源通道数据空间内存指针 */

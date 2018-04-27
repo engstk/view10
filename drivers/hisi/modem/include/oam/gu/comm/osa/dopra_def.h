@@ -104,7 +104,7 @@ extern "C" {
 
 #define VOS_NUCLEUS                    12
 #define VOS_RTOSCK                     13
-
+#define VOS_TEN                        14
 
 /* To define VOS_CPU_TYPE */
 #define VOS_X86                        0
@@ -126,6 +126,7 @@ extern "C" {
 
 #define OSA_CPU_CCPU                   0
 #define OSA_CPU_ACPU                   1
+#define OSA_CPU_NRCPU                  2
 
 /* To define VOS_BYTE_ORDER (the CPU byte order) */
 #define VOS_LITTLE_ENDIAN              1234

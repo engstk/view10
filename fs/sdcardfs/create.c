@@ -1,79 +1,5 @@
 /* this file is as part of other files used for including source (eg. inode.c) */
 
-#ifdef SDCARDFS_CASE_INSENSITIVE
-struct __create_lookup_ci_private {
-	struct dir_context ctx;
-	const struct qstr *to_find;
-	bool found;
-};
-
-static int __sdcardfs_do_create_lookup_ci_match(
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 19, 0))
-	void *_ctx, const char *name, int namelen,
-#else
-	struct dir_context *_ctx, const char *name, int namelen,
-#endif
-	loff_t offset, u64 ino, unsigned int d_type)
-{
-	struct __create_lookup_ci_private *buf = container_of(_ctx,
-		struct __create_lookup_ci_private, ctx);
-
-	if (namelen == buf->to_find->len &&
-		!strncasecmp(name, buf->to_find->name, namelen)) {
-		buf->found = true;
-		return -1;		/* found */
-	}
-	return 0;
-}
-
-static inline int __iterate_dir_locked(struct file *file,
-	struct dir_context *ctx)
-{
-	struct inode *inode;
-	int res;
-	if (file->f_op->iterate == NULL)
-		return -ENOTDIR;
-
-	inode = file_inode(file);
-	if (IS_DEADDIR(inode))
-		return -ENOENT;
-
-	ctx->pos = file->f_pos;
-	res = file->f_op->iterate(file, ctx);
-	file->f_pos = ctx->pos;
-	return res;
-}
-
-static inline int __do_create_lookup_ci(
-	struct super_block *sb,
-	struct dentry *dir,
-	struct qstr *name)
-{
-	int err;
-	struct file *file;
-	struct __create_lookup_ci_private buffer = {
-			.ctx.actor = __sdcardfs_do_create_lookup_ci_match,
-			.to_find = name,
-			.found = false
-	};
-	/* no race, no need to get a reference */
-	struct path path = {.dentry = dir,
-		.mnt = SDCARDFS_SB(sb)->lower_mnt};
-	/* any risk dentry_open within inode_lock(dir)? */
-	file = dentry_open(&path,
-		O_RDONLY | O_DIRECTORY | O_NOATIME, current_cred());
-	if (IS_ERR(file))
-		return PTR_ERR(file);
-	err = __iterate_dir_locked(file, &buffer.ctx);
-	fput(file);
-	if (err)
-		return err;
-	if (buffer.found)
-		return -ESTALE;
-	return 0;
-}
-#endif
-
 /* context for sdcardfs_do_create_xxxx */
 typedef struct sdcardfs_do_create_struct {
 	struct dentry *parent, *real_dentry;
@@ -98,6 +24,12 @@ static int __sdcardfs_do_create_begin(
 		return -ESTALE;
 	}
 
+	/* some forbidden filenames should be checked before creating */
+	if (permission_denied_to_create(dir, dentry->d_name.name)) {
+		errln("permission denied to create %s", dentry->d_name.name);
+		return -EACCES;
+	}
+
 	this(parent) = dget_parent(dentry);
 	BUG_ON(d_inode(this(parent)) != dir);
 
@@ -115,10 +47,14 @@ static int __sdcardfs_do_create_begin(
 	}
 
 #ifdef SDCARDFS_CASE_INSENSITIVE
-	err = __do_create_lookup_ci(dentry->d_sb,
-		this(real_dir_dentry), &dentry->d_name);
-	if (err) {
-		goto revert_cred_err;
+	if (sbi->ci->may_create != NULL) {
+		struct path path = {.dentry = this(real_dir_dentry),
+			.mnt = sbi->lower_mnt};
+
+		err = sbi->ci->may_create(&path, &dentry->d_name);
+		if (err) {
+			goto revert_cred_err;
+		}
 	}
 #endif
 
@@ -130,7 +66,7 @@ static int __sdcardfs_do_create_begin(
 		goto revert_cred_err;
 	}
 
-	if (d_inode(this(real_dentry)) != NULL) {
+	if (d_is_positive(this(real_dentry))) {
 		err = -ESTALE;
 		goto dput_err;
 	}

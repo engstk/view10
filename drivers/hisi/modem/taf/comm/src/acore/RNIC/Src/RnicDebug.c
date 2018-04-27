@@ -50,7 +50,6 @@
   1 头文件包含
 *****************************************************************************/
 #include "RnicDebug.h"
-#include "RnicCtx.h"
 
 
 /*****************************************************************************
@@ -82,21 +81,7 @@ VOS_VOID RNIC_SetPrintUlDataFlg(VOS_UINT32 ulFlg)
     g_ulRnicPrintUlDataFlg = ulFlg;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ShowRnicPdpStats
- 功能描述  : 显示RNIC pdp的信息
- 输入参数  : ucRmNetId : 网卡ID
- 输出参数  : 无
- 返 回 值  :
 
- 调用函数  :
- 被调函数  :
-
- 修改历史  :
-    1.日    期   : 2012年11月23日
-      作    者   : f00179208
-      修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID RNIC_ShowRnicPdpStats(VOS_UINT8 ucRmNetId)
 {
     RNIC_PDP_CTX_STRU                  *pstPdpCtx;
@@ -123,24 +108,7 @@ VOS_VOID RNIC_ShowRnicPdpStats(VOS_UINT8 ucRmNetId)
     PS_PRINTF("RNIC %d IPV4V6 PDP IPV6ADDR                 %s\n", ucRmNetId, pstPdpCtx->stIpv4v6PdpInfo.aucIpv6Addr);
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ShowUlProcStats
- 功能描述  : 显示RNIC上行统计信息
- 输入参数  : ucRmNetId : 网卡ID
- 输出参数  : 无
- 返 回 值  :
 
- 调用函数  :
- 被调函数  :
-
- 修改历史  :
-    1.日    期   : 2012年01月12日
-      作    者   : S62952
-      修改内容   : 新生成函数
-    2.日    期   : 2012年11月23日
-      作    者   : f00179208
-      修改内容   : DSDA Phase I: RNIC多实例
-*****************************************************************************/
 VOS_VOID RNIC_ShowULProcStats(VOS_UINT8 ucRmNetId)
 {
     PS_PRINTF("NET TX RMNETID ERR NUM                                 %d\n", g_stRnicMntnStats.ulNetTxRmNetIdErrNum);
@@ -188,24 +156,7 @@ VOS_VOID RNIC_ShowULProcStats(VOS_UINT8 ucRmNetId)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ShowDLProcStats
- 功能描述  : 显示RNIC下行统计信息
- 输入参数  : ucRmNetId : 网卡ID
- 输出参数  : 无
- 返 回 值  :
 
- 调用函数  :
- 被调函数  :
-
- 修改历史  :
-    1.日    期   : 2012年01月12日
-      作    者   : S62952
-      修改内容   : 新生成函数
-    2.日    期   : 2012年11月23日
-      作    者   : f00179208
-      修改内容   : DSDA Phase I: RNIC多实例
-*****************************************************************************/
 VOS_VOID RNIC_ShowDLProcStats(VOS_UINT8 ucRmNetId)
 {
     if (ucRmNetId >= RNIC_NET_ID_MAX_NUM)
@@ -224,6 +175,8 @@ VOS_VOID RNIC_ShowDLProcStats(VOS_UINT8 ucRmNetId)
     PS_PRINTF("RNIC %d下行加MAC头失败的个数                       %d\n", ucRmNetId, g_astRnicStats[ucRmNetId].ulDlAddMacHdFailNum);
     PS_PRINTF("RNIC %d网卡私有数据错误丢掉下行数据包的个数        %d\n", ucRmNetId, g_astRnicStats[ucRmNetId].ulDlNetCardDiscardNum);
     PS_PRINTF("RNIC %d网卡ID错误丢掉下行数据包的个数              %d\n", ucRmNetId, g_astRnicStats[ucRmNetId].ulDlNetIdDiscardNum);
+    PS_PRINTF("RNIC %d网卡NAPI Netif收到下行数据包的个数          %d\n", ucRmNetId, RNIC_GET_NAPI_NETIF_RCV_PKT_NUM(ucRmNetId));
+    PS_PRINTF("RNIC %d网卡NAPI GRO收到下行数据包的个数            %d\n", ucRmNetId, RNIC_GET_NAPI_GRO_RCV_PKT_NUM(ucRmNetId));
     PS_PRINTF("RNIC %d网卡GRO入队失败主动丢弃下行数据包的个数     %d\n", ucRmNetId, g_astRnicStats[ucRmNetId].ulDlNapiPollQueDiscardPktNum);
     PS_PRINTF("RNIC 当前NAPI Poll队列长度                         %d\n", g_ulRnicNapiPollQueLen[ucRmNetId]);
     PS_PRINTF("RNIC %d收到错误数据包的个数非ipv4ipv6包            %d\n", ucRmNetId, g_astRnicStats[ucRmNetId].ulDlRecvErrPktNum);
@@ -232,21 +185,7 @@ VOS_VOID RNIC_ShowDLProcStats(VOS_UINT8 ucRmNetId)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ShowResetStats
- 功能描述  : 显示RNIC信号量初始化信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  :
 
- 调用函数  :
- 被调函数  :
-
- 修改历史  :
-    1.日    期   : 2013年04月15日
-      作    者   : f00179208
-      修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID RNIC_ShowResetStats(VOS_VOID)
 {
     PS_PRINTF("模块初始化标识                              %d\n", g_astRnicStats[0].ulSemInitFlg);
@@ -258,24 +197,41 @@ VOS_VOID RNIC_ShowResetStats(VOS_VOID)
     PS_PRINTF("复位成功的次数                              %d\n", g_astRnicStats[0].ulResetSucessNum);
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_Help
- 功能描述  : RNIC调试信息
- 输入参数  :
- 输出参数  : 无
- 返 回 值  :
 
- 调用函数  :
- 被调函数  :
+VOS_VOID RNIC_ShowImsPortsBindStats(VOS_VOID)
+{
+    PS_PRINTF("ulImsPortRangeNumErrNum:                    %d\n", g_stRnicMntnStats.ulImsPortRangeNumErrNum);
+    PS_PRINTF("ulBindPidWriteLenErrNum:                    %d\n", g_stRnicMntnStats.ulBindPidWriteLenErrNum);
+    PS_PRINTF("ulBindPidWriteCpyErrNum:                    %d\n", g_stRnicMntnStats.ulBindPidWriteCpyErrNum);
+    PS_PRINTF("ulBindPidWritePidErrNum:                    %d\n", g_stRnicMntnStats.ulBindPidWritePidErrNum);
+    PS_PRINTF("ulBindPidReadCpyErrNum :                    %d\n", g_stRnicMntnStats.ulBindPidReadCpyErrNum);
+    PS_PRINTF("ulImsSipPortRangeNumErrNum :                %d\n", g_stRnicMntnStats.ulImsSipPortRangeNumErrNum);
+    PS_PRINTF("\r\n");
+    return;
+}
 
- 修改历史  :
-    1.日    期   : 2012年01月12日
-      作    者   : S62952
-      修改内容   : 新生成函数
-    2.日    期   : 2012年11月23日
-      作    者   : f00179208
-      修改内容   : DSDA Phase I: RNIC多实例
-*****************************************************************************/
+
+VOS_VOID RNIC_ShowNapiInfo(VOS_UINT8 ucRmNetId)
+{
+    if (ucRmNetId >= RNIC_NET_ID_MAX_NUM)
+    {
+        PS_PRINTF("RNIC_ShowDLProcStats: NetId overtop, ucRmNetId = %d\n", ucRmNetId);
+        return;
+    }
+
+    PS_PRINTF("ucNetInterfaceMode     :(0:Net_rx/1:NAPI)       %d\n", g_stRnicCtx.stRnicNetIfCfg.ucNetInterfaceMode);
+    PS_PRINTF("enNapiWeightAdjMode    :(0:static/1:dynamic)    %d\n", g_stRnicCtx.stRnicNetIfCfg.enNapiWeightAdjMode);
+    PS_PRINTF("ucNapiPollWeight       :                        %d\n", g_stRnicCtx.stRnicNetIfCfg.ucNapiPollWeight);
+    PS_PRINTF("usNapiPollQueMaxLen    :                        %d\n", g_stRnicCtx.stRnicNetIfCfg.usNapiPollQueMaxLen);
+    PS_PRINTF("Rmnet%d.enNapiRcvIf     :(0:GRO/1:Netif)         %d\n", ucRmNetId,RNIC_GET_NAPI_RCV_IF(ucRmNetId));
+    PS_PRINTF("enTetherConnStat       :(0:disconn/1:conn)      %d\n", g_stRnicCtx.stUsbTetherInfo.enTetherConnStat);
+    PS_PRINTF("ucMatchRmnetNameFlg    :(0:mismatch/1:match)    %d\n", g_stRnicCtx.stUsbTetherInfo.ucMatchRmnetNameFlg);
+    PS_PRINTF("aucRmnetName           :                        %s\n", g_stRnicCtx.stUsbTetherInfo.aucRmnetName);
+    PS_PRINTF("\r\n");
+    return;
+}
+
+
 VOS_VOID RNIC_Help(VOS_VOID)
 {
 
@@ -284,24 +240,13 @@ VOS_VOID RNIC_Help(VOS_VOID)
     PS_PRINTF("RNIC_ShowDLProcStats  ucRmNetId                 显示指定RNIC网卡下行统计信息\n");
     PS_PRINTF("RNIC_ShowRnicPdpStats ucRmNetId                 显示指定RNIC网卡PDP激活信息\n");
     PS_PRINTF("RNIC_ShowResetStats                             显示指定RNIC复位状态信息\n");
+    PS_PRINTF("RNIC_ShowImsPortsBindStats                      显示Ims保留端口号绑定的统计信息\n");
+    PS_PRINTF("RNIC_ShowNapiInfo     ucRmNetId                 显示指定RNIC网卡的NAPI相关信息\n");
 
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : RNIC_ShowDataFromIpStack
- 功能描述  : 打印收到IP协议栈的数据
- 输入参数  : pstSkb   :SKBUF数据首地址
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
- 1.日    期   : 2013年04月25日
-   作    者   : 范晶
-   修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID RNIC_ShowDataFromIpStack(
     struct sk_buff                     *pstSkb
 )

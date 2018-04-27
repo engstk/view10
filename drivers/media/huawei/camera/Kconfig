@@ -6,19 +6,7 @@ source "drivers/media/huawei/camera/sensor/Kconfig"
 source "drivers/media/huawei/camera/laser/Kconfig"
 source "drivers/media/huawei/camera/fd/Kconfig"
 
-
-
-if HISI_CAMERA_HISTAR_ISPV160
-source "drivers/media/huawei/camera/platform/kirin970/Kconfig"
-endif
-
-if HISI_CAMERA_HISTAR_ISPV150
-source "drivers/media/huawei/camera/platform/hi3660/Kconfig"
-endif
-
-if HISI_CAMERA_HISTAR_ISPV110
-source "drivers/media/huawei/camera/platform/hi6250/Kconfig"
-endif
+source "drivers/media/huawei/camera/platform/Kconfig"
 
 menuconfig HISI_CAMERA_LASER
     bool "Huawei laser support"

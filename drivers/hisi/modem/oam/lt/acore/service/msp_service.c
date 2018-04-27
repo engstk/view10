@@ -79,8 +79,8 @@ VOS_UINT32 msp_ServiceProc(SOCP_DECODER_DST_ENUM_U32 enChanID,VOS_UINT8 *pucData
     VOS_UINT32 ulRet = ERR_MSP_INVALID_PARAMETER;
     VOS_UINT32 ulTotalLen = 0;
     VOS_UINT8* pData;
+    VOS_UINT32 ulSID = 0;
     MSP_SERVICE_HEAD_STRU *pHeader;
-    DIAG_FRAME_INFO_STRU *pDiagHeader;
 
     if(pucData == VOS_NULL)
     {
@@ -88,27 +88,24 @@ VOS_UINT32 msp_ServiceProc(SOCP_DECODER_DST_ENUM_U32 enChanID,VOS_UINT8 *pucData
         return ERR_MSP_INVALID_PARAMETER;
     }
 
-    pDiagHeader = (DIAG_FRAME_INFO_STRU *)pucData;
-
-    mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_1, 1, pDiagHeader->ulCmdId, 0);
+    mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_1, 1, 0, 0);
 
     /*入参检查*/
-
     ulTotalLen = ulSize + ulRBSize;
     if(!ulTotalLen)
     {
-        mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_ERR2, 1, pDiagHeader->ulCmdId, 0);
+        mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_ERR2, 1, 0, 0);
         return ERR_MSP_INVALID_PARAMETER;
     }
 
     pData = VOS_MemAlloc(MSP_PID_DIAG_APP_AGENT, DYNAMIC_MEM_PT, ulTotalLen);
     if(pData == VOS_NULL)
     {
-        mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_ERR3, 1, pDiagHeader->ulCmdId, 0);
+        mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_ERR3, 1, 0, 0);
         return ERR_MSP_MALLOC_FAILUE;
     }
 
-    VOS_MemCpy_s(pData, ulTotalLen, pucData,ulSize);
+    VOS_MemCpy_s(pData, ulTotalLen, pucData, ulSize);
 
     /*回卷指针可能为空*/
     if((VOS_NULL != pucRBData)&&(0 != ulRBSize))
@@ -116,16 +113,25 @@ VOS_UINT32 msp_ServiceProc(SOCP_DECODER_DST_ENUM_U32 enChanID,VOS_UINT8 *pucData
         VOS_MemCpy_s(pData+ulSize, ulTotalLen - ulSize, pucRBData,ulRBSize);
     }
 
-    mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_2, 1, pDiagHeader->ulCmdId, 0);
+    mdrv_diag_PTR(EN_DIAG_PTR_MSP_SERVICE_2, 1, 0, 0);
 
+    /*消息数据大小必须要大于service头长度*/
+    /*if( ulTotalLen < sizeof(MSP_SERVICE_HEAD_STRU))
+    {
+        VOS_MemFree(MSP_PID_DIAG_APP_AGENT,pData);
+        diag_error("msg len is smaller than service header, msglen:0x%x\n", ulTotalLen);
+        return ERR_MSP_INVALID_PARAMETER;
+    }*/
+
+    ulSID = SERVICE_HEAD_SID(pData);
     pHeader = (MSP_SERVICE_HEAD_STRU *)pData;
 
-    if(pHeader->sid8b < MSP_SID_BUTT)
+    if(ulSID < MSP_SID_BUTT)
     {
-        if(g_astMspService[pHeader->sid8b].fnService)
+        if(g_astMspService[ulSID].fnService)
         {
             /* coverity[tainted_data] */
-            ulRet = g_astMspService[pHeader->sid8b].fnService(pHeader);
+            ulRet = g_astMspService[ulSID].fnService(pHeader, ulTotalLen);
         }
     }
 

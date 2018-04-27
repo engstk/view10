@@ -512,6 +512,28 @@ static ssize_t hw_logger_write_iter(struct kiocb *iocb, struct iov_iter *from)
 	ssize_t ret = 0;
 	unsigned long nr_segs = from->nr_segs;
 	struct iovec *iov  = from->iov;
+	int	invaliddata = 0;
+
+	if (unlikely(nr_segs < 1)) {
+		invaliddata = EVecSeg;
+	} else if (unlikely(iov[0].iov_len != sizeof(int))) {
+		invaliddata = EVecLen;
+	} else {
+		int  code = 0;
+		if (copy_from_user(&code, iov[0].iov_base, sizeof(int))) {
+			invaliddata = EVecCopy;
+		}else if (unlikely(code != CHECK_CODE)) {
+			invaliddata = EVecCode;
+		} else {
+			nr_segs--;
+			iov++;
+		}
+	}
+
+	if (unlikely(invaliddata)) {
+		pr_err_ratelimited("%s: invalid log data, error code is %d\n", log->misc.name, invaliddata);
+		return -EINVAL;
+	}
 
 	now = current_kernel_time();
 
@@ -581,6 +603,28 @@ static ssize_t hw_logger_aio_write(struct kiocb *iocb, const struct iovec *iov,
 	struct logger_entry header;
 	struct timespec now;
 	ssize_t ret = 0;
+	int	invaliddata = 0;
+
+	if (unlikely(nr_segs < 1)) {
+		invaliddata = EVecSeg;
+	} else if (unlikely(iov[0].iov_len != sizeof(int))) {
+		invaliddata = EVecLen;
+	} else {
+		int  code = 0;
+		if (copy_from_user(&code, iov[0].iov_base, sizeof(int))) {
+			invaliddata = EVecCopy;
+		} else if (unlikely(code != CHECK_CODE)) {
+			invaliddata = EVecCode;
+		} else {
+			nr_segs--;
+			iov++;
+		}
+	}
+
+	if (unlikely(invaliddata)) {
+		pr_err_ratelimited("%s: invalid log data, error code is %d\n", log->misc.name, invaliddata);
+		return -EINVAL;
+	}
 
 	now = current_kernel_time();
 
@@ -1071,7 +1115,7 @@ static int __init logger_init(void)
 {
 	int ret;
 
-	ret = create_log(LOGGER_LOG_EXCEPTION, 16 * 1024);	/*must modified with EXCEPTION_LOG_BUF_LEN*/
+	ret = create_log(LOGGER_LOG_EXCEPTION, 128 * 1024);	/*must modified with EXCEPTION_LOG_BUF_LEN*/
 	if (unlikely(ret))
 		goto out;
 #if defined (CONFIG_HWLOG_KERNEL)

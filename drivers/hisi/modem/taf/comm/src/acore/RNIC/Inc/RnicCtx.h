@@ -145,15 +145,27 @@ extern "C" {
 #define RNIC_RMNET_IS_VALID(RmNetId) \
             ((RmNetId) < RNIC_RMNET_ID_BUTT)
 
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-24, begin */
-#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#if (MULTI_MODEM_NUMBER >= 2)
 #define RNIC_RMNET_R_IS_VALID(RmNetId) \
-            ((RNIC_RMNET_ID_R_IMS00 == RmNetId) || (RNIC_RMNET_ID_R_IMS10 == RmNetId))
+            ((RNIC_RMNET_ID_R_IMS00 == (RmNetId)) \
+          || (RNIC_RMNET_ID_R_IMS10 == (RmNetId)) \
+          || (RNIC_RMNET_ID_R_IMS01 == (RmNetId)) \
+          || (RNIC_RMNET_ID_R_IMS11 == (RmNetId)))
 #else
 #define RNIC_RMNET_R_IS_VALID(RmNetId) \
-            (RNIC_RMNET_ID_R_IMS00 == RmNetId)
+            ((RNIC_RMNET_ID_R_IMS00 == (RmNetId)) \
+          || (RNIC_RMNET_ID_R_IMS01 == (RmNetId)))
 #endif
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-24, end */
+
+#if (FEATURE_ON == FEATURE_MULTI_MODEM)
+#define RNIC_RMNET_R_IS_EMC_BEAR(RmNetId) \
+            ((RNIC_RMNET_ID_R_IMS01 == (RmNetId)) \
+          || (RNIC_RMNET_ID_R_IMS11 == (RmNetId)))
+#else
+#define RNIC_RMNET_R_IS_EMC_BEAR(RmNetId) \
+            (RNIC_RMNET_ID_R_IMS01 == (RmNetId))
+#endif
+
 
 #define RNIC_GET_IP_VERSION(ucFirstData) \
             (((ucFirstData) >> 4) & (RNIC_IP_HEAD_VER_OFFSET_MASK))
@@ -177,6 +189,9 @@ extern "C" {
 /* 获取IPV4类型PDP激活的RABID */
 #define RNIC_GET_SPEC_NET_IPV4_REG_STATE(index)     (RNIC_GET_SPEC_NET_PDP_CTX(index)->stIpv4PdpInfo.enRegStatus)
 
+/* 获取IPV6类型网卡注册状态 */
+#define RNIC_GET_SPEC_NET_IPV6_REG_STATE(index)     (RNIC_GET_SPEC_NET_PDP_CTX(index)->stIpv6PdpInfo.enRegStatus)
+
 /* 获取当前的拨号模式 */
 #define RNIC_GET_DIAL_MODE()                        (g_stRnicCtx.stDialMode.enDialMode)
 
@@ -193,6 +208,9 @@ extern "C" {
 
 /* 获取网卡私有数据地址 */
 #define RNIC_GET_SPEC_NET_PRIV_PTR(index)           (g_stRnicCtx.astSpecCtx[index].pstPriv)
+
+/* 获取网卡私有数据地址 */
+#define RNIC_GET_SPEC_NET_DEV_NAME(index)           (g_stRnicCtx.astSpecCtx[index].pstPriv->pstDev->name)
 
 /* 获取网卡ID对应的ModemId */
 #define RNIC_GET_MODEM_ID_BY_NET_ID(index)          (g_astRnicManageTbl[index].enModemId)
@@ -237,29 +255,34 @@ extern "C" {
 
 /* 获取下行NAPI接口收到的报文数 */
 #define RNIC_GET_NAPI_RECV_PKT_NUM(index)                  (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiRecvPktNum)
+/* 获取下行NAPI netif_receive_skb接口收到的报文数 */
+#define RNIC_GET_NAPI_NETIF_RCV_PKT_NUM(index)             (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiNetifRcvPktNum)
+/* 获取下行NAPI napi_gro_receive接口收到的报文数 */
+#define RNIC_GET_NAPI_GRO_RCV_PKT_NUM(index)               (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiGroRcvPktNum)
 /* 获取网卡NAPI Poll队列主动丢弃的报文数 */
 #define RNIC_GET_NAPI_POLL_QUE_DISCARD_PKT_NUM(index)      (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiPollQueDiscardPktNum)
 /* 累加下行NAPI接口收到的报文数 */
 #define RNIC_ADD_NAPI_RECV_PKT_NUM(pktNum, index)          (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiRecvPktNum += (pktNum))
+/* 累加下行NAPI netif_receive_skb接口收到的报文数 */
+#define RNIC_ADD_NAPI_NETIF_RCV_PKT_NUM(pktNum, index)     (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiNetifRcvPktNum += (pktNum))
+/* 累加下行NAPI napi_gro_receive接口收到的报文数 */
+#define RNIC_ADD_NAPI_GRO_RCV_PKT_NUM(pktNum, index)       (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiGroRcvPktNum += (pktNum))
 /* 累加下行NAPI Poll队列主动丢弃的报文数 */
 #define RNIC_ADD_NAPI_POLL_QUE_DISCARD_PKT_NUM(pktNum, index)     (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiPollQueDiscardPktNum += (pktNum))
 /* 下行NAPI接口收到的报文数清零 */
 #define RNIC_RESET_NAPI_RECV_PKT_NUM(index)                       (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiRecvPktNum = 0)
 /* 下行NAPI Poll队列主动丢弃的报文数清零 */
 #define RNIC_RESET_NAPI_POLL_QUE_DISCARD_PKT_NUM(index)           (g_stRnicCtx.astSpecCtx[index].stNapiStats.ulDlNapiPollQueDiscardPktNum = 0)
+/* 获取NAPI收包接口 */
+#define RNIC_GET_NAPI_RCV_IF(index)                               (g_stRnicCtx.astSpecCtx[index].enNapiRcvIf)
 #endif
+
 
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
 
-/*********************************************
- 枚举名   :RNIC_NETCARD_STATUS_TYPE_ENUM
- 枚举说明 :RNIC网卡的状态
- 1.日    期   : 2011年12月12日
-   作    者   : f00179208
-   修改内容   : 新建
-*********************************************/
+
 enum RNIC_NETCARD_STATUS_TYPE_ENUM
 {
     RNIC_NETCARD_STATUS_CLOSED,                                                 /* RNIC为关闭状态 */
@@ -268,13 +291,7 @@ enum RNIC_NETCARD_STATUS_TYPE_ENUM
 };
 typedef VOS_UINT8 RNIC_NETCARD_STATUS_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : RNIC_PDP_REG_STATUS_ENUM
- 枚举说明  : 标识该PDP上下文是否注册
- 1.日    期   : 2011年12月12日
-   作    者   : f00179208
-   修改内容   : 创建
-*****************************************************************************/
+
 enum RNIC_PDP_REG_STATUS_ENUM
 {
     RNIC_PDP_REG_STATUS_DEACTIVE,                                               /* 未注册上 */
@@ -283,13 +300,7 @@ enum RNIC_PDP_REG_STATUS_ENUM
 };
 typedef VOS_UINT32 RNIC_PDP_REG_STATUS_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : RNIC_FLOW_CTRL_STATUS_ENUM
- 枚举说明  : 流控状态枚举
-  1.日    期   : 2012年6月1日
-    作    者   : A00165503
-    修改内容   : 创建
-*****************************************************************************/
+
 enum RNIC_FLOW_CTRL_STATUS_ENUM
 {
     RNIC_FLOW_CTRL_STATUS_STOP          = 0x00,                                 /* 流控停止 */
@@ -298,14 +309,7 @@ enum RNIC_FLOW_CTRL_STATUS_ENUM
 };
 typedef VOS_UINT32 RNIC_FLOW_CTRL_STATUS_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : RNIC_IPF_MODE_ENUM
-结构说明  : IPF模式定义
 
-  1.日    期   : 2016年11月08日
-    作    者   : l00373346
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum RNIC_IPF_MODE_ENUM
 {
     RNIC_IPF_MODE_INT  = 0x00,                                                   /* 中断上下文 */
@@ -315,14 +319,7 @@ enum RNIC_IPF_MODE_ENUM
 typedef VOS_UINT8 RNIC_IPF_MODE_ENUM_UINT8;
 
 #if (FEATURE_ON == FEATURE_RNIC_NAPI_GRO)
-/*****************************************************************************
-枚举名    : RNIC_NET_IF_ENUM
-结构说明  : RNIC网卡到Linux网络协议栈的接口
 
-  1.日    期   : 2017年03月10日
-    作    者   : l00373346
-    修改内容   : 新增枚举
-*****************************************************************************/
 enum RNIC_NET_IF_ENUM
 {
     RNIC_NET_IF_NETRX  = 0x00,                                                   /* Net_rx */
@@ -330,7 +327,17 @@ enum RNIC_NET_IF_ENUM
     RNIC_NET_IF_BUTT
 };
 typedef VOS_UINT8 RNIC_NET_IF_ENUM_UINT8;
+
+
+enum RNIC_NAPI_RCV_IF_ENUM
+{
+    RNIC_NAPI_GRO_RCV_IF                = 0x00,                                 /* USB tethering未连接 */
+    RNIC_NAPI_NETIF_RCV_IF              = 0x01,                                 /* USB tethering已连接 */
+    RNIC_NAPI_RCV_BUTT
+};
+typedef VOS_UINT8 RNIC_NAPI_RCV_IF_ENUM_UINT8;
 #endif
+
 
 /*****************************************************************************
   4 全局变量声明
@@ -351,13 +358,7 @@ typedef VOS_UINT8 RNIC_NET_IF_ENUM_UINT8;
   7 STRUCT定义
 *****************************************************************************/
 
-/*****************************************************************************
- 结构名    : RNIC_ETH_HEADER_STRU
- 结构说明  : 以太网头结构
- 1.日    期   : 2012年2月03日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           aucEtherDhost[RNIC_MAC_ADDR_LEN];       /* destination ethernet address */
@@ -366,13 +367,7 @@ typedef struct
     VOS_UINT8                           aucReserved[2];
 }RNIC_ETH_HEADER_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_NETCARD_ELEMENT_TAB_STRU
- 结构说明  : RNIC模块每个网卡对应的信息
- 1.日    期   : 2012年12月07日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     const VOS_CHAR                     *pucRnicNetCardName;                     /* 网卡名称 */
@@ -383,16 +378,7 @@ typedef struct
     VOS_UINT8                           aucReserved[5];
 }RNIC_NETCARD_ELEMENT_TAB_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_NETCARD_DEV_INFO_STRU
- 结构说明  : RNIC虚拟网卡设备私有结构
- 1.日    期   : 2011年12月06日
-   作    者   : f00179208
-   修改内容   : 新建
- 2.日    期   : 2012年12月10日
-   作    者   : f00179208
-   修改内容   : DSDA Phase I: RNIC多实例
-*****************************************************************************/
+
 typedef struct
 {
     struct net_device                  *pstDev;                                 /* 用于记录Linux内核分配的网卡虚地址 */
@@ -405,13 +391,7 @@ typedef struct
 #endif
 }RNIC_NETCARD_DEV_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_FILTER_INFO_STRU
- 结构说明  : 发送过滤器的信息
- 1.日    期   : 2011年12月07日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          OP_EnableDestAddr      : 1;             /* 使能目的IP地址作为过滤条件 */
@@ -429,13 +409,7 @@ typedef struct
     VOS_UINT16                          usSrcPortHigh;                          /* 源端口号上限 */
 }RNIC_FILTER_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_FILTER_LST_ITEM_STRU
- 结构说明  : 发送过滤器列表
- 1.日    期   : 2011年12月07日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct RNIC_FTI
 {
     VOS_INT32                           ulFilterId;                             /* 发送过滤器的ID */
@@ -443,13 +417,7 @@ typedef struct RNIC_FTI
     struct RNIC_FTI                    *pNextItem;                              /* 指向下一个列表项 */
 }RNIC_FILTER_LST_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_IPV4_PDP_INFO_STRU
- 结构说明  : RNIC模块IPV4的PDP信息
- 1.日    期   : 2011年12月15日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     RNIC_PDP_REG_STATUS_ENUM_UINT32     enRegStatus;                            /* 标识该PDP上下文是否注册 */
@@ -459,13 +427,7 @@ typedef struct
     VOS_UINT32                          ulIpv4Addr;                             /* IP地址 */
 }RNIC_IPV4_PDP_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_IPV6_PDP_INFO_STRU
- 结构说明  : RNIC模块IPV6的PDP信息
- 1.日    期   : 2011年12月15日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     RNIC_PDP_REG_STATUS_ENUM_UINT32     enRegStatus;                            /* 标识该PDP上下文是否注册 */
@@ -478,13 +440,7 @@ typedef struct
     VOS_UINT8                           aucIpv6Addr[RNIC_MAX_IPV6_ADDR_LEN];    /* 从AT带来的IPV6地址长度，不包括":" */
 }RNIC_IPV6_PDP_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_IPV4V6_PDP_INFO_STRU
- 结构说明  : RNIC模块IPV4V6的PDP信息
- 1.日    期   : 2011年12月17日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     RNIC_PDP_REG_STATUS_ENUM_UINT32     enRegStatus;                            /* 标识该PDP上下文是否注册 */
@@ -498,13 +454,7 @@ typedef struct
     VOS_UINT8                           aucIpv6Addr[RNIC_MAX_IPV6_ADDR_LEN];    /* 从AT带来的IPV6地址长度，不包括":" */
 }RNIC_IPV4V6_PDP_INFO_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_PDP_CTX_STRU
- 结构说明  : RNIC模块PDP上下文信息
- 1.日    期   : 2011年12月12日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     RNIC_IPV4_PDP_INFO_STRU             stIpv4PdpInfo;                          /* IPV4的PDP信息 */
@@ -541,17 +491,13 @@ typedef struct
 *****************************************************************************/
 typedef struct
 {
-    VOS_UINT32                          ulDlNapiRecvPktNum;                    /* 统计周期内NAPI接口收到的报文数 */
+    VOS_UINT32                          ulDlNapiRecvPktNum;                     /* 统计周期内NAPI接口收到的报文数 */
+    VOS_UINT32                          ulDlNapiNetifRcvPktNum;                 /* NAPI netif_receive_skb接口收到的报文数 */
+    VOS_UINT32                          ulDlNapiGroRcvPktNum;                   /* NAPI napi_gro_receive接口收到的报文数 */
     VOS_UINT32                          ulDlNapiPollQueDiscardPktNum;           /* NAPI Poll Queue主动丢弃的报文数 */
 } RNIC_NAPI_STATS_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_NET_IF_CFG_STRU
- 结构说明  : RNIC下行数据到Linux网络协议栈的接口模式配置
- 1.日    期   : 2017年03月10日
-   作    者   : l00373346
-   修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                                     ucNetInterfaceMode;           /* RNIC网卡下行数据到Linux网络协议栈的接口模式, 0: Net_rx(默认)，1：NAPI接口 */
@@ -564,13 +510,16 @@ typedef struct
 
 } RNIC_NET_IF_CFG_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_CTX_STRU
- 结构说明  : RNIC模块每个网卡专有的上下文
- 1.日    期   : 2012年11月22日
-   作    者   : f00179208
-   修改内容   : 新建
-*****************************************************************************/
+
+typedef struct
+{
+    VOS_UINT8                           aucRmnetName[RNIC_RMNET_NAME_MAX_LEN];  /* Rmnet网卡名 */
+    AT_RNIC_USB_TETHER_CONN_ENUM_UINT8  enTetherConnStat;                       /* USB Tethering连接状态 */
+    VOS_UINT8                           ucMatchRmnetNameFlg;                    /* 是否匹配上rmnet网卡名的标识 */
+    VOS_UINT8                           aucRsv[2];
+} RNIC_USB_TETHER_INFO_STRU;
+
+
 typedef struct
 {
     RNIC_PDP_CTX_STRU                   stPdpCtx;                               /* RNIC的PDP上下文 */
@@ -588,19 +537,13 @@ typedef struct
 #if (FEATURE_ON == FEATURE_RNIC_NAPI_GRO)
     IMM_ZC_HEAD_STRU                    stPollBuffQue;                          /* Poll缓存队列 */
     RNIC_NAPI_STATS_STRU                stNapiStats;                            /* NAPI统计信息 */
+    RNIC_NAPI_RCV_IF_ENUM_UINT8         enNapiRcvIf;
+    VOS_UINT8                           aucRsv[7];
 #endif
+
 }RNIC_SPEC_CTX_STRU;
 
-/*****************************************************************************
- 结构名    : RNIC_CTX_STRU
- 结构说明  : RNIC模块运行上下文
- 1.日    期   : 2011年12月07日
-   作    者   : f00179208
-   修改内容   : 新建
- 2.日    期   : 2012年11月22日
-   作    者   : f00179208
-   修改内容   : DSDA Phase I: RNIC多实例
-*****************************************************************************/
+
 typedef struct
 {
     /****** RNIC每个网卡专有的上下文 ******/
@@ -619,6 +562,7 @@ typedef struct
 
     VOS_UINT8                           ucIpfMode;                              /* IPF处理ADS下行数据的模式, 0: 中断上下文(默认)，1：线程上下文 */
     VOS_UINT8                           aucRsv[7];
+    RNIC_USB_TETHER_INFO_STRU           stUsbTetherInfo;
 #if (FEATURE_ON == FEATURE_RNIC_NAPI_GRO)
     RNIC_NET_IF_CFG_STRU                stRnicNetIfCfg;
 #endif
@@ -709,7 +653,11 @@ VOS_VOID RNIC_InitRnicNetInterfaceCfg(
 VOS_VOID RNIC_CheckNetIfCfgValid(
     RNIC_CTX_STRU                      *pstRnicCtx
 );
+VOS_UINT32 RNIC_UpdateRmnetNapiRcvIfByName(VOS_INT32 ulRmNetId);
+VOS_VOID RNIC_UpdateIpv6RmnetNapiRcvIfDefault(VOS_INT32 ulRmNetId);
 #endif
+
+VOS_VOID RNIC_InitUsbTetherInfo(VOS_VOID);
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()

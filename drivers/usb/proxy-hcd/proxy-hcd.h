@@ -186,7 +186,7 @@ void phcd_mark_all_endpoint_dropped(struct proxy_hcd *phcd);
 
 int phcd_register_client(struct proxy_hcd_client *client);
 void phcd_unregister_client(struct proxy_hcd_client *client);
-void phcd_giveback_all_unlinked_urbs(struct proxy_hcd_client *client);
+void phcd_giveback_all_urbs(struct proxy_hcd_client *client);
 
 enum hibernation_policy {
 	HIFI_USB_HIBERNATION_ALLOW = 0,
@@ -194,5 +194,10 @@ enum hibernation_policy {
 	HIFI_USB_HIBERNATION_FORCE,
 };
 enum hibernation_policy phcd_get_hibernation_policy(struct proxy_hcd_client *client);
+
+/*
+ * usbaudio-monirot.c
+ */
+bool check_non_usbaudio_device(struct usb_device *udev, int configuration);
 
 #endif

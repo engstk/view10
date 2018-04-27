@@ -76,7 +76,7 @@
 #define TEST_ERROR_CHIP_INIT BIT(10)
 
 #define LOG_LEVEL_INFO 7
-
+#define LM36923_RW_REG_MAX 14
 #define LM36923_EMERG(msg, ...)    \
 	do { if (lm36923_msg_level > 0)  \
 		printk(KERN_EMERG "[lm36923]%s: "msg, __func__, ## __VA_ARGS__); } while (0)
@@ -201,6 +201,7 @@ struct lm36923_platform_data {
 };
 
 ssize_t lm36923_set_backlight_reg(uint32_t bl_level);
+ssize_t lm36923_set_backlight_init(uint32_t bl_level);
 
 #endif /* __LINUX_LM36923_H */
 

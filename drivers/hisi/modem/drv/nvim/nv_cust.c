@@ -3,6 +3,7 @@
 
 #include <linux/vmalloc.h>
 #include <linux/kernel.h>
+#include <securec.h>
 #include "bsp_nvim.h"
 #include "bsp_version.h"
 #include "nv_file.h"
@@ -21,7 +22,7 @@ u32 nv_cust_decompress(s8* dst_buf, u32 max, s8* src_buf, u32 len)
 {
 	s8 *next_in = src_buf + 10;
 	u32 avail_in = len - 10;
-    
+
     return((u32)zlib_inflate_blob(dst_buf, max, next_in, avail_in));
 }
 
@@ -29,7 +30,7 @@ u32 nv_cust_get_head_info(const s8 * file_name, nv_dload_head *dload_head)
 {
     u32 ret;
     FILE *fp;
-    
+
     /* check modem_nv.bin upgrade flag */
     fp = nv_file_open((s8*)file_name, (s8*)NV_FILE_READ);
     if(NULL == fp)
@@ -56,7 +57,7 @@ u32 nv_cust_get_tail_info(const s8 * file_name, nv_dload_tail *dload_tail)
     FILE *fp;
 
     nv_dload_head dload_head;
-    
+
     /* check modem_nv.bin upgrade flag */
     ret = nv_cust_get_head_info((s8*)file_name, &dload_head);
     if(ret)
@@ -69,7 +70,7 @@ u32 nv_cust_get_tail_info(const s8 * file_name, nv_dload_tail *dload_tail)
     {
         return NV_OK;
     }
-    
+
     /*second count file total len*/
     offset = sizeof(nv_dload_head);
     offset += ((dload_head.nv_bin.magic_num == NV_FILE_EXIST)?dload_head.nv_bin.len:0);
@@ -93,7 +94,7 @@ u32 nv_cust_get_tail_info(const s8 * file_name, nv_dload_tail *dload_tail)
     {
         nv_record("R_Tail_info: read %s file dload tail err!ret=0x%x\n", file_name, ret);
         return BSP_ERR_NV_READ_FILE_FAIL;
-    }    
+    }
 
     return NV_OK;
 }
@@ -105,7 +106,7 @@ u32 nv_cust_set_tail_info(const s8 * file_name, nv_dload_tail *dload_tail)
     FILE *fp;
 
     nv_dload_head dload_head;
-    
+
     /* check modem_nv.bin upgrade flag */
     ret = nv_cust_get_head_info((s8*)file_name, &dload_head);
     if(ret)
@@ -118,7 +119,7 @@ u32 nv_cust_set_tail_info(const s8 * file_name, nv_dload_tail *dload_tail)
     {
         return NV_OK;
     }
-    
+
     /*second count file total len*/
     offset = sizeof(nv_dload_head);
     offset += ((dload_head.nv_bin.magic_num == NV_FILE_EXIST)?dload_head.nv_bin.len:0);
@@ -142,7 +143,7 @@ u32 nv_cust_set_tail_info(const s8 * file_name, nv_dload_tail *dload_tail)
     {
         nv_record("W_Tail_info: write %s file dload tail err!ret=0x%x\n", file_name, ret);
         return BSP_ERR_NV_READ_FILE_FAIL;
-    }    
+    }
 
     return NV_OK;
 }
@@ -168,7 +169,7 @@ bool nv_cust_get_upgrade_flag(const s8 *file_name)
     }
 
     nv_printf("%s file already updated!flag=0x%x.\n", file_name, dload_tail.upgrade_flag);
-    
+
     return false;
 }
 
@@ -177,7 +178,7 @@ u32 nv_cust_set_upgrade_flag(const s8 *file_name, bool flag)
     u32 ret;
 
     nv_dload_tail dload_tail;
-    
+
     ret = nv_cust_get_tail_info(file_name, &dload_tail);
     if(ret)
     {
@@ -193,11 +194,11 @@ u32 nv_cust_set_upgrade_flag(const s8 *file_name, bool flag)
     {
         dload_tail.upgrade_flag = NV_FILE_EXIST;
     }
-    
+
     ret = nv_cust_set_tail_info(file_name, &dload_tail);
     if(ret)
     {
-       nv_record("write %s file tail info err!\n", file_name); 
+       nv_record("write %s file tail info err!\n", file_name);
        return NV_ERROR;
     }
 
@@ -211,7 +212,7 @@ bool nv_cust_file_valid(nv_cust_file_ctrl *file_ctrl)
 
 u32 nv_cust_init_global(void)
 {
-    nv_memset(&g_nv_bcust_ctrl, 0, sizeof(nv_customize_ctrl));
+    (void)memset_s(&g_nv_bcust_ctrl, sizeof(g_nv_bcust_ctrl), 0, sizeof(nv_customize_ctrl));
 
     g_nv_bcust_ctrl.src_buff = vmalloc((unsigned long)XNV_SEC_MAX);
     if(NULL == g_nv_bcust_ctrl.src_buff)
@@ -219,7 +220,7 @@ u32 nv_cust_init_global(void)
         nv_record("malloc src buf failed!\n");
         return BSP_ERR_NV_MALLOC_FAIL;
     }
-    
+
     g_nv_bcust_ctrl.dst_buff = vmalloc((unsigned long)XNV_SEC_MAX);
     if(NULL == g_nv_bcust_ctrl.dst_buff)
     {
@@ -307,7 +308,7 @@ u32 nv_cust_get_pinfo(FILE *fp, nv_cust_file_ctrl *file_ctrl)
     {
        return BSP_ERR_NV_MALLOC_FAIL;
     }
-    (void)nv_memset((u8 *)pinfo_ctrl->prdt_info, 0, (size_t)pinfo_ctrl->length);
+    (void)memset_s((u8 *)pinfo_ctrl->prdt_info, (size_t)pinfo_ctrl->length, 0, (size_t)pinfo_ctrl->length);
 
     nv_file_seek(fp, pinfo_ctrl->offset, SEEK_SET);
     ret = (u32)nv_file_read((u8*)pinfo_ctrl->prdt_info, 1, pinfo_ctrl->length, fp);
@@ -323,7 +324,7 @@ u32 nv_cust_get_pinfo(FILE *fp, nv_cust_file_ctrl *file_ctrl)
         return BSP_ERR_NV_CUST_PINFO_ERR;
     }
 
-    nv_memcpy(&pinfo_ctrl->valid_pinfo, pinfo, sizeof(xnv_prdt_info));
+    (void)memcpy_s(&pinfo_ctrl->valid_pinfo, sizeof(pinfo_ctrl->valid_pinfo), pinfo, sizeof(xnv_prdt_info));
 
     return BSP_OK;
 }
@@ -340,12 +341,11 @@ u32 nv_cust_get_pmap(FILE *fp, nv_cust_file_ctrl *file_ctrl)
     pmap_ctrl->map_offset = file_ctrl->mmap.off + pinfo->map_data_offset;
     pmap_ctrl->map_length = pinfo->map_data_len;
     pmap_ctrl->map_data   = nv_malloc((unsigned long)pmap_ctrl->map_length);
-    
     if(NULL == pmap_ctrl->map_data)
     {
         return BSP_ERR_NV_MALLOC_FAIL;
     }
-    nv_memset((u8 *)pmap_ctrl->map_data, 0, (size_t)pmap_ctrl->map_length);
+    (void)memset_s((u8 *)pmap_ctrl->map_data, (size_t)pmap_ctrl->map_length, 0, (size_t)pmap_ctrl->map_length);
 
     /* read xnv product map, class */
     nv_file_seek(fp, pmap_ctrl->map_offset, SEEK_SET);
@@ -407,7 +407,7 @@ u32 nv_cust_search_iteminfo(u16 itemid, nv_ctrl_info_s* ctrl_info, nv_item_info_
     }
 
     *item_info = NULL;
-    
+
     return BSP_ERR_NV_NO_THIS_ID;
 }
 
@@ -448,7 +448,7 @@ u32 nv_cust_analyze(xnv_sec *sec_file)
 
         if((item->modem_num > src_item->modem_num) || (0 == item->modem_num))
         {
-            nv_record("Customize: invalid modem num! %d, %d, 0x%x, 0x%x\n", 
+            nv_record("Customize: invalid modem num! %d, %d, 0x%x, 0x%x\n",
                     item->modem_num, src_item->modem_num, item->id, src_item->itemid);
             return BSP_ERR_NV_CUST_MDMNUM_ERR;
         }
@@ -462,7 +462,7 @@ u32 nv_cust_analyze(xnv_sec *sec_file)
         {
             xnv_modem *modem = (xnv_modem*)((uintptr_t)(&item->modem_data[0]) + (item->length + sizeof(xnv_modem))*j);
             nv_wr_req wreq;
-            
+
             wreq.itemid  = item->id;
             wreq.modemid = (modem->modem_id + 1);
             wreq.pdata   = modem->data;
@@ -495,14 +495,14 @@ u32 nv_cust_sec_handle(FILE *fp, nv_cust_file_ctrl *file_ctrl, nv_cust_pmap_sec_
     {
         xnv_sec_info *cur_sec = &sec_info[i];
         u32 offset = cur_sec->offset + fmap_bin->off;
-         
+
         if(cur_sec->offset + cur_sec->length > fmap_bin->len)
         {
             nv_record("Customize: sec_info too long, 0x%x, 0x%x, 0x%x!\n", i, cur_sec->offset, cur_sec->length);
             return BSP_ERR_NV_CUST_SECINFO_ERR;
         }
 
-        nv_file_seek(fp, offset, SEEK_SET);       
+        nv_file_seek(fp, offset, SEEK_SET);
         ret = (u32)nv_file_read((u8*)src_buf, 1, cur_sec->length, fp);
         if(cur_sec->length != ret)
         {
@@ -572,9 +572,9 @@ u32 nv_cust_file(FILE *fp, u32 prdt_id, nv_cust_file_ctrl *file_ctrl)
         nv_record("Customize: file_ctrl or fp is null.\n");
         return BSP_ERR_NV_INVALID_PARAM;
     }
-    
+
     file_ctrl->prdt_id = prdt_id;
-    
+
     /* read xnv map head & get product num */
     nv_file_seek(fp, file_ctrl->mmap.off, SEEK_SET);
     ret = (u32)nv_file_read((u8*)(&file_ctrl->map_file), 1, (u32)sizeof(xnv_map_file), fp);
@@ -620,29 +620,29 @@ void nv_cust_help(void)
                                 g_nv_bcust_ctrl.dload_head.xnv_map.magic_num,
                                     g_nv_bcust_ctrl.dload_head.xnv_map.off,
                                         g_nv_bcust_ctrl.dload_head.xnv_map.len);
-    
+
     nv_printf("g_nv_bcust_ctrl.dload_head.xnv.bin:magic_num = 0x%x, offfset = 0x%x, len = 0x%x.\n",
                                 g_nv_bcust_ctrl.dload_head.xnv.magic_num,
                                         g_nv_bcust_ctrl.dload_head.xnv.off,
                                             g_nv_bcust_ctrl.dload_head.xnv.len);
 
     /* xnv.map和xnv.bin head */
-    nv_printf("g_nv_bcust_ctrl.xnv_ctrl.mmap: magic_num = 0x%x, offset = 0x%x, len = 0x%x.\n", 
-                                g_nv_bcust_ctrl.xnv_ctrl.mmap.magic_num, 
-                                        g_nv_bcust_ctrl.xnv_ctrl.mmap.off, 
+    nv_printf("g_nv_bcust_ctrl.xnv_ctrl.mmap: magic_num = 0x%x, offset = 0x%x, len = 0x%x.\n",
+                                g_nv_bcust_ctrl.xnv_ctrl.mmap.magic_num,
+                                        g_nv_bcust_ctrl.xnv_ctrl.mmap.off,
                                              g_nv_bcust_ctrl.xnv_ctrl.mmap.len);
-    nv_printf("g_nv_bcust_ctrl.xnv_ctrl.mbin: magic_num = 0x%x, offset = 0x%x, len = 0x%x.\n", 
-                                g_nv_bcust_ctrl.xnv_ctrl.mbin.magic_num, 
-                                        g_nv_bcust_ctrl.xnv_ctrl.mbin.off, 
+    nv_printf("g_nv_bcust_ctrl.xnv_ctrl.mbin: magic_num = 0x%x, offset = 0x%x, len = 0x%x.\n",
+                                g_nv_bcust_ctrl.xnv_ctrl.mbin.magic_num,
+                                        g_nv_bcust_ctrl.xnv_ctrl.mbin.off,
                                              g_nv_bcust_ctrl.xnv_ctrl.mbin.len);
 
     /* product info */
-    nv_printf("g_nv_bcust_ctrl.cust_ctrl.prdt_info.valid_pinfo:id = 0x%x,offset = 0x%x,len = 0x%x.\n", 
-                                g_nv_bcust_ctrl.xnv_ctrl.prdt_info.valid_pinfo.prdt_id, 
+    nv_printf("g_nv_bcust_ctrl.cust_ctrl.prdt_info.valid_pinfo:id = 0x%x,offset = 0x%x,len = 0x%x.\n",
+                                g_nv_bcust_ctrl.xnv_ctrl.prdt_info.valid_pinfo.prdt_id,
                                     g_nv_bcust_ctrl.xnv_ctrl.prdt_info.valid_pinfo.map_data_offset,
                                         g_nv_bcust_ctrl.xnv_ctrl.prdt_info.valid_pinfo.map_data_len);
 
-    return;    
+    return;
 }
 
 u32 nv_upgrade_modemnv(u32 prdt_id)
@@ -677,7 +677,7 @@ u32 nv_upgrade_modemnv(u32 prdt_id)
         ret = BSP_ERR_NV_READ_FILE_FAIL;
         goto out;
     }
-    
+
     if((dload_head->cust_map.magic_num == NV_FILE_EXIST) || (dload_head->cust.magic_num == NV_FILE_EXIST))
     {
         nv_record("Customize Modem: Not is modem_nv.bin");
@@ -687,8 +687,8 @@ u32 nv_upgrade_modemnv(u32 prdt_id)
 
      /* cust file customize */
     g_nv_bcust_ctrl.product_id = prdt_id;
-    nv_memcpy((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mmap, (s8 *)&dload_head->xnv_map, sizeof(nv_file_map_s));
-    nv_memcpy((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mbin, (s8 *)&dload_head->xnv, sizeof(nv_file_map_s));
+    (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mmap, sizeof(g_nv_bcust_ctrl.xnv_ctrl.mmap), (s8 *)&dload_head->xnv_map, sizeof(nv_file_map_s));
+    (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mbin, sizeof(g_nv_bcust_ctrl.xnv_ctrl.mbin), (s8 *)&dload_head->xnv, sizeof(nv_file_map_s));
     if(nv_cust_file_valid(&g_nv_bcust_ctrl.xnv_ctrl))
     {
         ret = nv_cust_file(fp, g_nv_bcust_ctrl.product_id, &g_nv_bcust_ctrl.xnv_ctrl);
@@ -704,13 +704,13 @@ u32 nv_upgrade_modemnv(u32 prdt_id)
         ret = BSP_ERR_NV_CUST_NOXNV_ERR;
     }
 
-out:    
+out:
     if(fp){
         nv_file_close(fp);
     }
     nv_cust_clear();
-    
-    return ret; 
+
+    return ret;
 }
 
 u32 nv_upgrade_custnv(u32 prdt_id)
@@ -745,7 +745,7 @@ u32 nv_upgrade_custnv(u32 prdt_id)
         ret = BSP_ERR_NV_READ_FILE_FAIL;
         goto out;
     }
-    
+
     if((dload_head->nv_bin.off != 0) || (dload_head->nv_bin.len != 0))
     {
         nv_record("Customize Cust: Not is modem_nv.bin");
@@ -753,11 +753,10 @@ u32 nv_upgrade_custnv(u32 prdt_id)
         goto out;
     }
 
-        
     /* cust file customize */
-    g_nv_bcust_ctrl.product_id = prdt_id;    
-    nv_memcpy((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mmap, (s8 *)&dload_head->xnv_map, sizeof(nv_file_map_s));
-    nv_memcpy((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mbin, (s8 *)&dload_head->xnv, sizeof(nv_file_map_s));
+    g_nv_bcust_ctrl.product_id = prdt_id;
+    (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mmap, sizeof(g_nv_bcust_ctrl.xnv_ctrl.mmap), (s8 *)&dload_head->xnv_map, sizeof(nv_file_map_s));
+    (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.xnv_ctrl.mbin, sizeof(g_nv_bcust_ctrl.xnv_ctrl.mbin), (s8 *)&dload_head->xnv, sizeof(nv_file_map_s));
     if(nv_cust_file_valid(&g_nv_bcust_ctrl.xnv_ctrl))
     {
         ret = nv_cust_file(fp, g_nv_bcust_ctrl.product_id, &g_nv_bcust_ctrl.xnv_ctrl);
@@ -766,7 +765,7 @@ u32 nv_upgrade_custnv(u32 prdt_id)
             nv_record("Customize Cust: cust file failed!\n");
             goto out;
         }
-    }   
+    }
     else
     {
         /* xnv必须有效，暂时不支持xnv不存在的情况，防止把错误遗漏过去 */
@@ -777,8 +776,8 @@ u32 nv_upgrade_custnv(u32 prdt_id)
 
     /* cust file customize */
     g_nv_bcust_ctrl.product_id = prdt_id;
-    nv_memcpy((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mmap, (s8 *)&dload_head->cust_map, sizeof(nv_file_map_s));
-    nv_memcpy((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mbin, (s8 *)&dload_head->cust, sizeof(nv_file_map_s));
+    (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mmap, sizeof(g_nv_bcust_ctrl.cust_ctrl.mmap), (s8 *)&dload_head->cust_map, sizeof(nv_file_map_s));
+    (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mbin, sizeof(g_nv_bcust_ctrl.cust_ctrl.mbin), (s8 *)&dload_head->cust, sizeof(nv_file_map_s));
     if(nv_cust_file_valid(&g_nv_bcust_ctrl.cust_ctrl))
     {
         ret = nv_cust_file(fp, g_nv_bcust_ctrl.product_id, &g_nv_bcust_ctrl.cust_ctrl);
@@ -787,14 +786,14 @@ u32 nv_upgrade_custnv(u32 prdt_id)
             nv_record("Customize: cust file failed!\n");
         }
     }
-    
-out:    
+
+out:
     if(fp){
         nv_file_close(fp);
     }
     nv_cust_clear();
-    
-    return ret; 
+
+    return ret;
 }
 
 u32 nv_upgrade_customize(void)
@@ -803,8 +802,13 @@ u32 nv_upgrade_customize(void)
     u32 product_id;
     u32 flag_modem = false;
     u32 flag_cust = false;
-    
+
     /* get product_id */
+    if(NULL == bsp_get_version_info())
+    {
+        nv_record("Customize:version return NULL!\n");
+        return NV_ERROR;
+    }
     product_id = bsp_get_version_info()->board_id;
     nv_printf("Customize:  product id = 0x%x\n", product_id);
 
@@ -823,7 +827,7 @@ u32 nv_upgrade_customize(void)
             flag_modem = true;
         }
     }
-    
+
     if(nv_cust_get_upgrade_flag((s8 *)NV_DLOAD_CUST_PATH))
     {
         ret = nv_upgrade_custnv(product_id);
@@ -852,7 +856,7 @@ u32 nv_upgrade_customize(void)
     else
     {
         nv_record("Customize:upgrade sucessfull!\n");
-        ret = NV_OK;          
+        ret = NV_OK;
     }
 
     return ret;
@@ -865,9 +869,15 @@ u32 nv_upgrade_mcarrier_customize(const s8 * mcar_path)
     nv_dload_head *dload_head;
 
     /* get product_id */
+    if(NULL ==bsp_get_version_info())
+    {
+        nv_record("Customize:version return NULL!\n");
+        return NV_ERROR;
+    }
+
     g_nv_bcust_ctrl.product_id = bsp_get_version_info()->board_id;
     nv_printf("Customize:  product id = 0x%x\n", g_nv_bcust_ctrl.product_id);
-    
+
     /* init global */
     ret = nv_cust_init_global();
     if(ret == NV_OK)
@@ -884,7 +894,7 @@ u32 nv_upgrade_mcarrier_customize(const s8 * mcar_path)
     dload_head = &g_nv_bcust_ctrl.dload_head;
     if(ret == NV_OK)
     {
-        ret = (u32)nv_file_read((u8*)dload_head, 1, (u32)sizeof(nv_dload_head), fp); 
+        ret = (u32)nv_file_read((u8*)dload_head, 1, (u32)sizeof(nv_dload_head), fp);
         if(ret == sizeof(nv_dload_head))
         {
             ret = NV_OK;
@@ -902,18 +912,18 @@ u32 nv_upgrade_mcarrier_customize(const s8 * mcar_path)
              nv_printf("Customize: is mcarrier cust file!");
              ret = NV_OK;
         }
-    } 
+    }
 
     if(ret == NV_OK)
     {
         ret = NV_ERROR;
-        nv_memcpy((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mmap, (s8 *)&dload_head->cust_map, sizeof(nv_file_map_s));
-        nv_memcpy((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mbin, (s8 *)&dload_head->cust, sizeof(nv_file_map_s));
-            
+        (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mmap, sizeof(g_nv_bcust_ctrl.cust_ctrl.mmap), (s8 *)&dload_head->cust_map, sizeof(nv_file_map_s));
+        (void)memcpy_s((s8 *)&g_nv_bcust_ctrl.cust_ctrl.mbin, sizeof(g_nv_bcust_ctrl.cust_ctrl.mbin), (s8 *)&dload_head->cust, sizeof(nv_file_map_s));
+
         /* cust file customize */
         if(nv_cust_file_valid(&g_nv_bcust_ctrl.cust_ctrl))
-        {   
-            ret = nv_cust_file(fp, g_nv_bcust_ctrl.product_id, &g_nv_bcust_ctrl.cust_ctrl);      
+        {
+            ret = nv_cust_file(fp, g_nv_bcust_ctrl.product_id, &g_nv_bcust_ctrl.cust_ctrl);
         }
     }
 
@@ -928,7 +938,7 @@ u32 nv_upgrade_mcarrier_customize(const s8 * mcar_path)
     }
     nv_cust_help();
     nv_cust_clear();
-    return ret;  
+    return ret;
 }
 
 EXPORT_SYMBOL(g_nv_bcust_ctrl);

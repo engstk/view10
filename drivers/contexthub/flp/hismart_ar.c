@@ -24,13 +24,43 @@
 
 static ar_device_t  g_ar_dev;
 
+static int ar_send_cmd_through_shmem(ar_hdr_t * head, char  *buf, size_t count)
+{
+	int ret;
+	char *data;
+	size_t len = count + sizeof(ar_hdr_t);
+	if (len > MAX_CONFIG_SIZE) {
+		printk(KERN_ERR "[%s]:line[%d] shmem send size[%d] too large ,error\n",  __func__, __LINE__, (int)len);
+		return -EINVAL;
+	}
+	data = (char *)kzalloc(len, GFP_KERNEL);
+	if (!data) {
+		printk(KERN_ERR "[%s]:line[%d] shmem send kzalloc[%d] fail\n",  __func__, __LINE__, (int)len);
+		return -ENOMEM;
+	}
+	memcpy_s(data, sizeof(ar_hdr_t), head, len - count);
+	memcpy_s(data + sizeof(ar_hdr_t), count, buf, len - sizeof(ar_hdr_t));
+#ifdef CONFIG_CONTEXTHUB_SHMEM
+	ret = shmem_send(TAG_AR, (void *)data, len);
+#else
+	printk(KERN_ERR "[%s]:line[%d] shmem has not enable len[%d]\n",  __func__, __LINE__, (int)len);
+	ret = 0;
+#endif
+	kfree((void *)data);
+	return ret;
+}
+
 static int ar_send_cmd_from_kernel(unsigned char cmd_tag, unsigned char cmd_type,
     unsigned int subtype, char  *buf, size_t count)
 {
 	unsigned int sub_cmd = 0;
 	ar_hdr_t * ptr_hdr = (ar_hdr_t *)&sub_cmd;
 	ptr_hdr->sub_cmd = (unsigned char)subtype;
-	return send_cmd_from_kernel(cmd_tag, cmd_type, sub_cmd, buf, count);
+	if (count > (MAX_PKT_LENGTH - CONTEXTHUB_HEADER_SIZE)) {
+		return ar_send_cmd_through_shmem(ptr_hdr, buf, count);
+	} else {
+		return send_cmd_from_kernel(cmd_tag, cmd_type, sub_cmd, buf, count);
+	}
 }
 
 static int ar_send_cmd_from_kernel_nolock(unsigned char cmd_tag, unsigned char cmd_type,
@@ -39,7 +69,11 @@ static int ar_send_cmd_from_kernel_nolock(unsigned char cmd_tag, unsigned char c
 	unsigned int sub_cmd = 0;
 	ar_hdr_t * ptr_hdr = (ar_hdr_t *)&sub_cmd;
 	ptr_hdr->sub_cmd = (unsigned char)subtype;
-	return send_cmd_from_kernel_nolock(cmd_tag, cmd_type, sub_cmd, buf, count);
+	if (count > (MAX_PKT_LENGTH - CONTEXTHUB_HEADER_SIZE)) {
+		return ar_send_cmd_through_shmem(ptr_hdr, buf, count);
+	} else {
+		return send_cmd_from_kernel_nolock(cmd_tag, cmd_type, sub_cmd, buf, count);
+	}
 }
 
 static int ar_send_cmd_from_kernel_response(unsigned char cmd_tag, unsigned char cmd_type,
@@ -411,7 +445,7 @@ static int ar_config_to_iomcu(ar_port_t *ar_port)
 #endif
 	}
 
-	printk(HISI_AR_DEBUG "[%s]interval[%u]\n", __func__, devinfo->cfg.report_interval);
+	printk(HISI_AR_DEBUG "[%s]:line[%d] interval[%u] size[%d] ret[%d]\n", __func__, __LINE__, devinfo->cfg.report_interval, devinfo->cfg_sz, ret);
 CFG_IOMCU_FIN:
 	return ret;
 }
@@ -526,6 +560,18 @@ static int env_enable_cmd(ar_port_t *ar_port, unsigned long arg)
 		goto ENV_EN_FIN;
 	}
 
+	if (CONTEXT_PRIVATE_DATA_MAX < enable.head.len){
+		pr_err("[%s]priv data len err[%u]\n", __func__, enable.head.len);
+		ret =  -EINVAL;
+		goto ENV_EN_FIN;
+	}
+
+	if (AR_STATE_MAX <= enable.head.event_type) {
+		pr_err("[%s]event_type err[%u]\n", __func__, enable.head.event_type);
+		ret =  -EINVAL;
+		goto ENV_EN_FIN;
+	}
+
 	if (AR_ENVIRONMENT_END <= enable.head.context) {
 		pr_err("%s context error[%d]\n", __func__, enable.head.context);
 		ret =  -EACCES;
@@ -536,10 +582,10 @@ static int env_enable_cmd(ar_port_t *ar_port, unsigned long arg)
 
 	memcpy_s((void*)&env_enable[enable.head.context], sizeof(env_enable_t), &enable, sizeof(env_enable_t));
 #ifdef CONFIG_INPUTHUB_20
-	ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, SUB_CMD_ENVIRONMENT_ENABLE_REQ,
+	ret = ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, SUB_CMD_ENVIRONMENT_ENABLE_REQ,
 	(char *)&enable, sizeof(env_enable_t));
 #else
-	ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, CMD_ENVIRONMENT_ENABLE_REQ,
+	ret = ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, CMD_ENVIRONMENT_ENABLE_REQ,
 	(char *)&enable, sizeof(env_enable_t));
 #endif
 	data_dump();
@@ -566,17 +612,29 @@ static int  env_disable_cmd(ar_port_t *ar_port, unsigned long arg)
 		goto ENV_DIS_ERR;
 	}
 
+	if (AR_STATE_MAX <= dis_cmd.event_type){
+		pr_err("[%s]event_type error [%u]\n", __func__, dis_cmd.event_type);
+		ret = -EINVAL;
+		goto ENV_DIS_ERR;
+	}
+
 	if (AR_ENVIRONMENT_END <= dis_cmd.context || AR_ENVIRONMENT_BEGIN > dis_cmd.context) {
 		pr_err("%s context error [%x]\n", __func__, dis_cmd.context);
 		ret = -EINVAL;
 		goto ENV_DIS_ERR;
 	}
 
+	if (0 == env_enable[dis_cmd.context].head.event_type) {
+		pr_err("[%s] you must enable first\n", __func__);
+		ret = -EIO;
+		goto ENV_DIS_ERR;
+	}
+
 	env_enable[dis_cmd.context].head.event_type &= 0x03&(~dis_cmd.event_type);
 #ifdef CONFIG_INPUTHUB_20
-	ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, SUB_CMD_ENVIRONMENT_DISABLE_REQ, (char *)&dis_cmd, sizeof(env_disable_cmd_t));
+	ret = ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, SUB_CMD_ENVIRONMENT_DISABLE_REQ, (char *)&dis_cmd, sizeof(env_disable_cmd_t));
 #else
-	ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, CMD_ENVIRONMENT_DISABLE_REQ, (char *)&dis_cmd, sizeof(env_disable_cmd_t));
+	ret = ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, CMD_ENVIRONMENT_DISABLE_REQ, (char *)&dis_cmd, sizeof(env_disable_cmd_t));
 #endif
 	data_dump();
 ENV_DIS_ERR:
@@ -818,11 +876,10 @@ static int state_v2_cmd(struct read_info *rd, unsigned long arg)
 	int ret = 0;
 	unsigned long  usr_len;
 	ar_state_t* date_report;
-	unsigned int buflen_limit = (sizeof(context_event_t) + CONTEXT_PRIVATE_DATA_MAX)*GET_STATE_NUM_MAX;
 
 	usr_len = rd->data_length - sizeof(unsigned int);
-	if (0 == usr_len || buflen_limit < usr_len){
-		pr_err("[%s]length err[%lu]buflen_limit[%u]\n", __func__, usr_len, buflen_limit);
+	if ((0 == usr_len) || (usr_len > (MAX_PKT_LENGTH - sizeof(ar_state_t)))) {
+		pr_err("[%s]length err[%lu] buflen_limit[%lu]\n", __func__, usr_len, MAX_PKT_LENGTH - sizeof(ar_state_t));
 		ret = -EINVAL;
 		goto STATE_V2_ERR;
 	}
@@ -936,6 +993,12 @@ static int  env_init_cmd(ar_port_t *ar_port, unsigned long arg)
 		goto ENV_INIT_ERR;
 	}
 
+	if (CONTEXT_PRIVATE_DATA_MAX < env_init.buf_len) {
+		pr_err("%s priv buf len[%u]err\n", __func__, env_init.buf_len);
+		ret = -EINVAL;
+		goto ENV_INIT_ERR;
+	}
+
 	if (AR_ENVIRONMENT_END <= env_init.context || AR_ENVIRONMENT_BEGIN > env_init.context) {
 		pr_err("%s context too big[%d]\n", __func__, env_init.context);
 		ret = -EINVAL;
@@ -944,10 +1007,10 @@ static int  env_init_cmd(ar_port_t *ar_port, unsigned long arg)
 
 	memcpy_s((void*)&envdev_priv->env_init[env_init.context],sizeof(env_init_t), &env_init, sizeof(env_init_t));
 #ifdef CONFIG_INPUTHUB_20
-	ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, SUB_CMD_ENVIRONMENT_INIT_REQ,
+	ret = ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, SUB_CMD_ENVIRONMENT_INIT_REQ,
 		(char *)&env_init, sizeof(env_init_t));
 #else
-	ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, CMD_ENVIRONMENT_INIT_REQ,
+	ret = ar_send_cmd_from_kernel(TAG_ENVIRONMENT, CMD_CMN_CONFIG_REQ, CMD_ENVIRONMENT_INIT_REQ,
 		(char *)&env_init, sizeof(env_init_t));
 #endif
 	data_dump();
@@ -971,6 +1034,12 @@ static int  env_exit_cmd(ar_port_t *ar_port, unsigned long arg)
 	if (copy_from_user((void *)&env_init,  (void __user *)arg, sizeof(env_init_t))) {
 		pr_err("%s copy_from_user error env_init\n", __func__);
 		ret = -EDOM;
+		goto ENV_EXIT_ERR;
+	}
+
+	if (CONTEXT_PRIVATE_DATA_MAX < env_init.buf_len) {
+		pr_err("[%s] priv buf len err[%u]\n", __func__, env_init.buf_len);
+		ret = -EINVAL;
 		goto ENV_EXIT_ERR;
 	}
 
@@ -1012,7 +1081,7 @@ static int  env_data_cmd(ar_port_t *ar_port, unsigned long arg)
 		goto ENV_DATA_FIN;
 	}
 
-	if(download.len >DATABASE_DATALEN) {
+	if(download.len >DATABASE_DATALEN || !download.len) {
 		pr_err("%s copy_from_user len to big[%d] \n", __func__, download.len);
 		ret = -E2BIG;
 		goto ENV_DATA_FIN;
@@ -1351,6 +1420,7 @@ static void  ar_service_recovery(void)
 			#endif
 		}
 	}
+	printk(HISI_AR_DEBUG "%s %d: service_type[%d]\n", __func__, __LINE__, g_ar_dev.service_type);
 }
 /*lint -e715*/
 static int ar_notifier(struct notifier_block *nb,
@@ -1430,7 +1500,7 @@ static int ar_open(struct inode *inode, struct file *filp)/*lint -e715*/
 	list_add_tail(&ar_port->list, &g_ar_dev.list);
 	wake_lock_init(&ar_port->wlock, WAKE_LOCK_SUSPEND, "hisi_ar");
 	filp->private_data = ar_port;
-	pr_info("[%s]\n", __func__);
+	printk(HISI_AR_DEBUG "%s %d: v1.0 enter\n", __func__, __LINE__);
 
 ar_open_ERR:
 	mutex_unlock(&g_ar_dev.lock);

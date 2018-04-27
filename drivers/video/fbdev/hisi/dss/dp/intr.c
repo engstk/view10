@@ -26,7 +26,10 @@
 /*lint -save -e* */
 #define EDID_NUM 256
 #define SAFE_MODE_TIMING_HACTIVE 640
+#define SAFE_MODE_TIMING_PIXEL_CLOCK 2517  /*The pixel clock of 640 * 480 = 25175. The saving pixel clock need 1/10.*/
 #define DPTX_CHECK_TIME_PERIOD 2000
+
+#define VBLANKING_MAX 255
 
 uint32_t g_bit_hpd_status;
 
@@ -37,7 +40,6 @@ enum dp_event_type
 };
 
 extern void dp_send_event(enum dp_event_type event);
-extern void dp_notify_audio(bool is_vr);
 
 static enum hrtimer_restart dptx_detect_hrtimer_fnc(struct hrtimer *timer)
 {
@@ -153,10 +155,7 @@ static void dptx_err_count_check_wq_handler(struct work_struct *work)
 		return;
 	}
 
-	mutex_lock(&dptx->dptx_mutex);
-
 	if ((!dptx->dptx_enable) || (!dptx->video_transfer_enable)) {
-		mutex_unlock(&dptx->dptx_mutex);
 		return;
 	}
 
@@ -180,8 +179,6 @@ static void dptx_err_count_check_wq_handler(struct work_struct *work)
 		dptx->detect_times = 1;
 		HISI_FB_INFO("\n ERR count upload!");
 	}
-
-	mutex_unlock(&dptx->dptx_mutex);
 
 	return;
 }
@@ -330,10 +327,9 @@ static int dptx_resolution_switch(struct hisi_fb_data_type *hisifd, enum dptx_ho
 		hisifd->fbi->var.height,
 		vparams->m_fps);
 
-	dptx->m_dsm_info.m_width = hisifd->fbi->var.xres;
-	dptx->m_dsm_info.m_high = hisifd->fbi->var.yres;
-	dptx->m_dsm_info.m_fps = vparams->m_fps;
-
+	dp_imonitor_set_param(DP_PARAM_WIDTH, &(mdtd->h_active));
+	dp_imonitor_set_param(DP_PARAM_HIGH,  &(mdtd->v_active));
+	dp_imonitor_set_param(DP_PARAM_FPS,   &(vparams->m_fps));
 
 	if(hisifd->hpd_open_sub_fnc) {
 		ret = hisifd->hpd_open_sub_fnc(hisifd->fbi);
@@ -1092,6 +1088,7 @@ static int handle_sink_request(struct dp_ctrl *dptx)
 		return retval;
 
 	HISI_FB_INFO("%s: IRQ_VECTOR: 0x%02x\n", __func__, vector);
+	dp_imonitor_set_param(DP_PARAM_IRQ_VECTOR, &vector);
 
 	/* TODO handle sink interrupts */
 	if (!vector)
@@ -1121,6 +1118,7 @@ static int handle_sink_request(struct dp_ctrl *dptx)
 	if (vector & DP_CP_IRQ) {
 		HISI_FB_WARNING("%s: DP_CP_IRQ", __func__);
 		//retval = dptx_write_dpcd(dptx, DP_DEVICE_SERVICE_IRQ_VECTOR, DP_CP_IRQ);
+        dp_imonitor_set_param(DP_PARAM_HDCP_VERSION, &g_hdcp_mode);
         if (g_hdcp_mode == 3)   //hdcp1.3
         {
             uint8_t bstatus=0;
@@ -1163,7 +1161,7 @@ static int handle_sink_request(struct dp_ctrl *dptx)
         else    //hdcp2.2 ot other
         {
             if(dptx->hisifd->secure_ctrl.hdcp_cp_irq)
-    	            dptx->hisifd->secure_ctrl.hdcp_cp_irq();
+				dptx->hisifd->secure_ctrl.hdcp_cp_irq();
         }
 		if (retval)
 			return retval;
@@ -1256,7 +1254,6 @@ int handle_hotunplug(struct hisi_fb_data_type *hisifd)
 {
 	struct dp_ctrl *dptx;
 	int ret = 0;
-	int timeout_count = 0;
 
 	if (!hisifd) {
 		HISI_FB_ERR("hisifd is NULL!\n");
@@ -1273,11 +1270,6 @@ int handle_hotunplug(struct hisi_fb_data_type *hisifd)
 	dptx_video_params_reset(&dptx->vparams);
 	dptx_audio_params_reset(&dptx->aparams);
 	dp_send_cable_notification(dptx, (dptx->dptx_vr) ? Hot_Plug_OUT_VR : Hot_Plug_OUT);
-	/* Make sure release fence had been closed. */
-	do {
-		msleep(10);
-		timeout_count++;
-	} while ((hisifd->ov_req_prev.release_fence > 0) && (timeout_count < 100));
 
 	/*Disable DSS and HWC first*/
 	if(hisifd->hpd_release_sub_fnc)
@@ -1297,19 +1289,7 @@ int handle_hotunplug(struct hisi_fb_data_type *hisifd)
 	atomic_set(&dptx->aux.event, 0);
 	dptx->link.trained = false;
 
-		ret = dptx_get_current_time(&dptx->m_dsm_info.dsm_dp_off_time[0]);
-		if(ret < 0) {
-			HISI_FB_ERR("get current time failed!\n");
-		}
-
-		dptx_dmd_report(DSM_DP_BASIC_DISPLAY_TIME_NO, "DP DSM: Externel Display Info: width=%d, high=%d, pfs=%d; DP dp on time=%s,link traing suss time=%s, dp off time=%s, mid=%s, monitor=%s, sink max lanes_rate=%02x, actual link lanes_rate=%02x, vs_pe=%x, tu=%d\n",
-			dptx->m_dsm_info.m_width, dptx->m_dsm_info.m_high, dptx->m_dsm_info.m_fps,
-			dptx->m_dsm_info.dsm_dp_on_time, dptx->m_dsm_info.dsm_link_succ_time, dptx->m_dsm_info.dsm_dp_off_time,
-			dptx->m_dsm_info.manufacturer_id, dptx->m_dsm_info.dsm_monitor_info,
-			dptx->m_dsm_info.max_lanes << 4 | dptx->m_dsm_info.max_rate,
-			dptx->m_dsm_info.lanes << 4 | dptx->m_dsm_info.rate,
-			dptx->m_dsm_info.vp.vswing_preemp, dptx->m_dsm_info.tu);
-
+	dp_imonitor_set_param(DP_PARAM_TIME_STOP, NULL);
 	HISI_FB_INFO("-.\n");
 
 	return 0;
@@ -1350,6 +1330,7 @@ static int dptx_read_edid_block(struct dp_ctrl *dptx,
 		HISI_FB_ERR("failed to  dptx_read_bytes_from_i2c 2!\n");
 		return retval;
 	}
+	dp_imonitor_set_param(DP_PARAM_EDID + block, &(dptx->edid[block * DP_DSM_EDID_BLOCK_SIZE]));
 
 	for (i = 0; i < 128;) {
 		if (!(i % 16)) {
@@ -1506,111 +1487,6 @@ static int dptx_check_edid(struct dp_ctrl *dptx)
 	return 0;
 }
 */
-bool dptx_check_low_temperature(struct dp_ctrl *dptx)
-{
-	uint32_t perictrl4;
-	struct hisi_fb_data_type *hisifd;
-
-	if (dptx == NULL) {
-		HISI_FB_ERR("NULL Pointer\n");
-		return FALSE;
-	}
-
-	hisifd = dptx->hisifd;
-
-	if (hisifd == NULL) {
-		HISI_FB_ERR("NULL Pointer\n");
-		return FALSE;
-	}
-
-	perictrl4 = inp32(hisifd->pmctrl_base + MIDIA_PERI_CTRL4);
-	perictrl4 &= PMCTRL_PERI_CTRL4_TEMPERATURE_MASK;
-	perictrl4 = (perictrl4 >> PMCTRL_PERI_CTRL4_TEMPERATURE_SHIFT);
-	HISI_FB_INFO("Get current temperature: %d \n", perictrl4);
-
-	if (perictrl4 != NORMAL_TEMPRATURE)
-		return TRUE;
-	else
-		return FALSE;
-}
-
-static int dptx_change_video_mode_tu_fail(struct dp_ctrl *dptx)
-{
-	struct dtd *mdtd;
-
-	if (dptx == NULL) {
-		HISI_FB_ERR("NULL Pointer\n");
-		return -EINVAL;
-	}
-
-	mdtd = &(dptx->vparams.mdtd);
-
-	if ((mdtd->pixel_clock > 500000) && (mdtd->h_active >= 3840)) {	/*4k 60HZ*/
-		if (((dptx->link.lanes == 2) && (dptx->link.rate == DPTX_PHYIF_CTRL_RATE_HBR2)) ||
-			((dptx->link.lanes == 4) && (dptx->link.rate == DPTX_PHYIF_CTRL_RATE_HBR)))
-			return 95;	/*4k 30HZ*/
-	}
-
-	if (mdtd->h_active == 2560) {
-		if ((dptx->link.lanes == 2) && (dptx->link.rate == DPTX_PHYIF_CTRL_RATE_HBR))
-			return 16;	/*1080p 60HZ*/
-	}
-
-	return 1;
-}
-
-static int dptx_change_video_mode_user(struct dp_ctrl *dptx)
-{
-	struct video_params *vparams;
-	int retval;
-	bool needchanged;
-
-	if (dptx == NULL) {
-		HISI_FB_ERR("NULL Pointer\n");
-		return -EINVAL;
-	}
-
-	vparams = &dptx->vparams;
-	needchanged = FALSE;
-	if (!dptx->same_source) {
-		if(vparams->mdtd.h_active > 1920) {
-			vparams->video_format = VCEA;
-			vparams->mode = 16; /*Siwtch to 1080p on PC mode*/
-			needchanged = TRUE;
-			HISI_FB_INFO("Video mode is changed by different source!\n");
-		}
-	}
-
-	if(dptx->user_mode != 0) {
-		vparams->video_format = dptx->user_mode_format;
-		vparams->mode = dptx->user_mode; /*Siwtch to user setting*/
-		needchanged = TRUE;
-		HISI_FB_INFO("Video mode is changed by user setting!\n");
-	}
-
-	if (needchanged) {
-		retval = dptx_video_mode_change(dptx, vparams->mode);
-		if (retval) {
-			HISI_FB_ERR("Change mode error!\n");
-			return retval;
-		}
-	}
-
-	if (dptx_check_low_temperature(dptx)) {
-		if(vparams->mdtd.h_active > 1920) {
-			vparams->video_format = VCEA;
-			vparams->mode = 16; /*Siwtch to 1080p on PC mode*/
-			HISI_FB_INFO("Video mode is changed by low temperature!\n");
-
-			retval = dptx_video_mode_change(dptx, vparams->mode);
-			if (retval) {
-				HISI_FB_ERR("Change mode error!\n");
-				return retval;
-			}
-		}
-	}
-	return 0;
-}
 
 int handle_hotplug(struct hisi_fb_data_type *hisifd)
 {
@@ -1621,9 +1497,11 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 	uint8_t blocks = 0;
 	//uint8_t preferred_vic[18] = {0};
 	uint8_t test = 0;
-	unsigned int edid_info_size = 0;
-	uint32_t i, pos_max, default_hactive;
-	struct timing_info * per_timing_info;
+	uint32_t default_hactive;
+	uint64_t default_pixel_clock;
+	uint32_t edid_info_size = 0;
+	struct timing_info *per_timing_info;
+	struct timing_info *dptx_timing_node, *_node_;
 	struct video_params *vparams;
 	struct hdcp_params *hparams;
 	struct dtd mdtd;
@@ -1650,9 +1528,12 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 		return -EINVAL;
 	}
 
+	dp_imonitor_set_param(DP_PARAM_TIME_START, NULL);
 	bsafe_mode = true;
 	vparams = &dptx->vparams;
 	hparams = &dptx->hparams;
+
+	per_timing_info = dptx_timing_node = _node_ = NULL;
 
 	dptx_video_params_reset(&dptx->vparams);
 	dptx_audio_params_reset(&dptx->aparams);
@@ -1668,7 +1549,6 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 	retval = dptx_write_dpcd(dptx, DP_SET_POWER, DP_SET_POWER_D0);
 	if (retval) {
 		HISI_FB_ERR("failed to  dptx_write_dpcd DP_SET_POWER, DP_SET_POWER_D0 %d", retval);
-		dptx_dmd_report(DSM_DP_BASIC_EXTERNAL_DISPLAY_NO,"DP DPCP FAIL: failed to  dptx_write_dpcd DP_SET_POWER, DP_SET_POWER_D0 %d\n",retval);
 		return retval;
 	}
 	mdelay(1);
@@ -1676,14 +1556,13 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 	retval = dptx_read_dpcd(dptx, DP_DEVICE_SERVICE_IRQ_VECTOR, &vector);
 	if (retval) {
 		HISI_FB_ERR("failed to  dptx_read_dpcd DP_DEVICE_SERVICE_IRQ_VECTOR, retval=%d.", retval);
-		dptx_dmd_report(DSM_DP_BASIC_EXTERNAL_DISPLAY_NO,"DP DPCD FAIL: failed to dptx_read_dpcd DP_DEVICE_SERVICE_IRQ_VECTOR, retval=%d.\n",retval);
 		return retval;
 	}
 
 	retval = dptx_read_edid(dptx);
 	if (retval < 128) {
 		HISI_FB_ERR("failed to  dptx_read_edid, retval=%d.", retval);
-		dptx_dmd_report(DSM_DP_BASIC_EXTERNAL_DISPLAY_NO, "DP EDID FAIL: failed to  dptx_read_edid, retval=%d.\n",retval);
+		dp_imonitor_set_param(DP_PARAM_READ_EDID_FAILED, &retval);
 		edid_info_size = 0;
 		bsafe_mode = true;
 		goto safe_mode;
@@ -1706,21 +1585,28 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 		}
 	}
 */
-	retval = parse_edid(dptx, edid_info_size);
+	if (g_fpga_flag == 1) {
+		retval = -1;
+	} else {
+		retval = parse_edid(dptx, edid_info_size);
+	}
+
 	if (retval) {
 		HISI_FB_ERR("EDID Parser fail, display safe mode");
 		bsafe_mode = true;
 		goto safe_mode;
 	} else {
-		if (dptx->edid_info.Video.TimingInfo != NULL) {
+		if (dptx->edid_info.Video.dptx_timing_list != NULL) {
 			default_hactive = SAFE_MODE_TIMING_HACTIVE;
-			for (i = 0; i < dptx->edid_info.Video.mainVCount; i++)
-			{
-				if ((dptx->edid_info.Video.TimingInfo[i].hActivePixels > default_hactive) &&
-					(dptx->edid_info.Video.TimingInfo[i].interlaced != 1) &&
-					(dptx->edid_info.Video.TimingInfo[i].vBlanking <= 256)) {
-					default_hactive = dptx->edid_info.Video.TimingInfo[i].hActivePixels;
-					pos_max = i;
+			default_pixel_clock = SAFE_MODE_TIMING_PIXEL_CLOCK;
+			list_for_each_entry_safe(dptx_timing_node, _node_, dptx->edid_info.Video.dptx_timing_list, list_node) {
+				if ((dptx_timing_node->hActivePixels >= default_hactive) &&
+					(dptx_timing_node->pixelClock > default_pixel_clock) &&
+					(dptx_timing_node->interlaced != 1) &&
+					(dptx_timing_node->vBlanking <= VBLANKING_MAX)) {
+					default_hactive = dptx_timing_node->hActivePixels;
+					default_pixel_clock = dptx_timing_node->pixelClock;
+					per_timing_info = dptx_timing_node;
 				}
 			}
 
@@ -1730,7 +1616,6 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 			}
 
 			bsafe_mode = false;
-			per_timing_info = dptx->edid_info.Video.TimingInfo + pos_max;
 			mdtd.pixel_repetition_input = 0;
 			mdtd.pixel_clock = per_timing_info->pixelClock;
 
@@ -1755,7 +1640,6 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 
 			if(dptx->edid_info.Video.dp_monitor_descriptor != NULL) {
 				monitor_name_info = dptx->edid_info.Video.dp_monitor_descriptor;
-				memcpy(&dptx->m_dsm_info.dsm_monitor_info[0], monitor_name_info, DP_MONTIOR_NAME_SIZE);
 				if(!(strncmp("HUAWEIAV02", monitor_name_info, strlen("HUAWEIAV02")))) {
 					dptx->dptx_vr = true;
 					HISI_FB_INFO("The display is VR.\n");
@@ -1768,9 +1652,9 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 
 			dptx->max_edid_timing_hactive = per_timing_info->hActivePixels;
 
-			HISI_FB_INFO("The choosed DTD: pixel_clock is %d, interlaced is %d, h_active is %d, v_active is %d\n",
+			HISI_FB_INFO("The choosed DTD: pixel_clock is %llu, interlaced is %d, h_active is %d, v_active is %d\n",
 					mdtd.pixel_clock, mdtd.interlaced, mdtd.h_active, mdtd.v_active);
-			HISI_FB_DEBUG("DTD pixel_clock: %d interlaced: %d\n",
+			HISI_FB_DEBUG("DTD pixel_clock: %llu interlaced: %d\n",
 				 mdtd.pixel_clock, mdtd.interlaced);
 			HISI_FB_DEBUG("h_active: %d h_blanking: %d h_sync_offset: %d\n",
 				 mdtd.h_active, mdtd.h_blanking, mdtd.h_sync_offset);
@@ -1782,6 +1666,10 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 			HISI_FB_DEBUG("v_sync_pulse_width: %d v_image_size: %d v_sync_polarity: %d\n",
 				 mdtd.v_sync_pulse_width, mdtd.v_image_size,
 				 mdtd.v_sync_polarity);
+
+			dp_imonitor_set_param(DP_PARAM_MAX_WIDTH,   &(mdtd.h_active));
+			dp_imonitor_set_param(DP_PARAM_MAX_HIGH,    &(mdtd.v_active));
+			dp_imonitor_set_param(DP_PARAM_PIXEL_CLOCK, &(mdtd.pixel_clock));
 		} else {
 			bsafe_mode = true;
 			goto safe_mode;
@@ -1790,12 +1678,25 @@ int handle_hotplug(struct hisi_fb_data_type *hisifd)
 
 safe_mode:
 	if (bsafe_mode) {
+		dp_imonitor_set_param(DP_PARAM_SAFE_MODE, &bsafe_mode);
 		if (edid_info_size) {
 			vparams->video_format = VCEA;
 			dptx_dtd_fill(&mdtd, 1, vparams->refresh_rate, vparams->video_format);
 		} else {
 			vparams->video_format = DMT;
 			dptx_dtd_fill(&mdtd, 16, vparams->refresh_rate, vparams->video_format); /*If edid can't be got, DP transfer 1024*768 firstly!*/
+
+			retval = dptx_read_dpcd(dptx, DP_DOWNSTREAMPORT_PRESENT, &rev);
+			if (retval) {
+				HISI_FB_ERR("failed to dptx_read_dpcd DP_DOWNSTREAMPORT_PRESENT, retval=%d.\n", retval);
+				return retval;
+			}
+
+			if (((rev & DP_DWN_STRM_PORT_TYPE_MASK) >> 1) != 0x01) {
+				dptx->edid_info.Audio.basicAudio = 0x1;
+				HISI_FB_INFO("If DFP port don't belong to analog(VGA/DVI-I), update audio capabilty.\n");
+				dp_imonitor_set_param(DP_PARAM_BASIC_AUDIO, &(dptx->edid_info.Audio.basicAudio));
+			}
 		}
 	}
 
@@ -1807,7 +1708,6 @@ safe_mode:
 		/* Reset core and try again */
 		/* Abort all aux, and other work, reset the core */
 		HISI_FB_ERR("failed to dptx_read_dpcd DP_DPCD_REV, retval=%d.\n", retval);
-		dptx_dmd_report(DSM_DP_BASIC_EXTERNAL_DISPLAY_NO,"DP DPCD FAIL: failed to dptx_read_dpcd DP_DPCD_REV, retval=%d.\n",retval);
 		return retval;
 	}
 	HISI_FB_INFO("DP Revision %x.%x .\n", (rev & 0xf0) >> 4, rev & 0xf);
@@ -1819,6 +1719,7 @@ safe_mode:
 		HISI_FB_ERR("failed to dptx_read_bytes_from_dpcd DP_DPCD_REV, retval=%d.\n", retval);
 		return retval;
 	}
+	dp_imonitor_set_param(DP_PARAM_DPCD_RX_CAPS, dptx->rx_caps);
 
 	/*
 	* The TEST_EDID_READ is asserted on HOTPLUG. Check for it and
@@ -1854,13 +1755,14 @@ safe_mode:
 	retval = dptx_link_training(dptx, dptx->max_rate, dptx->max_lanes);
 	if (retval) {
 		HISI_FB_ERR("failed to  dptx_link_training, retval=%d.\n", retval);
+		dp_imonitor_set_param(DP_PARAM_LINK_TRAINING_FAILED, &retval);
 		return retval;
 	}
 
 	retval = dptx_video_ts_calculate(dptx, dptx->link.lanes,
 		dptx->link.rate, vparams->bpc, vparams->pix_enc, vparams->mdtd.pixel_clock);
 	if (retval) {
-		HISI_FB_INFO("Can't change to the preferred video mode: frequency = %d\n",
+		HISI_FB_INFO("Can't change to the preferred video mode: frequency = %llu\n",
 						mdtd.pixel_clock);
 		vparams->video_format = VCEA;
 		vparams->mode = dptx_change_video_mode_tu_fail(dptx);
@@ -1873,15 +1775,18 @@ safe_mode:
 		}
 	} else {
 		vparams->mdtd = mdtd;
-		HISI_FB_INFO("pixel_frequency=%d.\n", mdtd.pixel_clock);
+		HISI_FB_INFO("pixel_frequency=%llu.\n", mdtd.pixel_clock);
 
 		/* MMCM */
 	}
 
-	dp_notify_audio(dptx->dptx_vr);
-
 	/*DP update device to HWC and configue DSS*/
 	if (dptx->dptx_vr) {
+		if (dptx_check_low_temperature(dptx)) {
+			HISI_FB_ERR("VR device can't work on low temperature!\n");
+			return 0;
+		}
+
 		retval = dptx_resolution_switch(hisifd, Hot_Plug_IN_VR);
 		if (retval) {
 			HISI_FB_ERR("Hot_Plug_IN_VR DSS init fail !!!\n");
@@ -1898,6 +1803,15 @@ safe_mode:
 		}
 	}
 
+	// for factory test
+	if (dp_factory_mode_is_enable()) {
+		if (!dp_factory_is_4k_60fps(dptx->max_rate, dptx->max_lanes,
+			dptx->vparams.mdtd.h_active, dptx->vparams.mdtd.v_active, dptx->vparams.m_fps)) {
+			HISI_FB_ERR("not support hotplug when not 4k@60fps in factory mode!\n");
+			return -ECONNREFUSED;
+		}
+	}
+
 	/*Update DP reg configue*/
 	dptx_video_timing_change(dptx);	/*dptx video reg depends on dss pixel clock.*/
 	dptx_audio_config(dptx);	/*dptx audio reg depends on phy status(P0)*/
@@ -1908,11 +1822,6 @@ safe_mode:
 	}
 
 	hparams->auth_fail_count = 0;
-
-		retval = dptx_get_current_time(&dptx->m_dsm_info.dsm_link_succ_time[0]);
-		if(retval < 0) {
-			HISI_FB_ERR("get current time failed!\n");
-		}
 
 	HISI_FB_INFO("-.\n");
 
@@ -1945,11 +1854,15 @@ static void handle_hdcp22_gpio_intr(struct dp_ctrl *dptx)
 			HISI_FB_NOTICE("[HDCP22] sink is not HDCP22 capable\n");
 	}
 
-	if (hdcpobs & DPTX_HDCP22_AUTH_SUCCESS)
+	if (hdcpobs & DPTX_HDCP22_AUTH_SUCCESS) {
 		HISI_FB_NOTICE("[HDCP22] the authentication is succeded.\n");
+		dp_imonitor_set_param(DP_PARAM_HDCP_KEY_S, NULL);
+	}
 
-	if (hdcpobs & DPTX_HDCP22_AUTH_FAILED)
+	if (hdcpobs & DPTX_HDCP22_AUTH_FAILED) {
 		HISI_FB_NOTICE("[HDCP22] the authentication is failed.\n");
+		dp_imonitor_set_param(DP_PARAM_HDCP_KEY_F, NULL);
+	}
 
 	if (hdcpobs & DPTX_HDCP22_RE_AUTH_REQ)
 		HISI_FB_WARNING("[HDCP22] the sink has requested a re-authentication.\n");
@@ -2017,6 +1930,7 @@ static void handle_hdcp_intr(struct dp_ctrl *dptx)
 		{
 		    link_error_count = MAX_LINK_ERROR_COUNT;   //flag to re-auth
 		    HISI_FB_INFO("HDCP authentication process was failed!\n");
+			dp_imonitor_set_param(DP_PARAM_HDCP_KEY_F, NULL);
 		}
 	}
 
@@ -2024,6 +1938,7 @@ static void handle_hdcp_intr(struct dp_ctrl *dptx)
 		hparams->auth_fail_count = 0;
 		HDCP_Stop_Polling_task(1);
 		HISI_FB_NOTICE("HDCP authentication process was successful.\n");
+		dp_imonitor_set_param(DP_PARAM_HDCP_KEY_S, NULL);
 	}
 
 	if (hdcpintsts & DPTX_HDCP22_GPIOINT) {
@@ -2117,11 +2032,7 @@ irqreturn_t dptx_threaded_irq(int irq, void *dev)
 		return IRQ_HANDLED;
 	}
 
-	if (g_dss_version_tag & FB_ACCEL_KIRIN970) {
-		g_bit_hpd_status = DPTX_HPDSTS_STATUS_GA;
-	} else {
-		g_bit_hpd_status = DPTX_HPDSTS_STATUS_EA03;
-	}
+	g_bit_hpd_status = DPTX_HPDSTS_STATUS_GA;
 
 	/*
 	 * TODO this should be set after all AUX transactions that are
@@ -2137,6 +2048,7 @@ irqreturn_t dptx_threaded_irq(int irq, void *dev)
 
 		if (hpdsts & g_bit_hpd_status) {
 			retval = handle_hotplug(hisifd);
+			dp_imonitor_set_param(DP_PARAM_HOTPLUG_RETVAL, &retval);
 			if (retval) {
 				HISI_FB_ERR("DP Device Hotplug error %d\n", retval);
 			}

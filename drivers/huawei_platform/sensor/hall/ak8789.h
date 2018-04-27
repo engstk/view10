@@ -62,6 +62,8 @@
 #define HALL_AUXILIARY_N				"huawei,auxiliary-north"
 #define HALL_AUXILIARY_S				"huawei,auxiliary-south"
 #define HALL_GPIO_TYPE					"huawei,gpio-type"
+#define HALL_INT_DELAY                              "huawei,int-delay-time"
+#define HALL_DEFAULT_INT_DELAY                      50
 #define HALL_MAX_STRING_LEN				16
 #define HALL_MXA_INFO_LEN				256
 #define HALL_SENSOR_NAME				"hall,sensor"
@@ -103,6 +105,7 @@ struct hall_device {
 	int hall_hw_wakeup_support;
 	int default_state;
 	int hall_gpio_type;
+	int hall_int_delay;
 
 	struct list_head list;
 	struct delayed_work h_delayed_work;

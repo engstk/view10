@@ -237,7 +237,7 @@ static ssize_t rmidev_sysfs_attn_state_show(struct device *dev,
 	return snprintf(buf, PAGE_SIZE, "%u\n", attn_state);
 }
 
-static int rmidev_allocate_buffer(int count)
+static int rmidev_allocate_buffer(size_t count)
 {
 	if (count + 1 > rmidev->tmpbuf_size) {
 		if (rmidev->tmpbuf_size)

@@ -1282,7 +1282,7 @@ static int slimbus_init_platform_params(const char *platformtype, slimbus_device
 	int ret = 0;
 
 	slimbus_devices[device_type]->rf = SLIMBUS_RF_6144;
-	slimbus_devices[device_type]->slimbusclk_drv = 0xA0;
+	slimbus_devices[device_type]->slimbusclk_drv = 0xA8;
 	slimbus_devices[device_type]->slimbusdata_drv = 0xA3;
 	slimbus_devices[device_type]->slimbusclk_offset = IOC_SYS_IOMG_011;
 	slimbus_devices[device_type]->slimbusdata_offset = IOC_SYS_IOMG_012;
@@ -1405,7 +1405,7 @@ static int slimbus_clk_init(struct platform_device *pdev, struct slimbus_private
 	mdelay(1);
 
 	pd->asp_subsys_clk = devm_clk_get(dev, "clk_asp_subsys");
-	if (IS_ERR_OR_NULL(pd->pmu_audio_clk)) {
+	if (IS_ERR_OR_NULL(pd->asp_subsys_clk)) {
 		dev_err(dev, "devm_clk_get: clk_asp_subsys not found!\n");
 		goto  pmu_audio_clk_enable_err;
 	}
@@ -1802,6 +1802,7 @@ static int slimbus_suspend(struct device *device)
 		*/
 
 		if (pd->framerstate == SLIMBUS_FRAMER_CODEC) {
+			pr_err("[%s:%d]switch framer to soc \n", __FUNCTION__, __LINE__);
 			ret = slimbus_switch_framer(pd->device_type, SLIMBUS_FRAMER_SOC);
 			if (ret) {
 				pr_err("%s : slimbus switch framer failed!\n", __FUNCTION__);

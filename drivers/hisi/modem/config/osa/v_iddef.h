@@ -188,6 +188,24 @@ typedef struct
 
 #endif
 
+#if (OSA_CPU_NRCPU == VOS_OSA_CPU)
+
+/* modify this to config memory*/
+/* the number of message's control block */
+#define VOS_MEM_CTRL_BLOCK_NUMBER                           13
+
+/* the number of memory's control block */
+#if (FEATURE_ON == FEATURE_VOS_REDUCE_MEM_CFG)
+#define VOS_SIMPLE_MEM_CTRL_BLOCK_NUMBER                    12
+#else
+#define VOS_SIMPLE_MEM_CTRL_BLOCK_NUMBER                    14
+#endif
+
+/* VOS_TIMER_MESSAGE_NUM must be equal 2*VOS_MAX_TIMER_NUMBER */
+#define VOS_TIMER_MESSAGE_NUM                               400
+
+#endif
+
 /* config the number of pool which VOS support */
 #define VOS_MEM_POOL_NUMBER                                 2
 

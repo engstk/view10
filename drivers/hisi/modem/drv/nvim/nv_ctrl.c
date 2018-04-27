@@ -48,6 +48,7 @@
 
 #include <product_config.h>
 #include <ptable_com.h>
+#include <securec.h>
 #include "mdrv_rfile_common.h"
 #include <bsp_blk.h>
 #include <bsp_slice.h>
@@ -183,7 +184,7 @@ FILE* nv_file_open(const s8* path,const s8* mode)
     {
         return NULL;
     }
-    (void)nv_memset((u8 *)fp, 0, sizeof(struct nv_file_p));
+    (void)memset_s((u8 *)fp, sizeof(struct nv_file_p), 0, sizeof(struct nv_file_p));
 
     if(0 != strncasecmp((const s8*)NON_FS_DIR, path, (sizeof(NON_FS_DIR) -1) ))
     {
@@ -338,14 +339,7 @@ u32 nv_file_ftell(FILE* fp)
     }
 }
 
- /*
-  * Function   : nv_file_access
-  * Discription: check the file is exist?
-  * Parameter  : fp:   file pointer
-  * Output     :
-  * return     : 0:表示有文件 其他没文件
-  * History    : yuyangyang  00228784  create
-  */
+ 
 u32 nv_file_access(const s8* path,s32 mode)
 {
 

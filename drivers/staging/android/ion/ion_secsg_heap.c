@@ -37,7 +37,7 @@
 #include <teek_client_id.h>
 #include <teek_client_constants.h>
 #include <linux/memblock.h>
-
+#include <asm/cacheflush.h>
 #include <linux/sched.h>
 #include <asm/tlbflush.h>
 #include <linux/list.h>
@@ -276,6 +276,9 @@ static inline void free_alloc_list(struct list_head *head)
 	struct alloc_list *pos = NULL;
 	while(!list_empty(head)){
 		pos = list_first_entry(head, struct alloc_list, list);
+		if (pos->addr || pos->size) {
+			pr_err("in %s %llx %x failed\n", __func__, pos->addr, pos->size);
+		}
 		list_del(&(pos->list));
 		kfree(pos);
 	}
@@ -432,6 +435,7 @@ retry:
 		}
 	}else {
 		memset(page_address(pg), 0x0, size);/*lint !e747*/ /* unsafe_function_ignore: memset  */
+		ion_flush_all_cpus_caches();
 	}
 	gen_pool_free(secsg_heap->pool, page_to_phys(pg), size);/*lint !e747*/
 	secsg_debug("out %s %u MB memory(ret = %d). \n",
@@ -463,13 +467,14 @@ static int __secsg_heap_input_check(struct ion_secsg_heap *secsg_heap,
 	if (((secsg_heap->heap_attr == HEAP_SECURE) ||
 	     (secsg_heap->heap_attr == HEAP_PROTECT)) &&
 	    !(flag & ION_FLAG_SECURE_BUFFER)) {
-		pr_err("allocating memory w/o sec flag in sec heap(%u)\n",
-		       secsg_heap->heap_attr);
+		pr_err("allocating memory w/o sec flag in sec heap(%u) flag(%lx)\n",
+		       secsg_heap->heap_attr, flag);
 		return -EINVAL;
 	}
 	if ((secsg_heap->heap_attr == HEAP_NORMAL) &&
 	    (flag & ION_FLAG_SECURE_BUFFER)) {
-		pr_err("invalid allocate sec memory in normal heap\n");
+		pr_err("invalid allocate sec in sec heap(%u) flag(%lx)\n",
+				secsg_heap->heap_attr, flag);
 		return -EINVAL;
 	}
 	secsg_heap->flag = flag;
@@ -489,6 +494,8 @@ static int __secsg_create_pool(struct ion_secsg_heap *secsg_heap)
 		pr_err("in __secsg_create_pool create failed\n");
 		return -ENOMEM;
 	}
+	gen_pool_set_algo(secsg_heap->pool, gen_pool_best_fit, NULL);
+
 	/* Add all memory to genpool first，one chunk only*/
 	cma_base = cma_get_base(secsg_heap->cma);
 	cma_size = cma_get_size(secsg_heap->cma);
@@ -510,6 +517,22 @@ err_alloc:
 err_add:
 	secsg_heap->pool = NULL;
 	return ret;
+}
+
+static bool gen_pool_bulk_free(struct gen_pool *pool, u32 size)
+{
+	int i;
+	unsigned long offset = 0;
+
+	for (i = 0; i < (size / PAGE_SIZE); i++) {/*lint !e574*/
+		offset = gen_pool_alloc(pool, PAGE_SIZE);/*lint !e747*/
+		if (!offset) {
+			pr_err("%s:%d:gen_pool_alloc failed!\n",
+			       __func__, __LINE__);
+			return false;
+		}
+	}
+	return true;
 }
 
 static void __secsg_pool_release(struct ion_secsg_heap *secsg_heap)
@@ -538,6 +561,41 @@ static void __secsg_pool_release(struct ion_secsg_heap *secsg_heap)
 		list_for_each_entry(pos, &secsg_heap->allocate_head, list) {
 			addr = pos->addr;
 			size = pos->size;
+			offset = gen_pool_alloc(secsg_heap->pool, size);/*lint !e747*/
+			if (!offset) {
+				pr_err("%s:%d:gen_pool_alloc failed! but it's nothing %llx %x\n",
+				       __func__, __LINE__, addr, size);
+				continue;
+			}
+			virt = (unsigned long)__va(addr);/*lint !e834 !e648*/
+			/*lint -save -e747 */
+			if (secsg_heap->flag & ION_FLAG_SECURE_BUFFER) {
+				create_mapping_late(addr,
+						    virt,
+						    size,
+						    __pgprot(PAGE_KERNEL));
+			}
+
+			/*lint -restore*/
+			cma_release(secsg_heap->cma, phys_to_page(addr),
+				    (1U << get_order(size)));/*lint !e516 !e866 !e834 !e747*/
+			pos->addr = 0;
+			pos->size = 0;
+		}
+	}
+	if (!list_empty(&secsg_heap->allocate_head)) {
+		list_for_each_entry(pos, &secsg_heap->allocate_head, list) {
+			addr = pos->addr;
+			size = pos->size;
+			if (!addr || !size)
+				continue;
+
+			if (unlikely(!gen_pool_bulk_free(secsg_heap->pool, size))) {
+					pr_err("%s:%d:gen_poo_bulk_free failed! %llx %x\n",
+					       __func__, __LINE__, addr, size);
+				continue;
+			}
+
 			virt = (unsigned long)__va(addr);/*lint !e834 !e648*/
 			/*lint -save -e747 */
 			if (secsg_heap->flag & ION_FLAG_SECURE_BUFFER) {
@@ -549,18 +607,16 @@ static void __secsg_pool_release(struct ion_secsg_heap *secsg_heap)
 			/*lint -restore*/
 			cma_release(secsg_heap->cma, phys_to_page(addr),
 				    (1U << get_order(size)));/*lint !e516 !e866 !e834 !e747*/
-			offset = gen_pool_alloc(secsg_heap->pool, size);/*lint !e747*/
-			if (!offset)
-				pr_err("%s:%d:gen_pool_alloc failed!\n",
-				       __func__, __LINE__);
+			pos->addr = 0;
+			pos->size = 0;
 		}
 		free_alloc_list(&secsg_heap->allocate_head);
 	}
 out:
 	size_remain = gen_pool_avail(secsg_heap->pool);
-
-	secsg_debug("out %s, size_remain = 0x%lx(0x%lx)\n",
-		__func__, size_remain, offset);
+	if (size_remain)
+		pr_err("out %s, size_remain = 0x%lx(0x%lx)\n",
+				__func__, size_remain, offset);
 	return;/*lint !e438*/
 }/*lint !e550*/
 
@@ -586,13 +642,6 @@ static int __secsg_alloc(struct ion_secsg_heap *secsg_heap,
 	/*align size*/
 	offset = gen_pool_alloc(secsg_heap->pool, size);
 	if(!offset){
-		/**
-		 * For the drm memory is also used by Camera,
-		 * So when drm create memory pool, need clean
-		 * the camera drm heap.
-		 */
-		ion_clean_dma_camera_cma();
-
 		ret = __secsg_cma_alloc(secsg_heap, size);
 		if (ret)
 			goto err_out2;
@@ -623,8 +672,12 @@ static void __secsg_free(
 	struct page *page = sg_page(table->sgl);
 	ion_phys_addr_t paddr = PFN_PHYS(page_to_pfn(page));
 
-	if (!(buffer->flags & ION_FLAG_SECURE_BUFFER))
+	if (!(buffer->flags & ION_FLAG_SECURE_BUFFER)) {
 		(void)ion_heap_buffer_zero(buffer);
+		if (buffer->flags & ION_FLAG_CACHED)
+			dma_sync_sg_for_device(NULL, table->sgl,
+					table->nents, DMA_BIDIRECTIONAL);
+	}
 	gen_pool_free(secsg_heap->pool, paddr, buffer->size);
 
 	sg_free_table(table);

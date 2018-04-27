@@ -32,7 +32,6 @@ static HI_U32  g_clock_values[] = {450000000, 300000000, 185000000};
 static HI_U32  g_VdecClkRate_l  = 185000000;
 static HI_U32  g_VdecClkRate_n  = 300000000;
 static HI_U32  g_VdecClkRate_h  = 450000000;
-static HI_U32  g_CurClkRate     = 0;
 static HI_BOOL g_VdecPowerOn    = HI_FALSE;
 
 static struct  clk          *g_PvdecClk        = HI_NULL;
@@ -43,6 +42,22 @@ static struct  iommu_domain *g_VdecSmmuDomain  = HI_NULL;
 struct mutex g_RegulatorMutex;
 static VFMW_DTS_CONFIG_S g_DtsConfig;
 static CLK_RATE_E g_ResumeClkType = VDEC_CLK_RATE_LOW;
+
+#ifdef PLATFORM_HIVCODECV300
+#define VDEC_QOS_MODE                0xE893000C
+#define VDEC_QOS_BANDWIDTH           0xE8930010
+#define VDEC_QOS_SATURATION          0xE8930014
+#define VDEC_QOS_EXTCONTROL          0xE8930018
+
+static HI_U32 g_VdecQosMode        = 0x1;
+static HI_U32 g_VdecQosBandwidth   = 0x1000;
+static HI_U32 g_VdecQosSaturation  = 0x20;
+static HI_U32 g_VdecQosExtcontrol  = 0x1;
+#endif
+
+#ifdef CONFIG_ES_VDEC_LOW_FREQ
+static HI_U32 g_VdecLowFreq        = 332000000;
+#endif
 
 #ifdef HIVDEC_SMMU_SUPPORT
 
@@ -105,7 +120,9 @@ static HI_S32 VDEC_Init_ClockRate(struct device *dev)
 	ret += read_clock_rate_value(dev->of_node, 2, &g_VdecClkRate_l);
 	RETURN_FAIL_IF_COND_IS_TRUE(ret, "read clock failed");
 
-	g_CurClkRate = g_VdecClkRate_l;
+#ifdef CONFIG_ES_VDEC_LOW_FREQ
+	g_VdecClkRate_h = g_VdecLowFreq;
+#endif
 
 	return HI_SUCCESS;
 }
@@ -234,6 +251,47 @@ HI_S32 VDEC_Regulator_Remove(struct device * dev)
 	return HI_SUCCESS;
 }
 
+#ifdef PLATFORM_HIVCODECV300
+static HI_S32 VDEC_Config_QOS(void)
+{
+	HI_U32 *qos_addr = HI_NULL;
+
+	qos_addr = (HI_U32*)ioremap(VDEC_QOS_MODE, 4);
+	if(!qos_addr) {
+		dprint(PRN_FATAL, "ioremap VDEC_QOS_MODE reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VdecQosMode, qos_addr);
+	iounmap(qos_addr);
+
+	qos_addr = (HI_U32*)ioremap(VDEC_QOS_BANDWIDTH, 4);
+	if(!qos_addr) {
+		dprint(PRN_FATAL, "ioremap VDEC_QOS_BANDWIDTH reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VdecQosBandwidth, qos_addr);
+	iounmap(qos_addr);
+
+	qos_addr = (HI_U32*)ioremap(VDEC_QOS_SATURATION, 4);
+	if(!qos_addr) {
+		dprint(PRN_FATAL, "ioremap VDEC_QOS_SATURATION reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VdecQosSaturation, qos_addr);
+	iounmap(qos_addr);
+
+	qos_addr = (HI_U32*)ioremap(VDEC_QOS_EXTCONTROL, 4);
+	if(!qos_addr) {
+		dprint(PRN_FATAL, "ioremap VDEC_QOS_EXTCONTROL reg failed! \n");
+		return HI_FAILURE;
+	}
+	writel(g_VdecQosExtcontrol, qos_addr);
+	iounmap(qos_addr);
+
+	return HI_SUCCESS;
+}
+#endif
+
 /*----------------------------------------
     func: enable regulator
  ----------------------------------------*/
@@ -272,6 +330,7 @@ HI_S32 VDEC_Regulator_Enable(HI_VOID)
 		dprint(PRN_FATAL, "%s clk_prepare_enable failed\n", __func__);
 		goto error_regulator_disable;
 	}
+
 	ret  = clk_set_rate(g_PvdecClk, g_VdecClkRate_l);
 	if (ret)
 	{
@@ -283,6 +342,14 @@ HI_S32 VDEC_Regulator_Enable(HI_VOID)
 		dprint(PRN_FATAL, "%s enable regulator failed\n", __func__);
 		goto error_unprepare_clk;
 	}
+
+#ifdef PLATFORM_HIVCODECV300
+	ret = VDEC_Config_QOS();
+	if (ret != HI_SUCCESS) {
+		dprint(PRN_FATAL, "%s config qos failed\n", __func__);
+		goto error_unprepare_clk;
+	}
+#endif
 
 	dprint(PRN_ALWS, "vdec regulator enable\n");
 
@@ -375,68 +442,67 @@ HI_VOID VDEC_Regulator_GetClkRate(CLK_RATE_E *pClkRate)
 	*pClkRate = g_ResumeClkType;
 	VDEC_MUTEX_UNLOCK(&g_RegulatorMutex);
 }
-
 HI_S32 VDEC_Regulator_SetClkRate(CLK_RATE_E eClkRate)
 {
-	HI_S32 ret          = 0;
-	HI_U32 rate         = 0;
-	HI_U8 need_set_flag = 1;
+	HI_S32 ret              = 0;
+	HI_U32 currentClkRate   = 0;
+	HI_U32 needClkRate      = 0;
+	CLK_RATE_E needClkType;
 
 	VDEC_MUTEX_LOCK(&g_RegulatorMutex);
-
-	if (g_DtsConfig.IsFPGA) {
-		VDEC_MUTEX_UNLOCK(&g_RegulatorMutex);
-		return HI_SUCCESS;
-	}
 
 	if (IS_ERR_OR_NULL(g_PvdecClk)) {
 		dprint(PRN_ERROR,  "Couldn't get clk [%s]\n", __func__);
 		goto error_exit;
 	}
 
-	rate = (HI_U32) clk_get_rate(g_PvdecClk);
 	switch (eClkRate) {
 	case VDEC_CLK_RATE_LOW:
-		if (g_VdecClkRate_l == rate) {
-			need_set_flag = 0;
-		} else {
-			rate = g_VdecClkRate_l;
-			need_set_flag = 1;
-		}
+		needClkRate = g_VdecClkRate_l;
 		break;
 
 	case VDEC_CLK_RATE_NORMAL:
-		if (g_VdecClkRate_n == rate) {
-			need_set_flag = 0;
-		}
-		else {
-			rate = g_VdecClkRate_n;
-			need_set_flag = 1;
-		}
+		needClkRate = g_VdecClkRate_n;
 		break;
 
 	case VDEC_CLK_RATE_HIGH:
-		if (g_VdecClkRate_h == rate) {
-			need_set_flag = 0;
-		} else {
-			rate = g_VdecClkRate_h;
-			need_set_flag = 1;
-		}
+		needClkRate = g_VdecClkRate_h;
 		break;
 
 	default:
-		dprint(PRN_ERROR,  "[%s] unsupport clk rate enum %d\n", __func__, eClkRate);
+		dprint(PRN_ERROR, "[%s] unsupport clk rate enum %d\n", __func__, eClkRate);
 		goto error_exit;
 	}
 
-	if (need_set_flag == 1) {
-		ret = clk_set_rate(g_PvdecClk, rate);
-		if (ret != 0) {
-			dprint(PRN_ERROR,  "Failed to clk_set_rate %u HZ[%s] ret : %d\n", rate, __func__, ret);
+	currentClkRate = (HI_U32) clk_get_rate(g_PvdecClk);
+	if (needClkRate != currentClkRate) {
+		needClkType = eClkRate;
+		ret = clk_set_rate(g_PvdecClk, needClkRate);
+		if ((0 != ret) && (needClkRate == g_VdecClkRate_h)
+			&& (currentClkRate != g_VdecClkRate_n)) {
+			dprint(PRN_ALWS, "[%s] failed set clk to %u Hz,  fail code is %d\n", __func__, needClkRate, ret);
+			needClkRate = g_VdecClkRate_n;
+			needClkType = VDEC_CLK_RATE_NORMAL;
+			ret = clk_set_rate(g_PvdecClk, needClkRate);
+		}
+
+#ifdef VDEC_AVS_LOW_CFG
+		if ((0 != ret) && (needClkRate == g_VdecClkRate_n)
+			&& (currentClkRate != g_VdecClkRate_l)) {
+			dprint(PRN_ALWS, "[%s] failed set clk to %u Hz,  fail code is %d\n", __func__, needClkRate, ret);
+			needClkRate = g_VdecClkRate_l;
+			needClkType = VDEC_CLK_RATE_LOW;
+			ret = clk_set_rate(g_PvdecClk, needClkRate);
+		}
+#endif
+		if (0 == ret)
+		{
+			g_ResumeClkType = needClkType;
+		}
+		else {
+			dprint(PRN_ERROR, "[%s] failed set clk to %u Hz,  fail code is %d\n", __func__, needClkRate, ret);
 			goto error_exit;
 		}
-		g_CurClkRate = rate;
-		g_ResumeClkType = eClkRate;
 	}
 
 	VDEC_MUTEX_UNLOCK(&g_RegulatorMutex);

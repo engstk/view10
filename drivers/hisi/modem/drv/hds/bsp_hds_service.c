@@ -53,20 +53,11 @@
 #include <linux/list.h>
 #include <linux/kernel.h>
 #include "osl_malloc.h"
-
+#include <securec.h>
 /*lint -save -e826 */
 bsp_hds_cmd_stru g_hds_cmd_list_head;
 hds_cnf_func     g_hds_cnf_fn = NULL;
-/*************************************************************************
- 函 数 名	: bsp_hds_cmd_register
- 功能描述	: bsp消息处理cmdid和回调函数注册接口
- 输入参数	: u32 cmdid, bsp_hds_func fn
- 返 回 值	: 0
- 修改历史	:
- 日    期	: 2016年8月10日
- 作    者	: l00354607
- 修改内容	:
-*************************************************************************/
+
 /*lint -save -e429 */
 void bsp_hds_cmd_register(u32 cmdid, bsp_hds_func fn)
 {
@@ -100,16 +91,7 @@ void bsp_hds_cmd_register(u32 cmdid, bsp_hds_func fn)
 }
 /*lint -restore*/
 
-/*************************************************************************
- 函 数 名	: bsp_hds_msg_proc
- 功能描述	: bsp消息处理
- 输入参数	: u32 cmdid, bsp_hds_func fn
- 返 回 值	: 0
- 修改历史	:
- 日    期	: 2016年8月10日
- 作    者	: l00354607
- 修改内容	:
-*************************************************************************/
+
 int bsp_hds_msg_proc(diag_frame_head_stru *pData)
 {
     s32 ret = 0;
@@ -147,7 +129,7 @@ void bsp_hds_get_cmdlist(u32 *cmdlist, u32 *num)
     struct list_head *me;
     bsp_hds_cmd_stru *pstDiag = NULL;
 
-    memset(cmdlist, 0, (unsigned long)(*num));
+    memset_s(cmdlist, (unsigned long)(*num), 0, (unsigned long)(*num));
 
     list_for_each(me,&g_hds_cmd_list_head.list)
     {
@@ -196,16 +178,7 @@ void bsp_hds_cnf_common_fill(hds_cnf_stru *cnf, diag_frame_head_stru *req)
     cnf->ulTransId    = req->stService.MsgTransId;
 }
 
-/*************************************************************************
- 函 数 名	: bsp_ShowDebugInfo
- 功能描述	: bsp消息回调debug信息
- 输入参数	:
- 返 回 值	:
- 修改历史	:
- 日    期	: 2016年8月10日
- 作    者	: l00354607
- 修改内容	:
-*************************************************************************/
+
 void bsp_ShowDebugInfo(void)
 {
     struct list_head *me;

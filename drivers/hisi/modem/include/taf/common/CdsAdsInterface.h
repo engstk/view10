@@ -76,18 +76,7 @@ extern "C" {
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
-枚举名    : CDS_ADS_MSG_ID_ENUM
-结构说明  : CDS和ADS的之间的消息
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义CDS和ADS之间的消息
-  2.日    期   : 2017年2月28日
-    作    者   : l00385436
-    修改内容   : 新增消息
-
-*****************************************************************************/
 enum CDS_ADS_MSG_ID_ENUM
 {
     ID_CDS_ADS_STOP_SENDDATA_IND     = CDS_ADS_MSG_HDR + 0x01,                  /* CDS->ADS STOP SENDDATA IND */
@@ -103,14 +92,7 @@ enum CDS_ADS_MSG_ID_ENUM
 typedef VOS_UINT32  CDS_ADS_MSG_ID_ENUM_UINT32;
 
 
-/*****************************************************************************
-枚举名    : CDS_ADS_IP_PACKET_TYPE_ENUM_UINT8
-结构说明  : CDS与ADS的IP消息包类型定义
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义CDS与ADS的消息包类型
-*****************************************************************************/
 enum CDS_ADS_IP_PACKET_TYPE_ENUM
 {
     CDS_ADS_IP_PACKET_TYPE_DHCP_SERVERV4   = 0x00,
@@ -122,14 +104,7 @@ enum CDS_ADS_IP_PACKET_TYPE_ENUM
 };
 typedef VOS_UINT8 CDS_ADS_IP_PACKET_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
-枚举名    : CDS_ADS_DL_IPF_BEARER_ID_ENUM
-结构说明  : CDS与ADS下行的IPF Bearer Id定义
 
-  1.日    期   : 2011年12月16日
-    作    者   : 鲁琳/l60609
-    修改内容   : CDS与ADS下行的IPF Bearer Id定义
-*****************************************************************************/
 enum CDS_ADS_DL_IPF_BEARER_ID_ENUM
 {
     CDS_ADS_DL_IPF_BEARER_ID_RSV0     = 0,                                      /* 0~4保留 */
@@ -141,22 +116,13 @@ enum CDS_ADS_DL_IPF_BEARER_ID_ENUM
     CDS_ADS_DL_IPF_BEARER_ID_ICMPV6   = 19,                                     /* 下行ICMPv6 */
     CDS_ADS_DL_IPF_BEARER_ID_LL_FE80  = 20,
     CDS_ADS_DL_IPF_BEARER_ID_LL_FF    = 21,
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-31, begin */
     CDS_ADS_DL_IPF_BEARER_ID_MIP_ADV  = 22,
     CDS_ADS_DL_IPF_BEARER_ID_MIP_REG_REPLY = 23,
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-31, end */
     CDS_ADS_DL_IPF_BEARER_ID_INVALID  = 63                                      /* 不匹配任何Filter，0x3F*/
 };
 typedef VOS_UINT32 CDS_ADS_DL_IPF_BEARER_ID_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : ADS_CDS_IPF_PKT_TYPE_ENUM_UINT8
-结构说明  : ADS给CDS的数据包类型
 
-  1.日    期   : 2013年05月22日
-    作    者   : 范晶/00179208
-    修改内容   : 定义ADS与CDS的数据包类型
-*****************************************************************************/
 enum ADS_CDS_PKT_TYPE_ENUM
 {
     ADS_CDS_IPF_PKT_TYPE_IP   = 0x00,                                           /* IP类型 */
@@ -183,14 +149,7 @@ typedef VOS_UINT8 ADS_CDS_IPF_PKT_TYPE_ENUM_UINT8;
 /*****************************************************************************
   7 STRUCT定义
 *****************************************************************************/
-/*****************************************************************************
-结构名    : CDS_ADS_STOP_SENDDATA_IND_STRU
-结构说明  : CDS指示ADS停止数据发送结构
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义CDS指示ADS停止数据发送的结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */
@@ -201,14 +160,7 @@ typedef struct
 
 } CDS_ADS_STOP_SENDDATA_IND_STRU;
 
-/*****************************************************************************
-结构名    : CDS_ADS_STOP_SENDDATA_RSP_STRU
-结构说明  : ADS回复CDS停止数据发送结构
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS回复CDS停止数据发送的结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */
@@ -218,14 +170,7 @@ typedef struct
     VOS_UINT8                           aucReserved[1];
 } CDS_ADS_STOP_SENDDATA_RSP_STRU;
 
-/*****************************************************************************
-结构名    : CDS_ADS_START_SENDDATA_IND_STRU
-结构说明  : CDS指示ADS继续数据发送结构
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义CDS指示ADS继续数据发送结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */
@@ -235,14 +180,7 @@ typedef struct
     VOS_UINT8                           aucReserved[1];
 } CDS_ADS_START_SENDDATA_IND_STRU;
 
-/*****************************************************************************
-结构名    : CDS_ADS_START_SENDDATA_RSP_STRU
-结构说明  : ADS回复CDS恢复数据发送结构
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS回复CDS恢复数据发送结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */
@@ -252,14 +190,7 @@ typedef struct
     VOS_UINT8                           aucReserved[1];
 } CDS_ADS_START_SENDDATA_RSP_STRU;
 
-/*****************************************************************************
-结构名    : CDS_ADS_CLEAR_DATA_IND_STRU
-结构说明  : CDS指示ADS清空缓存数据结构
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义CDS指示ADS清空缓存数据结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */
@@ -269,14 +200,7 @@ typedef struct
     VOS_UINT8                           aucRsv[1];                              /* 保留*/
 } CDS_ADS_CLEAR_DATA_IND_STRU;
 
-/*****************************************************************************
-结构名    : CDS_ADS_CLEAR_DATA_RSP_STRU
-结构说明  : ADS回复CDS清空缓存数据结构
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义ADS回复CDS清空缓存数据结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* 消息头 */
@@ -286,14 +210,7 @@ typedef struct
     VOS_UINT8                           aucRsv[1];                              /* 保留*/
 } CDS_ADS_CLEAR_DATA_RSP_STRU;
 
-/*****************************************************************************
- 结构名    : CDS_ADS_DATA_IND_STRU
- 结构说明  : CDS与ADS之间的数据包消息结构
 
-  1.日    期   : 2011年12月6日
-    作    者   : 鲁琳/l60609
-    修改内容   : 定义CDS与ADS之间的数据包消息结构
-*****************************************************************************/
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */

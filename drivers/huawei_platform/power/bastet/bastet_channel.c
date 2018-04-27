@@ -331,7 +331,7 @@ static bool bastet_check_mobile(struct sock *sk)
 
 static bool bastet_check_prio_flag(struct sock *sk, struct msghdr *msg)
 {
-	if (msg->msg_flags & (MSG_HRT | MSG_LPW)) {
+	if (!IS_ERR_OR_NULL(msg) ||(msg->msg_flags & (MSG_HRT | MSG_LPW))) {
 		/* only mobile type support hrt&lpw channel */
 		if (!bastet_check_mobile(sk))
 			return false;

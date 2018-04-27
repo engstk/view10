@@ -43,11 +43,12 @@
 #define FTS_GLOVE_SWITCH_BIT		"glove_switch_bit"
 #define FTS_ROI_SUPPORTED			"roi_supported"
 #define FTS_ROI_SWITCH_ADDR		"roi_switch_addr"
-#define FTS_ROI_PKG_NUM_ADDR		"roi_pkg_num_addr"
+#define FTS_ROI_PKG_NUM_ADDR	"roi_pkg_num_addr"
 
 #define FTS_VCI_LDO_VALUE		"vci_value"
 #define FTS_VDDIO_LDO_VALUE		"vddio_value"
 #define FTS_POWER_SELF_CTRL		"power_self_ctrl"
+#define FTS_RESET_SELF_CTRL		"reset_self_ctrl"
 #define FTS_NEED_SET_VDDIO_VALUE	"need_set_vddio_value"
 
 #define FTS_FW_UPDATE_LOGIC		"fw_update_logic"
@@ -69,6 +70,8 @@
 #define FTS_ROW_COLUMN_DELTA_TEST	"row_column_delta_test"
 #define FTS_ROW_COLUMN_DELTA_TEST_POINT_BY_POINT	"row_column_delta_test_point_by_point"
 #define FTS_LCD_NOISE_DATA_TEST		"lcd_noise_data_test"
+#define FTS_OPENTEST_CHARGE_TIME	"opentest_charge_time"
+#define FTS_OPENTEST_RESET_TIME		"opentest_reset_time"
 
 #define FTS_IN_CSV_FILE			"threshold,in_csv_file"
 #define DTS_RAW_DATA_MIN		"threshold,raw_data_min"
@@ -95,10 +98,11 @@
 #define FTS_POINT_BY_POINT_JUDGE	"threshold,point_by_point_judge"
 #define FTS_OPEN_ONCE_THRESHOLD		"only_open_once_captest_threshold"
 #define FTS_ENABLE_EDGE_TOUCH		"enable_edge_touch"
-#define FTS_EDGE_DATA_ADDR		"fts_edge_data_addr"
+#define FTS_EDGE_DATA_ADDR			"fts_edge_data_addr"
 #define FTS_FW_ONLY_DEPEND_ON_LCD	"fts,fw_only_depend_on_lcd"
 #define FTS_FW_NEED_DISTINGUISH_LCD	"fts,need_distinguish_lcd"
 #define FTS_TOUCH_SWITCH_FLAG	"touch_switch_flag"
+#define FTS_TOUCH_SWITCH_GAME_REG	"touch_switch_game_reg"
 
 int focal_get_vendor_name_from_dts(const char *project_id,
 	char *vendor_name, size_t size);

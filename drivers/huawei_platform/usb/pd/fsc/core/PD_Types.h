@@ -13,6 +13,8 @@
 #define STAT_SUCCESS            1
 #define STAT_ERROR              2
 
+#define PD_18_W    36000
+
 // Device FIFO Token Definitions
 #define TXON                    0xA1
 #define SYNC1_TOKEN             0x12

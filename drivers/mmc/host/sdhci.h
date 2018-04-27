@@ -20,6 +20,11 @@
 
 #include <linux/mmc/host.h>
 
+/* sctrl register */
+#define SCTRL_PEREN1			(0x170)
+#define SCTRL_PERDIS1			(0x174)
+#define GT_CLK_EMMC		(0x1 << 22)
+
 /*
  * Controller registers
  */
@@ -591,8 +596,6 @@ struct sdhci_host {
 	struct cmdq_host	*cq_host;
 	struct i2c_client *i2c_client;
 
-	int delay_measure_flag;
-
 	unsigned long private[0] ____cacheline_aligned;
 };
 
@@ -734,6 +737,9 @@ static inline u8 sdhci_readb(struct sdhci_host *host, int reg)
 }
 
 #endif /* CONFIG_MMC_SDHCI_IO_ACCESSORS */
+
+#define sdhci_sctrl_writel(host, val, reg) writel((val), (host)->sysctrl + (reg))
+#define sdhci_sctrl_readl(host, reg) readl((host)->sysctrl + (reg))
 
 extern struct sdhci_host *sdhci_alloc_host(struct device *dev,
 	size_t priv_size);

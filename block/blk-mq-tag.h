@@ -80,7 +80,7 @@ enum {
 };
 
 enum {
-	BLK_MQ_TAG_FAIL		= -1U,
+	BLK_MQ_TAG_FAIL		= UINT_MAX,
 	BLK_MQ_TAG_MIN		= BLK_MQ_TAG_CACHE_MIN,
 	BLK_MQ_TAG_MAX		= BLK_MQ_TAG_FAIL - 1,
 };

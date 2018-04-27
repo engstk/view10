@@ -112,7 +112,6 @@ extern "C" {
 /*****************************************************************************
   10 函数声明
 *****************************************************************************/
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, begin */
 #if (FEATURE_ON == FEATURE_ECALL)
 VOS_UINT32 AT_SetCecallPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryCecallPara(VOS_UINT8 ucIndex);
@@ -125,12 +124,12 @@ VOS_UINT32 AT_SetEclmsdPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryEclmsdPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_TestEclmsdPara(VOS_UINT8 ucIndex);
 #endif
-/* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, end   */
 
 VOS_UINT32 At_RcvVcMsgDtmfDecoderIndProc(
     MN_AT_IND_EVT_STRU                 *pstData
 );
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 /* Added by l60609 for CDMA 1X Iteration 2, 2014-9-5, begin */
 VOS_VOID AT_RcvTafCallSndFlashRslt(
     MN_AT_IND_EVT_STRU                 *pEvtInfo
@@ -209,15 +208,16 @@ extern VOS_UINT32 AT_RcvTafCallRcvContinuousDtmfInd(
 extern VOS_UINT32 AT_RcvTafCallRcvBurstDtmfInd(
     MN_AT_IND_EVT_STRU                 *pEvtInfo
 );
+#endif
 
 #if (FEATURE_ON == FEATURE_IMS)
 VOS_UINT32 AT_QryCimsErrPara(VOS_UINT8 ucIndex);
 #endif
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_VOID AT_RcvTafCallCclprCnf(MN_AT_IND_EVT_STRU *pstData);
 
 VOS_UINT32 AT_TestCclprPara( VOS_UINT8 ucIndex );
-
+#endif
 extern VOS_UINT32 AT_SetRejCallPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_TestRejCallPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryCsChannelInfoPara(VOS_UINT8 ucIndex);

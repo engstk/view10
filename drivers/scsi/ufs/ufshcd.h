@@ -317,6 +317,11 @@ struct debugfs_files {
 	struct dentry *dme_local_read;
 	struct dentry *dme_peer_read;
 	struct dentry *req_stats;
+#ifdef CONFIG_HISI_DEBUG_FS
+	struct dentry *idle_intr_verify;
+	struct dentry *idle_timeout_val;
+	struct dentry *idle_intr_check_timer_threshold;
+#endif
 	u32 dme_local_attr_id;
 	u32 dme_peer_attr_id;
 };
@@ -479,14 +484,6 @@ struct ufs_hba_variant_ops {
 #endif
 };
 
-/* clock gating state  */
-enum clk_gating_state {
-	CLKS_OFF,
-	CLKS_ON,
-	REQ_CLKS_OFF,
-	REQ_CLKS_ON,
-};
-
 /* UFS Host Controller debug print bitmask */
 #define UFSHCD_DBG_PRINT_CLK_FREQ_EN		UFS_BIT(0)
 #define UFSHCD_DBG_PRINT_UIC_ERR_HIST_EN	UFS_BIT(1)
@@ -502,32 +499,9 @@ enum clk_gating_state {
 		 UFSHCD_DBG_PRINT_HOST_REGS_EN | UFSHCD_DBG_PRINT_TRS_EN | \
 		 UFSHCD_DBG_PRINT_TMRS_EN | UFSHCD_DBG_PRINT_PWR_EN |	   \
 		 UFSHCD_DBG_PRINT_HOST_STATE_EN)
-/**
- * struct ufs_clk_gating - UFS clock gating related info
- * @gate_work: worker to turn off clocks after some delay as specified in
- * delay_ms
- * @ungate_work: worker to turn on clocks that will be used in case of
- * interrupt context
- * @state: the current clocks state
- * @delay_ms: gating delay in ms
- * @is_suspended: clk gating is suspended when set to 1 which can be used
- * during suspend/resume
- * @delay_attr: sysfs attribute to control delay_attr
- * @active_reqs: number of requests that are pending and should be waited for
- * completion before gating clocks.
- */
-struct ufs_clk_gating {
-	struct delayed_work gate_work;
-	struct work_struct ungate_work;
-	enum clk_gating_state state;
-	unsigned long delay_ms;
-	bool is_suspended;
-	struct device_attribute delay_attr;
-	int active_reqs;
-};
 
-#ifdef CONFIG_SCSI_UFS_HIVV_VCMD
-struct ufs_hiVV_fsr {
+#ifdef CONFIG_SCSI_UFS_HI1861_VCMD
+struct ufs_hi1861_fsr {
 	struct device_attribute fsr_attr;
 };
 #endif
@@ -657,6 +631,7 @@ struct ufs_hba {
 	/* Desired UFS power management level during system PM */
 	enum ufs_pm_level spm_lvl;
 	int pm_op_in_progress;
+	int idle_sleep_voted;
 
 	struct ufshcd_lrb *lrb;
 	unsigned long lrb_in_use;
@@ -713,6 +688,13 @@ struct ufs_hba {
 	 */
 	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
 
+	/*
+	 * This quirk needs to be enabled if the host controller doesn't want
+	 * to use HCD(Host Controller Disable) to reset host. If is enabled,
+	 * UFS error handler directly hard reset host instead of a soft one.
+	 */
+	#define UFSHCD_QUIRK_BROKEN_HCE				UFS_BIT(6)
+
 	#define UFSHCD_QUIRK_UNIPRO_TERMINATION UFS_BIT(30)
 	#define UFSHCD_QUIRK_UNIPRO_SCRAMBLING UFS_BIT(31)
 
@@ -745,7 +727,7 @@ struct ufs_hba {
 	struct work_struct eeh_work;
 	struct work_struct dsm_work;
 	struct work_struct rpmb_pm_work;
-#ifdef CONFIG_SCSI_UFS_HIVV_VCMD
+#ifdef CONFIG_SCSI_UFS_HI1861_VCMD
 	struct work_struct fsr_work;
 #endif
 #ifdef CONFIG_SCSI_UFS_HS_ERROR_RECOVER
@@ -777,9 +759,8 @@ struct ufs_hba {
 	struct ufs_pa_layer_attr pwr_info;
 	struct ufs_pwr_mode_info max_pwr_info;
 
-	struct ufs_clk_gating clk_gating;
-#ifdef CONFIG_SCSI_UFS_HIVV_VCMD
-	struct ufs_hiVV_fsr ufs_fsr;
+#ifdef CONFIG_SCSI_UFS_HI1861_VCMD
+	struct ufs_hi1861_fsr ufs_fsr;
 #endif
 	struct ufs_temp ufs_temp;
 	struct ufs_inline_state inline_state;
@@ -805,6 +786,7 @@ struct ufs_hba {
 	 * CAUTION: Enabling this might reduce overall UFS throughput.
 	 */
 #define UFSHCD_CAP_INTR_AGGR (1 << 4)
+
 	/*
 	* SSU needs to send directly to ufs to avoid accessing blk layer,
 	* blk layer can freeze blk queue during SR,
@@ -818,8 +800,6 @@ struct ufs_hba {
 	u32 ahit_ah8itv;
 	bool is_hibernate;
 
-	struct devfreq *devfreq;
-	struct ufs_clk_scaling clk_scaling;
 	struct ufs_stats ufs_stats;
 #ifdef CONFIG_DEBUG_FS
 	struct debugfs_files debugfs_files;
@@ -866,21 +846,25 @@ struct ufs_hba {
 	struct list_head bkops_whitelist;
 	struct list_head bkops_blacklist;
 #endif
+	u32 reset_retry_max;
+
+	uint32_t last_intr;
+	uint64_t last_intr_time_stamp;
+	int is_hs_gear4_dev;
+
+	bool ufs_idle_intr_en;
+#define UFSHCD_IDLE_TIMEOUT_DEFAULT_VAL	5000
+	u32 idle_timeout_val; /* in us */
+	int timer_irq;
+
+	struct timer_list idle_intr_check_timer;
+#define UFSHCD_IDLE_INTR_CHECK_INTERVAL	3600000
+	unsigned int idle_intr_check_timer_threshold;/* in ms */
+#ifdef CONFIG_HISI_DEBUG_FS
+	bool ufs_idle_intr_verify;
+#endif
 };
 
-/* Returns true if clocks can be gated. Otherwise false */
-static inline bool ufshcd_is_clkgating_allowed(struct ufs_hba *hba)
-{
-	return hba->caps & UFSHCD_CAP_CLK_GATING;
-}
-static inline bool ufshcd_can_hibern8_during_gating(struct ufs_hba *hba)
-{
-	return hba->caps & UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
-}
-static inline int ufshcd_is_clkscaling_enabled(struct ufs_hba *hba)
-{
-	return hba->caps & UFSHCD_CAP_CLK_SCALING;
-}
 static inline bool ufshcd_can_autobkops_during_suspend(struct ufs_hba *hba)
 {
 	return hba->caps & UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
@@ -897,12 +881,14 @@ static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
 
 static inline bool ufshcd_is_auto_hibern8_allowed(struct ufs_hba *hba)
 {
+	/*lint -e648*/
 	if ((hba->caps & UFSHCD_CAP_AUTO_HIBERN8) &&
 	    AUTO_HIBERN8_TIMER_SCALE_VAL(hba->ahit_ts) &&
 	    AUTO_HIBERN8_IDLE_TIMER_VAL(hba->ahit_ah8itv))
 		return true;
 	else
 		return false;
+	/*lint +e648*/
 }
 
 #define ufshcd_writel(hba, val, reg)	\
@@ -928,7 +914,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
 }
 
 int ufshcd_alloc_host(struct device *, struct ufs_hba **);
-int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int);
+int ufshcd_init(struct ufs_hba * , void __iomem * , unsigned int, int);
 void ufshcd_remove(struct ufs_hba *);
 
 /**
@@ -1032,10 +1018,6 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
 /* Expose Query-Request API */
 int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
 	enum flag_idn idn, bool *flag_res);
-int ufshcd_hold(struct ufs_hba *hba, bool async);
-void ufshcd_hold_all(struct ufs_hba *hba);
-void ufshcd_release(struct ufs_hba *hba);
-void ufshcd_release_all(struct ufs_hba *hba);
 void ufshcd_scsi_unblock_requests(struct ufs_hba *hba);
 void ufshcd_scsi_block_requests(struct ufs_hba *hba);
 
@@ -1083,7 +1065,7 @@ static inline int ufshcd_vops_init(struct ufs_hba *hba)
 static inline void ufshcd_vops_exit(struct ufs_hba *hba)
 {
 	if (hba->vops && hba->vops->exit)
-		return hba->vops->exit(hba);
+		hba->vops->exit(hba);
 }
 
 static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
@@ -1097,7 +1079,7 @@ static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
 static inline void ufshcd_vops_clk_scale_notify(struct ufs_hba *hba)
 {
 	if (hba->vops && hba->vops->clk_scale_notify)
-		return hba->vops->clk_scale_notify(hba);
+		hba->vops->clk_scale_notify(hba);
 }
 
 static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool on)

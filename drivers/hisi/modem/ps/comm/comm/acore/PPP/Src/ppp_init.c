@@ -195,19 +195,7 @@ VOS_VOID PPP_ClearDataQ(VOS_VOID)
 } /* PPP_ClearDataQ */
 
 
-/*****************************************************************************
- Prototype      : PPP_GetMruConfig()
- Description    : 定制需求,通过NV项获取PPP用户配置MRU
- Input          : VOS_VOID
- Output         :
- Return Value   : VOS_UINT16 用户配置的MRU
- Calls          :
- Called By      :
- History        :
-  1.Date        : 2009-07-13
-    Author      : x00138766
-    Modification: Created function
-*****************************************************************************/
+
 VOS_UINT16 PPP_GetMruConfig(VOS_VOID)
 {
     VOS_UINT16                      usPppConfigMru  = DEF_MRU;
@@ -219,7 +207,7 @@ VOS_UINT16 PPP_GetMruConfig(VOS_VOID)
 
     /* 为客户定制PPP Default MRU而使用NV_Item，由于此NV结构为16bit，考虑到字节对齐因素，
        长度固定写sizeof(VOS_UINT16) */
-    ulRslt = NV_ReadEx(MODEM_ID_0, en_NV_Item_PPP_CONFIG_MRU_Type, &stPppConfigMruType, sizeof(PPP_CONFIG_MRU_TYPE_NV_STRU));
+    ulRslt = GUCTTF_NV_Read(MODEM_ID_0, en_NV_Item_PPP_CONFIG_MRU_Type, &stPppConfigMruType, sizeof(PPP_CONFIG_MRU_TYPE_NV_STRU));
     usPppConfigMru  = stPppConfigMruType.usPppConfigType;
 
     if (NV_OK != ulRslt)
@@ -245,19 +233,7 @@ VOS_UINT16 PPP_GetMruConfig(VOS_VOID)
     return usPppConfigMru;
 }
 
-/*****************************************************************************
- Prototype      : PPP_GetConfigWINS()
- Description    : 定制需求,通过NV项获取PPP用户配置WINS协商使能开关
- Input          : VOS_VOID
- Output         :
- Return Value   : VOS_UINT8 WINS开关
- Calls          :
- Called By      :
- History        :
-  1.Date        : 2009-07-13
-    Author      : x00138766
-    Modification: Created function
-*****************************************************************************/
+
 VOS_UINT8 PPP_GetWinsConfig(VOS_VOID)
 {
     WINS_CONFIG_STRU    stWins;
@@ -268,7 +244,7 @@ VOS_UINT8 PPP_GetWinsConfig(VOS_VOID)
     /* 定制需求,读取WINS特性控制开关NV项 */
 
     /* 若读取en_NV_Item_WINS失败,则默认WINS设置为使能 */
-    if(NV_OK != NV_ReadEx(MODEM_ID_0, en_NV_Item_WINS_Config, &stWins, sizeof(WINS_CONFIG_STRU)))
+    if(NV_OK != GUCTTF_NV_Read(MODEM_ID_0, en_NV_Item_WINS_Config, &stWins, sizeof(WINS_CONFIG_STRU)))
     {
         PPP_MNTN_LOG(PS_PID_APP_PPP, 0, PS_PRINT_WARNING, "Warning: Read en_NV_Item_WINS_Config Error!");
         return WINS_CONFIG_ENABLE;
@@ -418,19 +394,7 @@ VOS_VOID PppStop(VOS_VOID)
     return;
 }
 
-/*****************************************************************************
- Prototype      : PPP_EntInit
- Description    : 定制需求,通过NV项获取PPP用户配置AUTH
- Input          : VOS_VOID
- Output         :
- Return Value   : VOS_UINT16 用户配置的AUTH
- Calls          :
- Called By      :
- History        :
-  1.Date        : 2009-07-13
-    Author      : x00138766
-    Modification: Created function
-*****************************************************************************/
+
 VOS_VOID PPP_EntInit(VOS_VOID)
 {
     VOS_UINT32                  ulRslt;
@@ -440,7 +404,7 @@ VOS_VOID PPP_EntInit(VOS_VOID)
 
     PSACORE_MEM_SET(&stPppConfig, sizeof(NV_TTF_PPP_CONFIG_STRU), 0x0, sizeof(NV_TTF_PPP_CONFIG_STRU));
 
-    ulRslt = NV_ReadEx(MODEM_ID_0, en_NV_Item_PPP_CONFIG, &stPppConfig, (VOS_UINT32)sizeof(NV_TTF_PPP_CONFIG_STRU));
+    ulRslt = GUCTTF_NV_Read(MODEM_ID_0, en_NV_Item_PPP_CONFIG, &stPppConfig, (VOS_UINT32)sizeof(NV_TTF_PPP_CONFIG_STRU));
     if (NV_OK != ulRslt)
     {
         g_stPppEntInfo.enChapEnable                 = TTF_TRUE;
@@ -602,31 +566,7 @@ VOS_VOID PppMsgTimerProc( struct MsgCB * pMsg )
     return;
 }
 
-/*****************************************************************************
- Prototype      : APP_PPP_PidInit
- Description    : TAF PPP模块中的初始化函数,该函数将向系统申请建立PPP模块运行
-                  所需要的各种资源。如果成功将返回VOS_OK，否则为VOS_ERR。
- Input          : ---
- Output         : ---
- Return Value   : ---VOS_UINT32
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2005-11-18
-    Author      : ---
-    Modification: Created function
-  2. 2006-03-13 MODIFY BY F49086 FOR A32D02474
-  3.Date        : 2006-05-22
-    Author      : L47619
-    Modification: Modify for PN:A32D04462
-  4.Date        : 2006-10-08
-    Author      : L47619
-    Modification: Modify for PN:A32D06578
-  5.Data        : 2009-7-14
-    Author      : x00138766
-    Modification: 增加WINS协商使能开关特性
-*****************************************************************************/
 VOS_UINT32    APP_PPP_PidInit(enum VOS_INIT_PHASE_DEFINE InitPhase )
 {
     VOS_INT32               i;
@@ -801,20 +741,7 @@ VOS_VOID APP_PPP_MsgProc( struct MsgCB * pMsg )
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : APP_PPP_FidTask
- 功能描述  : APP_PPP_FidTask任务处理函数
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月6日
-    作    者   :
-    修改内容   : 新生成函数
-*****************************************************************************/
 /*lint -e{838} */
 VOS_VOID APP_PPP_FidTask(VOS_VOID)
 {
@@ -877,23 +804,11 @@ VOS_VOID APP_PPP_FidTask(VOS_VOID)
 }
 
 
-/*****************************************************************************
- 函 数 名  : APP_PPP_FidInit
- 功能描述  : APP_PPP_FidInit处理任务初始化函数
- 输入参数  : enum VOS_INIT_PHASE_DEFINE ip
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月06日
-    作    者   :
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 APP_PPP_FidInit(enum VOS_INIT_PHASE_DEFINE ip)
 {
     VOS_UINT32                          ulRslt;
+
 
     switch (ip)
     {

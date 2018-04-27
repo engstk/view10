@@ -1,14 +1,4 @@
-/*************************************************************************
-*   版权所有(C) 1987-2015, 深圳海思半导体技术有限公司.
-*
-*   文 件 名 :  adrv.h
-*
-*   作    者 :  mohaoju
-*
-*   描    述 :  本文件命名为"adrv.h", 给出AP侧底软直接对外提供API接口描述
-*
-*   修改记录 :  2015年2月28日  v1.00  mohaoju创建
-*************************************************************************/
+
 
 #ifndef HISI_AP_DRV_H
 #define HISI_AP_DRV_H
@@ -136,29 +126,25 @@ int bsp_reset_core_notify(BSP_CORE_TYPE_E ecoretype, unsigned int cmdtype, unsig
 /*与AP 约定定义成如下格式，如果变更，有AP变更*/
 typedef enum
 {
-    CP_S_MODEMDMSS     = 0x50,
-    CP_S_MODEMNOC      = 0x51,
-    CP_S_MODEMAP       = 0x52,
-    CP_S_EXCEPTION     = 0x53,
-    CP_S_RESETFAIL     = 0x54,
-    CP_S_NORMALRESET   = 0x55,
-    CP_S_RILD_EXCEPTION= 0x56,
-    CP_S_3RD_EXCEPTION = 0x57,
-    CP_S_DRV_EXC       = 0x58,
-    CP_S_PAM_EXC       = 0x59,
-    CP_S_GUAS_EXC      = 0x5a,
-    CP_S_CTTF_EXC      = 0x5b,
-    CP_S_CAS_CPROC_EXC = 0x5c,
-    CP_S_GUDSP_EXC     = 0x5d,
-    CP_S_TLPS_EXC      = 0x5e,
-    CP_S_TLDSP_EXC     = 0x5f,
-    CP_S_CPHY_EXC      = 0x60,
-    CP_S_GUCNAS_EXC    = 0x61,
-
-
-
+    CP_S_MODEMDMSS     = 0x70,
+    CP_S_MODEMNOC      = 0x71,
+    CP_S_MODEMAP       = 0x72,
+    CP_S_EXCEPTION     = 0x73,
+    CP_S_RESETFAIL     = 0x74,
+    CP_S_NORMALRESET   = 0x75,
+    CP_S_RILD_EXCEPTION= 0x76,
+    CP_S_3RD_EXCEPTION = 0x77,
+    CP_S_DRV_EXC       = 0x78,
+    CP_S_PAM_EXC       = 0x79,
+    CP_S_GUAS_EXC      = 0x7a,
+    CP_S_CTTF_EXC      = 0x7b,
+    CP_S_CAS_CPROC_EXC = 0x7c,
+    CP_S_GUDSP_EXC     = 0x7d,
+    CP_S_TLPS_EXC      = 0x7e,
+    CP_S_TLDSP_EXC     = 0x7f,
+    CP_S_CPHY_EXC      = 0x80,
+    CP_S_GUCNAS_EXC    = 0x81,
 } EXCH_SOURCE;
-
 
 struct list_head_rdr {
 	struct list_head_rdr *next, *prev;
@@ -197,8 +183,9 @@ struct rdr_exception_info_s {
 	unsigned long long	e_reset_core_mask;
 	unsigned long long	e_from_core;
 	unsigned int	e_reentrant;
-    unsigned int    e_exce_type;
-    unsigned int    e_upload_flag;
+	unsigned int    e_exce_type;
+	unsigned int    e_exce_subtype;
+	unsigned int    e_upload_flag;
 	unsigned char	e_from_module[MODULE_NAME_LEN];
 	unsigned char	e_desc[STR_EXCEPTIONDESC_MAXLEN];
 	unsigned int	e_reserve_u32;
@@ -252,6 +239,7 @@ struct rdr_register_module_result {
 };
 
 
+#ifdef CONFIG_HISI_BB
 /*****************************************************************************
 * 函 数 名  : rdr_register_exception
 *
@@ -303,6 +291,12 @@ int rdr_register_module_ops(unsigned long long coreid, struct rdr_module_ops_pub
 *
 *****************************************************************************/
 void rdr_system_error(unsigned int modid, unsigned int arg1, unsigned int arg2);
+#else
+static inline u32 rdr_register_exception(struct rdr_exception_info_s* e){ return 0;}
+static inline int rdr_register_module_ops(unsigned long long coreid, struct rdr_module_ops_pub* ops,
+				struct rdr_register_module_result* retinfo){ return -1; }
+static inline void rdr_system_error(unsigned int modid, unsigned int arg1, unsigned int arg2) {}
+#endif
 
 /*****************************************************************************
 * 函 数 名  : rdr_syserr_process_for_ap
@@ -576,6 +570,7 @@ enum EDITION_KIND{
     EDITION_OVERSEA_BETA    = 3,
     EDITION_MAX
 };
+#ifdef CONFIG_HISI_BB
 /*
  * func name: bbox_check_edition
  * func args:
@@ -587,6 +582,9 @@ enum EDITION_KIND{
  *				0x03		Oversea BETA
  */
 unsigned int bbox_check_edition(void);
+#else
+static inline unsigned int bbox_check_edition(void){return EDITION_USER;}
+#endif
 
 /* hisi_pmic_special_ocp_register需要加入接口管控  */
 

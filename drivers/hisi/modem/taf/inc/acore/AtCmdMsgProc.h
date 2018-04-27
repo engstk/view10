@@ -59,11 +59,9 @@
 #include  "TafDrvAgent.h"
 #include  "AtMtaInterface.h"
 #include  "AtInternalMsg.h"
-/* Added by y00213812 for VoLTE_PhaseII 项目, 2013-9-22, begin */
 #if (FEATURE_ON == FEATURE_IMS)
 #include  "AtImsaInterface.h"
 #endif
-/* Added by y00213812 for VoLTE_PhaseII 项目, 2013-9-22, end */
 
 #include  "TafAppMma.h"
 
@@ -85,6 +83,48 @@ extern "C" {
 *****************************************************************************/
 #define         TAF_AT_INVALID_MCC          (0xffffffff)
 
+/* CESQ命令Rxlev参数相关宏定义*/
+#define         AT_CMD_CESQ_RXLEV_MIN_VALUE               (0)
+#define         AT_CMD_CESQ_RXLEV_MAX_VALUE               (63)
+#define         AT_CMD_CESQ_RXLEV_INVALID_VALUE           (99)
+#define         AT_CMD_CESQ_RXLEV_CONVERT_BASE_VALUE      (111)
+#define         AT_CMD_CESQ_RXLEV_LOWER_BOUNDARY_VALUE    (-110)
+#define         AT_CMD_CESQ_RXLEV_UPPER_BOUNDARY_VALUE    (-48)
+
+/* CESQ命令Ber参数相关宏定义*/
+#define         AT_CMD_CESQ_BER_INVALID_VALUE             (99)
+
+/* CESQ命令Rscp参数相关宏定义*/
+#define         AT_CMD_CESQ_RSCP_MIN_VALUE                (0)
+#define         AT_CMD_CESQ_RSCP_MAX_VALUE                (96)
+#define         AT_CMD_CESQ_RSCP_INVALID_VALUE            (255)
+#define         AT_CMD_CESQ_RSCP_CONVERT_BASE_VALUE       (121)
+#define         AT_CMD_CESQ_RSCP_LOWER_BOUNDARY_VALUE     (-120)
+#define         AT_CMD_CESQ_RSCP_UPPER_BOUNDARY_VALUE     (-25)
+
+/* CESQ命令Ecno参数相关宏定义*/
+#define         AT_CMD_CESQ_ECNO_MIN_VALUE                (0)
+#define         AT_CMD_CESQ_ECNO_MAX_VALUE                (49)
+#define         AT_CMD_CESQ_ECNO_INVALID_VALUE            (255)
+#define         AT_CMD_CESQ_ECNO_CONVERT_BASE_VALUE       (49)
+#define         AT_CMD_CESQ_ECNO_LOWER_BOUNDARY_VALUE     (-48)
+#define         AT_CMD_CESQ_ECNO_UPPER_BOUNDARY_VALUE     (0)
+
+/* CESQ命令Rsrq参数相关宏定义*/
+#define         AT_CMD_CESQ_RSRQ_MIN_VALUE                (0)
+#define         AT_CMD_CESQ_RSRQ_MAX_VALUE                (34)
+#define         AT_CMD_CESQ_RSRQ_INVALID_VALUE            (255)
+#define         AT_CMD_CESQ_RSRQ_CONVERT_BASE_VALUE       (40)
+#define         AT_CMD_CESQ_RSRQ_LOWER_BOUNDARY_VALUE     (-39)
+#define         AT_CMD_CESQ_RSRQ_UPPER_BOUNDARY_VALUE     (-6)
+
+/* CESQ命令Rsrp参数相关宏定义*/
+#define         AT_CMD_CESQ_RSRP_MIN_VALUE                (0)
+#define         AT_CMD_CESQ_RSRP_MAX_VALUE                (97)
+#define         AT_CMD_CESQ_RSRP_INVALID_VALUE            (255)
+#define         AT_CMD_CESQ_RSRP_CONVERT_BASE_VALUE       (141)
+#define         AT_CMD_CESQ_RSRP_LOWER_BOUNDARY_VALUE     (-140)
+#define         AT_CMD_CESQ_RSRP_UPPER_BOUNDARY_VALUE     (-44)
 
 /*****************************************************************************
   3 枚举定义
@@ -120,11 +160,9 @@ typedef VOS_UINT32 (*pAtProcMsgFromDrvAgentFunc)(VOS_VOID *pMsg);
 /*AT与MTA模块间消息处理函数指针*/
 typedef VOS_UINT32 (*AT_MTA_MSG_PROC_FUNC)(VOS_VOID *pMsg);
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-21, begin */
 
 /*AT与MMA模块间消息处理函数指针*/
 typedef VOS_UINT32 (*AT_MMA_MSG_PROC_FUNC)(VOS_VOID *pMsg);
-/* Added by w00167002 for L-C互操作项目, 2014-2-21, end */
 
 typedef VOS_UINT32 (*AT_XCALL_MSG_PROC_FUNC)(VOS_VOID *pMsg);
 
@@ -211,7 +249,6 @@ typedef struct
 }AT_PROC_MSG_FROM_MTA_STRU;
 /*lint +e958 +e959 修改人:l60609;原因:64bit*/
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-21, begin */
 /*****************************************************************************
  结构名    : AT_PROC_MSG_FROM_MTA_STRU
  结构说明  : AT与MTA消息与对应处理函数的结构
@@ -223,7 +260,6 @@ typedef struct
     AT_MMA_MSG_PROC_FUNC                pProcMsgFunc;
 }AT_PROC_MSG_FROM_MMA_STRU;
 /*lint +e958 +e959 修改人:l60609;原因:64bit*/
-/* Added by w00167002 for L-C互操作项目, 2014-2-21, end */
 
 
 /*****************************************************************************
@@ -269,7 +305,7 @@ VOS_UINT32 AT_FormatAtiCmdQryString(
 );
 /* Modified by l60609 for DSDA Phase III, 2013-3-5, End */
 VOS_UINT32 AT_RcvDrvAgentMsidQryCnf(VOS_VOID *pMsg);
-VOS_UINT32 AT_RcvDrvAgentGasMntnCmdRsp(VOS_VOID *pMsg);
+
 VOS_UINT32 AT_RcvDrvAgentVertimeQryRsp(VOS_VOID *pMsg);
 VOS_UINT32 AT_RcvDrvAgentYjcxSetCnf(VOS_VOID *pMsg);
 
@@ -385,19 +421,12 @@ VOS_UINT32 AT_RcvDrvAgentNandDevInfoQryRsp(VOS_VOID *pMsg);
 VOS_UINT32 AT_RcvDrvAgentChipTempQryRsp(VOS_VOID *pMsg);
 
 
-/* Added by h59254 for SAR Project, 2012/04/24, begin */
-VOS_UINT32 AT_RcvDrvAgentAntStateIndRsp(VOS_VOID *pMsg);
-/* Added by h59254 for SAR Project, 2012/04/24, end */
-
-
 VOS_VOID  AT_ReadSystemAppConfigNV(VOS_VOID);
 
 
-/* Modified by w00167002 for L-C互操作项目, 2014-2-21, begin */
 VOS_UINT32 AT_RcvMmaOmMaintainInfoInd(
     VOS_VOID                           *pstMsg
 );
-/* Modified by w00167002 for L-C互操作项目, 2014-2-21, end */
 VOS_UINT32 AT_RcvDrvAgentSetMaxLockTmsRsp(VOS_VOID *pMsg);
 
 VOS_UINT32 AT_RcvDrvAgentSetApSimstRsp(VOS_VOID *pMsg);
@@ -438,14 +467,14 @@ VOS_UINT32 AT_RcvMtaWrrFreqLockQryCnf( VOS_VOID *pMsg );
 VOS_UINT32 AT_RcvMtaWrrRrcVersionSetCnf( VOS_VOID *pMsg );
 VOS_UINT32 AT_RcvMtaWrrRrcVersionQryCnf( VOS_VOID *pMsg );
 
+VOS_UINT32 AT_RcvMtaGrrAutotestQryCnf( VOS_VOID *pMsg );
+
 extern VOS_UINT32 AT_RcvMtaDelCellEntityCnf(
     VOS_VOID                           *pMsg
 );
 
-/* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-11, begin */
 VOS_UINT32 AT_RcvMmaAcInfoQueryCnf(VOS_VOID *pstMsg);
 
-/* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-11, end */
 
 /* Modified by l60609 for DSDA Phase III, 2013-2-26, Begin */
 extern VOS_VOID AT_ReadWasCapabilityNV(VOS_VOID);
@@ -476,7 +505,6 @@ VOS_UINT32 AT_RcvHifiResetEndInd(
 extern VOS_UINT32 At_PidInit(enum VOS_INIT_PHASE_DEFINE enPhase);
 #endif
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-1, begin */
 VOS_UINT32 AT_RcvMtaQryCurcCnf(VOS_VOID *pstMsg);
 VOS_UINT32 AT_RcvMtaSetUnsolicitedRptCnf(VOS_VOID *pstMsg);
 VOS_UINT32 AT_RcvMtaQryUnsolicitedRptCnf(VOS_VOID *pstMsg);
@@ -485,7 +513,15 @@ VOS_UINT32 AT_ProcMtaUnsolicitedRptQryCnf(
     VOS_VOID                               *pstMsg
 );
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-1, end */
+
+VOS_UINT32 AT_ProcCerssiInfoQuery(VOS_VOID *pstMsg);
+VOS_INT16 AT_ConvertCerssiRssiToCesqRxlev(VOS_INT16 sRssiValue);
+VOS_INT16 AT_ConvertCerssiRscpToCesqRscp(VOS_INT16 sRscpValue);
+VOS_INT8 AT_ConvertCerssiEcnoToCesqEcno(VOS_INT8 cEcno);
+VOS_INT16 AT_ConvertCerssiRsrqToCesqRsrq(VOS_INT16 sRsrqValue);
+VOS_INT16 AT_ConvertCerssiRsrpToCesqRsrp(VOS_INT16 sRsrpValue);
+VOS_UINT32 AT_ProcCesqInfoSet(VOS_VOID *pstMsg);
+
 VOS_UINT32 AT_RcvMmaCerssiInfoQueryCnf(VOS_VOID *pstMsg);
 
 /*****************************************************************************
@@ -545,9 +581,7 @@ VOS_VOID AT_RcvSwitchCmdModeMsg(VOS_UINT8 ucIndex);
 
 VOS_VOID AT_RcvWaterLowMsg(VOS_UINT8 ucIndex);
 
-/* Added by l00198894 for 新增+ECID命令, 2013-12-09, begin */
 VOS_UINT32 AT_RcvMtaEcidSetCnf(VOS_VOID *pMsg);
-/* Added by l00198894 for 新增+ECID命令, 2013-12-09, end */
 
 VOS_UINT32 AT_RcvMtaMipiInfoCnf(
     VOS_VOID                           *pMsg
@@ -558,7 +592,6 @@ VOS_UINT32 AT_RcvMtaMipiInfoInd(
 );
 
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-18, begin */
 
 VOS_UINT32 AT_RcvMmaSysCfgSetCnf(
     VOS_VOID                           *pMsg
@@ -570,7 +603,6 @@ VOS_UINT32 AT_RcvMmaPhoneModeSetCnf(
 VOS_UINT32 AT_RcvMmaDetachCnf(
     VOS_VOID                           *pMsg
 );
-/* Added by w00167002 for L-C互操作项目, 2014-2-18, end */
 
 VOS_UINT32 AT_RcvMmaAttachCnf(
     VOS_VOID                           *pstMsg
@@ -594,6 +626,7 @@ VOS_UINT32 AT_RcvVcMsgQryEcallCfgCnfProc(
 
 #endif
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_UINT32 AT_RcvMmaCdmaCsqSetCnf(
     VOS_VOID                           *pMsg
 );
@@ -619,6 +652,8 @@ VOS_UINT32 AT_RcvMmaCFreqLockQueryCnf(
 extern VOS_UINT32 AT_RcvMmaCTimeInd(
     VOS_VOID                           *pstMsg
 );
+#endif
+
 VOS_UINT32 AT_RcvMtaXpassInfoInd(
     VOS_VOID                           *pMsg
 );
@@ -705,15 +740,15 @@ VOS_UINT32 AT_RcvMmaCerssiSetCnf(
     VOS_VOID                           *pstMsg
 );
 
-extern VOS_UINT32 AT_RcvMmaPlmnReselAutoSetCnf(
+VOS_UINT32 AT_RcvMmaPlmnSearchCnf(
     VOS_VOID                           *pstMsg
 );
+
 extern VOS_UINT32 AT_RcvMmaPrefPlmnTypeSetCnf(
     VOS_VOID                           *pstMsg
 );
-extern VOS_UINT32 AT_RcvMmaPlmnSpecialSelSetCnf(
-    VOS_VOID                           *pstMsg
-);
+
+
 extern VOS_UINT32 AT_RcvMmaPowerDownCnf(
     VOS_VOID                           *pstMsg
 );
@@ -809,6 +844,7 @@ VOS_UINT32 AT_RcvMmaHsQryCnf(
 );
 
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_UINT32 AT_RcvMmaHdrCsqInd(
     VOS_VOID                           *pMsg
 );
@@ -820,6 +856,7 @@ VOS_UINT32 AT_RcvMmaHdrCsqSetCnf(
 VOS_UINT32 AT_RcvMmaHdrCsqQryCnf(
     VOS_VOID                           *pMsg
 );
+#endif
 
 
 
@@ -889,6 +926,7 @@ VOS_UINT32 AT_RcvMmaImsiRefreshInd(
     VOS_VOID                           *pstMsg
 );
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_UINT32 AT_RcvMma1xChanSetCnf(
     VOS_VOID                           *pstMsg
 );
@@ -908,6 +946,7 @@ VOS_UINT32 AT_RcvMmaStateQueryCnf(
 VOS_UINT32 AT_RcvMmaCHverQueryCnf(
     VOS_VOID                           *pstMsg
 );
+#endif
 #if (FEATURE_ON == FEATURE_LTE)
 VOS_UINT32 AT_RcvMtaSetFrCnf(
     VOS_VOID                           *pMsg
@@ -949,6 +988,17 @@ VOS_UINT32 AT_RcvMtaClearHistoryFreqCnf(
 );
 
 
+VOS_UINT32 AT_RcvMmaQuitCallBackCnf(
+    VOS_VOID                           *pMsg
+);
+
+VOS_UINT32 AT_RcvMmaEmcCallBackNtf(
+    VOS_VOID                           *pstMsg
+);
+
+VOS_UINT32 AT_RcvMmaQryEmcCallBackCnf(
+    VOS_VOID                           *pMsg
+);
 
 #if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_UINT32 AT_RcvMmaCLocInfoQueryCnf(
@@ -959,18 +1009,12 @@ VOS_UINT32 AT_RcvMmaCSidInd(
     VOS_VOID                           *pstMsg
 );
 
-VOS_UINT32 AT_RcvMmaQuitCallBackCnf(
-    VOS_VOID                           *pMsg
-);
+/* 移出CDMA编译开关 */
 VOS_UINT32 AT_RcvMmaSetCSidListCnf(
     VOS_VOID                           *pMsg
 );
-VOS_UINT32 AT_RcvMmaEmcCallBackNtf(
-    VOS_VOID                           *pstMsg
-);
-VOS_UINT32 AT_RcvMmaQryEmcCallBackCnf(
-    VOS_VOID                           *pMsg
-);
+
+/* 移出CDMA编译开关 */
 
 VOS_UINT32 AT_RcvMtaMeidSetCnf(
     VOS_VOID                           *pMsg
@@ -1083,14 +1127,17 @@ VOS_UINT32 AT_RcvMmaDplmnQryCnf(
     VOS_VOID                           *pstMsg
 );
 
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-24, begin */
+
+VOS_UINT32 AT_RcvMmaExchangeModemInfoCnf(
+    VOS_VOID                           *pstMsg
+);
+
 VOS_UINT32 AT_RcvMmaBorderInfoSetCnf(
     VOS_VOID                           *pstMsg
 );
 VOS_UINT32 AT_RcvMmaBorderInfoQryCnf(
     VOS_VOID                           *pstMsg
 );
-/* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-24, end */
 
 extern VOS_UINT32 AT_RcvMmaSrchedPlmnInfoInd(
     VOS_VOID                           *pMsg
@@ -1196,6 +1243,35 @@ VOS_UINT32 AT_RcvMtaLteCategoryInfoInd(
 );
 #endif
 
+VOS_UINT32 AT_RcvMtaPhyCommAckInd(
+    VOS_VOID                           *pMsg
+);
+
+VOS_UINT32 AT_RcvMtaCommBoosterInd(
+    VOS_VOID                           *pstMsg
+);
+
+VOS_UINT32 AT_RcvMtaCommBoosterSetCnf(VOS_VOID *pMsg);
+
+VOS_UINT32 AT_RcvMtaCommBoosterQueryCnf(VOS_VOID *pMsg);
+
+VOS_UINT32 AT_RcvGameModeSetCnf(
+    VOS_VOID                           *pMsg
+);
+
+VOS_UINT32 AT_RcvMtaNvLoadSetCnf(VOS_VOID *pMsg);
+
+VOS_UINT32 AT_RcvMmaMtReattachInd(
+    VOS_VOID                           *pstMsg
+);
+
+VOS_UINT32 AT_RcvMmaCindSetCnf(
+    VOS_VOID                           *pstMsg
+);
+
+TAF_UINT32 At_CallMsgProc(
+    MSG_HEADER_STRU                     *pstMsg
+);
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()
 #else

@@ -15,7 +15,7 @@
 
 #define NOC_L_D_PRT pr_err
 
-#define NOC_DUMP_MAX_REG_NUM         40
+#define NOC_DUMP_MAX_REG_NUM         50
 #define NOC_DUMP_ERRPRO_BUS_NUM      MAX_NOC_NODES_NR	/*9 */
 #define NOC_DUMP_ERRPRO_OFF_NUM      7
 

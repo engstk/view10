@@ -710,7 +710,7 @@ static int thermal_of_get_trip_type(struct device_node *np,
 	if (err < 0)
 		return err;
 
-	for (i = 0; i < ARRAY_SIZE(trip_types); i++)
+	for (i = 0; i < ARRAY_SIZE(trip_types); i++)/*lint !e574*/
 		if (!strcasecmp(t, trip_types[i])) {
 			*type = i;
 			return 0;
@@ -1042,7 +1042,7 @@ int __init of_parse_thermal_zones(void)
 			of_thermal_free_zone(tz);
 			/* attempting to build remaining zones still */
 		}
-	}
+	}/*lint !e593*/
 	of_node_put(np);
 
 	return 0;

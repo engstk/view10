@@ -51,5 +51,13 @@ config HISI_DFX_CORE
 	help
 	  This module can record some data to dfx partition.
 
+config HISI_MNTN_ESUBTYPE
+	bool "hisi exception subtype"
+	depends on HISI_BB
+	default n
+	help
+	  This module can record exception subtype.
+
+
 source "drivers/hisi/mntn/blackbox/platform_ap/Kconfig"
 endmenu

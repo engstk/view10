@@ -86,18 +86,18 @@
         rdr-dumpctl = "1111111111100000";
         rdr-log-max-size = <0x1F400000>; /*boston hisi_logs size from 400M to 500M*/
         wait-dumplog-timeout = <120000>;
-        rdr_area_num = <14>;
+        rdr_area_num = <15>;
         unexpected-max-reboot-times = <0x5>;
-        bbox_area_names = "AP", "CP", "TEEOS", "HIFI", "LPM3", "IOM3", "ISP", "IVP", "EMMC", "MODEMAP","CLK", "REGULATOR", "BFM", "HISEE";
-        bbox_area_coreid = <0x1 0x2 0x4 0x8 0x10 0x20 0x40 0x80 0x100 0x200 0x400 0x800 0x1000 0x2000>;
+        bbox_area_names = "AP", "CP", "TEEOS", "HIFI", "LPM3", "IOM3", "ISP", "IVP", "EMMC", "MODEMAP","CLK", "REGULATOR", "BFM", "HISEE", "NPU";
+        bbox_area_coreid = <0x1 0x2 0x4 0x8 0x10 0x20 0x40 0x80 0x100 0x200 0x400 0x800 0x1000 0x2000 0x4000>;
         /* bbox_men_addr and bbox_mem_size is configured in kirin970_memory.dtsi, node_name is mntn_mem:bbox-mem
          * bbox_men_size:0x800000 8M
          * RDR_BASEINFO_SIZE:0x200 0.5k
          * AP_size = bbox_men_size - RDR_BASEINFO_SIZE - CP_size - TEEOS_size - HIFI_size - LPM3_size - IOM3_size - ISP_size
-         *           - IVP_size - EMMC_size - MODEMAP_size - CLK_size - REGULATOR_size - BFM_size - HISEE_size
-         *         = 0x47FE00 4607.5k
+         *           - IVP_size - EMMC_size - MODEMAP_size - CLK_size - REGULATOR_size - BFM_size - HISEE_size - NPU_size
+         *         = 0x46FE00  4543.5K
          */
-        rdr_area_sizes = <0 0x180000 0x40000 0x40000 0x40000 0x40000 0x40000 0x40000 0x40000 0x0 0x10000 0x10000 0x10000 0x10000>;
+        rdr_area_sizes = <0 0x180000 0x40000 0x40000 0x40000 0x40000 0x40000 0x40000 0x40000 0x0 0x10000 0x10000 0x10000 0x10000 0x10000>;
         status = "ok";
     };
 

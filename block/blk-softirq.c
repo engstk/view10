@@ -182,9 +182,6 @@ void blk_complete_request(struct request *req)
 {
 	if (unlikely(blk_should_fake_timeout(req->q)))
 		return;
-#ifdef CONFIG_HISI_IO_LATENCY_TRACE
-	req_latency_check(req,REQ_PROC_STAGE_COMPLETE);
-#endif
 	if (!blk_mark_rq_complete(req))
 		__blk_complete_request(req);
 }

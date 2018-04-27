@@ -47,6 +47,9 @@ extern "C" {
 #define HIFI_OM_LOG_SIZE_MAX	0x400000 /* 4*1024*1024 = 4M */
 #define HIFI_OM_FILE_BUFFER_SIZE_MAX	(1024)
 #define HIFI_SEC_MAX_NUM 100
+#define VOICE_BIGDATA_NOISESIZE     16
+#define VOICE_BIGDATA_VOICESIZE     16
+#define VOICE_BIGDATA_CHARACTSIZE   32
 
 typedef enum {
 	DUMP_DSP_LOG,
@@ -165,6 +168,21 @@ enum DRV_HIFI_IMAGE_SEC_TYPE_ENUM {
 };
 typedef unsigned char DRV_HIFI_IMAGE_SEC_TYPE_ENUM_UINT8;
 
+enum MLIB_DEVICE_ENUM
+{
+	MLIB_DEVICE_HANDSET = 0,              /* handset mode */
+	MLIB_DEVICE_HANDFREE,                 /* handfree mode */
+	MLIB_DEVICE_CARFREE,                  /* carfree mode */
+	MLIB_DEVICE_HEADSET,                  /* headset mode */
+	MLIB_DEVICE_BLUETOOTH,                /* buletooth mode */
+	MLIB_DEVICE_PCVOICE,                  /* PC-VOICE mode */
+	MLIB_DEVICE_HEADPHONE,                /* Three segment headphone mode */
+	MLIB_DEVICE_USBVOICE,                 /* VR USB VOICE call*/
+	MLIB_DEVICE_USBHEADSET,               /* TypeC HIFI USB VOICE call (UP & DOWN LINK)*/
+	MLIB_DEVICE_USBHEADPHONE,             /* TypeC HIFI USB VOICE call (JUST DOWN LINK)*/
+	MLIB_DEVICE_BUTT,
+};
+
 struct drv_hifi_image_sec {
 	unsigned short sn;
 	DRV_HIFI_IMAGE_SEC_TYPE_ENUM_UINT8 type;
@@ -275,6 +293,22 @@ struct voice_3a_om_stru
 	unsigned short	recv_msg;
 };
 
+typedef struct {
+	unsigned char	iMedia_Voice_bigdata_device :4;
+	unsigned char	iMedia_Voice_bigdata_flag:4;
+	unsigned char	iMedia_Voice_bigdata_noise  :4;
+	unsigned char	iMedia_Voice_bigdata_voice  :4;
+	unsigned char	iMedia_Voice_bigdata_miccheck;
+	unsigned char	iMedia_Voice_bigdata_reserve2;
+	unsigned int	iMedia_Voice_bigdata_charact ;
+} imedia_voice_bigdata;
+
+typedef struct {
+	char	noise[VOICE_BIGDATA_NOISESIZE];              /*0-15 noise level*/
+	char	voice[VOICE_BIGDATA_VOICESIZE];              /*0-15 voice level*/
+	char	charact[VOICE_BIGDATA_CHARACTSIZE];         /*32 voice charact, such as whisper, ave and so on*/
+} imedia_voice_bigdata_to_imonitor;
+
 extern struct hifi_om_s g_om_data;
 
 typedef struct {
@@ -303,6 +337,7 @@ enum hifi_om_work_id {
 	HIFI_OM_WORK_VOICE_BSD = 0,
 	HIFI_OM_WORK_AUDIO_OM_DETECTION,
 	HIFI_OM_WORK_VOICE_3A,
+	HIFI_OM_WORK_VOICE_BIGDATA,
 	HIFI_OM_WORK_MAX,
 };
 

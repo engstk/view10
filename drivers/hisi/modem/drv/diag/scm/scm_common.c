@@ -58,6 +58,8 @@
 #include "scm_ind_dst.h"
 #include "scm_cnf_src.h"
 #include "scm_cnf_dst.h"
+#include "scm_common.h"
+#include <securec.h>
 
 
 /*****************************************************************************
@@ -89,8 +91,7 @@ void *scm_UnCacheMemAlloc(u32 ulSize, unsigned long *pulRealAddr)
     *pulRealAddr = 0;
     pVirtAdd     = 0;
 
-    /* coverity[secure_coding] */
-    memset(&dev, 0, sizeof(dev));
+    memset_s(&dev, sizeof(dev), 0, sizeof(dev));
     pVirtAdd = dma_alloc_coherent(&dev, ulSize, &ulAddress, GFP_KERNEL);
 
     *pulRealAddr = (unsigned long)ulAddress;
@@ -99,19 +100,7 @@ void *scm_UnCacheMemAlloc(u32 ulSize, unsigned long *pulRealAddr)
 }
 
 
-/*****************************************************************************
- 函 数 名  : VOS_FlushCpuWriteBuf
- 功能描述  : 刷CPU Write buffer
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2013年6月8日
-     作    者  : j00174725
-     修改内容  : Creat Function
-**************************************************************************** */
+
 void scm_FlushCpuWriteBuf(void)
 {
     __asm(" DSB sy ");
@@ -121,22 +110,7 @@ void scm_FlushCpuWriteBuf(void)
 }
 
 
-/*****************************************************************************
- 函 数 名  : VOS_UncacheMemPhyToVirt
- 功能描述  : 根据输入的实地址，计算对应的虚地址
- 输入参数  : pucCurPhyAddr:  当前实地址
-             pucPhyStart: 通道配置内存起始的实地址
-             pucVirtStart:通道配置内存起始的虚地址
-             ulBufLen:    通道内存空间大小
- 输出参数  : 无
- 返 回 值  : VOS_NULL: 转换失败/other: 虚地址的值
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2012年8月8日
-     作    者  : zhuli
-     修改内容  : Creat Function
-**************************************************************************** */
+
 unsigned long scm_UncacheMemPhyToVirt(u8 *pucCurPhyAddr, u8 *pucPhyStart, u8 *pucVirtStart, u32 ulBufLen)
 {
     if((pucCurPhyAddr < pucPhyStart) || (pucCurPhyAddr >= (pucPhyStart+ulBufLen)))

@@ -524,7 +524,7 @@ static int hifi_usb_plat_remove(struct platform_device *pdev)
 #ifdef CONFIG_OF
 static const struct of_device_id hifi_usb_of_match[] = {
 	{
-		.compatible = "hisilicon,kirin970-hifi-usb",
+		.compatible = "hisilicon,feb-hifi-usb",
 	},
 	{ },
 };

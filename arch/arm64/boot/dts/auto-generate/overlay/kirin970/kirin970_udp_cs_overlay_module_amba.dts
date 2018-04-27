@@ -382,7 +382,7 @@
 			};
 
 			huawei,lm3646@67{
-				huawei,need-wakelock = <1>;
+				huawei,need-wakelock = <0>;
 				huawei,flash-pin = <131 999 999>;
 				status = "ok";
 			};

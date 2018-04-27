@@ -354,6 +354,7 @@ void rdr_print_one_exc(struct rdr_exception_info_s *e)
 	BB_PRINT_DBG(" reset_core_mk:  [0x%llx]\n", e->e_reset_core_mask);
 	BB_PRINT_DBG(" reentrant:      [0x%x]\n", e->e_reentrant);
 	BB_PRINT_DBG(" exce_type:      [0x%x]\n", e->e_exce_type);
+	BB_PRINT_DBG(" exce_subtype:   [0x%x]\n", e->e_exce_subtype);
 	BB_PRINT_DBG(" from_core:      [0x%llx]\n", e->e_from_core);
 	BB_PRINT_DBG(" from_module:    [%s]\n", e->e_from_module);
 	BB_PRINT_DBG(" desc:           [%s]\n", e->e_desc);

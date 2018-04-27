@@ -58,6 +58,7 @@
 #include <product_nv_id.h>
 #include <product_nv_def.h>
 #include <mdrv.h>
+#include <securec.h>
 #include "nv_comm.h"
 #include "nv_file.h"
 #include "nv_ctrl.h"
@@ -196,7 +197,7 @@ u32 nv_read_ctrl_from_file(const s8 * path)
     u32 file_len;
 
     FILE * fp;
-    
+
     fp = nv_file_open((s8 *)path, (s8*)NV_FILE_READ);
     if(NULL == fp)
     {
@@ -211,7 +212,7 @@ u32 nv_read_ctrl_from_file(const s8 * path)
         nv_record("file len over nv mem or failed!len=0x%x.\n", file_len);
         return BSP_ERR_NV_FILE_OVER_MEM_ERR;
     }
-    
+
     ret = nv_read_from_file(fp, (u8*)NV_GLOBAL_CTRL_INFO_ADDR, 0, file_len);
     (void)nv_file_close(fp);
     if(ret)
@@ -231,7 +232,7 @@ u32 nv_read_ctrl_from_upfile(void)
     FILE * fp;
 
     nv_dload_head dload_head;
-   
+
 
     fp = nv_file_open((s8 *)NV_DLOAD_PATH, (s8*)NV_FILE_READ);
     if(NULL == fp)
@@ -239,7 +240,7 @@ u32 nv_read_ctrl_from_upfile(void)
         nv_record("open %s failed \n", (s8 *)NV_DLOAD_PATH);
         return NV_ERROR;
     }
-    
+
     if(nv_upgrade_xnv_compressed())
     {
         ret = (u32)nv_file_read((u8*)&dload_head, 1, (u32)sizeof(nv_dload_head), fp);
@@ -249,7 +250,7 @@ u32 nv_read_ctrl_from_upfile(void)
             nv_record("read %s file dload head err!ret=0x%x.\n", (s8 *)NV_DLOAD_PATH, ret);
             return BSP_ERR_NV_READ_FILE_FAIL;
         }
-    
+
         offset = dload_head.nv_bin.off;
         file_len = dload_head.nv_bin.len;
     }
@@ -265,7 +266,7 @@ u32 nv_read_ctrl_from_upfile(void)
         nv_record("file len over nv mem!len=0x%x.\n", file_len);
         return BSP_ERR_NV_FILE_OVER_MEM_ERR;
     }
-        
+
     ret = nv_read_from_file(fp, (u8*)NV_GLOBAL_CTRL_INFO_ADDR, offset, file_len);
     (void)nv_file_close(fp);
     if(ret)
@@ -309,7 +310,7 @@ u32 nv_load_err_proc(void)
     }
 
     nv_record("%s %s load from %s ...\n",__DATE__,__TIME__,NV_DLOAD_PATH);
-    
+
     ret = nv_read_ctrl_from_upfile();
     if(ret)
     {
@@ -350,7 +351,7 @@ u32 nv_load_err_proc(void)
         return ret;
     }
     /*lint -save -e550*//* Warning 550: (Warning -- Symbol '__dummy' (line 267) not accessed)*/
-    nv_spin_lock(nvflag, IPC_SEM_NV);    
+    nv_spin_lock(nvflag, IPC_SEM_NV);
     /*lint -restore*/
     ddr_info->acore_init_state = NV_INIT_OK;
     nv_spin_unlock(nvflag, IPC_SEM_NV);
@@ -435,7 +436,7 @@ u32 nv_copy_img2backup(void)
         (void)bsp_close((u32)(unsigned long)fp);
         return BSP_ERR_NV_MALLOC_FAIL;
     }
-    (void)nv_memset((u8 *)pdata, 0, (size_t)NV_FILE_COPY_UNIT_SIZE);
+    (void)memset_s((u8 *)pdata, (size_t)NV_FILE_COPY_UNIT_SIZE, 0, (size_t)NV_FILE_COPY_UNIT_SIZE);
 
     nv_create_flag_file((s8*)NV_BACK_FLAG_PATH);
     while(total_len)
@@ -708,7 +709,7 @@ u32 nv_read_from_file(FILE * fp, u8* ptr, u32 offset, u32 file_len)
 
     nv_ctrl_info_s ctrl_info;
     nv_global_info_s * ddr_info = (nv_global_info_s*)NV_GLOBAL_INFO_ADDR;
-    
+
     if(file_len == 0)
     {
         nv_record("datalen 0x%x\n", file_len);
@@ -756,13 +757,13 @@ u32 nv_read_from_file(FILE * fp, u8* ptr, u32 offset, u32 file_len)
         ret = BSP_ERR_NV_FILE_ERROR;
         goto out;
     }
-    
+
     nv_flush_cache((void*)NV_GLOBAL_CTRL_INFO_ADDR,(u32)NV_MAX_FILE_SIZE);
     return NV_OK;
-    
+
 out:
     nv_record("ret : 0x%x,datalen 0x%x\n", ret, file_len);
-    return NV_ERROR;    
+    return NV_ERROR;
 }
 
 u32 nv_revert_item(nv_revert_file_s * file, u32 itemid, u32 mkcrc, u8* temp_buff, u32 buff_size)
@@ -840,9 +841,9 @@ u32 nv_revert_item(nv_revert_file_s * file, u32 itemid, u32 mkcrc, u8* temp_buff
         mdm_len    = mem_item.nv_len;
         if(NV_MODEM_CRC_CHECK_YES)
         {
-        
+
             /*lint -save -e776*//*776表示计算之和可能超出范围*/
-            mdm_base = (u8 *)((unsigned long)temp_buff + (unsigned long)(i - NV_USIMM_CARD_1)*(mdm_len+4));   
+            mdm_base = (u8 *)((unsigned long)temp_buff + (unsigned long)(i - NV_USIMM_CARD_1)*(mdm_len+4));
             /*lint -restore*/
         }
         else
@@ -869,7 +870,7 @@ u32 nv_revert_item(nv_revert_file_s * file, u32 itemid, u32 mkcrc, u8* temp_buff
 
         nv_ipc_sem_take(IPC_SEM_NV_CRC, IPC_SME_TIME_OUT);
         /* coverity[secure_coding] */
-        nv_memcpy((void*)item_base, (void*)temp_buff, (unsigned long)item_size);
+        (void)memcpy_s((void*)item_base, item_size, (void*)temp_buff, (unsigned long)item_size);
         nv_flush_cache(item_base, item_size);
         nv_ipc_sem_give(IPC_SEM_NV_CRC);
     }
@@ -885,7 +886,7 @@ u32 nv_revert_item(nv_revert_file_s * file, u32 itemid, u32 mkcrc, u8* temp_buff
 
             nv_ipc_sem_take(IPC_SEM_NV_CRC, IPC_SME_TIME_OUT);
             /* coverity[secure_coding] */
-            nv_memcpy((void*)mdm_base, (void*)crc_data, (unsigned long)mdm_size);
+            (void)memcpy_s((void*)mdm_base, mdm_size, (void*)crc_data, (unsigned long)mdm_size);
             nv_flush_cache(mdm_base, mdm_size);
             nv_ipc_sem_give(IPC_SEM_NV_CRC);
         }
@@ -894,7 +895,7 @@ u32 nv_revert_item(nv_revert_file_s * file, u32 itemid, u32 mkcrc, u8* temp_buff
     {
         nv_ipc_sem_take(IPC_SEM_NV_CRC, IPC_SME_TIME_OUT);
         /* coverity[secure_coding] */
-        nv_memcpy((void*)item_base, (void*)temp_buff, (unsigned long)item_size);
+        (void)memcpy_s((void*)item_base, item_size, (void*)temp_buff, (unsigned long)item_size);
         nv_flush_cache(item_base, item_size);
         nv_ipc_sem_give(IPC_SEM_NV_CRC);
     }
@@ -974,7 +975,7 @@ u32 nv_revert_data(s8* path,const u32* revert_data,u32 len, u32 crc_mark)
 
     /* 支持分区文件长度大于内存 */
     ret = nv_init_file_info(file_ctrl_data,file_global_info);
-    if(ret) 
+    if(ret)
     {
         nv_printf("init file failed 0x%x!\n", ret);
         ret = BSP_ERR_NV_MEM_INIT_FAIL;
@@ -1048,13 +1049,7 @@ close_file:
 }
 
 
-/*
-* Function   : nv_revertEx
-* Discription: 恢复nv
-* Parameter  : path 文件路径
-* Output     : read result
-* History    : yuyangyang  00228784  create
-*/
+
 u32 nv_revertEx(const s8* path)
 {
     u32 i;
@@ -1065,7 +1060,7 @@ u32 nv_revertEx(const s8* path)
     u32* resum_list;
     nv_ctrl_info_s*   ctrl_info = (nv_ctrl_info_s*)NV_GLOBAL_CTRL_INFO_ADDR;
     nv_item_info_s*   item_tbl;
-    
+
     nv_record("start to revert nv from %s!\n", path);
 
     total    = ctrl_info->ref_count;
@@ -1081,13 +1076,13 @@ u32 nv_revertEx(const s8* path)
             resum_num += 1;
         }
     }
-    
+
     if(0 == resum_num)
     {
         nv_record("not find nv resum id!\n");
         return NV_ERROR;
     }
-    
+
     resum_list = (u32 *)vmalloc(sizeof(u32)*resum_num);
     if(NULL == resum_list)
     {
@@ -1102,8 +1097,8 @@ u32 nv_revertEx(const s8* path)
             resum_list[resum_cnt++] = item_tbl[i].itemid;
         }
     }
-    
-    ret = nv_revert_data((s8*)path, resum_list, resum_num, NV_FLAG_NO_CRC); 
+
+    ret = nv_revert_data((s8*)path, resum_list, resum_num, NV_FLAG_NO_CRC);
     if(ret)
     {
         nv_printf("ret=0x%x\n", ret);
@@ -1128,10 +1123,11 @@ u32 nv_write_to_mem(nv_wr_req *wreq, nv_item_info_s *item_info)
     u8* mdm_base;
     u8* crc_data  = NULL;
     u8* temp_buff = NULL;
+    u32 mem_len;
     u32 buff_size = 0;
 
     mdm_base  = nv_get_item_mdmbase(item_info, wreq->modemid, NULL);
-
+    mem_len = nv_get_item_mdmlen(item_info, NULL); 
     if(nv_crc_need_make_inwr())
     {
         ret = nv_crc_make_item_wr(wreq, item_info, &crc_data, &temp_buff, &buff_size);
@@ -1146,7 +1142,7 @@ u32 nv_write_to_mem(nv_wr_req *wreq, nv_item_info_s *item_info)
         {
             nv_ipc_sem_take(IPC_SEM_NV_CRC, IPC_SME_TIME_OUT);
             /* coverity[secure_coding] */
-            nv_memcpy(crc_data, temp_buff, (unsigned long)buff_size);/* [false alarm]:fortify */
+            (void)memcpy_s(crc_data, buff_size, temp_buff, (unsigned long)buff_size);/* [false alarm]:fortify */
             nv_flush_cache((u8*)crc_data, buff_size);
             nv_ipc_sem_give(IPC_SEM_NV_CRC);
 
@@ -1156,7 +1152,7 @@ u32 nv_write_to_mem(nv_wr_req *wreq, nv_item_info_s *item_info)
         {
             nv_ipc_sem_take(IPC_SEM_NV_CRC, IPC_SME_TIME_OUT);
             /* coverity[secure_coding] */
-            nv_memcpy(mdm_base + wreq->offset, wreq->pdata, (unsigned long)wreq->size);/* [false alarm]:fortify */
+            (void)memcpy_s(mdm_base + wreq->offset, (mem_len - wreq->offset), wreq->pdata, (unsigned long)wreq->size);/* [false alarm]:fortify */
             nv_flush_cache((u8*)(mdm_base + wreq->offset), buff_size);
             nv_ipc_sem_give(IPC_SEM_NV_CRC);
         }
@@ -1165,7 +1161,7 @@ u32 nv_write_to_mem(nv_wr_req *wreq, nv_item_info_s *item_info)
     {
         nv_ipc_sem_take(IPC_SEM_NV_CRC, IPC_SME_TIME_OUT);
         /* coverity[secure_coding] */
-        nv_memcpy(mdm_base + wreq->offset, wreq->pdata, (unsigned long)wreq->size);/* [false alarm]:fortify */
+        (void)memcpy_s(mdm_base + wreq->offset, (mem_len - wreq->offset), wreq->pdata, (unsigned long)wreq->size);/* [false alarm]:fortify */
         nv_flush_cache((u8*)(mdm_base + wreq->offset), buff_size);
         nv_ipc_sem_give(IPC_SEM_NV_CRC);
     }
@@ -1186,7 +1182,7 @@ u32 nv_read_from_mem(nv_rd_req *rreq, nv_item_info_s *item_info)
     mdm_base = nv_get_item_mdmbase(item_info, rreq->modemid, NULL);
 
     /* coverity[secure_coding] */
-    nv_memcpy(rreq->pdata, mdm_base+rreq->offset, (unsigned long)rreq->size);
+    (void)memcpy_s(rreq->pdata, rreq->size, mdm_base+rreq->offset, (unsigned long)rreq->size);
 
     return NV_OK;
 }
@@ -1409,12 +1405,11 @@ u32 nv_imei_data_comp(const s8* path)
     u32 ret;
     char fac_imei[16];
     char path_imei[16];
-    u32  len = 0;
 
     /* coverity[secure_coding] */
-    nv_memset(fac_imei,0,sizeof(fac_imei));
+    (void)memset_s(fac_imei, sizeof(fac_imei), 0,sizeof(fac_imei));
     /* coverity[secure_coding] */
-    nv_memset(path_imei,0,sizeof(path_imei));
+    (void)memset_s(path_imei,sizeof(path_imei), 0,sizeof(path_imei));
 
     /*出厂分区中的imei号获取失败的情况下无需比较*/
     ret = nv_get_key_data((s8*)NV_DEFAULT_PATH,NV_ID_DRV_IMEI,fac_imei,(u32)sizeof(fac_imei));
@@ -1446,12 +1441,7 @@ u32 nv_imei_data_comp(const s8* path)
     ret = (u32)memcmp(fac_imei,path_imei,sizeof(fac_imei));
     if(ret)
     {
-        nv_modify_print_sw(1);
-        len = sizeof(fac_imei);
-        nv_debug_trace(fac_imei, len);
-        len = sizeof(path_imei);
-        nv_debug_trace(path_imei, len);
-        nv_modify_print_sw(0);
+        nv_record("nv0 not same!\n");
         return ret;
     }
 
@@ -1504,13 +1494,7 @@ u32 nv_resume_item(nv_item_info_s *item_info, u32 itemid, u32 modemid)
     return NV_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : nv_resume_ddr_from_img
- 功能描述  : 从工作或者备份分区出厂分区恢复NV数据
- 输入参数  : void
- 输出参数  : 无
- 返 回 值  : 无
-*****************************************************************************/
+
 u32 nv_resume_ddr_from_img(void)
 {
     nv_global_info_s* ddr_info = (nv_global_info_s*)NV_GLOBAL_INFO_ADDR;
@@ -1529,9 +1513,9 @@ u32 nv_resume_ddr_from_img(void)
     }
 
     /*lock write right*/
-    
+
     /*lint -save -e550*//* Warning 550: (Warning -- Symbol '__dummy' (line 267) not accessed)*/
-    nv_spin_lock(nvflag, IPC_SEM_NV);    
+    nv_spin_lock(nvflag, IPC_SEM_NV);
     /*lint -restore*/
     ddr_info->acore_init_state = NV_KERNEL_INIT_DOING;
     nv_spin_unlock(nvflag, IPC_SEM_NV);
@@ -1546,9 +1530,9 @@ u32 nv_resume_ddr_from_img(void)
     }
     else
     {
-        /*unlock wirte right*/        
+        /*unlock wirte right*/
         /*lint -save -e550*//* Warning 550: (Warning -- Symbol '__dummy' (line 267) not accessed)*/
-        nv_spin_lock(nvflag, IPC_SEM_NV);        
+        nv_spin_lock(nvflag, IPC_SEM_NV);
         /*lint -restore*/
         ddr_info->acore_init_state = NV_INIT_OK;
         nv_spin_unlock(nvflag, IPC_SEM_NV);
@@ -1571,7 +1555,7 @@ void nv_flushListInit(void)
     nv_global_info_s* ddr_info = (nv_global_info_s*)NV_GLOBAL_INFO_ADDR;
 
     /* coverity[secure_coding] */
-    nv_memset(&(ddr_info->flush_info), 0, sizeof(nv_flush_list));
+    (void)memset_s(&(ddr_info->flush_info), sizeof(ddr_info->flush_info), 0, sizeof(nv_flush_list));
     nv_flush_cache((void*)NV_GLOBAL_INFO_ADDR, sizeof(nv_global_info_s*));
     return;
 }
@@ -1643,7 +1627,7 @@ u32 nv_flushItem(nv_flush_item_s *flush_item)
             return ret;
         }
         /* coverity[secure_coding] */
-        nv_memcpy(buff, data, (unsigned long)len);
+        (void)memcpy_s(buff, len, data, (unsigned long)len);
         nv_ipc_sem_give(IPC_SEM_NV_CRC);
 
         crc_code = *(u32*)((unsigned long)buff + len - (u32)4);

@@ -187,7 +187,6 @@
 
 /*非信令综测end*/
 
-/*一键升级 先弄到FTM里面吧 lkf58113 @ 20111010*/
 #define ID_MSG_FTM_RD_DLOADVER_REQ              (0x000101eb)
 #define ID_MSG_FTM_RD_DLOADVER_CNF              (0x000101ec)
 
@@ -379,7 +378,6 @@ typedef struct
 }CLIP_SUPPORT_BANDS_STRU;
 
 /******************************************************************************/
-/*一键升级结构体 lkf58113 @20111011*/
 /*DLOADVER*/
 typedef struct
 {
@@ -1312,14 +1310,7 @@ typedef struct
 
 /**********************************************************************************/
 
-/*****************************************************************************
- 结构名    : DRV_AGENT_CBC_GET_CNF_STRU
- 结构说明  : The message struct get cbc state reponse.
 
-1. 日    期   : 2012年03月01日
-   作    者   : HanJiuping 00122021
-   修改内容   : 新增结构体
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8        ulbcs;
@@ -1352,6 +1343,10 @@ typedef struct
     VOS_INT32 lValue2;
     VOS_INT32 lValue3;
     VOS_INT32 lValue4;
+    VOS_INT32 lValue5;
+    VOS_INT32 lValue6;
+    VOS_INT32 lValue7;
+    VOS_INT32 lValue8;
 
     /* ERR_SUCCESS(0):成功。*/
     /* 1:单板模式错误*/
@@ -2196,7 +2191,7 @@ typedef struct
 {
     VOS_UINT32 ulErrCode;
     VOS_UINT32 ulDataLen;
-    VOS_CHAR   cData[0];
+    VOS_CHAR   cData[1152]; /* 由于引用LMspLPhyInterface.h头文件后，会引起工具编译不过，这里直接用数据，大小需要与宏MAX_COMM_CMD_LEN保持一致辞 */
 }FTM_RD_LTCOMMCMD_CNF_STRU;
 
 typedef struct
@@ -2235,31 +2230,35 @@ typedef struct
 	VOS_UINT8		 enCamped;			/*是否驻留 */
 	VOS_UINT8		 enState;			/*是否为冲突状态 */
 	VOS_UINT8		 usBand;			/*频带指示 */
-	VOS_UINT8		 aucResv[1];
+    APP_RRC_ANTENNA_MAX_LAYERS_MIMO_ENUM_UINT8   enDlMimo;
 } L4A_LWCLASH_INFO_STRU;
 
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
-    APS_L4A_MSG_ID_ENUM_UINT32          enMsgId;                                /* _H2ASN_Skip */
+    VOS_UINT32          				enMsgId;                                /* _H2ASN_Skip */
 
     VOS_UINT16                          usClientId;                             /* 客户端ID */
     VOS_UINT8                           ucOpId;
-    VOS_UINT8		 					aucResv[1];
+    VOS_UINT8                           aucResv[1];
     VOS_UINT32                          ulErrorCode;
 
-	L4A_LWCLASH_INFO_STRU               stLwclashInfo;
+    L4A_LWCLASH_INFO_STRU               stLwclashInfo;
+    VOS_UINT32                          ulScellNum;
+    RRC_APP_SCELL_INFO_STRU             stScellInfo[LRRC_APP_LWCLASH_MAX_SCELL_NUM];
 } L4A_READ_LWCLASH_CNF_STRU;
 
 typedef struct
 {
     VOS_MSG_HEADER                                                              /* _H2ASN_Skip */
-    APS_L4A_MSG_ID_ENUM_UINT32          enMsgId;                                /* _H2ASN_Skip */
+    VOS_UINT32          				enMsgId;                                /* _H2ASN_Skip */
 
     VOS_UINT16                          usClientId;                             /* 客户端ID */
     VOS_UINT8                           ucOpId;                                 /* 操作码ID */
-    VOS_UINT8		 					aucResv[1];                                  /* CID      */
-	L4A_LWCLASH_INFO_STRU stLwclashInfo;
+    VOS_UINT8                           aucResv[1];                                  /* CID      */
+    L4A_LWCLASH_INFO_STRU stLwclashInfo;
+    VOS_UINT32                          ulScellNum;
+    RRC_APP_SCELL_INFO_STRU             stScellInfo[LRRC_APP_LWCLASH_MAX_SCELL_NUM];
 } L4A_READ_LWCLASH_IND_STRU;
 
 typedef L4A_COMM_REQ_STRU L4A_READ_LCACELL_REQ_STRU;

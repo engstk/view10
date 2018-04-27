@@ -117,7 +117,8 @@ typedef struct ST_PWC_SWITCH_STRU_S {
     u32 ccpu_hotplug_suspend      :1;/*bit24 此方案拔核时，被拔出的cpu做suspend操作，耗时较长*/
     u32 ccpu_hotplug_crg      :1;/*bit25 此方案拔核时，被拔核仅作l1cache和remove smp操作，耗时叫短，但是低功耗睡眠时需要先把被拔出的cpu插入*/
     u32 ccpu_tickless          :1;/*bit26 ccpu tickless*/
-    u32 reserved    :5; /*bit27-31*/
+    u32 sleep_monitor_time  :4; /*bit27-30*/
+    u32 reserved    :1; /*bit31*/
 
     /*以下NV用于DEBUG上下电和开关钟*/
     u32 drx_pa_pd        :1; /*bit0 用于控制PA的上下电*/
@@ -346,6 +347,31 @@ typedef struct
 {
     u32 enPortNum;         /* 维测使用的物理通道类型 */
 }DIAG_CHANNLE_PORT_CFG_STRU;
+
+typedef struct {
+    u32 iqi_enable:1;      /*0 iqi特性关闭 1 iqi特性打开*/
+    u32 serial_enable:1;   /*serial 开关 1打开 0 关闭*/
+    //u32 debug_enable:1;    /*debug功能使能*/
+    u32 reservd:30;
+}DRV_IQI_CFG_STRU;
+#ifndef LPHY_UT_MODE//lint !e553
+typedef struct convert_table
+{
+    s32 temperature;
+    u16 code;
+    u16 reserved;
+} convert_table;
+#define XO_TBL_SIZE 166
+typedef struct xo_convert_table_array
+{
+    convert_table convert_table[XO_TBL_SIZE];
+} xo_convert_table_array;
+#define PA_TBL_SIZE 32
+typedef struct pa_convert_table_array
+{
+    convert_table convert_table[PA_TBL_SIZE];
+} pa_convert_table_array;
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -262,6 +262,9 @@ FSC_U8 *FUSB3601_AddressToRegister(DeviceReg_t *registers, enum RegAddress addre
   case regMUS_TIMING:
     reg = &registers->MUSTiming.byte;
     break;
+  case regDEVICE_TYPE:
+    reg = &registers->DeviceType.byte;
+    break;
   case regWD_RESET:
     reg = &registers->WDReset;
     break;

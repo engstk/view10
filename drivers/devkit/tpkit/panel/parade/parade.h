@@ -384,6 +384,7 @@ enum parade_module_id {
 	MODULE_TRULY_ID = 2,
 	MODULE_MUTTO_ID = 3,
 	MODULE_JUNDA_ID = 5,
+	MODULE_LENSONE_ID = 6,
 	MODULE_TOPTOUCH_ID = 18,
 	MODULE_UNKNOW_ID = 0xFF,
 };
@@ -1479,6 +1480,7 @@ struct parade_core_data {
 	bool  is_need_check_mode_before_status_resume;
 
 	int create_project_id_flag;
+	int need_provide_projectID_for_sensor;
 	int get_module_name_flag;
 	int cm_delta_lattice_flag;
 	u32 cy_hid_reset_timeout; /* get from dts setting for ESD reset time*/
@@ -1508,6 +1510,7 @@ struct parade_core_data {
 	int avoid_roi_switch_flag;
 	bool need_set_rst_after_iovcc_flag;
 	bool need_check_report_descriptor_flag;
+	bool fw_need_depend_on_lcd;
 };
 
 #endif

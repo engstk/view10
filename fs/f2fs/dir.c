@@ -250,9 +250,6 @@ struct f2fs_dir_entry *__f2fs_find_entry(struct inode *dir,
 			break;
 	}
 out:
-	/* This is to increase the speed of f2fs_create */
-	if (!de)
-		F2FS_I(dir)->task = current;
 	return de;
 }
 
@@ -425,6 +422,13 @@ struct page *init_inode_metadata(struct inode *inode, struct inode *dir,
 			err = fscrypt_inherit_context(dir, inode, page, false);
 			if (err)
 				goto put_error;
+
+#if DEFINE_F2FS_FS_SDP_ENCRYPTION
+			err = f2fs_sdp_crypt_inherit(dir, inode, dpage, page);
+			if (err)
+				goto put_error;
+#endif
+
 		}
 
 		if (S_ISDIR(inode->i_mode))
@@ -454,6 +458,9 @@ struct page *init_inode_metadata(struct inode *inode, struct inode *dir,
 			remove_orphan_inode(F2FS_I_SB(dir), inode->i_ino);
 		f2fs_i_links_write(inode, true);
 	}
+
+	/* in case of zero inode page */
+	update_inode(inode, page);
 	return page;
 
 put_error:
@@ -651,35 +658,21 @@ int __f2fs_add_link(struct inode *dir, const struct qstr *name,
 				struct inode *inode, nid_t ino, umode_t mode)
 {
 	struct fscrypt_name fname;
-	struct page *page = NULL;
-	struct f2fs_dir_entry *de = NULL;
 	int err;
 
 	err = fscrypt_setup_filename(dir, name, 0, &fname);
 	if (err)
 		return err;
 
-	/*
-	 * An immature stakable filesystem shows a race condition between lookup
-	 * and create. If we have same task when doing lookup and create, it's
-	 * definitely fine as expected by VFS normally. Otherwise, let's just
-	 * verify on-disk dentry one more time, which guarantees filesystem
-	 * consistency more.
-	 */
-	if (current != F2FS_I(dir)->task) {
-		de = __f2fs_find_entry(dir, &fname, &page);
-		F2FS_I(dir)->task = NULL;
-	}
-	if (de) {
-		f2fs_dentry_kunmap(dir, page);
-		f2fs_put_page(page, 0);
-		err = -EEXIST;
-	} else if (!IS_ERR(page)) {
-		err = __f2fs_do_add_link(dir, &fname, inode, ino, mode);
-	} else {
-		err = (int)PTR_ERR(page);
-	}
+	err = __f2fs_do_add_link(dir, &fname, inode, ino, mode);
+
 	fscrypt_free_filename(&fname);
+
+	/* if the specific dirent added, clean last_ci_name */
+	if (!err && F2FS_I(dir)->last_ci_name != NULL
+		&& !strcasecmp(name->name, F2FS_I(dir)->last_ci_name))
+		F2FS_I(dir)->last_ci_name[0] = '\0';
+
 	return err;
 }
 
@@ -867,6 +860,7 @@ int f2fs_fill_dentries(struct dir_context *ctx, struct f2fs_dentry_ptr *d,
 	return 0;
 }
 
+/*lint -save -e573 -e574*/
 static int f2fs_readdir(struct file *file, struct dir_context *ctx)
 {
 	struct inode *inode = file_inode(file);
@@ -938,6 +932,7 @@ out:
 	fscrypt_fname_free_buffer(&fstr);
 	return err < 0 ? err : 0;
 }
+/*lint -restore*/
 
 static int f2fs_dir_open(struct inode *inode, struct file *filp)
 {

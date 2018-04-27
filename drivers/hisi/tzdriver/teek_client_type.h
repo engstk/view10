@@ -52,7 +52,9 @@ typedef signed char int8_t;
  * true值的定义
  */
 #ifndef true
+/*lint -e652 */
 #define true    1
+/*lint +e652 */
 #endif
 
 /**
@@ -60,7 +62,9 @@ typedef signed char int8_t;
  * false值的定义
  */
 #ifndef false
+/*lint -e652 */
 #define false   0
+/*lint +e652 */
 #endif
 
 /**

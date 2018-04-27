@@ -171,14 +171,7 @@ extern "C" {
 /*****************************************************************************
   3 枚举定义
 *****************************************************************************/
-/*****************************************************************************
-枚举名    : ADS_FILTER_PKT_TYPE_ENUM
-枚举说明  : ADS过滤数据包类型
 
-  1.日    期   : 2013年6月3日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目修改
-*****************************************************************************/
 enum ADS_FILTER_PKT_TYPE_ENUM
 {
     ADS_FILTER_PKT_TYPE_TCP,                                /* 数据包类型为TCP */
@@ -190,14 +183,7 @@ enum ADS_FILTER_PKT_TYPE_ENUM
 };
 typedef VOS_UINT32 ADS_FILTER_PKT_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : ADS_FILTER_ORIG_PKT_ENUM
-枚举说明  : ADS数据包原始报文类型
 
-  1.日    期   : 2013年6月14日
-    作    者   : L47619
-    修改内容   : V3R3 Share-PDP项目修改
-*****************************************************************************/
 enum ADS_FILTER_ORIG_PKT_ENUM
 {
     ADS_FILTER_ORIG_PKT_UL_IPV4_TCP,                                   /* 原始数据包类型为上行IPv4 TCP */
@@ -241,13 +227,7 @@ typedef VOS_UINT32 ADS_FILTER_ORIG_PKT_ENUM_UINT32;
   8 STRUCT定义
 *****************************************************************************/
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_IPV4_HEADER_STRU
- 结构说明  : IPV4的IP首部信息中用于过滤匹配的条件
- 1.日    期   : 2013年06月03日
-   作    者   : l00198894
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                          ulSrcAddr;                              /* source address */
@@ -256,62 +236,31 @@ typedef struct
     VOS_UINT8                           aucReserved[3];                         /* reserved */
 } ADS_FILTER_IPV4_HEADER_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_IPV4_TCP_STRU
- 结构说明  : IPV4的TCP报文过滤匹配条件
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usSrcPort;                              /* source port */
     VOS_UINT16                          usDstPort;                              /* dest port */
 } ADS_FILTER_IPV4_TCP_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_IPV4_UDP_STRU
- 结构说明  : IPV4的UDP报文过滤匹配条件
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef ADS_FILTER_IPV4_TCP_STRU    ADS_FILTER_IPV4_UDP_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_IPV4_ICMP_STRU
- 结构说明  : IPV4的ICMP报文过滤匹配条件
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usSeqNum;                               /* ICMP首部中的Sequence number */
     VOS_UINT16                          usIdentifier;                           /* ICMP首部中的Identifier */
 } ADS_FILTER_IPV4_ICMP_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_IPV4_FRAGMENT_STRU
- 结构说明  : IPV4的下行分片报文，记录首片的源地址、目的地址和IP首部中的
-             Identification作为过滤匹配条件
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                          usIdentification;                       /* IP首部中的identification */
     VOS_UINT8                           aucReserved[2];                         /* reserved */
 } ADS_FILTER_IPV4_FRAGMENT_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_IPV4_INFO_STRU
- 结构说明  : IPV4的过滤匹配条件
- 1.日    期   : 2013年06月03日
-   作    者   : L47619
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     ADS_FILTER_PKT_TYPE_ENUM_UINT32     enPktType;
@@ -330,14 +279,7 @@ typedef struct
 }ADS_FILTER_IPV4_INFO_STRU;
 
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_DECODE_DL_ICMP_FUNC
- 结构说明  : 下行ICMP包解析时所用结构体，包括对应ICMP type解析的函数指针及
-              对应原始报文类型
- 1.日    期   : 2013年06月18日
-   作    者   : l00198894
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef VOS_UINT32 (*ADS_FILTER_DECODE_DL_ICMP_FUNC)(
     ADS_IPV4_HDR_STRU                  *pstIPv4Hdr,
     ADS_FILTER_IPV4_INFO_STRU          *pstIPv4Filter);
@@ -350,26 +292,14 @@ typedef struct
 }ADS_FILTER_DECODE_DL_ICMP_FUNC_STRU;
 
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_NODE_STRU
- 结构说明  : 下行过滤链表节点结构体
- 1.日    期   : 2013年06月03日
-   作    者   : l00198894
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     ADS_FILTER_IPV4_INFO_STRU           stFilter;
     HI_LIST_S                           stList;
 }ADS_FILTER_NODE_STRU;
 
-/*****************************************************************************
- 结构名    : ADS_FILTER_CTX_STRU
- 结构说明  : ADS过滤功能相关上下文
- 1.日    期   : 2013年06月03日
-   作    者   : l00198894
-   修改内容   : V3R3 Share-PDP项目创建
-*****************************************************************************/
+
 typedef struct
 {
     HI_LIST_S                           astLists[ADS_FILTER_MAX_LIST_NUM];      /* ADS下行数据过滤表 */

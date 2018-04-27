@@ -6,7 +6,7 @@
  * apply:
  *
  * * This program is free software; you can redistribute it and/or modify
- * * it under the terms of the GNU General Public License version 2 and 
+ * * it under the terms of the GNU General Public License version 2 and
  * * only version 2 as published by the Free Software Foundation.
  * *
  * * This program is distributed in the hope that it will be useful,
@@ -28,10 +28,10 @@
  * * 2) Redistributions in binary form must reproduce the above copyright
  * *    notice, this list of conditions and the following disclaimer in the
  * *    documentation and/or other materials provided with the distribution.
- * * 3) Neither the name of Huawei nor the names of its contributors may 
- * *    be used to endorse or promote products derived from this software 
+ * * 3) Neither the name of Huawei nor the names of its contributors may
+ * *    be used to endorse or promote products derived from this software
  * *    without specific prior written permission.
- * 
+ *
  * * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -48,6 +48,8 @@
 
 #include <bsp_dump.h>
 #include "icc_core.h"
+#include <securec.h>
+
 
 extern struct icc_control g_icc_ctrl;
 //extern struct icc_dynamic_info dynamic_info[ICC_DYNAMIC_CHAN_NUM_MAX];
@@ -71,7 +73,7 @@ s32 icc_channel_has_data(void)
 
 	for(i = 0; i < (int)ICC_CHN_ID_MAX; i++)
 	{
-		
+
 		if(NULL == g_icc_ctrl.channels[i])
 		{
 			continue;
@@ -130,7 +132,7 @@ int icc_shared_task_init(void)
 		(void*)&g_icc_ctrl.shared_task_id); /*lint !e611 */
 }
 
-	
+
 void icc_system_error(u32 mod_id, u32 arg1, u32 arg2, char *data, u32 length)
 {
     system_error(mod_id, arg1, arg2, data, length);
@@ -196,6 +198,12 @@ s32 bsp_icc_channel_reset(DRV_RESET_CB_MOMENT_E stage, int usrdata)
 				channel->fifo_send->read  = 0;
 				channel->fifo_send->write = 0;
 			}
+            if(g_icc_ctrl.channels[ICC_CHN_IQI])
+            {
+                //新增的IQI 通道单独处理
+                g_icc_ctrl.channels[ICC_CHN_IQI]->fifo_send->read  = 0;
+                g_icc_ctrl.channels[ICC_CHN_IQI]->fifo_send->write = 0;
+            }
 		}
 		return ICC_OK;
 }
@@ -222,7 +230,7 @@ void bsp_icc_channel_uninit(u32 real_channel_id)
 
 	icc_safe_free(channel->vector);
 	/* coverity[secure_coding] */
-	(void)icc_safe_memset(channel->fifo_send, sizeof(struct icc_channel_fifo) + channel->fifo_send->size,/* [false alarm]:fortify */
+	(void)memset_s(channel->fifo_send, sizeof(struct icc_channel_fifo) + channel->fifo_send->size,/* [false alarm]:fortify */
 		0, sizeof(struct icc_channel_fifo) + channel->fifo_send->size); /*lint !e665 */
 	icc_safe_free(channel);
 

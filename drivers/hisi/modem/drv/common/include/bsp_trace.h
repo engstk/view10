@@ -172,9 +172,15 @@ typedef enum _bsp_module_e
 	BSP_MODU_CPM,
     BSP_MODU_BUS_FREQ,
     BSP_MODU_DIAG_SYSTEM,
+    BSP_MODU_DYNMEM_REPORT,
+    BSP_MODU_HCODE,
 	BSP_MODU_BOARD_TRACE,
 	BSP_MODU_EASYRF,
 	BSP_MODU_RTOSCK_TEST,
+	BSP_MODU_IQI,
+	BSP_MODU_CHR,
+	BSP_MODU_NRDSP,
+    BSP_MODU_ECIPHER,
     BSP_MODU_ALL,   /* 代表所有的模块 */
     BSP_MODU_MAX = 128    /* 边界值 */
 } bsp_module_e;
@@ -204,6 +210,16 @@ unsigned int bsp_mod_level_set(bsp_module_e  mod_id ,unsigned int print_level);
 
 unsigned int bsp_log_module_cfg_get(bsp_module_e mod_id);
 
+unsigned int bsp_log_level_set(bsp_log_level_e log_level);
+
+void bsp_log_level_reset(void);
+
+void bsp_log_show(void);
+
+void log_buff_info(void);
+
+void dmesg(void);
+
 #else
 static inline void bsp_trace(bsp_log_level_e log_level, bsp_module_e mod_id, char *fmt,...){return ;}
 
@@ -211,7 +227,19 @@ static inline unsigned int bsp_mod_level_set(bsp_module_e  mod_id ,unsigned int 
 
 static inline unsigned int bsp_log_module_cfg_get(bsp_module_e mod_id){return 0;}
 
+static inline unsigned int bsp_log_level_set(bsp_log_level_e log_level){return 0;}
+
+static inline void bsp_log_level_reset(void){return ;}
+
+static inline void bsp_log_show(void){return ;}
+
+static inline void log_buff_info(void){return ;}
+
+static inline void dmesg(void){return ;}
+
 #endif
+
+
 
 
 #ifdef __cplusplus

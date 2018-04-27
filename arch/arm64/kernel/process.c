@@ -95,12 +95,15 @@ void arch_cpu_idle_dead(void)
 }
 #endif
 
-#ifdef CONFIG_CPU_FREQ_GOV_INTERACTIVE
+void arch_cpu_idle_enter(void)
+{
+	idle_notifier_call_chain(IDLE_START);
+}
+
 void arch_cpu_idle_exit(void)
 {
 	idle_notifier_call_chain((unsigned long)IDLE_END);
 }
-#endif
 /*
  * Called by kexec, immediately prior to machine_kexec().
  *
@@ -383,26 +386,29 @@ int copy_thread(unsigned long clone_flags, unsigned long stack_start,
 
 static void tls_thread_switch(struct task_struct *next)
 {
-	unsigned long tpidr, tpidrro;
+	unsigned long tpidr;
 
 	asm("mrs %0, tpidr_el0" : "=r" (tpidr));
 	*task_user_tls(current) = tpidr;
 
-	tpidr = *task_user_tls(next);
-	tpidrro = is_compat_thread(task_thread_info(next)) ?
-		  next->thread.tp_value : 0;
+	if (is_compat_thread(task_thread_info(next)))
+		write_sysreg(next->thread.tp_value, tpidrro_el0);
+	else if (!arm64_kernel_unmapped_at_el0())
+		write_sysreg(0, tpidrro_el0);
 
-	asm(
-	"	msr	tpidr_el0, %0\n"
-	"	msr	tpidrro_el0, %1"
-	: : "r" (tpidr), "r" (tpidrro));
+	write_sysreg(*task_user_tls(next), tpidr_el0);
 }
 
 /* Restore the UAO state depending on next's addr_limit */
 static void uao_thread_switch(struct task_struct *next)
 {
 	if (IS_ENABLED(CONFIG_ARM64_UAO)) {
-		if (task_thread_info(next)->addr_limit == KERNEL_DS)
+#ifndef CONFIG_HISI_HHEE
+		bool uao = task_thread_info(next)->addr_limit == KERNEL_DS;
+#else
+		bool uao = hkip_get_task_bit(hkip_addr_limit_bits, next, true);
+#endif
+		if (uao)
 			asm(ALTERNATIVE("nop", SET_PSTATE_UAO(1), ARM64_HAS_UAO));
 		else
 			asm(ALTERNATIVE("nop", SET_PSTATE_UAO(0), ARM64_HAS_UAO));

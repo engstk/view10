@@ -653,6 +653,8 @@ static inline int tcpci_dp_configure(
 	event.typec_orien = tcpc->typec_polarity;
 	ret = pd_dpm_handle_combphy_event(event);
 
+	extern void hisi_usb_otg_update_mode_type(TCPC_MUX_CTRL_TYPE mode_type);
+	hisi_usb_otg_update_mode_type(TCPC_DP);
 	pr_info("\nhuawei_pd %s pd_event_notify ret = %d, mux_type = %d\n", __func__, ret, g_mux_type);
 #endif
 	return srcu_notifier_call_chain(&tcpc->evt_nh,

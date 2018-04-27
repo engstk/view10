@@ -574,9 +574,10 @@
 		compatible = "huawei,pd_dpm";
 		tcp_name = "type_c_port0";
 		switch_manual_enable = <1>;
+		otg_channel = <0>;
 		support_dp = <1>;
-		abnormal_cc_detection = <0>;
 		support_analog_audio = <1>;
+		abnormal_cc_detection = <0>;
 		status = "disabled";
 	};
 

@@ -1,4 +1,4 @@
-# MD5: 7c963bfd58f6ee540f1b81bcdcca11ee
+# MD5: 57521c892cc25fac02b8a7e377d80f9e
 ifeq ($(chip_type),es)
 CFG_ZSP_DSP_CHIP_BB_TYPE		:=13
 else
@@ -25,7 +25,11 @@ CFG_FEATURE_RTT_TEST                            := FEATURE_ON
 CFG_FEATURE_RTT_RANDOM_TEST                     := FEATURE_OFF
 CFG_FEATURE_GUTLC_ONE_DSP               := FEATURE_OFF
 CFG_FEATURE_NX_CORE_OPEN                := FEATURE_OFF
+ifeq ($(cdma),false)
+CFG_FEATURE_CSDR                        := FEATURE_OFF
+else
 CFG_FEATURE_CSDR                        := FEATURE_ON
+endif
 CFG_CPHY_PUB_DTCM_BASE	    :=0xE3840000
 CFG_CPHY_PUB_ITCM_BASE	    :=0xE3940000
 CFG_CPHY_PRV_DTCM_BASE	    :=0x49480000
@@ -44,3 +48,4 @@ CFG_XTENSA_CORE_X_CACHE             := Boston_cbbe16_nc
 CFG_LD_MAP_PATH                     := kirin970
 CFG_XTENSA_CORE_X_SYSTEM            := RF-2015.3
 endif
+CFG_FEATURE_EASYRF                        := FEATURE_OFF

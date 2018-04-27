@@ -29,7 +29,7 @@ void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 	lock->raw_lock = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
 	lock->magic = SPINLOCK_MAGIC;
 	lock->owner = SPINLOCK_OWNER_INIT;
-	lock->owner_cpu = -1;
+	lock->owner_cpu = -1;/*lint !e570*/
 }
 
 EXPORT_SYMBOL(__raw_spin_lock_init);
@@ -47,7 +47,7 @@ void __rwlock_init(rwlock_t *lock, const char *name,
 	lock->raw_lock = (arch_rwlock_t) __ARCH_RW_LOCK_UNLOCKED;
 	lock->magic = RWLOCK_MAGIC;
 	lock->owner = SPINLOCK_OWNER_INIT;
-	lock->owner_cpu = -1;
+	lock->owner_cpu = -1;/*lint !e570*/
 }
 
 EXPORT_SYMBOL(__rwlock_init);
@@ -103,7 +103,7 @@ static inline void debug_spin_unlock(raw_spinlock_t *lock)
 	SPIN_BUG_ON(lock->owner_cpu != raw_smp_processor_id(),
 							lock, "wrong CPU");
 	lock->owner = SPINLOCK_OWNER_INIT;
-	lock->owner_cpu = -1;
+	lock->owner_cpu = -1;/*lint !e570*/
 }
 
 #ifdef CONFIG_HISI_TIME
@@ -265,7 +265,7 @@ static inline void debug_write_unlock(rwlock_t *lock)
 	RWLOCK_BUG_ON(lock->owner_cpu != raw_smp_processor_id(),
 							lock, "wrong CPU");
 	lock->owner = SPINLOCK_OWNER_INIT;
-	lock->owner_cpu = -1;
+	lock->owner_cpu = -1;/*lint !e570*/
 }
 
 #if 0		/* This can cause lockups */

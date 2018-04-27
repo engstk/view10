@@ -370,7 +370,6 @@ struct mmc_card {
 	u8 *cached_ext_csd;
 #endif
 #ifdef CONFIG_HISI_MMC_MANUAL_BKOPS
-	bool	hisi_man_bkops_en;
 	struct hisi_bkops *mmc_bkops;
 #endif
 };

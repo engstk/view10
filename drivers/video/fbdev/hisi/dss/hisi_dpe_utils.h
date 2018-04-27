@@ -22,10 +22,14 @@
 #define CSC_VALUE_MAX	32768
 #define CSC_VALUE_NUM	9
 
-struct dss_clk_rate * get_dss_clk_rate(struct hisi_fb_data_type *hisifd);
-int set_dss_clk_rate(struct hisi_fb_data_type *hisifd, dss_clk_rate_t dss_clk_rate);
+struct dss_vote_cmd * get_dss_vote_cmd(struct hisi_fb_data_type *hisifd);
+int set_dss_vote_cmd(struct hisi_fb_data_type *hisifd, dss_vote_cmd_t dss_vote_cmd);
 int dpe_set_clk_rate(struct platform_device *pdev);
-int dpe_set_clk_rate_on_pll0(struct hisi_fb_data_type *hisifd);
+int dpe_get_votage_value(struct hisi_fb_data_type *hisifd, dss_vote_cmd_t *vote_cmd);
+int dpe_get_votage_level(struct hisi_fb_data_type *hisifd, int votage_value);
+
+int dpe_set_pixel_clk_rate_on_pll0(struct hisi_fb_data_type *hisifd);
+int dpe_set_common_clk_rate_on_pll0(struct hisi_fb_data_type *hisifd);
 
 void init_post_scf(struct hisi_fb_data_type *hisifd);
 void init_dbuf(struct hisi_fb_data_type *hisifd);
@@ -47,7 +51,7 @@ void ldi_frame_update(struct hisi_fb_data_type *hisifd, bool update);
 void single_frame_update(struct hisi_fb_data_type *hisifd);
 void ldi_data_gate(struct hisi_fb_data_type *hisifd, bool enble);
 
-#if defined(CONFIG_HISI_FB_3660) || defined (CONFIG_HISI_FB_970)
+#if defined(CONFIG_HISI_FB_3660) || defined (CONFIG_HISI_FB_970) || defined (CONFIG_HISI_FB_V320) || defined (CONFIG_HISI_FB_V501)
 int dpe_recover_pxl_clock(struct hisi_fb_data_type *hisifd);
 void init_dpp_csc(struct hisi_fb_data_type *hisifd);
 #endif

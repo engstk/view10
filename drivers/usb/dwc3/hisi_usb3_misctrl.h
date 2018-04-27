@@ -3,6 +3,8 @@
 
 #include <linux/hisi/usb/hisi_usb_interface.h>
 
+#define COMBOPHY_MODE_MASK              0x3
+
 /* misc ctrl internal inteface */
 void init_misc_ctrl_addr(void __iomem *base);
 void init_sc_misc_ctrl_addr(void __iomem *base);
@@ -40,5 +42,4 @@ int usb31phy_cr_wait_ack(void);
 void usb31phy_cr_start(enum phy_cr_start_type type);
 void usb31phy_cr_set_sel(void);
 int dwc3_is_highspeed_only(void);
-int dwc3_set_highspeed_only(void);
 #endif /* _DWC3_HISI_COMMON__H */

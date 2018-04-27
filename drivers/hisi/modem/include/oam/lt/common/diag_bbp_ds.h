@@ -68,21 +68,30 @@ extern "C" {
 #endif
 #endif
 
+#include "product_config.h"
+
 #pragma pack(4)
 
 /*****************************************************************************
   1 Include Headfile
 *****************************************************************************/
-//#include "mdrv.h"
 
 /*****************************************************************************
   2 macro
 *****************************************************************************/
+#ifdef DIAG_SYSTEM_5G
+#define DRX_SAMPLE_BBP_DATA_CHNNUM          15
+#define DDR_SAMPLE_BASE_ADDR_MAX            8
+#else
 #define DRX_SAMPLE_BBP_DATA_CHNNUM          10
 #define DDR_SAMPLE_BASE_ADDR_MAX            5
+#endif
 
-/* DIAG给TL-PHY发消息的MsgID */
+/* DIAG给GU-PHY发消息的MsgID */
 #define MSG_ID_DIAG2GUPHY_CHAN_ADDR_INFO         0x3200fe2d
+
+/* DIAG给EASY RF发消息的MsgID */
+#define MSG_ID_DIAG2EASYRF_CHAN_ADDR_INFO        0xaf00f804
 
 #define GUPHY_MSG_HEADER    unsigned int ulSenderCpuId;  \
                             unsigned int ulSenderPid;    \
@@ -103,9 +112,9 @@ REQ : DIAG_CMD_DRX_SAMPLE_GET_ADDR_REQ_STRU
 CNF : DIAG_CMD_DRX_SAMPLE_GET_ADDR_CNF_STRU
 IND : DIAG_CMD_DRX_REG_WR_IND_STRU
 *****************************************************************************/
-typedef enum
+ typedef enum
 {
-    /*                                       function     Austin  Dallas/V7R5/V722  Boston */
+                                            /* function   Austin  Dallas/V7R5/V722  Boston */
     DRX_SAMPLE_BBP_DMA_LOG0_CHNSIZE = 0x00, /* BUS        chn 16      chn 16        chn 16 */
     DRX_SAMPLE_BBP_DMA_LOG1_CHNSIZE ,       /* LOG        chn 17      chn 17          NA   */
     DRX_SAMPLE_BBP_DMA_LOG2_CHNSIZE ,       /* LOG1       chn 18        NA            NA   */
@@ -115,8 +124,15 @@ typedef enum
     DRX_SAMPLE_BBP_DMA_LOG6_CHNSIZE ,       /* LOG5       chn 22        NA            NA   */
     DRX_SAMPLE_BBP_DMA_LOG7_CHNSIZE ,       /* LOG6       chn 23        NA            NA   */
     DRX_SAMPLE_BBP_DMA_DATA_CHNSIZE ,       /* DATA       chn 24      chn 24        chn 17 */
-    DRX_SAMPLE_BBP_CDMA_DATA_CHNSIZE
-}DIAG_CMD_DRX_SAMPLE_CHNSIZE_E;
+    DRX_SAMPLE_BBP_CDMA_DATA_CHNSIZE,
+#ifdef DIAG_SYSTEM_5G
+    DRX_SAMPLE_BBP_5G_BUS_CHNSIZE,     //5G BUS CHAN
+    DRX_SAMPLE_BBP_RFIC_0_BUS_CHNSIZE, //RFIC 0 BUS CHAN
+    DRX_SAMPLE_BBP_RFIC_1_BUS_CHNSIZE, //RFIC 1 BUS CHAN
+    DRX_SAMPLE_BBP_5G_DATA_CHNSIZE,    //5G DATA CHAN
+    DRX_SAMPLE_BBA_DATA_CHNSIZE,       //ACCESS DATA CHAN
+#endif
+}DIAG_CMD_DRX_SAMPLE_CHNSIZE_E; 
 
 /*****************************************************************************
 描述 : 获取SOCP\BBP DMA基地址等
@@ -132,6 +148,11 @@ typedef enum
 	DRX_SAMPLE_BBP_SRC_BASE_ADDR ,
 	DRX_SAMPLE_POW_ONOFF_CLK_BASE_ADDR ,
 	DRX_SAMPLE_SOCP_BASE_ADDR,
+#ifdef DIAG_SYSTEM_5G  /*5G上PHY需要获取其他的地址信息*/	
+	DRX_SAMPLE_BBA_DBG_CTRL_BASE_ADDR = 0x05,
+	DRX_SAMPLE_BBP_RFIC0_BASE_ADDR,
+	DRX_SAMPLE_BBP_RFIC1_BASE_ADDR,
+#endif	
 }DIAG_CMD_DRX_SAMPLE_ADDR_TYPE_E;
 
 /*****************************************************************************
@@ -206,7 +227,8 @@ extern void mdrv_socp_update_bbp_ptr(unsigned int u32SrcChanId);
     #endif
 #endif
 
-#endif /* end of  */
+#endif /* end of diag_bbp_ds.h */
+
 
 
 

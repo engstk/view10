@@ -309,7 +309,7 @@ int tpm2_pcr_extend(struct tpm_chip *chip, int pcr_idx, const u8 *hash)
 	cmd.params.pcrextend_in.auth_area.attributes = 0;
 	cmd.params.pcrextend_in.auth_area.auth_size = 0;
 	cmd.params.pcrextend_in.digest_cnt = cpu_to_be32(1);
-	cmd.params.pcrextend_in.hash_alg = cpu_to_be16(TPM2_ALG_SHA1);
+	cmd.params.pcrextend_in.hash_alg = cpu_to_be16(TPM2_ALG_SHA256);
 	memcpy(cmd.params.pcrextend_in.digest, hash, TPM_DIGEST_SIZE);
 
 	rc = tpm_transmit_cmd(chip, &cmd, sizeof(cmd),

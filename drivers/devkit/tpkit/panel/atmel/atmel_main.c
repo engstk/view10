@@ -2362,6 +2362,27 @@ static int atmel_init_chip(void)
 	return error;
 }
 
+/*parse fw_need_depend_on_lcd flag, 0: not need, 1:need*/
+void atmel_parse_fw_need_depend_on_lcd(struct device_node *core_node, struct ts_kit_device_data *chip_data)
+{
+	int value = 0;
+	int error = 0;
+
+	if(NULL == core_node || NULL == chip_data || !mxt_core_data) {
+		TS_LOG_ERR("%s, core_node or chip_data is NULL\n", __func__);
+		return;
+	}
+
+	/*  fw need depend on lcd module */
+	error = of_property_read_u32(core_node, "fw_need_depend_on_lcd", &value);
+	if (error) {
+		TS_LOG_INFO("parse fw_need_depend_on_lcd failed\n");
+		value = 0;
+	}
+	mxt_core_data->fw_need_depend_on_lcd = value;
+	TS_LOG_INFO("%s, fw_need_depend_on_lcd = %d \n", __func__, mxt_core_data->fw_need_depend_on_lcd);
+}
+
 static int atmel_parse_dts(struct device_node *device, struct ts_kit_device_data *chip_data)
 {
 	struct mxt_data *data = mxt_core_data;
@@ -2535,7 +2556,8 @@ static int atmel_parse_dts(struct device_node *device, struct ts_kit_device_data
 		chip_data->rawdata_get_timeout = 0;
 		error = 0;
 	}
-
+	/*parse fw is not need depend on lcd flag*/
+	atmel_parse_fw_need_depend_on_lcd(device, chip_data);
 	TS_LOG_INFO
 	    ("reset_gpio = %d, irq_gpio = %d, irq_config = %d, algo_id = %d, x_max = %d, y_max = %d, x_mt = %d,y_mt = %d, support_3d_func = %d\n",
 	     chip_data->ts_platform_data->reset_gpio, chip_data->ts_platform_data->irq_gpio, chip_data->irq_config,
@@ -4479,6 +4501,14 @@ static void atmel_get_threshold_file_name(struct mxt_data *data, char *file_name
 	offset +=
 	    snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - offset,
 		     data->module_id);
+	if(data->fw_need_depend_on_lcd) {
+		offset +=
+			snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - offset,
+				"_");
+		offset +=
+			snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - offset,
+				data->lcd_module_name);
+	}
 
 	snprintf(file_name + offset, MAX_FILE_NAME_LENGTH - offset,
 		 "_threshold.csv");

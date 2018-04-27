@@ -15,7 +15,9 @@
 
 #define	MUTIPLY_FACTOR		(100000)
 #define	DEFAULT_SHELL_TEMP	(25000)
-#define	NORMAL_TEMP_DIFF		(10000)
+#define	NORMAL_TEMP_DIFF	(10000)
+#define	BATTERY_ID   		(255)
+#define	BATTERY_NAME		"Battery"
 
 struct hisi_temp_tracing_t {
 	int temp;
@@ -74,7 +76,7 @@ static int calc_shell_temp(struct hisi_shell_t *hisi_shell)
 		for (j = 0; j < hisi_shell->sample_count; j++) {
 			k = (hisi_shell->index - j) <  0 ? ((hisi_shell->index - j) + hisi_shell->sample_count) : hisi_shell->index - j;
 			sum += (long)shell_sensor->temp_tracing[j].coef * (long)shell_sensor->temp_tracing[k].temp;
-			trace_calc_shell_temp(i, j, shell_sensor->temp_tracing[j].coef, shell_sensor->temp_tracing[k].temp, sum);
+			trace_calc_shell_temp(hisi_shell->tz_dev, i, j, shell_sensor->temp_tracing[j].coef, shell_sensor->temp_tracing[k].temp, sum);
 		}
 	}
 
@@ -118,10 +120,14 @@ static void hkadc_sample_temp(struct work_struct *work)
 		shell_sensor = (struct hisi_shell_sensor_t *)((u64)(hisi_shell->hisi_shell_sensor) + (u64)((long)i) * (sizeof(struct hisi_shell_sensor_t)
 						+ sizeof(struct hisi_temp_tracing_t) * (u64)((long)hisi_shell->sample_count)));
 
-		if (ipa_get_periph_value(shell_sensor->id, &temp))
-			shell_sensor->temp_tracing[index].temp = DEFAULT_SHELL_TEMP;
-		else
+		if(shell_sensor->id == BATTERY_ID) {
+			temp = hisi_battery_temperature() * 1000;
 			hkadc_handle_temp_data(hisi_shell, shell_sensor, (int)temp);
+		} else if (ipa_get_periph_value(shell_sensor->id, &temp)) {
+			shell_sensor->temp_tracing[index].temp = DEFAULT_SHELL_TEMP;
+		} else {
+			hkadc_handle_temp_data(hisi_shell, shell_sensor, (int)temp);
+		}
 	}
 
 	if (!hisi_shell->valid_flag && index >= hisi_shell->sample_count - 1)
@@ -132,10 +138,60 @@ static void hkadc_sample_temp(struct work_struct *work)
 	else
 		hisi_shell->temp = hisi_battery_temperature() * 1000;
 
-	trace_shell_temp(hisi_shell->temp);
+	trace_shell_temp(hisi_shell->tz_dev, hisi_shell->temp);
 
 	index++;
 	hisi_shell->index = index >= hisi_shell->sample_count ? 0 : index;
+}
+
+static int fill_sensor_coef(struct hisi_shell_t *hisi_shell, struct device_node *np)
+{
+	int i = 0, j = 0, coef = 0, ret = 0;
+	const char *ptr_coef = NULL, *ptr_type = NULL;
+	struct device_node *child;
+	struct hisi_shell_sensor_t *shell_sensor;
+
+	for_each_child_of_node(np, child) {
+		shell_sensor = (struct hisi_shell_sensor_t *)((u64)hisi_shell + sizeof(struct hisi_shell_t) + (u64)((long)i) * (sizeof(struct hisi_shell_sensor_t)
+						+ sizeof(struct hisi_temp_tracing_t) * (u64)((long)hisi_shell->sample_count)));
+
+		ret = of_property_read_string(child, "type", &ptr_type);
+		if (ret) {
+			pr_err("%s type read err\n", __func__);
+			return ret;
+		}
+
+		if(strncmp(ptr_type, BATTERY_NAME, strlen(BATTERY_NAME))) {
+			ret = ipa_get_periph_id(ptr_type);
+			if (ret < 0) {
+				pr_err("%s sensor id get err\n", __func__);
+				return ret;
+			}
+			shell_sensor->id = (u32)ret;
+		} else {//type is Battery
+			pr_info("%s type is Battery. sensor id set to %d\n", __func__, BATTERY_ID);
+			shell_sensor->id = BATTERY_ID;
+		}
+
+		for (j = 0; j < hisi_shell->sample_count; j++) {
+			ret =  of_property_read_string_index(child, "coef", j, &ptr_coef);
+			if (ret) {
+				pr_err("%s coef [%d] read err\n", __func__, j);
+				return ret;
+			}
+
+			ret = kstrtoint(ptr_coef, 10, &coef);
+			if (ret) {
+				pr_err("%s kstortoint is failed\n", __func__);
+				return ret;
+			}
+			shell_sensor->temp_tracing[j].coef = coef;
+		}
+
+		i++;
+	}
+
+	return ret;
 }
 
 static int hisi_shell_probe(struct platform_device *pdev)
@@ -145,10 +201,6 @@ static int hisi_shell_probe(struct platform_device *pdev)
 	int ret;
 	int sample_count, sensor_count;
 	struct device_node *np;
-	struct device_node *child;
-	int i = 0, j, coef;
-	const char *ptr_coef, *ptr_type;
-	struct hisi_shell_sensor_t *shell_sensor;
 	struct hisi_shell_t *hisi_shell;
 
 	if (!of_device_is_available(dev_node)) {
@@ -183,6 +235,7 @@ static int hisi_shell_probe(struct platform_device *pdev)
 		pr_err("no enough memory\n");
 		goto node_put;
 	}
+
 	hisi_shell->sensor_count = sensor_count;
 	hisi_shell->sample_count = sample_count;
 
@@ -198,40 +251,9 @@ static int hisi_shell_probe(struct platform_device *pdev)
 		goto free_mem;
 	}
 
-	for_each_child_of_node(np, child) {
-		shell_sensor = (struct hisi_shell_sensor_t *)((u64)hisi_shell + sizeof(struct hisi_shell_t) + (u64)((long)i) * (sizeof(struct hisi_shell_sensor_t)
-						+ sizeof(struct hisi_temp_tracing_t) * (u64)((long)sample_count)));
-
-		ret = of_property_read_string(child, "type", &ptr_type);
-		if (ret) {
-			pr_err("%s type read err\n", __func__);
-			goto free_mem;
-		}
-
-		ret = ipa_get_periph_id(ptr_type);
-		if (ret < 0) {
-			pr_err("%s sensor id get err\n", __func__);
-			goto free_mem;
-		}
-		shell_sensor->id = (u32)ret;
-
-		for (j = 0; j < hisi_shell->sample_count; j++) {
-			ret =  of_property_read_string_index(child, "coef", j, &ptr_coef);
-			if (ret) {
-				pr_err("%s coef [%d] read err\n", __func__, j);
-				goto free_mem;
-			}
-
-			ret = kstrtoint(ptr_coef, 10, &coef);
-			if (ret) {
-				pr_err("%s kstortoint is failed\n", __func__);
-				goto free_mem;
-			}
-			shell_sensor->temp_tracing[j].coef = coef;
-		}
-
-		i++;
-	}
+	ret = fill_sensor_coef(hisi_shell, np);
+	if (ret)
+		goto free_mem;
 
 	hisi_shell->tz_dev = thermal_zone_device_register(dev_node->name,
 			0, 0, hisi_shell, &shell_thermal_zone_ops, NULL, 0, 0);
@@ -242,7 +264,7 @@ static int hisi_shell_probe(struct platform_device *pdev)
 	}
 
 	hisi_shell->temp = hisi_battery_temperature() * 1000;
-	pr_info("SHELL: temp %d\n", hisi_shell->temp);
+	pr_info("%s: temp %d\n", dev_node->name, hisi_shell->temp);
 	of_node_put(np);
 
 	platform_set_drvdata(pdev, hisi_shell);
@@ -292,7 +314,7 @@ int shell_temp_pm_resume(struct platform_device *pdev)
 
 	if (hisi_shell) {
 		hisi_shell->temp = hisi_battery_temperature() * 1000;
-		pr_info("SHELL: temp %d\n", hisi_shell->temp);
+		pr_info("%s: temp %d\n", hisi_shell->tz_dev->type, hisi_shell->temp);
 		hisi_shell->index = 0;
 		hisi_shell->valid_flag = 0;
 	}

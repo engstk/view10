@@ -2,7 +2,7 @@
 #include <linux/delay.h>
 #include <of.h>
 #include <n_bsp_ipf.h>
-#include <ipf_balong.h>
+#include "ipf_balong.h"
 #include <bsp_slice.h>
 #include <bsp_ipc.h>
 #include <bsp_module.h>

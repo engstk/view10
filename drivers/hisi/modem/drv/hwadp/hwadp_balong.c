@@ -125,9 +125,9 @@ int hwadp_init(void)
     ret += bsp_hwadp_register_base_addr(BSP_IP_TYPE_SYSCTRL, "SYSCTRL", addr_ao);
     if(addr_ao != addr_pd)
         ret += bsp_hwadp_register_base_addr(BSP_IP_TYPE_SYSCTRL_PD, "SYSCTRL_PD", addr_pd);
-    if(addr_ao != addr_mdm)
+    if(NULL != addr_mdm)
         ret += bsp_hwadp_register_base_addr(BSP_IP_TYPE_SYSCTRL_MDM, "SYSCTRL_MDM", addr_mdm);
-    if(addr_ao != addr_ap_peri)
+    if(NULL != addr_ap_peri)
         ret += bsp_hwadp_register_base_addr(BSP_IP_TYPE_PERI_SYSCTRL, "PERI_SYSCTRL", addr_ap_peri);
 
     ret += bsp_hwadp_register_ddr(BSP_DDR_SECT_TYPE_WAN, BSP_DDR_SECT_ATTR_NONCACHEABLE, (void *)((unsigned long)SHM_BASE_ADDR + SHM_OFFSET_WAN),

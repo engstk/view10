@@ -54,6 +54,12 @@
 				status = "disabled";
 			};
 
+			pmicdieid {
+				compatible = "hisilicon-hisi-pmic-dieid";
+				hisilicon,hisi-pmic-dieid-name = "Hi6421_PMU1"; /*dieid: <chip name>*/
+				hisilicon,hisi-pmic-dieid-reg-num = <17>; /*dieid: <register number>*/
+				hisilicon,hisi-pmic-dieid-regs = <0x288 0x289 0x28A 0x28B 0x28C 0x28D 0x28E 0x28F 0x290 0x291 0x292 0x293 0x294 0x295 0x296 0x297 0x298>; /*dieid: <addr value>*/
+			};
 
 			ldo4: ldo4@17 {
 				compatible = "hisilicon-hisi-ldo";

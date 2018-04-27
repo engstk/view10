@@ -12,6 +12,7 @@
 #include "nv_index.h"
 #include "nv_debug.h"
 #include "nv_xml_dec.h"
+#include "nv_partition_img.h"
 
 bool nv_upgrade_xnv_compressed(void)
 {
@@ -128,7 +129,7 @@ u32 bsp_nvm_upgrade(void)
 
     /*判断fastboot阶段升级包文件解析异常，若出现异常，则需要重新解析升级包文件*/
     if(ddr_info->nvdload_boot_state != NV_BOOT_UPGRADE_SUCC_STATE)
-    {   
+    {
         /* 解析xml nv或者解析压缩nv */
         if(nv_upgrade_xnv_compressed())
         {
@@ -140,7 +141,7 @@ u32 bsp_nvm_upgrade(void)
             nv_record("fastboot xml decode fail ,need kernel decode again!\n");
             ret = nv_upgrade_dec_xml_all();
         }
-        
+
         if(ret)
         {
             nv_record("kernel cprs or xml decode failed 0x%x!\n", ret);
@@ -209,7 +210,7 @@ upgrade_fail_out:
 u32 nv_upgrade_file_updata(void)
 {
     u32 ret;
-    
+
     ret = nv_file_update((s8*)NV_DLOAD_PATH);
     if(ret)
     {
@@ -226,7 +227,7 @@ u32 nv_upgrade_file_updata(void)
             return NV_ERROR;
         }
     }
-    
+
     return NV_OK;
 }
 
@@ -308,7 +309,7 @@ bool nv_upgrade_get_flag(void)
         ret = (bool)flag;
     }
     else
-    {        
+    {
         ret = nv_get_upgrade_flag();
     }
 
@@ -319,7 +320,7 @@ bool nv_upgrade_get_flag(void)
 u32 nv_upgrade_set_flag(bool flag)
 {
     u32 ret = NV_ERROR;
-    
+
     if(nv_upgrade_xnv_compressed())
     {
         if(!nv_file_access((s8*)NV_DLOAD_PATH,0))

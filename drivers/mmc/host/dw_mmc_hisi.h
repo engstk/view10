@@ -98,7 +98,6 @@
 
 #define CRG_PRINT 0x1
 
-/* mmc1 sys ctrl */
 #define MMC1_SYSCTRL_PEREN0		(0x300)
 #define MMC1_SYSCTRL_PERDIS0		(0x304)
 #define MMC1_SYSCTRL_PERCLKEN0		(0x308)
@@ -108,8 +107,8 @@
 #define MMC1_SYSCTRL_PERRSTEN0		(0x310)
 #define MMC1_SYSCTRL_PERRSTDIS0		(0x314)
 #define MMC1_SYSCTRL_PERRSTSTAT0	(0x318)
-#define  BIT_HRST_SDIO_HIGH	(0x1)
-#define  BIT_RST_SDIO_HIGH	(0x1 << 1)
+#define  BIT_HRST_SDIO_CANCER	(0x1)
+#define  BIT_RST_SDIO_CANCER	(0x1 << 1)
 /* mmc1 sys ctrl end*/
 
 #define HI3660_FPGA 1
@@ -118,8 +117,11 @@
 #define GTCLK_SD_EN (0x20000)
 
 #define BIT_VOLT_OFFSET         (0x314)
+#define BIT_VOLT_OFFSET_CANCER         (0x31c)
 #define BIT_VOLT_OFFSET_AUSTIN  (0x214)
 #define BIT_VOLT_VALUE_18       (0x4)
+#define BIT_VOLT_VALUE_18_CANCER       (0x400040)
+#define BIT_VOLT_VALUE_18_MASK_CANCER       (0x400000)
 
 #define BIT_RST_EMMC            (1<<20)
 #define BIT_RST_SD              (1<<18)
@@ -127,7 +129,7 @@
 
 #define BIT_RST_SDIO_CHICAGO    (1<<20)
 #define BIT_RST_SDIO_BOSTON    (1<<20)
-#define BIT_RST_SDIO_MIDDLE    (1<<20)
+#define BIT_RST_SDIO_LIBRA    (1<<20)
 
 #define BIT_RST_SD_M      (1<<24)
 #define GPIO_CLK_DIV(x) (((x) & 0xf) << 8)

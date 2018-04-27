@@ -100,9 +100,10 @@ void diag_RingBufferFlush( OM_RING_ID ringId );
 
 int diag_RingBufferGet( OM_RING_ID rngId, char *buffer, int maxbytes );
 
+#ifdef USED_CODE   /* 该宏定义不存在，作用是替代#if 0 */
 int diag_RingBufferRemove( OM_RING_ID rngId, int maxbytes );
-
 int diag_RingBufferGetReserve( OM_RING_ID rngId, char *buffer, int maxbytes );
+#endif
 
 int diag_RingBufferPut( OM_RING_ID rngId, char *buffer, int nbytes );
 

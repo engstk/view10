@@ -53,7 +53,7 @@
 extern "C"
 {
 #endif
-
+#include <product_config.h>
 #include <osl_types.h>
 #include <osl_spinlock.h>
 #include <osl_list.h>
@@ -66,7 +66,9 @@ extern "C"
 #include <bsp_ring_buffer.h>
 #endif
 #include <bsp_modem_log.h>
-
+#ifndef CCPU_CORE_NUM
+#define CCPU_CORE_NUM 1
+#endif
 /*
  * 模块id，增加或修改模块ID的同时需要同步修改:
  * 1) 标识模块的魔数      : enum PM_OM_MAGIC的定义
@@ -105,6 +107,7 @@ enum PM_OM_MOD_ID
 	PM_OM_RFFE = 28,
 	PM_OM_CDSP = 29,
 	PM_OM_MDRV = 30,
+	PM_OM_IQI = 31,
 	/* 32~48预留给上层, 模块ID不可以超过64 */
 	PM_OM_MOD_ID_MAX
 };
@@ -248,9 +251,11 @@ void pm_om_wakeup_log(void);
 #define CDRX_DUMP_WAKELOCK_TIME_OFFSET (CDRX_DUMP_RSRACC_OFFSET+CDRX_DUMP_RSRACC_SIZE)
 #define CDRX_DUMP_WAKELOCK_TIME_SIZE   (128)
 #define CDRX_DUMP_IPC_OFFSET           (CDRX_DUMP_WAKELOCK_TIME_OFFSET+CDRX_DUMP_WAKELOCK_TIME_SIZE)
-#define CDRX_DUMP_IPC_SIZE             (4*IPC_INT_BUTTOM)
+#define CDRX_DUMP_IPC_SIZE             (4*(IPC_INT_BUTTOM+IPC_SEM_BUTTOM))
 #define CDRX_DUMP_ICC_OFFSET           (CDRX_DUMP_IPC_OFFSET+CDRX_DUMP_IPC_SIZE)
 #define CDRX_DUMP_ICC_SIZE             (4*ICC_CHN_ID_MAX)
+#define CPUIDLE_STAMP_OFFSET           (CDRX_DUMP_ICC_OFFSET+CDRX_DUMP_ICC_SIZE)
+#define CPUIDLE_STAMP_SIZE             (4*CCPU_CORE_NUM*0x6*0x2)/*each stamp 4byte,each cpu record 6 stamp,0x2 means 32K stamp and hrt stamp*/
 
 #define CCPU_WAKEUP_IRQ_NUM_MAX 15
 /* STAMP */
@@ -328,6 +333,12 @@ void pm_om_wakeup_log(void);
 #define CHECK_CRG_CLKSTAT4          (4+CHECK_CRG_CLKSTAT3)
 #define CHECK_CRG_CLKSTAT5          (4+CHECK_CRG_CLKSTAT4)
 #define CHECK_PWR_STAT1             (4+CHECK_CRG_CLKSTAT5)
+#define L2CACHE_RESUME_READY_OFFSET   (4+CHECK_PWR_STAT1)
+#define L2CACHE_RESUME_READY_SIZE   (0X4*CCPU_CORE_NUM)
+
+#if ((L2CACHE_RESUME_READY_OFFSET+L2CACHE_RESUME_READY_SIZE)>CDRX_DUMP_PM_SIZE)/*每次新添加。最后要检测是否越界*/
+#error "pm dump size overflow"
+#endif
 
 #define PM_STAMP_START_FLAG     (0X5555AAAA)
 #define pm_wakeirq_name_len 8

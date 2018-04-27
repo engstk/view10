@@ -18,6 +18,7 @@
 #include <linux/module.h>
 #include <linux/mempool.h>
 #include <linux/vmalloc.h>
+#include <linux/of_reserved_mem.h>
 
 #include "mem.h"
 #include "smc.h"
@@ -37,6 +38,7 @@ void tc_mem_free(TC_NS_Shared_MEM *shared_mem)
 		mailbox_free(shared_mem->kernel_addr);
 	else
 		vfree(shared_mem->kernel_addr);
+
 	kfree(shared_mem);
 }
 
@@ -45,10 +47,6 @@ TC_NS_Shared_MEM *tc_mem_allocate(size_t len, bool from_mailbox)
 	TC_NS_Shared_MEM *shared_mem = NULL;
 	void *addr = NULL;
 
-	if (0 == len) {
-		tloge("alloc length 0 share memory is not allowed\n");
-		return ERR_PTR(-EFAULT);
-	}
 
 	shared_mem = kmalloc(sizeof(TC_NS_Shared_MEM), GFP_KERNEL|__GFP_ZERO);
 	if (!shared_mem) {
@@ -67,6 +65,7 @@ TC_NS_Shared_MEM *tc_mem_allocate(size_t len, bool from_mailbox)
 		}
 		addr = vmalloc_user(len);
 	}
+
 	if (!addr) {
 		tloge("alloc maibox failed\n");
 		kfree(shared_mem);
@@ -78,6 +77,58 @@ TC_NS_Shared_MEM *tc_mem_allocate(size_t len, bool from_mailbox)
 	shared_mem->len = len;
 
 	return shared_mem;
+}
+
+static u64 g_ion_mem_addr;
+static u64 g_ion_mem_size;
+
+static int supersonic_reserve_tee_mem(struct reserved_mem *rmem)
+{
+	g_ion_mem_addr = rmem->base;
+	g_ion_mem_size = rmem->size;
+
+	return 0;
+}
+RESERVEDMEM_OF_DECLARE(supersonic, "hisi-supersonic", supersonic_reserve_tee_mem); /*lint !e611 */
+
+
+/*send the ion static memory to tee.*/
+int TC_NS_register_ion_mem(void)
+{
+	TC_NS_SMC_CMD smc_cmd = {0};
+	int ret = 0;
+	struct mb_cmd_pack *mb_pack;
+
+	if ((u64)0 == g_ion_mem_addr || (u64)0 == g_ion_mem_size){
+		tloge("No ion mem static reserved for tee.\n");
+		return 0;
+	}
+
+	mb_pack = mailbox_alloc_cmd_pack();
+	if (!mb_pack) {
+		return -ENOMEM;
+	}
+
+	mb_pack->uuid[0] = 1;
+	smc_cmd.uuid_phys = virt_to_phys(mb_pack->uuid);
+	smc_cmd.uuid_h_phys = virt_to_phys(mb_pack->uuid) >> 32; /*lint !e572*/
+	smc_cmd.cmd_id = GLOBAL_CMD_ID_REGISTER_ION_MEM;
+
+	mb_pack->operation.paramTypes = TEE_PARAM_TYPE_VALUE_INPUT | TEE_PARAM_TYPE_VALUE_INPUT << 4;
+	mb_pack->operation.params[0].value.a = (u32)g_ion_mem_addr;
+	mb_pack->operation.params[0].value.b = (u32)(g_ion_mem_addr >> 32);
+	mb_pack->operation.params[1].value.a = (u32)g_ion_mem_size;
+
+	smc_cmd.operation_phys = virt_to_phys(&mb_pack->operation);
+	smc_cmd.operation_h_phys = virt_to_phys(&mb_pack->operation) >> 32; /*lint !e572*/
+
+	ret = TC_NS_SMC(&smc_cmd, 0);
+	mailbox_free(mb_pack);
+	if (ret) {
+	    tloge("Send ion mem info failed.\n");
+	}
+
+	return ret;
 }
 
 int tc_mem_init(void)

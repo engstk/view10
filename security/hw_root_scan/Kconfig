@@ -17,5 +17,14 @@ config HW_ROOT_SCAN
 	  base on five items, kernel code integrity, system call table
 	  integrity, SeLinux status, SeLinux hooks status, and root processes.
 
+config HW_ROOT_SCAN_ENG_DEBUG
+	bool "Huawei root scanner for engineering mode debug"
+	depends on HW_ROOT_SCAN
+	default n
+	help
+	  This option should only be enabled for engineering mode & debug test.
+	  In engineering mode, root scanner will be turnoff(default) after init,
+	  tester can use supported interface to turn it on, and do debug test.
+
 endmenu
 #a blank line must be existed

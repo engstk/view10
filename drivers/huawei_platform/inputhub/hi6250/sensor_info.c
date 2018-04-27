@@ -756,8 +756,8 @@ BH1745_ALS_PARA_TABLE als_para_diff_tp_color_table[] = {
 
 	{HAYDN, V3, DEFAULT_TPLCD, WHITE,
 	 {171, 223, 134, 803, 788, 171, 285, 589, 100, -4269, 5377, -3052,
-	  5306, 2466, 1227, 2116, 1229, 4741, 6598, 3360, 683, 4103, 7330, 3200,
-	  300} },
+	  5306, 2466, 1227, 2116, 1229, 4741, 6598, 3360, 683, 4103, 7330, 5000,
+	  200} },
 	{NATASHA, V3, DEFAULT_TPLCD, BLACK,
 	 {194, 354, 136, 1060, 1140, 194, 412, 1370, 100, -2713, 7576, -2787,
 	  5320, 963, 1418, 1598, 1896, 11495, 8100, 1968, 1143, 3163, 2480, 4500,
@@ -1599,16 +1599,16 @@ TMD2745_ALS_PARA_TABLE tmd2745_als_para_diff_tp_color_table[] = {
 RPR531_ALS_PARA_TABLE rpr531_als_para_diff_tp_color_table[] ={
 	{ANE, V4, TS_PANEL_UNKNOWN,
 //		 C_d0  D_d0  A_d0  H_d0  C_d1  D_d1  A_d1  H_d1  C     D     A     H
-		{6325, 2531, 1682, 1682, 3723, 1221, 559, 559, 910, 1394, 1890, 2318,
+		{6325, 2531, 1682, 1682, 3723, 1221, 559, 559, 800, 1450, 1890, 2318,
 		 1017, 159, 5000, 200}},
 	{ANE, V4, TS_PANEL_OFILIM,
-		{6326, 2531, 1682, 1682, 3723, 1221, 559, 559, 910, 1394, 1890, 2318,
+		{6325, 2531, 1682, 1682, 3723, 1221, 559, 559, 800, 1450, 1890, 2318,
 		 1017, 159, 5000, 200}},
 	{ANE, V4, TS_PANEL_TRULY,
-		{6327, 2531, 1682, 1682, 3723, 1221, 559, 559, 910, 1394, 1890, 2318,
+		{6325, 2531, 1682, 1682, 3723, 1221, 559, 559, 800, 1450, 1890, 2318,
 		 1017, 159, 5000, 200}},
 	{ANE, V4, TS_PANEL_MUTTO,
-		{6328, 2531, 1682, 1682, 3723, 1221, 559, 559, 910, 1394, 1890, 2318,
+		{6325, 2531, 1682, 1682, 3723, 1221, 559, 559, 800, 1450, 1890, 2318,
 		 1017, 159, 5000, 200}},
 
 	{RNE, V4, TS_PANEL_UNKNOWN,
@@ -2989,6 +2989,10 @@ int combo_bus_trans(struct sensor_combo_cfg *p_cfg, uint8_t *tx, uint32_t tx_len
 		return -1;
 	}
 
+	if (tx_len >= (uint32_t)0xFFFF - sizeof(*pkt_combo_trans)){
+		hwlog_err("%s: tx_len %x too big\n", __func__, tx_len);
+		return -1;
+	}
 	cmd_wd_len = tx_len + sizeof(*pkt_combo_trans);
 	pkt_combo_trans = kzalloc((size_t)cmd_wd_len, GFP_KERNEL);
 	if (!pkt_combo_trans) {

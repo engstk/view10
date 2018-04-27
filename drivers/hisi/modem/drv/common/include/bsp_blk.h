@@ -83,11 +83,16 @@ const char* bsp_blk_get_type(void);
 int bsp_blk_read(const char *part_name,unsigned int part_offset, void *data_buf, unsigned int data_len);
 int bsp_blk_read_oob(const char *part_name, unsigned int part_offset, void *data_buf, unsigned int length, unsigned int spare);
 int bsp_blk_read_ecc0(const char *part_name, unsigned int part_offset, void *data_buf, unsigned int length, unsigned int spare);
+int bsp_blk_read_page(unsigned int offset, void *data, unsigned int len);
 int bsp_blk_write(const char *part_name,unsigned int part_offset, void *data_buf, unsigned int data_len);
 int bsp_blk_write_oob(const char *part_name,unsigned int part_offset, void *data_buf, unsigned int length, unsigned int spare);
 int bsp_blk_write_ecc0(const char *part_name,unsigned int part_offset, void *data_buf, unsigned int length, unsigned int spare);
+int bsp_blk_write_page(unsigned int offset, void *data, unsigned int len);
+int bsp_blk_isbad(unsigned int offset, unsigned int *pbad);
+int bsp_blk_erase_block(unsigned int offset);
 int bsp_blk_erase(char *part_name);
 int bsp_blk_erase_all(void);
+int bsp_blk_markbad(unsigned int offset);
 
 int bsp_blk_ptable_update(void *ptbl_buf);
 

@@ -30,6 +30,8 @@
 
 static void __iomem *powerhold_gpio_base;
 static int g_powerhold_gpio_offset = 0;
+static int g_powerhold_protect_offset = 0xFFFF;
+static int g_powerhold_protect_bit = 0xFF;
 
 #include <linux/hisi/rdr_hisi_platform.h>
 #include <rdr_inner.h>
@@ -41,13 +43,25 @@ extern struct cmdword reboot_reason_map[];
 
 void hisi_pm_system_off(void)
 {
-	int out_dir;
+	int out_dir, protect_val;
 
 	set_reboot_reason(AP_S_COLDBOOT);
 	while(1) {
 
 		if (powerhold_gpio_base != NULL) {
 			printk(KERN_INFO "system power off now\n");
+			/* clear powerhold protect */
+			if (g_powerhold_protect_offset != 0xFFFF) {
+				/* we need clear protect bit and set mask bit */
+				protect_val = readl((void *)sysctrl_base + g_powerhold_protect_offset);
+				if ((protect_val & BIT(g_powerhold_protect_bit)) == 0) {
+					printk(KERN_ERR "protect_offset = 0x%X, protect_bit = 0x%X. powerhold protect is already cleared!\n",
+						g_powerhold_protect_offset, g_powerhold_protect_bit);
+				}
+				protect_val = (~BIT(g_powerhold_protect_bit)) | (BIT(g_powerhold_protect_bit+16));
+				writel(protect_val, (void *)sysctrl_base + g_powerhold_protect_offset);
+			}
+
 			/*set direction*/
 			out_dir = readl(SOC_GPIO_GPIODIR_ADDR(powerhold_gpio_base));
 			out_dir |= (1 << g_powerhold_gpio_offset);
@@ -75,7 +89,7 @@ void hisi_pm_system_reset(char mode, const char *cmd)
 
     if (cmd == NULL || *cmd == '\0') {
         printk(KERN_ERR "hisi_pm_system_reset cmd is null\n");
-        cmd = "coldboot";
+        cmd = "COLDBOOT";
     } else {
         printk(KERN_ERR "hisi_pm_system_reset cmd is %s\n", cmd);
     }
@@ -119,6 +133,23 @@ static int hi3xxx_reset_probe(struct platform_device *pdev)
 		else {
 			printk(KERN_INFO "offset = 0x%x !\n", (unsigned int)offset);
 			g_powerhold_gpio_offset = offset;
+		}
+
+		ret = of_property_read_u32(np, "powerhold_protect_offset", (u32 *)&offset);
+		if (ret) {
+			printk(KERN_ERR "no powerhold_protect_offset !\n");
+		} else {
+			printk(KERN_INFO "powerhold_protect_offset = 0x%x !\n", (unsigned int)offset);
+			g_powerhold_protect_offset = offset;
+		}
+
+		ret = of_property_read_u32(np, "powerhold_protect_bit", (u32 *)&offset);
+		if (ret) {
+			printk(KERN_ERR "no powerhold_protect_bit !\n");
+			g_powerhold_protect_offset = 0xFFFF;
+		} else {
+			printk(KERN_INFO "powerhold_protect_bit = 0x%x !\n", (unsigned int)offset);
+			g_powerhold_protect_bit = offset;
 		}
 	}
 

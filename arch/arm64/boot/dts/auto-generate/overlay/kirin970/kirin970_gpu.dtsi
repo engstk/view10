@@ -22,12 +22,5 @@
 	system-coherency=<1>;
 		gpu-bound-detection-enable = "enable";
 		gpu-bound-check-threshold = <300>;
-
-
-	gpu_hw_vote_freq_reg {
-		compatible = "hisi,gpu-hw-vote-freq";
-		/* vote-reg-info: [0:pmctrl] [vote-reg-offset] [value-mask] [write-mask] [result-reg-offset] [read-mask] */
-		vote_reg_info = <0 0x290 0xFF 0xFF0000 0x2DC 0xFF0000>;
-	};
     };
 };

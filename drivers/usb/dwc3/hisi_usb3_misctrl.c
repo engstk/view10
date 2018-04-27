@@ -23,7 +23,6 @@
 #define USB_MISC_REG_PHY_CR_PARA_CTRL	0x54
 #define USB_MISC_REG_PHY_CR_PARA_DATA	0x58
 
-#define COMBOPHY_MODE_MASK              0x3
 extern struct hisi_dwc3_device *hisi_dwc3_dev;
 extern bool __clk_is_enabled(struct clk *clk);
 
@@ -437,38 +436,12 @@ int dwc3_is_highspeed_only(void)
 {
 	volatile uint32_t temp;
 	temp = usb3_misc_reg_readl(0x214);
+	/* Mux control from TCPM controlling the behavior of the ComboPHY DPAlt_Xbar
+	 * and TCA synchronization.
+	 * 00: No connection (default)
+	 * 01: USB3.1 Connected
+	 * 10: DP Alternate Mode - 4 lanes
+	 * 11: USB3.1 + Display Port Lanes 0 & 1
+	 */
 	return (temp & COMBOPHY_MODE_MASK) == DPONLY_MODE;
 }
-
-int dwc3_set_highspeed_only(void)
-{
-	int i = 0;
-
-	/* * * * * * * * * * * * * * * * * * *
-	 * boston only
-	 * check if usb phy cr read success.
-	 * * * * * * * * * * * * * * * * * * */
-	while (0x74cd != usb31phy_cr_read(0)) {
-		i++;
-		if(i > 10) {
-			usb_err("crphy read timeout!\n");
-			return -ENOMEM;
-		}
-		udelay(1);
-	}
-
-	/* Override value for ref_clk_mplla_div2_en */
-	usb31phy_cr_write(5, usb31phy_cr_read(5) | (1u << 15) | 1);
-
-	/* disable usb3 SS port */
-	usb3_misc_reg_setbit(1, 0x4);
-
-/*lint -e648 -esym(648,*)*/
-	usb3_misc_reg_clrvalue((u32)(~GENMASK(7, 4)), 0x7c);
-/*lint -e648 +esym(648,*)*/
-
-	udelay(100);
-
-	return 0;
-}
-

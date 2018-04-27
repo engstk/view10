@@ -91,13 +91,27 @@ extern int fsa9685_manual_sw(int input_select);
 #define HI6523_DPDM_WATER_THRESH_2500MV (2500)
 #define HI6523_DPDM_WATER_THRESH_2700MV (2700)
 #define HI6523_DPDM_WATER_THRESH_MAX    (3000)
+
+#define WATER_VOLT_PARA_LEVEL  (6)
+#define WATER_VOLT_PARA (2)
 /*************************struct define area***************************/
+struct check_vol {
+	unsigned int vol_min;
+	unsigned int vol_max;
+};
+
+struct scharger_check_voltage{
+	struct check_vol dm_vol_data[WATER_VOLT_PARA_LEVEL];
+	struct check_vol dp_vol_data[WATER_VOLT_PARA_LEVEL];
+};
+
 struct param {
     int bat_comp;
     int vclamp;
     int fcp_support;
     int dpm_en;
     int scp_support;
+    struct scharger_check_voltage scharger_check_vol;
 };
 struct hi6523_device_info {
     struct i2c_client *client;
@@ -558,9 +572,10 @@ struct charge_cv_vdpm_data {
 /* fcp 中断寄存器3 */
 #define CHG_FCP_IRQ3_REG                (SOC_SCHARGER_FCP_IRQ3_ADDR(0))
 #define CHG_FCP_TAIL_HAND_FAIL          (1<<SOC_SCHARGER_FCP_IRQ3_tail_hand_fail_irq_START)
+#define CHG_FCP_INIT_HAND_FAIL          (1<<SOC_SCHARGER_FCP_IRQ3_init_hand_fail_irq_START)
 /* fcp 中断寄存器4 */
 #define CHG_FCP_IRQ4_REG                (SOC_SCHARGER_FCP_IRQ4_ADDR(0))
-
+#define CHG_FCP_ENABLE_HAND_FAIL        (1<<SOC_SCHARGER_FCP_IRQ4_enable_hand_fail_irq_START)
 /* fcp 中断寄存器5 */
 #define CHG_FCP_IRQ5_REG                (SOC_SCHARGER_FCP_IRQ5_ADDR(0))
 #define CHG_FCP_SET_DET_SHIFT           (SOC_SCHARGER_FCP_IRQ5_fcp_set_d60m_r_START)

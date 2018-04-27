@@ -61,6 +61,10 @@ extern "C" {
 
 u32 nv_img_write(u8* pdata, u32 len, u32 file_offset);
 u32 nv_img_flush_all(void);
+#ifdef FEATURE_NV_CARRIER_CUST
+u32 nv_img_flush_carrier(void);
+#endif
+u32 nv_img_load_carrier(s8 * path);
 u32 nv_img_resume_item(nv_item_info_s *item_info, u32 modem_id);
 u32 nv_img_boot_check(const s8 * pdir);
 void nv_img_clear_check_result(void);

@@ -108,10 +108,17 @@ int32_t update_timestamp(TC_NS_SMC_CMD *cmd)
 	uint8_t *token_buffer = NULL;
 	phys_addr_t phy_addr;
 	bool global;
+	bool filterFlag;
+	bool needCheckFlag;
 
 	if (!cmd) {
 		tloge("cmd is NULL, error!");
 		return TEEC_ERROR_BAD_PARAMETERS;
+	}
+	/*if cmd is agent ,not check uuid. and sometime uuid canot access it */
+	filterFlag = (0 != cmd->agent_id) || (TEEC_PENDING2_AGENT == cmd->ret_val);
+	if (filterFlag) {
+		return TEEC_SUCCESS;
 	}
 
 	phy_addr = (phys_addr_t)(cmd->uuid_h_phys) << 32 | (cmd->uuid_phys);
@@ -124,8 +131,8 @@ int32_t update_timestamp(TC_NS_SMC_CMD *cmd)
 		return TEEC_ERROR_GENERIC;
 	}
 	global = (UUID_PREFIX_MEANS_GLOBAL == uuid[0]) ? true : false;
-
-	if (!global && 0 == cmd->agent_id && TEEC_PENDING2_AGENT != cmd->ret_val) {
+	needCheckFlag = (!global) && (0 == cmd->agent_id) && (TEEC_PENDING2_AGENT != cmd->ret_val);
+	if (needCheckFlag) {
 		token_buffer = phys_to_virt((phys_addr_t)(cmd->token_h_phys) << 32
 				| (cmd->token_phys));
 		if (!token_buffer || is_token_empty(token_buffer, TOKEN_BUFFER_LEN)) {
@@ -255,6 +262,10 @@ int32_t update_chksum(TC_NS_SMC_CMD *cmd)
 	if (!cmd) {
 		tloge("cmd is NULL, error!\n");
 		return TEEC_ERROR_BAD_PARAMETERS;
+	}
+	/*if cmd is agent ,not check uuid. and sometime uuid canot access it */
+	if (0 != cmd->agent_id || TEEC_PENDING2_AGENT == cmd->ret_val) {
+		return TEEC_SUCCESS;
 	}
 
 	cmd->chksum = 0;

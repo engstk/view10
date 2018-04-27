@@ -1857,7 +1857,6 @@ err_out:
             regmap_exit(di->regmapL);
     }
     g_anc_ncx8293_priv = NULL;
-    np = NULL;
 
     return ret;
 
@@ -1912,7 +1911,6 @@ static int anc_ncx8293_remove(struct i2c_client *client)
             hwlog_err("%s: disable anc hs ldo failed.\n", __func__);
     }
 
-    di = NULL;
     misc_deregister(&anc_ncx8293_device);
     hwlog_info("%s: exit\n", __func__);
 

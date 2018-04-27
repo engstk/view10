@@ -40,14 +40,41 @@
 #include "hisi_hisee_power.h"
 #include "hisi_hisee_upgrade.h"
 #include "hisi_hisee_chip_test.h"
+#include <dsm/dsm_pub.h>
+
+
+#define SET_COS_DEFAULT_BUF_PARA() \
+do {\
+	cos_default_buf_para[0] = HISEE_CHAR_SPACE;\
+	cos_default_buf_para[2] = '0' + COS_PROCESS_UPGRADE;\
+	cos_default_buf_para[1] = '0' + COS_IMG_ID_0;\
+} while (0)
+
+/* check ret is ok or otherwise goto err_process*/
+#define CHECK_OK(ret) do { if (HISEE_OK != (ret)) goto err_process; } while (0)
+
+u32 g_hisee_sm_flag = 0;
 
 /* hisee manufacture function begin */
 extern void release_hisee_semphore(void);/*should be semaphore; whatever..*/
 static int otp_image_upgrade_func(void *buf, int para)
 {
     int ret;
+	unsigned int cos_id = COS_IMG_ID_0;
+	unsigned int process_id = 0;
+
+	ret = hisee_get_cosid_processid(buf, &cos_id, &process_id);
+	if (HISEE_OK != ret) {
+		pr_err("%s() hisee_get_cosid failed ret=%d\n", __func__, ret);
+		set_errno_and_return(ret);
+	}
+	if (COS_IMG_ID_0 != cos_id) {
+		pr_err("hisee:%s() cosid=%d not support otp image upgrade now, bypass!\n", __func__, cos_id);
+		return ret;
+	}
     ret = write_hisee_otp_value(OTP_IMG_TYPE);
     check_and_print_result();
+
     set_errno_and_return(ret);/*lint !e1058*/
 }/*lint !e715*/
 
@@ -172,13 +199,19 @@ static int hisee_apdu_test_func(void *buf, int para)
     set_errno_and_return(ret);
 }
 
-int hisee_verify_isd_key(void)
+static int hisee_verify_isd_key(hisee_cos_imgid_type cos_id)
 {
     char *buff_virt;
     phys_addr_t buff_phy = 0;
     atf_message_header *p_message_header;
     int ret = HISEE_OK;
     unsigned int image_size;
+
+	if (COS_IMG_ID_0 != cos_id) {
+		/*TODO:can do more actions in future if necessary*/
+		pr_err("hisee:%s() cosid=%d not support verify_isd_key now, bypass!\n", __func__, cos_id);
+		return ret;
+	}
 
     buff_virt = (void *)dma_alloc_coherent(g_hisee_data.cma_device, (unsigned long)SIZE_1K * 4,
                                             &buff_phy, GFP_KERNEL);
@@ -193,8 +226,12 @@ int hisee_verify_isd_key(void)
     ret = send_smc_process(p_message_header, buff_phy, image_size,
                             HISEE_ATF_GENERAL_TIMEOUT, CMD_HISEE_VERIFY_KEY);
     dma_free_coherent(g_hisee_data.cma_device, (unsigned long)(SIZE_1K * 4), buff_virt, buff_phy);
-    check_and_print_result();
-    set_errno_and_return(ret);
+    if (HISEE_OK == ret) {
+		pr_err("hisee:%s() run success!", __func__);
+    } else {
+		pr_err("hisee:%s() run failed!", __func__);
+    }
+	return ret;
 }
 
 static int hisee_write_casd_key(void)
@@ -208,7 +245,7 @@ int hisee_debug(void)
     return g_hisee_flag_protect_lcs;
 }
 
-static int hisee_write_rpmb_key_process(void)
+static int hisee_write_rpmb_key_process(void *buf)
 {
     int ret = HISEE_OK;
     int write_rpmbkey_try = 5;
@@ -219,9 +256,9 @@ static int hisee_write_rpmb_key_process(void)
             break;
         }
 
-        ret = hisee_poweroff_func(NULL, HISEE_PWROFF_LOCK);
+        ret = hisee_poweroff_func(buf, HISEE_PWROFF_LOCK);
         CHECK_OK(ret);
-        ret = hisee_poweron_upgrade_func(NULL, 0);
+        ret = hisee_poweron_upgrade_func(buf, 0);
         CHECK_OK(ret);
         hisee_mdelay(DELAY_FOR_HISEE_POWERON_UPGRADE); /*lint !e744 !e747 !e748*/
     }
@@ -231,9 +268,17 @@ err_process:
     return ret;
 }
 
-static int hisee_apdu_test_process(void)
+static int hisee_apdu_test_process(hisee_cos_imgid_type cos_id)
 {
     int ret;
+
+	if (COS_IMG_ID_0 != cos_id) {
+		ret = wait_hisee_ready(HISEE_STATE_COS_READY, DELAY_FOR_HISEE_POWERON_BOOTING);
+		if (HISEE_OK != ret) {
+			pr_err("hisee:%s(): wait_hisee_ready failed,retcode=%d\n", __func__, ret);
+		}
+		return ret;
+	}
     ret = hisee_apdu_test_func(NULL, 0);
     CHECK_OK(ret);
 
@@ -267,13 +312,32 @@ extern phys_addr_t g_patch_buff_phy;
 /* poweron booting hisee in misc upgrade mode
  * and do write casd key and misc image upgrade in order
  * go through: hisee misc ready -> write casd key to nvm -> misc upgrade to nvm -> hisee cos ready. */
-static int hisee_poweron_booting_misc_process(void)
+static int hisee_poweron_booting_misc_process(void *buf)
 {
     cosimage_version_info misc_version;
-    int ret;
+	/*3 characters: space,cos_id=0,process_id=COS_PROCESS_CHIP_TEST*/
+	char cos_default_buf_para[MAX_CMD_BUFF_PARAM_LEN] = {0};
+	unsigned int cos_id = 0;
+	unsigned int process_id = 0;
+	int ret;
+	hisee_img_file_type img_type = MISC3_IMG_TYPE;
+
+	SET_COS_DEFAULT_BUF_PARA();
+	ret = hisee_get_cosid_processid(buf, &cos_id, &process_id);
+	CHECK_OK(ret);
+
+	cos_default_buf_para[1] = '0' + cos_id;
+	if (COS_IMG_ID_0 != cos_id) {
+		ret = hisee_poweron_booting_func((void *)cos_default_buf_para, HISEE_POWER_ON_BOOTING);
+		pr_err("hisee:%s() cosid=%d not support misc booting now, bypass!\n", __func__, cos_id);
+		CHECK_OK(ret);
+		/* wait hisee cos ready for later process */
+		ret = wait_hisee_ready(HISEE_STATE_COS_READY, 30000);
+		goto err_process;
+	}
 
     /* poweron booting hisee and set the flag for the process */
-    ret = hisee_poweron_booting_func(NULL, HISEE_POWER_ON_BOOTING_MISC);
+    ret = hisee_poweron_booting_func((void *)cos_default_buf_para, HISEE_POWER_ON_BOOTING_MISC);
     CHECK_OK(ret);
 
     /* wait hisee ready for receiving images */
@@ -285,11 +349,11 @@ static int hisee_poweron_booting_misc_process(void)
     CHECK_OK(ret);
 
     /* cos patch upgrade only supported in this function */
-    ret = hisee_cos_patch_read(MISC3_IMG_TYPE);
+    ret = hisee_cos_patch_read(img_type + (HISEE_MAX_MISC_IMAGE_NUMBER * cos_id));
     CHECK_OK(ret);
 
     /* misc image upgrade only supported in this function */
-    ret = misc_image_upgrade_func(NULL, 0);
+    ret = misc_image_upgrade_func(NULL, cos_id);
     CHECK_OK(ret);
 
     /* wait hisee cos ready for later process */
@@ -297,9 +361,10 @@ static int hisee_poweron_booting_misc_process(void)
     CHECK_OK(ret);
 
     /* write current misc version into record area */
-    if (g_misc_version) {
+    if (g_misc_version[cos_id]) {
+		access_hisee_image_partition((char *)&misc_version, MISC_VERSION_READ_TYPE);
         misc_version.magic = HISEE_SW_VERSION_MAGIC_VALUE;
-        misc_version.img_version_num[0] = g_misc_version;
+        misc_version.img_version_num[cos_id] = (unsigned char)g_misc_version[cos_id];
         access_hisee_image_partition((char *)&misc_version, MISC_VERSION_WRITE_TYPE);
     }
 
@@ -308,35 +373,83 @@ err_process:
     return ret;
 }
 
-static int hisee_manufacture_image_upgrade_process(unsigned int hisee_lcs_mode)
+/*************************************************************
+函数原型：int run_hisee_nvmformat(void)
+函数功能：执行hisee nvm format基本操作，发SMC指令告诉ATF执行nvm format动作
+参数：
+输入：无
+输出：无。
+返回值：HISEE_OK:执行hisee nvm format基本操作成功；不是HISEE_OK:执行hisee nvm format基本操作失败
+前置条件：cos flash镜像升级成功，启动cos flash镜像运行。
+后置条件： 无
+*************************************************************/
+int run_hisee_nvmformat(void)
+{
+	char *buff_virt = NULL;
+    phys_addr_t buff_phy = 0;
+    atf_message_header *p_message_header;
+    int ret = HISEE_OK;
+    int image_size;
+
+    buff_virt = (void *)dma_alloc_coherent(g_hisee_data.cma_device, SIZE_1K * 4,
+                                            &buff_phy, GFP_KERNEL);
+    if (buff_virt == NULL) {
+        pr_err("%s(): dma_alloc_coherent failed\n", __func__);
+        set_errno_and_return(HISEE_NO_RESOURCES);
+    }
+
+    memset(buff_virt, 0, SIZE_1K * 4);
+    p_message_header = (atf_message_header *)buff_virt;
+    set_message_header(p_message_header, CMD_FORMAT_RPMB);
+
+    image_size = HISEE_ATF_MESSAGE_HEADER_LEN;
+    ret = send_smc_process(p_message_header, buff_phy, (unsigned int)image_size,
+                            HISEE_ATF_GENERAL_TIMEOUT, CMD_FORMAT_RPMB);
+    if (HISEE_OK != ret) {
+        pr_err("%s(): hisee reported fail code=%d\n", __func__, ret);
+    }
+
+    dma_free_coherent(g_hisee_data.cma_device, (unsigned long)(SIZE_1K * 4), buff_virt, buff_phy);
+    check_and_print_result();
+    set_errno_and_return(ret);
+}
+
+
+
+static int hisee_manufacture_image_upgrade_process(void *buf, unsigned int hisee_lcs_mode)
 {
     int ret;
 
-    ret = hisee_poweroff_func(NULL, HISEE_PWROFF_LOCK);
+    ret = hisee_poweroff_func(buf, HISEE_PWROFF_LOCK);
     CHECK_OK(ret);
 
     /* wait hisee power down, if timeout or fail, return errno */
     ret = wait_hisee_ready(HISEE_STATE_POWER_DOWN, DELAY_FOR_HISEE_POWEROFF);
     CHECK_OK(ret);
 
-    ret = hisee_poweron_upgrade_func(NULL, 0);
+    ret = hisee_poweron_upgrade_func(buf, 0);
     CHECK_OK(ret);
     hisee_mdelay(DELAY_FOR_HISEE_POWERON_UPGRADE); /*lint !e744 !e747 !e748*/
 
     if (HISEE_DM_MODE_MAGIC == hisee_lcs_mode) {
-        ret = hisee_write_rpmb_key_process();
+		/*DM mode can write rpmbkey multiple with no harm*/
+        ret = hisee_write_rpmb_key_process(buf);
         CHECK_OK(ret);
     }
+	ret = run_hisee_nvmformat();
+	if (HISEE_OK != ret) {
+		pr_err("hisee:%s() run_hisee_nvmformat failed, ret=%d\n", __func__, ret);
+	}
 
-    ret = cos_image_upgrade_func(NULL, HISEE_FACTORY_TEST_VERSION);
+    ret = cos_image_upgrade_func(buf, HISEE_FACTORY_TEST_VERSION);
     CHECK_OK(ret);
     hisee_mdelay(DELAY_FOR_HISEE_POWEROFF); /*lint !e744 !e747 !e748*/
 
-    ret = hisee_poweron_booting_misc_process();
+    ret = hisee_poweron_booting_misc_process(buf);
     CHECK_OK(ret);
 
     if (HISEE_DM_MODE_MAGIC == hisee_lcs_mode) {
-        ret = otp_image_upgrade_func(NULL, 0);
+        ret = otp_image_upgrade_func(buf, 0);
         CHECK_OK(ret);
     }
 
@@ -349,32 +462,54 @@ static int hisee_total_manufacture_func(void *buf, int para)
 {
     int ret, ret1;
     unsigned int hisee_lcs_mode = 0;
+	void *p_buff_para;
+	unsigned int cos_id;
+	char factory_slt_test_para[MAX_CMD_BUFF_PARAM_LEN] = {0};
+	unsigned int cos_image_num;
 
+	p_buff_para = NULL;
+	cos_image_num = HISEE_MIN_COS_IMAGE_NUMBER;
+
+	factory_slt_test_para[0] = HISEE_CHAR_SPACE;/*space character*/
+	factory_slt_test_para[2] = '0' + COS_PROCESS_UPGRADE;
     ret = get_hisee_lcs_mode(&hisee_lcs_mode);
-    CHECK_OK(ret);
+	CHECK_OK(ret);
 
-    ret = hisee_manufacture_image_upgrade_process(hisee_lcs_mode);
-    CHECK_OK(ret);
+    /* 判断LCS为SM则返回成功 */
+    if (HISEE_SM_MODE_MAGIC == hisee_lcs_mode) {
+        g_hisee_sm_flag = 1;
+        ret = HISEE_OK;
+        goto exit;
+    }
 
-    ret = hisee_verify_isd_key();
-    CHECK_OK(ret);
+	for (cos_id = 0; cos_id < cos_image_num; cos_id++) {
 
-    ret = hisee_apdu_test_process();
-    CHECK_OK(ret);
+		factory_slt_test_para[1] = '0' + cos_id;
+	    ret = hisee_manufacture_image_upgrade_process(p_buff_para, hisee_lcs_mode);
+	    CHECK_OK(ret);
 
-    ret = hisee_manufacture_set_lcs_sm(hisee_lcs_mode);
-    CHECK_OK(ret);
+	    ret = hisee_verify_isd_key(cos_id);
+	    CHECK_OK(ret);
 
-    pr_err("%s() success!\n", __func__);
-    ret = HISEE_OK;
-
+	    ret = hisee_apdu_test_process(cos_id);
+	    CHECK_OK(ret);
+	    pr_err("hisee:%s() cos_id=%d, success!\n", __func__, cos_id);
+	}
+	ret = hisee_manufacture_set_lcs_sm(hisee_lcs_mode);
+	CHECK_OK(ret);
+	pr_err("hisee:%s() set hisee to SM state succes\n", __func__);
+	ret = HISEE_OK;
 err_process:
-    ret1 = hisee_poweroff_func(NULL, HISEE_PWROFF_LOCK);
-    if (HISEE_OK == ret) ret = ret1;
+    ret1 = hisee_poweroff_func(p_buff_para, HISEE_PWROFF_LOCK);
+    if (HISEE_OK == ret) {
+		ret = ret1;
+    }
     hisee_mdelay(DELAY_FOR_HISEE_POWEROFF);
 
-    if (HISEE_OK == ret)
+exit:
+    if (HISEE_OK == ret) {
         release_hisee_semphore();/*sync signal for flash_otp_task*/
+    }
 
     set_errno_and_return(ret);
 }
@@ -416,6 +551,7 @@ int hisee_parallel_manufacture_func(void *buf, int para)
     set_errno_and_return(ret);
 }/*lint !e715*/
 /* hisee manufacture function end */
+
 /* hisee slt test function begin */
 /* hisee slt test function end */
 

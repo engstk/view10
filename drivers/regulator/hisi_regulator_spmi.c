@@ -478,8 +478,8 @@ static ssize_t dbg_control_regulator_set_value(struct file *filp, const char __u
 	unsigned int i;
 	int next_flag = 1;
 
-	if (count >= 128) {
-		pr_info("error! buffer size big than internal buffer\n");
+	if (count >= 128 || count == 0) {
+		pr_info("error! buffer size illegal!\n");
 		return -EFAULT;
 	}
 

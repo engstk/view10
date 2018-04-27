@@ -73,10 +73,8 @@
 
 
 #include "AcpuReset.h"
-/* Added by w00176964 for VoLTE_PhaseII 项目, 2013-11-5, begin */
 #include "siapppih.h"
 #include "TafAgentInterface.h"
-/* Added by w00176964 for VoLTE_PhaseII 项目, 2013-11-5, end */
 #include "TafAppXsmsInterface.h"
 
 #include "AtXpdsInterface.h"
@@ -163,11 +161,9 @@ extern "C" {
 #define AT_DISLOG_DIAG_OPEN             (0)
 #define AT_DISLOG_DIAG_CLOSE            (1)
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 #define AT_DISSD_OPEN             (0)
 #define AT_DISSD_CLOSE            (1)
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 
 /* Added by l60609 for B060 Project, 2012-2-20, Begin   */
@@ -243,12 +239,10 @@ extern "C" {
 #define AT_PCVOICE_FRAME_PERIOD                 (20)
 
 /*DTMF相关*/
-/* Modified by l00198894 for V9R1 STK升级, 2013/07/11, begin */
 #define AT_DTMF_START                           (1)
 #define AT_DTMF_STOP                            (0)
 #define AT_VTS_DEFAULT_DTMF_LENGTH              (65)
 #define AT_DTMF_DEFAULT_DTMF_LENGTH             (60000)
-/* Modified by l00198894 for V9R1 STK升级, 2013/07/11, end */
 
 #define AT_DTMF_MIN_DTMF_OFF_LENGTH             (10)                            /* osa能启动最小精度的定时器为10ms */
 
@@ -329,13 +323,10 @@ typedef TAF_UINT8   AT_MSG_DELETE_ENUM_U8;
 /* 解决DCM 461-0701-0202 461-0701-0203重传过程中AT命令提前结束问题 */
 #define AT_SMS_SET_PARA_TIME   (105000) /*<==A32D12591*/
 
-/* Added by y00245242 for VoLTE_PhaseII 项目, 2013-10-12, begin */
 #if (FEATURE_IMS == FEATURE_ON)
 /* increase 15s for CMGS and CMSS set command */
 
-/* Added by j00174725 for DTS2015051104404 DCM 短信测试(180修改为210( 短信时间4*(45+5) )), 2015-05-07, begin */
 #define AT_SMS_CMGS_SET_PARA_TIME        (210000)
-/* Added by j00174725 for DTS2015051104404 DCM 短信测试, 2015-05-07, begin */
 
 #define AT_SMS_CMSS_SET_PARA_TIME        (180000)
 /* increase 15s for SS service request command */
@@ -345,7 +336,6 @@ typedef TAF_UINT8   AT_MSG_DELETE_ENUM_U8;
 #define AT_SMS_CMSS_SET_PARA_TIME        (105000)
 #define AT_SS_CUSD_SET_PARA_TIME         (30000)
 #endif
-/* Added by y00245242 for VoLTE_PhaseII 项目, 2013-10-12, end */
 
 
 /* 将PDP激活和断开时AT起的TIMER的时长拉长 */
@@ -385,6 +375,9 @@ typedef TAF_UINT8   AT_MSG_DELETE_ENUM_U8;
 #define AT_SET_SS_PARA_TIME             (160000)
 #define AT_QRY_SS_PARA_TIME             (160000)
 
+#define AT_SET_VC_PARA_TIME             (10000)
+#define AT_QRY_VC_PARA_TIME             (10000)
+#define AT_SET_CALL_PARA_TIME           (100000)
 
 #define AT_PPP_PROTOCOL_REL_TIME  5000   /*等待PPP回应AT_PPP_PROTOCOL_REL_IND_MSG的保护定时器时长*/
 #define AT_HOLD_CMD_TIMER_LEN   (360000)    /*处理AT缓存命令的定时器时长，设置为最长AT处理定时器360000*/
@@ -478,8 +471,6 @@ typedef TAF_UINT8   AT_MSG_DELETE_ENUM_U8;
 #define AT_RSA_CIPHERTEXT_PARA_LEN                          (256)       /* RSA密文参数长度 */
 #define AT_SIMLOCKDATAWRITE_PARA_LEN                        (1096)      /* 锁网锁卡改制命令参数结构体长度 */
 #endif
-#define AT_PORTCTRLTMP_PARA_LEN                             (16)        /* ^PORTCTRLTMP命令参数长度 */
-#define AT_PORTATTRIBSET_PARA_ONOFF_LEN                     (1)         /* ^PORTATTRIBSET端口状态参数长度 */
 #define AT_PERSONALIZATION_CODE_LEN                         (8)         /* 锁网锁卡通用锁网号段长度 */
 #define AT_PERSONALIZATION_CODE_LEN_EX                      (10)        /* 扩展后锁网锁卡通用锁网号段长度 */
 #define AT_PERSONALIZATION_CP_CODE_LEN                      (10)        /* 锁网锁卡CP类型锁网号段长度 */
@@ -671,6 +662,17 @@ typedef VOS_UINT8 AT_COEX_PARA_TYPE;
 extern CBTCPM_RCV_FUNC                  g_apAtPortDataRcvFuncTab[AT_PHY_PORT_MAX];
 /* Added by L60609 for AT Project，2011-10-10,  End*/
 
+enum AT_CLI_VALIDITY_ENUM
+{
+    AT_CLI_VALIDITY_VALID                   = 0,
+    AT_CLI_VALIDITY_USR_REJ                 = 1,
+    AT_CLI_VALIDITY_INTERACT                = 2,
+    AT_CLI_VALIDITY_PAYPHONE                = 3,
+    AT_CLI_VALIDITY_UNAVAL                  = 4,
+    AT_CLI_VALIDITY_BUTT
+};
+typedef VOS_UINT8 AT_CLI_VALIDITY_ENUM_UINT8;
+
 /*****************************************************************************
  枚举名    : AT_VOICE_DOMAIN_TYPE_ENUM
  协议表格  :
@@ -787,13 +789,7 @@ enum AT_WIFI_MODE_ENUM
 };
 typedef VOS_UINT8 AT_WIFI_MODE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : AT_GSM_BAND_ENUM
- 结构说明  : GSM频段定义
- 1.日    期   : 2015年10月30日
-   作    者   : w00316404
-   修改内容   : 新增枚举(开源整改A、C核解耦)
-*****************************************************************************/
+
 enum AT_GSM_BAND_ENUM
 {
     AT_GSM_850                         = 0,
@@ -833,6 +829,7 @@ typedef enum
     AT_CMD_CERSSI,
     AT_CMD_CNMR,
     AT_CMD_CECELLID,
+    AT_CMD_CESQ,
     AT_CMD_LFROMCONNTOIDLE,
     AT_CMD_LWTHRESHOLDCFG,
     AT_CMD_SYSMODE,
@@ -907,19 +904,13 @@ typedef enum
     AT_CMD_USIM_STUB,
     AT_CMD_REFRESH_STUB,
     AT_CMD_AUTO_RESEL_STUB,
-    /* Modified by c00318887 for file refresh需要触发背景搜, 2015-3-27, begin */
     AT_CMD_DELAYBG_STUB,
-    /* Modified by c00318887 for file refresh需要触发背景搜, 2015-3-27, end */
     /* Added by s46746 for DSDA GUNAS C CORE, 2013-01-28, begin */
     AT_CMD_PIDREINIT,
     /* Added by s46746 for DSDA GUNAS C CORE, 2013-01-28, end */
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-15, begin */
     AT_CMD_IMSRATSTUB,
-    /* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-15, end */
-    /* Added by s00217060 for VoLTE_PhaseII  项目, 2013-10-23, begin */
     AT_CMD_IMSCAPSTUB,
     AT_CMD_DOMAINSTUB,
-    /* Added by s00217060 for VoLTE_PhaseII  项目, 2013-10-23, end */
     AT_CMD_USIM,
     AT_CMD_SIM,
     AT_CMD_PDPSTUB,
@@ -1032,11 +1023,9 @@ typedef enum
     AT_CMD_CAATT,
     AT_CMD_SYSINFO,
     AT_CMD_SYSINFOEX,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_CEMODE,
     AT_CMD_LTECS,
 
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     AT_CMD_SYSCFG,
     AT_CMD_SYSCFGEX,
     AT_CMD_CMM,
@@ -1064,18 +1053,14 @@ typedef enum
     AT_CMD_DPACAT,
     AT_CMD_HSSPT,
     AT_CMD_BSN,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_SFM,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     AT_CMD_TMODE,
     AT_CMD_FCHAN,
     AT_CMD_FTXON,
     AT_CMD_FDAC,
 
     AT_CMD_SD,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_INFORRS,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     AT_CMD_INFORBU,
     AT_CMD_DATALOCK,
     AT_CMD_GPIOPL,
@@ -1110,17 +1095,16 @@ typedef enum
     AT_CMD_SSID,
     AT_CMD_WIKEY,
     AT_CMD_WILOG,
-    /* Added by L00171473 for DTS2012020106679,AT WT工位 2012-01-17  Begin */
     AT_CMD_WIPARANGE,
     AT_CMD_WIINFO,
-    /* Added by L00171473 for DTS2012020106679,AT WT工位 2012-01-17  End */
     AT_CMD_WUPWD,
     AT_CMD_BATVOL,
     AT_CMD_PRODTYPE,
     AT_CMD_FEATURE,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CTA,
-
+#endif
     AT_CMD_CGMTU,
 
     /* Added by c64416 for AT Project 2011-10-20  Begin */
@@ -1206,18 +1190,14 @@ typedef enum
     AT_CMD_SPWORD,
 #endif
     /* Added by l60609 for B060 Project, 2012-2-20, End   */
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_RSRPCFG,
     AT_CMD_RSCPCFG,
     AT_CMD_ECIOCFG,
     AT_CMD_CELLROAM,
     AT_CMD_PDPROFMOD,
     AT_CMD_FRSTATUS,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
-    /*DTS2012041801532 w00182550 NV归一化 start in 2012-04-12 */
     AT_CMD_GETEXBANDINFO,
     AT_CMD_GETEXBANDTESTINFO,
-    /*DTS2012041801532 w00182550 NV归一化 end in 2012-04-12 */
     AT_CMD_APBATLVL,
     AT_CMD_OPENPORT,
     AT_CMD_SDLOAD,
@@ -1227,6 +1207,7 @@ typedef enum
     AT_CMD_DHCPV6,
     AT_CMD_APRAINFO,
     AT_CMD_APLANADDR,
+    AT_CMD_IPV6TEMPADDR,
 #endif
     AT_CMD_VERTIME,
     AT_CMD_PRODNAME,
@@ -1261,9 +1242,7 @@ typedef enum
     AT_CMD_APPROFRD,
     /* Added by f62575 for AT Project, 2011-10-21, end */
 
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
     AT_CMD_MEMQUERY,
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
     /* Added by f62575 for SMALL IMAGE, 2012-1-3, begin */
     AT_CMD_TBAT,
     AT_CMD_PSTANDBY,
@@ -1300,11 +1279,9 @@ typedef enum
     AT_CMD_FACAUTHPUBKEY,
     AT_CMD_IDENTIFYSTART,
     AT_CMD_IDENTIFYEND,
-#if ((FEATURE_ON == FEATURE_SC_DATA_STRUCT_EXTERN) || (FEATURE_ON == FEATURE_BOSTON_AFTER_FEATURE))
     AT_CMD_SIMLOCKNWDATAWRITE,
     AT_CMD_SIMLOCKDATAWRITEEX,
     AT_CMD_SIMLOCKDATAREADEX,
-#endif
 
     AT_CMD_SIMLOCKDATAWRITE,
     AT_CMD_PHONESIMLOCKINFO,
@@ -1336,11 +1313,12 @@ typedef enum
     AT_CMD_LOGNVE,
     /* Added by h59254 for V7R1C50 Log2.0 End */
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CCMGS,
     AT_CMD_CCMGW,
     AT_CMD_CCMGD,
     AT_CMD_CCSASM,
-
+#endif
 
     /* Added by l60609 for AT Project, 2012-01-07, begin */
 #if ( VOS_WIN32 == VOS_OS_VER )
@@ -1364,9 +1342,7 @@ typedef enum
     AT_CMD_CLPR,
     AT_CMD_CCSERR,
     AT_CMD_WLTHRESHOLDCFG,
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-12, begin */
     AT_CMD_ACINFO,
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-12, end */
     AT_CMD_CLTEROAMALLOW,
 
     AT_CMD_SWVER,
@@ -1431,6 +1407,12 @@ typedef enum
     AT_CMD_HVCHECKCARD,
     /* Added by zhuli for VSIM, 2013-10-15 end */
 
+#if (FEATURE_ON == FEATURE_PHONE_SC)
+    AT_CMD_SILENTPIN,
+
+    AT_CMD_SILENTPININFO,
+#endif
+
     AT_CMD_PRIVATECGLA,
 
     AT_CMD_EOPLMN,
@@ -1445,9 +1427,7 @@ typedef enum
 
     AT_CMD_FPLLSTATUS,
 
-    /* Added by l00198894 for 新增+ECID命令, 2013-12-09, begin */
     AT_CMD_ECID,
-    /* Added by l00198894 for 新增+ECID命令, 2013-12-09, end */
 
 
     AT_CMD_SWITCH_UART,
@@ -1489,13 +1469,11 @@ typedef enum
     AT_CMD_DPDT,
     AT_CMD_DPDTQRY,
 
-    /* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, begin */
     AT_CMD_CECALL,
     AT_CMD_ECLSTART,
     AT_CMD_ECLSTOP,
     AT_CMD_ECLCFG,
     AT_CMD_ECLMSD,
-    /* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, end */
 
 #if (FEATURE_ON == FEATURE_DSDS)
     AT_CMD_PSPROTECTMODE,
@@ -1518,9 +1496,7 @@ typedef enum
 #endif
     AT_CMD_CHLD_EX,
 
-    /* Add by j00174725 for K3V3 多模多天线特性, 2014-06-16, Begin */
     AT_CMD_CDMACONNST,
-    /* Add by j00174725 for K3V3 多模多天线特性, 2014-06-16, End */
 
     AT_CMD_GSMFREQLOCK,
 
@@ -1530,12 +1506,13 @@ typedef enum
     AT_CMD_CCLK,
 
     AT_CMD_CTZU,
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     /* Modified by L47619 for 1X SS Project, 2014-11-8, begin */
     AT_CMD_CFSH,
     /* Modified by L47619 for 1X SS Project, 2014-11-8, end */
 
     AT_CMD_CRM,
+#endif
 
     AT_CMD_CARDTYPE,
 
@@ -1543,17 +1520,24 @@ typedef enum
 
     AT_CMD_CARDVOLTAGE,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CQOSPRI,
 
     /* Added by f279542 for CDMA 1X Iteration 4, 2014-11-10, begin */
     AT_CMD_CBURSTDTMF,
     /* Added by f279542 for CDMA 1X Iteration 4, 2014-11-10, end */
+#endif
+
+    AT_CMD_QCCB,
+
+    AT_CMD_EMCCBM,
 
 #if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CLOCINFO,
     AT_CMD_CSID,
-    AT_CMD_QCCB,
-    AT_CMD_EMCCBM,
+
+    /* 移出CDMA编译开关 */
+
     AT_CMD_CSIDLIST,
     AT_CMD_ECCALL,
     AT_CMD_ECCTRL,
@@ -1563,7 +1547,6 @@ typedef enum
     AT_CMD_ECCTEST,
     AT_CMD_CTROAMINFO,
     AT_CMD_CTOOSCOUNT,
-#endif
 
     AT_CMD_CCLPR,
 
@@ -1572,6 +1555,7 @@ typedef enum
     AT_CMD_CFREQLOCK,
 
     AT_CMD_HDRCSQ,
+#endif
 
     AT_CMD_APDSFLOWRPTCFG,
 
@@ -1582,11 +1566,12 @@ typedef enum
 #if (FEATURE_ON == FEATURE_HUAWEI_VP)
     AT_CMD_VOICEPREFER,
 #endif
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 
     AT_CMD_CUSTOMDIAL,
 
     AT_CMD_CDMAMODEMSWITCH,
-
+#endif
     AT_CMD_TTYMODE,
     AT_CMD_FEMCTRL,
 
@@ -1597,19 +1582,22 @@ typedef enum
     AT_CMD_PRFAPP,
 
     AT_CMD_UICCPRFAPP,
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CCIMI,
-
+#endif
 
     AT_CMD_RATRFSWITCH,
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_1XCHAN,
     AT_CMD_CVER,
+#endif
     AT_CMD_CCMGG,
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_GETSTA,
     AT_CMD_GETESN,
     AT_CMD_GETMEID,
     AT_CMD_CHIGHVER,
+#endif
 
 #if(FEATURE_ON == FEATURE_LTE)
 #if(FEATURE_ON == FEATURE_LTE_MBMS)
@@ -1636,21 +1624,24 @@ typedef enum
     AT_CMD_CAGPSPOSINFO,
     AT_CMD_CGPSCONTROLSTART,
     AT_CMD_CGPSCONTROLSTOP,
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_MEID,
+#endif
 
     AT_CMD_IMSPDPCFG,
 
     AT_CMD_TRANSMODE,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CCONTDTMF,
 
     AT_CMD_CDORMTIMER,
+#endif
     AT_CMD_MCCFREQ,
-    /* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, begin */
     AT_CMD_BORDERINFO,
-    /* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, end */
     AT_CMD_HPLMN,
     AT_CMD_DPLMNLIST,
+    AT_CMD_EXCHANGE_MODEM_INFO,
     AT_CMD_CSGIDSEARCH,
     AT_CMD_CHISFREQ,
     AT_CMD_UE_CENTER,
@@ -1672,20 +1663,25 @@ typedef enum
 
     AT_CMD_PDMCTRL,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CSNID,
+#endif
 
     AT_CMD_AFCCLKINFO,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CPMP,
+#endif
 
     AT_CMD_SECURESTATE,
     AT_CMD_KCE,
     AT_CMD_SOCID,
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_DIVERSITYSWITCH,
 
     AT_CMD_DOSYSEVENT,
     AT_CMD_DOSIGMASK,
+#endif
 
     AT_CMD_ROAMIMSSERVICE,
 
@@ -1729,10 +1725,8 @@ typedef enum
 
     AT_CMD_PHYCOMCFG,
 
-    /* Added by c00380008 for WIFI 共天线&VOLTE视频调速, 2016-08-22, begin */
     AT_CMD_CRRCONN,
     AT_CMD_VTRLQUALRPT,
-    /* Added by c00380008 for WIFI 共天线&VOLTE视频调速, 2016-08-22, end */
 
     AT_CMD_PMUDIESN,
 
@@ -1759,16 +1753,12 @@ typedef enum
     AT_CMD_RSRP,
     AT_CMD_RSRQ,
 
-    /* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, begin */
     AT_CMD_CACDC,
-    /* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, end */
 
     AT_CMD_ERRCCAPCFG,
     AT_CMD_ERRCCAPQRY,
 
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
     AT_CMD_CMIP,
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
 
     AT_CMD_PSEUCELL,
     AT_CMD_BLACKCELLLIST,
@@ -1789,6 +1779,7 @@ typedef enum
     AT_CMD_LCACFG,
     AT_CMD_LCACELLEX,
     AT_CMD_LCACELLRPTCFG,
+    AT_CMD_FINE_TIME,
 #endif
 
     AT_CMD_VTFLOWRPT,
@@ -1797,6 +1788,46 @@ typedef enum
     AT_CMD_DMRCSCFG,
     AT_CMD_RCSSWITCH,
     AT_CMD_USERAGENTCFG,
+
+    AT_CMD_DATASWITCH,
+    AT_CMD_DATAROAMSWITCH,
+
+    AT_CMD_COMMBOOSTER,
+
+    AT_CMD_VZWAPNE,
+    AT_CMD_VZWAPNEEX,
+
+    AT_CMD_NVLOAD,
+
+
+    AT_CMD_MTREATTACH,
+
+    AT_CMD_CSDF,
+
+    AT_CMD_CGEREP,
+    AT_CMD_CIND,
+
+    AT_CMD_SMSDOMAIN,
+
+    AT_CMD_APNTHROTINFO,
+
+    AT_CMD_CGPIAF,
+    AT_CMD_CENFS,
+    AT_CMD_WS46,
+
+#if (FEATURE_ON == FEATURE_DSDS)
+    AT_CMD_DSDSSTATE,
+#endif
+
+    AT_CMD_SAMPLE,
+
+    AT_CMD_GPSLOCSET,
+
+
+    AT_CMD_USBTETHERINFO,
+
+    AT_CMD_GAMEMODE,
+
 
     AT_CMD_COMM_BUTT,        /* ADD by c64416 for V9R1/V7R1 AT, 2013/09/18 */
 
@@ -1855,10 +1886,8 @@ typedef enum
 
     AT_CMD_CHUP_SET,
 
-    /* Modified by l00198894 for V9R1 STK升级, 2013/07/11, begin */
     AT_CMD_DTMF_SET,
     AT_CMD_VTS_SET,
-    /* Modified by l00198894 for V9R1 STK升级, 2013/07/11, end */
 
     AT_CMD_CLIP_READ,
 
@@ -1969,9 +1998,7 @@ typedef enum
 
     AT_CMD_AUTHDATA_SET,
     AT_CMD_AUTHDATA_READ,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_PDPROFMOD_SET,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     /* 异步消息实现增加的操作标记 */
     AT_CMD_D_GPRS_SET,
     AT_CMD_NDISCONN_SET,
@@ -1990,11 +2017,9 @@ typedef enum
     AT_CMD_CGEQOSRDP_SET,
     AT_CMD_NDISSTATQRY_READ,
 
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_LTECS_READ,
     AT_CMD_CEMODE_SET,
     AT_CMD_CEMODE_READ,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     AT_CMD_CREG_READ,
 
     AT_CMD_CCUG_SET,
@@ -2014,8 +2039,6 @@ typedef enum
     AT_CMD_CCFC_ERASURE,
 
     AT_CMD_CUSD_REQ,
-    /* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-5-6, begin */
-    /* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-5-6, end */
 
     AT_CMD_CHLD_SET,
 
@@ -2121,9 +2144,7 @@ typedef enum
     /* Added by 傅映君/f62575 for CPULOAD&MFREELOCKSIZE处理过程移至C核, 2011/11/15, end */
     /* Added by f62575 for AT Project，2011-10-03,  End*/
 
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  begin */
     AT_CMD_MEMINFO_READ,
-    /* Added by l00171473 for 内存监控AT命令, 2011-11-29,  end */
 
     AT_CMD_STPD_SET,
     AT_CMD_CLVL_SET,
@@ -2145,9 +2166,7 @@ typedef enum
     /* Added by l60609 for AT Project 2011-11-3  End*/
     AT_CMD_IMSICHG_READ,
     AT_CMD_INFORBU_SET,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_INFORRS_SET,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     AT_CMD_CPNN_TEST,
     /* Added by l60609 for AT Project 2011-11-3  End*/
     AT_CMD_CSEN_SET,
@@ -2240,9 +2259,7 @@ typedef enum
     AT_CMD_TBAT_SET,
     /* Added by f62575 for SMALL IMAGE, 2012-1-10, end   */
     AT_CMD_TBAT_QRY,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_STANDBY_SET,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     AT_CMD_DRV_AGENT_HARDWARE_QRY,
     AT_CMD_DRV_AGENT_FULL_HARDWARE_QRY,
     AT_CMD_WAS_MNTN_SET_CELLSRH,
@@ -2258,39 +2275,30 @@ typedef enum
     AT_CMD_APP_SET_UUSINFO_REQ,
     AT_CMD_APP_SET_ALS_REQ,
     AT_CMD_MSG_MMA_SET_PIN,
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, begin */
     AT_CMD_CSSN_SET,
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-3, end */
 
     /* Added by c64416 for AT Project 2011-10-20  Begin */
 
-    /* 一键升级 lkf58113 @20111011 */
     AT_CMD_BOOTROMVER_READ,
 
     AT_CMD_NVBACKUP_SET,
     AT_CMD_NVRESTORE_SET,
     AT_CMD_RESET_SET,
     AT_CMD_NVRSTSTTS_SET,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_TBAT_READ,
     AT_CMD_SECUBOOTFEATURE_READ,
-    /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-1, begin */
     AT_CMD_CURC_READ,
     AT_CMD_UNSOLICITED_RPT_SET,
     AT_CMD_UNSOLICITED_RPT_READ,
-    /* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-1, end */
     AT_CMD_NCELL_MONITOR_SET,
     AT_CMD_NCELL_MONITOR_READ,
     AT_CMD_USER_SRV_STATE_READ,
 
-    /*装备 快速校准 c00172979 start 20110727 */
     AT_CMD_TMODE_SET,
     AT_CMD_TMODE_READ,
     AT_CMD_TMODE_TEST,
 
-    /*装备 快速校准 c00172979 end 20110727 */
 
     /*  AT_CMD_FCHAN_SET, */
     AT_CMD_FCHAN_READ,
@@ -2318,11 +2326,11 @@ typedef enum
 
     AT_CMD_CIPERQRY_READ,
     AT_CMD_LOCINFO_READ,
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-12, begin */
     AT_CMD_ACINFO_READ,
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-12, end */
 
     AT_CMD_CERSSI_READ,
+
+    AT_CMD_CESQ_SET,
 
     //非信令综测end
     /* Added by c64416 for AT Project 2011-10-20  End*/
@@ -2355,12 +2363,10 @@ typedef enum
 
     AT_CMD_CSASM_SET,
     AT_CMD_DNSQUERY_SET,
-  /* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
     AT_CMD_CELLROAM_READ,
 
     AT_CMD_TCHRENABLE_SET,
     AT_CMD_TCHRENABLE_TEST,
-  /* Add by w00199382 for V7代码同步, 2012-04-07, End   */
     AT_CMD_RSFR_VERSION_QRY,
 
     AT_CMD_MAXLCKTMS_SET,                                                       /* 标示命令^MAXLCKTMS设置操作 */
@@ -2381,12 +2387,8 @@ typedef enum
     AT_CMD_OPWORD_SET,
 
     AT_CMD_FACAUTHPUBKEYEX_SET,
-#if ((FEATURE_ON == FEATURE_SC_DATA_STRUCT_EXTERN) || (FEATURE_ON == FEATURE_BOSTON_AFTER_FEATURE))
-
     AT_CMD_SIMLOCKDATAWRITEEX_SET,
     AT_CMD_SIMLOCKDATAREADEX_READ_SET,
-
-#endif
     AT_CMD_CLVL_READ,
 
     AT_CMD_APSIMST_SET,
@@ -2399,10 +2401,8 @@ typedef enum
     AT_CMD_CMTLRA_SET,
     AT_CMD_CMTLRA_READ,
 
-/* Added by y00213812 for V7R1C50 A-GPS Project，2012-06-28,  begin*/
     AT_CMD_CPOS_SET,
     AT_CMD_CGPSCLOCK_SET,
-/* Added by y00213812 for V7R1C50 A-GPS Project，2012-06-28,  end*/
 
     /* DEL by c64416 for V9R1/V7R1 AT, 2013/09/18 */
 
@@ -2461,22 +2461,24 @@ typedef enum
     AT_CMD_SCICHG_SET,
     AT_CMD_SCICHG_QRY,
 
+#if (FEATURE_ON == FEATURE_PHONE_SC)
+    AT_CMD_SILENTPIN_SET,
+
+    AT_CMD_SILENTPININFO_SET,
+#endif
+
     AT_CMD_PRIVATECGLA_REQ,
 
     AT_CMD_EOPLMN_SET,
     AT_CMD_EOPLMN_QRY,
 
-    /* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, begin */
     AT_CMD_NVMANUFACTUREEXT_SET,
-    /* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, end */
     AT_CMD_NETSCAN_SET,
     AT_CMD_ABORT_NETSCAN,
 
     AT_CMD_FPLLSTATUS_QRY,
 
-    /* Added by l00198894 for 新增+ECID命令, 2013-12-09, begin */
     AT_CMD_ECID_SET,
-    /* Added by l00198894 for 新增+ECID命令, 2013-12-09, end */
 
     AT_CMD_CLCC_QRY,
 #if (FEATURE_ON == FEATURE_IMS)
@@ -2525,7 +2527,6 @@ typedef enum
     AT_CMD_PSPROTECTMODE_SET,
 #endif
     AT_CMD_PHYINIT_SET,
-    /* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, begin */
     AT_CMD_CECALL_SET,
     AT_CMD_CECALL_QRY,
     AT_CMD_ECLSTART_SET,
@@ -2534,7 +2535,6 @@ typedef enum
     AT_CMD_ECLCFG_QRY,
     AT_CMD_ECLMSD_SET,
     AT_CMD_ECLMSD_QRY,
-    /* Added by n00269697 for V3R3C60_eCall项目, 2014-3-29, end */
     AT_CMD_FPOWDET_QRY,
 
     AT_CMD_JDETEX_SET,
@@ -2563,7 +2563,6 @@ typedef enum
 
     AT_CMD_CARDTYPEEX_QUERY,
 
-
     AT_CMD_CARDVOLTAGE_QUERY,
 
     AT_CMD_CRM_SET,
@@ -2575,6 +2574,7 @@ typedef enum
     AT_CMD_FRSTATUS_SET,
 #endif
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CFSH_SET,
 
     /* Added by f279542 for CDMA 1X Iteration 4, 2014-11-10, begin */
@@ -2595,6 +2595,7 @@ typedef enum
 
     AT_CMD_HDR_CSQ_SET,
     AT_CMD_HDR_CSQ_QRY,
+#endif
 
     AT_CMD_APDSFLOWRPTCFG_SET,
     AT_CMD_APDSFLOWRPTCFG_QRY,
@@ -2602,15 +2603,19 @@ typedef enum
     AT_CMD_DSFLOWNVWRCFG_SET,
     AT_CMD_DSFLOWNVWRCFG_QRY,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CTA_SET,
     AT_CMD_CTA_QRY,
+#endif
 
 
 #if (FEATURE_ON == FEATURE_HUAWEI_VP)
     AT_CMD_VOICEPREFER_SET,
     AT_CMD_VOICEPREFER_QRY,
 #endif
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CUSTOMDIAL_SET,
+#endif
 
     AT_CMD_TTYMODE_SET,
     AT_CMD_TTYMODE_READ,
@@ -2622,15 +2627,18 @@ typedef enum
 
     AT_CMD_CCIMI_SET,
 
+    AT_CMD_QCCB_SET,
+
+    AT_CMD_EMCCBM_QRY,
+
 #if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CLOCINFO_QRY,
 
     AT_CMD_CSID_QRY,
 
-    AT_CMD_QCCB_SET,
     AT_CMD_CSIDLIST_SET,
     AT_CMD_CSID_SET,
-    AT_CMD_EMCCBM_QRY,
+
     AT_CMD_CSNID_QRY,
     AT_CMD_ECCALL_SET,
     AT_CMD_ECCTRL_SET,
@@ -2658,14 +2666,19 @@ typedef enum
     AT_CMD_CCLPR_SET,
 
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_1XCHAN_SET,
     AT_CMD_1XCHAN_QRY,
     AT_CMD_CVER_QRY,
+#endif
     AT_CMD_CCMGG_QRY,
+
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_GETSTA_QRY,
     AT_CMD_GETESN_QRY,
     AT_CMD_GETMEID_QRY,
     AT_CMD_CHIGHVER_QRY,
+#endif
 #if(FEATURE_ON == FEATURE_LTE)
 #if(FEATURE_ON == FEATURE_LTE_MBMS)
     AT_CMD_MBMS_SERVICE_OPTION_SET,
@@ -2684,7 +2697,6 @@ typedef enum
     AT_CMD_LTE_WIFI_COEX_QRY,
 #endif
 
-    AT_CMD_CGMTU_READ,
 
     AT_CMD_CAGPSCFGPOSMODE_SET,
     AT_CMD_CAGPSSTART_SET,
@@ -2692,27 +2704,33 @@ typedef enum
     AT_CMD_CAGPSCFGMPCADDR_SET,
     AT_CMD_CAGPSCFGPDEADDR_SET,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_MEID_SET,
     AT_CMD_MEID_QRY,
+#endif
 
     AT_CMD_IMSPDPCFG_SET,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_CCONTDTMF_SET,
+#endif
 
     AT_CMD_TRANSMODE_READ,
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_CMD_DORMTIMER_SET,
     AT_CMD_DORMTIMER_QRY,
+#endif
     AT_CMD_EHPLMN_LIST_QRY,
     AT_CMD_DPLMNLIST_SET,
     AT_CMD_DPLMNLIST_QRY,
 
     AT_CMD_MCCFREQ_SET,
     AT_CMD_MCCFREQ_QRY,
-    /* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, begin */
     AT_CMD_BORDERINFO_SET,
     AT_CMD_BORDERINFO_QRY,
-    /* Added by s00217060 for 边境搜网优化PhaseI, 2016-8-20, end */
+
+    AT_CMD_EXCHANGE_MODEM_INFO_SET,
 
     AT_CMD_CSG_LIST_SEARCH,
     AT_CMD_ABORT_CSG_LIST_SEARCH,
@@ -2797,11 +2815,9 @@ typedef enum
     AT_CMD_M2M_FREQLOCK_QRY,
 #endif
 
-    /* Added by c00380008 for Wifi共天线 & VoLTE视频调速, 2016-8-22, begin */
     AT_CMD_CRRCONN_SET,
     AT_CMD_CRRCONN_QRY,
     AT_CMD_VTRLQUALRPT_SET,
-    /* Added by c00380008 for Wifi共天线 & VoLTE视频调速, 2016-8-22, end */
 
     AT_CMD_MODEM_CAP_UPDATE_SET,
 
@@ -2828,10 +2844,8 @@ typedef enum
     AT_CMD_ERRCCAPCFG_SET,
     AT_CMD_ERRCCAPQRY_SET,
 
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
     AT_CMD_CMIP_SET,
     AT_CMD_CMIP_QRY,
-    /* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
 
     AT_CMD_PSEUCELL_SET,
     AT_CMD_BLACKCELLLIST_SET,
@@ -2856,6 +2870,7 @@ typedef enum
     AT_CMD_LTE_CA_CELLEX_QRY,
     AT_CMD_LCACELLRPTCFG_SET,
     AT_CMD_LCACELLRPTCFG_QRY,
+    AT_CMD_LTE_FINE_TIME_SET,
 #endif
 
     AT_CMD_VTFLOWRPT_SET,
@@ -2868,6 +2883,43 @@ typedef enum
 
     AT_CMD_USERAGENTCFG_SET,
 
+    AT_CMD_DATASWITCH_SET,
+    AT_CMD_DATASWITCH_QRY,
+
+    AT_CMD_DATAROAMSWITCH_SET,
+    AT_CMD_DATAROAMSWITCH_QRY,
+
+    AT_CMD_COMM_BOOSTER_SET,
+    AT_CMD_COMM_BOOSTER_QRY,
+
+    AT_CMD_NVLOAD_SET,
+
+    AT_CMD_VZWAPNE_SET,
+    AT_CMD_VZWAPNE_QRY,
+
+    AT_CMD_CIND_SET,
+
+    AT_CMD_SMSDOMAIN_SET,
+    AT_CMD_SMSDOMAIN_QRY,
+
+    AT_CMD_APN_THROT_INFO_SET,
+
+    AT_CMD_CENFS_QRY,
+    AT_CMD_WS46_SET,
+    AT_CMD_WS46_QRY,
+
+#if (FEATURE_ON == FEATURE_DSDS)
+    AT_CMD_DSDS_STATE_SET,
+#endif
+
+    AT_CMD_SAMPLE_SET,
+
+    AT_CMD_GPSLOCSET_SET,
+    
+    AT_CMD_CCLK_QRY,
+
+    AT_CMD_GAME_MODE_SET,
+	
     AT_CMD_INVALID,
 
     /* modify by c64416 for V9R1/V7R1 AT, 2013/09/18 */
@@ -2895,10 +2947,13 @@ typedef enum
     AT_STRING_STO_SENT_PDU,
     AT_STRING_ALL_PDU,
     AT_STRING_IP,
+    AT_STRING_IPv4,
     AT_STRING_PPP,
 #if (FEATURE_ON == FEATURE_IPV6)
     AT_STRING_IPV6,
     AT_STRING_IPV4V6,
+    AT_STRING_IPv6,
+    AT_STRING_IPv4v6,
 #endif
 
     AT_STRING_0E0,
@@ -2930,13 +2985,9 @@ typedef enum
 
     AT_STRING_CERSSI,
 
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-14, begin */
     AT_STRING_ACINFO,
-    /* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-14, end */
 
-    /* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, begin */
     AT_STRING_CS_CHANNEL_INFO,
-    /* Added by l00171473 for DTS2013010800120 语音带宽信息上报, 2013-1-5, end */
 
     AT_STRING_RESET,
 
@@ -2961,6 +3012,7 @@ typedef enum
 
 #endif
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
     AT_STRING_CDISP,
     AT_STRING_CCONNNUM,
     AT_STRING_CCALLEDNUM,
@@ -2969,6 +3021,7 @@ typedef enum
     AT_STRING_CSIGTONE,
     AT_STRING_CLCTR,
     AT_STRING_CCWAC,
+#endif
 
     AT_STRING_FILECHANGE,
 
@@ -3016,6 +3069,19 @@ typedef enum
     AT_STRING_VT_FLOW_RPT,
     AT_STRING_CALL_ALT_SRV,
 
+    AT_STRING_FINETIMEINFO,
+    AT_STRING_SFN,
+
+    AT_STRING_PHYCOMACK,
+
+    AT_STRING_BOOSTERNTF,
+
+    AT_STRING_MTREATTACH,
+
+    AT_STRING_IMPU,
+#if (FEATURE_ON == FEATURE_DSDS)
+    AT_STRING_DSDSSTATE,
+#endif
 
     AT_STRING_BUTT
 }AT_STRING_CONTENT_ENUM;
@@ -3077,22 +3143,7 @@ typedef TAF_UINT8 AT_COPS_MODE_TYPE;
 #define AT_COPS_ONLY_SET_FORMAT_TYPE            3
 #define AT_COPS_MANUAL_AUTOMATIC_TYPE            4
 
-/*****************************************************************************
- 枚举名    : AT_COPS_RAT_ENUM
- 结构说明  : AT+COPS命令使用的接入技术模式
-  1.日    期   : 2011年10月12日
-    作    者   : l00130025
-    修改内容   : 添加cops命令的定义 Ts27.007
-    <AcT>: access technology selected
-    0 GSM
-    1 GSM Compact
-    2 UTRAN
-    3 GSM w/EGPRS (see NOTE 1)
-    4 UTRAN w/HSDPA (see NOTE 2)
-    5 UTRAN w/HSUPA (see NOTE 2)
-    6 UTRAN w/HSDPA and HSUPA (see NOTE 2)
-    7 E-UTRAN
-*****************************************************************************/
+
 
 enum AT_COPS_RAT_ENUM
 {
@@ -3143,8 +3194,7 @@ typedef enum AT_NVIM_PARA_ENUM
     AT_NVIM_BUTT_TYPE                   /* 结束 */
 }AT_NVIM_PARA_ENUM;
 
-/* Modified by L00171473 for V7R1 porting, 2011-04-23, begin，为兼容北京的TMODE命令，
-   增加了MODE 4和5 */
+
 
 
 
@@ -3569,7 +3619,8 @@ typedef struct
 
     AT_CMD_CURRENT_OPT_ENUM CmdCurrentOpt;                                      /* 指示当前用户的命令操作类型 */
 
-    TAF_UINT32              ulCause;                                            /* 指示当前Cause值 */
+    /* ulCause没有使用点，删除 */
+    VOS_UINT8               aucReserved1[4];
 
     pAtAppCBF               pAppCallBack;
 
@@ -3681,26 +3732,7 @@ typedef struct
     VOS_UINT8    aucReserved[83];
 }AT_WIFI_SSID_STRU;
 
-/*****************************************************************************
- 结构名    : AT_WIFI_SEC_STRU
- 协议表格  :
- ASN.1描述 :
- 结构说明  : en_NV_Item_WIFI_KEY NV项对应的结构，
-             用于保存wifi 安全信息
-             nv_wifisec_type结构的副本必须与NV项50012的数据结构nv_wifisec_type保持一致
-             aucwlAuthMode              鉴权模式
-             aucBasicEncryptionModes    基本加密模式
-             aucWPAEncryptionModes      WPA加密模式
-             aucWifiWepKey1...aucWifiWepKey4               WIFI KEY
-             ulKeyIndex                 使用的WIFI KEY index,例如，1代表使用wlKeys1
-             aucWpaPsk                  WPA的密码
-             ucWpsEnable                wps是否使能开关
-             ucWpsCfg                   是否允许register来改变enrollee的参数,  0:不允许(默认);  1:允许
 
-  1.日    期   : 2012年4月6日
-    作    者   : l60609
-    修改内容   : DTS201203307015:结构体未四字节对齐
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT8    aucWifiAuthmode[16];
@@ -3732,7 +3764,6 @@ typedef struct
 /* 设备形态组合参数最大字符数，最多17个设备形态，最大2个字符，16个逗号 */
 #define AT_SETPORT_PARA_MAX_CHAR_LEN ((17*2) + 16)
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 
 typedef enum tagAT_DEV__PID_UNIFY_IF_PROT
 {
@@ -3765,7 +3796,6 @@ typedef enum tagAT_DEV__PID_UNIFY_IF_PROT
     AT_DEV_RNDIS            = 0xA3,
     AT_DEV_NONE             = 0xFF
 } AT_DEV_PID_UNIFY_IF_PROT;
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 /* PORT */
 typedef struct
 {
@@ -3841,13 +3871,7 @@ typedef struct
 /* end V7R1 PhaseI Modify */
 
 
-/*****************************************************************************
- 枚举名    : AT_RRC_VERSION_ENUM
- 枚举说明  : 标识RRC版本类型
-1.日    期   : 2012年04月21日
-  作    者   : l60609
-   修改内容   : 创建
-*****************************************************************************/
+
 enum AT_RRC_VERSION_ENUM
 {
     AT_RRC_VERSION_WCDMA                = 0,
@@ -3858,13 +3882,7 @@ enum AT_RRC_VERSION_ENUM
 };
 typedef VOS_UINT8 AT_RRC_VERSION_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : AT_PTL_VER_TYPE_ENUM_UINT8
- 枚举说明  : 标识协议版本类型
-1.日    期   : 2012年04月21日
-  作    者   : l60609
-   修改内容   : 创建
-*****************************************************************************/
+
 enum AT_PTL_VER_TYPE_ENUM
 {
     AT_PTL_VER_ENUM_R3,
@@ -3898,13 +3916,7 @@ enum AT_DPACAT_CATEGORY_TYPE_ENUM
 };
 typedef VOS_UINT32 AT_DPACAT_CATEGORY_TYPE_ENUM_U32;
 
-/*****************************************************************************
-结构名    : AT_DPACAT_PARA_STRU
-结构说明  : AT定义DPACAT命令关注的参数结构
-1.日    期   : 2012年05月21日
-  作    者   : f62575
-  修改内容   : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     PS_BOOL_ENUM_UINT8                  enHSDSCHSupport;                        /* 是否支持enHSDSCHSupport的标志                */
@@ -3915,13 +3927,7 @@ typedef struct
 
 }AT_DPACAT_PARA_STRU;
 
-/*****************************************************************************
-结构名    : AT_NVIM_UE_CAPA_STRU
-结构说明  : AT定义NV9008的结构
-1.日    期   : 2012年04月21日
-  作    者   : l60609
-  修改内容   : 新增结构
-*****************************************************************************/
+
 
 typedef struct
 {
@@ -3980,13 +3986,7 @@ typedef struct
     VOS_UINT8                           aucRsv4[7];
 }AT_NVIM_UE_CAPA_STRU;
 
-/*****************************************************************************
- 枚举名    : AT_NVWR_SEC_TYPE_ENUM
- 结构说明  : ^NVWR命令安全控制类型枚举
-  1.日    期  : 2015年04月04日
-    作    者  : l00198894
-    修改内容  : 新增结构
-*****************************************************************************/
+
 enum AT_NVWR_SEC_TYPE_ENUM
 {
     AT_NVWR_SEC_TYPE_OFF = 0,                                                   /* 安全控制关闭 */
@@ -3997,13 +3997,7 @@ enum AT_NVWR_SEC_TYPE_ENUM
 typedef VOS_UINT8 AT_NVWR_SEC_TYPE_ENUM_UINT8;
 
 
-/*****************************************************************************
- 枚举名    : AT_SYSCFGEX_RAT_TYPE_ENUM
- 结构说明  : AT^syscfgex 中acqorder接入技术类型
-1.日    期  : 2011年07月15日
-  作    者  : z00161729
-  修改内容  : 新增结构
-*****************************************************************************/
+
 enum AT_SYSCFGEX_RAT_TYPE_ENUM
 {
     AT_SYSCFGEX_RAT_AUTO = 0,              /* 接入技术为自动模式 */
@@ -4017,13 +4011,7 @@ enum AT_SYSCFGEX_RAT_TYPE_ENUM
 };
 typedef VOS_UINT8 AT_SYSCFGEX_RAT_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
- 结构名    : AT_SYSCFGEX_RAT_ORDER_STRU
- 结构说明  : AT^syscfgex中设置的acqorder接入技术个数和优先级
- 1.日    期  : 2011年07月15日
-   作    者  : z00161729
-   修改内容  : 新增结构
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                           ucRatOrderNum;                          /* syscfgex中设置的acqoder中的指示接入技术的个数 */
@@ -4031,13 +4019,7 @@ typedef struct
     VOS_UINT8                           aucRsv[2];
 }AT_SYSCFGEX_RAT_ORDER_STRU;
 
-/*****************************************************************************
- 枚举名    : AT_SYSCFG_RAT_TYPE_ENUM
- 结构说明  : AT^syscfg 中mode接入技术的类型
-1.日    期  : 2011年07月15日
-  作    者  : z00161729
-  修改内容  : 新增结构
-*****************************************************************************/
+
 enum AT_SYSCFG_RAT_TYPE_ENUM
 {
     AT_SYSCFG_RAT_AUTO          = 2,                                                /* 接入技术为自动模式 */
@@ -4051,13 +4033,7 @@ enum AT_SYSCFG_RAT_TYPE_ENUM
 };
 typedef VOS_UINT8 AT_SYSCFG_RAT_TYPE_ENUM_UINT8;
 
-/*****************************************************************************
- 枚举名    : AT_SYSCFG_RAT_PRIO_ENUM
- 结构说明  : AT^syscfg 中acqorder接入优先级的取值
-1.日    期  : 2011年07月15日
-  作    者  : z00161729
-  修改内容  : 新增结构
-*****************************************************************************/
+
 enum AT_SYSCFG_RAT_PRIO_ENUM
 {
     AT_SYSCFG_RAT_PRIO_AUTO = 0,                                                /* 接入优先级参数为自动 */
@@ -4071,13 +4047,7 @@ typedef VOS_UINT8 AT_SYSCFG_RAT_PRIO_ENUM_UINT8;
 
 
 #if (FEATURE_ON == FEATURE_PROBE_FREQLOCK)
-/*****************************************************************************
- 枚举名    : AT_FREQLOCK_MODE_TYPE_ENUM
- 结构说明  : FREQLOCK命令接入技术枚举
-1.日    期  : 2014年10月21日
-  作    者  : z00214637
-  修改内容  : 新增结构
-*****************************************************************************/
+
 enum AT_FREQLOCK_MODE_TYPE_ENUM
 {
     AT_FREQLOCK_MODE_TYPE_GSM       = 1,                                                /* GSM */
@@ -4088,13 +4058,7 @@ enum AT_FREQLOCK_MODE_TYPE_ENUM
 };
 typedef VOS_UINT32 AT_FREQLOCK_MODE_TYPE_ENUM_UINT32;
 
-/*****************************************************************************
- 枚举名    : AT_FREQLOCK_BAND_TYPE_ENUM
- 结构说明  : FREQLOCK命令BAND枚举
-1.日    期  : 2014年10月21日
-  作    者  : z00214637
-  修改内容  : 新增结构
-*****************************************************************************/
+
 enum AT_FREQLOCK_BAND_TYPE_ENUM
 {
     AT_FREQLOCK_BAND_TYPE_GSM_850   = 0,                                                /* GSM频段850 */
@@ -4122,8 +4086,6 @@ typedef struct
 } AT_PS_EVT_FUNC_TBL_STRU;
 /*lint +e958 +e959 修改人:l60609;原因:64bit*/
 
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-2, end */
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-2, end */
 
 /* Added by l60609 for B060 Project, 2012-2-21, Begin   */
 #if (FEATURE_ON == FEATURE_SECURITY_SHELL)
@@ -4137,15 +4099,7 @@ typedef struct
 /* Added by l60609 for B060 Project, 2012-2-21, End   */
 
 /* Added by L47619 for AP-Modem Personalisation Project, 2012/04/18, begin */
-/*****************************************************************************
- 结构名    : AT_FACAUTHPUBKEY_SET_REQ_STRU
- 结构说明  : AT解析AT^FACAUTHPUBKEY命令后存储参数的结构体(未做half-byte解析)
 
-  1.日    期   : 2012年04月18日
-    作    者   : L47619
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     /* 鉴权公钥码流(未做half-byte解析) */
@@ -4154,15 +4108,7 @@ typedef struct
     VOS_UINT8                           aucPubKeySign[AT_FACAUTHPUBKEY_SIGN_PARA_LEN];
 }AT_FACAUTHPUBKEY_SET_REQ_STRU;
 
-/*****************************************************************************
- 结构名    : AT_SIMLOCKDATAWRITE_SET_REQ_STRU
- 结构说明  : AT解析AT^SIMLOCKDATAWRITE命令后存储参数的结构体(未做half-byte解析)
 
-  1.日    期   : 2012年04月18日
-    作    者   : L47619
-    修改内容   : AP-Modem锁网锁卡项目新增结构
-
-*****************************************************************************/
 typedef struct
 {
     /* 结构体码流, 包含该锁网锁卡类型的包括状态, 锁网号段, CK, UK等所有信息(未做half-byte解析) */
@@ -4177,13 +4123,7 @@ typedef struct
     TAF_UINT8                           aucSerialNum[TAF_SERIAL_NUM_NV_LEN];
 }TAF_PH_SERIAL_NUM_STRU;
 /* Modified by l60609 for DSDA Phase III, 2013-3-4, End */
-/*****************************************************************************
-结构名    : AT_NV_WG_RF_MAIN_BAND_STRU
-结构说明  : AT^APSEC的请求消息结构
-1.日    期  : 2013年01月18日
-  作    者  : l00198894
-  修改内容  : Body SAR项目新增
-*****************************************************************************/
+
 typedef struct
 {
     AT_WCDMA_BAND_SET_UN        unWcdmaBand;                    /* 记录W频段信息 */
@@ -4193,13 +4133,7 @@ typedef struct
 
 #define AT_NVIM_BODYSARGSM_MAX_PARA_GROUP_NUM       (8)
 
-/*****************************************************************************
-结构名    : AT_BODYSARGSM_SET_PARA_STRU
-结构说明  : Body SAR设置命令参数结构体
-1.日    期  : 2013年03月12日
-  作    者  : l00198894
-  修改内容  : Body SAR项目新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                   ucParaNum;                                      /* 设置命令参数组数 */
@@ -4208,13 +4142,7 @@ typedef struct
     VOS_UINT32                  aulBand[AT_NVIM_BODYSARGSM_MAX_PARA_GROUP_NUM];      /* G频段位域 */
 }AT_BODYSARGSM_SET_PARA_STRU;
 
-/*****************************************************************************
-结构名    : AT_BODYSARWCDMA_SET_PARA_STRU
-结构说明  : Body SAR设置命令参数结构体
-1.日    期  : 2013年03月12日
-  作    者  : l00198894
-  修改内容  : Body SAR项目新增
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT8                   ucParaNum;                                      /* 设置命令参数组数 */
@@ -4223,13 +4151,7 @@ typedef struct
     VOS_UINT32                  aulBand[AT_BODYSARWCDMA_MAX_PARA_GROUP_NUM];    /* W频段位域 */
 }AT_BODYSARWCDMA_SET_PARA_STRU;
 
-/*****************************************************************************
- 结构名    : NAS_NV_TRI_MODE_FEM_PROFILE_ID_STRU
- 结构说明  : en_NV_Item_TRI_MODE_FEM_PROFILE_ID NV项结构
- 1.日    期   : 2015年01月04日
- 作    者   : z00306637
- 修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT32                              ulProfileId;                        /* 根据使用场景，控制前端器件的上下电（ABB，TCXO，RF）以及RF通道的控制。
@@ -4237,13 +4159,7 @@ typedef struct
     VOS_UINT32                              ulReserved[3];                     /* 保留，将来扩展使用 */
 }NAS_NV_TRI_MODE_FEM_PROFILE_ID_STRU;
 
-/*****************************************************************************
- 结构名    : NAS_NV_TRI_MODE_ENABLE_STRU
- 结构说明  : en_NV_Item_TRI_MODE_ENABLE NV项结构
-  1.日    期   : 2015年01月04日
-    作    者   : z00306637
-    修改内容   : 新建
-*****************************************************************************/
+
 typedef struct
 {
     VOS_UINT16                              usEnable;                           /* 全网通特性开关 */
@@ -4251,14 +4167,7 @@ typedef struct
 }NAS_NV_TRI_MODE_ENABLE_STRU;
 
 #if (FEATURE_ON == FEATURE_PROBE_FREQLOCK)
-/*****************************************************************************
- 结构名    : AT_FREQLOCK_GSM_BAND_TBL_STRU
- 结构说明  : FREQLOCK锁频命令<mode>字符类型消息结构
 
-  1.日    期   : 2014年10月20日
-    作    者   : z00214637
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_FREQLOCK_MODE_TYPE_ENUM_UINT32   ulMode;
@@ -4266,14 +4175,7 @@ typedef struct
     VOS_CHAR                           *acStrMode;
 }AT_FREQLOCK_MODE_TBL_STRU;
 
-/*****************************************************************************
- 结构名    : AT_FREQLOCK_GSM_BAND_TBL_STRU
- 结构说明  : FREQLOCK锁频<band>字符类型消息结构
 
-  1.日    期   : 2014年10月20日
-    作    者   : z00214637
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     AT_FREQLOCK_BAND_TYPE_ENUM_UINT32   ulBand;
@@ -4282,13 +4184,7 @@ typedef struct
 }AT_FREQLOCK_GSM_BAND_TBL_STRU;
 #endif
 
-/*****************************************************************************
- 枚举名    : AT_IMS_CTRL_MSG_RECEIVE_MODULE_ENUM
- 结构说明  : IMS control message接收模块枚举
-1.日    期  : 2015年10月28日
-  作    者  : n00269697
-  修改内容  : 新增枚举
-*****************************************************************************/
+
 enum AT_IMS_CTRL_MSG_RECEIVE_MODULE_ENUM
 {
     AT_IMS_CTRL_MSG_RECEIVE_MODULE_IMSA                     = 0,                /* 接收模块为IMSA */
@@ -4299,54 +4195,25 @@ typedef VOS_UINT8 AT_IMS_CTRL_MSG_RECEIVE_MODULE_ENUM_UINT8;
 
 /* 删除解析AT^EOPLMN命令后存储参数的结构体AT_EOPLMN_SET_REQ_STRU */
 
-/*****************************************************************************
- 结构名    : AT_DISPLAY_RATE_PAIR_STRU
- 结构说明  : 速率显示包含上行速率和下行速率
 
-  1.日    期   : 2016年09月28日
-    作    者   : l00373346
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_CHAR                           *acStrDlSpeed;                           /* 理论最大下行速率 */
     VOS_CHAR                           *acStrUlSpeed;                           /* 理论最大上行速率 */
 }AT_DISPLAY_RATE_PAIR_STRU;
 
-/*****************************************************************************
- 结构名    : At_GET_CONNECT_RATE_FUNC_PTR
- 结构说明  : MM/GMM的注册结果处理函数指针
-  1.日    期   : 2017年4月27日
-    作    者   : b00368361
-    修改内容   : 新增
-*****************************************************************************/
+
 typedef  VOS_UINT8 (*AT_GET_CONNECT_RATE_FUNC_PTR)(VOS_VOID);
 
-/*****************************************************************************
- 结构名    : AT_SUB_SYS_MODE_CONNECT_RATE_PAIR_STRU
- 结构说明  : 系统子模式和获取连接速率的结构体
 
-  1.日    期   : 2017年05月2日
-    作    者   : b00368361
-    修改内容   : 创建
-*****************************************************************************/
-/*lint -e958 -e959 修改人:b00368361;原因:64bit*/
 typedef struct
 {
     VOS_UINT32                                              ulSubSysMode;
     AT_GET_CONNECT_RATE_FUNC_PTR                            pGetConnectRateFunc;
 }AT_SUB_SYS_MODE_CONNECT_RATE_PAIR_STRU;
-/*lint +e958 +e959 修改人:b00368361;原因:64bit*/
 
 
-/*****************************************************************************
- 结构名    : AT_SIMLOCK_WRITE_EX_PARA_STRU
- 结构说明  : 保存^SIMLOCKWRITEEX命令参数信息
 
-  1.日    期   : 2017年03月05日
-    作    者   : q00380176
-    修改内容   : 创建
-*****************************************************************************/
 typedef struct
 {
     VOS_UINT32                          ulLayer;
@@ -4363,8 +4230,6 @@ typedef struct
   4 全局变量声明
 *****************************************************************************/
 
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-2, begin */
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-2, end */
 
 /* Added by l60609 for AT Project，2011-10-12,  Begin*/
 extern AT_PB_CONVERSION_TABLE_STRU  g_astIraToUnicode[AT_PB_IRA_MAX_NUM];
@@ -4432,7 +4297,7 @@ extern AT_SP_WORD_CTX_STRU                  g_stSpWordCtx;
 /* Added by l60609 for B060 Project, 2012-2-21, End   */
 
 /* Added by l60609 for DSDA Phase II, 2012-12-06, Begin */
-#if(FEATURE_ON == FEATURE_MULTI_MODEM)
+#if(2 <= MULTI_MODEM_NUMBER)
 /* AT与编译两次的PID对应表  */
 extern AT_MODEM_PID_TAB_STRU                   g_astAtModemPidTab[];
 #endif
@@ -4598,17 +4463,13 @@ extern VOS_UINT32 AT_SetWiFiKeyPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryWiFiKeyPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetWiFiLogPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryWiFiLogPara(VOS_UINT8 ucIndex);
-/* Added by L00171473 for DTS2012020106679,AT WT工位 2012-01-17  Begin */
 extern VOS_UINT32 AT_SetWifiInfoPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetWifiPaRangePara (VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryWifiPaRangePara (VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_TestWifiPaRangePara (VOS_UINT8 ucIndex);
-/* Added by L00171473 for DTS2012020106679,AT WT工位 2012-01-17  End */
 
 
-/* Add by c00172979 for V7代码同步, 2012-04-13, Begin   */
 #if (FEATURE_ON==FEATURE_LTE)
-/* Add by c00172979 for V7代码同步, 2012-04-13, End   */
 extern TAF_UINT32 At_SetSfm(TAF_UINT8 ucIndex);
 extern VOS_UINT32 At_QrySfm(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_SetFrStatus(VOS_UINT8 ucIndex);
@@ -4616,7 +4477,6 @@ VOS_UINT32 AT_SetFrStatus(VOS_UINT8 ucIndex);
 #if (FEATURE_LTE==FEATURE_ON)
 extern VOS_UINT32 AT_GetLteFeatureInfo(AT_FEATURE_SUPPORT_ST  *pstFeATure);
 #endif
-/* Add by c00172979 for V7代码同步, 2012-04-13, End   */
 extern VOS_UINT32 AT_SetTmmiPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryTmmiPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetChrgEnablePara(VOS_UINT8 ucIndex);
@@ -4673,6 +4533,7 @@ extern TAF_UINT32   At_SetCnmiPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetCnmaPara(TAF_UINT8 ucIndex);/*begin add by zhoujun40661 2006-10-24 for CNMA*/
 extern TAF_UINT32   At_SetCcnmaPara(TAF_UINT8 ucIndex);/*begin add by zhoujun40661 2006-10-24 for CNMA*/
 extern TAF_UINT32   At_SetCgregPara(TAF_UINT8 ucIndex);
+extern VOS_UINT32   AT_SetCsdfPara(VOS_UINT8 ucIndex);
 extern TAF_UINT32   At_SetCgsmsPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetCscaPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetCsmsPara(TAF_UINT8 ucIndex);
@@ -4718,6 +4579,8 @@ extern TAF_UINT32   At_SetCsndPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetCgattPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetCgcattPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetCopsPara(TAF_UINT8 ucIndex);
+extern TAF_UINT32   At_SetCesqPara(TAF_UINT8 ucIndex);
+
 
 #if (FEATURE_ON == FEATURE_CSG)
 extern VOS_UINT32 AT_SetCsgIdSearchPara(VOS_UINT8 ucIndex);
@@ -4801,15 +4664,12 @@ extern TAF_UINT32   At_SetImsichgPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetTestPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetFPlmnPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetQuickStart(TAF_UINT8 ucIndex);
-/* <==l00107747 快速开机 */
 extern TAF_UINT32   At_SetAutoAttach(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_SetSystemInfo(TAF_UINT8 ucIndex);
 extern VOS_UINT32   At_SetSystemInfoEx(TAF_UINT8 ucIndex);
-/*DTS2012041102190 : h00135900 start in 2011-04-11 AT代码融合*/
 extern TAF_UINT32 At_QryLtecsInfo(TAF_UINT8 ucIndex);
 
 extern TAF_UINT32 At_QryCemode(TAF_UINT8 ucIndex);
-/*DTS2012041102190 : h00135900 end in 2011-04-11 AT代码融合*/
 /* ==> x68770 For WAS AutoTest */
 extern TAF_UINT32   At_SetCwasPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32 At_SetCellSearch(TAF_UINT8 ucIndex);
@@ -4878,9 +4738,7 @@ extern TAF_UINT32  At_SetFlnaPara(VOS_UINT8 ucIndex );
 extern VOS_UINT32  At_SetDataLock(VOS_UINT8 ucIndex );
 extern VOS_UINT32  At_SetSD(VOS_UINT8 ucIndex );
 extern VOS_UINT32  At_SetGPIOPL(VOS_UINT8 ucIndex );
-/* Add by c00172979 for V7代码同步, 2012-04-13, Begin   */
 #if (FEATURE_ON==FEATURE_LTE)
-/* Add by c00172979 for V7代码同步, 2012-04-13, End   */
 VOS_UINT32  At_SetInfoRRS(VOS_UINT8 ucIndex );
 #endif
 extern VOS_UINT32  At_SetInfoRBU(VOS_UINT8 ucIndex );
@@ -4958,6 +4816,8 @@ extern VOS_UINT32 AT_IsSupportLMode(
 );
 
 
+VOS_UINT32 AT_SetQuitCallBack( VOS_UINT8 ucIndex  );
+
 #if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_UINT32 AT_IsSupport1XMode(
     TAF_MMA_MULTIMODE_RAT_CFG_STRU     *pstRatOrder
@@ -4966,8 +4826,6 @@ VOS_UINT32 AT_IsSupportHrpdMode(
     TAF_MMA_MULTIMODE_RAT_CFG_STRU     *pstRatOrder
 );
 
-
-VOS_UINT32 AT_SetQuitCallBack( VOS_UINT8 ucIndex  );
 VOS_UINT32 AT_SetCSidList( VOS_UINT8 ucIndex   );
 VOS_UINT32 AT_ConvertCSidListMcc(
     VOS_UINT8                          *pucPara,
@@ -4995,9 +4853,8 @@ VOS_UINT32 AT_SetNoCardMode(VOS_UINT8 ucIndex );
 
 VOS_UINT32 AT_QryNoCardMode(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryRatCombinedMode(VOS_UINT8 ucIndex);
-#endif
-
 VOS_UINT32 AT_SetCclprPara(VOS_UINT8 ucIndex);
+#endif
 
 
 VOS_UINT32 AT_SetNetScan(
@@ -5053,11 +4910,9 @@ extern VOS_UINT32   AT_SetTinTypeStub( VOS_UINT8 ucIndex );
 extern  VOS_UINT32  AT_SetPsBearIsrFlgStub( VOS_UINT8 ucIndex );
 extern VOS_UINT32 At_QryTinTypeStub(VOS_UINT8 ucIndex);
 
-/* Modified by z00161729 for DCM定制需求和遗留问题, 2012-8-30, begin */
 
 extern VOS_UINT32  AT_SetPsRegisterContainDrxStub( VOS_UINT8 ucIndex );
 extern  VOS_UINT32 AT_QryPsRegisterContainDrxStub(VOS_UINT8 ucIndex);
-/* Modified by z00161729 for DCM定制需求和遗留问题, 2012-8-30, end */
 
 /* Added by s46746 for CS/PS mode 1, 2012-6-25, begin */
 extern VOS_UINT32 AT_SetCsUnAvailPlmnStub( VOS_UINT8 ucIndex );
@@ -5066,25 +4921,17 @@ extern VOS_UINT32 AT_SetForbRoamTaStub( VOS_UINT8 ucIndex );
 
 VOS_UINT32 AT_SetDisableRatPlmnStub( VOS_UINT8 ucIndex );
 
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-15, begin */
 extern VOS_UINT32 AT_SetImsRatStub(VOS_UINT8 ucIndex);
-/* Added by s00217060 for VoLTE_PhaseI  项目, 2013-08-15, end */
-/* Added by s00217060 for VoLTE_PhaseII  项目, 2013-10-23, begin */
 extern VOS_UINT32 AT_SetImsCapabilityStub(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetDomainStub(VOS_UINT8 ucIndex);
-/* Added by s00217060 for VoLTE_PhaseII  项目, 2013-10-23, end */
 extern VOS_UINT32 AT_SetCmdImsRoamingStub(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetCmdRedailStub(VOS_UINT8 ucIndex);
-/* Added by w00176964 for VoLTE_PhaseIII 项目, 2014-1-16, begin */
 extern VOS_UINT32 AT_SetImsVoiceInterSysLauEnableStub(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetImsVoiceMMEnableStub(VOS_UINT8 ucIndex);
-/* Added by w00176964 for VoLTE_PhaseIII 项目, 2014-1-16, end */
 extern VOS_UINT32 AT_SetCmdImsUssdStub(VOS_UINT8 ucIndex);
 #endif
 
 /*测试用PDP打桩命令*/
-/* Deleted by s00217060 for VoLTE_PhaseI  项目, 2013-08-22, begin */
-/* Deleted by s00217060 for VoLTE_PhaseI  项目, 2013-08-22, end */
 extern VOS_UINT32 At_SetNdisAddPara(TAF_UINT8 ucIndex);
 extern VOS_UINT32 At_SetDnsPrim(VOS_UINT8 ucIndex);
 extern VOS_UINT32 At_SetDnsSnd(VOS_UINT8 ucIndex);
@@ -5096,9 +4943,7 @@ extern VOS_UINT32 At_SetResetPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetNvBackUpPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 At_SetNvRestorePara(VOS_UINT8 ucIndex);
 
-/* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, begin */
 extern VOS_UINT32 AT_SetNvManufactureExtPara( VOS_UINT8 ucIndex );
-/* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 2013-10-24, end */
 
 extern TAF_UINT32   At_QryApDialModePara(TAF_UINT8 ucIndex);
 extern VOS_UINT32   AT_SetWifiGlobalMacPara(VOS_UINT8 ucIndex);
@@ -5119,9 +4964,7 @@ extern VOS_UINT32 AT_SetShellPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryShellPara(VOS_UINT8 ucIndex);
 
 #endif
- /* Add by c00172979 for V7代码同步, 2012-04-07, Begin   */
 #if (FEATURE_ON==FEATURE_LTE)
- /* Modify by c00172979 for V7代码同步, 2012-04-07, End   */
 
 extern VOS_UINT32 AT_SetRsrpCfgPara ( VOS_UINT8 ucIndex );
 extern VOS_UINT32  AT_QryRsrpCfgPara ( VOS_UINT8 ucIndex );
@@ -5134,11 +4977,6 @@ extern VOS_UINT32  AT_QryEcioCfgPara ( VOS_UINT8 ucIndex );
 extern VOS_UINT32 AT_SetPdprofmodPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryPdprofmodPara(VOS_UINT8 ucIndex);
 
-
-/*DTS2012041801532 w00182550 NV归一化 start in 2012-04-12 */
-extern VOS_UINT32 AT_SetExbandInfoPara(VOS_UINT8 ucIndex);
-extern VOS_UINT32 AT_SetExbandTestInfoPara(VOS_UINT8 ucIndex);
-/*DTS2012041801532 w00182550 NV归一化 end in 2012-04-12 */
 
 #endif
 extern VOS_UINT32   AT_SetApbatlvlPara( VOS_UINT8 ucIndex );
@@ -5176,11 +5014,9 @@ VOS_UINT32 At_SetUsimStub(VOS_UINT8 ucIndex);
 VOS_UINT32 At_SetRefreshStub(VOS_UINT8 ucIndex);
 VOS_UINT32 At_SetAutoReselStub(VOS_UINT8 ucIndex);
 
-/* Modified by c00318887 for file refresh需要触发背景搜, 2015-3-31, begin */
 #if ( VOS_WIN32 == VOS_OS_VER )
 VOS_UINT32 At_SetDelayBgStub(VOS_UINT8 ucIndex);
 #endif
-/* Modified by c00318887 for file refresh需要触发背景搜, 2015-3-31, end */
 extern TAF_UINT32   At_QryCpbsPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_QryCfunPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_QryCpamPara(TAF_UINT8 ucIndex);
@@ -5223,9 +5059,7 @@ extern TAF_UINT32   AT_QryCgdnsPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_QryFrqPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_QryFPlmnPara(TAF_UINT8 ucIndex);
 extern TAF_UINT32   At_QryDialModePara(TAF_UINT8 ucIndex);
-/* ==>l00107747 快速开机 */
 extern TAF_UINT32   At_QryQuickStart(TAF_UINT8 ucIndex);
-/* <==l00107747 快速开机 */
 extern TAF_UINT32   At_QryAutoAttach(TAF_UINT8 ucIndex);
 
 VOS_UINT32 AT_QrySysCfgExPara(VOS_UINT8 ucIndex);
@@ -5280,9 +5114,11 @@ extern TAF_UINT32   At_ReadNumTypePara(TAF_UINT8 *pucDst,TAF_UINT8 *pucSrc);
 
 extern TAF_UINT32   At_ChgMnErrCodeToAt(TAF_UINT8 ucIndex,TAF_UINT32 ulMnErrorCode);
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern TAF_UINT32 At_ChgXsmsErrorCodeToAt(
     TAF_UINT32                          ulXsmsError
 );
+#endif
 
 /*->f62575*/
 /* Modified by l60609 for DSDA Phase III, 2013-3-4, Begin */
@@ -5651,7 +5487,6 @@ extern TAF_VOID     At_QryParaRspCPnnProc(
     TAF_VOID                            *pPara
 );
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 #if(FEATURE_ON == FEATURE_LTE)
 
 TAF_VOID At_QryParaRspCellRoamProc(
@@ -5660,7 +5495,6 @@ TAF_VOID At_QryParaRspCellRoamProc(
     TAF_VOID                            *pPara
 );
 #endif
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 extern TAF_VOID     At_QryParaRspOplProc(
     TAF_UINT8                           ucIndex,
@@ -5676,8 +5510,6 @@ extern TAF_VOID     At_QryParaRspCfplmnProc(
 
 
 
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, begin */
-/* Deleted by Y00213812 for VoLTE_PhaseI 项目, 2013-07-08, end */
 extern TAF_VOID     At_QryParaRspCgdnsProc(
     TAF_UINT8                           ucIndex,
     TAF_UINT8                           OpId,
@@ -5929,12 +5761,7 @@ extern  VOS_UINT32 MN_PH_QryApHplmn(
     VOS_UINT32                          *pulMnc
 );
 
-extern VOS_UINT32 MN_PH_QryAnQuery(
-    VOS_INT16                           *psCpichRscp,
-    VOS_INT16                           *psCpichEcNo,
-    VOS_UINT8                           *pucRssi,
-    VOS_UINT32                          *pulCellId
-);
+/* 无调用点，多实例项目删除 */
 extern AT_CMD_ANTENNA_LEVEL_ENUM_UINT8 AT_CalculateAntennaLevel(
     VOS_INT16                           sRscp,
     VOS_INT16                           sEcio
@@ -6097,9 +5924,7 @@ extern VOS_UINT32 AT_SetFwavePara(
 /* Deleted by k902809 for Iteration 11, Iteration 11 2015-3-30, end */
 /* Added by f62575 for B050 Project, 2012-2-3, Begin   */
 
-/* Modified by w00167002 for L-C互操作项目, 2014-2-21, begin */
 VOS_UINT32 AT_RcvSimLockQryRsp(VOS_VOID *pMsg);
-/* Modified by w00167002 for L-C互操作项目, 2014-2-21, end */
 
 /* Added by f62575 for B050 Project, 2012-2-3, end     */
 
@@ -6148,11 +5973,9 @@ VOS_UINT32 AT_RcvDrvAgentSdloadSetRsp(VOS_VOID *pMsg);
 VOS_UINT32 AT_RcvDrvAgentImsiChgQryRsp(VOS_VOID *pMsg);
 
 VOS_UINT32 AT_RcvDrvAgentInfoRbuSetRsp(VOS_VOID *pMsg);
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 #if(FEATURE_ON == FEATURE_LTE)
 VOS_UINT32 AT_RcvDrvAgentInfoRrsSetRsp(VOS_VOID *pMsg);
 #endif
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 
 VOS_UINT32 AT_RcvDrvAgentCpnnQryRsp(VOS_VOID *pMsg);
@@ -6190,20 +6013,16 @@ VOS_UINT32 AT_ProcTestError(VOS_UINT8 ucIndex);
 
 
 /* added by c64416 for AT Project 2011-10-8  Begin */
-/*装备快速校准c00172979 20110730 start */
 extern VOS_UINT32 atSetTmodePara(VOS_UINT8 ucClientId, VOS_UINT32 usTmode);
 extern VOS_UINT32 atSetTmodeParaCnfProc(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
 
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 #if(FEATURE_ON == FEATURE_LTE)
-/*装备快速校准c00172979 20110730 end */
 extern VOS_UINT32 atSetFCHANPara(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atSetFCHANParaCnfProc(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
 
 extern VOS_UINT32 atQryFCHANPara(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atQryFCHANParaCnfProc(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
 #endif
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 
 extern VOS_UINT32 atSetNVRDLenPara(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atSetNVRDExPara(VOS_UINT8 ucClientId);
@@ -6229,12 +6048,10 @@ extern VOS_UINT32 atSetFLNAParaCnfProc(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock
 extern VOS_UINT32 atQryFLNAPara(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atQryFLNAParaCnfProc(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
 
-/*DTS2012041102190 : h00135900 start in 2011-04-11 AT代码融合*/
 
 extern VOS_UINT32 atQryTselrfPara(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atSetTselrfPara(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atSetTselrfParaCnfProc(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
-/*DTS2012041102190 : h00135900 end in 2011-04-11 AT代码融合*/
 
 extern VOS_UINT32 atQryFRSSIPara(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atQryFRSSIParaCnfProc(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
@@ -6254,7 +6071,6 @@ extern VOS_UINT32 atSetFWAVEPara(VOS_UINT8 ucClientId);
 /*非信令综测start */
 /* Added by c64416 for AT Project 2011-10-20  Begin */
 
-/*一键式升级-c00172979 start */
 extern VOS_UINT32 atQryDLoadVer(VOS_UINT8 ucClientId);
 extern VOS_UINT32 atQryDLoadVerCnf(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
 
@@ -6287,7 +6103,6 @@ extern VOS_UINT32 atSetTbatCnf(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
 extern VOS_UINT32 atRdTbatCnf(VOS_UINT8 ucClientId, VOS_VOID *pMsgBlock);
 extern VOS_UINT32  AT_SetLteSdloadPara(VOS_UINT8 ucClientId);
 
-/*一键式升级-c00172979 end */
 /* Added by c64416 for AT Project 2011-10-20  End*/
 /* added by c64416 for AT Project 2011-10-8  End*/
 
@@ -6320,7 +6135,6 @@ extern VOS_UINT32 AT_HandleFacAuthPubKeyCmd(
 );
 #endif
 
-#if ((FEATURE_ON == FEATURE_SC_DATA_STRUCT_EXTERN) || (FEATURE_ON == FEATURE_BOSTON_AFTER_FEATURE))
 VOS_UINT32 AT_HandleSimLockDataWriteExCmd(
     VOS_UINT8                           ucIndex,
     VOS_UINT8                          *pucData,
@@ -6332,7 +6146,6 @@ VOS_UINT32 AT_HandleSimLockNWDataWriteCmd(
     VOS_UINT8                          *pucData,
     VOS_UINT16                          usLen
 );
-#endif
 
 extern VOS_UINT32 AT_HandleSimLockDataWriteCmd(
     VOS_UINT8                           ucIndex,
@@ -6388,9 +6201,7 @@ extern VOS_UINT32 AT_QryProdNamePara(
 
 extern VOS_UINT32 AT_QryCipherPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryLocinfoPara(VOS_UINT8 ucIndex);
-/* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-12, begin */
 extern VOS_UINT32 AT_QryAcInfoPara(VOS_UINT8 ucIndex);
-/* Added by w00176964 for V7R1C50_DCM接入禁止小区信息上报, 2012-12-12, end */
 
 /* added by c64416 for AT Project 2011-10-9  Start */
 extern VOS_UINT32 At_SmsProc ( VOS_UINT8 ucIndex, VOS_UINT8 *pData, VOS_UINT16 usLen);
@@ -6441,13 +6252,11 @@ VOS_UINT32 At_TestNdisAdd(VOS_UINT8 ucIndex);
 
 /* Added by L60609 for AT Project，2011-10-21,  End*/
 
-/* Added by A00165503 for AT Project，2011-10-21, begin */
 TAF_UINT32 At_SetDialGprsPara(
     TAF_UINT8                           ucIndex,
     TAF_UINT8                           ucCid,
     TAF_GPRS_ACTIVE_TYPE_UINT8          enActiveType
 );
-/* Added by A00165503 for AT Project，2011-10-21, end */
 /* Added by h44270 for V7R1 phase III, 2011-10-18, begin */
 VOS_UINT32 AT_SetFastDormPara(TAF_UINT8 ucIndex);
 VOS_UINT32 AT_QryFastDormPara(TAF_UINT8 ucIndex);
@@ -6462,10 +6271,6 @@ extern VOS_UINT32 At_ReadCustomizeServiceNV(
     VOS_UINT16                          *pusValueInfo
 );
 
-extern VOS_UINT32 At_ReadGprsActiveTimerLenNV(
-    VOS_UINT32                          *pulGprsActiveTimerLen,
-    VOS_UINT16                          *pusValueInfo
-);
 
 
 
@@ -6481,11 +6286,9 @@ extern VOS_VOID AT_GetSpecificPort(
     VOS_UINT32                         *pulPortNum
 );
 /* Added by l60609 for B070 Project, 2012/03/20, end */
-/* Add by w00199382 for V7代码同步, 2012-04-07, Begin   */
 
 extern VOS_UINT32 AT_OpenSpecificPort(VOS_UINT8 ucPort);
 extern VOS_UINT32 AT_CloseSpecificPort(VOS_UINT8 ucPort);
-/* Add by w00199382 for V7代码同步, 2012-04-07, End   */
 VOS_UINT32 AT_QryNvBackupStatusPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryNandBadBlockPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryNandDevInfoPara(VOS_UINT8 ucIndex);
@@ -6708,8 +6511,6 @@ VOS_UINT32 At_QryCerssiPara(VOS_UINT8 ucIndex);
 VOS_UINT32 At_SetCnmrPara(VOS_UINT8 ucIndex);
 VOS_UINT32 At_QryCecellidPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 At_QryCellIdPara(VOS_UINT8 ucIndex);
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-2, begin */
-/* Deleted by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-2, end */
 
 VOS_UINT32 At_SetWlthresholdcfgPara(VOS_UINT8 ucIndex);
 
@@ -6733,9 +6534,7 @@ VOS_UINT32 AT_SetCopnPara(VOS_UINT8 ucIndex);
 /* Added by f62575 for SS FDN&Call Control, 2013-05-06, end */
 
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-10, begin */
 VOS_VOID At_RcvMnCallSetCssnCnf(MN_AT_IND_EVT_STRU *pstData);
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-4-10, end */
 VOS_UINT32 AT_FillSsBsService(
     TAF_SS_ERASESS_REQ_STRU            *pstSSPara,
     AT_PARSE_PARA_TYPE_STRU            *pstAtPara
@@ -6747,7 +6546,6 @@ VOS_UINT32 AT_FillSsNoRepCondTime(
     TAF_SS_REGISTERSS_REQ_STRU         *pstSSPara
 );
 
-/* Deleted by l00198894 for V9R1 STK升级, 2013/07/11 */
 
 VOS_VOID At_QryMmPlmnInfoRspProc(
     VOS_UINT8                           ucIndex,
@@ -6822,6 +6620,19 @@ VOS_UINT32 AT_QryUserSrvStatePara(VOS_UINT8 ucIndex);
 
 VOS_UINT32 AT_SetHistoryFreqPara(VOS_UINT8 ucIndex);
 
+
+extern VOS_UINT32 AT_SetCommBoosterPara(
+    VOS_UINT8                           ucIndex
+);
+
+#if (FEATURE_ON == FEATURE_DSDS)
+VOS_UINT32 AT_SetDsdsStatePara(
+    VOS_UINT8                           ucIndex
+);
+#endif
+
+VOS_UINT32 AT_SetNvLoadPara(VOS_UINT8 ucIndex);
+
 VOS_UINT32 At_SetSIMSlotPara(VOS_UINT8 ucIndex);
 VOS_UINT32 At_QrySIMSlotPara(VOS_UINT8 ucIndex);
 
@@ -6865,9 +6676,7 @@ extern VOS_UINT32 AT_SetUserCfgOPlmnPara(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_QryUserCfgOPlmnPara(VOS_UINT8 ucIndex);
 
-/* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, begin */
 extern VOS_UINT32 AT_RcvNvManufactureExtSetCnf(VOS_VOID *pMsg);
-/* Added by d00212987 for BalongV9R1 NV备份数据丢失容错&恢复 项目 2013-10-24, end */
 
 VOS_UINT32 AT_TestNetScan( VOS_UINT8 ucIndex );
 
@@ -6885,9 +6694,7 @@ VOS_UINT32 AT_SetOPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_SetSwitchUart(VOS_UINT8 ucIndex);
 #endif
 
-/* Added by l00198894 for 新增+ECID命令, 2013-12-09, begin */
 VOS_UINT32 AT_SetEcidPara(VOS_UINT8 ucIndex);
-/* Added by l00198894 for 新增+ECID命令, 2013-12-09, end */
 
 VOS_UINT32 AT_QryClccPara(VOS_UINT8 ucIndex);
 
@@ -7041,17 +6848,14 @@ extern VOS_UINT32 At_SetPsProtectModePara (VOS_UINT8 ucIndex);
 #endif
 extern VOS_UINT32 At_SetPhyInitPara (VOS_UINT8 ucIndex);
 
-/* Added by w00167002 for L-C互操作项目, 2014-2-22, begin */
 TAF_MMA_SERVICE_DOMAIN_ENUM_UINT8 At_ConvertDetachTypeToServiceDomain(
     VOS_UINT32                          ulCgcattMode
 );
-/* Added by w00167002 for L-C互操作项目, 2014-2-22, end */
 
 TAF_MMA_ATTACH_TYPE_ENUM_UINT8 At_ConvertCgcattModeToAttachType(
     VOS_UINT32                          ulCgcattMode
 );
 
-/* Added by j00174725 for V3R3C60_eCall项目, 2014-3-29, begin */
 extern VOS_UINT32 AT_FillCalledNumPara(
     VOS_UINT8                          *pucAtPara,
     VOS_UINT16                          usLen,
@@ -7059,7 +6863,6 @@ extern VOS_UINT32 AT_FillCalledNumPara(
 );
 
 extern TAF_UINT32 At_AsciiString2HexSimple(TAF_UINT8 *pTextStr,TAF_UINT8 *pucSrc,TAF_UINT16 usSrcLen);
-/* Added by j00174725 for V3R3C60_eCall项目, 2014-3-29, end */
 
 extern VOS_UINT32 AT_QryCclkPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_SetCclkPara(VOS_UINT8 ucIndex);
@@ -7073,6 +6876,13 @@ extern TAF_UINT32 At_QryCardTypePara(TAF_UINT8 ucIndex);
 
 extern TAF_UINT32 At_QryCardTypeExPara(TAF_UINT8 ucIndex);
 
+#if (FEATURE_ON == FEATURE_PHONE_SC)
+extern VOS_UINT32 At_SetSilentPin(TAF_UINT8 ucIndex);
+
+extern VOS_UINT32 At_SetSilentPinInfo(TAF_UINT8 ucIndex);
+#endif
+
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 AT_SetCcmgsPara(VOS_UINT8 ucIndex, VOS_UINT32 ulLengthValue, VOS_UINT8 *pucCommand, VOS_UINT16 usCommandLength);
 
 extern VOS_UINT32 AT_SetCcmgwPara(VOS_UINT8 ucIndex, VOS_UINT32 ulLengthValue, VOS_UINT32 ulStatValue, VOS_UINT8 *pucCommand, VOS_UINT16 usCommandLength);
@@ -7136,14 +6946,14 @@ VOS_UINT32 AT_IsPlatformSupport1XMode(
 VOS_UINT32 At_SetCdmaModemSwitch(VOS_UINT8 ucIndex);
 
 VOS_UINT32 At_QryCdmaModemSwitch(VOS_UINT8 ucIndex);
-
+#endif
 extern VOS_UINT32 AT_SetTTYModePara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryTTYModePara(VOS_UINT8 ucIndex);
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 AT_SetCtaPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryCtaPara(VOS_UINT8 ucIndex);
-
-VOS_UINT32 AT_QryCgmtuPara(VOS_UINT8 ucIndex);
+#endif
+VOS_UINT32 AT_SetCgmtuPara(VOS_UINT8 ucIndex);
 
 VOS_UINT32 At_SetFemCtrl(VOS_UINT8 ucIndex);
 
@@ -7158,6 +6968,7 @@ TAF_UINT32 AT_HexToAsciiString(
 extern VOS_UINT32 At_SetRatRfSwitch(VOS_UINT8 ucIndex);
 extern VOS_UINT32 At_QryRatRfSwitch(VOS_UINT8 ucIndex);
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 AT_Set1xChanPara(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_Qry1xChanPara(VOS_UINT8 ucIndex);
@@ -7171,6 +6982,7 @@ extern VOS_UINT32 AT_QryProGetEsn(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryProGetMeid(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_QryHighVer(VOS_UINT8 ucIndex);
+#endif
 
 VOS_UINT32 AT_CheckMccFreqPara(VOS_VOID);
 VOS_UINT32 AT_SetMccFreqPara(VOS_UINT8 ucIndex);
@@ -7185,7 +6997,10 @@ VOS_UINT32 AT_ParseDplmnStringList(
     TAF_MMA_DPLMN_INFO_SET_STRU        *pstDplmnInfoSet
 );
 
-/* Modified by s00217060 for 边境搜网优化PhaseI, 2016-8-20, begin */
+VOS_UINT32 AT_ExchangeModemInfo(
+    VOS_UINT8                           ucIndex
+);
+
 VOS_UINT32 AT_ParseEhplmnStringList(
     VOS_UINT32                          ulParaLen,
     VOS_UINT8                          *pucPara,
@@ -7198,24 +7013,22 @@ VOS_UINT32 AT_SetBorderInfoPara(
 VOS_UINT32 AT_QryBorderInfoPara(
     VOS_UINT8                           ucIndex
 );
-/* Modified by s00217060 for 边境搜网优化PhaseI, 2016-8-20, end */
 
 extern VOS_UINT32 AT_QryTransModePara(VOS_UINT8 ucIndex);
-/* Added by wx270776 for OM融合, 2015-7-25, begin */
 extern VOS_VOID DIAG_LogShowToFile(VOS_BOOL bIsSendMsg);
-/* Added by wx270776 for OM融合, 2015-7-25, end */
 extern VOS_UINT32 AT_QryEmcCallBack( VOS_UINT8 ucIndex  );
 
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 AT_QryCdmaDormTimerVal(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_SetCdmaDormantTimer(VOS_UINT8 ucIndex);
-
+#endif
 extern VOS_UINT32 AT_QryUECenterPara(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_SetUECenterPara(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_TestUECenterPara(VOS_UINT8 ucIndex);
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 AT_SetHdrCsqPara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QryHdrCsqPara(VOS_UINT8 ucIndex);
 
@@ -7225,7 +7038,7 @@ extern VOS_UINT32 AT_QryEncryptCallRandom( VOS_UINT8 ucIndex );
 extern VOS_UINT32 AT_QryEncryptCallKmc( VOS_UINT8 ucIndex );
 extern VOS_UINT32  AT_QryEccTestMode( VOS_UINT8 ucIndex );
 extern VOS_UINT32 AT_QryCurrSidNid(VOS_UINT8 ucIndex);
-
+#endif
 extern VOS_UINT32 AT_QryCtRoamInfo(VOS_UINT8 ucIndex);
 
 extern VOS_UINT32 AT_QryAfcClkInfo(VOS_UINT8 ucIndex);
@@ -7235,14 +7048,16 @@ extern VOS_UINT32 AT_SetKcePara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QrySecureStatePara(VOS_UINT8 ucIndex);
 extern VOS_UINT32 AT_QrySocidPara(VOS_UINT8 ucIndex);
 
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 TAF_UINT32 At_CheckCurrRatModeIsCL(
     VOS_UINT8                           ucIndex
 );
+#endif
 VOS_UINT32 AT_SetCtzuPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryCtzuPara(VOS_UINT8 ucIndex);
-
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 AT_QryPRLID(VOS_UINT8 ucIndex);
+#endif
 #if ((TAF_OS_VER == TAF_WIN32) || (TAF_OS_VER == TAF_NUCLEUS))
 #pragma pack()
 #else
@@ -7301,6 +7116,23 @@ VOS_UINT32 At_ProcSpecificReturnCode(
     VOS_UINT8                           ucIndex,
     VOS_UINT32                          ulReturnCode
 );
+VOS_UINT32 AT_SetMtReattachPara(VOS_UINT8 ucIndex );
+
+VOS_UINT32 AT_QryCsdfPara(VOS_UINT8 ucIndex);
+
+
+VOS_UINT32 AT_ConvertMtaResult(
+    MTA_AT_RESULT_ENUM_UINT32           enResult
+);
+
+extern AT_PAR_CMD_ELEMENT_STRU *At_GetBasicCmdTable(VOS_VOID);
+
+extern AT_PAR_CMD_ELEMENT_STRU *At_GetExtendCmdTable(VOS_VOID);
+
+extern VOS_UINT32 At_GetBasicCmdNum(VOS_VOID);
+
+extern VOS_UINT32 At_GetExtendCmdNum(VOS_VOID);
+
 #ifdef __cplusplus
     #if __cplusplus
         }

@@ -49,6 +49,7 @@
 #define  FP_IOC_CMD_GET_IRQ_STATUS     _IO(FP_IOC_MAGIC, 4)
 #define  FP_IOC_CMD_SET_WAKELOCK_STATUS  _IO(FP_IOC_MAGIC, 5)
 #define  FP_IOC_CMD_SEND_SENSORID      _IO(FP_IOC_MAGIC, 6)
+#define  FP_IOC_CMD_SET_IPC_WAKELOCKS      _IO(FP_IOC_MAGIC, 7)
 
 enum module_vendor_info
 {
@@ -78,12 +79,14 @@ struct fp_data
     unsigned int nav_stat;
     struct wake_lock ttw_wl;
     int irq_gpio;
-    int cs0_gpio;
-    int cs1_gpio;
-    int rst_gpio;
+    int cs0_gpio;//UG
+    int cs1_gpio;//UD
+    int rst_gpio;//UG
+    int rst1_gpio;//UD
     int power_en_gpio;
     int moduleID_gpio;
     char extern_ldo_name[32];
+    char product_name[20];
     int extern_ldo_num;
     int extern_vol;
     int module_vendor_info;
@@ -104,6 +107,7 @@ struct fp_data
     struct pinctrl_state* pins_default;
     struct pinctrl_state* pins_idle;
     char module_id[64];
+    char module_id_ud[64];
     bool irq_enabled;
     unsigned int pen_anti_enable;
 };

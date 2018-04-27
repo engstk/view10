@@ -55,11 +55,7 @@ int mdrv_pm_log(int mod_id,  unsigned int data_len , void *data)
 {
 	int ret = 0;
 
-	if (PM_MOD_AP_OSA == mod_id)
-	{
-		mod_id = (int)PM_OM_AOSA;
-	}
-	else if (PM_MOD_CP_OSA == mod_id)
+	if (PM_MOD_CP_OSA == mod_id)
 	{
 		mod_id = (int)PM_OM_COSA;
 	}

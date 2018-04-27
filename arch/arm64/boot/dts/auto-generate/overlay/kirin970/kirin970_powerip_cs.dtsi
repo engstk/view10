@@ -25,6 +25,7 @@
 			hisilicon,hisi-ppll0-clock-rate-set = <0>;/*ppll0 frequency:0:not set frequency;*/
 			hisilicon,hisi-need-to-autofreqdump = <0>;/*0:not need enale autofreqdump;1:need autofreqdump*/
 			hisilicon,hisi-regulator-is-fake = <0>;/*0:this ip is effective;1:this ip is ineffective*/
+			hisilicon,hisi-need-to-hwlock = <29 0x438>;/*dss aod need hwlock*/
 		};
 		vivobus: ip@1 {
 			compatible = "ip-regulator-atf";
@@ -38,12 +39,13 @@
 			hisilicon,hisi-regulator-clk-num = <1>;
 			hisilicon,hisi-regulator-clk-check-flag = <0>;/*0:not check clock state;1:check clock state*/
 			hisilicon,hisi-need-to-enable-clock = <1>;/*0:donot enable clock;1:enable clock*/
-			hisilicon,hisi-clock-rate-set-flag = <0>;/*low frequency clock set flag:0:donot set clock rate;1:set clock rate*/
-			hisilicon,hisi-clock-rate-set = <0>;/*frequency:0:not set frequency;*/
+			hisilicon,hisi-clock-rate-set-flag = <1>;/*low frequency clock set flag:0:donot set clock rate;1:set clock rate*/
+			hisilicon,hisi-clock-rate-set = <238000000>;/*frequency:0:not set frequency;*/
 			hisilicon,hisi-ppll0-clock-rate-set-flag = <1>;
 			hisilicon,hisi-ppll0-clock-rate-set = <277000000>;
 			hisilicon,hisi-need-to-autofreqdump = <1>;/*0:not need enale autofreqdump;1:need autofreqdump*/
 			hisilicon,hisi-regulator-is-fake = <0>;/*0:this ip is effective;1:this ip is ineffective*/
+			hisilicon,hisi-need-to-hwlock = <29 0x438>;/*dss aod need hwlock*/
 		};
 
 		media2_subsys: ip@13 {
@@ -121,6 +123,7 @@
 			hisilicon,hisi-need-to-autofreqdump = <0>;
 			hisilicon,hisi-regulator-is-fake = <0>;
 			hisilicon,hisi-regulator-dss-boot-check = <0x38 0xC0>;
+			hisilicon,hisi-need-to-hwlock = <29 0x438>;/*dss aod need hwlock*/
 		};
 		ispsubsys: ip@5 {
 			compatible = "ip-regulator-atf";

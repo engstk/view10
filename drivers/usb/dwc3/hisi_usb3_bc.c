@@ -121,13 +121,43 @@ void read_usb3_phy_cr_param(u32 addr)
 EXPORT_SYMBOL_GPL(read_usb3_phy_cr_param);
 
 
+void hisi_bc_dplus_pulldown(struct hisi_dwc3_device *hisi_dwc)
+{
+	void __iomem *base = hisi_dwc->otg_bc_reg_base;
+	volatile u32 reg;
+
+	usb_dbg("+\n");
+
+	reg = readl(base + BC_CTRL0);
+	reg |= ((1u << 7) | (1u << 8));
+	writel(reg, base + BC_CTRL0);
+
+	usb_dbg("-\n");
+}
+
+void hisi_bc_dplus_pullup(struct hisi_dwc3_device *hisi_dwc)
+{
+	void __iomem *base = hisi_dwc->otg_bc_reg_base;
+	volatile u32 reg;
+
+	usb_dbg("+\n");
+
+	reg = readl(base + BC_CTRL0);
+	reg &= (~((1u << 7) | (1u << 8)));
+	writel(reg, base + BC_CTRL0);
+
+	usb_dbg("-\n");
+}
+
 /* BC1.2 Spec:
  * If a PD detects that D+ is greater than VDAT_REF, it knows that it is
  * attached to a DCP. It is then required to enable VDP_SRC or pull D+
  * to VDP_UP through RDP_UP */
-void disable_vdp_src(struct hisi_dwc3_device *hisi_dwc3)
+void hisi_bc_disable_vdp_src(struct hisi_dwc3_device *hisi_dwc3)
 {
-	void __iomem *base = hisi_dwc3->otg_bc_reg_base;
+	void __iomem *base;
+	void __iomem *bc_ctrl2;
+
 	uint32_t reg;
 
 	usb_dbg("+\n");
@@ -136,11 +166,13 @@ void disable_vdp_src(struct hisi_dwc3_device *hisi_dwc3)
 		return;
 	hisi_dwc3->vdp_src_enable = 0;
 
+	base = hisi_dwc3->otg_bc_reg_base;
+	bc_ctrl2 = hisi_dwc3->bc_ctrl_reg;
 	usb_dbg("diaable VDP_SRC\n");
 
-	reg = readl(base + BC_CTRL2);
+	reg = readl(bc_ctrl2);
 	reg &= ~(BC_CTRL2_BC_PHY_VDATARCENB | BC_CTRL2_BC_PHY_VDATDETENB);
-	writel(reg, base + BC_CTRL2);
+	writel(reg, bc_ctrl2);
 
 	reg = readl(base + BC_CTRL0);
 	reg |= BC_CTRL0_BC_SUSPEND_N;
@@ -150,9 +182,9 @@ void disable_vdp_src(struct hisi_dwc3_device *hisi_dwc3)
 	usb_dbg("-\n");
 }
 
-void enable_vdp_src(struct hisi_dwc3_device *hisi_dwc3)
+void hisi_bc_enable_vdp_src(struct hisi_dwc3_device *hisi_dwc3)
 {
-	void __iomem *base = hisi_dwc3->otg_bc_reg_base;
+	void __iomem *bc_ctrl2;
 	uint32_t reg;
 
 	usb_dbg("+\n");
@@ -161,11 +193,12 @@ void enable_vdp_src(struct hisi_dwc3_device *hisi_dwc3)
 		return;
 	hisi_dwc3->vdp_src_enable = 1;
 
+	bc_ctrl2 = hisi_dwc3->bc_ctrl_reg;
 	usb_dbg("enable VDP_SRC\n");
-	reg = readl(base + BC_CTRL2);
+	reg = readl(bc_ctrl2);
 	reg &= ~BC_CTRL2_BC_PHY_CHRGSEL;
 	reg |= (BC_CTRL2_BC_PHY_VDATARCENB | BC_CTRL2_BC_PHY_VDATDETENB);
-	writel(reg, base + BC_CTRL2);
+	writel(reg, bc_ctrl2);
 	usb_dbg("-\n");
 }
 
@@ -204,6 +237,7 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 {
 	enum hisi_charger_type type = CHARGER_TYPE_NONE;
 	void __iomem *base = hisi_dwc3->otg_bc_reg_base;
+	void __iomem *bc_ctrl2;
 	uint32_t reg;
 	unsigned long flags;
 
@@ -219,6 +253,7 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 		return hisi_dwc3->fake_charger_type;
 	}
 
+	bc_ctrl2 = hisi_dwc3->bc_ctrl_reg;
 	writel(BC_CTRL1_BC_MODE, base + BC_CTRL1);
 
 	/* phy suspend */
@@ -228,9 +263,9 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 
 	spin_lock_irqsave(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 	/* enable DCD */
-	reg = readl(base + BC_CTRL2);
+	reg = readl(bc_ctrl2);
 	reg |= BC_CTRL2_BC_PHY_DCDENB;
-	writel(reg, base + BC_CTRL2);
+	writel(reg, bc_ctrl2);
 	spin_unlock_irqrestore(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 
 	reg = readl(base + BC_CTRL0);
@@ -247,18 +282,18 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 
 	spin_lock_irqsave(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 	/* disable DCD */
-	reg = readl(base + BC_CTRL2);
+	reg = readl(bc_ctrl2);
 	reg &= ~BC_CTRL2_BC_PHY_DCDENB;
-	writel(reg, base + BC_CTRL2);
+	writel(reg, bc_ctrl2);
 
 	usb_dbg("DCD done\n");
 
 	if (type == CHARGER_TYPE_NONE) {
 		/* enable vdect */
-		reg = readl(base + BC_CTRL2);
+		reg = readl(bc_ctrl2);
 		reg &= ~BC_CTRL2_BC_PHY_CHRGSEL;
 		reg |= (BC_CTRL2_BC_PHY_VDATARCENB | BC_CTRL2_BC_PHY_VDATDETENB);
-		writel(reg, base + BC_CTRL2);
+		writel(reg, bc_ctrl2);
 		spin_unlock_irqrestore(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 
 		msleep(40);
@@ -271,19 +306,19 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 
 		spin_lock_irqsave(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 		/* disable vdect */
-		reg = readl(base + BC_CTRL2);
+		reg = readl(bc_ctrl2);
 		reg &= ~(BC_CTRL2_BC_PHY_VDATARCENB | BC_CTRL2_BC_PHY_VDATDETENB);
-		writel(reg, base + BC_CTRL2);
+		writel(reg, bc_ctrl2);
 	}
 
 	usb_dbg("Primary Detection done\n");
 
 	if (type == CHARGER_TYPE_NONE) {
 		/* enable vdect */
-		reg = readl(base + BC_CTRL2);
+		reg = readl(bc_ctrl2);
 		reg |= (BC_CTRL2_BC_PHY_VDATARCENB | BC_CTRL2_BC_PHY_VDATDETENB
 				| BC_CTRL2_BC_PHY_CHRGSEL);
-		writel(reg, base + BC_CTRL2);
+		writel(reg, bc_ctrl2);
 		spin_unlock_irqrestore(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 
 		msleep(40);
@@ -297,10 +332,10 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 
 		spin_lock_irqsave(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 		/* disable vdect */
-		reg = readl(base + BC_CTRL2);
+		reg = readl(bc_ctrl2);
 		reg &= ~(BC_CTRL2_BC_PHY_VDATARCENB | BC_CTRL2_BC_PHY_VDATDETENB
 				| BC_CTRL2_BC_PHY_CHRGSEL);
-		writel(reg, base + BC_CTRL2);
+		writel(reg, bc_ctrl2);
 	}
 	spin_unlock_irqrestore(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 
@@ -312,7 +347,7 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 	if (type == CHARGER_TYPE_DCP) {
 		usb_dbg("charger is DCP, enable VDP_SRC\n");
 		spin_lock_irqsave(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
-		enable_vdp_src(hisi_dwc3);
+		hisi_bc_enable_vdp_src(hisi_dwc3);
 		spin_unlock_irqrestore(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 	} else {
 		/* bc_suspend = 1, nomal mode */
@@ -329,7 +364,7 @@ enum hisi_charger_type detect_charger_type(struct hisi_dwc3_device *hisi_dwc3)
 	if (type == CHARGER_TYPE_CDP) {
 		usb_dbg("it needs enable VDP_SRC while detect CDP!\n");
 		spin_lock_irqsave(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
-		enable_vdp_src(hisi_dwc3);
+		hisi_bc_enable_vdp_src(hisi_dwc3);
 		spin_unlock_irqrestore(&hisi_dwc3->bc_again_lock, flags);/*lint !e550*/
 	}
 

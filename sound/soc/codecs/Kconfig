@@ -935,4 +935,10 @@ config SND_SOC_CODEC_HI6555C
 config SND_SOC_DP_AUDIO
 	tristate "Support Sound SoC DP audio"
 
+config SND_SOC_CODEC_HI6555V2
+	tristate "HI Soc Smartstar Codec 6555v2 support"
+
+config SND_SOC_HICODEC_DEBUG
+	bool "Hisi Codec debug support"
+
 endmenu

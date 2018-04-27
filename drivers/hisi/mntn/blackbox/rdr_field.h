@@ -24,8 +24,8 @@
 #endif
 
 #define RDR_PRODUCT "PRODUCT_NAME"	/* "hi3630_udp" */
-#define RDR_VERSION             ((RDR_SMP_FLAG << 16) | (0x200 << 0))
-						    /* v2.00 2014.9.14 */
+#define RDR_VERSION             ((RDR_SMP_FLAG << 16) | (0x201 << 0))
+						    /* v2.01 2017.9.19 */
 #define RDR_BASEINFO_SIZE  0x200
 
 enum RDR_AREA_LIST {
@@ -43,7 +43,8 @@ enum RDR_AREA_LIST {
 	RDR_AREA_REGULATOR = 0xB,
 	RDR_AREA_BFM = 0xC,
 	RDR_AREA_HISEE = 0xD,
-	RDR_AREA_MAXIMUM = 0xE
+	RDR_AREA_NPU   = 0xE,
+	RDR_AREA_MAXIMUM = 0xF
 };
 
 struct rdr_base_info_s {
@@ -52,6 +53,7 @@ struct rdr_base_info_s {
 	u32 arg2;
 	u32 e_core;
 	u32 e_type;
+	u32 e_subtype;
 	u32 start_flag;
 	u32 savefile_flag;
 	u32 reboot_flag;
@@ -77,14 +79,22 @@ struct rdr_area_s {
 	u32 length;	/* unit is bytes */
 };
 
+struct rdr_cleartext_s {
+	u8 savefile_flag;
+	u8 aucResv[3];
+};
+
+#pragma pack(4)
 struct rdr_struct_s {
 	struct rdr_top_head_s top_head;
 	struct rdr_base_info_s base_info;
 	struct rdr_area_s area_info[RDR_AREA_MAXIMUM];
+	struct rdr_cleartext_s cleartext_info;
 	u8 padding2[RDR_BASEINFO_SIZE - sizeof(struct rdr_top_head_s)
 		    - sizeof(struct rdr_area_s) * RDR_AREA_MAXIMUM
-		    - sizeof(struct rdr_base_info_s)];
+		    - sizeof(struct rdr_base_info_s) - sizeof(struct rdr_cleartext_s)];
 };
+#pragma pack()
 
 /* (RDR_AREA_RES - sizeof(struct rdr_area_head_s))/sizeof(u32) */
 /* TYPE,reference for parser: */

@@ -101,6 +101,13 @@ unsigned int mdrv_nv_get_nvid_list(NV_LIST_INFO_STRU *pstNvIdList)
 
 }
 
+void mdrv_nv_get_nvauth_list(unsigned int ** list_adr, unsigned int * list_num)
+{
+    bsp_nvm_get_auth_list(list_adr, list_num);
+
+    return;
+}
+
 /*****************************************************************************
 * 函 数 名  : mdrv_nv_readex
 *
@@ -444,6 +451,26 @@ unsigned int mdrv_nv_revert_factorynv()
 unsigned int mdrv_nv_check_factorynv(u32 mode)
 {
     return nv_check_factory_nv_status(mode);
+}
+
+
+/*****************************************************************************
+* 函 数 名  : mdrv_nv_get_modem_num
+*
+* 功能描述  : 获取NV镜像支持的odem个数
+*
+* 输入参数  : 无
+*
+* 输出参数  : 无
+*
+* 返 回 值  : modem个数
+*
+* 修改记录  : 
+*
+*****************************************************************************/
+unsigned int mdrv_nv_get_modem_num(void)
+{
+    return bsp_nvm_get_modem_num();
 }
 
 

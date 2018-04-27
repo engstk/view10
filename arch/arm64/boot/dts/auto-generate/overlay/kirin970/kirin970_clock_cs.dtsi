@@ -321,6 +321,15 @@
 					clock-output-names = "clk_pmu32kc";
 				};
 
+				clk_wifi: clk_wifi {
+					compatible = "hisilicon,clk-pmu-gate";
+					#clock-cells = <0>;
+					pmu32khz;
+					clocks = <&clkin_ref>;
+					hisilicon,clkgate = <0x38 0>;
+					clock-output-names = "clk_wifi";
+				};
+
 				clk_pmuaudioclk: clk_pmuaudioclk {
 					compatible = "hisilicon,clk-pmu-gate";
 					#clock-cells = <0>;
@@ -1925,21 +1934,12 @@
 					clock-output-names = "clkdiv_track";
 				};
 
-				aclk_gate_perf_dvfs: aclk_perf_dvfs {
+				aclk_gate_perf_stat: aclk_perf_stat {
 					compatible = "hisilicon,hi3xxx-clk-gate";
 					#clock-cells = <0>;
 					clock-fpga = "clk_fpga_40m";
 					clocks = <&clk_div_dmabus>;
 					hisilicon,hi3xxx-clkgate = <0x040 0x400>;
-					clock-output-names = "aclk_perf_dvfs";
-				};
-
-				aclk_gate_perf_stat: aclk_perf_stat {
-					compatible = "hisilicon,interactive-clk";
-					#clock-cells = <0>;
-					clocks = <&aclk_gate_perf_dvfs>;
-					hisilicon,ipc-lpm3-cmd-en = <0x000D0002 0xC>;
-					hisilicon,ipc-lpm3-cmd-dis = <0x000D0102 0xC>;
 					clock-output-names = "aclk_perf_stat";
 				};
 
@@ -4518,6 +4518,7 @@
 				clk_gate_vivobusfreq: clk_vivobusfreq {
 					compatible = "hisilicon,hi3xxx-clk-gate";
 					#clock-cells = <0>;
+					always_on;
 					hwspinlock-id = <20>;
 					clock-id = <29>;
 					sensitive_pll = <3>;
@@ -4525,7 +4526,6 @@
 					clocks = <&clk_div_vivobus>;
 					hisilicon,hi3xxx-clkgate = <0x00 0x40000>;
 					clock-output-names = "clk_vivobusfreq";
-					clock-friend-names = "clk_vivobus2ddr";
 				};
 
 				clk_gate_edc0: clk_edc0 {
@@ -5274,6 +5274,7 @@
 				clk_i2c6_gate_iomcu: clk_i2c6_gt {
 					compatible = "hisilicon,hi3xxx-clk-gate";
 					#clock-cells = <0>;
+					always_on;
 					clocks = <&clk_fll_src>;
 					hisilicon,hi3xxx-clkgate = <0x10 0x8000000>;
 					clock-output-names = "clk_i2c6_gt";

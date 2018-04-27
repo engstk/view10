@@ -57,22 +57,3 @@
 
 #define SRAM_REBOOT_ADDR  (((SRAM_SMALL_SECTIONS*)((char*)SRAM_BASE_ADDR + SRAM_OFFSET_SMALL_SECTIONS))->SRAM_REBOOT_INFO)
 
-/*****************************************************************************
- 函 数 名  : power_on_c_status_get
- 功能描述  : 获取C核状态
- 输入参数  : power_on_c_status_get 开机原因
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
-*****************************************************************************/
-c_power_st_e power_on_c_status_get(void)
-{
-    power_info_s *power_info = (power_info_s *)(SRAM_REBOOT_ADDR);
-
-    pr_dbg(KERN_DEBUG "#########  power_on_c_status_get = 0x%08X ######## \r\n", power_info->c_power_state );
-
-    return (c_power_st_e)(power_info->c_power_state);
-
-}
-

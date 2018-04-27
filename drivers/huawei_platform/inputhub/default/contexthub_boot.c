@@ -45,6 +45,7 @@ int (*api_inputhub_mcu_recv) (const char* buf, unsigned int length) = 0;
 int (*send_func) (int) = NULL;
 
 extern uint32_t need_reset_io_power;
+extern uint32_t need_set_3v_io_power;
 extern atomic_t iom3_rec_state;
 
 static int isSensorMcuMode;	/*mcu power mode: 0 power off;  1 power on */
@@ -478,6 +479,12 @@ static int mcu_sys_ready_callback(const pkt_header_t *head)
 			time_of_vddio_power_reset = jiffies_to_msecs(new_sensor_jiffies);
 			if (time_of_vddio_power_reset < SENSOR_MAX_RESET_TIME_MS)
 				msleep(SENSOR_MAX_RESET_TIME_MS - time_of_vddio_power_reset);
+
+			if (need_set_3v_io_power) {
+				ret = regulator_set_voltage(sensorhub_vddio, SENSOR_VOLTAGE_3V, SENSOR_VOLTAGE_3V);
+				if (ret < 0)
+					hwlog_err("failed to set sensorhub_vddio voltage to 3V\n");
+			}
 
 			hwlog_info("time_of_vddio_power_reset %u\n", time_of_vddio_power_reset);
 			ret = regulator_enable(sensorhub_vddio);

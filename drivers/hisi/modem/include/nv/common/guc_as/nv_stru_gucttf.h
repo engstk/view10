@@ -206,8 +206,13 @@ typedef struct
     FC_CFG_CPU_STRU                     stFcCfgCpuC;                            /* C核CPU流控门限 */
     FC_CFG_UM_UL_RATE_STRU              stFcCfgUmUlRateForCpu;                  /* C核CPU流控上行速率档位配置 */
     FC_CFG_UM_UL_RATE_STRU              stFcCfgUmUlRateForTmp;                  /* C核温度流控上行行速率档位配置 */
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)    
     FC_CFG_MEM_THRESHOLD_STRU           stFcCfgCdmaMemSize;                     /* X模内存总量流控门限 */
     FC_CFG_MEM_THRESHOLD_STRU           stFcCfgCdmaMemCnt;                      /* X模内存块数流控门限 */
+#else
+    FC_CFG_MEM_THRESHOLD_STRU           stRsv1;                     
+    FC_CFG_MEM_THRESHOLD_STRU           stRsv2;                      
+#endif
 } FC_CFG_NV_STRU;
 
 #ifdef __cplusplus

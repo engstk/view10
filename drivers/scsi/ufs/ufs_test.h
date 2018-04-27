@@ -19,8 +19,6 @@
 extern struct ufs_hba *hba_addr;
 extern int ufshcd_map_sg(struct ufshcd_lrb *lrbp);
 extern int ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag);
-extern int ufshcd_hold(struct ufs_hba *hba, bool async);
 extern int ufshcd_compose_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
-extern void ufshcd_release(struct ufs_hba *hba);
 extern bool ufshcd_get_dev_cmd_tag(struct ufs_hba *hba, int *tag_out);
 #endif /* _UNIPRO_H_ */

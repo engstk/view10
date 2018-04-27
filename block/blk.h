@@ -130,6 +130,9 @@ unsigned int blk_plug_queued_count(struct request_queue *q);
 void blk_account_io_start(struct request *req, bool new_io);
 void blk_account_io_completion(struct request *req, unsigned int bytes);
 void blk_account_io_done(struct request *req);
+#ifdef CONFIG_WBT
+extern void blk_mq_stat_add(struct request *rq);
+#endif
 #ifdef CONFIG_HISI_BLK_CORE
 #ifdef CONFIG_HISI_BLK_MQ
 extern struct blk_mq_tags *hisi_blk_mq_init_tags(struct blk_mq_tag_set *set, unsigned int total_tags,unsigned int reserved_tags, unsigned int high_prio_tags,int node, int alloc_policy);
@@ -151,11 +154,20 @@ extern int hisi_blk_mq_requeue_req(struct request* req, struct request_queue *q)
 extern int hisi_blk_mq_run_list(struct request_queue *q);
 extern int hisi_blk_mq_run_list_directly(struct request_queue *q);
 extern int hisi_blk_mq_complete_request(struct request *rq,struct request_queue *q, bool count);
-extern void hisi_blk_mq_rq_timed_out(struct request *req, struct request_queue *q);
+extern void hisi_blk_mq_rq_timed_out(struct request *req, bool reserved);
 extern void hisi_blk_mq_dispatch_strategy_init(struct request_queue *q);
 extern void hisi_blk_mq_dispatch_strategy_deinit(struct request_queue *q);
 extern void hisi_blk_complete_request(struct request *req);
 extern bool hisi_blk_mq_poll(struct request_queue *q,blk_qc_t cookie);
+#ifdef CONFIG_HISI_DEBUG_FS
+extern bool hisi_blk_ft_mq_queue_rq_redirection(struct request *rq, struct request_queue *q);
+extern bool hisi_blk_ft_mq_complete_rq_redirection(struct request *rq, bool count);
+extern bool hisi_blk_ft_mq_rq_timeout_redirection(struct request *rq, enum blk_eh_timer_return *ret);
+#else
+static inline bool hisi_blk_ft_mq_queue_rq_redirection(struct request *rq, struct request_queue *q) {return false;}
+static inline bool hisi_blk_ft_mq_complete_rq_redirection(struct request *rq, bool count) {return false;}
+static inline bool hisi_blk_ft_mq_rq_timeout_redirection(struct request *rq, enum blk_eh_timer_return *ret) {return false;}
+#endif
 #else
 static inline int hisi_blk_mq_flush_plug_list(struct blk_plug *plug){return 0;};
 static inline bool hisi_blk_mq_attempt_merge(struct request_queue *q, struct blk_mq_ctx *ctx, struct bio *bio){return false;}
@@ -164,18 +176,11 @@ static inline int hisi_blk_mq_requeue_req(struct request* req, struct request_qu
 static inline int hisi_blk_mq_run_list(struct request_queue *q){return 0;};
 static inline int hisi_blk_mq_run_list_directly(struct request_queue *q){return 0;};
 static inline int hisi_blk_mq_complete_request(struct request *rq,struct request_queue *q, bool count){return 0;};
-static inline void hisi_blk_mq_rq_timed_out(struct request *req, struct request_queue *q){};
+static inline void hisi_blk_mq_rq_timed_out(struct request *req, bool reserved){};
 static inline bool hisi_blk_mq_poll(struct request_queue *q,blk_qc_t cookie){return false;};
 static inline void hisi_blk_mq_dispatch_strategy_init(struct request_queue *q){};
 static inline void hisi_blk_mq_dispatch_strategy_deinit(struct request_queue *q){};
 #endif /* CONFIG_HISI_MQ_DISPATCH_DECISION */
-#ifdef CONFIG_HISI_BLK_MQ_DUMP
-void blk_mq_dump_register_queue(struct request_queue *q);
-void blk_mq_dump_unregister_queue(struct request_queue *q);
-#else
-static inline void blk_mq_dump_register_queue(struct request_queue *q){}
-static inline void blk_mq_dump_unregister_queue(struct request_queue *q){}
-#endif /* CONFIG_HISI_BLK_MQ_DUMP */
 #endif /* CONFIG_HISI_BLK_MQ */
 #ifdef CONFIG_HISI_BLK_FLUSH_REDUCE
 void blk_queue_async_flush_init(struct request_queue *q);
@@ -193,8 +198,8 @@ struct request_queue* blk_get_queue_by_lld(struct blk_lld_func* lld);
 char* io_type_parse(unsigned long io_flag);
 void blk_dump_bio(struct bio *bio);
 void blk_dump_request(struct request *rq);
-int blk_busy_idle_event_register(struct request_queue *q, struct blk_busy_idle_nb* notify_nb);
-int blk_busy_idle_event_unregister(struct request_queue *q, struct blk_busy_idle_nb* notify_nb);
+int blk_busy_idle_event_register(struct blk_lld_func* lld, struct blk_busy_idle_nb* notify_nb);
+int blk_busy_idle_event_unregister(struct blk_lld_func* lld, struct blk_busy_idle_nb* notify_nb);
 int hisi_generic_make_request(struct bio *bio);
 void hisi_init_request_from_bio(struct request *req, struct bio *bio);
 void hisi_blk_allocated_queue_init(struct request_queue *q);
@@ -217,6 +222,8 @@ void req_latency_check(struct request *req,enum req_process_stage_enum req_stage
 void req_latency_for_merge(struct request *req, struct request *next);
 void blk_queue_latency_deinit(struct request_queue *q);
 #endif /* CONFIG_HISI_IO_LATENCY_TRACE */
+void hisi_blk_dump_register_queue(struct request_queue *q);
+void hisi_blk_dump_unregister_queue(struct request_queue *q);
 #endif
 
 /*

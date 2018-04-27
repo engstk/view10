@@ -183,6 +183,8 @@ enum OM_FIELD_ID_ENUM
     OM_CP_USIMM1        = (OM_CP_FIELD_BEGIN + 13),
     OM_CP_TLPS1         = (OM_CP_FIELD_BEGIN + 14),
     OM_CP_GUPHY         = (OM_CP_FIELD_BEGIN + 15),
+    OM_CP_RFDSP         = (OM_CP_FIELD_BEGIN + 16),
+    OM_CP_GUCSLEEP         = (OM_CP_FIELD_BEGIN + 17),
     OM_CP_FIELD_END,
 };
 enum
@@ -286,59 +288,6 @@ dump_handle mdrv_om_register_callback(char * name, dump_hook pFunc);
  *****************************************************************************/
  int mdrv_om_unregister_callback(dump_handle handle);
 
-
-/*****************************************************************************
-  函 数 名  : mdrv_om_set_hsoflag
-  功能描述  : DIAG通知底软HSO连接状态接口。
-
-  输入参数  : flag :  1表示HSO连接，0表示HSO断开
-
-  输出参数  : 无
-
-  返 回 值     : 无
-
- *****************************************************************************/
-void mdrv_om_set_hsoflag(unsigned int flag);
-
-/*****************************************************************************
- * 函 数 名  : mdrv_om_set_sysview_swt
- * 功能描述  : HSO配置sysview开关。
- *
- * 输入参数  : set_type :  上报类型
- *             set_swt: 开关，1表示开，0 表示关
- *             period:  上报周期，单位是秒
- * 输出参数  : 无
- *
- * 返 回 值  :  0  成功
- *        -1   失败
- *****************************************************************************/
-unsigned int mdrv_om_set_sysview_swt(unsigned int set_type,unsigned int set_swt,unsigned int period);
-
-/*****************************************************************************
- * 函 数 名  : mdrv_om_get_alltaskinfo
- * 功能描述  : 获取当前核中所有任务的任务ID和任务名称。
- *
- * 输入参数  : p_task_stru:  内存指针，由使用者申请
- *             param_len:  内存长度
- *
- * 输出参数  : 无
- *
- * 返 回 值     :  0    成功
- *                 -1   失败
- *
- *****************************************************************************/
-unsigned int mdrv_om_get_alltaskinfo(void *p_task_stru,unsigned int param_len);
-
- /**************************************************************************
-  * 函 数 名  : mdrv_om_get_rootfs
-  * 功能描述  : 查询根目录的分区情况
-  * 输入参数  : data：用于存放根目录字符串的缓冲区的首地址
-  *             len: 缓冲区data的长度
-  * 输出参数  :
-  *             返 回 值  : 0:  操作成功；
-  *                        -1： 操作失败。
-  ****************************************************************************/
-int mdrv_om_get_rootfs(char *data, unsigned int len);
 
 #ifdef _cplusplus
 }

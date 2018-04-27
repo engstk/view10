@@ -55,6 +55,7 @@ extern "C"
 {
 #endif
 
+#include "product_config.h"
 #include "vos.h"
 #include "mdrv.h"
 
@@ -108,6 +109,17 @@ extern "C"
 /*diag AGENT发给PS模块的HSO回放请求*/
 #define ID_MSG_DIAG_CMD_REPLAY_TO_PS    			(0x00010100)
 
+/* diag 发送给各个子系统的建连请求 */
+#define ID_MSG_DIAG_CMD_CONNECT_REQ    		        (0x00010200)
+#define ID_MSG_DIAG_CMD_CONNECT_CNF    		        (ID_MSG_DIAG_CMD_CONNECT_REQ)
+/* diag 发送给各个子系统的断连请求 */
+#define ID_MSG_DIAG_CMD_DISCONNECT_REQ    		    (0x00010202)
+#define ID_MSG_DIAG_CMD_DISCONNECT_CNF    		    (ID_MSG_DIAG_CMD_DISCONNECT_REQ)
+/* diag 发送给各个子系统的断连请求 */
+#define ID_MSG_DIAG_CMD_CHANN_DISCONN_REQ    		(0x00010203)
+#define ID_MSG_DIAG_CMD_CHANN_DISCONN_CNF    		(ID_MSG_DIAG_CMD_CHANN_DISCONN_REQ)
+
+
 /* 对外消息的范围与 DIAG_MESSAGE_TYPE_U32 拉通 */
 
 /* 2000 - 2fff是与PS的消息范围 */
@@ -139,6 +151,42 @@ extern "C"
 /* DIAG_SERVICE_HEAD_STRU:ssid4b */
 enum DIAG_SSID_TYPE
 {
+#ifdef DIAG_SYSTEM_5G
+    DIAG_SSID_DEFAULT       = 0x0,  /* 0x00：未指定（仅下发REQ使用，表示由UE确定分发目标，CNF和IND不能使用该值） */
+    DIAG_SSID_APP_CPU       = 0x1,  /* 0x01：A-CPU */
+    DIAG_SSID_MODEM_CPU     = 0x2,  /* 0x02：2G/3G/4.5G子系统C-CPU（底软、PS使用） */
+    DIAG_SSID_TLDSP_BBE_NX  = 0x3,  /* 0x03：BBE NX（TL DSP使用） */
+    DIAG_SSID_BBP_DEBUG     = 0x4,  /* 0x04：2G/3G/4.5G BBP Debug	//原来是LTE BBP */
+    DIAG_SSID_GUC_BBE_NX    = 0x5,  /* 0x05：BBE NX（GUC DSP SDR使用）	//因GUC PHY与TL PHY没有融合，仍需单独分配 */
+    DIAG_SSID_HIFI          = 0x6,
+    DIAG_SSID_LTE_V_DSP     = 0x7,  /* 0x07：LTE-V DSP（预留）//原来是TDS DSP */
+    DIAG_SSID_RESERVE0      = 0x8,
+    DIAG_SSID_MCU           = 0x9,
+    DIAG_SSID_TEE           = 0xA,  /* 0x0A：TEE		//原来是GPU */
+    DIAG_SSID_RESERVE1      = 0xB,  /* 0x0B：保留		//原来是GUX BBP */
+    DIAG_SSID_IOM3          = 0xC,
+    DIAG_SSID_EASYRF0       = 0xD,
+    DIAG_SSID_X_DSP         = 0xE,
+    DIAG_SSID_GUC_L1C       = 0xE,  /* 0x0E：2G/3G/4.5G子系统C-CPU（GUC L1C使用） 	//因GUC L1C没有通过C核MSP进行OAM数据上报，仍需单独分配 */
+    DIAG_SSID_RESERVE2      = 0xF,
+    DIAG_SSID_5G_CCPU       = 0x10,
+    DIAG_SSID_L2HAC         = 0x11,
+    DIAG_SSID_HL1C          = 0x12,
+    DIAG_SSID_LL1C_CORE0    = 0x13,
+    DIAG_SSID_LL1C_CORE1    = 0x14,
+    DIAG_SSID_LL1C_CORE2    = 0x15,
+    DIAG_SSID_LL1C_CORE3    = 0x16,
+    DIAG_SSID_LL1C_CORE4    = 0x17,
+    DIAG_SSID_LL1C_CORE5    = 0x18,
+    DIAG_SSID_SDR_CORE0     = 0x19,
+    DIAG_SSID_SDR_CORE1     = 0x1A,
+    DIAG_SSID_SDR_CORE2     = 0x1B,
+    DIAG_SSID_SDR_CORE3     = 0x1C,
+    DIAG_SSID_5G_BBP_DEBUG  = 0x1D,
+    DIAG_SSID_EASYRF1       = 0x1E,
+    DIAG_SSID_BBP_ACCESS_DEBUG= 0x1F,
+    DIAG_SSID_BUTT,
+#else
     DIAG_SSID_APP_CPU   = 0x1,
     DIAG_SSID_MODEM_CPU,
     DIAG_SSID_LTE_DSP,
@@ -154,6 +202,7 @@ enum DIAG_SSID_TYPE
     DIAG_SSID_ISP,
     DIAG_SSID_X_DSP,
     DIAG_SSID_BUTT
+#endif
 };
 typedef VOS_UINT32 DIAG_SSID_TYPE_U32;
 
@@ -177,6 +226,23 @@ typedef VOS_UINT32 DIAG_DIRECTION_TYPE_U32;
 /* ==============消息层头结构枚举值定义==================================== */
 
 /* MSP_DIAG_STID_STRU:pri4b */
+#ifdef DIAG_SYSTEM_5G
+enum DIAG_MESSAGE_TYPE
+{
+    DIAG_MSG_TYPE_RSV       = 0x0,
+    DIAG_MSG_TYPE_MSP       = 0x1,
+    DIAG_MSG_TYPE_PS        = 0x2,
+    DIAG_MSG_TYPE_PHY       = 0x3,
+    DIAG_MSG_TYPE_BBP       = 0x4,
+    DIAG_MSG_TYPE_HSO       = 0x5,
+    DIAG_MSG_TYPE_BSP       = 0x9, /*MODEM BSP*/
+    DIAG_MSG_TYPE_EASYRF    = 0xa,
+    DIAG_MSG_TYPE_AP_BSP    = 0xb, /*AP BSP*/
+    DIAG_MSG_TYPE_AUDIO     = 0xc,
+    DIAG_MSG_TYPE_APP       = 0xe,
+    DIAG_MSG_TYPE_BUTT
+};
+#else
 enum DIAG_MESSAGE_TYPE
 {
     DIAG_MSG_TYPE_RSV   = 0x0,
@@ -191,6 +257,7 @@ enum DIAG_MESSAGE_TYPE
     DIAG_MSG_TYPE_APP   = 0xe,
     DIAG_MSG_TYPE_BUTT
 };
+#endif
 typedef VOS_UINT32 DIAG_MESSAGE_TYPE_U32;
 
 /* MSP_DIAG_STID_STRU:mode4b */
@@ -202,6 +269,9 @@ enum DIAG_MODE_TYPE
     DIAG_MODE_UMTS = 0x3,
     DIAG_MODE_1X   = 0x4,
     DIAG_MODE_HRPD = 0x5,
+#ifdef DIAG_SYSTEM_5G    
+    DIAG_MODE_NR   = 0x6,
+#endif
     DIAG_MODE_COMM = 0xf
 };
 typedef VOS_UINT32 DIAG_MODE_TYPE_U32;
@@ -261,16 +331,45 @@ typedef enum
     PS_LOG_LEVEL_BUTT
 }PS_LOG_LEVEL_EN;
 
+enum DIAG_FRAME_VER_TYPE
+{
+    DIAG_FRAME_VER_4G = 0,
+    DIAG_FRAME_VER_5G = 1,
+    DIAG_FRAME_VER_BUTT
+};
 /**************************************************************************
   5 结构定义
 **************************************************************************/
 
 /* ==============帧结构描述================================================ */
-
-/* 描述 :一级头: service头 */
+#ifdef DIAG_SYSTEM_5G
+/* 描述 :5G 一级头: service头 */
 typedef struct
 {
-    VOS_UINT32    sid8b       :8;
+    VOS_UINT32    sid4b       :4;   /* service id, value:DIAG_SID_TYPE */
+    VOS_UINT32    ver4b       :4;   /* version , value:DIAG_SERVICE_HEAD_VER_TYPE */
+    VOS_UINT32    mdmid3b     :3;   /* modem id dfd*/
+    VOS_UINT32    rsv5b       :5;
+    VOS_UINT32    ssid8b      :8;   /* sub system id , DIAG_SSID_TYPE, CCPU/ACPU/BBE NX/Audio Dsp/LTE-V DSP..... */
+    VOS_UINT32    mt2b        :2;
+    VOS_UINT32    index4b     :4;
+    VOS_UINT32    eof1b       :1;
+    VOS_UINT32    ff1b        :1;
+
+    VOS_UINT16    srcCounter;
+    VOS_UINT16    ulMsgTransId;
+
+    VOS_UINT8     aucTimeStamp[4];
+}DIAG_SERVICE_HEAD_STRU;
+
+#define SERVICE_HEAD_SID(pData)   ((VOS_UINT32)(((DIAG_SERVICE_HEAD_STRU *)pData)->sid4b))
+#define DIAG_4G_FRAME_HEAD_LEN    (sizeof(DIAG_SERVICE_HEAD_STRU) + sizeof(VOS_UINT32))
+#define DIAG_SERVICE_HEAD_VER(pData) (((DIAG_SERVICE_HEAD_STRU *)pData)->ver4b)
+#else
+/* 描述 :4G 一级头: service头 */
+typedef struct
+{
+    VOS_UINT32    sid8b       :8;   /* service id, value:DIAG_SID_TYPE */
     VOS_UINT32    mdmid3b     :3;
     VOS_UINT32    rsv1b       :1;
     VOS_UINT32    ssid4b      :4;
@@ -284,6 +383,10 @@ typedef struct
     VOS_UINT8     aucTimeStamp[8];
 }DIAG_SERVICE_HEAD_STRU;
 
+#define SERVICE_HEAD_SID(pData)         ((VOS_UINT32)(((DIAG_SERVICE_HEAD_STRU *)pData)->sid8b))
+#define DIAG_4G_FRAME_HEAD_LEN          (sizeof(DIAG_SERVICE_HEAD_STRU))
+#define DIAG_SERVICE_HEAD_VER(pData)    ((((DIAG_SERVICE_HEAD_STRU *)pData)->sid8b)&0xF0)//sid8b在5G中为sid4b ver4b 取
+#endif
 
 /* 描述 :二级头: DIAG消息头 */
 typedef struct
@@ -373,28 +476,6 @@ typedef struct
     VOS_VOID* pData;        /* Pointer to the data buffer.*/
 } DIAG_USERPLANE_MSG_STRU;
 
-#if(FEATURE_SOCP_ON_DEMAND == FEATURE_ON)
-/* 发送给MSP_PID_DIAG_APP_AGENT的投票请求消息结构体 */
-typedef struct
-{
-    VOS_MSG_HEADER
-    VOS_UINT32              ulMsgId;
-    SOCP_VOTE_ID_ENUM_U32   ulVoteId;    /* 投票组件 */
-    SOCP_VOTE_TYPE_ENUM_U32 ulVoteType;  /* 投票类型 */
-}DIAG_MSG_SOCP_VOTE_REQ_STRU;
-
-/* 反对票消息回复 */
-typedef struct
-{
-    VOS_MSG_HEADER
-    VOS_UINT32              ulMsgId;
-    SOCP_VOTE_ID_ENUM_U32   ulVoteId;    /* 投票组件 */
-    SOCP_VOTE_TYPE_ENUM_U32 ulVoteType;  /* 投票类型 */
-    VOS_UINT32              ulVoteRst;   /* 投票结果，0-成功, 0xFFFFFFFF-失败 */
-}DIAG_MSG_SOCP_VOTE_WAKE_CNF_STRU;
-#endif
-
-
 /* service层为上层提供的获取buffer的返回结构 */
 typedef struct
 {
@@ -423,14 +504,7 @@ typedef struct
 }DIAG_TTF_TRACECFG_REQ_STRU;
 
 
-/*****************************************************************************
-枚举名    : OM_AT_MSG_ENUM
-枚举说明  : AT给OM发送的请求消息类型
 
-  1.日    期   : 2012年4月4日
-    作    者   : h59254
-    修改内容   : V7R1C51 锁网锁卡项目新增
-*****************************************************************************/
 enum OM_AT_MSG_ENUM
 {
     AT_OM_PORT_SWITCH           = 0,    /* OM口切换请求，在USB和HSIC之间切换 */
@@ -440,14 +514,7 @@ enum OM_AT_MSG_ENUM
 };
 typedef VOS_UINT32 OM_AT_MSG_ENUM_UINT32;
 
-/*****************************************************************************
-枚举名    : OM_PORT_SWITCH_MODE_ENUM
-枚举说明  : USB SWITCH切换类型
 
-  1.日    期   : 2012年4月4日
-    作    者   : h59254
-    修改内容   : V7R1C51 可维可测项目新增
-*****************************************************************************/
 enum OM_PORT_SWITCH_MODE_ENUM
 {
     OM_PORT_SWITCH_MODEM2AP     = USB_SWITCH_OFF,
@@ -456,14 +523,7 @@ enum OM_PORT_SWITCH_MODE_ENUM
 };
 typedef VOS_UINT32 OM_PORT_SWITCH_MODE_ENUM_UINT32;
 
-/*****************************************************************************
-结构名    : OM_PORT_SWITCH_MSG_STRU
-结构说明  : AP+MODEM形态产品AP-Modem USB切换消息结构
 
-  1.日    期   : 2012年4月10日
-    作    者   : h59254
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct
 {
    VOS_MSG_HEADER
@@ -471,14 +531,7 @@ typedef struct
    OM_PORT_SWITCH_MODE_ENUM_UINT32  ulSwitchMode;   /*切换模式，从AP到Modem或Modem到AP*/
 }OM_PORT_SWITCH_MSG_STRU;
 
-/*****************************************************************************
-结构名    : OM_HSIC_CONNECT_MSG_STRU
-结构说明  : AP+MODEM形态产品AT要求关联OM和HSIC的消息结构
 
-  1.日    期   : 2012年4月10日
-    作    者   : h59254
-    修改内容   : 初始生成
-*****************************************************************************/
 typedef struct
 {
    VOS_MSG_HEADER
@@ -540,6 +593,32 @@ typedef struct
     VOS_UINT32        ulLength;
     VOS_VOID          *pData;
 } DIAG_TRANS_IND_STRU;
+
+/*********************************连接管理相关********************************************/
+
+typedef struct
+{
+    VOS_MSG_HEADER
+    VOS_UINT32              ulMsgId;           /* 消息名 */
+    VOS_UINT32              ulLen;             /* 数据长度 */
+    VOS_UINT8               pContext[0];       /* 数据其实地址*/
+}DIAG_CFG_MSG_HEAD;
+
+
+typedef struct{
+    VOS_UINT32			ulChannelId;	/* 通道ID */
+    VOS_UINT32			ulResult;		/*  处理结果 0成功, 0x5C5C5C5C通道未分配, 0x5A5A5A5A通道未使用, 其他值失败*/
+}DIAG_CONNECT_RESULT;
+
+typedef struct{
+    VOS_UINT32				ulSn;
+    DIAG_CONNECT_RESULT     pstResult[0];
+} DIAG_CONN_CNF_MSG_STRU;
+
+typedef struct{
+    VOS_UINT32				ulSn;
+}DIAG_CONN_REQ_MSG_STRU;
+
 
 /* 层间消息匹配接口，入参和返回值为标准的OSA消息格式 */
 typedef VOS_VOID* (*DIAG_LayerMsgMatchFunc)(VOS_VOID *pMsg);
@@ -661,16 +740,7 @@ VOS_UINT32 DIAG_AirMsgReport(DIAG_AIR_IND_STRU *pstAir);
 extern VOS_VOID DIAG_TraceReport(VOS_VOID *pMsg);
 
 
-/*****************************************************************************
- 函 数 名  : DIAG_TraceReport
- 功能描述  : 层间消息上报接口，用于对OSA消息进行勾包
- 输入参数  : pMsg(标准的VOS消息体，源模块、目的模块信息从消息体中获取)
 
- History         :
-    1.w00182550      2012-11-20  Draft Enact
-    2.c64416         2014-11-18  适配新的诊断架构
-
-*****************************************************************************/
 VOS_VOID DIAG_LayerMsgReport(VOS_VOID *pMsg);
 
 /*****************************************************************************
@@ -695,27 +765,10 @@ VOS_UINT32 DIAG_UserPlaneReport(DIAG_USER_IND_STRU *pstUser);
 *****************************************************************************/
 VOS_UINT32 DIAG_ReportVoLTELog(DIAG_VOLTE_LOG_STRU* pRptMessage);
 
-/*****************************************************************************
- Function Name   : DIAG_GetConnState
- Description     : 获取当前工具连接状态
- Return          : 1:connect; 0:disconnect
 
- History         :
-    1.c00326366      2015-6-24  Draft Enact
-*****************************************************************************/
 VOS_UINT32 DIAG_GetConnState(VOS_VOID);
 
-/*****************************************************************************
- Function Name   : DIAG_LogPortSwich
- Description     : 端口切换函数(提供给taf，在at^logport中调用) 
- Input           : VOS_UINT32 ulPhyPort: 待切换的物理端口类型(USB or VCOM)
-                   VOS_BOOL ulEffect: 是否立即生效                   
- Return          : VOS_OK:success
-                   VOS_ERR: error
-                   ERR_MSP_AT_CHANNEL_BUSY:diag建链状态下不允许从USB切换到VCOM                   
- History         :
-    1.w00393099      2017-9-2  Draft Enact
-*****************************************************************************/
+
 VOS_UINT32 DIAG_LogPortSwich(VOS_UINT32 ulPhyPort, VOS_BOOL ulEffect);
 
 
@@ -729,26 +782,12 @@ extern VOS_UINT32 DIAG_ErrorLog(VOS_CHAR * cFileName,VOS_UINT32 ulFileId, VOS_UI
     DIAG_ErrorLog(__FILE__,THIS_FILE_ID,__LINE__,ulErrNo,pBuf,ulLen)
 
 
-/*****************************************************************************
- 函 数 名  : Log_GetPrintLevel
- 功能描述  : 得到模块Id、子模块Id在打印级别记录表中的索引号
- return    : PS_LOG_LEVEL_EN
- History         :
-    1.c00326366      2015-6-24  Draft Enact
-*****************************************************************************/
+
 extern VOS_UINT32 Diag_GetLogLevel(VOS_UINT32 ulPid);
 
 
 #if(VOS_OS_VER == VOS_LINUX)
-/*****************************************************************************
- Function Name   : DIAG_LogShowToFile
- Description     : 给AT命令提供的调用接口，保存DIAG的log到文件中
- Input           : bIsSendMsg 是否给A核发送消息保存A核log
- Return          : VOS_VOID
 
- History         :
-    1.c00326366      2015-6-20  Draft Enact
-*****************************************************************************/
 extern VOS_VOID DIAG_LogShowToFile(VOS_BOOL bIsSendMsg);
 #endif
 

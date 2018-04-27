@@ -1338,23 +1338,7 @@ VOS_UINT32 R_Get32KRelTmRemainTime( HTIMER * phTm, VOS_UINT32 * pulTime,
     }
 }
 
-/*****************************************************************************
- 函 数 名  : RTC_CheckTimer
- 功能描述  : 检查TIMER是否正确
- 输入参数  : HTIMER  *phTm
-             VOS_UINT32 ulFileID
-             VOS_INT32 usLineNo
- 输出参数  : VOS_UINT32 *ulTimerID
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年5月5日
-    作    者   : s00207770
-    修改内容   : 规避TimerId被修改导致的检查错误发起主动复位
-
-*****************************************************************************/
 VOS_UINT32 RTC_CheckTimer( HTIMER  *phTm, VOS_UINT32 *ulTimerID,
                            VOS_UINT32 ulFileID, VOS_INT32 usLineNo )
 {
@@ -1809,6 +1793,7 @@ VOS_VOID RTC_ReportOmInfo(VOS_VOID)
 
         pstRTCInfo->ulLength      = ulRTCLength;
 
+        /*lint -e426 */
         if (VOS_NULL_PTR == VOS_MemCpy_s((VOS_VOID *)pstRTCInfo->aucValue, ulRTCLength,
             (VOS_VOID *)g_astRtcSocTimerDebugInfo, ulRTCTimerDebugInfoLength))
         {
@@ -1816,8 +1801,9 @@ VOS_VOID RTC_ReportOmInfo(VOS_VOID)
 
             return;
         }
+        /*lint +e426 */
 
-        /*lint -e416 */
+        /*lint -e416 -e426 */
         if (VOS_NULL_PTR == VOS_MemCpy_s((VOS_VOID *)(pstRTCInfo->aucValue + ulRTCTimerDebugInfoLength),
             (ulRTCLength - ulRTCTimerDebugInfoLength), (VOS_VOID *)&g_stRtcSocTimerInfo, ulRTCTimerInfoLength))
         {
@@ -1825,7 +1811,7 @@ VOS_VOID RTC_ReportOmInfo(VOS_VOID)
 
             return;
         }
-        /*lint +e416*/
+        /*lint +e416 +e426 */
 
         DIAG_TraceReport((VOS_VOID *)(pstRTCInfo));
 

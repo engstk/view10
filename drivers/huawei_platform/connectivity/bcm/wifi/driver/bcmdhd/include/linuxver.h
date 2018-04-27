@@ -541,6 +541,7 @@ typedef struct {
 	struct	completion completed;
 	spinlock_t	spinlock;
 	int		up_cnt;
+	bool    is_running;
 } tsk_ctl_t;
 
 
@@ -582,6 +583,17 @@ static inline bool binary_sema_down_ex(tsk_ctl_t *tsk)
 	} else
 		return true;
 }
+static inline bool binary_sema_task_is_running(tsk_ctl_t *tsk)
+{
+	unsigned long flags = 0;
+	bool is_running = false;
+
+	spin_lock_irqsave(&tsk->spinlock, flags);
+	is_running = tsk->is_running;
+	spin_unlock_irqrestore(&tsk->spinlock, flags);
+
+	return is_running;
+}
 #endif
 static inline bool binary_sema_up(tsk_ctl_t *tsk)
 {
@@ -618,6 +630,7 @@ static inline bool binary_sema_up(tsk_ctl_t *tsk)
 	(tsk_ctl)->parent = owner; \
 	(tsk_ctl)->proc_name = name;  \
 	(tsk_ctl)->terminated = FALSE; \
+	(tsk_ctl)->is_running = FALSE; \
 	(tsk_ctl)->p_task  = kthread_run(thread_func, tsk_ctl, (char*)name); \
 	if (IS_ERR((tsk_ctl)->p_task)) { \
 		(tsk_ctl)->thr_pid = DHD_PID_KT_INVALID; \
@@ -640,6 +653,7 @@ static inline bool binary_sema_up(tsk_ctl_t *tsk)
 	DBG_THR(("%s(): thread:%s:%lx terminated OK\n", __FUNCTION__, \
 			 (tsk_ctl)->proc_name, (tsk_ctl)->thr_pid)); \
 	(tsk_ctl)->thr_pid = -1; \
+	(tsk_ctl)->is_running = FALSE; \
 }
 
 /*  ----------------------- */

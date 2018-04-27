@@ -229,14 +229,13 @@ static ssize_t tas2560_file_write(struct file *file, const char *buf, size_t cou
 	UNUSED(ppos);
 
 	if(NULL == file||NULL == file->private_data){
-		ret = -1;
-		goto err;
+		return -1;
 	}
 	pTAS2560 = (struct tas2560_priv *)file->private_data;
 
 	mutex_lock(&pTAS2560->file_lock);
 
-	if(0 == count||(!count&&(NULL == buf))){
+	if ((0 == count) || (NULL == buf)) {
 		ret = -1;
 		goto err;
 	}

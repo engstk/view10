@@ -62,38 +62,40 @@
 #include <bsp_m3pm_log.h>
 #include "pm_om_platform.h"
 #include "pm_om_debug.h"
+#include "pm_om_pressure.h"
 #include "product_config.h"
+#include <mdrv_pm_common.h>
 
 struct pm_om_debug g_pmom_debug;
 char *wakelock_name[]={
-    "TLPHY" ,   /*MSP--fuxin*/
-    "PS_G0",        /*GU--ganlan*/
-    "PS_W0",       /*GU--ganlan*/
-    "PS_G1",        /*GU--ganlan*/
-    "PS_W1",       /*GU--ganlan*/
-    "FTM",           /*GU--zhangyizhan*/
-    "FTM_1",       /*GU--zhangyizhan*/
-    "NAS",           /*GU--zhangyizhan*/
-    "NAS_1",       /*GU--zhangyizhan*/
-    "OAM",          /* GU--zhangyizhan */
-    "SCI0",            /* LTE --yangzhi */
-    "SCI1",            /* LTE --yangzhi */
-    "TLPS",             /* LTE --maobibo*/
-    "TLPS1",              /*LTE --maobibo*/
-    "DSFLOW",          /* NAS --zhangyizhan */
-    "PM",            /* PM  ---shangmianyou */
-    "UART0",        /*UART0 -zhangliangdong */
-    "TDS",         /*TRRC&TL2----leixiantiao*/
+    "TLPHY" ,
+    "PS_G0",
+    "PS_W0",
+    "PS_G1",
+    "PS_W1",
+    "FTM",
+    "FTM_1",
+    "NAS",
+    "NAS_1",
+    "OAM",
+    "SCI0",
+    "SCI1",
+    "TLPS",
+    "TLPS1",
+    "DSFLOW",
+    "PM",
+    "UART0",
+    "TDS",
     "CDMAUART",         /*drv cdma uart 数传*/
     "USIM",             /*oam*/
     "DSPPOWERON",       /*v8r1 ccore 提供给GUTL DSP作为c核上电初始化投票用*/
-    "RESET",            /*RESET -nieluhua */
-    "PS_G2",        /*GU--ganlan*/
-    "FTM_2",       /*GU--zhangyizhan*/
-    "NAS_2",       /*GU--zhangyizhan*/
-    "1X",       /*CDMA--ganlan*/
-    "HRPD",       /*CDMA--ganlan*/
-    "MSP",       /*cuijunqiang*/
+    "RESET",
+    "PS_G2",
+    "FTM_2",
+    "NAS_2",
+    "1X",
+    "HRPD",
+    "MSP",
     "VOWIFI",
     "DSFLOW1"
 };
@@ -209,7 +211,6 @@ s32 pm_wakeup_ccore(enum debug_wake_type type)
 	}
     return 0;
 }
-
 void debug_pm_wake_lock(void)
 {
     wake_lock(&g_pmom_debug.wakelock_debug);
@@ -349,6 +350,13 @@ static inline void print_ccpu_ipc_info(void)
 		cnt += snprintf((char*)print_buf+cnt,(size_t)(print_buf_size-cnt),"%d,", readl(g_pmom_debug.cdrx_dump_addr+CDRX_DUMP_IPC_OFFSET+4*i)); /* [false alarm]:fortify */
 	}
 	/* coverity[secure_coding] */
+	cnt += snprintf((char*)print_buf+cnt,(size_t)(print_buf_size -cnt),"\n[C SR]ipclock(stopsuspend count):");
+	for(i=0; i<IPC_SEM_BUTTOM; i++)
+	{
+		/* coverity[secure_coding] */
+		cnt += snprintf((char*)print_buf+cnt,(size_t)(print_buf_size-cnt),"%d,", readl(g_pmom_debug.cdrx_dump_addr+CDRX_DUMP_IPC_OFFSET + (4*IPC_INT_BUTTOM)+4*i)); /* [false alarm]:fortify */
+	}
+	/* coverity[secure_coding] */
 	cnt += snprintf((char*)print_buf+cnt,(size_t)(print_buf_size-cnt),"\n");
 	printk(KERN_ERR"%s",print_buf);
 }
@@ -464,82 +472,6 @@ void pm_om_help(void)
 	pmom_print("***********************\n");
 }
 
-static ssize_t pm_om_mod_sw_show(struct file *file,  char  __user *buffer, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' not referenced*/
-    int  len;
-    char buf[32]  = {0};
-    u64  sw_value;
-    u32  tmp_low;
-    u32  tmp_high;
-    ssize_t ret;
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-
-    sw_value = ctrl->log.smem->nv_cfg.mod_sw_bitmap;
-    tmp_low  = (u32)(sw_value & (u32)0xFFFFFFFF);
-    tmp_high = (u32)((sw_value >> 32) & (u32)0xFFFFFFFF);
-
-    len = snprintf(buf, (size_t)32, "0x%08x%08x\n", tmp_high, tmp_low);
-	ret = simple_read_from_buffer(buffer, count, ppos, (void *)buf, (size_t)len);/*lint !e571  (Warning -- Suspicious cast)*/
-	if (ret == 0)
-		{
-		return -EFAULT;
-		}
-	return ret;
-}
-
-static ssize_t get_u32_data_from_user(const char  __user *usr_buf, size_t count)
-{
-	char buf[32]= {0};
-	u32  value  = 0;
-	int  ret;
-
-	if(count >= sizeof(buf) || usr_buf == NULL)
-	{
-		pmom_pr_err("input size(%zu) >= buf size(%zu), usr_buf(%p)\n", count, sizeof(buf), usr_buf);
-		return -EINVAL;
-	}
-	/* coverity[extend_simple_error] */
-	// cppcheck-suppress *
-	if (copy_from_user(buf, usr_buf, count))
-	{
-		pmom_pr_err("copy_from_user err\n");
-		return -EFAULT;
-	}
-       // cppcheck-suppress *
-	ret = sscanf(buf, "%u", &value);
-	if (ret < 0)
-	{
-		return ret;
-	}
-	return value;
-}
-
-static int get_u32_seq_data_from_user(const char  __user *usr_buf, size_t usr_count, u8 *seq_data, u32 len)
-{
-	char buf[PM_OM_LOG_THRE_BUF_SIZE]= {0};
-	int ret;
-
-	if(usr_count >= sizeof(buf) || seq_data == NULL || len < 4 || usr_buf == NULL)
-	{
-		pmom_pr_err("input size(%zu) >= buf size(%zu), seq_data(%p), len(%d), usr_buf(%p)\n", usr_count, sizeof(buf), seq_data, len, usr_buf);
-		return -EINVAL;
-	}
-	/* coverity[extend_simple_error] */
-	// cppcheck-suppress *
-	if (copy_from_user(buf, usr_buf, usr_count))
-	{
-		pmom_pr_err("copy_from_user err\n");
-		return -EFAULT;
-	}
-      // cppcheck-suppress *
-	ret = sscanf(buf, "%c %c %c %c", &seq_data[0], &seq_data[1], &seq_data[2], &seq_data[3]);/* [false alarm]:fortify */
-	if (ret != 4)
-	{
-		return  -EFAULT;
-	}
-	return 0;
-}
-
 /* supress pclint of list_for_each_entry */
 /*lint -save -e144 -e413 -e613 -e826 -e838*/
 /* 通知其他核开启log功能 */
@@ -548,8 +480,10 @@ void pm_om_notify_other_core(pm_om_icc_data_type data)
 	s32 ret;
 	u32 channel_id;
 	struct pm_info_list *pm_info = NULL;
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-
+	struct pm_om_ctrl *ctrl = NULL;
+	if(g_pmom_debug.ctrl == NULL)
+		return;
+	ctrl = g_pmom_debug.ctrl;
 	list_for_each_entry(pm_info, &(ctrl->pm_info.list), entry) /* [false alarm]:屏蔽Fortify错误 */
 	{
 		if (pm_info && pm_info->cb_func)
@@ -574,281 +508,6 @@ icc_send_fail:
 	return;
 }
 /*lint -restore +e144 +e413 +e613*/
-
-static ssize_t pm_om_mod_on_store(struct file *file,  const char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-	struct pm_om_platform *linux_plat = (struct pm_om_platform *)ctrl->platform;
-	ssize_t mod_id = get_u32_data_from_user(usr_buf, count);
-
-	if(mod_id < 0)
-	{
-		return mod_id;
-	}
-	else if(mod_id < 64)
-	{
-		ctrl->log.init_flag = PM_OM_INIT_MAGIC;
-		linux_plat->log_info.mem_is_ok = 1;
-		pm_om_log_mod_on(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), (u32)mod_id);
-		pm_om_notify_other_core(1);
-	}
-	else if(mod_id == 64)/* enable all */
-	{
-		ctrl->log.init_flag = PM_OM_INIT_MAGIC;
-		linux_plat->log_info.mem_is_ok = 1;
-		pm_om_log_sw_set(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), 0xffffffffffffffff);
-		pm_om_notify_other_core(1);
-	}
-
-	return (ssize_t)count;
-}
-
-static ssize_t pm_om_mod_off_store(struct file *fil,  const char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'fil' & 'ppos' not referenced*/
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-	ssize_t mod_id = get_u32_data_from_user(usr_buf, count);
-
-	if(mod_id < 0)
-	{
-		return mod_id;
-	}
-	else if(mod_id < 64)
-	{
-		ctrl->log.init_flag = 0;
-		pm_om_log_mod_off(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), (u32)mod_id);
-		pm_om_notify_other_core(0);
-	}
-	else if(mod_id == 64)/* disable all */
-	{
-		ctrl->log.init_flag = 0;
-		pm_om_log_sw_set(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), (u64)0);
-		pm_om_notify_other_core(0);
-	}
-
-	return (ssize_t)count;
-}
-
-static ssize_t pm_om_fwrite_trigger_on_store(struct file *file,  const char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-	ssize_t sw = get_u32_data_from_user(usr_buf, count);
-
-	if(sw < 0)
-	{
-		return sw;
-	}
-	else if(sw > 0)
-	{
-		ctrl->log.smem->mem_info.app_is_active = 1;
-	}
-	else if(sw == 0)
-	{
-		ctrl->log.smem->mem_info.app_is_active = 0;
-	}
-
-	return (ssize_t)count;
-}
-
-static ssize_t pm_om_fwrite_trigger_on_show(struct file *file,  char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	int  len;
-	char buf[32]  = {0};
-	u32  sw_value;
-	ssize_t ret;
-	struct pm_om_ctrl *ctrl = pm_om_ctrl_get();
-
-	sw_value = ctrl->log.smem->mem_info.app_is_active;
-	len = snprintf(buf, (size_t)32, "0x%08x\n", sw_value);
-	ret = simple_read_from_buffer(usr_buf, count, ppos, (void *)buf, (size_t)len);/*lint !e571  (Warning -- Suspicious cast)*/
-	if (ret == 0)
-		{
-		return -EFAULT;
-		}
-	return ret;
-}
-
-static ssize_t pm_om_rb_size_store(struct file *file,  const char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-	ssize_t rb_size = get_u32_data_from_user(usr_buf, count);
-
-	if(rb_size < 0)
-	{
-		return rb_size;
-	}
-	else if(rb_size)
-	{
-		ctrl->log.rb.size = (u32)rb_size;
-	}
-
-	return (ssize_t)count;
-}
-
-static ssize_t pm_om_rb_info_show(struct file *file,  char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	int  len;
-	ssize_t ret;
-	char buf[PM_OM_LOG_THRE_BUF_SIZE]  = {0};
-
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-	struct ring_buffer *rb = &(ctrl->log.rb);
-	len = snprintf(buf, (size_t)PM_OM_LOG_THRE_BUF_SIZE,
-		"rb_base\t\t\trb_size\t\trb_write\trb_read\n0x%p(0x%p)\t0x%08x\t0x%08x\t0x%08x\t\n",
-		(void *)rb->buf, (void *)SHD_DDR_V2P((void *)rb->buf), rb->size, rb->write, rb->read);/*lint !e834 suppress SHD_DDR_V2P warning */
-	ret = simple_read_from_buffer(usr_buf, count, ppos, (void *)buf, (size_t)len);/*lint !e571  (Warning -- Suspicious cast)*/
-	if (ret == 0)
-		{
-		return -EFAULT;
-		}
-	return ret;
-}
-
-static ssize_t pm_om_log_threshold_store(struct file *file,  const char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-	u8 *seq_data ;
-	int ret;
-	u32 len = sizeof(u8) * PM_OM_LOG_THRE_CORE_NUM;
-
-	/* coverity[extend_simple_error] */
-	seq_data = kmalloc((size_t)len, GFP_KERNEL);
-	if (!seq_data)
-	{
-		return -ENOMEM;
-	}
-
-	ret = get_u32_seq_data_from_user(usr_buf, count, seq_data, len);
-	if(ret < 0)
-	{
-		kfree(seq_data);
-		//seq_data = NULL;
-		return ret;
-	}
-	else
-	{
-		/* coverity[extend_simple_error] */
-		memcpy((void *)ctrl->log.smem->nv_cfg.log_threshold, (void *)seq_data, len);/*lint !e747 type coversion */
-		ctrl->log.threshold = ctrl->log.smem->nv_cfg.log_threshold[PM_OM_CPUID];
-	}
-
-	kfree(seq_data);
-	//seq_data = NULL;
-	return (ssize_t)count;
-}
-
-static ssize_t pm_om_log_threshold_show(struct file *file,  char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	int len;
-	ssize_t ret;
-	char buf[PM_OM_LOG_THRE_BUF_SIZE] = {0};
-	struct pm_om_ctrl *ctrl = g_pmom_debug.ctrl;
-
-	len = snprintf(buf, (size_t)PM_OM_LOG_THRE_BUF_SIZE, "%2d %2d %2d %2d\n",
-		ctrl->log.smem->nv_cfg.log_threshold[0],
-		ctrl->log.smem->nv_cfg.log_threshold[1],
-		ctrl->log.smem->nv_cfg.log_threshold[2],
-		ctrl->log.smem->nv_cfg.log_threshold[3]);
-	ret = simple_read_from_buffer(usr_buf, count, ppos, (void *)buf, (size_t)len);/*lint !e571  (Warning -- Suspicious cast)*/
-	if (ret == 0)
-		{
-		return -EFAULT;
-		}
-	return ret;
-}
-
-static int pm_om_wakeup_stats_show(struct seq_file *m, void *unused)
-{/*lint --e{715} suppress 'unused' not referenced*/
-	struct pm_om_debug *debug = &g_pmom_debug;
-
-	seq_puts(m, "wake_times\twaket_min\twaket_max\n");
- 	seq_printf(m, "%u\t\t%u\t\t%u\n", debug->stat.wakeup_cnt,debug->stat.waket_min, debug->stat.waket_max);
-
-	return 0;
-}
-
-static int wakeup_sources_stats_open(struct inode *inode, struct file *file)
-{/*lint --e{715} suppress 'inode' not referenced*/
-	return single_open(file, pm_om_wakeup_stats_show, NULL);
-}
-static int cp_pm_status_open(struct inode *inode, struct file *file)
-{/*lint --e{715} suppress 'inode' not referenced*/
-	cp_pm_notify((struct notifier_block *)NULL,PM_SUSPEND_PREPARE,NULL);
-	printk(KERN_ERR"[C SR]current slice:0x%x, mem phy:0x%pK, virt:0x%pK\n",
-        bsp_get_slice_value(), bsp_dump_get_field_phy_addr(DUMP_CP_DRX), g_pmom_debug.cdrx_dump_addr);
-	print_ccpu_wakelock_info();
-	print_ccpu_pm_info();
-	print_dpm_device_info();
-	return 0;
-}
-static ssize_t pm_om_wake_ccore_store(struct file *file,  const char  __user *usr_buf, size_t count, loff_t *ppos)
-{/*lint --e{715} suppress 'file' & 'ppos' not referenced*/
-	ssize_t wake_cmd = get_u32_data_from_user(usr_buf, count);
-	if((wake_cmd>(ssize_t)PM_WAKEUP_THEN_SLEEP)||(wake_cmd<(ssize_t)PM_WAKEUP))
-	{
-		return wake_cmd;
-	}
-	(void)pm_wakeup_ccore((enum debug_wake_type)wake_cmd);
-	return (ssize_t)count;
-}
-
-/*lint -save -e785*/ /*suppress too few initializers for struct*/
-static const struct file_operations pm_om_mod_on_fops = {
-	.read  = pm_om_mod_sw_show,
-	.write = pm_om_mod_on_store,
-};
-
-static const struct file_operations pm_om_mod_off_fops = {
-	.read  = pm_om_mod_sw_show,
-	.write = pm_om_mod_off_store,
-};
-
-static const struct file_operations pm_om_fwrite_trigger_fops = {
-	.read  = pm_om_fwrite_trigger_on_show,
-	.write = pm_om_fwrite_trigger_on_store,
-};
-
-static const struct file_operations pm_om_rb_info_fops = {
-	.read  = pm_om_rb_info_show,
-	.write = pm_om_rb_size_store,
-};
-
-static const struct file_operations pm_om_log_threshold_fops = {
-	.read  = pm_om_log_threshold_show,
-	.write = pm_om_log_threshold_store,
-};
-
-static const struct file_operations pm_om_wakeup_stats_fops = {
-	.open = wakeup_sources_stats_open,
-	.read = seq_read,
-	.llseek = seq_lseek,
-	.release = single_release,
-};
-static const struct file_operations pm_om_cp_pm_stat_fops = {
-	.open = cp_pm_status_open,
-};
-static const struct file_operations pm_om_wake_ccore_fops = {
-	.write = pm_om_wake_ccore_store,
-};
-/*lint -restore +e785*/
-static int pm_om_debugfs_create(void)
-{
-	struct dentry *debugfs_root;
-	/* coverity[var_deref_model] */
-	debugfs_root = debugfs_create_dir("pm_om", NULL);
-	if (!debugfs_root)
-		return (-ENOENT);
-
-	debugfs_create_file("mod_on", (S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_mod_on_fops);
-	debugfs_create_file("mod_off", (S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_mod_off_fops);
-	debugfs_create_file("fwrite_trigger", (S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_fwrite_trigger_fops);
-	debugfs_create_file("rb_info", (S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_rb_info_fops);
-	debugfs_create_file("log_threshold", (S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_log_threshold_fops);
-	debugfs_create_file("wakeup_stats",(S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_wakeup_stats_fops);
-	debugfs_create_file("cp_pm_stat",(S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_cp_pm_stat_fops);
-	debugfs_create_file("wake_ccore",(S_IRUGO|S_IWUSR), debugfs_root, NULL, &pm_om_wake_ccore_fops);
-	return 0;
-}
-
 static ssize_t pm_stat_info_get(struct device *dev, struct device_attribute *attr, char *buf)
 {/*lint --e{715} suppress 'dev' & 'attr' not referenced*/
     int  len;
@@ -897,17 +556,11 @@ static ssize_t pm_stat_info_on_set(struct device *dev, struct device_attribute *
 			pmom_pr_err("input includes Non-number parameters. endp=%s\n", endp);
 			return -EINVAL;
 		}
-		if(mod_id >= 0 && mod_id < 64)
+		if((mod_id > (ssize_t)PM_MOD_BEGIN && mod_id < (ssize_t)PM_MOD_END)||(mod_id == (ssize_t)PM_OM_MDRV))
 		{
 			ctrl->log.init_flag = PM_OM_INIT_MAGIC;
 			linux_plat->log_info.mem_is_ok = 1;
 			pm_om_log_mod_on(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), (u32)mod_id);
-		}
-		else if(mod_id == 64)/* enable all */
-		{
-			ctrl->log.init_flag = PM_OM_INIT_MAGIC;
-			linux_plat->log_info.mem_is_ok = 1;
-			pm_om_log_sw_set(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), 0xffffffffffffffff);
 		}
 		else
 		{
@@ -951,15 +604,10 @@ static ssize_t pm_stat_info_off_set(struct device *dev, struct device_attribute 
 			pmom_pr_err("input includes Non-number parameters. endp=%s\n", endp);
 			return -EINVAL;
 		}
-		if(mod_id >= 0 && mod_id < 64)
+		if((mod_id > (ssize_t)PM_MOD_BEGIN && mod_id < (ssize_t)PM_MOD_END)||(mod_id == (ssize_t)PM_OM_MDRV))
 		{
 			ctrl->log.init_flag = 0;
 			pm_om_log_mod_off(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), (u32)mod_id);
-		}
-		else if(mod_id == 64)/* disable all */
-		{
-			ctrl->log.init_flag = 0;
-			pm_om_log_sw_set(&(ctrl->log.smem->nv_cfg.mod_sw_bitmap), (u64)0);
 		}
 		else
 		{
@@ -997,9 +645,12 @@ static const struct attribute_group pm_stat_info_off_group = {
 static int __init pm_info_probe(struct platform_device *pdev)
 {
     int ret = 0;
-
-    ret |= device_create_file(&(pdev->dev), &dev_attr_mod_on);
-    ret |= device_create_file(&(pdev->dev), &dev_attr_mod_off);
+    struct pm_om_ctrl *ctrl = pm_om_ctrl_get();
+    if (ctrl->log.smem->nv_cfg.mod_sw_bitmap)
+    {
+        ret |= device_create_file(&(pdev->dev), &dev_attr_mod_on);
+        ret |= device_create_file(&(pdev->dev), &dev_attr_mod_off);
+    }
     if (ret)
     {
         printk("fail to creat balong modem pm info sysfs\n");
@@ -1026,7 +677,7 @@ static struct platform_driver balong_modem_pm_info_drv = {
 };
 /*lint -restore +e785*/
 
-static int __init balong_modem_pm_info_init(void)
+int balong_modem_pm_info_init(void)
 {
     int ret;
 
@@ -1047,32 +698,57 @@ static int __init balong_modem_pm_info_init(void)
     return ret;
 }
 
-static void __exit balong_modem_pm_info_exit(void)
+void balong_modem_pm_info_exit(void)
 {
     platform_driver_unregister(&balong_modem_pm_info_drv);
     platform_device_unregister(&balong_modem_pm_info_device);
 }
 
-module_init(balong_modem_pm_info_init);
-module_exit(balong_modem_pm_info_exit);
+//module_init(balong_modem_pm_info_init);
+//module_exit(balong_modem_pm_info_exit);
 
 int pm_om_debug_init(void)
 {
+	int ret;
+	unsigned long flags = 0;
 	struct pm_om_ctrl *ctrl = pm_om_ctrl_get();
-
+	struct pm_om_platform *platform = NULL;
+	UNUSED(flags);
+	platform = (struct pm_om_platform *)ctrl->platform;
+	if (ctrl->log.smem->nv_cfg.mod_sw_bitmap)
+	{
+		if (PM_OM_PROT_MAGIC1 == ctrl->log.smem->mem_info.magic)
+		{
+			pm_om_spin_lock(&ctrl->log.lock, flags);/*lint !e550: (Warning -- Symbol '__dummy' not accessed)*/
+			ctrl->log.smem->mem_info.magic = PM_OM_PROT_MAGIC2;
+			pm_om_spin_unlock(&ctrl->log.lock, flags);
+			if (platform)
+			{
+				platform->log_info.mem_is_ok = 1; /*[false alarm]*/
+			}
+			ctrl->log.init_flag = PM_OM_INIT_MAGIC;
+		}
+		else if (PM_OM_PROT_MAGIC2 == ctrl->log.smem->mem_info.magic)
+		{
+			ctrl->log.init_flag = PM_OM_INIT_MAGIC;
+			pm_om_spin_lock(&ctrl->log.lock, flags);/*lint !e550: (Warning -- Symbol '__dummy' not accessed)*/
+			if (platform)
+			{
+				platform->log_info.mem_is_ok = 1; /*[false alarm]*/
+			}
+			pm_om_spin_unlock(&ctrl->log.lock, flags);
+		}
+	}
 	memset((void *)&g_pmom_debug, 0, sizeof(g_pmom_debug));
-
 	g_pmom_debug.stat.waket_prev    = bsp_get_slice_value();
 	g_pmom_debug.stat.waket_min     = 0xffffffff;
 	g_pmom_debug.stat.logt_print_sw = ctrl->log.smem->nv_cfg.reserved;
-
+	ret = balong_modem_pm_info_init();
+	if(ret)
+		printk("balong modem info driver init fail\n");
 	g_pmom_debug.ctrl = ctrl;
 	ctrl->debug = (void *)&g_pmom_debug;
-
 	pm_wakeup_init();
-
-	pm_om_debugfs_create();
-
 	return 0;
 }
 

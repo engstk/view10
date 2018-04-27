@@ -1131,6 +1131,7 @@ again:
 	init_rss_vec(rss);
 	start_pte = pte_offset_map_lock(mm, pmd, addr, &ptl);
 	pte = start_pte;
+	flush_tlb_batched_pending(mm);
 	arch_enter_lazy_mmu_mode();
 	do {
 		pte_t ptent = *pte;
@@ -2524,7 +2525,7 @@ int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	page = lookup_swap_cache(entry);
 	if (!page) {
 		page = swapin_readahead(entry,
-					GFP_HIGHUSER_MOVABLE | ___GFP_CMA,
+					GFP_HIGHUSER_MOVABLE,
 					vma, address);
 		if (!page) {
 			/*
@@ -2684,40 +2685,6 @@ out_release:
 EXPORT_SYMBOL(do_swap_page);
 
 /*
- * This is like a special single-page "expand_{down|up}wards()",
- * except we must first make sure that 'address{-|+}PAGE_SIZE'
- * doesn't hit another vma.
- */
-static inline int check_stack_guard_page(struct vm_area_struct *vma, unsigned long address)
-{
-	address &= PAGE_MASK;
-	if ((vma->vm_flags & VM_GROWSDOWN) && address == vma->vm_start) {
-		struct vm_area_struct *prev = vma->vm_prev;
-
-		/*
-		 * Is there a mapping abutting this one below?
-		 *
-		 * That's only ok if it's the same stack mapping
-		 * that has gotten split..
-		 */
-		if (prev && prev->vm_end == address)
-			return prev->vm_flags & VM_GROWSDOWN ? 0 : -ENOMEM;
-
-		return expand_downwards(vma, address - PAGE_SIZE);
-	}
-	if ((vma->vm_flags & VM_GROWSUP) && address + PAGE_SIZE == vma->vm_end) {
-		struct vm_area_struct *next = vma->vm_next;
-
-		/* As VM_GROWSDOWN but s/below/above/ */
-		if (next && next->vm_start == address + PAGE_SIZE)
-			return next->vm_flags & VM_GROWSUP ? 0 : -ENOMEM;
-
-		return expand_upwards(vma, address + PAGE_SIZE);
-	}
-	return 0;
-}
-
-/*
  * We enter with non-exclusive mmap_sem (to exclude vma changes,
  * but allow concurrent faults), and pte mapped but not yet locked.
  * We return with mmap_sem still held, but pte unmapped and unlocked.
@@ -2736,10 +2703,6 @@ static int do_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	/* File mapping without ->vm_ops ? */
 	if (vma->vm_flags & VM_SHARED)
 		return VM_FAULT_SIGBUS;
-
-	/* Check if we need to add a guard page to the stack */
-	if (check_stack_guard_page(vma, address) < 0)
-		return VM_FAULT_SIGSEGV;
 
 	/* Use the zero-page for reads */
 	if (!(flags & FAULT_FLAG_WRITE) && !mm_forbids_zeropage(mm)) {
@@ -3337,6 +3300,7 @@ static int handle_pte_fault(struct mm_struct *mm,
 {
 	pte_t entry;
 	spinlock_t *ptl;
+	int ret;
 
 	/*
 	 * some architectures can have larger ptes than wordsize,
@@ -3350,15 +3314,36 @@ static int handle_pte_fault(struct mm_struct *mm,
 	barrier();
 	if (!pte_present(entry)) {
 		if (pte_none(entry)) {
-			if (vma_is_anonymous(vma))
-				return do_anonymous_page(mm, vma, address,
+			if (vma_is_anonymous(vma)) {
+				ret = do_anonymous_page(mm, vma, address,
 							 pte, pmd, flags);
-			else
-				return do_fault(mm, vma, address, pte, pmd,
-						flags, entry);
+				#ifdef CONFIG_HISI_DEBUG_FS
+				if (ret & VM_FAULT_OOM) {
+					pr_err("do_anonymous_page: mm:0x%pK, current->flags:%u\n",
+						mm, current->flags);
+				}
+				#endif
+				return ret;
+			}
+			ret = do_fault(mm, vma, address, pte, pmd,
+				flags, entry);
+			#ifdef CONFIG_HISI_DEBUG_FS
+			if (ret & VM_FAULT_OOM) {
+				pr_err("do_fault: mm:0x%pK, current->flags:%u\n",
+					mm, current->flags);
+			}
+			#endif
+			return ret;
 		}
-		return do_swap_page(mm, vma, address,
+		ret = do_swap_page(mm, vma, address,
 					pte, pmd, flags, entry);
+		#ifdef CONFIG_HISI_DEBUG_FS
+		if (ret & VM_FAULT_OOM) {
+			pr_err("do_swap_page: mm:0x%pK, current->flags:%u\n",
+				mm, current->flags);
+		}
+		#endif
+		return ret;
 	}
 
 	if (pte_protnone(entry))
@@ -3369,9 +3354,17 @@ static int handle_pte_fault(struct mm_struct *mm,
 	if (unlikely(!pte_same(*pte, entry)))
 		goto unlock;
 	if (flags & FAULT_FLAG_WRITE) {
-		if (!pte_write(entry))
-			return do_wp_page(mm, vma, address,
+		if (!pte_write(entry)) {
+			ret = do_wp_page(mm, vma, address,
 					pte, pmd, ptl, entry);
+			#ifdef CONFIG_HISI_DEBUG_FS
+			if (ret & VM_FAULT_OOM) {
+				pr_err("do_wp_page: mm:0x%pK, current->flags:%u\n",
+					mm, current->flags);
+			}
+			#endif
+			return ret;
+		}
 		entry = pte_mkdirty(entry);
 	}
 	entry = pte_mkyoung(entry);
@@ -3411,11 +3404,21 @@ static int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 
 	pgd = pgd_offset(mm, address);
 	pud = pud_alloc(mm, pgd, address);
-	if (!pud)
+	if (!pud) {
+		#ifdef CONFIG_HISI_DEBUG_FS
+		pr_err("!pud: mm:0x%pK, current->flags:%u\n",
+			mm, current->flags);
+		#endif
 		return VM_FAULT_OOM;
+	}
 	pmd = pmd_alloc(mm, pud, address);
-	if (!pmd)
+	if (!pmd) {
+		#ifdef CONFIG_HISI_DEBUG_FS
+		pr_err("!pmd: mm:0x%pK, current->flags:%u\n",
+			mm, current->flags);
+		#endif
 		return VM_FAULT_OOM;
+	}
 	if (pmd_none(*pmd) && transparent_hugepage_enabled(vma)) {
 		int ret = create_huge_pmd(mm, vma, address, pmd, flags);
 		if (!(ret & VM_FAULT_FALLBACK))
@@ -3459,8 +3462,13 @@ static int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	 * materialize from under us from a different thread.
 	 */
 	if (unlikely(pmd_none(*pmd)) &&
-	    unlikely(__pte_alloc(mm, vma, pmd, address)))
+	    unlikely(__pte_alloc(mm, vma, pmd, address))) {
+		#ifdef CONFIG_HISI_DEBUG_FS
+		pr_err("__pte_alloc: mm:0x%pK, current->flags:%u\n",
+			mm, current->flags);
+		#endif
 		return VM_FAULT_OOM;
+	}
 	/*
 	 * If a huge pmd materialized under us just retry later.  Use
 	 * pmd_trans_unstable() instead of pmd_trans_huge() to ensure the pmd

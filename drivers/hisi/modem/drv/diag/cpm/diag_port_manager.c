@@ -429,6 +429,7 @@ void CPM_Show(void)
 
     return;
 }
+EXPORT_SYMBOL(CPM_Show);
 
 /*****************************************************************************
  º¯ Êý Ãû  : CPM_ComErrShow
@@ -462,4 +463,5 @@ void CPM_ComErrShow(void)
 
     return;
 }
+EXPORT_SYMBOL(CPM_ComErrShow);
 

@@ -89,7 +89,7 @@ enum hifi_usb_test_msg_type {
 	AP_HIFI_USB_TEST_MESG_END = 0xF,
 };
 
-#define HIFI_USB_MSG_TIMEOUT (5 * HZ)
+#define HIFI_USB_MSG_TIMEOUT (2 * HZ)
 #define HIFI_USB_MSG_MAX_LEN 26
 #define HIFI_USB_MSG_HDR_LEN 12
 #define HIFI_USB_MSG_MAX_DATA_LEN (HIFI_USB_MSG_MAX_LEN - HIFI_USB_MSG_HDR_LEN)

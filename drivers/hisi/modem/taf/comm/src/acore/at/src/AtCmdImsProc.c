@@ -95,13 +95,11 @@ const AT_IMSA_MSG_PRO_FUNC_STRU g_astAtImsaMsgTab[]=
 
     {ID_IMSA_AT_DMCN_IND,                   AT_RcvImsaDmcnInd},
 
-    /* Added by f00367319 for LGU+迭代一, 2016-6-22, begin */
     {ID_IMSA_AT_IMSTIMER_QRY_CNF,           AT_RcvImsaImsTimerQryCnf},
     {ID_IMSA_AT_IMSTIMER_SET_CNF,           AT_RcvImsaImsTimerSetCnf},
     {ID_IMSA_AT_SMSPSI_SET_CNF,             AT_RcvImsaImsPsiSetCnf},
     {ID_IMSA_AT_SMSPSI_QRY_CNF,             AT_RcvImsaImsPsiQryCnf},
     {ID_IMSA_AT_DMUSER_QRY_CNF,             AT_RcvImsaDmUserQryCnf},
-    /* Added by f00367319 for LGU+迭代一, 2016-6-22, end */
 
     {ID_IMSA_AT_NICKNAME_SET_CNF,           AT_RcvImsaNickNameSetCnf},
     {ID_IMSA_AT_NICKNAME_QRY_CNF,           AT_RcvImsaNickNameQryCnf},
@@ -131,6 +129,8 @@ const AT_IMSA_MSG_PRO_FUNC_STRU g_astAtImsaMsgTab[]=
 
     {ID_IMSA_AT_USER_AGENT_CFG_SET_CNF,     AT_RcvImsaUserAgentSetCnf},
 
+    {ID_IMSA_AT_IMPU_TYPE_IND,              AT_RcvImsaImpuInd},
+
 };
 
 
@@ -138,21 +138,7 @@ const AT_IMSA_MSG_PRO_FUNC_STRU g_astAtImsaMsgTab[]=
   3 函数实现
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : AT_ProcImsaMsg
- 功能描述  : 处理来自IMSA模块的消息
- 输入参数  : AT_IMSA_MSG_STRU *pMsg
- 输出参数  : 无
- 返 回 值  : TAF_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_VOID AT_ProcImsaMsg(AT_IMSA_MSG_STRU *pstMsg)
 {
     VOS_UINT32                          i;
@@ -191,21 +177,7 @@ VOS_VOID AT_ProcImsaMsg(AT_IMSA_MSG_STRU *pstMsg)
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCiregSetCnf
- 功能描述  : +CIREG设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCiregSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -258,21 +230,7 @@ VOS_UINT32 AT_RcvImsaCiregSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCiregQryCnf
- 功能描述  : +CIREG查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCiregQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -351,21 +309,7 @@ VOS_UINT32 AT_RcvImsaCiregQryCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCirepSetCnf
- 功能描述  : +CIREP设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCirepSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -418,21 +362,7 @@ VOS_UINT32 AT_RcvImsaCirepSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCirepQryCnf
- 功能描述  : +CIREP查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCirepQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -494,24 +424,7 @@ VOS_UINT32 AT_RcvImsaCirepQryCnf(VOS_VOID * pMsg)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImpuSetCnf
- 功能描述  : +CIREP查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年1月17日
-    作    者   : c64416
-    修改内容   : 新增函数
-
-  2.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : LGU+ iterative two Project
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImpuSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -592,21 +505,7 @@ VOS_UINT32 AT_RcvImsaImpuSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetVolteImpiPara
- 功能描述  : ^VOLTEIMPI设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月28日
-    作    者   : q00380176
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetVolteImpiPara(TAF_UINT8 ucIndex)
 {
     AT_IMSA_VOLTEIMPI_QRY_REQ_STRU      stImpi;
@@ -638,21 +537,7 @@ VOS_UINT32 AT_SetVolteImpiPara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetVolteDomainPara
- 功能描述  : ^VOLTEDOMAIN设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月28日
-    作    者   : q00380176
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetVolteDomainPara(TAF_UINT8 ucIndex)
 {
     AT_IMSA_VOLTEDOMAIN_QRY_REQ_STRU    stDomain;
@@ -684,21 +569,7 @@ VOS_UINT32 AT_SetVolteDomainPara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaVolteImpiQryCnf
- 功能描述  : ^VOLTEIMPI查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月28日
-    作    者   : q00380176
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaVolteImpiQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -771,21 +642,7 @@ VOS_UINT32 AT_RcvImsaVolteImpiQryCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaVolteDomainQryCnf
- 功能描述  : ^VOLTEDOMAIN查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月28日
-    作    者   : q00380176
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaVolteDomainQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -858,21 +715,7 @@ VOS_UINT32 AT_RcvImsaVolteDomainQryCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCirephInd
- 功能描述  : +CIREPH主动上报命令处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCirephInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -905,21 +748,7 @@ VOS_UINT32 AT_RcvImsaCirephInd(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCirepiInd
- 功能描述  : +CIREPI主动上报命令处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCirepiInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -952,21 +781,7 @@ VOS_UINT32 AT_RcvImsaCirepiInd(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCireguInd
- 功能描述  : +CIREGU主动上报命令处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年09月18日
-    作    者   : Y00213812
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCireguInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -1018,22 +833,7 @@ VOS_UINT32 AT_RcvImsaCireguInd(VOS_VOID * pMsg)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_ReportImsEmcStatResult
- 功能描述  : 主动上报^IMSEMCSTAT:<stat>
- 输入参数  : ucIndex  --- 端口索引
-             ulStatus --- 连接状态
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月23日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID AT_ReportImsEmcStatResult(
     VOS_UINT8                           ucIndex,
     AT_PDP_STATUS_ENUM_UINT32           ulStatus
@@ -1053,21 +853,7 @@ VOS_VOID AT_ReportImsEmcStatResult(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaEmcPdnActivateInd
- 功能描述  : 处理ID_IMSA_AT_EMC_PDN_ACTIVATE_IND消息
- 输入参数  : VOS_VOID *pMsg
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月23日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaEmcPdnActivateInd(VOS_VOID *pMsg)
 {
     IMSA_AT_EMC_PDN_ACTIVATE_IND_STRU  *pstPdnActivateInd = VOS_NULL_PTR;
@@ -1160,21 +946,7 @@ VOS_UINT32 AT_RcvImsaEmcPdnActivateInd(VOS_VOID *pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaEmcPndDeactivateInd
- 功能描述  : 处理ID_IMSA_AT_EMC_PDN_DEACTIVATE_IND消息
- 输入参数  : VOS_VOID *pMsg
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月23日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaEmcPdnDeactivateInd(VOS_VOID *pMsg)
 {
     IMSA_AT_EMC_PDN_DEACTIVATE_IND_STRU    *pstPdnDeactivateInd = VOS_NULL_PTR;
@@ -1215,21 +987,7 @@ VOS_UINT32 AT_RcvImsaEmcPdnDeactivateInd(VOS_VOID *pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaMtStateInd
- 功能描述  : 被叫状态指示处理函数
- 输入参数  : *pMsg        IMSA上报消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年03月18日
-    作    者   : m00277840
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaMtStateInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -1265,21 +1023,7 @@ VOS_UINT32 AT_RcvImsaMtStateInd(VOS_VOID * pMsg)
 
     return VOS_OK;
 }
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsRegDomainQryCn
- 功能描述  : ^IMSREGDOMAIN?查询命令回复处理函数
- 输入参数  : *pMsg        IMSA上报消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年03月18日
-    作    者   : h00360002
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsRegDomainQryCnf(VOS_VOID *pMsg)
 {
     /* 局部变量 */
@@ -1336,21 +1080,7 @@ VOS_UINT32 AT_RcvImsaImsRegDomainQryCnf(VOS_VOID *pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsCtrlMsg
- 功能描述  : AT透传IMSA给MAPCON发送的消息
- 输入参数  : VOS_VOID * pMsg
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月28日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsCtrlMsg(VOS_VOID *pMsg)
 {
     /* 定义局部变量 */
@@ -1398,21 +1128,7 @@ VOS_UINT32 AT_RcvImsaImsCtrlMsg(VOS_VOID *pMsg)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCallEncryptSetCnf
- 功能描述  : ^CALLENCRYPT设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月04日
-    作    者   : f00179208
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCallEncryptSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -1465,21 +1181,7 @@ VOS_UINT32 AT_RcvImsaCallEncryptSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaRoamImsServiceQryCnf
- 功能描述  : ^ROAMIMSSERVICE查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年01月15日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaRoamImsServiceQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -1543,21 +1245,7 @@ VOS_UINT32 AT_RcvImsaRoamImsServiceQryCnf(VOS_VOID * pMsg)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaRatHandoverInd
- 功能描述  : imsa主动上报ID_IMSA_AT_IMS_RAT_HANDOVER_IND消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年04月22日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaRatHandoverInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -1591,21 +1279,7 @@ VOS_UINT32 AT_RcvImsaRatHandoverInd(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvSrvStatusUpdateInd
- 功能描述  : imsa主动上报ID_IMSA_AT_IMS_SRV_STATUS_UPDATE_IND消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年04月22日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvSrvStatusUpdateInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -1643,23 +1317,7 @@ VOS_UINT32 AT_RcvSrvStatusUpdateInd(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillDmdynNumParaInCmd
- 功能描述  : 将数字格式的参数放到AT命令中
- 输入参数  : *pusLength        AT命令的长度
-             ulValue           需要添加的数字格式的参数
-             ulValueValidFlg   当前参数是否有效
- 输出参数  : *pusLength        AT命令的长度
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_VOID At_FillDmdynNumParaInCmd (
     VOS_UINT16                         *pusLength,
     VOS_UINT32                          ulValue,
@@ -1688,24 +1346,7 @@ VOS_VOID At_FillDmdynNumParaInCmd (
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillDmdynStrParaInCmd
- 功能描述  : 将字符串格式的参数放到AT命令中
- 输入参数  : *pusLength        AT命令的长度
-             *pcValue          需要添加的字符串格式的参数
-             ulValueValidFlg   当前参数是否有效
-             ulLastParaFlg     是否是AT命令中最后一个参数
- 输出参数  : *pusLength        AT命令的长度
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_VOID At_FillDmdynStrParaInCmd (
     VOS_UINT16                         *pusLength,
     VOS_CHAR                           *pcValue,
@@ -1737,25 +1378,7 @@ VOS_VOID At_FillDmdynStrParaInCmd (
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillIpv6AddrInCmd
- 功能描述  : 将协议格式的IPV6地址转换后放到AT命令中
- 输入参数  : *pusLength        AT命令的长度
-             *pucAddr          需要添加的协议格式的IPV6地址
-             ulAddrValidFlg    当前参数是否有效
-             ulSipPort         端口号
-             ulPortValidFlg    端口号是否有效
- 输出参数  : *pusLength        AT命令的长度
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_VOID At_FillIpv6AddrInCmd (
     VOS_UINT16                         *pusLength,
     VOS_UINT8                          *pucAddr,
@@ -1808,25 +1431,7 @@ VOS_VOID At_FillIpv6AddrInCmd (
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillIpv4AddrInCmd
- 功能描述  : 将协议格式的IPV4地址转换后放到AT命令中
- 输入参数  : *pusLength        AT命令的长度
-             *pucAddr          需要添加的协议格式的IPV4地址
-             ulAddrValidFlg    当前参数是否有效
-             ulSipPort         端口号
-             ulPortValidFlg    端口号是否有效
- 输出参数  : *pusLength        AT命令的长度
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_VOID At_FillIpv4AddrInCmd (
     VOS_UINT16                         *pusLength,
     VOS_UINT8                          *pucAddr,
@@ -1884,21 +1489,7 @@ VOS_VOID At_FillIpv4AddrInCmd (
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaPcscfSetCnf
- 功能描述  : 收到IMSA回复的ID_IMSA_AT_PCSCF_SET_CNF消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaPcscfSetCnf(
     VOS_VOID                           *pMsg
 )
@@ -1955,21 +1546,7 @@ VOS_UINT32 AT_RcvImsaPcscfSetCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaPcscfQryCnf
- 功能描述  : IMSA回复PCSCF地址查询消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaPcscfQryCnf(
     VOS_VOID                           *pMsg
 )
@@ -2086,21 +1663,7 @@ VOS_UINT32 AT_RcvImsaPcscfQryCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaDmDynSetCnf
- 功能描述  : 收到IMSA回复的ID_IMSA_AT_DMDYN_SET_CNF消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaDmDynSetCnf(
     VOS_VOID                           *pMsg
 )
@@ -2158,21 +1721,7 @@ VOS_UINT32 AT_RcvImsaDmDynSetCnf(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaDmDynQryCnf
- 功能描述  : IMSA回复动态变化参数查询消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaDmDynQryCnf(
     VOS_VOID                           *pMsg
 )
@@ -2286,21 +1835,7 @@ VOS_UINT32 AT_RcvImsaDmDynQryCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaDmcnInd
- 功能描述  : imsa主动上报ID_IMSA_AT_DMCN_IND消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaDmcnInd(
     VOS_VOID                           *pMsg
 )
@@ -2337,23 +1872,7 @@ VOS_UINT32 AT_RcvImsaDmcnInd(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ParseIpv6PcscfData
- 功能描述  : 解析AT命令中的IPV6地址
- 输入参数  : ulIndex            AT命令参数索引值，指示IPV6地址在参数中的位置
- 输出参数  : pulAddrExistFlg    IPV6地址是否存在并成功解析
-             pucIpAddr          解析后的IPV6地址
-             pulPortExistFlg    IPV6地址中端口号是否存在并成功解析
-             pulPortNum         解析后的端口号
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_ParseIpv6PcscfData(
     VOS_UINT32                         *pulAddrExistFlg,
     VOS_UINT8                          *pucIpAddr,
@@ -2395,21 +1914,7 @@ VOS_UINT32 AT_ParseIpv6PcscfData(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_FillIpv6PcscfData
- 功能描述  : 将AT命令中的IPV6地址填到PCSCF结构体中
- 输入参数  : pstPcscf           PCSCF设置请求结构体
-             ulIpv6Num          IPV6地址个数
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_FillIpv6PcscfData(
     AT_IMSA_PCSCF_SET_REQ_STRU         *pstPcscf
 )
@@ -2495,23 +2000,7 @@ VOS_UINT32 AT_FillIpv6PcscfData(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_ParseIpv4PcscfData
- 功能描述  : 解析AT命令中的IPV6地址
- 输入参数  : ulIndex            AT命令参数索引值，指示IPV4地址在参数中的位置
- 输出参数  : pulAddrExistFlg    IPV4地址是否存在并成功解析
-             pucIpAddr          解析后的IPV4地址
-             pulPortExistFlg    IPV4地址中端口号是否存在并成功解析
-             pulPortNum         解析后的端口号
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_ParseIpv4PcscfData(
     VOS_UINT32                         *pulAddrExistFlg,
     VOS_UINT8                          *pucIpAddr,
@@ -2588,21 +2077,7 @@ VOS_UINT32 AT_ParseIpv4PcscfData(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_FillIpv4PcscfData
- 功能描述  : 将AT命令中的IPV4地址填到PCSCF结构体中
- 输入参数  : pstPcscf           PCSCF设置请求结构体
-             ulIpv4Num          IPV4地址个数
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_FillIpv4PcscfData(
     AT_IMSA_PCSCF_SET_REQ_STRU         *pstPcscf
 )
@@ -2689,20 +2164,7 @@ VOS_UINT32 AT_FillIpv4PcscfData(
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_FillDataToPcscf
- 功能描述  : 将AT命令中的IPV6和IPV4地址填到PCSCF结构体中
- 输入参数  : pstAtPcscf     PCSCF结构体
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_FillDataToPcscf(
     AT_IMSA_PCSCF_SET_REQ_STRU         *pstPcscf
 )
@@ -2739,20 +2201,7 @@ VOS_UINT32 AT_FillDataToPcscf(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsPcscfPara
- 功能描述  : ^IMSPCSCF设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_SetImsPcscfPara(VOS_UINT8 ucIndex)
 {
     AT_IMSA_PCSCF_SET_REQ_STRU          stPcscf;
@@ -2812,22 +2261,7 @@ VOS_UINT32 AT_SetImsPcscfPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillImsPayloadTypePara
- 功能描述  : 将动态参数配置中IMS的payload type格式的参数放入消息结构体中
- 输入参数  : ulIndex          AT命令中参数的索引值
- 输出参数  : pulValue         参数取值
-             pulValueValidFlg 参数是否有效
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 At_FillImsPayloadTypePara (
     VOS_UINT32                         *pulValue,
     VOS_UINT32                         *pulValueValidFlg,
@@ -2859,22 +2293,7 @@ VOS_UINT32 At_FillImsPayloadTypePara (
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillImsAmrWbModePara
- 功能描述  : 将动态参数配置中IMS的AMR WB MODE的参数取值放入消息结构体中
- 输入参数  : ulIndex          AT命令中参数的索引值
- 输出参数  : pulValue         参数取值
-             pulValueValidFlg 参数是否有效
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 At_FillImsAmrWbModePara (
     VOS_UINT32                         *pulValue,
     VOS_UINT32                         *pulValueValidFlg,
@@ -2905,22 +2324,7 @@ VOS_UINT32 At_FillImsAmrWbModePara (
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillImsRtpPortPara
- 功能描述  : 将动态参数配置中IMS的相关RTP port参数放入消息结构体中
- 输入参数  : ulIndex          AT命令中参数的索引值
- 输出参数  : pulValue         参数取值
-             pulValueValidFlg 参数是否有效
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 At_FillImsRtpPortPara (
     VOS_UINT32                         *pulValue,
     VOS_UINT32                         *pulValueValidFlg,
@@ -2952,22 +2356,7 @@ VOS_UINT32 At_FillImsRtpPortPara (
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillImsaNumericPara
- 功能描述  : 将动态参数配置中IMSA的相关的数字格式参数放入消息结构体中
- 输入参数  : ulIndex          AT命令中参数的索引值
- 输出参数  : pulValue         参数取值
-             pulValueValidFlg 参数是否有效
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 At_FillImsaNumericPara (
     VOS_UINT32                         *pulValue,
     VOS_UINT32                         *pulValueValidFlg,
@@ -2991,23 +2380,7 @@ VOS_UINT32 At_FillImsaNumericPara (
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillImsaStrPara
- 功能描述  : 将动态参数配置中IMSA的相关的字符串格式参数放入消息结构体中
- 输入参数  : ulIndex           AT命令中参数的索引值
-             ulMaxLen          字符串最大长度
- 输出参数  : pucStr            写入的字符串
-             pulStrValidFlg    字符串是否有效
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月16日
-    作    者   : z00359541
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 At_FillImsaStrPara (
     VOS_CHAR                           *pucStr,
     VOS_UINT32                         *pulStrValidFlg,
@@ -3038,20 +2411,7 @@ VOS_UINT32 At_FillImsaStrPara (
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetDmDynPara
- 功能描述  : ^DMDYN设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_SetDmDynPara(TAF_UINT8 ucIndex)
 {
     AT_IMSA_DMDYN_SET_REQ_STRU          stDmdynSetReq;
@@ -3218,21 +2578,7 @@ VOS_UINT32 AT_SetDmDynPara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsPcscfPara
- 功能描述  : 处理AT^IMSPCSCF的AT查询命令
- 输入参数  : VOS_UINT8                           ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryImsPcscfPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32                          ulRet;
@@ -3262,21 +2608,7 @@ VOS_UINT32 AT_QryImsPcscfPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryDmDynPara
- 功能描述  : 处理AT^DMDYN的AT查询命令
- 输入参数  : VOS_UINT8                           ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年06月18日
-    作    者   : z00359541
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryDmDynPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32                          ulRet;
@@ -3305,21 +2637,7 @@ VOS_UINT32 AT_QryDmDynPara(VOS_UINT8 ucIndex)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_IMSA_IMSTIMER_PARA_FILL
- 功能描述  : 组装发送给IMSA的时间信息
- 输入参数  : AT_IMSA_IMSTIMER_SET_REQ_STRU* pstImsTimer
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-
-*****************************************************************************/
 VOS_UINT32 AT_FillImsTimerReqBitAndPara(
     VOS_UINT32                          *pulValue,
     VOS_UINT32                          *pulBitOpValue,
@@ -3354,21 +2672,7 @@ VOS_UINT32 AT_FillImsTimerReqBitAndPara(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_FillDataToImsTimer
- 功能描述  : 组装发送给IMSA的时间信息
- 输入参数  : AT_IMSA_IMSTIMER_SET_REQ_STRU* pstImsTimer
- 输出参数  : 无
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-
-*****************************************************************************/
 VOS_UINT32 AT_FillImsTimerReqData(
     AT_IMSA_IMSTIMER_SET_REQ_STRU       *pstImsTimer
 )
@@ -3537,21 +2841,7 @@ VOS_UINT32 AT_FillImsTimerReqData(
 
 }
 
-/*****************************************************************************
- 函 数 名  : At_FillImsaTimerParaInCmd
- 功能描述  : 将数字格式的参数放到AT命令中
- 输入参数  : *pusLength        AT命令的长度
-             ulValue           需要添加的数字格式的参数
-             ulValueValidFlg   当前参数是否有效
- 输出参数  : *pusLength        AT命令的长度
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
-  1.日    期   : 2016年6月29日
-    作    者   : f00367319
-    修改内容   : 新增
-*****************************************************************************/
 VOS_VOID At_FillImsaTimerParaInCmd(
     VOS_UINT16                         *pusLength,
     VOS_UINT32                          ulValue,
@@ -3581,21 +2871,7 @@ VOS_VOID At_FillImsaTimerParaInCmd(
     return;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetDmTimerPara
- 功能描述  : ^DMTIMER设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-
-*****************************************************************************/
 VOS_UINT32 AT_SetImsTimerPara(
     VOS_UINT8                           ucIndex
 )
@@ -3642,21 +2918,7 @@ VOS_UINT32 AT_SetImsTimerPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsSmsPsiPara
- 功能描述  : ^IMSPSI设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月18日
-    作    者   : f00367319
-    修改内容   : 新增
-
-*****************************************************************************/
 VOS_UINT32 AT_SetImsSmsPsiPara(
     VOS_UINT8                           ucIndex
 )
@@ -3714,19 +2976,7 @@ VOS_UINT32 AT_SetImsSmsPsiPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsTimerPara
- 功能描述  : ^DMTIMER查询命令处理函数,查询
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
-  1.日    期   : 2016年6月20日
-    作    者   : f00367319
-    修改内容   : 新建
-*****************************************************************************/
 VOS_UINT32 AT_QryImsTimerPara(
     VOS_UINT8                           ucIndex
 )
@@ -3760,19 +3010,7 @@ VOS_UINT32 AT_QryImsTimerPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsSmsPsiPara
- 功能描述  : ^IMSPSI查询命令处理函数,查询
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
-  1.日    期   : 2016年6月20日
-    作    者   : f00367319
-    修改内容   : 新建
-*****************************************************************************/
 VOS_UINT32 AT_QryImsSmsPsiPara(
     VOS_UINT8                           ucIndex
 )
@@ -3806,19 +3044,7 @@ VOS_UINT32 AT_QryImsSmsPsiPara(
 
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryDmUserPara
- 功能描述  : ^DMUSER查询命令处理函数,查询
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
-  1.日    期   : 2016年6月20日
-    作    者   : f00367319
-    修改内容   : 新建
-*****************************************************************************/
 VOS_UINT32 AT_QryDmUserPara(
     VOS_UINT8                           ucIndex
 )
@@ -3852,19 +3078,7 @@ VOS_UINT32 AT_QryDmUserPara(
 
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsTimerSetCnf
- 功能描述  : ^DMTIMER设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-  1.日    期   : 2016年6月21日
-    作    者   : f00367319
-    修改内容   : 新建
 
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsTimerSetCnf(
     VOS_VOID                            *pMsg
 )
@@ -3919,19 +3133,7 @@ VOS_UINT32 AT_RcvImsaImsTimerSetCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsTimerQryCnf
- 功能描述  : ^DMTIMER设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-  1.日    期   : 2016年6月21日
-    作    者   : f00367319
-    修改内容   : 新建
 
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsTimerQryCnf(
     VOS_VOID                            *pMsg
 )
@@ -4078,19 +3280,7 @@ VOS_UINT32 AT_RcvImsaImsTimerQryCnf(
 
     return VOS_OK;
 }
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsPsiSetCnf
- 功能描述  : ^IMSPSI设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-  1.日    期   : 2016年6月21日
-    作    者   : f00367319
-    修改内容   : 新建
 
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsPsiSetCnf(
     VOS_VOID                            *pMsg
 )
@@ -4146,19 +3336,7 @@ VOS_UINT32 AT_RcvImsaImsPsiSetCnf(
 
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsPsiQryCnf
- 功能描述  : ^IMSPSI查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-  1.日    期   : 2016年6月21日
-    作    者   : f00367319
-    修改内容   : 新建
 
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsPsiQryCnf(
     VOS_VOID                            *pMsg
 )
@@ -4220,19 +3398,7 @@ VOS_UINT32 AT_RcvImsaImsPsiQryCnf(
     return VOS_OK;
 
 }
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaDmUserQryCnf
- 功能描述  : ^DMUSER查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-  1.日    期   : 2016年6月21日
-    作    者   : f00367319
-    修改内容   : 新建
 
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaDmUserQryCnf(
     VOS_VOID                            *pMsg
 )
@@ -4250,8 +3416,10 @@ VOS_UINT32 AT_RcvImsaDmUserQryCnf(
     TAF_MEM_SET_S(&stNvSmsDomain, sizeof(TAF_NVIM_SMS_DOMAIN_STRU), 0x00, sizeof(TAF_NVIM_SMS_DOMAIN_STRU));
 
     /* 读NV项en_NV_Item_SMS_DOMAIN，失败，直接返回 */
-    if (NV_OK != NV_ReadEx(MODEM_ID_0, en_NV_Item_SMS_DOMAIN,
-                           &stNvSmsDomain, (VOS_UINT32)sizeof(TAF_NVIM_SMS_DOMAIN_STRU)))
+    if (NV_OK != TAF_ACORE_NV_READ(MODEM_ID_0,
+                                   en_NV_Item_SMS_DOMAIN,
+                                   &stNvSmsDomain,
+                                   (VOS_UINT32)sizeof(TAF_NVIM_SMS_DOMAIN_STRU)))
     {
 
         AT_ERR_LOG("AT_RcvImsaDmUserQryCnf():WARNING: read en_NV_Item_SMS_DOMAIN Error");
@@ -4314,21 +3482,7 @@ VOS_UINT32 AT_RcvImsaDmUserQryCnf(
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_SetNickNamePara
- 功能描述  : ^NICKNAME设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetNickNamePara(TAF_UINT8 ucIndex)
 {
     AT_IMSA_NICKNAME_SET_REQ_STRU       stNickname;
@@ -4392,21 +3546,7 @@ VOS_UINT32 AT_SetNickNamePara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryNickNamePara
- 功能描述  : ^NICKNAME查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryNickNamePara(TAF_UINT8 ucIndex)
 {
     AT_IMSA_NICKNAME_QRY_REQ_STRU       stNickNameQryReq;
@@ -4438,21 +3578,7 @@ VOS_UINT32 AT_QryNickNamePara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaNickNameSetCnf
- 功能描述  : ^NICKNAME设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaNickNameSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -4505,21 +3631,7 @@ VOS_UINT32 AT_RcvImsaNickNameSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaNickNameQryCnf
- 功能描述  : ^NICKNAME查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaNickNameQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -4599,20 +3711,7 @@ VOS_UINT32 AT_RcvImsaNickNameQryCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsRegFailInd
- 功能描述  : imsa主动上报ID_IMSA_AT_REGFAIL_IND消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsRegFailInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -4644,21 +3743,7 @@ VOS_UINT32 AT_RcvImsaImsRegFailInd(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetBatteryInfoPara
- 功能描述  : ^BATTERYINFO设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetBatteryInfoPara(TAF_UINT8 ucIndex)
 {
     AT_MODEM_IMS_CONTEXT_STRU          *pstLocalBatteryInfo = VOS_NULL_PTR;
@@ -4711,21 +3796,7 @@ VOS_UINT32 AT_SetBatteryInfoPara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaBatteryInfoSetCnf
- 功能描述  : ^BATTERYINFO设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaBatteryInfoSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -4784,21 +3855,7 @@ VOS_UINT32 AT_RcvImsaBatteryInfoSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryBatteryInfoPara
- 功能描述  : ^BATTERYINFO查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年7月18日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryBatteryInfoPara(TAF_UINT8 ucIndex)
 {
     AT_MODEM_IMS_CONTEXT_STRU          *pstLocalBatteryInfo = VOS_NULL_PTR;
@@ -4829,21 +3886,7 @@ VOS_UINT32 AT_QryBatteryInfoPara(TAF_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetVolteRegPara
- 功能描述  : ^VOLTEREG设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年09月06日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetVolteRegPara(TAF_UINT8 ucIndex)
 {
     VOS_UINT32                          ulResult;
@@ -4871,36 +3914,36 @@ VOS_UINT32 AT_SetVolteRegPara(TAF_UINT8 ucIndex)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsVideoCallCancelPara
- 功能描述  : ^IMSVIDEOCALLCANCEL设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月13日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetImsVideoCallCancelPara(TAF_UINT8 ucIndex)
 {
     VOS_UINT32                          ulResult;
+    AT_IMSA_CANCEL_ADD_VIDEO_REQ_STRU   stImsCancelAddVideoReq;
 
-    if (AT_CMD_OPT_SET_CMD_NO_PARA != g_stATParseCmd.ucCmdOptType)
+    TAF_MEM_SET_S(&stImsCancelAddVideoReq, sizeof(stImsCancelAddVideoReq), 0x00, sizeof(AT_IMSA_CANCEL_ADD_VIDEO_REQ_STRU));
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
     {
+        AT_WARN_LOG("AT_SetImsVideoCallCancelPara: NOT AT_CMD_OPT_SET_PARA_CMD!");
         return AT_CME_INCORRECT_PARAMETERS;
     }
+
+    /* 参数个数不正确 */
+    if (1 != gucAtParaIndex)
+    {
+        AT_WARN_LOG("AT_SetImsVideoCallCancelPara: para num is not equal 1!");
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    stImsCancelAddVideoReq.ulCallIndex = gastAtParaList[0].ulParaValue;
 
     /* 给IMSA发送^IMSVIDEOCALLCANCEL查询请求 */
     ulResult = AT_FillAndSndAppReqMsg(gastAtClientTab[ucIndex].usClientId,
                                       0,
                                       ID_AT_IMSA_CANCEL_ADD_VIDEO_REQ,
-                                      VOS_NULL_PTR,
-                                      0,
+                                      &(stImsCancelAddVideoReq.ulCallIndex),
+                                      (VOS_UINT32)sizeof(stImsCancelAddVideoReq.ulCallIndex),
                                       PS_PID_IMSA);
 
     if (TAF_SUCCESS != ulResult)
@@ -4914,21 +3957,7 @@ VOS_UINT32 AT_SetImsVideoCallCancelPara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsVideoCallCancelSetCnf
- 功能描述  : ^IMSVIDEOCALLCANCEL设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月13日
-    作    者   : w00316404
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsVideoCallCancelSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -4981,21 +4010,7 @@ VOS_UINT32 AT_RcvImsaImsVideoCallCancelSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_ParseImsvtcapcfgPara
- 功能描述  : 解析IMSVTCAPCFG命令
- 输入参数  : TAF_MMA_IMS_VIDEO_CALL_CAP_STRU            *pstImsVtCap
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年5月10日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_ParseImsvtcapcfgPara(
     TAF_MMA_IMS_VIDEO_CALL_CAP_STRU    *pstImsVtCap
 )
@@ -5017,21 +4032,7 @@ VOS_UINT32 At_ParseImsvtcapcfgPara(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsVtCapCfgPara
- 功能描述  : AT^IMSVTCAPCFG=<type>,<value>
-             IMS VT能力配置命令
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : VOS_INT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年05月10日
-    作    者   : n00269697
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetImsVtCapCfgPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32                          ulRst;
@@ -5081,20 +4082,7 @@ VOS_UINT32 AT_SetImsVtCapCfgPara(VOS_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvMmaImsVideoCallCapSetCnf
- 功能描述  : AT模块收到MMA回复的ID_TAF_MMA_IMS_VIDEO_CALL_CAP_SET_CNF消息的处理函数
- 输入参数  : pMsg -- 消息内容
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年05月10日
-    作    者   : n00269697
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_RcvMmaImsVideoCallCapSetCnf(
     VOS_VOID                           *pMsg
 )
@@ -5145,24 +4133,7 @@ VOS_UINT32 AT_RcvMmaImsVideoCallCapSetCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsSmsCfgPara
- 功能描述  : AT^IMSSMSCFG=<value>
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : VOS_INT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月31日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-  2.日    期   : 2017年2月27日
-    作    者   : l00198894
-    修改内容   : IMS Over GU
-*****************************************************************************/
 VOS_UINT32 AT_SetImsSmsCfgPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32                          ulRst;
@@ -5213,21 +4184,7 @@ VOS_UINT32 AT_SetImsSmsCfgPara(VOS_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsSmsCfgPara
- 功能描述  : ^IMSSMSCFG?查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年10月31日
-    作    者   : m00217266
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryImsSmsCfgPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32 ulResult;
@@ -5255,20 +4212,7 @@ VOS_UINT32 AT_QryImsSmsCfgPara(VOS_UINT8 ucIndex)
 
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvMmaImsSmsCfgSetCnf
- 功能描述  : AT模块收到MMA回复的ID_TAF_MMA_IMS_DOMAIN_CFG_SET_CNF消息的处理函数
- 输入参数  : pMsg -- 消息内容
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月26日
-    作    者   : m00217266
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_RcvMmaImsSmsCfgSetCnf(
     VOS_VOID                           *pMsg
 )
@@ -5318,24 +4262,7 @@ VOS_UINT32 AT_RcvMmaImsSmsCfgSetCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvMmaImsSmsCfgQryCnf
- 功能描述  : AT模块收到MMA回复的ID_TAF_MMA_IMS_SMS_CFG_QRY_CNF消息的处理函数
- 输入参数  : pMsg -- 消息内容
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月26日
-    作    者   : m00217266
-    修改内容   : 新增
-
-  2.日    期   : 2017年3月1日
-    作    者   : l00198894
-    修改内容   : IMS Over GU
-*****************************************************************************/
 VOS_UINT32 AT_RcvMmaImsSmsCfgQryCnf(
     VOS_VOID                           *pMsg
 )
@@ -5394,21 +4321,7 @@ VOS_UINT32 AT_RcvMmaImsSmsCfgQryCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsRegErrRpt
- 功能描述  : ^IMSREGERRRPT设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年11月15日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetImsRegErrRpt(
     TAF_UINT8                           ucIndex
 )
@@ -5456,21 +4369,7 @@ VOS_UINT32 AT_SetImsRegErrRpt(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaRegErrRptSetCnf
- 功能描述  : ^IMSREGERRRPT设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年11月15日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaRegErrRptSetCnf(
     VOS_VOID                           *pMsg
 )
@@ -5525,21 +4424,7 @@ VOS_UINT32 AT_RcvImsaRegErrRptSetCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsRegErrRpt
- 功能描述  : ^IMSREGERRRPT查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年11月15日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryImsRegErrRpt(
     TAF_UINT8                           ucIndex
 )
@@ -5572,21 +4457,7 @@ VOS_UINT32 AT_QryImsRegErrRpt(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsVideoCallCancelSetCnf
- 功能描述  : ^IMSREGERRRPT查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年11月15日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaRegErrRptQryCnf(
     VOS_VOID                           *pMsg
 )
@@ -5643,21 +4514,7 @@ VOS_UINT32 AT_RcvImsaRegErrRptQryCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaRegErrRptInd
- 功能描述  : imsa上报注册失败消息处理
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年11月15日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaRegErrRptInd(
     VOS_VOID                           *pMsg
 )
@@ -5717,23 +4574,7 @@ VOS_UINT32 AT_RcvImsaRegErrRptInd(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_IsImsRegErrRptParaValid
- 功能描述  : imsa上报的注册失败上报参数是否有效
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
-             VOS_TRUE       imsa上报参数有效
-             VOS_FALSE      imsa上报参数无效
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年11月21日
-    作    者   : m00217266
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_IsImsRegErrRptParaValid(
     VOS_VOID                           *pMsg
 )
@@ -5783,20 +4624,7 @@ VOS_UINT32 AT_IsImsRegErrRptParaValid(
     return VOS_TRUE;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsSrvStatRptCfgPara
- 功能描述  : ^IMSSRVSTATRPT设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_SetImsSrvStatRptCfgPara(TAF_UINT8 ucIndex)
 {
     AT_IMSA_IMS_SRV_STAT_REPORT_SET_REQ_STRU    stImsSrvStatRptSetReq;
@@ -5845,20 +4673,7 @@ VOS_UINT32 AT_SetImsSrvStatRptCfgPara(TAF_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsSrvStatRptSetCnf
- 功能描述  : ^IMSSRVSTATRPT设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsSrvStatRptSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -5911,20 +4726,7 @@ VOS_UINT32 AT_RcvImsaImsSrvStatRptSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsSrvStatRptCfgPara
- 功能描述  : ^IMSSRVSTATRPT查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_QryImsSrvStatRptCfgPara(TAF_UINT8 ucIndex)
 {
     VOS_UINT32                          ulRst;
@@ -5955,20 +4757,7 @@ VOS_UINT32 AT_QryImsSrvStatRptCfgPara(TAF_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsSrvStatRptQryCnf
- 功能描述  : ^IMSSRVSTATRPT查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsSrvStatRptQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -6030,20 +4819,7 @@ VOS_UINT32 AT_RcvImsaImsSrvStatRptQryCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsSrvStatusPara
- 功能描述  : ^IMSSRVSTATUS查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_QryImsSrvStatusPara(TAF_UINT8 ucIndex)
 {
     VOS_UINT32                          ulRst;
@@ -6074,20 +4850,7 @@ VOS_UINT32 AT_QryImsSrvStatusPara(TAF_UINT8 ucIndex)
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsSrvStatusQryCnf
- 功能描述  : ^IMSSRVSTATUS查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年06月05日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsSrvStatusQryCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -6157,21 +4920,7 @@ VOS_UINT32 AT_RcvImsaImsSrvStatusQryCnf(VOS_VOID * pMsg)
 }
 
 
-/*****************************************************************************
- 函   数   名 : AT_SetEmcAIdPara
- 功能描述  : ^WIEMCAID设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
 
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年7月10日
-    作    者   : d81022901
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_SetEmcAIdPara(VOS_UINT8 ucIndex)
 {
     AT_IMSA_EMERGENCY_AID_INFO_STRU             stEmcAIdInfo;
@@ -6223,20 +4972,7 @@ VOS_UINT32 AT_SetEmcAIdPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函   数   名 : AT_RcvImsaEmcAIdSetCnf
- 功能描述  : ^WIEMCAID设置命令返回函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年7月10日
-    作    者   : d81022901
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaEmcAIdSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -6289,15 +5025,7 @@ VOS_UINT32 AT_RcvImsaEmcAIdSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaCallAltSrvInd
- 功能描述  : ^CALLALTSRV主动上报消息处理函数
- 输入参数  : *pMsg        主动上报消息
 
-  1.日    期   : 2017年07月06日
-    作    者   : m00217266
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaCallAltSrvInd(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -6328,21 +5056,7 @@ VOS_UINT32 AT_RcvImsaCallAltSrvInd(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetDmRcsCfgPara
- 功能描述  : ^DMRCSCFG设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年7月6日
-    作    者   : m00217266
-    修改内容   : 新增
-
-*****************************************************************************/
 VOS_UINT32 AT_SetDmRcsCfgPara(
     VOS_UINT8                           ucIndex
 )
@@ -6392,21 +5106,7 @@ VOS_UINT32 AT_SetDmRcsCfgPara(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetRcsSwitch
- 功能描述  : ^RCSSWITCH设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年7月6日
-    作    者   : m00217266
-    修改内容   : 新增
-
-*****************************************************************************/
 VOS_UINT32 AT_SetRcsSwitch(
     VOS_UINT8                           ucIndex
 )
@@ -6450,19 +5150,7 @@ VOS_UINT32 AT_SetRcsSwitch(
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryRcsSwitch
- 功能描述  : ^RCSSWITCH查询命令处理函数,查询
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
-  1.日    期   : 2017年7月10日
-    作    者   : m00217266
-    修改内容   : 新建
-*****************************************************************************/
 VOS_UINT32 AT_QryRcsSwitch(
     VOS_UINT8                           ucIndex
 )
@@ -6490,20 +5178,7 @@ VOS_UINT32 AT_QryRcsSwitch(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaDmRcsCfgSetCnf
- 功能描述  : ^DMRCSCFG设置请求回复消息处理函数
- 输入参数  : *pMsg        主动上报消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年07月06日
-    作    者   : m00217266
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaDmRcsCfgSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -6555,20 +5230,7 @@ VOS_UINT32 AT_RcvImsaDmRcsCfgSetCnf(VOS_VOID * pMsg)
 
     return VOS_OK;
 }
-/*****************************************************************************
- 函 数 名  : AT_RcvMmaRcsSwitchQryCnf
- 功能描述  : AT模块收到MMA回复的ID_TAF_MMA_RCS_SWITCH_QRY_CNF消息的处理函数
- 输入参数  : pMsg -- 消息内容
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年07月10日
-    作    者   : m00217266
-    修改内容   : 新增
-*****************************************************************************/
 VOS_UINT32 AT_RcvMmaRcsSwitchQryCnf(
     VOS_VOID                           *pMsg
 )
@@ -6624,20 +5286,7 @@ VOS_UINT32 AT_RcvMmaRcsSwitchQryCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函   数   名 : AT_ProcUserAgentPara
- 功能描述  : ^USERAGENTCFG设置命令参数赋值函数
- 输入参数  : AT_IMSA_USER_AGENT_CFG_STRU             *pstUserAgentCfg
- 输出参数  : 无
- 返 回 值  : VOS_VOID
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年8月21日
-    作    者   : d81022901
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_VOID AT_ProcUserAgentPara(
     AT_IMSA_USER_AGENT_CFG_STRU             *pstUserAgentCfg
 )
@@ -6677,20 +5326,7 @@ VOS_VOID AT_ProcUserAgentPara(
     return;
 }
 
-/*****************************************************************************
- 函   数   名 : AT_SetUserAgentCfgPara
- 功能描述  : ^USERAGENTCFG设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年8月21日
-    作    者   : d81022901
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_SetUserAgentCfgPara(VOS_UINT8 ucIndex)
 {
     AT_IMSA_USER_AGENT_CFG_STRU              stUserAgentCfg;
@@ -6743,20 +5379,7 @@ VOS_UINT32 AT_SetUserAgentCfgPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函   数   名 : AT_RcvImsaUserAgentSetCnf
- 功能描述  : ^USERAGENTCFG设置命令返回函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年8月21日
-    作    者   : d81022901
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaUserAgentSetCnf(VOS_VOID * pMsg)
 {
     /* 定义局部变量 */
@@ -6810,21 +5433,39 @@ VOS_UINT32 AT_RcvImsaUserAgentSetCnf(VOS_VOID * pMsg)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetEflociInfoPara
- 功能描述  : AT_CMD_EFLOCIINFO，设置卡文件6f7e
- 输入参数  : ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新生成函数
+VOS_UINT32 AT_RcvImsaImpuInd(VOS_VOID * pMsg)
+{
+    /* 定义局部变量 */
+    IMSA_AT_IMPU_TYPE_IND_STRU                 *pstImpuInd    = VOS_NULL_PTR;
+    VOS_UINT8                                   ucIndex;
 
-*****************************************************************************/
+    /* 初始化消息变量 */
+    ucIndex             = 0;
+    pstImpuInd          = (IMSA_AT_IMPU_TYPE_IND_STRU *)pMsg;
+
+    /* 通过ClientId获取ucIndex */
+    if (AT_FAILURE == At_ClientIdToUserId(pstImpuInd->stAppCtrl.usClientId, &ucIndex))
+    {
+        AT_WARN_LOG("AT_RcvImsaImpuInd: WARNING:AT INDEX NOT FOUND!");
+        return VOS_ERR;
+    }
+
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr,
+                                       "%s%s%d%s",
+                                       gaucAtCrLf,
+                                       gastAtStringTab[AT_STRING_IMPU].pucText,
+                                       pstImpuInd->enImpuType,
+                                       gaucAtCrLf);
+
+    At_SendResultData(ucIndex, pgucAtSndCodeAddr, gstAtSendData.usBufLen);
+
+    return VOS_OK;
+}
+
+
 VOS_UINT32 At_SetEflociInfoPara(VOS_UINT8 ucIndex)
 {
     TAF_MMA_EFLOCIINFO_STRU             stEfLociInfo;
@@ -6941,21 +5582,7 @@ VOS_UINT32 At_SetEflociInfoPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryEflociInfoPara
- 功能描述  : AT_CMD_EFLOCIINFO，查询卡文件6f7e
- 输入参数  : ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_QryEflociInfoPara(VOS_UINT8 ucIndex)
 {
     /* 参数检查 */
@@ -6975,21 +5602,7 @@ VOS_UINT32 At_QryEflociInfoPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetPsEflociInfoPara
- 功能描述  : AT_CMD_EFPSLOCIINFO，设置卡文件6f73
- 输入参数  : ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_SetPsEflociInfoPara(VOS_UINT8 ucIndex)
 {
     TAF_MMA_EFPSLOCIINFO_STRU           stPsefLociInfo;
@@ -7115,21 +5728,7 @@ VOS_UINT32 At_SetPsEflociInfoPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryPsEflociInfoPara
- 功能描述  : AT_CMD_EFPSLOCIINFO，查询卡文件6f73
- 输入参数  : ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月18日
-    作    者   : h00360002
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_QryPsEflociInfoPara(VOS_UINT8 ucIndex)
 {
     /* 参数检查 */
@@ -7151,21 +5750,7 @@ VOS_UINT32 At_QryPsEflociInfoPara(VOS_UINT8 ucIndex)
 
 
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsIpCapPara
- 功能描述  : ^IMSIPCAPCFG设置命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年12月12日
-    作    者   : lwx331495
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetImsIpCapPara(VOS_UINT8 ucIndex)
 {
     AT_IMSA_IMS_IP_CAP_SET_INFO_STRU    stImsIpCapSetInfo;
@@ -7218,21 +5803,7 @@ VOS_UINT32 AT_SetImsIpCapPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsIpCapSetCnf
- 功能描述  : ^IMSIPCAPCFG设置命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年12月12日
-    作    者   : lwx331495
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsIpCapSetCnf(
     VOS_VOID                           *pMsg
 )
@@ -7287,21 +5858,7 @@ VOS_UINT32 AT_RcvImsaImsIpCapSetCnf(
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryImsIpCapPara
- 功能描述  : ^IMSIPCAPCFG查询命令处理函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年12月14日
-    作    者   : lwx331495
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryImsIpCapPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32                          ulResult;
@@ -7331,21 +5888,7 @@ VOS_UINT32 AT_QryImsIpCapPara(VOS_UINT8 ucIndex)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_RcvImsaImsIpCapQryCnf
- 功能描述  : ^IMSIPCAPCFG查询命令回复处理函数
- 输入参数  : *pMsg        回复消息
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年12月14日
-    作    者   : lwx331495
-    修改内容   : 新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_RcvImsaImsIpCapQryCnf(
     VOS_VOID                           *pMsg
 )
@@ -7410,22 +5953,7 @@ VOS_UINT32 AT_RcvImsaImsIpCapQryCnf(
 }
 
 
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, begin */
-/*****************************************************************************
- 函 数 名  : AT_CheckCacdcPara
- 功能描述  : AT+CACDC命令参数有效性检查
- 输入参数  : 无
- 输出参数  :
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年02月05日
-    作    者   : wx270776
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL VOS_UINT32 AT_CheckCacdcPara(VOS_VOID)
 {
 
@@ -7461,22 +5989,7 @@ LOCAL VOS_UINT32 AT_CheckCacdcPara(VOS_VOID)
     return AT_SUCCESS;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetCacdcPara
- 功能描述  : AT+CACDC
 
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年02月05日
-    作    者   : wx270776
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetCacdcPara(VOS_UINT8 ucIndex)
 {
     TAF_MMA_ACDC_APP_INFO_STRU          stAcdcAppInfo;
@@ -7532,23 +6045,8 @@ VOS_UINT32 AT_SetCacdcPara(VOS_UINT8 ucIndex)
 
     return AT_ERROR;
 }
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-4, end */
 
-/*****************************************************************************
- 函 数 名  : AT_CheckErrcCapCfgPara
- 功能描述  : AT^ERRCCAPCFG命令参数有效性检查
- 输入参数  : 无
- 输出参数  :
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月10日
-    作    者   : wx270776
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL VOS_UINT32 AT_CheckErrcCapCfgPara(VOS_VOID)
 {
     /* 参数有效性检查 */
@@ -7576,21 +6074,7 @@ LOCAL VOS_UINT32 AT_CheckErrcCapCfgPara(VOS_VOID)
     return AT_SUCCESS;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetErrcCapCfgPara
- 功能描述  : ^ERRCCAPCFG
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月10日
-    作    者   : wx270776
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetErrcCapCfgPara(VOS_UINT8 ucIndex)
 {
     AT_MTA_ERRCCAP_CFG_REQ_STRU         stSetErrcCapCfgReq;
@@ -7637,21 +6121,7 @@ VOS_UINT32 AT_SetErrcCapCfgPara(VOS_UINT8 ucIndex)
     return AT_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetErrcCapQryPara
- 功能描述  : ^ERRCCAPQRY
- 输入参数  : ucIndex - 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月10日
-    作    者   : wx270776
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetErrcCapQryPara(VOS_UINT8 ucIndex)
 {
     AT_MTA_ERRCCAP_QRY_REQ_STRU         stSetErrcCapQryReq;

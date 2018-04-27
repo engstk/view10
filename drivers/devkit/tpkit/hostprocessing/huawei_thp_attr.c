@@ -55,11 +55,7 @@ static ssize_t thp_hostprocessing_show(struct kobject *kobj,
 static ssize_t thp_status_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
-	struct thp_core_data *cd = thp_get_core_data();
-	return snprintf(buf, PAGE_SIZE, "charger=%d power=%d tui=%d roi=%d\n"
-			"power : %d\ntui : %d\n",             /*we should remove this line once the aptouch_daemon has switched to this way.*/
-			cd->charger_state, !cd->suspended, cd->tui_flag, cd->roi_enabled,
-			!cd->suspended, cd->tui_flag);       /*we should remove this line once the aptouch_daemon has switched to this way.*/
+	return snprintf(buf, PAGE_SIZE - 1, "status=0x%x\n", thp_get_status_all());
 }
 
 /*
@@ -95,7 +91,7 @@ static ssize_t thp_host_charger_state_show(struct kobject *kobj,
 
 	THP_LOG_DEBUG("%s called\n", __func__);
 
-	return snprintf(buf, 32, "%d\n", ts->charger_state);
+	return snprintf(buf, 32, "%d\n", thp_get_status(THP_STATUS_CHARGER));
 }
 static ssize_t thp_host_charger_state_store(struct kobject *kobj,
 		struct kobj_attribute *attr, const char *buf, size_t count)
@@ -109,13 +105,13 @@ static ssize_t thp_host_charger_state_store(struct kobject *kobj,
 
 	THP_LOG_INFO("%s: input value is %d\n", __func__, value);
 
-	ts->charger_state = value;
+	thp_set_status(THP_STATUS_CHARGER, value);
 
 	return count;
 }
 #endif
 
-static ssize_t host_roi_data_show(struct kobject* kobj,
+static ssize_t thp_roi_data_show(struct kobject* kobj,
 				struct kobj_attribute* attr, char* buf)
 {
 	struct thp_core_data *cd = thp_get_core_data();
@@ -139,7 +135,7 @@ static const char* move_to_next_number(const char* str_in)
 	return str_in;
 }
 
-static ssize_t host_roi_data_store(struct kobject* kobj,
+static ssize_t thp_roi_data_store(struct kobject* kobj,
 		struct kobj_attribute* attr, const char* buf, size_t count)
 {
 	int i = 0;
@@ -159,7 +155,7 @@ static ssize_t host_roi_data_store(struct kobject* kobj,
 	return count;
 }
 
-static ssize_t host_roi_data_debug_show(struct kobject* kobj,
+static ssize_t thp_roi_data_debug_show(struct kobject* kobj,
 				struct kobj_attribute* attr, char* buf)
 {
 	int count = 0;
@@ -178,7 +174,7 @@ static ssize_t host_roi_data_debug_show(struct kobject* kobj,
 	return count;
 }
 
-static ssize_t host_roi_enable_store(struct kobject* kobj,
+static ssize_t thp_roi_enable_store(struct kobject* kobj,
 		struct kobj_attribute* attr, const char* buf, size_t count)
 {
 	struct thp_core_data *cd = thp_get_core_data();
@@ -192,84 +188,155 @@ static ssize_t host_roi_enable_store(struct kobject* kobj,
 		return ret;
 	}
 
-	cd->roi_enabled = !!status;
-	THP_LOG_INFO("%s: set roi enable status to %d\n", __func__, cd->roi_enabled);
+	thp_set_status(THP_STATUS_ROI, !!status);
+	THP_LOG_INFO("%s: set roi enable status to %d\n", __func__, !!status);
 
 	return count;
 }
 
-static ssize_t host_roi_enable_show(struct kobject* kobj,
+static ssize_t thp_roi_enable_show(struct kobject* kobj,
 					struct kobj_attribute* attr, char* buf)
 {
 	struct thp_core_data *cd = thp_get_core_data();
 
-	return snprintf(buf, PAGE_SIZE - 1, "%d\n", cd->roi_enabled);
+	return snprintf(buf, PAGE_SIZE - 1, "%d\n",
+			thp_get_status(THP_STATUS_ROI));
 }
 
-struct device_attribute attr_thp_status = {
-	.attr = {.name = "thp_status",
-		 .mode = S_IRUGO },
-	.show	= thp_status_show,
-	.store	= NULL,
-};
+static ssize_t thp_holster_enable_store(struct kobject* kobj,
+		struct kobj_attribute* attr, const char* buf, size_t count)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+	long status = 0;
+	int ret;
 
-struct device_attribute attr_touch_chip_info = {
-	.attr = {.name = "touch_chip_info",
-		 .mode = S_IRUGO },
-	.show	= thp_chip_info_show,
-	.store	= NULL,
-};
-struct device_attribute attr_hostprocessing = {
-	.attr = {.name = "hostprocessing",
-		 .mode = S_IRUGO },
-	.show	= thp_hostprocessing_show,
-	.store	= NULL,
-};
-struct device_attribute attr_loglevel = {
-	.attr = {.name = "loglevel",
-		 .mode = S_IRUGO },
-	.show	= thp_loglevel_show,
-	.store	= NULL,
-};
 
-#if defined(THP_CHARGER_FB)
-struct device_attribute attr_charger_state = {
-	.attr = {.name = "charger_state",
-		 .mode = (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP) },
-	.show	= thp_host_charger_state_show,
-	.store	= thp_host_charger_state_store,
-};
-#endif
-struct device_attribute attr_roi_data = {
-	.attr = {.name = "roi_data",
-		 .mode = (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP) },
-	.show	= host_roi_data_show,
-	.store	= host_roi_data_store,
-};
-struct device_attribute attr_roi_data_internal = {
-	.attr = {.name = "roi_data_internal",
-		 .mode = S_IRUGO },
-	.show	= host_roi_data_debug_show,
-	.store	= NULL,
-};
-struct device_attribute attr_roi_enable = {
-	.attr = {.name = "roi_enable",
-		 .mode = (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP) },
-	.show	= host_roi_enable_show,
-	.store	= host_roi_enable_store,
-};
+	ret = strict_strtoul(buf, 10, &status);
+	if (ret) {
+		THP_LOG_ERR("%s: illegal input\n", __func__);
+		return ret;
+	}
+
+	thp_set_status(THP_STATUS_HOLSTER, !!status);
+	THP_LOG_INFO("%s: set holster status to %d\n", __func__, !!status);
+
+	return count;
+}
+
+static ssize_t thp_holster_enable_show(struct kobject* kobj,
+					struct kobj_attribute* attr, char* buf)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+
+	return snprintf(buf, PAGE_SIZE - 1, "%d\n",
+			thp_get_status(THP_STATUS_HOLSTER));
+}
+
+static ssize_t thp_glove_enable_store(struct kobject* kobj,
+		struct kobj_attribute* attr, const char* buf, size_t count)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+	long status = 0;
+	int ret;
+
+
+	ret = strict_strtoul(buf, 10, &status);
+	if (ret) {
+		THP_LOG_ERR("%s: illegal input\n", __func__);
+		return ret;
+	}
+
+	thp_set_status(THP_STATUS_GLOVE, !!status);
+	THP_LOG_INFO("%s: set glove status to %d\n", __func__, !!status);
+
+	return count;
+}
+
+static ssize_t thp_glove_enable_show(struct kobject* kobj,
+					struct kobj_attribute* attr, char* buf)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+
+	return snprintf(buf, PAGE_SIZE - 1, "%d\n",
+			thp_get_status(THP_STATUS_GLOVE));
+}
+
+
+static ssize_t thp_holster_window_store(struct kobject* kobj,
+		struct kobj_attribute* attr, const char* buf, size_t count)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+	int ret;
+
+	int window_enable;
+	int x0 = 0;
+	int y0 = 0;
+	int x1 = 0;
+	int y1 = 0;
+
+	ret = sscanf(buf,"%4d %4d %4d %4d %4d", &window_enable, &x0,&y0,&x1, &y1);
+	if (ret <= 0) {
+		THP_LOG_ERR("%s: illegal input\n", __func__);
+		return ret;
+	}
+	thp_set_status(THP_STATUS_HOLSTER, !!window_enable);
+	thp_set_status(THP_STAUTS_WINDOW_UPDATE, !thp_get_status(THP_STAUTS_WINDOW_UPDATE));
+	THP_LOG_INFO("%s: update window %d %d %d %d %d\n",
+			__func__, window_enable, x0, y0, x1, y1);
+
+	cd->window.x0 = x0;
+	cd->window.y0 = y0;
+	cd->window.x1 = x1;
+	cd->window.y1 = y1;
+
+	return count;
+}
+
+static ssize_t thp_holster_window_show(struct kobject* kobj,
+					struct kobj_attribute* attr, char* buf)
+{
+	struct thp_core_data *cd = thp_get_core_data();
+	struct thp_window_info *window = &cd->window;
+
+	return snprintf(buf, PAGE_SIZE - 1, "%d %d %d %d %d\n",
+			thp_get_status(THP_STATUS_HOLSTER),
+			window->x0, window->y0, window->x1, window->y1);
+}
+
+
+
+static DEVICE_ATTR(thp_status, S_IRUGO, thp_status_show, NULL);
+static DEVICE_ATTR(touch_chip_info, S_IRUGO, thp_chip_info_show, NULL);
+static DEVICE_ATTR(hostprocessing, S_IRUGO, thp_hostprocessing_show, NULL);
+static DEVICE_ATTR(loglevel, S_IRUGO, thp_loglevel_show, NULL);
+static DEVICE_ATTR(charger_state, (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP),
+			thp_host_charger_state_show, thp_host_charger_state_store);
+static DEVICE_ATTR(roi_data, (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP),
+			 thp_roi_data_show, thp_roi_data_store);
+static DEVICE_ATTR(roi_data_internal, S_IRUGO, thp_roi_data_debug_show, NULL);
+static DEVICE_ATTR(roi_enable, (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP),
+			thp_roi_enable_show, thp_roi_enable_store);
+static DEVICE_ATTR(touch_sensitivity, (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP),
+			thp_holster_enable_show, thp_holster_enable_store);
+static DEVICE_ATTR(touch_glove, (S_IRUSR | S_IRGRP | S_IWUSR | S_IWGRP),
+			thp_glove_enable_show, thp_glove_enable_store);
+static DEVICE_ATTR(touch_window, (S_IRUSR | S_IWUSR),
+			thp_holster_window_show, thp_holster_window_store);
 
 static struct attribute *thp_ts_attributes[] = {
-	&attr_thp_status.attr,
-	&attr_touch_chip_info.attr,
-	&attr_hostprocessing.attr,
-	&attr_loglevel.attr,
+	&dev_attr_thp_status.attr,
+	&dev_attr_touch_chip_info.attr,
+	&dev_attr_hostprocessing.attr,
+	&dev_attr_loglevel.attr,
 #if defined(THP_CHARGER_FB)
-	&attr_charger_state.attr,
+	&dev_attr_charger_state.attr,
 #endif
-	&attr_roi_data.attr,
-	&attr_roi_data_internal.attr,
-	&attr_roi_enable.attr,
+	&dev_attr_roi_data.attr,
+	&dev_attr_roi_data_internal.attr,
+	&dev_attr_roi_enable.attr,
+	&dev_attr_touch_sensitivity.attr,
+	&dev_attr_touch_glove.attr,
+	&dev_attr_touch_window.attr,
 	NULL,
 };
 
@@ -277,15 +344,12 @@ static const struct attribute_group thp_ts_attr_group = {
 	.attrs = thp_ts_attributes,
 };
 
-struct device_attribute attr_tui_wake_up_enable = {
-	.attr = {.name = "tui_wake_up_enable",
-		 .mode = (S_IRUGO | S_IWUSR | S_IWGRP) },
-	.show	= thp_tui_wake_up_enable_show,
-	.store	= thp_tui_wake_up_enable_store,
-};
+static DEVICE_ATTR(tui_wake_up_enable, (S_IRUGO | S_IWUSR | S_IWGRP),
+			thp_tui_wake_up_enable_show, thp_tui_wake_up_enable_store);
+
 
 static struct attribute *thp_prop_attrs[] = {
-	&attr_tui_wake_up_enable.attr,
+	&dev_attr_tui_wake_up_enable.attr,
 	NULL
 };
 

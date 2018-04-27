@@ -139,21 +139,7 @@ LOCAL MN_MSG_LANG_CONVERT_STRU f_astMsgCbLangTable[MN_MSG_MAX_LANG_NUM] =
   10 函数声明
 *****************************************************************************/
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_Iso639LangToDef
- 功能描述  : 映射ISO 639 [12]编码的语言类型编码到TAF的语言类型编码
- 输入参数  : enIso639Lang - ISO 639 [12]编码的语言类型编码
- 输出参数  : 无
- 返 回 值  : TAF的语言类型编码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2006年12月20日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 MN_MSG_CBLANG_ENUM_U8 MN_MSG_Iso639LangToDef(
     MN_MSG_ISO639_LANG_ENUM_U16         enIso639Lang
 )
@@ -174,27 +160,7 @@ MN_MSG_CBLANG_ENUM_U8 MN_MSG_Iso639LangToDef(
     return enLang;
 }
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_DecodeDcsIf01
- 功能描述  : 解析DCS的值，当前高四位为01
- 输入参数  : ucDcs:             DCS
-             pucContent         CB DATA首地址
-             ulContentLength    CB DATA长度
- 输出参数  : pstDcsInfo:DCS解析后的参数
- 返 回 值  : VOS_UINT32 :MN_ERR_NO_ERROR,解析成功
-                         其他:解析失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年5月14日
-    作    者   : zhoujun /z40661
-    修改内容   : 新生成函数
-  2.日    期   : 2017年5月11日
-    作    者   : f00317170
-    修改内容   : USSI
-
-*****************************************************************************/
 VOS_UINT32 MN_MSG_DecodeDcsIf01(
     VOS_UINT8                           ucDcs,
     VOS_UINT8                          *pucContent,
@@ -281,22 +247,7 @@ VOS_UINT32 MN_MSG_DecodeDcsIf01(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_DecodeDcsIf07
- 功能描述  : 解析DCS的值，判断高四位为01xx
- 输入参数  : ucDcs:DCS的当前值
- 输出参数  : pstDcsInfo:DCS解析后的参数
- 返 回 值  : VOS_UINT32 :MN_ERR_NO_ERROR,解析成功
-                         其他:解析失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年5月14日
-    作    者   : zhoujun /z40661
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL VOS_UINT32 MN_MSG_DecodeDcsIf07(
     VOS_UINT8                           ucDcs,
     MN_MSG_CBDCS_CODE_STRU              *pstDcsInfo
@@ -371,22 +322,7 @@ LOCAL VOS_UINT32 MN_MSG_DecodeDcsIf07(
 }
 
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_DecodeDcsIf09
- 功能描述  : 解析DCS的值，当前高位为1001
- 输入参数  : ucDcs:DCS的当前值
- 输出参数  : pstDcsInfo:DCS解析后的参数
- 返 回 值  : VOS_UINT32 :MN_ERR_NO_ERROR,解析成功
-                         其他:解析失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年5月14日
-    作    者   : zhoujun /z40661
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL VOS_UINT32 MN_MSG_DecodeDcsIf09(
     VOS_UINT8                           ucDcs,
     MN_MSG_CBDCS_CODE_STRU              *pstDcsInfo
@@ -418,21 +354,7 @@ LOCAL VOS_UINT32 MN_MSG_DecodeDcsIf09(
     return ulRet;
 }
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_DecodeDcsIf0F
- 功能描述  : 解析DCS的值，当前高位为1111
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年5月14日
-    作    者   : zhoujun /z40661
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL VOS_UINT32 MN_MSG_DecodeDcsIf0F(
     VOS_UINT8                           ucDcs,
     MN_MSG_CBDCS_CODE_STRU              *pstDcsInfo
@@ -465,37 +387,7 @@ LOCAL VOS_UINT32 MN_MSG_DecodeDcsIf0F(
 
 }
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_DecodeCbsDcs
- 功能描述  : 根据协议23038 5解析CBS页的DCS字节
- 输入参数  : ucDcs: 空口接收到的DCS
-             pucContent: 广播短信内容或USSD STRING的首地址
- 输出参数  : pstDcsInfo:解析好的DCS内容
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年1月11日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-  2.日    期   : 2012年8月10日
-    作    者   : L00171473
-    修改内容   : DTS2012082204471, TQE清理
-  3.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级，更新函数名为MN_MSG_DecodeCbsDcs，开放为外部接口
-                 入口参数由pstGsmPage修改为ucDcs和pucContent
-  4.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级
-  5.日    期   : 2013年10月08日
-    作    者   : j00174725
-    修改内容   : TQE
-  6.日    期   : 2017年5月11日
-    作    者   : f00317170
-    修改内容   : USSI
-*****************************************************************************/
 
 VOS_UINT32 MN_MSG_DecodeCbsDcs(
     VOS_UINT8                           ucDcs,
@@ -576,21 +468,7 @@ VOS_UINT32 MN_MSG_DecodeCbsDcs(
 
 }
 
-/*****************************************************************************
- 函 数 名  : MSG_CbDecodeSn
- 功能描述  : 根据协议23038 5解码CBS页的SN
- 输入参数  : pstGsmPage:当前页CBS的消息内容
- 输出参数  : pstSn:解析好的serial number的值
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2008年1月11日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL VOS_UINT32 MSG_CbDecodeSn(
     const MN_MSG_CBGSMPAGE_STRU         *pstGsmPage,
     MN_MSG_CBSN_STRU                    *pstSn
@@ -605,39 +483,7 @@ LOCAL VOS_UINT32 MSG_CbDecodeSn(
     return MN_ERR_NO_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : MN_MSG_DecodeCbsPage
- 功能描述  : 解码GSM格式的广播短消息页, Refer to 23041 9.4.1和23038 5
- 输入参数  : pstGsmPage  - CBS短信的TPDU格式
- 输出参数  : pstPage     - CBS短信属性结构，包括原始数据区
- 返 回 值  : 无
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2006年12月20日
-    作    者   : 傅映君 62575
-    修改内容   : 新生成函数
-
-  2.日    期   : 2010年7月12日
-    作    者   : zhoujun /40661
-    修改内容   : 异常情况的处理和标竿一致
-  3.日    期   : 2012年4月5日
-    作    者   : l00171473
-    修改内容   : for V7R1C50 CSFB&PPAC&ETWS&ISR
-  4.日    期   : 2012年4月11日
-    作    者   : l00171473
-    修改内容   : DTS2012041103201, 7Bit码转8Bit时长度不正确
-  5.日    期   : 2013年6月26日
-    作    者   : f62575
-    修改内容   : V9R1 STK升级
-  6.日    期   : 2013年10月08日
-    作    者   : j00174725
-    修改内容   : TQE
-  7.日    期   : 2015年12月10日
-    作    者   : s00217060
-    修改内容   : DTS2015120405133:安全检查修改，防止copy越界
-*****************************************************************************/
 VOS_UINT32  MN_MSG_DecodeCbmPage(
     const MN_MSG_CBRAW_TS_DATA_STRU     *pstCbRawInfo,
     MN_MSG_CBPAGE_STRU                  *pstCbmPageInfo

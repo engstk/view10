@@ -29,20 +29,27 @@
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
 #include <huawei_platform/usb/hw_pd_dev.h>
+#ifdef CONFIG_SUPERSWITCH_FSC
 #include <huawei_platform/usb/superswitch/fsc/core/hw_scp.h>
-
+#endif
+#ifdef CONFIG_WIRELESS_CHARGER
+#include <huawei_platform/power/wired_channel_switch.h>
+#endif
 #include "huawei_platform/audio/usb_audio_power.h"
 
 #define HWLOG_TAG usb_audio_power
 HWLOG_REGIST();
 
-#define USB_DISCONNECT_WAIT_TIME 1000   // DBC station: wait for usb disconnect when accept the AT command.
+#ifdef CONFIG_SUPERSWITCH_FSC
+#define USB_DISCONNECT_WAIT_TIME 4000   // DBC station: wait for usb disconnect when accept the AT command.
+#endif
 
 enum usb_audio_power_gpio_type {
 	USB_AUDIO_POWER_GPIO_SOC           = 0,
 	USB_AUDIO_POWER_GPIO_CODEC         = 1,
 };
 
+#ifdef CONFIG_SUPERSWITCH_FSC
 enum {
 	NOT_USING_SUPWRSWITCH              = 0,
 	USING_SUPWRSWITCH                  = 1,
@@ -52,9 +59,22 @@ enum {
 	SUPERSWITCH_VOUT_SWITCH_OPEN       = 0,
 	SUPERSWITCH_VOUT_SWITCH_CLOSE      = 1,
 };
+#endif
+
+#ifdef CONFIG_WIRELESS_CHARGER
+enum {
+	NOT_USING_WIRELESS_CHARGER         = 0,
+	USING_WIRELESS_CHARGER             = 1,
+};
+#endif
 
 struct usb_audio_power_data {
+#ifdef CONFIG_SUPERSWITCH_FSC
 	int using_superswitch;
+#endif
+#ifdef CONFIG_WIRELESS_CHARGER
+	int using_wireless_charger;
+#endif
 	int gpio_chg_vbst_ctrl;
 	int gpio_ear_power_en;
 	int gpio_type;
@@ -64,8 +84,10 @@ struct usb_audio_power_data {
 
 	struct mutex vboost_ctrl_lock;
 	struct wake_lock wake_lock;
+#ifdef CONFIG_SUPERSWITCH_FSC
 	struct workqueue_struct* superswitch_vout_switch_delay_wq;
 	struct delayed_work superswitch_vout_switch_delay_work;
+#endif
 };
 
 static struct usb_audio_power_data *pdata;
@@ -142,7 +164,8 @@ int usb_audio_power_buckboost()
 		hwlog_warn("pdata is NULL!\n");
 		return -ENOMEM;
 	}
-	if (pdata->audio_buckboost_enable == false) {
+
+	if (pdata->audio_buckboost_enable == false && pd_dpm_get_pd_source_vbus()) {
 		bst_ctrl_enable(true, VBOOST_CONTROL_AUDIO);
 		usb_audio_power_gpio_set_value(pdata->gpio_ear_power_en, AUDIO_POWER_GPIO_SET);
 
@@ -171,11 +194,14 @@ int usb_audio_power_scharger()
 	return 0;
 }
 
+#ifdef CONFIG_SUPERSWITCH_FSC
 static void superswitch_vout_switch_work(struct work_struct* work)
 {
+	usb_audio_power_buckboost();
 	/* close the vout switch, to avoid the voltage drop when pass through super switch.*/
 	FUSB3601_vout_enable(SUPERSWITCH_VOUT_SWITCH_CLOSE);
 }
+#endif
 
 /**
  * usb_audio_power_ioctl - ioctl interface for userspeace
@@ -195,14 +221,30 @@ static long usb_audio_power_ioctl(struct file *file, unsigned int cmd,
 
 	switch (cmd) {
 		case IOCTL_USB_AUDIO_POWER_BUCKBOOST_CMD:
+#ifdef CONFIG_WIRELESS_CHARGER
+			if (USING_WIRELESS_CHARGER == pdata->using_wireless_charger) {
+				wired_chsw_set_wired_channel(WIRED_CHANNEL_CUTOFF);
+			}
+#endif
+#ifdef CONFIG_SUPERSWITCH_FSC
 			if (USING_SUPWRSWITCH == pdata->using_superswitch) {
 				queue_delayed_work(pdata->superswitch_vout_switch_delay_wq,
 							   &pdata->superswitch_vout_switch_delay_work,
 							   msecs_to_jiffies(USB_DISCONNECT_WAIT_TIME));
+				ret = 0;
+			} else {
+#endif
+				ret = usb_audio_power_buckboost();
+#ifdef CONFIG_SUPERSWITCH_FSC
 			}
-			ret = usb_audio_power_buckboost();
+#endif
 			break;
 		case IOCTL_USB_AUDIO_POWER_SCHARGER_CMD:
+#ifdef CONFIG_WIRELESS_CHARGER
+			if (USING_WIRELESS_CHARGER == pdata->using_wireless_charger) {
+				wired_chsw_set_wired_channel(WIRED_CHANNEL_RESTORE);
+			}
+#endif
 			ret = usb_audio_power_scharger();
 			break;
 		default:
@@ -235,7 +277,7 @@ static void load_usb_audio_power_config(struct device_node *node)
 	} else {
 		pdata->gpio_type = USB_AUDIO_POWER_GPIO_SOC;
 	}
-
+#ifdef CONFIG_SUPERSWITCH_FSC
 	/*lint -save -e* */
 	if (!of_property_read_u32(node, "using_superswitch", &temp)) {
 	/*lint -restore*/
@@ -243,6 +285,16 @@ static void load_usb_audio_power_config(struct device_node *node)
 	} else {
 		pdata->using_superswitch = NOT_USING_SUPWRSWITCH;
 	}
+#endif
+#ifdef CONFIG_WIRELESS_CHARGER
+	/*lint -save -e* */
+	if (!of_property_read_u32(node, "using_wireless_charger", &temp)) {
+	/*lint -restore*/
+		pdata->using_wireless_charger = temp;
+	} else {
+		pdata->using_wireless_charger = NOT_USING_WIRELESS_CHARGER;
+	}
+#endif
 }
 static const struct file_operations usb_audio_power_fops = {
 	.owner            = THIS_MODULE,
@@ -329,7 +381,7 @@ static int usb_audio_power_probe(struct platform_device *pdev)
 		goto gpio_ear_power_en_err;
 	}
 	gpio_direction_output(pdata->gpio_ear_power_en, 0);
-
+#ifdef CONFIG_SUPERSWITCH_FSC
 	pdata->superswitch_vout_switch_delay_wq = create_singlethread_workqueue("superswitch_vout_switch_delay_wq");
 	if (!(pdata->superswitch_vout_switch_delay_wq)) {
 		hwlog_err("%s : vout switch create failed\n", __func__);
@@ -339,25 +391,30 @@ static int usb_audio_power_probe(struct platform_device *pdev)
 		goto gpio_ear_power_en_err;
 	}
 	INIT_DELAYED_WORK(&pdata->superswitch_vout_switch_delay_work, superswitch_vout_switch_work);
-
+#endif
 	load_usb_audio_power_config(node);
 
 	ret = misc_register(&usb_audio_power_miscdev);
 	if (0 != ret) {
 		hwlog_err("%s: can't register usb audio power miscdev, ret:%d.\n", __func__, ret);
+#ifdef CONFIG_SUPERSWITCH_FSC
 		goto superswitch_vout_switch_delay_wq_err;
+#else
+		goto gpio_ear_power_en_err;
+#endif
 	}
 
 	hwlog_info("usb_audio_power probe success!\n");
 
 	return 0;
-
+#ifdef CONFIG_SUPERSWITCH_FSC
 superswitch_vout_switch_delay_wq_err:
 	if (pdata->superswitch_vout_switch_delay_wq) {
 		cancel_delayed_work(&pdata->superswitch_vout_switch_delay_work);
 		flush_workqueue(pdata->superswitch_vout_switch_delay_wq);
 		destroy_workqueue(pdata->superswitch_vout_switch_delay_wq);
 	}
+#endif
 gpio_ear_power_en_err:
 	gpio_free(pdata->gpio_ear_power_en);
 gpio_chg_vbst_ctrl_err:
@@ -379,11 +436,13 @@ static int usb_audio_power_remove(struct platform_device *pdev)
 		if(pdata->gpio_ear_power_en > 0) {
 			gpio_free(pdata->gpio_ear_power_en);
 		}
+#ifdef CONFIG_SUPERSWITCH_FSC
 		if (pdata->superswitch_vout_switch_delay_wq) {
 			cancel_delayed_work(&pdata->superswitch_vout_switch_delay_work);
 			flush_workqueue(pdata->superswitch_vout_switch_delay_wq);
 			destroy_workqueue(pdata->superswitch_vout_switch_delay_wq);
 		}
+#endif
 		devm_kfree(&pdev->dev, pdata);
 		pdata = NULL;
 	}

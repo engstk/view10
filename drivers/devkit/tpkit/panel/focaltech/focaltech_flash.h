@@ -15,6 +15,7 @@
 #define FTS_BOOT_PROJ_CODE_ADDR2	0x20
 
 #define FTS_PACKAGE_SIZE		128
+#define FTS_PACKAGE_SIZE_SPI	((4*1024) - 4)
 
 #define FTS_REG_RESET_FW		0x07
 
@@ -82,6 +83,15 @@
 
 #define FTS_SLEEP_TIME_1		1
 #define FTS_SLEEP_TIME_5		5
+
+#define AL2_FCS_COEF					((1 << 15) + (1 << 10) + (1 << 3))
+#define FTS_ROMBOOT_CMD_ECC				0xCC
+#define FTS_ROMBOOT_CMD_ECC_LEN			7
+#define FTS_ROMBOOT_CMD_ECC_FINISH		0xCE
+#define FTS_ROMBOOT_CMD_ECC_READ		0xCD
+
+#define FTS_ROMBOOT_CMD_GET_STA			0xF2
+#define PROJECT_ID_ADDR					0x007812
 
 struct focal_delay_time {
 	int hard_reset_delay;

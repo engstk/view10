@@ -916,7 +916,7 @@ dhdpcie_advertise_bus_cleanup(dhd_pub_t	 *dhdp)
 	if (timeleft == 0) {
 		DHD_ERROR(("%s : Timeout due to dhd_bus_busy_state=0x%x\n",
 				__FUNCTION__, dhdp->dhd_bus_busy_state));
-		BUG_ON(1);
+		//BUG_ON(1);
 	}
 
 	return;
@@ -3365,7 +3365,9 @@ dhd_bus_devreset(dhd_pub_t *dhdp, uint8 flag)
 						__FUNCTION__, bcmerror));
 					goto done;
 				}
-
+#ifdef HW_WATCHDOG_MS
+				dhd_os_wd_timer(dhdp, dhd_watchdog_ms);
+#endif
 				bcmerror = dhd_dbg_start(dhdp, 1);
 				if (bcmerror) {
 					DHD_ERROR(("%s: dhd_dbg_start: %d\n",
@@ -4816,13 +4818,18 @@ dhd_update_txflowrings(dhd_pub_t *dhd)
 
 		next = dll_next_p(item);
 		flow_ring_node = dhd_constlist_to_flowring(item);
-
+#ifndef HW_PCIE_STABILITY
 		/* Ensure that flow_ring_node in the list is Not Null */
 		ASSERT(flow_ring_node != NULL);
 
 		/* Ensure that the flowring node has valid contents */
 		ASSERT(flow_ring_node->prot_info != NULL);
-
+#else
+		if(flow_ring_node == NULL || flow_ring_node->prot_info == NULL ) {
+			DHD_ERROR(("%s: flow_ring_node is null pointer\n", __FUNCTION__));
+			break;
+		}
+#endif
 		dhd_prot_update_txflowring(dhd, flow_ring_node->flowid, flow_ring_node->prot_info);
 	}
 	DHD_FLOWRING_LIST_UNLOCK(bus->dhd->flowring_list_lock, flags);
@@ -5548,6 +5555,9 @@ int dhd_bus_init(dhd_pub_t *dhdp, bool enforce_mutex)
 	bus->reg = si_setcore(bus->sih, PCIE2_CORE_ID, 0);
 	ASSERT(bus->reg != NULL);
 
+	DHD_ERROR(("%s: Reset the bus const_flowring.\n", __FUNCTION__));
+	dll_init(&bus->const_flowring);
+
 	/* Set bus state according to enable result */
 	dhdp->busstate = DHD_BUS_DATA;
 
@@ -6163,6 +6173,7 @@ void dhd_bus_oob_intr_set(dhd_pub_t *dhdp, bool enable)
 #define TEL_HUAWEI_NV_WITXL2G5G1_NUMBER      385
 #define TEL_HUAWEI_NV_WITXOFFSET2G_NUMBER    386
 #define TEL_HUAWEI_NV_WITXOFFSET5G_NUMBER    387
+#define TEL_HUAWEI_NV_WICALCRYSTAL_NUMBER    390
 
 #define TEL_HUAWEI_NV_WINVRAM_NAME           "WINVRAM"
 #define TEL_HUAWEI_NV_WIRXNVRAM_NAME         "WIRXNV"
@@ -6174,6 +6185,7 @@ void dhd_bus_oob_intr_set(dhd_pub_t *dhdp, bool enable)
 #define TEL_HUAWEI_NV_WITXL2G5G1_NAME        "WITXL1"
 #define TEL_HUAWEI_NV_WITXOFFSET2G_NAME      "WITXO2G"
 #define TEL_HUAWEI_NV_WITXOFFSET5G_NAME      "WITXO5G"
+#define TEL_HUAWEI_NV_WICALCRYSTAL_NAME	     "WICALCY"
 
 #define TEL_HUAWEI_NV_WINVRAM_LENGTH         104
 
@@ -6290,9 +6302,9 @@ static uint hw_check_var(char *varbufp)
 */
 #define CALIBRATE_SIZE 128
 #ifdef SUPPORT_WT_WIFI_MIMO_CALIBRATE
-#define MAX_CALIBRATE_SIZE (128 * 10)
+#define MAX_CALIBRATE_SIZE (128 * 11)
 #else
-#define MAX_CALIBRATE_SIZE (128 * 2)
+#define MAX_CALIBRATE_SIZE (128 * 3)
 #endif
 static int hw_calibrate_nvram_vars(struct dhd_bus *bus, char * bufp, uint len)
 {
@@ -6330,6 +6342,9 @@ static int hw_calibrate_nvram_vars(struct dhd_bus *bus, char * bufp, uint len)
 	CalDateLen += hw_load_radio_calibrate_data(CalDateBuf+(strlen(CalDateBuf)), CALIBRATE_SIZE,
 					TEL_HUAWEI_NV_WITXOFFSET5G_NUMBER, TEL_HUAWEI_NV_WINVRAM_LENGTH, TEL_HUAWEI_NV_WITXOFFSET5G_NAME);
 #endif /* SUPPORT_WT_WIFI_MIMO_CALIBRATE */
+        CalDateLen += hw_load_radio_calibrate_data(CalDateBuf+(strlen(CalDateBuf)), CALIBRATE_SIZE,
+					TEL_HUAWEI_NV_WICALCRYSTAL_NUMBER, TEL_HUAWEI_NV_WINVRAM_LENGTH, TEL_HUAWEI_NV_WICALCRYSTAL_NAME);
+
 	if (CalDateLen<=0) {
 		DHD_ERROR(("%s: calibrate data is empty, no need to calibrate nvram\n",  __FUNCTION__));
 		goto fail;

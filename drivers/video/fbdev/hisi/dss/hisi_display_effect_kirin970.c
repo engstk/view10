@@ -58,8 +58,7 @@ static spinlock_t g_gmp_effect_lock;
 static spinlock_t g_igm_effect_lock;
 static spinlock_t g_xcc_effect_lock;
 static spinlock_t g_gamma_effect_lock;
-
-#define THRESHOLD_HBM_BACKLIGHT			(741)
+extern struct mutex g_rgbw_lock;
 
 static time_interval_t interval_wait_hist = {0};
 static time_interval_t interval_algorithm = {0};
@@ -106,6 +105,84 @@ static inline uint32_t get_fixed_point_offset(uint32_t half_block_size)
 		len <<= 1;
 	}
 	return num;
+}
+
+#define ACM_HUE_LUT_LENGTH ((uint32_t)256)
+#define ACM_SATA_LUT_LENGTH ((uint32_t)256)
+#define ACM_SATR_LUT_LENGTH ((uint32_t)64)
+
+#define LCP_GMP_LUT_LENGTH	((uint32_t)9*9*9)
+#define LCP_XCC_LUT_LENGTH	((uint32_t)12)
+
+#define IGM_LUT_LEN ((uint32_t)257)
+#define GAMMA_LUT_LEN ((uint32_t)257)
+
+#define BYTES_PER_TABLE_ELEMENT 4
+
+static int hisi_effect_copy_to_user(uint32_t *table_dst, uint32_t *table_src, uint32_t table_length)
+{
+	unsigned long table_size = 0;
+
+	if ((NULL == table_dst) || (NULL == table_src) || (table_length == 0)) {
+		HISI_FB_ERR("invalid input parameters.\n");
+		return -EINVAL;
+	}
+
+	table_size = (unsigned long)table_length * BYTES_PER_TABLE_ELEMENT;
+
+	if (copy_to_user(table_dst, table_src, table_size)) {
+		HISI_FB_ERR("failed to copy table to user.\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int hisi_effect_alloc_and_copy(uint32_t **table_dst, uint32_t *table_src,
+	uint32_t lut_table_length, bool copy_user)
+{
+	uint32_t *table_new = NULL;
+	unsigned long table_size = 0;
+
+	if ((NULL == table_dst) ||(NULL == table_src) ||  (lut_table_length == 0)) {
+		HISI_FB_ERR("invalid input parameter");
+		return -EINVAL;
+	}
+
+	table_size = (unsigned long)lut_table_length * BYTES_PER_TABLE_ELEMENT;
+
+	if (*table_dst == NULL) {
+		table_new = (uint32_t *)kmalloc(table_size, GFP_ATOMIC);
+		if (table_new) {
+			memset(table_new, 0, table_size);
+			*table_dst = table_new;
+		} else {
+			HISI_FB_ERR("failed to kmalloc lut_table!\n");
+			return -EINVAL;
+		}
+	}
+
+	if (copy_user) {
+		if (copy_from_user(*table_dst, table_src, table_size)) {
+			HISI_FB_ERR("failed to copy table from user\n");
+			if (table_new)
+				kfree(table_new);
+			*table_dst = NULL;
+			return -EINVAL;
+		}
+	} else {
+		memcpy(*table_dst, table_src, table_size);
+	}
+
+	return 0;
+}
+
+static void hisi_effect_kfree(uint32_t **free_table)
+{
+	if (*free_table) {
+		kfree((uint32_t *) *free_table);
+		*free_table = NULL;
+	}
 }
 
 static int hisifb_ce_do_contrast(struct hisi_fb_data_type *hisifd)
@@ -174,6 +251,7 @@ void hisi_effect_init(struct hisi_fb_data_type *hisifd)
 		spin_lock_init(&g_igm_effect_lock);
 		spin_lock_init(&g_xcc_effect_lock);
 		spin_lock_init(&g_gamma_effect_lock);
+		mutex_init(&g_rgbw_lock);
 		g_is_effect_lock_init = true;
 	}
 
@@ -258,6 +336,11 @@ void hisi_effect_deinit(struct hisi_fb_data_type *hisifd)
 	} else {
 		HISI_FB_ERR("[effect] fb%d, not support!", hisifd->index);
 		return;
+	}
+
+	if (g_is_effect_lock_init) {
+		g_is_effect_lock_init = false;
+		mutex_destroy(&g_rgbw_lock);
 	}
 
 	if (g_is_effect_init) {
@@ -694,7 +777,7 @@ int hisifb_ce_service_set_lut(struct fb_info *info, void __user *argp)
 	if (g_debug_effect & DEBUG_EFFECT_DELAY) {
 		interval_copy_lut.start = get_timestamp_in_us();
 	}
-	ret = (int)copy_from_user(hisifd->hiace_info.lut_table, hiace_set_interface.lut, sizeof(hisifd->hiace_info.lut_table));
+	ret = (int)hisi_effect_alloc_and_copy(&hisifd->hiace_info.lut_table, hiace_set_interface.lut, CE_SIZE_LUT, true);
 
 	if (ret) {
 		HISI_FB_ERR("[effect] copy_from_user(lut_table) failed! ret=%d.\n", ret);
@@ -931,9 +1014,64 @@ bool hisifb_display_effect_is_need_blc(struct hisi_fb_data_type *hisifd)
 	return hisifd->de_info.blc_enable;
 }
 
+static int deltabl_process(struct hisi_fb_data_type *hisifd, int backlight_in)
+{
+	int ret = 0;
+	int bl_min = (int)hisifd->panel_info.bl_min;
+	int bl_max = (int)hisifd->panel_info.bl_max;
+	bool HBMEnable = hisifd->de_info.amoled_param.HBMEnable;
+	bool AmoledDimingEnable = hisifd->de_info.amoled_param.AmoledDimingEnable;
+	int HBM_Threshold_BackLight = hisifd->de_info.amoled_param.HBM_Threshold_BackLight;
+	int HBM_Min_BackLight = hisifd->de_info.amoled_param.HBM_Min_BackLight;
+	int HBM_Max_BackLight = hisifd->de_info.amoled_param.HBM_Max_BackLight;
+	//int HBM_MinLum_Regvalue = hisifd->de_info.amoled_param.HBM_MinLum_Regvalue;
+	//int HBM_MaxLum_Regvalue = hisifd->de_info.amoled_param.HBM_MaxLum_Regvalue;
+	int Hiac_DBVThres = hisifd->de_info.amoled_param.Hiac_DBVThres;
+	int Hiac_DBV_XCCThres = hisifd->de_info.amoled_param.Hiac_DBV_XCCThres;
+	int Hiac_DBV_XCC_MinThres = hisifd->de_info.amoled_param.Hiac_DBV_XCC_MinThres;
+	int current_hiac_backlight = 0;
+	int current_hiac_deltaBL = 0;
+	int temp_hiac_backlight = 0;
+	int origin_hiac_backlight = 0;
+
+	if (NULL == hisifd) {
+		HISI_FB_ERR("[effect] hisifd is NULL \n");
+		return -1;
+	}
+
+	origin_hiac_backlight = (backlight_in - bl_min) * (HBM_Max_BackLight - HBM_Min_BackLight) /(bl_max - bl_min) + HBM_Min_BackLight;
+	current_hiac_backlight = origin_hiac_backlight;
+
+	if (HBMEnable && (HBM_Max_BackLight > HBM_Threshold_BackLight) && (HBM_Threshold_BackLight > (HBM_Min_BackLight + 1))) {
+		if ((backlight_in >= bl_min) && (backlight_in < HBM_Threshold_BackLight)) {
+			current_hiac_deltaBL = HBM_Min_BackLight + ((current_hiac_backlight - HBM_Min_BackLight) * (HBM_Max_BackLight - HBM_Min_BackLight) /(HBM_Threshold_BackLight - 1 - HBM_Min_BackLight)) - current_hiac_backlight;
+		} else if ((current_hiac_backlight >= HBM_Threshold_BackLight) && (backlight_in <= bl_max)) {
+			current_hiac_deltaBL = HBM_Max_BackLight - current_hiac_backlight;
+		}
+		current_hiac_backlight = current_hiac_backlight + current_hiac_deltaBL;
+		HISI_FB_DEBUG("[effect] hiac_delta =  %d hiac_backlight =  %d, backlight = %d", current_hiac_deltaBL,current_hiac_backlight, backlight_in);
+	}
+
+	if (AmoledDimingEnable) {
+		if ((current_hiac_backlight <= Hiac_DBVThres) && (current_hiac_backlight > Hiac_DBV_XCCThres)) {
+			current_hiac_deltaBL = Hiac_DBVThres - origin_hiac_backlight;
+		} else if ((current_hiac_backlight <= Hiac_DBV_XCCThres)) {
+			temp_hiac_backlight = (current_hiac_backlight - HBM_Min_BackLight ) * (Hiac_DBVThres - Hiac_DBV_XCC_MinThres) /(Hiac_DBV_XCCThres - HBM_Min_BackLight) + Hiac_DBV_XCC_MinThres;
+			current_hiac_deltaBL = temp_hiac_backlight - origin_hiac_backlight;
+		}
+		HISI_FB_DEBUG("[effect] hiac_delta =  %d hiac_backlight =  %d, backlight = %d", current_hiac_deltaBL,current_hiac_backlight, backlight_in);
+	}
+
+	hisifd->de_info.blc_delta = (bl_max - bl_min) * current_hiac_deltaBL /(HBM_Max_BackLight -HBM_Min_BackLight);
+	HISI_FB_DEBUG("[effect] first screen on ! delta: -10000 -> %d bl: %d (%d)\n",hisifd->de_info.blc_delta,backlight_in,backlight_in+hisifd->de_info.blc_delta);
+
+	return ret;
+}
+
 static void handle_first_deltabl(struct hisi_fb_data_type *hisifd, int backlight_in)
 {
-	struct hisi_panel_info* pinfo = NULL;
+	bool HBMEnable = hisifd->de_info.amoled_param.HBMEnable;
+	bool AmoledDimingEnable = hisifd->de_info.amoled_param.AmoledDimingEnable;
 	int bl_min = (int)hisifd->panel_info.bl_min;
 	int bl_max = (int)hisifd->panel_info.bl_max;
 
@@ -942,35 +1080,64 @@ static void handle_first_deltabl(struct hisi_fb_data_type *hisifd, int backlight
 		return;
 	}
 
-	pinfo = &(hisifd->panel_info);
-	if(NULL == pinfo) {
-		HISI_FB_ERR("pinfo is NULL!\n");
-		return;
-	}
-
-	if (pinfo->hbm_support != 1) {
+	if (!(HBMEnable || AmoledDimingEnable)) {
+		HISI_FB_DEBUG("[effect] HBM and Amoled disable\n");
 		return;
 	}
 
 	if (hisifd->bl_level == 0) {
-		hisifd->de_info.blc_delta = -1;
+		hisifd->de_info.blc_delta = -10000;
 		return;
 	}
 
-	if (hisifd->de_info.blc_delta == -1) {
-		if ((backlight_in >= bl_min) && (backlight_in < THRESHOLD_HBM_BACKLIGHT)) {
-			hisifd->de_info.blc_delta = bl_min + (backlight_in - bl_min)*(bl_max - bl_min)/(THRESHOLD_HBM_BACKLIGHT - 1 - bl_min ) - backlight_in;
-		} else if ((backlight_in >= THRESHOLD_HBM_BACKLIGHT) && (backlight_in <= bl_max)) {
-			hisifd->de_info.blc_delta = bl_max - backlight_in;
-		}
-		HISI_FB_DEBUG("[effect] first screen on ! delta: -1 -> %d bl: %d (%d)\n",hisifd->de_info.blc_delta,backlight_in,hisifd->bl_level);
+	if (backlight_in >0 && (backlight_in < bl_min || backlight_in > bl_max)) {
+		return;
 	}
+
+	if (hisifd->de_info.blc_delta == -10000) {
+		deltabl_process(hisifd,backlight_in);
+	}
+}
+
+bool hisifb_display_effect_check_bl_value(int curr, int last) {
+	if (abs(curr - last) > 200) {
+		return true;
+	}
+	return false;
+}
+
+bool hisifb_display_effect_check_bl_delta(int curr, int last) {
+	if (abs(curr - last) > 20) {
+		return true;
+	}
+	return false;
+}
+
+static inline void display_engine_bl_debug_print(int bl_in, int bl_out, int delta) {
+	static int last_delta = 0;
+	static int last_bl = 0;
+	static int last_bl_out = 0;
+	static int count = 0;
+	if (hisifb_display_effect_check_bl_value(bl_in, last_bl) || hisifb_display_effect_check_bl_value(bl_out, last_bl_out) || hisifb_display_effect_check_bl_delta(delta, last_delta)) {
+		if (count == 0) {
+			HISI_FB_INFO("[effect] last delta:%d bl:%d->%d\n", last_delta, last_bl, last_bl_out);
+		}
+		count = DISPLAYENGINE_BL_DEBUG_FRAMES;
+	}
+	if (count > 0) {
+		HISI_FB_INFO("[effect] delta:%d bl:%d->%d\n", delta, bl_in, bl_out);
+		count--;
+	}
+	last_delta = delta;
+	last_bl = bl_in;
+	last_bl_out = bl_out;
 }
 
 bool hisifb_display_effect_fine_tune_backlight(struct hisi_fb_data_type *hisifd, int backlight_in, int *backlight_out)
 {
 	bool changed = false;
 	struct hisi_panel_info* pinfo = NULL;
+	int delta = 0;
 
 	if (NULL == hisifd) {
 		HISI_FB_ERR("[effect] hisifd is NULL\n");
@@ -990,10 +1157,10 @@ bool hisifb_display_effect_fine_tune_backlight(struct hisi_fb_data_type *hisifd,
 
 	handle_first_deltabl(hisifd,backlight_in);
 
-	if ((pinfo->hbm_support == 1) && (backlight_in <= (int)hisifd->panel_info.bl_min)) {
+	/*if ((pinfo->hbm_support == 1) && (backlight_in <= (int)hisifd->panel_info.bl_min)) {
 		HISI_FB_DEBUG("[effect] don't need add delta_bl for bl_min\n");
 		return false;
-	}
+	}*/
 
 	if (hisifd->bl_level > 0) {
 		if (hisifb_display_effect_is_need_blc(hisifd)) {
@@ -1004,17 +1171,20 @@ bool hisifb_display_effect_fine_tune_backlight(struct hisi_fb_data_type *hisifd,
 				changed = true;
 				hisifd->de_info.blc_used = true;
 			}
+			delta = hisifd->de_info.blc_delta;
 		} else {
 			if (hisifd->de_info.blc_used) {
-			if (*backlight_out != backlight_in) {
-				HISI_FB_DEBUG("[effect] bl:%d->%d\n", *backlight_out, backlight_in);
-				*backlight_out = backlight_in;
-				changed = true;
+				if (*backlight_out != backlight_in) {
+					HISI_FB_DEBUG("[effect] bl:%d->%d\n", *backlight_out, backlight_in);
+					*backlight_out = backlight_in;
+					changed = true;
 				}
 				hisifd->de_info.blc_used = false;
 			}
+			delta = 0;
 		}
 	}
+	display_engine_bl_debug_print(backlight_in, *backlight_out, delta);
 
 	return changed;
 }
@@ -1027,7 +1197,7 @@ int hisifb_display_effect_blc_cabc_update(struct hisi_fb_data_type *hisifd)
 		return -1;
 	}
 
-	if ((hisifd->panel_info.blpwm_input_ena || (hisifd->ce_ctrl.ctrl_ce_mode != CE_MODE_DISABLE && hisifd->bl_enable_ctrl.ctrl_bl_enable == 1)) && hisifd->cabc_update) {
+	if ((hisifd->panel_info.blpwm_input_ena || hisifb_display_effect_is_need_blc(hisifd)) && hisifd->cabc_update) {
 		hisifd->cabc_update(hisifd);
 	}
 
@@ -1438,16 +1608,16 @@ void hisi_dss_dpp_hiace_set_reg(struct hisi_fb_data_type *hisifd)
 			DEBUG_EFFECT_LOG("[effect] g_enable_effect is %d, ctrl_ce_mode is %d.\n",
 						g_enable_effect, ce_ctrl->ctrl_ce_mode);
 		}
-		ce_info->algorithm_result = 1;
+		//ce_info->algorithm_result = 1;
 		return;
 	}
 
-	if (g_debug_effect & DEBUG_EFFECT_FRAME) {
+	/*if (g_debug_effect & DEBUG_EFFECT_FRAME) {
 		DEBUG_EFFECT_LOG("[effect] step in\n");
-	}
+	}*/
 
 	//lint -e{438}
-	if (ce_info->algorithm_result == 0) {
+	if (ce_info->algorithm_result == 0 && hisifd->hiace_info.lut_table != NULL) {
 		int gamma_ab_shadow = inp32(hiace_base + DPE_GAMMA_AB_SHADOW);
 		int gamma_ab_work = inp32(hiace_base + DPE_GAMMA_AB_WORK);
 		time_interval_t interval_lut = {0};
@@ -1457,6 +1627,7 @@ void hisi_dss_dpp_hiace_set_reg(struct hisi_fb_data_type *hisifd)
 			int i = 0;
 
 			/* write gamma lut */
+			//HISI_FB_DEBUG("[effect] write gamma lut!\n");
 			set_reg(hiace_base + DPE_GAMMA_EN, 1, 1, 31);
 
 			if (g_debug_effect & DEBUG_EFFECT_DELAY) {
@@ -1768,9 +1939,11 @@ int hisifb_use_dynamic_gamma(struct hisi_fb_data_type *hisifd, char __iomem *dpp
 				outp32(gamma_pre_lut_base + (U_GAMA_PRE_B_COEF + i * 4), gm_lut_b[index] | gm_lut_b[index+1] << 16);
 			}
 		}
-		outp32(dpp_base + U_GAMA_R_LAST_COEF, gm_lut_r[pinfo->gamma_lut_table_len - 1]);
-		outp32(dpp_base + U_GAMA_G_LAST_COEF, gm_lut_g[pinfo->gamma_lut_table_len - 1]);
-		outp32(dpp_base + U_GAMA_B_LAST_COEF, gm_lut_b[pinfo->gamma_lut_table_len - 1]);
+		if (pinfo->gamma_lut_table_len <= GM_LUT_LEN) {
+			outp32(dpp_base + U_GAMA_R_LAST_COEF, gm_lut_r[pinfo->gamma_lut_table_len - 1]);
+			outp32(dpp_base + U_GAMA_G_LAST_COEF, gm_lut_g[pinfo->gamma_lut_table_len - 1]);
+			outp32(dpp_base + U_GAMA_B_LAST_COEF, gm_lut_b[pinfo->gamma_lut_table_len - 1]);
+		}
 
 		if (g_dss_version_tag == FB_ACCEL_KIRIN970) {
 			//GAMA PRE LUT
@@ -1817,9 +1990,11 @@ int hisifb_use_dynamic_degamma(struct hisi_fb_data_type *hisifd, char __iomem *d
 			outp32(dpp_base + (U_DEGAMA_G_COEF +  i * 4), degm_lut_g[index] | degm_lut_g[index+1] << 16);
 			outp32(dpp_base + (U_DEGAMA_B_COEF +  i * 4), degm_lut_b[index] | degm_lut_b[index+1] << 16);
 		}
-		outp32(dpp_base + U_DEGAMA_R_LAST_COEF, degm_lut_r[pinfo->igm_lut_table_len - 1]);
-		outp32(dpp_base + U_DEGAMA_G_LAST_COEF, degm_lut_g[pinfo->igm_lut_table_len - 1]);
-		outp32(dpp_base + U_DEGAMA_B_LAST_COEF, degm_lut_b[pinfo->igm_lut_table_len - 1]);
+		if (pinfo->igm_lut_table_len <= GM_LUT_LEN) {
+			outp32(dpp_base + U_DEGAMA_R_LAST_COEF, degm_lut_r[pinfo->igm_lut_table_len - 1]);
+			outp32(dpp_base + U_DEGAMA_G_LAST_COEF, degm_lut_g[pinfo->igm_lut_table_len - 1]);
+			outp32(dpp_base + U_DEGAMA_B_LAST_COEF, degm_lut_b[pinfo->igm_lut_table_len - 1]);
+		}
 
 		return 1;
 	}
@@ -1872,6 +2047,8 @@ void hisifb_update_gm_from_reserved_mem(uint32_t *gm_r, uint32_t *gm_g, uint32_t
 	unsigned long gm_addr = 0;
 	unsigned long gm_size = 0;
 
+	g_factory_gamma_enable = 0;
+
 	if (gm_r == NULL || gm_g == NULL || gm_b == NULL
 		|| igm_r == NULL || igm_g == NULL || igm_b == NULL) {
 		return;
@@ -1890,7 +2067,7 @@ void hisifb_update_gm_from_reserved_mem(uint32_t *gm_r, uint32_t *gm_g, uint32_t
 	memcpy(&len, mem, 4UL);
 	HISI_FB_INFO("gamma read len = %d \n", len);
 	if (len != GM_IGM_LEN) {
-		HISI_FB_ERR("gamma read len error ! \n");
+		HISI_FB_INFO("gamma read len error ! \n");
 		iounmap(mem);
 		return;
 	}
@@ -1913,88 +2090,12 @@ void hisifb_update_gm_from_reserved_mem(uint32_t *gm_r, uint32_t *gm_g, uint32_t
 		igm_b[i] = u16_igm_b[i];
 	}
 	iounmap(mem);
+
+	g_factory_gamma_enable = 1;
 	return;
 }
 
 /*lint -e571, -e573, -e737, -e732, -e850, -e730, -e713, -e529, -e574, -e679, -e732, -e845, -e570, -e774*/
-
-#define ACM_HUE_LUT_LENGTH ((uint32_t)256)
-#define ACM_SATA_LUT_LENGTH ((uint32_t)256)
-#define ACM_SATR_LUT_LENGTH ((uint32_t)64)
-
-#define LCP_GMP_LUT_LENGTH	((uint32_t)9*9*9)
-#define LCP_XCC_LUT_LENGTH	((uint32_t)12)
-
-#define IGM_LUT_LEN ((uint32_t)257)
-#define GAMMA_LUT_LEN ((uint32_t)257)
-
-#define BYTES_PER_TABLE_ELEMENT 4
-
-static int hisi_effect_copy_to_user(uint32_t *table_dst, uint32_t *table_src, uint32_t table_length)
-{
-	unsigned long table_size = 0;
-
-	if ((NULL == table_dst) || (NULL == table_src) || (table_length == 0)) {
-		HISI_FB_ERR("invalid input parameters.\n");
-		return -EINVAL;
-	}
-
-	table_size = (unsigned long)table_length * BYTES_PER_TABLE_ELEMENT;
-
-	if (copy_to_user(table_dst, table_src, table_size)) {
-		HISI_FB_ERR("failed to copy table to user.\n");
-		return -EINVAL;
-	}
-
-	return 0;
-}
-
-static int hisi_effect_alloc_and_copy(uint32_t **table_dst, uint32_t *table_src,
-	uint32_t lut_table_length, bool copy_user)
-{
-	uint32_t *table_new = NULL;
-	unsigned long table_size = 0;
-
-	if ((NULL == table_dst) ||(NULL == table_src) ||  (lut_table_length == 0)) {
-		HISI_FB_ERR("invalid input parameter");
-		return -EINVAL;
-	}
-
-	table_size = (unsigned long)lut_table_length * BYTES_PER_TABLE_ELEMENT;
-
-	if (*table_dst == NULL) {
-		table_new = (uint32_t *)kmalloc(table_size, GFP_ATOMIC);
-		if (table_new) {
-			memset(table_new, 0, table_size);
-			*table_dst = table_new;
-		} else {
-			HISI_FB_ERR("failed to kmalloc lut_table!\n");
-			return -EINVAL;
-		}
-	}
-
-	if (copy_user) {
-		if (copy_from_user(*table_dst, table_src, table_size)) {
-			HISI_FB_ERR("failed to copy table from user\n");
-			if (table_new)
-				kfree(table_new);
-			*table_dst = NULL;
-			return -EINVAL;
-		}
-	} else {
-		memcpy(*table_dst, table_src, table_size);
-	}
-
-	return 0;
-}
-
-static void hisi_effect_kfree(uint32_t **free_table)
-{
-	if (*free_table) {
-		kfree((uint32_t *) *free_table);
-		*free_table = NULL;
-	}
-}
 
 static void free_acm_table(struct acm_info *acm)
 {
@@ -3117,12 +3218,12 @@ void hisi_effect_acm_set_reg(struct hisi_fb_data_type *hisifd)
 	acm_param = &(hisifd->effect_info.acm);
 
 	if (NULL == acm_param->hue_table) {
-		HISI_FB_ERR("fb%d, invalid acm hue table param!\n", hisifd->index);
+		HISI_FB_INFO("fb%d, invalid acm hue table param!\n", hisifd->index);
 		goto err_ret;
 	}
 
 	if (NULL == acm_param->sata_table) {
-		HISI_FB_ERR("fb%d, invalid acm sata table param!\n", hisifd->index);
+		HISI_FB_INFO("fb%d, invalid acm sata table param!\n", hisifd->index);
 		goto err_ret;
 	}
 
@@ -3130,7 +3231,7 @@ void hisi_effect_acm_set_reg(struct hisi_fb_data_type *hisifd)
 		|| (NULL == acm_param->satr2_table) || (NULL == acm_param->satr3_table)
 		|| (NULL == acm_param->satr4_table) || (NULL == acm_param->satr5_table)
 		|| (NULL == acm_param->satr6_table) || (NULL == acm_param->satr7_table)) {
-		HISI_FB_ERR("fb%d, invalid acm satr table param!\n", hisifd->index);
+		HISI_FB_INFO("fb%d, invalid acm satr table param!\n", hisifd->index);
 		goto err_ret;
 	}
 
@@ -3205,7 +3306,7 @@ static bool lcp_igm_set_reg(char __iomem *degamma_lut_base, struct lcp_info *lcp
 	}
 
 	if (lcp_param->igm_r_table == NULL || lcp_param->igm_g_table == NULL || lcp_param->igm_b_table == NULL) {
-		HISI_FB_ERR("igm_r_table or igm_g_table or igm_b_table	is NULL!\n");
+		HISI_FB_INFO("igm_r_table or igm_g_table or igm_b_table	is NULL!\n");
 		return false;
 	}
 
@@ -3409,7 +3510,7 @@ void hisi_effect_gamma_set_reg(struct hisi_fb_data_type *hisifd)
 	if ((NULL == gamma_param->gamma_r_table) ||
 		(NULL == gamma_param->gamma_g_table) ||
 		(NULL == gamma_param->gamma_b_table)) {
-		HISI_FB_ERR("fb%d, gamma table is null!\n", hisifd->index);
+		HISI_FB_INFO("fb%d, gamma table is null!\n", hisifd->index);
 		goto err_ret;
 	}
 
@@ -4056,7 +4157,7 @@ int hisifb_ce_service_enable_hiace(struct fb_info *info, void __user *argp)
 		mutex_lock(&(ce_ctrl->ctrl_lock));
 		ce_ctrl->ctrl_ce_mode = mode;
 		mutex_unlock(&(ce_ctrl->ctrl_lock));
-		if (mode == CE_MODE_DISABLE) {
+		if (mode == CE_MODE_DISABLE && hisifd->panel_power_on) {
 			ce_info->gradual_frames = EFFECT_GRADUAL_REFRESH_FRAMES;
 			ce_info->to_stop_hdr = true;
 		}
@@ -4243,9 +4344,17 @@ static int set_hiace_param(struct hisi_fb_data_type *hisifd) {
 
 int hisi_effect_hiace_config(struct hisi_fb_data_type *hisifd) {
 	char __iomem *hiace_base = NULL;
+	struct hisi_panel_info *pinfo = NULL;
+
 	if (hisifd == NULL) {
 		HISI_FB_ERR("hisifd is NULL!\n");
 		return -1;
+	}
+
+	pinfo = &(hisifd->panel_info);
+	if (pinfo->hiace_support == 0) {
+		HISI_FB_DEBUG("[effect] HIACE is not supported!\n");
+		return 0;
 	}
 
 	if (hisifd->index == PRIMARY_PANEL_IDX) {

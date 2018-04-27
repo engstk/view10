@@ -82,11 +82,7 @@ extern "C" {
 #define NF_EXT_MEM_FREE(pid, p)                      PS_MEM_FREE(pid, p);
 #endif
 
-#if ((SC_CTRL_MOD_P532 == SC_CTRL_MOD) || (SC_CTRL_MOD_6932_SFT == SC_CTRL_MOD))
-#define NF_EXT_RING_BUF_SIZE                        (2*1024 - 1)  /*环形buff的大小*/
-#else
 #define NF_EXT_RING_BUF_SIZE                        (8*1024 - 1)  /*环形buff的大小*/
-#endif
 
 #define NF_ONCE_DEAL_MAX_CNT                        (200)
 
@@ -284,23 +280,6 @@ extern NF_EXT_STATS_STRU g_stNfExtStats;
 #endif
 
 #define NFEXT_DATA_PROC_NOTIFY                      (0x0001)
-
-
-/* NFEXT Log输出 */
-#define NFEXT_LOG(ModulePID, ModeType, Level, String) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, String))
-
-#define NFEXT_LOG1(ModulePID, ModeType, Level, String, Para1) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, String, Para1))
-
-#define NFEXT_LOG2(ModulePID, ModeType, Level, String, Para1, Para2) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, String, Para1, Para2))
-
-#define NFEXT_LOG3(ModulePID, ModeType, Level, String,Para1, Para2, Para3) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, String, Para1, Para2, Para3))
-
-#define NFEXT_LOG4(ModulePID, ModeType, Level, String, Para1, Para2, Para3, Para4) \
-        ((VOS_VOID)DIAG_LogReport(DIAG_GEN_LOG_MODULE(VOS_GetModemIDFromPid(ModulePID), ModeType, Level), (ModulePID), __FILE__, __LINE__, String, Para1, Para2, Para3, Para4))
 
 /*****************************************************************************
   6 函数声明

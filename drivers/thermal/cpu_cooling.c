@@ -36,7 +36,11 @@
 #ifdef CONFIG_HISI_IPA_THERMAL
 #include <trace/events/thermal_power_allocator.h>
 #ifdef CONFIG_HISI_THERMAL_SPM
+#ifdef CONFIG_HISI_THERMAL_TRIPPLE_CLUSTERS
+#define NUM_CLUSTERS 3
+#else
 #define NUM_CLUSTERS 2
+#endif
 extern unsigned int get_powerhal_profile(enum ipa_actor actor);
 extern unsigned int get_minfreq_profile(enum ipa_actor actor);
 extern bool is_spm_mode_enabled(void);
@@ -979,7 +983,7 @@ static int cpufreq_power2freq(struct thermal_cooling_device *cdev, u32 power, u3
 
 int get_profile_cpu_freq(enum ipa_actor actor, u32 *freq)
 {
-	if (actor >= IPA_ACTOR_MAX || actor < IPA_CLUSTER0)
+	if (actor >= IPA_GPU)
 		return -EDOM;
 
 	*freq = profile_freq[actor]; /* [false alarm]:  check done */

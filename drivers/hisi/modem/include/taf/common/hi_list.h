@@ -6,7 +6,7 @@
 * apply:
 *
 * * This program is free software; you can redistribute it and/or modify
-* * it under the terms of the GNU General Public License version 2 and 
+* * it under the terms of the GNU General Public License version 2 and
 * * only version 2 as published by the Free Software Foundation.
 * *
 * * This program is distributed in the hope that it will be useful,
@@ -28,10 +28,10 @@
 * * 2) Redistributions in binary form must reproduce the above copyright
 * *    notice, this list of conditions and the following disclaimer in the
 * *    documentation and/or other materials provided with the distribution.
-* * 3) Neither the name of Huawei nor the names of its contributors may 
-* *    be used to endorse or promote products derived from this software 
+* * 3) Neither the name of Huawei nor the names of its contributors may
+* *    be used to endorse or promote products derived from this software
 * *    without specific prior written permission.
-* 
+*
 * * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -54,47 +54,66 @@ struct msp_list_header {
     struct msp_list_header *prev;
 };
 
-
 typedef struct msp_list_header HI_LIST_S;
 
 #define HI_LIST_HEAD_INIT(name) { &(name), &(name) }
-
 
 /* init a list head */
 #define HI_INIT_LIST_HEAD(ptr) { \
     (ptr)->next = (ptr); (ptr)->prev = (ptr); \
 }
 
-
 /**
  * msp_list_entry - get the struct for this entry
  * @ptr:    the &struct msp_list_header pointer.
- * @type:    the type of the struct this is embedded in.
- * @member:    the name of the list_struct within the struct.
+ * @type:   the type of the struct this is embedded in.
+ * @member: the name of the list_struct within the struct.
  */
 #define msp_list_entry(ptr, type, member) \
-    ((type *)((char *)(ptr)-(unsigned long)(&((type *)16)->member)+16))
+    ((type *)((char *)(ptr) - (unsigned long)(&((type *)16)->member)+16))
 
 /**
- * msp_list_for_each    -    iterate over a list
+ * msp_list_first_entry - get the first element from a list
+ * @ptr:    the list head to take the element from.
+ * @type:   the type of the struct this is embedded in.
+ * @member: the name of the list_head within the struct.
+ *
+ * Note, that list is expected to be not empty.
+ */
+#define msp_list_first_entry(ptr, type, member) \
+    msp_list_entry((ptr)->next, type, member)
+
+/**
+ * msp_list_last_entry - get the last element from a list
+ * @ptr:    the list head to take the element from.
+ * @type:   the type of the struct this is embedded in.
+ * @member: the name of the list_head within the struct.
+ *
+ * Note, that list is expected to be not empty.
+ */
+#define msp_list_last_entry(ptr, type, member) \
+    msp_list_entry((ptr)->prev, type, member)
+
+/**
+ * msp_list_for_each - iterate over a list
  * @pos:    the &struct msp_list_header to use as a loop counter.
- * @head:    the head for your list.
+ * @head:   the head for your list.
  */
 #define msp_list_for_each(pos, head) \
     for (pos = (head)->next; pos != (head); pos = pos->next)
 
 /**
- * msp_list_for_each_safe    -    iterate over a list safe against removal of list entry
+ * msp_list_for_each_safe - iterate over a list safe against removal of list entry
  * @pos:    the &struct msp_list_header to use as a loop counter.
- * @n:        another &struct msp_list_header to use as temporary storage
- * @head:    the head for your list.
+ * @n:      another &struct msp_list_header to use as temporary storage
+ * @head:   the head for your list.
  */
 #define msp_list_for_each_safe(pos, n, head) \
     for (pos = (head)->next, n = pos->next; pos != (head); \
             pos = n, n = pos->next)
 
 /**
- * msp_list_for_each_ex    -    iterate over a list
+ * msp_list_for_each_ex - iterate over a list
  * @pos:    the &struct msp_list_header to use as a loop counter.
  * @head:   the head for your list.
  * @begin:  the previous item of the begining item
@@ -103,35 +122,21 @@ typedef struct msp_list_header HI_LIST_S;
     for (pos = (begin)->next; pos != (head); pos = (pos)->next)
 
 /**
- * msp_list_for_index    -    iterate over a list for index
+ * msp_list_for_index - iterate over a list for index
  * @pos:    the &struct msp_list_header to use as a loop counter.
- * @head:    the head for your list.
+ * @head:   the head for your list.
  */
 #define msp_list_for_index(pos, i, head, index) \
     for (pos = (head)->next, i=0; (pos != (head) && i < index); pos = pos->next,i++)
 
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-13, begin */
-/**
- * msp_list_empty    -    is list empty
- * @head:    the head for your list.
- */
-#define msp_list_empty(head) \
-    ((head)->next == (head))
-
-/**
- * msp_list_first_entry - get the first entry of list
- * @ptr:    the &struct msp_list_header pointer.
- * @type:    the type of the struct this is embedded in.
- * @member:    the name of the list_struct within the struct.
- */
-#define msp_list_first_entry(pos, type, member) \
-    msp_list_entry((pos)->next, type, member)
-/* Added by m00217266 for 双VoWiFi项目, 2017-3-13, end */
 
 /*lint -esym(752,__list_add_msp)*/
 extern void __list_add_msp(struct msp_list_header * newnew,
         struct msp_list_header * prev,
         struct msp_list_header * next);
+
+/*lint -esym(752,msp_list_add)*/
+extern void msp_list_add(struct msp_list_header *newnew, struct msp_list_header *head);
 
 /*lint -esym(752,msp_list_add_tail)*/
 extern void msp_list_add_tail(struct msp_list_header *newnew, struct msp_list_header *head);
@@ -143,7 +148,9 @@ extern void __list_del_msp(struct msp_list_header * prev,
 /*lint -esym(752,msp_list_del)*/
 extern void msp_list_del(struct msp_list_header *entry);
 
+/*lint -esym(752,msp_list_empty)*/
+extern int msp_list_empty(const struct msp_list_header *head);
+
 
 #endif /* _MG_LIST_H */
-
 

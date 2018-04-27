@@ -16,8 +16,13 @@
 #define   MAX_IMG_HEIGHT_IN_MB         (MAX_IMG_HALF_HEIGHT_IN_MB * 2)
 #define   MAX_MB_NUM_IN_PIC            (MAX_IMG_WIDTH_IN_MB * MAX_IMG_HEIGHT_IN_MB)
 
-#define   MAX_SLOT_WIDTH                (4096)
+#define   MAX_SLOT_WIDTH               (4096)
+#ifndef   PLATFORM_HIVCODECV210
 #define   MAX_STRIDE                   ((1024 * MAX_SLOT_WIDTH / 64 + ((1024) - 1)) & (~ ((1024) - 1)))
+#else
+#define   ALIGN_LEN                    128
+#define   MAX_STRIDE                   (((MAX_SLOT_WIDTH + ALIGN_LEN - 1) / ALIGN_LEN + 1) * ALIGN_LEN * 16)
+#endif
 /************************************************************************/
 /*  Register read/write interface                                       */
 /************************************************************************/

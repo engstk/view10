@@ -772,6 +772,12 @@ bool ts_cmd_need_process(struct ts_cmd_node* cmd)
                 case TS_GET_CHIP_INFO:
                     is_need_process = true;
                     break;
+                case TS_TOUCH_SWITCH:
+                    is_need_process = false;
+                    break;
+                case TS_READ_RAW_DATA:
+                    is_need_process = false;
+                    break;
                 default:
                     is_need_process = true;
                     break;
@@ -819,13 +825,13 @@ int ts_kit_power_control_notify(enum ts_pm_type pm_type, int timeout)
         return -EINVAL;
     }
 #if defined (CONFIG_TEE_TUI)
-    if (g_ts_kit_platform_data.chip_data->report_tui_enable && TS_BEFORE_SUSPEND == pm_type) {
+    if (g_ts_kit_platform_data.chip_data->report_tui_enable && (TS_BEFORE_SUSPEND == pm_type)) {
     	  g_ts_kit_platform_data.chip_data->tui_set_flag |= 0x1;
     	  TS_LOG_INFO("TUI is working, later do before suspend\n");
          return NO_ERR;
     }
     
-    if (g_ts_kit_platform_data.chip_data->report_tui_enable && TS_SUSPEND_DEVICE == pm_type) {
+    if (g_ts_kit_platform_data.chip_data->report_tui_enable && (TS_SUSPEND_DEVICE == pm_type)) {
     	    g_ts_kit_platform_data.chip_data->tui_set_flag |= 0x2;
     	   TS_LOG_INFO("TUI is working, later do suspend\n");
           return NO_ERR;
@@ -890,12 +896,56 @@ out:
     return error;
 }
 
+int ts_read_rawdata_for_newformat(struct ts_cmd_node* in_cmd, struct ts_cmd_node* out_cmd, struct ts_cmd_sync* sync)
+{
+	struct ts_rawdata_info_new* info = NULL;
+	struct ts_kit_device_data* dev = g_ts_kit_platform_data.chip_data;
+	int error = NO_ERR;
+	
+	TS_LOG_INFO("ts read rawdata for new format called\n");
+	if (!in_cmd || !out_cmd){
+		TS_LOG_ERR("%s : find a null pointer\n", __func__);
+		return -EINVAL;
+	}
+	
+	info = (struct ts_rawdata_info_new*)in_cmd->cmd_param.prv_params;
+
+	if(!g_ts_kit_platform_data.chip_data->is_parade_solution){
+        ts_stop_wd_timer(&g_ts_kit_platform_data);
+    }
+    if (dev->ops->chip_get_rawdata){
+		error = dev->ops->chip_get_rawdata(info, out_cmd); 
+	}
+    if(!g_ts_kit_platform_data.chip_data->is_parade_solution){
+        ts_start_wd_timer(&g_ts_kit_platform_data);
+    }
+    if (!error)
+    {
+        TS_LOG_INFO("read rawdata success\n");
+        info->status = TS_ACTION_SUCCESS;
+        info->time_stamp = ktime_get();
+        goto out;
+    }
+    info->status = TS_ACTION_FAILED;
+    TS_LOG_ERR("read rawdata failed :%d\n", error);
+out:
+    return error;
+}
+
 int ts_read_rawdata(struct ts_cmd_node* in_cmd, struct ts_cmd_node* out_cmd, struct ts_cmd_sync* sync)
 {
     int error = NO_ERR;
     struct ts_kit_device_data* dev = g_ts_kit_platform_data.chip_data;
     struct ts_rawdata_info* info = NULL;
 
+	/**********************************************/
+	/* Rawdata rectification, if dts configured   */
+	/* with a new mark, take a new process        */
+	/**********************************************/
+    if (g_ts_kit_platform_data.chip_data->rawdata_newformatflag == TS_RAWDATA_NEWFORMAT){
+		return ts_read_rawdata_for_newformat(in_cmd,out_cmd,sync);		
+	}
+	
     TS_LOG_INFO("ts read rawdata called\n");
 	if (!in_cmd || !out_cmd){
 		TS_LOG_ERR("%s : find a null pointer\n", __func__);

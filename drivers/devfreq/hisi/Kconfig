@@ -74,3 +74,5 @@ config HISI_DEVFREQ_DEVBW
           DDR bandwidth votes. This driver provides a SoC topology
           agnostic interface to so that some of the devfreq governors can be
           shared across SoCs.
+
+source "drivers/devfreq/hisi/dsu_pctrl/Kconfig"

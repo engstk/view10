@@ -718,7 +718,7 @@ static long bastet_ioctl(struct file *flip, unsigned int cmd, unsigned long arg)
 		break;
 	}
 	default: {
-		BASTET_LOGE("unknown ioctl: %d", cmd);
+		BASTET_LOGE("unknown ioctl: %u", cmd);
 		break;
 	}
 	}
@@ -798,7 +798,7 @@ static int bastet_packet_read(char __user *buf, size_t count)
 
 		return -EFAULT;
 	}
-	pkt->data.cons += count;
+	pkt->data.cons += size;
 
 	if (isfree)
 		kfree(pkt);

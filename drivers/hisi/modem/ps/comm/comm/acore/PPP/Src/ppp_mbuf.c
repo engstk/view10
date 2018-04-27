@@ -495,20 +495,7 @@ PPP_ZC_STRU *ppp_m_alloc_ttfmem_from_mbuf(struct ppp_mbuf *bp)
     return pstMem;
 } /* ppp_m_ttfmem_alloc_from_mbuf */
 
-/*****************************************************************************
- 函 数 名  : ppp_m_init_data
- 功能描述  : 初始化MBUF内存中存放的报文,不支持链式初始化
- 输入参数  : bp     存放报文的MBUF指针
- 输出参数  : 无
- 返 回 值  : NULL
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年8月6日
-    作    者   : c00184031
-    修改内容   : created
-*****************************************************************************/
 VOS_VOID ppp_m_init_data(struct ppp_mbuf *bp)
 {
     VOS_UINT8                          *pucData;

@@ -2367,6 +2367,7 @@ void PolicySinkEvaluateCaps(void)
     // The evaluate caps
     FSC_S32 i, reqPos;
     FSC_U32 objVoltage = 0;
+    FSC_U32 optional_max_power = 0;
     FSC_U32 objCurrent, objPower, MaxPower, SelVoltage, ReqCurrent;
     objCurrent = 0;
     platform_set_timer(&NoResponseTimer, T_TIMER_DISABLE);                                          // Stop the no response timer
@@ -2413,6 +2414,11 @@ void PolicySinkEvaluateCaps(void)
                 objPower = 0;                                                   // Set the object power to zero so we ignore for now
                 break;
         }
+
+        if (objPower > optional_max_power) {
+            optional_max_power = objPower;
+        }
+
         if (objPower >= MaxPower)                                               // If the current object has power greater than or equal the previous objects
         {
             MaxPower = objPower;                                                // Store the objects power
@@ -2446,6 +2452,14 @@ void PolicySinkEvaluateCaps(void)
                 SinkRequest.FVRDO.CapabilityMismatch = FALSE;                   // there is no mismatch in the capabilities
             }
         }
+
+        if (optional_max_power >= PD_18_W)
+        {
+            pd_dpm_set_optional_max_power_status(true);
+        } else {
+            pd_dpm_set_optional_max_power_status(false);
+        }
+
         PolicyState = peSinkSelectCapability;                                   // Go to the select capability state
         PolicySubIndex = 0;                                                     // Reset the sub index
         platform_set_timer(&PolicyStateTimer, tSenderResponse);                                     // Initialize the sender response timer

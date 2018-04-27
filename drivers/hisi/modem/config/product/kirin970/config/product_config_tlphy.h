@@ -1,4 +1,4 @@
-/* MD5: 8c14251b60c651ce05048a90c698e60f*/
+/* MD5: 1ae355e0c7e47a36bf3f4bd3e0e5b057*/
 #if !defined(__PRODUCT_CONFIG_TLPHY_H__)
 #define __PRODUCT_CONFIG_TLPHY_H__
 
@@ -64,6 +64,9 @@
 #ifndef LPHY_DDR_HAVE_DMSS
 #endif 
 
+#ifndef PHY_EXTERN_BOOT
+#endif 
+
 #ifndef LPHY_DTCM_BASE
 #define LPHY_DTCM_BASE 0xE3400000 
 #endif 
@@ -98,6 +101,7 @@
 
 #else
 #ifndef XTENSA_PREDICT_BUG
+#define XTENSA_PREDICT_BUG 
 #endif 
 
 #ifndef XTENSA_INST_PREFETCH_BUG
@@ -105,7 +109,10 @@
 #endif 
 
 #ifndef LPHY_DDR_HAVE_DMSS
-#define LPHY_DDR_HAVE_DMSS 
+#endif 
+
+#ifndef PHY_EXTERN_BOOT
+#define PHY_EXTERN_BOOT 
 #endif 
 
 #ifndef LPHY_DTCM_BASE
@@ -150,11 +157,7 @@
 #endif 
 
 #ifndef LPHY_DDR_BASE
-#define LPHY_DDR_BASE (DDR_TLPHY_IMAGE_ADDR + 0x1000) 
-#endif 
-
-#ifndef LPHY_DDR_BASE
-#define LPHY_DDR_BASE $(CFG_DDR_TLPHY_IMAGE_ADDR)+0x1000 
+#define LPHY_DDR_BASE ((DDR_TLPHY_IMAGE_ADDR)+0x10000) 
 #endif 
 
 #ifndef LPHY_DDR_SIZE
@@ -192,6 +195,10 @@
 #define FEATURE_LTE_4RX FEATURE_OFF 
 #endif 
 
+#ifndef FEATURE_LTE_8RX
+#define FEATURE_LTE_8RX FEATURE_OFF 
+#endif 
+
 #ifndef BBPCONFIG_VERIOSN
 #define BBPCONFIG_VERIOSN bbp_config_hi6960 
 #endif 
@@ -219,6 +226,10 @@
 #define FEATURE_TLPHY_DPD FEATURE_ON 
 #endif 
 
+#ifndef FEATURE_TLPHY_DPD_OPT
+#define FEATURE_TLPHY_DPD_OPT FEATURE_OFF 
+#endif 
+
 #else
 #ifndef FEATURE_TLPHY_ET
 #define FEATURE_TLPHY_ET FEATURE_ON 
@@ -228,7 +239,19 @@
 #define FEATURE_TLPHY_DPD FEATURE_OFF 
 #endif 
 
+#ifndef FEATURE_TLPHY_DPD_OPT
+#define FEATURE_TLPHY_DPD_OPT FEATURE_OFF 
+#endif 
+
 #endif
+#ifndef FEATURE_TLPHY_ETM_ONLY
+#define FEATURE_TLPHY_ETM_ONLY FEATURE_OFF 
+#endif 
+
+#ifndef FEATURE_TLPHY_NEWET
+#define FEATURE_TLPHY_NEWET FEATURE_OFF 
+#endif 
+
 #ifndef TL_PHY_FEATURE_SCELL_USE_LISTEN
 #define TL_PHY_FEATURE_SCELL_USE_LISTEN 
 #endif 
@@ -239,6 +262,10 @@
 
 #ifndef FEATURE_TLPHY_WTC_SWTICH
 #define FEATURE_TLPHY_WTC_SWTICH FEATURE_ON 
+#endif 
+
+#ifndef FEATURE_TLPHY_ANT_BLANK
+#define FEATURE_TLPHY_ANT_BLANK FEATURE_OFF 
 #endif 
 
 #endif /*__PRODUCT_CONFIG_H__*/ 

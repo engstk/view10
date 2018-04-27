@@ -1,6 +1,9 @@
 #ifndef __USBAUDIO_IOCTL_H
 #define __USBAUDIO_IOCTL_H
 
+#define USBAUDIO_INFONAME_LEN (256)
+#define USBAUDIO_PCM_NUM (2)
+
 enum usbaudio_stream_type
 {
 	DOWNLINK_STREAM = 0,
@@ -35,7 +38,7 @@ struct usbaudio_info
 	int controller_location;
 	unsigned short uplink_channels;
 	unsigned short dnlink_channels;
-	unsigned char name[256];
+	unsigned char name[USBAUDIO_INFONAME_LEN];
 	int sr_status;
 };
 

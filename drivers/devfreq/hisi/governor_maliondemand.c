@@ -26,7 +26,7 @@
 #include <linux/hisi/hisi_devfreq.h>
 
 #ifdef CONFIG_HUAWEI_DUBAI
-#include <huawei_platform/power/dubai/dubai.h>
+#include <chipset_common/dubai/dubai.h>
 #endif
 
 /* Default constants for DevFreq-Mali-Ondemand (DFMO) */

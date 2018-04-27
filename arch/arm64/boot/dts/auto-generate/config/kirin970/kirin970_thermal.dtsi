@@ -48,7 +48,7 @@
 
 		hisi_peripheral_tm: hisi_tm@1 {
 			compatible = "hisi,hisi-peripheral-tm";
-			hisi,peripheral_sensors = <8>;
+			hisi,peripheral_sensors = <11>;
 
 			hisi,detect_system_h_tm_chanel = <7>;
 			hisi,detect_system_h_tm_ntc = "austin_hkadc_soc_temp_table";
@@ -86,6 +86,18 @@
 			hisi,detect_charger1_tm_ntc = "austin_hkadc_soc_temp_table";
 			hisi,detect_charger1_tm_state = "disable";
 
+			hisi,detect_usb_tm_chanel = <3>;
+			hisi,detect_usb_tm_ntc = "austin_hkadc_soc_temp_table";
+			hisi,detect_usb_tm_state = "disable";
+
+			hisi,detect_rfboard_tm_chanel = <8>;
+			hisi,detect_rfboard_tm_ntc = "austin_hkadc_soc_temp_table";
+			hisi,detect_rfboard_tm_state = "disable";
+
+			hisi,detect_wireless_tm_chanel = <12>;
+			hisi,detect_wireless_tm_ntc = "austin_hkadc_soc_temp_table";
+			hisi,detect_wireless_tm_state = "disable";
+
 			status = "ok";
 		};
 
@@ -110,6 +122,34 @@
 				};
 				sensor3 {
 					type = "dcxo0";
+					coef = "0","0","0","0","0","0";
+				};
+			};
+		};
+
+		hisi_shell_1: hisi_shell_1@0 {
+			compatible = "hisi,shell-temp";
+			interval = <5000>;
+			bias = <0>;
+			count = <6>;
+			status = "disable";
+			sensors {
+				sensor0 {
+					type = "system_h";
+					coef = "0","0","0","0","0","0";
+				};
+			};
+		};
+
+		hisi_shell_2: hisi_shell_2@0 {
+			compatible = "hisi,shell-temp";
+			interval = <5000>;
+			bias = <0>;
+			count = <6>;
+			status = "disable";
+			sensors {
+				sensor0 {
+					type = "system_h";
 					coef = "0","0","0","0","0","0";
 				};
 			};

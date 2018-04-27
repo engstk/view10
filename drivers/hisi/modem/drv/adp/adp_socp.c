@@ -67,6 +67,7 @@ void DRV_SOCP_SHOW_DEBUG_INFO(void)
         g_SocpDebugInfo.u32TimeoutTimes, g_SocpDebugInfo.u32TimeoutSlice,
         g_SocpDebugInfo.u32DefaultTimes, g_SocpDebugInfo.u32DefaultSlice);
 }
+EXPORT_SYMBOL(DRV_SOCP_SHOW_DEBUG_INFO);
 
 /*****************************************************************************
 * 函 数 名  : DRV_SOCP_INIT
@@ -83,6 +84,21 @@ int DRV_SOCP_INIT()
 {
     return socp_init();
 }
+EXPORT_SYMBOL(DRV_SOCP_INIT);
+
+/*****************************************************************************
+ 函 数 名  : mdrv_socp_send_data_manager
+ 功能描述  : 控制socp目的端数据上报管理状态机
+ 输入参数  : EncDestChanID:编码目的通道号
+             bEnable:是否打开socp目的端中断
+ 输出参数  : 无
+ 返 回 值  : 无
+*****************************************************************************/
+void mdrv_socp_send_data_manager(unsigned int EncDestChanID, unsigned int bEnable)
+{
+    bsp_socp_data_send_manager(EncDestChanID, bEnable);    
+}
+EXPORT_SYMBOL(mdrv_socp_send_data_manager);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_CORDER_SET_SRC_CHAN
@@ -97,6 +113,7 @@ int mdrv_socp_corder_set_src_chan(SOCP_CODER_SRC_ENUM_U32 enSrcChanID, SOCP_CODE
 {
     return bsp_socp_coder_set_src_chan(enSrcChanID, pSrcAttr);
 }
+EXPORT_SYMBOL(mdrv_socp_corder_set_src_chan);
 
 /*****************************************************************************
  函 数 名  : mdrv_socp_coder_set_dest_chan_attr
@@ -111,6 +128,7 @@ int mdrv_socp_coder_set_dest_chan_attr(unsigned int u32DestChanID, SOCP_CODER_DE
 {
     return bsp_socp_coder_set_dest_chan_attr(u32DestChanID, pDestAttr);
 }
+EXPORT_SYMBOL(mdrv_socp_coder_set_dest_chan_attr);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_DECODER_SET_DEST_CHAN
@@ -127,6 +145,7 @@ int DRV_SOCP_DECODER_SET_DEST_CHAN(SOCP_DECODER_DST_ENUM_U32 enDestChanID, SOCP_
 {
     return bsp_socp_decoder_set_dest_chan(enDestChanID, pAttr);
 }
+EXPORT_SYMBOL(DRV_SOCP_DECODER_SET_DEST_CHAN);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_DECODER_SET_SRC_CHAN_ATTR
@@ -141,6 +160,7 @@ int DRV_SOCP_DECODER_SET_SRC_CHAN_ATTR ( unsigned int u32SrcChanID,SOCP_DECODER_
 {
     return bsp_socp_decoder_set_src_chan_attr(u32SrcChanID, pInputAttr);
 }
+EXPORT_SYMBOL(DRV_SOCP_DECODER_SET_SRC_CHAN_ATTR);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_DECODER_GET_ERR_CNT
@@ -155,6 +175,38 @@ int DRV_SOCP_DECODER_GET_ERR_CNT (unsigned int u32ChanID, SOCP_DECODER_ERROR_CNT
 {
     return bsp_socp_decoder_get_err_cnt(u32ChanID, pErrCnt);
 }
+EXPORT_SYMBOL(DRV_SOCP_DECODER_GET_ERR_CNT);
+
+/*****************************************************************************
+ 函 数 名  : DRV_SOCP_SET_DEC_PKT_LGTH
+ 功能描述  : 设置解码包长度极限值
+ 输入参数  : pPktlgth:解码包长度极值
+
+ 输出参数  : 无。
+ 返 回 值  : SOCP_OK:设置成功。
+             其他值:设置失败
+*****************************************************************************/
+int DRV_SOCP_SET_DEC_PKT_LGTH(SOCP_DEC_PKTLGTH_STRU *pPktlgth)
+{
+    return bsp_socp_set_dec_pkt_lgth(pPktlgth);
+}
+EXPORT_SYMBOL(DRV_SOCP_SET_DEC_PKT_LGTH);
+
+/*****************************************************************************
+ 函 数 名  : DRV_SOCP_SET_DEBUG
+ 功能描述  : 设置解码源通道的debug模式
+ 输入参数  : u32ChanID:通道ID
+             u32DebugEn: debug标识
+ 输出参数  : 无。
+ 返 回 值  : SOCP_OK:设置成功。
+             其他值:设置失败
+*****************************************************************************/
+int DRV_SOCP_SET_DEBUG(unsigned int u32DestChanID, unsigned int u32DebugEn)
+{
+    return bsp_socp_set_debug(u32DestChanID, u32DebugEn);
+}
+EXPORT_SYMBOL(DRV_SOCP_SET_DEBUG);
+
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_FREE_CHANNEL
@@ -168,6 +220,7 @@ int DRV_SOCP_FREE_CHANNEL(unsigned int u32ChanID)
 {
     return bsp_socp_free_channel(u32ChanID);
 }
+EXPORT_SYMBOL(DRV_SOCP_FREE_CHANNEL);
 
 /*****************************************************************************
 * 函 数 名  : DRV_SOCP_CLEAN_ENCSRC_CHAN
@@ -184,6 +237,7 @@ unsigned int DRV_SOCP_CLEAN_ENCSRC_CHAN(SOCP_CODER_SRC_ENUM_U32 enSrcChanID)
 {
     return bsp_socp_clean_encsrc_chan(enSrcChanID);
 }
+EXPORT_SYMBOL(DRV_SOCP_CLEAN_ENCSRC_CHAN);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_REGISTER_EVENT_CB
@@ -198,6 +252,7 @@ int DRV_SOCP_REGISTER_EVENT_CB(unsigned int u32ChanID, socp_event_cb EventCB)
 {
     return bsp_socp_register_event_cb(u32ChanID, EventCB);
 }
+EXPORT_SYMBOL(DRV_SOCP_REGISTER_EVENT_CB);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_START
@@ -211,6 +266,7 @@ int mdrv_socp_start(unsigned int u32SrcChanID)
 {
     return bsp_socp_start(u32SrcChanID);
 }
+EXPORT_SYMBOL(mdrv_socp_start);
 
 /*****************************************************************************
  函 数 名  : mdrv_socp_stop
@@ -224,6 +280,7 @@ int mdrv_socp_stop(unsigned int u32SrcChanID)
 {
     return bsp_socp_stop(u32SrcChanID);
 }
+EXPORT_SYMBOL(mdrv_socp_stop);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_SET_TIMEOUT
@@ -238,34 +295,7 @@ int DRV_SOCP_SET_TIMEOUT (SOCP_TIMEOUT_EN_ENUM_UIN32 eTmOutEn, unsigned int u32T
 {
     return bsp_socp_set_timeout(eTmOutEn, u32Timeout);
 }
-
-/*****************************************************************************
- 函 数 名  : DRV_SOCP_SET_DEC_PKT_LGTH
- 功能描述  : 设置解码包长度极限值
- 输入参数  : pPktlgth:解码包长度极值
-
- 输出参数  : 无。
- 返 回 值  : SOCP_OK:设置成功。
-             其他值:设置失败
-*****************************************************************************/
-int DRV_SOCP_SET_DEC_PKT_LGTH(SOCP_DEC_PKTLGTH_STRU *pPktlgth)
-{
-    return bsp_socp_set_dec_pkt_lgth(pPktlgth);
-}
-
-/*****************************************************************************
- 函 数 名  : DRV_SOCP_SET_DEBUG
- 功能描述  : 设置解码源通道的debug模式
- 输入参数  : u32ChanID:通道ID
-             u32DebugEn: debug标识
- 输出参数  : 无。
- 返 回 值  : SOCP_OK:设置成功。
-             其他值:设置失败
-*****************************************************************************/
-int DRV_SOCP_SET_DEBUG(unsigned int u32DestChanID, unsigned int u32DebugEn)
-{
-    return bsp_socp_set_debug(u32DestChanID, u32DebugEn);
-}
+EXPORT_SYMBOL(DRV_SOCP_SET_TIMEOUT);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_GET_WRITE_BUFF
@@ -281,6 +311,7 @@ int mdrv_socp_get_write_buff( unsigned int u32SrcChanID, SOCP_BUFFER_RW_STRU *pB
 {
     return bsp_socp_get_write_buff(u32SrcChanID, pBuff);
 }
+EXPORT_SYMBOL(mdrv_socp_get_write_buff);
 
 /*****************************************************************************
  函 数 名  : mdrv_socp_write_done
@@ -295,6 +326,7 @@ int mdrv_socp_write_done(unsigned int u32SrcChanID, unsigned int u32WrtSize)
 {
     return bsp_socp_write_done(u32SrcChanID, u32WrtSize);
 }
+EXPORT_SYMBOL(mdrv_socp_write_done);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_REGISTER_RD_CB
@@ -309,6 +341,7 @@ int DRV_SOCP_REGISTER_RD_CB(unsigned int u32SrcChanID, socp_rd_cb RdCB)
 {
     return bsp_socp_register_rd_cb(u32SrcChanID, RdCB);
 }
+EXPORT_SYMBOL(DRV_SOCP_REGISTER_RD_CB);
 
 /*****************************************************************************
  函 数 名  : mdrv_socp_get_rd_buffer
@@ -323,6 +356,7 @@ int mdrv_socp_get_rd_buffer( unsigned int u32SrcChanID,SOCP_BUFFER_RW_STRU *pBuf
 {
     return bsp_socp_get_rd_buffer(u32SrcChanID, pBuff);
 }
+EXPORT_SYMBOL(mdrv_socp_get_rd_buffer);
 
 /*****************************************************************************
  函 数 名  : bsp_socp_read_rd_done
@@ -337,6 +371,7 @@ int mdrv_socp_read_rd_done(unsigned int u32SrcChanID, unsigned int u32RDSize)
 {
     return bsp_socp_read_rd_done(u32SrcChanID, u32RDSize);
 }
+EXPORT_SYMBOL(mdrv_socp_read_rd_done);
 
 /*****************************************************************************
  函 数 名  : bsp_socp_register_read_cb
@@ -351,6 +386,7 @@ int DRV_SOCP_REGISTER_READ_CB( unsigned int u32DestChanID, socp_read_cb ReadCB)
 {
     return bsp_socp_register_read_cb(u32DestChanID, ReadCB);
 }
+EXPORT_SYMBOL(DRV_SOCP_REGISTER_READ_CB);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_GET_READ_BUFF
@@ -365,6 +401,7 @@ int DRV_SOCP_GET_READ_BUFF(unsigned int u32DestChanID,SOCP_BUFFER_RW_STRU *pBuff
 {
     return bsp_socp_get_read_buff(u32DestChanID, pBuffer);
 }
+EXPORT_SYMBOL(DRV_SOCP_GET_READ_BUFF);
 
 /*****************************************************************************
  函 数 名  : DRV_SOCP_READ_DATA_DONE
@@ -379,32 +416,10 @@ int DRV_SOCP_READ_DATA_DONE(unsigned int u32DestChanID,unsigned int u32ReadSize)
 {
     return bsp_socp_read_data_done(u32DestChanID, u32ReadSize);
 }
+EXPORT_SYMBOL(DRV_SOCP_READ_DATA_DONE);
 
-/*****************************************************************************
- 函 数 名  : DRV_SOCP_SET_BBP_ENABLE
- 功能描述  : 使能或停止BBP通道。
- 输入参数  : bEnable:通道ID
- 输出参数  : 无。
- 返 回 值      : SOCP_OK:设置成功。
-                   其他值:设置失败
-*****************************************************************************/
-int DRV_SOCP_SET_BBP_ENABLE(int bEnable)
-{
-    return bsp_socp_set_bbp_enable(bEnable);
-}
 
-/*****************************************************************************
- 函 数 名  : DRV_SOCP_SET_BBP_DS_MODE
- 功能描述  : 设置BBP DS通道数据溢出处理模式。
- 输入参数  : eDsMode:DS通道数据溢出时处理模式设置
- 输出参数  : 无。
- 返 回 值      : SOCP_OK:设置成功。
-                   其他值:设置失败
-*****************************************************************************/
-int DRV_SOCP_SET_BBP_DS_MODE(SOCP_BBP_DS_MODE_ENUM_UIN32 eDsMode)
-{
-    return bsp_socp_set_bbp_ds_mode(eDsMode);
-}
+
 
 /*****************************************************************************
 * 函 数 名  : DRV_SOCP_GET_STATE
@@ -418,20 +433,7 @@ SOCP_STATE_ENUM_UINT32 DRV_SOCP_GET_STATE()
 {
     return bsp_socp_get_state();
 }
-
-/*****************************************************************************
-* 函 数 名  : DRV_SOCP_VOTE
-* 功能描述  : SOCP投票接口，根据投票结果决定SOCP是否睡眠，该接口只在A核提供
-* 输入参数  : id --- 投票组件ID，type --- 投票类型
-* 输出参数  : 无
-* 返 回 值  : int 0 --- 投票成功，0xFFFFFFFF --- 投票失败
-*****************************************************************************/
-int DRV_SOCP_VOTE(SOCP_VOTE_ID_ENUM_U32 id, SOCP_VOTE_TYPE_ENUM_U32 type)
-{
-    UNUSED(id);
-    UNUSED(type);
-    return 0;
-}
+EXPORT_SYMBOL(DRV_SOCP_GET_STATE);
 
 
 /*****************************************************************************
@@ -449,6 +451,7 @@ unsigned int mdrv_socp_get_sd_logcfg(SOCP_ENC_DST_BUF_LOG_CFG_STRU* cfg)
 {
     return bsp_socp_get_sd_logcfg(cfg);
 }
+EXPORT_SYMBOL(mdrv_socp_get_sd_logcfg);
 
 /*****************************************************************************
 * 函 数 名  : mdrv_socp_set_ind_mode
@@ -465,6 +468,8 @@ int mdrv_socp_set_ind_mode(SOCP_IND_MODE_ENUM eMode)
 {
     return bsp_socp_set_ind_mode(eMode);
 }
+EXPORT_SYMBOL(mdrv_socp_set_ind_mode);
+
 /*****************************************************************************
 * 函 数 名  : mdrv_socp_set_autodiv_enalbe
 *
@@ -481,6 +486,7 @@ void mdrv_socp_enalbe_dfs(void)
     bsp_socp_set_clk_autodiv_enable();
     return;
 }
+EXPORT_SYMBOL(mdrv_socp_enalbe_dfs);
 
 /*****************************************************************************
 * 函 数 名  : mdrv_socp_set_autodiv_disalbe
@@ -498,6 +504,8 @@ void mdrv_socp_disalbe_dfs(void)
     bsp_socp_set_clk_autodiv_disable();
     return;
 }
+EXPORT_SYMBOL(mdrv_socp_disalbe_dfs);
+
 /*****************************************************************************
 * 函 数 名  : mdrv_socp_compress_enable
 * 功能描述  :此接口用于使能deflate压缩
@@ -583,6 +591,8 @@ int mdrv_socp_get_log_ind_mode(unsigned int *eMode)
 {
     return bsp_socp_get_log_ind_mode(eMode);
 }
+EXPORT_SYMBOL(mdrv_socp_get_log_ind_mode);
+
 /*****************************************************************************
 * 函 数 名  : mdrv_report_ind_mode_ajust
 *
@@ -598,6 +608,7 @@ int mdrv_report_ind_mode_ajust(SOCP_IND_MODE_ENUM eMode)
 {
     return bsp_report_ind_mode_ajust(eMode);
 }
+EXPORT_SYMBOL(mdrv_report_ind_mode_ajust);
 
 
 BSP_VOID BSP_SOCP_RefreshSDLogCfg(unsigned int ulTimerLen)
@@ -605,7 +616,7 @@ BSP_VOID BSP_SOCP_RefreshSDLogCfg(unsigned int ulTimerLen)
     UNUSED(ulTimerLen);
 	return;
 }
-
+EXPORT_SYMBOL(BSP_SOCP_RefreshSDLogCfg);
 
 
 

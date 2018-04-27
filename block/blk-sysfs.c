@@ -789,6 +789,9 @@ extern ssize_t hisi_queue_idle_dur_store(struct request_queue *q, const char *pa
 extern ssize_t hisi_queue_idle_dur_show(struct request_queue *q, char *page);
 extern ssize_t hisi_queue_busy_idle_test_enable_store(struct request_queue *q, const char *page, size_t count);
 extern ssize_t hisi_queue_busy_idle_multi_nb_test_enable_store(struct request_queue *q, const char *page, size_t count);
+extern ssize_t hisi_queue_hw_idle_enable_show(struct request_queue *q, char *page);
+extern ssize_t hisi_queue_hw_idle_enable_store(struct request_queue *q, const char *page, size_t count);
+extern ssize_t hisi_queue_idle_state_show(struct request_queue *q, char *page);
 #ifdef CONFIG_HISI_IO_LATENCY_TRACE
 extern ssize_t hisi_queue_io_latency_warning_threshold_show(struct request_queue *q, char *page);
 extern ssize_t hisi_queue_io_latency_warning_threshold_store(struct request_queue *q, const char *page, size_t count);
@@ -857,6 +860,15 @@ static struct queue_sysfs_entry queue_busy_idle_multi_nb_test_enable_entry = {
 	.show = NULL,
 	.store = hisi_queue_busy_idle_multi_nb_test_enable_store,
 };
+static struct queue_sysfs_entry queue_hw_idle_enable_entry = {
+	.attr = {.name = "hw_idle_enable", .mode = S_IRUGO },
+	.show = hisi_queue_hw_idle_enable_show,
+};
+static struct queue_sysfs_entry queue_idle_state_entry = {
+	.attr = {.name = "idle_state", .mode = S_IRUGO },
+	.show = hisi_queue_idle_state_show,
+};
+
 #ifdef CONFIG_HISI_IO_LATENCY_TRACE
 static struct queue_sysfs_entry queue_io_latency_warning_threshold_entry = {
 	.attr = {.name = "io_latency_warning_threshold", .mode = S_IRUGO | S_IWUSR },
@@ -982,6 +994,8 @@ static struct attribute *default_attrs[] = {
 	&queue_idle_dur_statistic_entry.attr,
 	&queue_busy_idle_test_enable_entry.attr,
 	&queue_busy_idle_multi_nb_test_enable_entry.attr,
+	&queue_hw_idle_enable_entry.attr,
+	&queue_idle_state_entry.attr,
 #ifdef CONFIG_HISI_IO_LATENCY_TRACE
 	&queue_io_latency_warning_threshold_entry.attr,
 	&queue_io_latency_statistic_enable_entry.attr,

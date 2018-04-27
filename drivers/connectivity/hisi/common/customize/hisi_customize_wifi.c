@@ -431,21 +431,7 @@ OAL_STATIC wlan_cfg_cmd g_ast_nvram_config_ini[NVRAM_PARAMS_INDEX_BUTT] =
     {"nvram_params25",                    NVRAM_PARAMS_INDEX_25},
 };
 
-/*****************************************************************************
- 函 数 名  : original_value_for_dts_params
- 功能描述  : dts定制化参数初值处理
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年11月2日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_void original_value_for_dts_params(oal_void)
 {
     g_al_dts_params[WLAN_CFG_DTS_BAND_5G_ENABLE]                        = 0;
@@ -510,22 +496,7 @@ OAL_STATIC oal_void original_value_for_dts_params(oal_void)
     g_al_dts_params[WLAN_CFG_DTS_BT_CALI_TXPWR_PA_FRE8]                 = 78;
     g_al_dts_params[WLAN_CFG_DTS_BT_CALI_TONE_AMP_GRADE]                = 2;
 }
-/*****************************************************************************
- 函 数 名  : host_params_init_first
- 功能描述  : 给定制化参数全局数组 g_al_host_init_params 附初值
-             ini文件读取失败时用初值
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC oal_void host_params_init_first(oal_void)
 {
     /* ROAM */
@@ -597,8 +568,8 @@ OAL_STATIC oal_void host_params_init_first(oal_void)
     g_al_host_init_params[WLAN_CFG_INIT_RF_LINE_TXRX_GAIN_DB_5G_BAND6_MULT10]   = -20;
     g_al_host_init_params[WLAN_CFG_INIT_RF_LINE_TXRX_GAIN_DB_5G_BAND7_MULT4]    = -8;
     g_al_host_init_params[WLAN_CFG_INIT_RF_LINE_TXRX_GAIN_DB_5G_BAND7_MULT10]   = -20;
-    g_al_host_init_params[WLAN_CFG_INIT_RF_LINE_RX_GAIN_DB_5G]             = -12;
-    g_al_host_init_params[WLAN_CFG_INIT_LNA_GAIN_DB_5G]                    = 20;
+    g_al_host_init_params[WLAN_CFG_INIT_RF_LINE_RX_GAIN_DB_5G]             = -36;
+    g_al_host_init_params[WLAN_CFG_INIT_LNA_GAIN_DB_5G]                    = 48;
     g_al_host_init_params[WLAN_CFG_INIT_RF_LINE_TX_GAIN_DB_5G]             = -12;
     g_al_host_init_params[WLAN_CFG_INIT_EXT_SWITCH_ISEXIST_5G]             = 1;
     g_al_host_init_params[WLAN_CFG_INIT_EXT_PA_ISEXIST_5G]                 = 1;
@@ -634,21 +605,7 @@ OAL_STATIC oal_void host_params_init_first(oal_void)
 #endif
 }
 
-/*****************************************************************************
- 函 数 名  : hwifi_get_regdomain_from_country_code
- 功能描述  : 根据国家码找到对应的regdomain
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC regdomain_enum hwifi_get_regdomain_from_country_code(const countrycode_t country_code)
 {
     regdomain_enum  en_regdomain = REGDOMAIN_COMMON;
@@ -670,41 +627,13 @@ OAL_STATIC regdomain_enum hwifi_get_regdomain_from_country_code(const countrycod
     return en_regdomain;
 }
 
-/*****************************************************************************
- 函 数 名  : hwifi_is_regdomain_changed
- 功能描述  : 国家码改变后，对应的regdomain是否有变化
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int32 hwifi_is_regdomain_changed(const countrycode_t country_code_old, const countrycode_t country_code_new)
 {
     return hwifi_get_regdomain_from_country_code(country_code_old) != hwifi_get_regdomain_from_country_code(country_code_new);
 }
 
-/*****************************************************************************
- 函 数 名  : hwifi_get_plat_tag_from_country_code
- 功能描述  : 根据国家码找到平台对应的tag
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC int32 hwifi_get_plat_tag_from_country_code(const countrycode_t country_code)
 {
     regdomain_enum  en_regdomain;
@@ -728,21 +657,7 @@ OAL_STATIC int32 hwifi_get_plat_tag_from_country_code(const countrycode_t countr
     return INI_MODU_WIFI;
 }
 
-/*****************************************************************************
- 函 数 名  : hwifi_fetch_ori_caldata
- 功能描述  : 产线校准获取初始校准参数对外提供接口，供atcmd模块调用
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int32 hwifi_fetch_ori_caldata(uint8* auc_caldata, int32 l_nvm_len)
 {
     int32 l_ret = INI_FAILED;
@@ -773,21 +688,7 @@ int32 hwifi_fetch_ori_caldata(uint8* auc_caldata, int32 l_nvm_len)
 
     return INI_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : hwifi_config_init_nvram
- 功能描述  : handle nvram customize params
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC int32 hwifi_config_init_nvram(void)
 {
     OAL_STATIC oal_bool_enum en_nvm_initialed = OAL_FALSE;  /* 是否为第一次初始化，如果是国家码更新调用的本接口，则不再去nvm读取参数 */
@@ -800,7 +701,6 @@ OAL_STATIC int32 hwifi_config_init_nvram(void)
 
     if (OAL_FALSE == en_nvm_initialed)
     {
-        /* DTS2016080509156:FCC认证国家不采用产线校准参数 */
         if (hwifi_get_regdomain_from_country_code(hwifi_get_country_code()) != REGDOMAIN_FCC)
         {
             l_ret = get_cust_conf_string(CUST_MODU_NVRAM, OAL_PTR_NULL, g_auc_nv_params, sizeof(g_auc_nv_params));
@@ -843,25 +743,7 @@ OAL_STATIC int32 hwifi_config_init_nvram(void)
 
     return INI_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : hwifi_config_init
- 功能描述  : netdev open 调用的定制化总入口
-             读取ini文件，更新 g_al_host_init_params 全局数组
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-  2.日    期   : 2015年11月2日
-    作    者   : h00349274
-    修改内容   : 增加tag用于判断ini和dts
-
-*****************************************************************************/
 int32 hwifi_config_init(int32 cus_tag)
 {
     int32               l_cfg_id;
@@ -912,21 +794,7 @@ int32 hwifi_config_init(int32 cus_tag)
 
     return INI_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : char2byte
- 功能描述  : 统计值，判断有无读取到mac地址
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 OAL_STATIC int char2byte( char* strori, char* outbuf )
 {
     int i = 0;
@@ -960,22 +828,7 @@ OAL_STATIC int char2byte( char* strori, char* outbuf )
 
     return sum;
 }
-/*****************************************************************************
- 函 数 名  : hwifi_get_mac_addr
- 功能描述  : 从nvram中获取mac地址
-             如果获取失败，则随机一个mac地址
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int32 hwifi_get_mac_addr(uint8 *puc_buf)
 {
     struct hisi_nve_info_user st_info;
@@ -1027,24 +880,7 @@ int32 hwifi_get_mac_addr(uint8 *puc_buf)
 
     return INI_SUCC;
 }
-/*****************************************************************************
- 函 数 名  : hwifi_get_init_value
- 功能描述  :
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-  2.日    期   : 2015年11月2日
-    作    者   : h00349274
-    修改内容   : 增加tag用于判断ini和dts
-
-*****************************************************************************/
 int32 hwifi_get_init_value(int32 cus_tag, int32 cfg_id)
 {
     int32*              pgal_params = OAL_PTR_NULL;
@@ -1073,22 +909,7 @@ int32 hwifi_get_init_value(int32 cus_tag, int32 cfg_id)
     }
     return pgal_params[cfg_id];
 }
-/*****************************************************************************
- 函 数 名  : hwifi_get_country_code
- 功能描述  :
 
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int8* hwifi_get_country_code(void)
 {
     int32 l_ret;
@@ -1111,22 +932,7 @@ int8* hwifi_get_country_code(void)
     return g_ac_country_code;
 }
 
-/*****************************************************************************
- 函 数 名  : hwifi_set_country_code
- 功能描述  :
 
- 输入参数  :
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 void hwifi_set_country_code(int8* country_code, const uint32 len)
 {
     if (OAL_PTR_NULL == country_code || len != COUNTRY_CODE_LEN)
@@ -1140,43 +946,13 @@ void hwifi_set_country_code(int8* country_code, const uint32 len)
 
     return;
 }
-/*****************************************************************************
- 函 数 名  : hwifi_get_nvram_params
- 功能描述  :
 
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2015年10月22日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 uint8* hwifi_get_nvram_params(void)
 {
     return g_auc_nv_params;
 }
 
-/*****************************************************************************
- 函 数 名  : hwifi_atcmd_update_host_nv_params
- 功能描述  : 本函数只被产线AT命令:AT^WICALDATA=0,,,,,,调用，其他情况请不要调用本接口
-             本函数只被产线AT命令:AT^WICALDATA=0,,,,,,调用，其他情况请不要调用本接口
- 输入参数  :
- 输出参数  : 无
- 返 回 值  : OAL_SUCC 或 失败错误码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年6月24日
-    作    者   : h00349274
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 int32 hwifi_atcmd_update_host_nv_params(void)
 {
     int32 l_ret = INI_FAILED;

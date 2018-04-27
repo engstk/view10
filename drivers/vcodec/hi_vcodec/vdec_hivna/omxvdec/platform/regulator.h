@@ -18,6 +18,20 @@ static const struct of_device_id Hisi_Vdec_Match_Table[] = {
 };
 #endif
 
+#ifdef PLATFORM_HIVCODECV210
+static const struct of_device_id Hisi_Vdec_Match_Table[] = {
+	{.compatible = "hisi,HiVCodecV210-vdec",},
+	{ }
+};
+#endif
+
+#ifdef PLATFORM_HIVCODECV300
+static const struct of_device_id Hisi_Vdec_Match_Table[] = {
+	{.compatible = "hisi,HiVCodecV300-vdec",},
+	{ }
+};
+#endif
+
 HI_S32  VDEC_Regulator_Probe(struct device *dev);
 HI_S32  VDEC_Regulator_Remove(struct device *dev);
 HI_S32  VDEC_Regulator_Enable(HI_VOID);

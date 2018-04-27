@@ -94,6 +94,11 @@
 #include "audit.h"
 #include "avc_ss.h"
 
+#define SELINUX_POOL_ALIGNMENT_ORDER	4
+#define SELINUX_POOL_PREALLOC_SIZE_BYTES (3 * 1024 * 1024)
+
+struct gen_pool *selinux_pool;
+
 /* SECMARK reference count */
 static atomic_t selinux_secmark_refcount = ATOMIC_INIT(0);
 
@@ -110,8 +115,14 @@ static int __init enforcing_setup(char *str)
 __setup("enforcing=", enforcing_setup);
 #endif
 
+#if defined(CONFIG_HISI_SELINUX_PROT) && !defined(CONFIG_SECURITY_SELINUX_DISABLE)
+#define __selinux_enabled_prot  __ro_after_init
+#else
+#define __selinux_enabled_prot
+#endif
+
 #ifdef CONFIG_SECURITY_SELINUX_BOOTPARAM
-int selinux_enabled = CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE;
+int selinux_enabled __selinux_enabled_prot = CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE;
 
 static int __init selinux_enabled_setup(char *str)
 {
@@ -122,7 +133,7 @@ static int __init selinux_enabled_setup(char *str)
 }
 __setup("selinux=", selinux_enabled_setup);
 #else
-int selinux_enabled = 1;
+int selinux_enabled __selinux_enabled_prot = 1;
 #endif
 
 static struct kmem_cache *sel_inode_cache;
@@ -514,7 +525,7 @@ static int selinux_get_mnt_opts(const struct super_block *sb,
 	if (!(sbsec->flags & SE_SBINITIALIZED))
 		return -EINVAL;
 
-	if (!ss_initialized)
+	if (!*ss_initialized)
 		return -EINVAL;
 
 	/* make sure we always check enough bits to cover the mask */
@@ -632,7 +643,7 @@ static int selinux_set_mnt_opts(struct super_block *sb,
 
 	mutex_lock(&sbsec->lock);
 
-	if (!ss_initialized) {
+	if (!*ss_initialized) {
 		if (!num_opts) {
 			/* Defer initialization until selinux_complete_init,
 			   after the initial policy is loaded and the security
@@ -881,7 +892,7 @@ static int selinux_sb_clone_mnt_opts(const struct super_block *oldsb,
 	 * if the parent was able to be mounted it clearly had no special lsm
 	 * mount options.  thus we can safely deal with this superblock later
 	 */
-	if (!ss_initialized)
+	if (!*ss_initialized)
 		return 0;
 
 	/* how can we clone if the old one wasn't set up?? */
@@ -2782,7 +2793,7 @@ static int selinux_inode_init_security(struct inode *inode, struct inode *dir,
 		isec->initialized = 1;
 	}
 
-	if (!ss_initialized || !(sbsec->flags & SBLABEL_MNT))
+	if (!*ss_initialized || !(sbsec->flags & SBLABEL_MNT))
 		return -EOPNOTSUPP;
 
 	if (name)
@@ -5674,7 +5685,7 @@ static int selinux_setprocattr(struct task_struct *p,
 		return error;
 
 	/* Obtain a SID for the context, if one was specified. */
-	if (size && str[1] && str[1] != '\n') {
+	if (size && str[0] && str[0] != '\n') {
 		if (str[size-1] == '\n') {
 			str[size-1] = 0;
 			size--;
@@ -5890,7 +5901,7 @@ static int selinux_key_getsecurity(struct key *key, char **_buffer)
 
 #endif
 
-static struct security_hook_list selinux_hooks[] = {
+static struct security_hook_list selinux_hooks[] HISI_RO_LSM_HOOKS = {
 	LSM_HOOK_INIT(binder_set_context_mgr, selinux_binder_set_context_mgr),
 	LSM_HOOK_INIT(binder_transaction, selinux_binder_transaction),
 	LSM_HOOK_INIT(binder_transfer_binder, selinux_binder_transfer_binder),
@@ -6104,6 +6115,7 @@ static struct security_hook_list selinux_hooks[] = {
 
 static __init int selinux_init(void)
 {
+
 	if (!security_module_enable("selinux")) {
 		selinux_enabled = 0;
 		return 0;
@@ -6115,6 +6127,17 @@ static __init int selinux_init(void)
 	}
 
 	printk(KERN_INFO "SELinux:  Initializing.\n");
+
+	selinux_pool = pmalloc_create_pool("selinux",
+					   SELINUX_POOL_ALIGNMENT_ORDER);
+	BUG_ON(pmalloc_prealloc(selinux_pool,
+				SELINUX_POOL_PREALLOC_SIZE_BYTES) == false);
+	BUG_ON(selinux_pool == NULL);
+
+	ss_initialized = pmalloc(selinux_pool, sizeof(*ss_initialized), GFP_KERNEL);
+
+	BUG_ON(!ss_initialized);
+	*ss_initialized = 0;
 
 	/* Set the security state for the initial task. */
 	cred_init_security();
@@ -6162,7 +6185,7 @@ security_initcall(selinux_init);
 
 #if defined(CONFIG_NETFILTER)
 
-static struct nf_hook_ops selinux_nf_ops[] = {
+static struct nf_hook_ops selinux_nf_ops[] HISI_RO_LSM_HOOKS = {
 	{
 		.hook =		selinux_ipv4_postroute,
 		.pf =		NFPROTO_IPV4,
@@ -6237,7 +6260,7 @@ static int selinux_disabled;
 
 int selinux_disable(void)
 {
-	if (ss_initialized) {
+	if (*ss_initialized) {
 		/* Not permitted after initial policy load. */
 		return -EINVAL;
 	}

@@ -285,7 +285,6 @@ VOS_UINT32 AT_QryImsPcscfPara(VOS_UINT8 ucIndex);
 
 VOS_UINT32 AT_QryDmDynPara(VOS_UINT8 ucIndex);
 
-/* Added by f00367319 for LGU+迭代一, 2016-6-21, begin */
 VOS_VOID At_FillImsaTimerParaInCmd(
     VOS_UINT16                         *pusLength,
     VOS_UINT32                          ulValue,
@@ -321,7 +320,6 @@ VOS_UINT32 AT_RcvImsaImsPsiSetCnf(VOS_VOID * pMsg);
 VOS_UINT32 AT_RcvImsaImsPsiQryCnf(VOS_VOID * pMsg);
 VOS_UINT32 AT_RcvImsaDmUserQryCnf(VOS_VOID* pMsg);
 
-/* Added by f00367319 for LGU+迭代一, 2016-6-21, end */
 
 VOS_UINT32 AT_SetNickNamePara(TAF_UINT8 ucIndex);
 VOS_UINT32 AT_QryNickNamePara(TAF_UINT8 ucIndex);
@@ -389,6 +387,7 @@ VOS_UINT32 AT_RcvMmaRcsSwitchQryCnf(
 
 VOS_UINT32 AT_SetUserAgentCfgPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_RcvImsaUserAgentSetCnf(VOS_VOID * pMsg);
+VOS_UINT32 AT_RcvImsaImpuInd(VOS_VOID * pMsg);
 #endif /* end of FEATURE_IMS */
 extern VOS_UINT32 AT_DigitString2Hex(
     VOS_UINT8                          *pucDigitStr,
@@ -406,9 +405,7 @@ VOS_UINT32 AT_RcvImsaImsIpCapSetCnf(VOS_VOID * pMsg);
 VOS_UINT32 AT_QryImsIpCapPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_RcvImsaImsIpCapQryCnf(VOS_VOID * pMsg);
 
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-6, begin */
 VOS_UINT32 AT_SetCacdcPara(VOS_UINT8 ucIndex);
-/* Added by wx270776 for 适配LNAS R13协议升级迭代开发, 2017-2-6, end */
 
 VOS_UINT32 AT_SetErrcCapCfgPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_SetErrcCapQryPara(VOS_UINT8 ucIndex);

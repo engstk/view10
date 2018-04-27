@@ -219,10 +219,18 @@ config DEFAULT_SECURITY
 	default "apparmor" if DEFAULT_SECURITY_APPARMOR
 	default "" if DEFAULT_SECURITY_DAC
 
+config HISI_RO_LSM_HOOKS
+        bool "Turn into RO the LSM hooks, after kernel init is completed."
+        depends on MMU
+        default n
+        help
+          Protects the security huulks from further modifications, after init.
+
 source security/hwselinux/Kconfig
 source security/check_root/Kconfig
 source security/hw_root_scan/Kconfig
 source security/kernel_harden/Kconfig
 source security/hkip_atkinfo/Kconfig
+source security/mdpp_selftest/Kconfig
 endmenu
 

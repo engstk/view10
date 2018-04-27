@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   vendor_info.h
  * Author: W0017688
  *
@@ -11,8 +11,8 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
-/** Helpers **/   
+
+/** Helpers **/
 #define YES 1
 #define NO 0
 #define SWAP(X) ((X) ? 0 : 1)
@@ -21,13 +21,13 @@ extern "C" {
 /******************************************************************************/
 /************************* Vendor Info ****************************************/
 /******************************************************************************/
-    
+
 /* Leave any fields that do not apply as their defaults */
 /* All fields marked as unimplemented are supported by device, but are not
  part of the example code. Features can be implemented on request. */
-    
-    
-/* Intro Tab */    
+
+
+/* Intro Tab */
 #define $VIF_Specification "Revision 1.00, Version 1.0"
 #define $VIF_Producer "USB-IF Vendor Info File Generator, Version 1.1.0.2"
 #define UUT_Device_Type 4        // DRP
@@ -41,7 +41,7 @@ extern "C" {
 #define PD_Specification_Revision 1         //; Revision 2.0 /* Must be 1 */
 #define SOP_Capable YES                     /* Always YES */
 #define SOP_P_Capable YES
-#define SOP_PP_Capable YES
+#define SOP_PP_Capable NO
 #define SOP_P_Debug_Capable NO              /* Not Currently Implemented */
 #define SOP_PP_Debug_Capable NO             /* Not Currently Implemented */
 #define USB_Comms_Capable NO
@@ -52,9 +52,9 @@ extern "C" {
 #define VCONN_Swap_To_Off_Supported YES
 #define Responds_To_Discov_SOP YES
 #define Attempts_Discov_SOP YES
-  
 
-/* USB Type-C Tab */    
+
+/* USB Type-C Tab */
 #define Type_C_State_Machine 2            //; 2: DRP
 #define Type_C_Supports_Vconn_Powered_Accessory YES
 #define Type_C_Implements_Try_SRC NO
@@ -77,13 +77,13 @@ extern "C" {
 #define Captive_Cable NO
 #define Type_C_Sources_VCONN YES
 
-    
-/* Source Tab */    
+
+/* Source Tab */
 #define PD_Power_as_Source 500
 #define USB_Suspend_May_Be_Cleared YES
-#define Sends_Pings NO                      /* Not Currently Implemented */   
+#define Sends_Pings NO                      /* Not Currently Implemented */
 #define Num_Src_PDOs 1 //TODO: 1+
-    
+
 #define Src_PDO_Supply_Type1 0             //; 0: Fixed
 #define Src_PDO_Peak_Current1 0            //; 0: 100% IOC
 #define Src_PDO_Voltage1 100
@@ -146,7 +146,7 @@ extern "C" {
 #define GiveBack_May_Be_Set NO
 #define Higher_Capability_Set NO
 #define Num_Snk_PDOs 1 //TODO: 1+
-    
+
 #define Snk_PDO_Supply_Type1 0          //; 0: Fixed
 #define Snk_PDO_Voltage1 100
 #define Snk_PDO_Op_Current1 10
@@ -199,7 +199,7 @@ extern "C" {
 /* Dual Role Tab */
 #define Accepts_PR_Swap_As_Src YES
 #define Accepts_PR_Swap_As_Snk YES
-#define Requests_PR_Swap_As_Src NO             
+#define Requests_PR_Swap_As_Src NO
 #define Requests_PR_Swap_As_Snk NO
 
 /* SOP Discovery - Part One Tab */
@@ -207,17 +207,17 @@ extern "C" {
 #define XID_SOP 0
 #define Data_Capable_as_USB_Host_SOP YES
 #define Data_Capable_as_USB_Device_SOP YES
-#define Product_Type_SOP 2            //; 0: Undefined
-#define Modal_Operation_Supported_SOP NO
+#define Product_Type_SOP 2            //; 0: Undefined, 2: Peripheral, 5: AMA
+#define Modal_Operation_Supported_SOP YES
 #define USB_VID_SOP 0x12D1
 #define PID_SOP 0x107E
 #define bcdDevice_SOP 0x0000
 
 /* SOP Discovery - Part Two Tab */
 #define SVID_fixed_SOP YES
-#define Num_SVIDs_min_SOP 0
-#define Num_SVIDs_max_SOP 0                 /* Currently Implements Up To 1 */
-    
+#define Num_SVIDs_min_SOP 1
+#define Num_SVIDs_max_SOP 1                 /* Currently Implements Up To 1 */
+
 #define SVID1_SOP 0xFF01
 #define SVID1_modes_fixed_SOP YES
 #define SVID1_num_modes_min_SOP 1
@@ -226,12 +226,12 @@ extern "C" {
 #define SVID1_mode1_enter_SOP YES
 
 /* AMA Tab */
-#define AMA_HW_Vers 0x0
-#define AMA_FW_Vers 0x0
+#define AMA_HW_Vers 0x1
+#define AMA_FW_Vers 0x1
 #define AMA_VCONN_reqd NO
 #define AMA_VCONN_power 0            //; 0: 1W
 #define AMA_VBUS_reqd NO
-#define AMA_Superspeed_Support 0            //; 0: USB 2.0 only    
+#define AMA_Superspeed_Support 1            //; 0: USB 2.0 only
 
 /******************************************************************************/
 
@@ -240,4 +240,3 @@ extern "C" {
 #endif
 
 #endif	/* VENDOR_INFO_H */
-

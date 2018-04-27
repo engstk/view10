@@ -38,14 +38,17 @@
 #include "ion_priv.h"
 
 /**
- * Why pre-allocation size is 32MB?
- * 1.The time of 32MB memory cma releasing is short
- * 2.32MB memory is larger then iris's memory size
+ * Why pre-allocation size is 64MB?
+ * 1.The time of 64MB memory cma releasing is short
+ * 2.64MB memory is larger then iris's memory size
  */
 
-#define PREALLOC_CNT     (32UL * SZ_1M / PAGE_SIZE)
+/* align must be modify with count */
+#define PREALLOC_ALIGN   (14U)
+#define PREALLOC_CNT     (64UL * SZ_1M / PAGE_SIZE)
+
 #define DMA_CAMERA_WATER_MARK (100 * SZ_1M)
-#define PREALLOC_ALIGN   (13U)
+
 static void pre_alloc_wk_func(struct work_struct *work);
 
 struct ion_dma_pool_heap {
@@ -104,7 +107,7 @@ void ion_register_dma_camera_cma(void *p)
 void ion_clean_dma_camera_cma(void)
 {
 	ion_phys_addr_t addr;
-	long long size = 0;
+	unsigned long size_remain = 0;
 #ifdef ION_DMA_POOL_DEBUG
 	int free_count = 0;
 	unsigned long t_ns = 0;
@@ -113,21 +116,28 @@ void ion_clean_dma_camera_cma(void)
 	if (!ion_dma_camera_heap)
 		return;
 
-	if (!atomic64_sub_and_test(0L, &ion_dma_camera_heap->alloc_size)) {
-		size = atomic64_read(&ion_dma_camera_heap->alloc_size);/*lint !e529 !e438*/
-		pr_err("camera daemon heap remain %lld\n", size);
-	}
-
 	while (!!(addr = gen_pool_alloc(ion_dma_camera_heap->pool, PAGE_SIZE))) {/*lint !e820*/
-		memset(phys_to_virt(addr), 0x0, PAGE_SIZE); /* unsafe_function_ignore: memset  */
 		if (ion_dma_camera_cma
 		    && !cma_release(ion_dma_camera_cma,  phys_to_page(addr), 1))
 			pr_err("cma release failed\n");
+
 #ifdef ION_DMA_POOL_DEBUG
 		else
 			free_count++;
 #endif
+
+		/* here is mean the camera is start again */
+		if (!atomic64_sub_and_test(0L, &ion_dma_camera_heap->alloc_size)) {
+			pr_err("@free memory camera is start again, alloc sz %llx\n",
+					atomic64_read(&ion_dma_camera_heap->alloc_size));
+			break;
+		}
 	}
+
+	size_remain = gen_pool_avail(ion_dma_camera_heap->pool);
+	if (!!size_remain)
+		pr_err("out %s, size_remain = 0x%lx\n", __func__, size_remain);
+
 #ifdef ION_DMA_POOL_DEBUG
 	t_ns = ktime_to_ns(ktime_sub(ktime_get(), t1));
 	pr_err("cma free size %lu B time is %lu us\n",
@@ -170,20 +180,33 @@ static void pre_alloc_wk_func(struct work_struct *work)
 #endif
 		return;
 	}
-	ion_clean_dma_camera_cma();
 }/*lint !e715*/
 
 static ion_phys_addr_t ion_dma_pool_allocate(struct ion_heap *heap,
 				      unsigned long size,
 				      unsigned long align)
 {
+	unsigned long offset = 0;
 	struct ion_dma_pool_heap *dma_pool_heap =
 		container_of(heap, struct ion_dma_pool_heap, heap);/*lint !e826*/
 
+	if (!dma_pool_heap)
+		return (ion_phys_addr_t)-1L;
 
-	unsigned long offset = gen_pool_alloc(dma_pool_heap->pool, size);
+	offset = gen_pool_alloc(dma_pool_heap->pool, size);
 	if (!offset) {
-		if (heap->id == ION_CAMERA_DAEMON_HEAP_ID)
+		if ((heap->id == ION_CAMERA_DAEMON_HEAP_ID)
+			/*
+			 * When the camera can only use 7/16 of all CMA size,
+			 * the watermark its looks ok.
+			 * v    wm    used   maxchun
+			 * NA   NA    400M
+			 * 1/2  304M  360M   160M
+			 * 1/3  200M  260M   300M
+			 * 3/8  228M  300M   240M
+			 * 7/16 266M  340M   256M
+			 */
+			&& (atomic64_read(&dma_pool_heap->alloc_size) < dma_pool_heap->size / 16 * 7))/*lint !e574*/
 			schedule_work(&ion_pre_alloc_wk);
 		return (ion_phys_addr_t)-1L;
 	}
@@ -200,19 +223,15 @@ static void ion_dma_pool_free(struct ion_heap *heap, ion_phys_addr_t addr,
 	if (addr == (ion_phys_addr_t)-1L)
 		return;
 
+	memset(phys_to_virt(addr), 0x0, size); /* unsafe_function_ignore: memset  */
+	gen_pool_free(dma_pool_heap->pool, addr, size);
 	atomic64_sub(size, &dma_pool_heap->alloc_size);/*lint !e713*/
 
-	memset(phys_to_virt(addr), 0x0, size); /* unsafe_function_ignore: memset  */
-
 	if (heap->id == ION_CAMERA_DAEMON_HEAP_ID) {
-		if (ion_dma_camera_cma
-		    && (!cma_release(ion_dma_camera_cma,  phys_to_page(addr), size / PAGE_SIZE)))/*lint !e712 !e747*/
-			pr_err("cma release failed\n");
-		if (atomic64_sub_and_test(0L, &dma_pool_heap->alloc_size))
+		if (atomic64_sub_and_test(0L, &dma_pool_heap->alloc_size)) {
 			ion_clean_dma_camera_cma();
+		}
 	}
-	else
-		gen_pool_free(dma_pool_heap->pool, addr, size);
 }
 
 static int ion_dma_pool_heap_phys(struct ion_heap *heap,

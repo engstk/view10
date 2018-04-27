@@ -1,21 +1,6 @@
 #ifndef __M3_RDR_DDR_MAP_H__
 #define __M3_RDR_DDR_MAP_H__ 
-#if defined(__KERNEL__)
-#if defined(CONFIG_HISI_LPMCU_BB)
-extern char *g_lpmcu_rdr_ddr_addr;
-#define M3_RDR_SYS_CONTEXT_BASE_ADDR g_lpmcu_rdr_ddr_addr
-#else
 #define M3_RDR_SYS_CONTEXT_BASE_ADDR (0)
-#endif
-#elif defined(__CMSIS_RTOS)
-extern unsigned int g_lpmcu_rdr_ddr_addr;
-#define M3_RDR_SYS_CONTEXT_BASE_ADDR g_lpmcu_rdr_ddr_addr
-#elif defined(FASTBOOT_MNTN)
-extern unsigned long long g_lpmcu_rdr_ddr_addr;
-#define M3_RDR_SYS_CONTEXT_BASE_ADDR g_lpmcu_rdr_ddr_addr
-#else
-#define M3_RDR_SYS_CONTEXT_BASE_ADDR (0)
-#endif
 #define M3_RDR_SYS_CONTEXT_SIZE (0x40000)
 #define M3_RDR_SYS_CONTEXT_RDR_MEM_MAP_INDEX_ADDR (M3_RDR_SYS_CONTEXT_BASE_ADDR)
 #define M3_RDR_SYS_CONTEXT_RDR_MEM_MAP_INDEX_SIZE (0x80)
@@ -77,4 +62,21 @@ extern unsigned long long g_lpmcu_rdr_ddr_addr;
 #endif
 #define M3_RDR_SYS_CONTEXT_M3_IMAGE_ADDR (M3_RDR_SYS_CONTEXT_BASE_ADDR+0x20000)
 #define M3_RDR_SYS_CONTEXT_M3_IMAGE_SIZE (0x20000)
+#undef M3_RDR_SYS_CONTEXT_BASE_ADDR
+#if defined(__KERNEL__)
+#if defined(CONFIG_HISI_LPMCU_BB)
+extern char *g_lpmcu_rdr_ddr_addr;
+#define M3_RDR_SYS_CONTEXT_BASE_ADDR g_lpmcu_rdr_ddr_addr
+#else
+#define M3_RDR_SYS_CONTEXT_BASE_ADDR (0)
+#endif
+#elif defined(__CMSIS_RTOS)
+extern unsigned int g_lpmcu_rdr_ddr_addr;
+#define M3_RDR_SYS_CONTEXT_BASE_ADDR g_lpmcu_rdr_ddr_addr
+#elif defined(FASTBOOT_MNTN)
+extern unsigned long long g_lpmcu_rdr_ddr_addr;
+#define M3_RDR_SYS_CONTEXT_BASE_ADDR g_lpmcu_rdr_ddr_addr
+#else
+#define M3_RDR_SYS_CONTEXT_BASE_ADDR (0)
+#endif
 #endif

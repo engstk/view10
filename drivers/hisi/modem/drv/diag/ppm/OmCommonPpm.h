@@ -152,17 +152,7 @@ typedef u32     OM_LOGIC_CHANNEL_ENUM_UINT32;
 /*****************************************************************************
   4 结构体定义
 *****************************************************************************/
-/*****************************************************************************
- 结构名    : OM_PSEUDO_SYNC_STRU
- 协议表格  : 无
- 结构说明  : OM调用底软DRV_UDI_IOCTL异步接口发送数据，为与调用DRV_UDI_WRITE同步接口
-             处处理逻辑一致，将异步接口调用伪造为同步接口
 
- 修改历史      :
-  1.日    期   : 2014年5月25日
-    作    者   : L00256032
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 typedef struct
 {
     u8                          *pucAsyncCBData;      /* DRV_UDI_IOCTL接口异步返回后传入的数据指针 */
@@ -170,16 +160,7 @@ typedef struct
     u32                          ulRsv;               /* Reserve */
 }OM_PSEUDO_SYNC_STRU;
 
-/*****************************************************************************
- 结构名    : PPM_PORT_CFG_INFO_STRU
- 协议表格  : 无
- 结构说明  : PPM端口切换统计信息
 
- 修改历史      :
-  1.日    期   : 2014年5月25日
-    作    者   : h59254
-    修改内容   : V8R1 OM_Optimize项目新增
-*****************************************************************************/
 typedef struct
 {
     u32                          ulPortTypeErr;
@@ -261,6 +242,9 @@ extern void   PPM_HsicPortInit(void);
 extern void   PPM_VComPortInit(void);
 void PPM_RegDisconnectCb(PPM_DisconnectTLPortFuc cb);
 u32 PPM_LogPortSwitch(u32  ulPhyPort, bool ulEffect);
+void PPM_OmPortInfoShow(OM_PROT_HANDLE_ENUM_UINT32  enHandle);
+void PPM_OmPortDebugInfoShow(void);
+void PPM_PortSwitchInfoShow(void);
 
 extern OM_PSEUDO_SYNC_STRU * PPM_ComPpmGetSyncInfo(void);
 extern OM_ACPU_DEBUG_INFO * PPM_ComPpmGetDebugInfo(void);

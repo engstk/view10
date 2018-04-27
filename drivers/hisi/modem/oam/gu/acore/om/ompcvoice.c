@@ -46,24 +46,7 @@
  *
  */
 
-/******************************************************************************
 
-                  版权所有 (C), 2001-2011, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : OmPcVoice.c
-  版 本 号   : 初稿
-  作    者   : 余骏
-  生成日期   : 2010年4月
-  最近修改   :
-  功能描述   : pc voice的实现
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2010年4月
-    作    者   : 余骏
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 /*****************************************************************************
   1 头文件包含
@@ -361,21 +344,7 @@ VOS_VOID OM_Write16Reg( VOS_UINT_PTR ulRegAddr, VOS_UINT16 usRegVal)
 }
 
 
-/*****************************************************************************
- Prototype       : OM_PcvHookInd
- Description     : 构造透明消息并发送
- Input           : pucBuf,      --数据指针
-                   usLen        --数据长度
-                   usBitmap     --钩取数据对象的BITMAP
-                   ulFrameTick  --帧号
- Output          : None
- Return Value    : None
 
- History         : ---
-Date         : 2010-04-9
-Author       : y00163779
-Modification : Created function
- *****************************************************************************/
 VOS_VOID OM_PcvHookInd(VOS_UCHAR* pucBuf, VOS_UINT16 usLen, VOS_UINT16 usBit, VOS_UINT32 ulFrameTick)
 {
     OM_PCV_TRANS_IND_STRU              *pstOmToAppMsg;
@@ -662,6 +631,13 @@ VOS_UINT32 OM_PcvTransStatus(VOS_UINT32 ulStatus, VOS_UINT32 ulPort)
 {
     VOS_UINT32 ulRet;
 
+    if ((sizeof(g_ulPcvPortMap)/sizeof(g_ulPcvPortMap[0])) <= ulPort)
+    {
+        PS_LOG1(ACPU_PID_PCVOICE, 0, PS_PRINT_ERROR, "OM_PcvTransStatus, port is error!\n", ulPort);
+
+        return VOS_ERR;
+    }
+
     /* record debugging info */
     g_stPcvLog.ulStatus = ulStatus;
     g_stPcvLog.ulPort = ulPort;
@@ -697,21 +673,7 @@ VOS_UINT32 OM_PcvTransStatus(VOS_UINT32 ulStatus, VOS_UINT32 ulPort)
     return VOS_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : OM_PcvSendData
- 功能描述  : 将PCVOICE数据发送给PC侧
- 输入参数  : pucVirAddr:   传递的数据虚地址
-             pucPhyAddr:   传递的数据实地址
-             ulDataLen:    数据长度
- 输出参数  : 无
- 返 回 值  : VOS_ERR/VOS_OK
- 调用函数  :
- 被调函数  :
- 修改历史  :
-   1.日    期  : 2011年10月8日
-     作    者  : g47350
-     修改内容  : Creat Function
-*****************************************************************************/
+
 VOS_UINT32 OM_PcvSendData(VOS_UINT8 *pucVirAddr, VOS_UINT8 *pucPhyAddr,VOS_UINT32 ulDataLen)
 {
 
@@ -745,7 +707,7 @@ VOS_VOID OM_PcvTransmitTaskEntry( VOS_VOID )
     }
 
     /*分配临时缓冲区，(OM->USB)方向搬运数据时使用*/
-    g_stPcvUncacheMemCtrl.pucBuf = (VOS_UCHAR  *)VOS_UnCacheMemAlloc(OM_PCV_BUF_SIZE, &ulRealAddr);
+    g_stPcvUncacheMemCtrl.pucBuf = (VOS_UCHAR  *)VOS_UnCacheMemAllocDebug(OM_PCV_BUF_SIZE, &ulRealAddr, (VOS_UINT32)ACPU_PCV_OM_USB_ADDR);
 
     if ( VOS_NULL_PTR == g_stPcvUncacheMemCtrl.pucBuf)
     {
@@ -927,9 +889,9 @@ VOS_UINT32 OM_PcvPidInit(enum VOS_INIT_PHASE_DEFINE ip)
 /*lint +e413*/
 
             /*申请uncache的动态内存区*/
-            g_stPcvOmToDspAddr.ulBufVirtAddr = (VOS_UINT_PTR)VOS_UnCacheMemAlloc(OM_PCV_BUF_SIZE, &g_stPcvOmToDspAddr.ulBufPhyAddr);
+            g_stPcvOmToDspAddr.ulBufVirtAddr = (VOS_UINT_PTR)VOS_UnCacheMemAllocDebug(OM_PCV_BUF_SIZE, &g_stPcvOmToDspAddr.ulBufPhyAddr, (VOS_UINT32)ACPU_PCV_OM_PHY_ADDR);
 
-            g_stPcvDspToOmAddr.ulBufVirtAddr = (VOS_UINT_PTR)VOS_UnCacheMemAlloc(OM_PCV_BUF_SIZE, &g_stPcvDspToOmAddr.ulBufPhyAddr);
+            g_stPcvDspToOmAddr.ulBufVirtAddr = (VOS_UINT_PTR)VOS_UnCacheMemAllocDebug(OM_PCV_BUF_SIZE, &g_stPcvDspToOmAddr.ulBufPhyAddr, (VOS_UINT32)ACPU_PCV_PHY_OM_ADDR);
 
             if ( VOS_NULL_PTR == g_stPcvOmToDspAddr.ulBufVirtAddr )
             {
@@ -1031,7 +993,7 @@ VOS_UINT32 PCV_AcpuFidInit(enum VOS_INIT_PHASE_DEFINE ip)
         case VOS_IP_LOAD_CONFIG:
         {
             /*读取PcVoice在NV中的配置*/
-            if(NV_OK!= NV_Read(en_NV_Item_PCVOICE_Support_Flg, &stPcvConfig, sizeof(APP_VC_NVIM_PC_VOICE_SUPPORT_FLAG_STRU)))
+            if(NV_OK!= mdrv_nv_read(en_NV_Item_PCVOICE_Support_Flg, &stPcvConfig, sizeof(APP_VC_NVIM_PC_VOICE_SUPPORT_FLAG_STRU)))
             {
                 stPcvConfig.usPcVoiceSupportFlag =  VOS_FALSE;
             }
@@ -1073,18 +1035,7 @@ VOS_UINT32 PCV_AcpuFidInit(enum VOS_INIT_PHASE_DEFINE ip)
 }
 
 
-/*****************************************************************************
- 函 数 名  : OM_PcvLogShow
- 功能描述  : 显示调测信息
- 输入参数  : 无
- 输出参数  : 无
- 返 回 值  : 无
 
- 修改历史  :
-   1.日    期  : 2013年06月18日
-     作    者  : d00212987
-     修改内容  : Creat Function
-*****************************************************************************/
 VOS_VOID OM_PcvLogShow(VOS_VOID)
 {
     (VOS_VOID)vos_printf("\r\n g_ulPcvStatus is   %d", g_ulPcvStatus);

@@ -40,6 +40,7 @@
 				hisilicon,mic_num = <2>;
 				hisilicon,hs_det = <0>;
 				hisilicon,hs_ctrl = <0x31>;
+				hisilicon,hs_det_trigger = <0>;
 				hisilicon,coefficient = <2700>;
 				hisilicon,hs_3_pole_min_voltage = <0>;
 				hisilicon,hs_3_pole_max_voltage = <8>;

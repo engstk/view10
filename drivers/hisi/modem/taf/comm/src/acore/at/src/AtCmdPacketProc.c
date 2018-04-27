@@ -70,22 +70,7 @@
 *****************************************************************************/
 
 /* Modified by l60609 for V9R1 IPv6&TAF/SM Project, 2013-4-27, begin */
-/*****************************************************************************
- 函 数 名  : AT_AppConvertPdpStateToConnStatus
- 功能描述  : 转换承载状态 -> 连接状态
- 输入参数  : enPdpState      - 承载状态
- 输出参数  : 无
- 返 回 值  : AT_APP_DIALING  - 连接正在建立
-             AT_APP_DIALED   - 连接已经建立
-             AT_APP_UNDIALED - 连接已经断开
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年3月9日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 AT_APP_CONN_STATE_ENUM_U32 AT_AppConvertPdpStateToConnStatus(
     AT_PDP_STATE_ENUM_U8                enPdpState
 )
@@ -112,21 +97,7 @@ AT_APP_CONN_STATE_ENUM_U32 AT_AppConvertPdpStateToConnStatus(
     return enConnStatus;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetChdataPara_AppUser
- 功能描述  : APP下发的^CHDATA =<cid>,<datachannel>
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年11月2日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetChdataPara_AppUser(VOS_UINT8 ucIndex)
 {
     VOS_UINT8                           ucLoop;
@@ -184,21 +155,7 @@ VOS_UINT32 AT_SetChdataPara_AppUser(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetChdataPara_HsicUser
- 功能描述  : HSIC通道下发的^CHDATA =<cid>,<datachannel>
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年11月2日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetChdataPara_HsicUser(VOS_UINT8 ucIndex)
 {
     VOS_UINT8                           ucLoop;
@@ -281,28 +238,7 @@ VOS_UINT32 AT_SetChdataPara_HsicUser(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetChdataPara
- 功能描述  : ^CHDATA =<cid>,<datachannel>
- 输入参数  : TAF_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年2月17日
-    作    者   : L47619
-    修改内容   : 新生成函数
-
-  2.日    期   : 2012年9月10日
-    作    者   : L60609
-    修改内容   : AP适配项目
-
-  3.日    期   : 2015年5月27日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_UINT32 AT_SetChdataPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT8                           ucUserIndex;
@@ -369,21 +305,7 @@ VOS_UINT32 AT_SetChdataPara(VOS_UINT8 ucIndex)
     return AT_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryChdataPara_AppUser
- 功能描述  : APP下发的AT^CHDATA?
- 输入参数  : TAF_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年11月2日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryChdataPara_AppUser(TAF_UINT8 ucIndex)
 {
     VOS_UINT8                           ucLoop;
@@ -434,21 +356,7 @@ VOS_UINT32 AT_QryChdataPara_AppUser(TAF_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryChdataPara_HsicUser
- 功能描述  : HSIC下发的AT^CHDATA?
- 输入参数  : TAF_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年11月2日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryChdataPara_HsicUser(TAF_UINT8 ucIndex)
 {
     VOS_UINT8                           ucLoop;
@@ -510,28 +418,7 @@ VOS_UINT32 AT_QryChdataPara_HsicUser(TAF_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryChdataPara
- 功能描述  : AT^CHDATA?
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  :
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年02月17日
-    作    者   : L47619
-    修改内容   : 新生成函数
-
-  2.日    期   : 2012年9月10日
-    作    者   : L60609
-    修改内容   : AP适配项目
-
-  3.日    期   : 2015年5月27日
-    作    者   : l00198894
-    修改内容   : TSTS
-*****************************************************************************/
 VOS_UINT32 AT_QryChdataPara(TAF_UINT8 ucIndex)
 {
     VOS_UINT8                           ucUserId;
@@ -586,28 +473,7 @@ VOS_UINT32 AT_QryChdataPara(TAF_UINT8 ucIndex)
     return AT_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_TestChdataPara
- 功能描述  : ^CHDATA测试函数
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年03月20日
-    作    者   : l00198894
-    修改内容   : 新增函数
-
-  2.日    期   : 2012年8月13日
-    作    者   : l60609
-    修改内容   : MUX:增加MUX通道的处理
-
-  3.日    期   : 2012年9月10日
-    作    者   : l60609
-    修改内容   : AP适配项目：修改CHDATA的通道检查
-*****************************************************************************/
 VOS_UINT32 AT_TestChdataPara(VOS_UINT8 ucIndex)
 {
     /* Modified by l60609 for AP适配项目 ，2012-09-10 Begin */
@@ -628,20 +494,7 @@ VOS_UINT32 AT_TestChdataPara(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PS_ReportDhcp
- 功能描述  : 上报IPv4的DHCP信息
- 输入参数  : ucIndex --- 用户索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月10日
-    作    者   : Y00213812
-    修改内容   : C50 IPv6 项目新增函数
-*****************************************************************************/
 VOS_UINT32 AT_PS_ReportDhcp(VOS_UINT8 ucIndex)
 {
     AT_PS_CALL_ENTITY_STRU             *pstCallEntity = VOS_NULL_PTR;
@@ -692,31 +545,7 @@ VOS_UINT32 AT_PS_ReportDhcp(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- Prototype      : At_SetDhcpPara
- Description    : ^DHCP设置命令
- Input          : ucIndex --- 用户索引
- Output         :
- Return Value   : AT_XXX  --- ATC返回码
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2009-09-01
-    Author      : L47619
-    Modification: Created function
-
-  2.日    期   : 2011年10月24日
-    作    者   : o00132663
-    修改内容   : AT融合项目，获取命令名全局变量改变
-  3.日    期   : 2012年03月03日
-    作    者   : s62952
-    修改内容   : BalongV300R002 Build优化项目:与数传相关的AP代码都已经废弃
-  4.日    期   : 2012年12月10日
-    作    者   : Y00213812
-    修改内容   : C50 IPv6 Project，PDP未激活或者参数错误时返回ERROR，支持指定
-                 CID查询
-*****************************************************************************/
 VOS_UINT32 At_SetDhcpPara(VOS_UINT8 ucIndex)
 {
     /* 参数检查 */
@@ -735,21 +564,7 @@ VOS_UINT32 At_SetDhcpPara(VOS_UINT8 ucIndex)
     return AT_PS_ReportDhcp(ucIndex);
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryDhcpPara_AppUser
- 功能描述  : APP User下发AT^DHCP?
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年9月3日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_QryDhcpPara_AppUser(VOS_UINT8 ucIndex)
 {
     AT_PDP_ENTITY_STRU                 *pstAppPdpEntity = VOS_NULL_PTR;
@@ -799,21 +614,7 @@ VOS_UINT32 At_QryDhcpPara_AppUser(VOS_UINT8 ucIndex)
 
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryDhcpPara_NdisUser
- 功能描述  : Ndis User下发AT^DHCP?
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年9月3日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_QryDhcpPara_NdisUser(VOS_UINT8 ucIndex)
 {
     AT_DHCP_PARA_STRU                   stDhcpConfig;
@@ -862,21 +663,7 @@ VOS_UINT32 At_QryDhcpPara_NdisUser(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryDhcpPara_UsbComUser
- 功能描述  : UsbCom User下发AT^DHCP?
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月01日
-    作    者   : w00316404
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_QryDhcpPara_UsbComUser(VOS_UINT8 ucIndex)
 {
     AT_PS_CALL_ENTITY_STRU             *pstCallEntity = VOS_NULL_PTR;
@@ -934,23 +721,7 @@ VOS_UINT32 At_QryDhcpPara_UsbComUser(VOS_UINT8 ucIndex)
     return ulRst;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PS_GetDailPortUsrType
- 功能描述  : 获取拨号端口期望的用户类型(用于PCUI端口等触发APPP/NDIS拨号)
- 输入参数  : enUsrType    --- 端口类型
- 输出参数  : 无
- 返 回 值  : AT_USER_TYPE --- 拨号类型
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2014年1月13日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-  2.日    期   : 2016年07月01日
-    作    者   : w00316404
-    修改内容   : DTS2016070101260 增加上层是ANDROID形态的支持
-*****************************************************************************/
 AT_USER_TYPE AT_PS_GetDailPortUsrType(AT_USER_TYPE enUsrType)
 {
     VOS_UINT8                          *pucSystemAppConfig = VOS_NULL_PTR;
@@ -986,28 +757,7 @@ AT_USER_TYPE AT_PS_GetDailPortUsrType(AT_USER_TYPE enUsrType)
     return enExpUsrType;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryDhcpPara
- 功能描述  : <clip>,<netmask>,<gate>,<dhcp>,<pDNS>,<sDNS>,<max_rx_data>,<max_tx_data>
- 输入参数  : ucIndex --- 用户索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年1月23日
-    作    者   : sunshaohua
-    修改内容   : 新生成函数
-
-  2.日    期   : 2014年1月13日
-    作    者   : A00165503
-    修改内容   : DTS2013100906456: PCUI端口支持查询APP/NDIS的DHCP操作
-
-  3.日    期   : 2016年07月01日
-    作    者   : w00316404
-    修改内容   : DTS2016070101260 增加上层是ANDROID形态的支持
-*****************************************************************************/
 VOS_UINT32 At_QryDhcpPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT32                          ulResult;
@@ -1037,21 +787,7 @@ VOS_UINT32 At_QryDhcpPara(VOS_UINT8 ucIndex)
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_TestDhcpPara
- 功能描述  : ^DHCP测试命令
- 输入参数  : ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月10日
-    作    者   : Y00213812
-    修改内容   : C50 IPv6 项目新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_TestDhcpPara(VOS_UINT8 ucIndex)
 {
     gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
@@ -1063,24 +799,7 @@ VOS_UINT32 AT_TestDhcpPara(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PS_ReportDhcpv6
- 功能描述  : 上报IPv6的DHCP信息
- 输入参数  : ucIndex --- 用户索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月10日
-    作    者   : Y00213812
-    修改内容   : C50 IPv6 项目新增函数
-
-  2.日    期   : 2014年12月8日
-    作    者   : A00165503
-    修改内容   : DTS2014103102656: IPv6前缀未获取, ^DHCPV6查询需要返回ERROR
-*****************************************************************************/
 VOS_UINT32 AT_PS_ReportDhcpv6(TAF_UINT8 ucIndex)
 {
     AT_PS_CALL_ENTITY_STRU             *pstCallEntity = VOS_NULL_PTR;
@@ -1170,21 +889,7 @@ VOS_UINT32 AT_PS_ReportDhcpv6(TAF_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetDhcpv6Para
- 功能描述  : 指定CID，查询IPv6类型PDP上下文
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月10日
-    作    者   : Y00213812
-    修改内容   : C50 IPv6 项目新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetDhcpv6Para(VOS_UINT8 ucIndex)
 {
     /* 参数检查 */
@@ -1202,21 +907,7 @@ VOS_UINT32 AT_SetDhcpv6Para(VOS_UINT8 ucIndex)
     /* 查询指定CID的实体PDP上下文 */
     return AT_PS_ReportDhcpv6(ucIndex);
 }
-/*****************************************************************************
- 函 数 名  : AT_QryDhcpV6Para_AppUser
- 功能描述  : APP User下发AT^DHCPV6?
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年9月3日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryDhcpV6Para_AppUser(VOS_UINT8 ucIndex)
 {
     VOS_UINT16                          usLength;
@@ -1299,21 +990,7 @@ VOS_UINT32 AT_QryDhcpV6Para_AppUser(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryDhcpV6Para_NdisUser
- 功能描述  : NDIS User下发AT^DHCPV6?
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年9月3日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryDhcpV6Para_NdisUser(VOS_UINT8 ucIndex)
 {
     VOS_UINT16                          usLength;
@@ -1393,20 +1070,7 @@ VOS_UINT32 AT_QryDhcpV6Para_NdisUser(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryDhcpV6Para_UsbComUser
- 功能描述  : 上报IPv6的DHCP信息
- 输入参数  : ucIndex --- 用户索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2016年07月01日
-    作    者   : w00316404
-    修改内容   : 新增函数
-*****************************************************************************/
 VOS_UINT32 At_QryDhcpV6Para_UsbComUser(TAF_UINT8 ucIndex)
 {
     AT_PS_CALL_ENTITY_STRU             *pstCallEntity = VOS_NULL_PTR;
@@ -1505,28 +1169,7 @@ VOS_UINT32 At_QryDhcpV6Para_UsbComUser(TAF_UINT8 ucIndex)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_QryDhcpv6Para
- 功能描述  :
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  - ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月21日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-  2.日    期   : 2014年1月13日
-    作    者   : A00165503
-    修改内容   : DTS2013100906456: PCUI端口支持查询APP/NDIS的DHCP操作
-
-  3.日    期   : 2016年07月01日
-    作    者   : w00316404
-    修改内容   : DTS2016070101260 增加上层是ANDROID形态的支持
-*****************************************************************************/
 VOS_UINT32 AT_QryDhcpv6Para(VOS_UINT8 ucIndex)
 {
     VOS_UINT32                          ulResult;
@@ -1556,21 +1199,7 @@ VOS_UINT32 AT_QryDhcpv6Para(VOS_UINT8 ucIndex)
     return ulResult;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_TestDhcpv6Para
- 功能描述  : ^DHCPV6测试命令
- 输入参数  : ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2012年12月10日
-    作    者   : Y00213812
-    修改内容   : C50 IPv6 项目新增函数
-
-*****************************************************************************/
 VOS_UINT32 AT_TestDhcpv6Para(VOS_UINT8 ucIndex)
 {
     gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
@@ -1581,21 +1210,7 @@ VOS_UINT32 AT_TestDhcpv6Para(VOS_UINT8 ucIndex)
 
     return AT_OK;
 }
-/*****************************************************************************
- 函 数 名  : AT_PS_ReportApraInfo
- 功能描述  : 上报IPv6的RA信息
- 输入参数  : TAF_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_PS_ReportApraInfo(TAF_UINT8 ucIndex)
 {
     VOS_UINT16                          usLength;
@@ -1703,21 +1318,7 @@ VOS_UINT32 AT_PS_ReportApraInfo(TAF_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetApRaInfoPara
- 功能描述  : 指定CID，查询IPv6 RA消息中相关参数取值值, 包括MTU, 前缀,前缀的preferred lifetime和Valid lifetime
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月25日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetApRaInfoPara(VOS_UINT8 ucIndex)
 {
     if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
@@ -1735,25 +1336,7 @@ VOS_UINT32 AT_SetApRaInfoPara(VOS_UINT8 ucIndex)
     return AT_PS_ReportApraInfo(ucIndex);
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryApRaInfoPara
- 功能描述  : 查询IPv6 RA消息中相关参数取值值, 包括MTU, 前缀,
-             前缀的preferred lifetime和Valid lifetime
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  - ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月25日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-  2.日    期   : 2012年5月11日
-    作    者   : l60609
-    修改内容   : DTS2012051101376：lifetime输出应该为%u
-*****************************************************************************/
 VOS_UINT32 AT_QryApRaInfoPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT16                          usLength;
@@ -1863,21 +1446,7 @@ VOS_UINT32 AT_QryApRaInfoPara(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_TestApRaInfoPara
- 功能描述  : ^APRAINFO测试命令
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_TestApRaInfoPara(VOS_UINT8 ucIndex)
 {
     gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
@@ -1890,21 +1459,7 @@ VOS_UINT32 AT_TestApRaInfoPara(VOS_UINT8 ucIndex)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_PS_ReportLanAddr
- 功能描述  : IPv6 路由器LAN端口地址取值
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_PS_ReportLanAddr(VOS_UINT8 ucIndex)
 {
     VOS_UINT8                           ucCallId;
@@ -1969,21 +1524,7 @@ VOS_UINT32 AT_PS_ReportLanAddr(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetApLanAddrPara
- 功能描述  : 指定CID，查询IPv6 路由器LAN端口地址取值
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月25日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetApLanAddrPara(VOS_UINT8 ucIndex)
 {
     if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
@@ -2001,21 +1542,7 @@ VOS_UINT32 AT_SetApLanAddrPara(VOS_UINT8 ucIndex)
     return AT_PS_ReportLanAddr(ucIndex);
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryApLanAddrPara
- 功能描述  : 查询IPv6 路由器LAN端口地址取值
- 输入参数  : ucIndex - 用户索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  - ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2011年7月25日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryApLanAddrPara(VOS_UINT8 ucIndex)
 {
     VOS_UINT16                          usLength;
@@ -2081,21 +1608,7 @@ VOS_UINT32 AT_QryApLanAddrPara(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_TestApLanAddrPara
- 功能描述  : ^APLANADDR测试命令
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_TestApLanAddrPara(VOS_UINT8 ucIndex)
 {
     gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
@@ -2108,21 +1621,176 @@ VOS_UINT32 AT_TestApLanAddrPara(VOS_UINT8 ucIndex)
 }
 
 
-/*****************************************************************************
- 函 数 名  : AT_PS_ReportConnSt
- 功能描述  : 上报呼叫状态
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
+VOS_UINT32 AT_PS_ReportIPv6TempAddr(VOS_UINT8 ucIndex)
+{
+    AT_PS_CALL_ENTITY_STRU             *pstCallEntity = VOS_NULL_PTR;
+    VOS_UINT8                           aucIpv6AddrStr[TAF_MAX_IPV6_ADDR_COLON_STR_LEN];
+    VOS_UINT16                          usLength = 0;
+    VOS_UINT8                           ucCallId;
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
+    TAF_MEM_SET_S(aucIpv6AddrStr, sizeof(aucIpv6AddrStr),
+                  0x00, sizeof(aucIpv6AddrStr));
 
-*****************************************************************************/
+    if (IPV6_ADDRESS_TEST_MODE_ENABLE != AT_GetPsIPv6IIDTestModeConfig())
+    {
+        AT_ERR_LOG("AT_PS_ReportIPv6TempAddr: Test mode is disabled!");
+        return AT_CME_OPERATION_NOT_ALLOWED;
+    }
+
+    ucCallId = AT_PS_TransCidToCallId(ucIndex, (VOS_UINT8)gastAtParaList[0].ulParaValue);
+    if (VOS_TRUE != AT_PS_IsCallIdValid(ucIndex, ucCallId))
+    {
+        AT_ERR_LOG("AT_PS_ReportIPv6TempAddr: CallId is invalid!");
+        return AT_ERROR;
+    }
+
+    pstCallEntity = AT_PS_GetCallEntity(ucIndex, ucCallId);
+    if (AT_PDP_STATE_ACTED != pstCallEntity->enIpv6State)
+    {
+        AT_WARN_LOG("AT_PS_ReportIPv6TempAddr: PDP is not actived.");
+        return AT_ERROR;
+    }
+
+    if (VOS_TRUE != pstCallEntity->stIpv6RaInfo.bitOpPrefixAddr)
+    {
+        AT_WARN_LOG("AT_PS_ReportIPv6TempAddr: Prefix address is not received.");
+        return AT_ERROR;
+    }
+
+    if (!AT_PS_IS_IPV6_ADDR_IID_VALID(pstCallEntity->stIpv6DhcpInfo.aucIpv6TmpAddr))
+    {
+        AT_WARN_LOG("AT_PS_ReportIPv6TempAddr: IID is invalid.");
+        return AT_ERROR;
+    }
+
+    usLength  = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr,
+                                       "%s: ",
+                                       g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    AT_ConvertIpv6AddrToCompressedStr(aucIpv6AddrStr,
+                                      pstCallEntity->stIpv6DhcpInfo.aucIpv6TmpAddr,
+                                      TAF_IPV6_STR_RFC2373_TOKENS);
+
+    usLength += (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr,
+                                       (VOS_CHAR *)pgucAtSndCodeAddr + usLength,
+                                       "\"%s\"",
+                                       aucIpv6AddrStr);
+
+    gstAtSendData.usBufLen = usLength;
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_SetIPv6TempAddrPara(VOS_UINT8 ucIndex)
+{
+    /* 参数检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数错误 */
+    if (gucAtParaIndex != 1)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    return AT_PS_ReportIPv6TempAddr(ucIndex);
+}
+
+
+VOS_UINT32 AT_TestIPv6TempAddrPara(VOS_UINT8 ucIndex)
+{
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                                    (VOS_CHAR *)pgucAtSndCodeAddr,
+                                                    (VOS_CHAR *)pgucAtSndCodeAddr,
+                                                    "%s: (1-11)",
+                                                    g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_SetCgpiafPara(VOS_UINT8 ucIndex)
+{
+    AT_COMM_PS_CTX_STRU                *pstCommPsCtx        = VOS_NULL_PTR;
+
+    pstCommPsCtx    = AT_GetCommPsCtxAddr();
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数过多 */
+    if (4 < gucAtParaIndex)
+    {
+        return AT_TOO_MANY_PARA;
+    }
+
+    /* 参数<IPv6_AddressFormat> */
+    if (0 != gastAtParaList[0].usParaLen)
+    {
+        pstCommPsCtx->bitOpIpv6AddrFormat = (VOS_UINT8)gastAtParaList[0].ulParaValue;
+    }
+
+    /* 参数<IPv6_SubnetNotation> */
+    if (0 != gastAtParaList[1].usParaLen)
+    {
+        pstCommPsCtx->bitOpIpv6SubnetNotation = (VOS_UINT8)gastAtParaList[1].ulParaValue;
+    }
+
+    /* 参数<IPv6_LeadingZeros> */
+    if (0 != gastAtParaList[2].usParaLen)
+    {
+        pstCommPsCtx->bitOpIpv6LeadingZeros = (VOS_UINT8)gastAtParaList[2].ulParaValue;
+    }
+
+    /* 参数<IPv6_CompressZeros> */
+    if (0 != gastAtParaList[2].usParaLen)
+    {
+        pstCommPsCtx->bitOpIpv6CompressZeros = (VOS_UINT8)gastAtParaList[3].ulParaValue;
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_QryCgpiafPara(VOS_UINT8 ucIndex)
+{
+    AT_COMM_PS_CTX_STRU                *pstCommPsCtx        = VOS_NULL_PTR;
+
+    pstCommPsCtx    = AT_GetCommPsCtxAddr();
+
+    /* 命令操作类型检查 */
+    if (AT_CMD_OPT_READ_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 输出查询结果 */
+    /* +CGPIAF: <IPv6_AddressFormat>,<IPv6_SubnetNotation>,<IPv6_LeadingZeros>,<IPv6_CompressZeros> */
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                      (VOS_CHAR *)pgucAtSndCodeAddr,
+                                      (VOS_CHAR *)pgucAtSndCodeAddr,
+                                      "%s: %d,%d,%d,%d",
+                                      g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
+                                      pstCommPsCtx->bitOpIpv6AddrFormat,
+                                      pstCommPsCtx->bitOpIpv6SubnetNotation,
+                                      pstCommPsCtx->bitOpIpv6LeadingZeros,
+                                      pstCommPsCtx->bitOpIpv6CompressZeros);
+
+    return AT_OK;
+}
+
+
+
+
 VOS_UINT32 AT_PS_ReportConnSt(VOS_UINT8 ucIndex)
 {
     VOS_UINT8                           ucCallId;
@@ -2207,21 +1875,7 @@ VOS_UINT32 AT_PS_ReportConnSt(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetApConnStPara
- 功能描述  : 指定cid，查询APP拨号状态
- 输入参数  : VOS_UINT8                           ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月25日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32  At_SetApConnStPara(
     VOS_UINT8                           ucIndex
 )
@@ -2241,25 +1895,7 @@ VOS_UINT32  At_SetApConnStPara(
     return AT_PS_ReportConnSt(ucIndex);
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryApConnStPara
- 功能描述  : 查询APP拨号状态
- 输入参数  : TAF_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : 成功
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2010年9月9日
-    作    者   : s62952
-    修改内容   : 新生成函数
-
-  2.日    期   : 2015年11月4日
-    作    者   : W00316404
-    修改内容   : 支持多PDP TYPE的类型（DTS2015110302814）
-
-*****************************************************************************/
 VOS_UINT32  At_QryApConnStPara(
     VOS_UINT8                           ucIndex
 )
@@ -2362,21 +1998,7 @@ VOS_UINT32  At_QryApConnStPara(
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_TestApConnStPara
- 功能描述  : ^APCONNST测试命令
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_TestApConnStPara(VOS_UINT8 ucIndex)
 {
     gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
@@ -2388,21 +2010,7 @@ VOS_UINT32 AT_TestApConnStPara(VOS_UINT8 ucIndex)
     return AT_OK;
 }
 
-/*****************************************************************************
- 函 数 名  : At_SetApThroughputPara
- 功能描述  : 指定CID，查询当前流量
- 输入参数  : VOS_UINT8                           ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月25日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 At_SetApThroughputPara(
     VOS_UINT8                           ucIndex
 )
@@ -2472,24 +2080,7 @@ VOS_UINT32 At_SetApThroughputPara(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : At_QryApThroughputPara
- 功能描述  : E5查询当前流量
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : 成功或失败
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
- 1.日    期   : 2010年9月9日
-   作    者   : s62952
-   修改内容   : 新生成函数
- 2.日    期   : 2011年12月08日
-   作    者   : f00179208
-   修改内容   : PS Project: 给RNIC发流速查询消息
-
-*****************************************************************************/
 VOS_UINT32 At_QryApThroughputPara(
     VOS_UINT8                           ucIndex
 )
@@ -2532,21 +2123,7 @@ VOS_UINT32 At_QryApThroughputPara(
     }
 }
 
-/*****************************************************************************
- 函 数 名  : AT_TestApThroughputPara
- 功能描述  : ^APTHROUGHOUT测试命令
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年4月27日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_TestApThroughputPara(VOS_UINT8 ucIndex)
 {
     gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
@@ -2559,40 +2136,13 @@ VOS_UINT32 AT_TestApThroughputPara(VOS_UINT8 ucIndex)
 }
 /* Modified by l60609 for V9R1 IPv6&TAF/SM Project, 2013-4-27, end */
 
-/*****************************************************************************
- 函 数 名  : AT_SetApEndPppPara
- 功能描述  : APENDPPP命令的设置函数，该命令仅用于PAD版本断开PPP拨号
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2013年7月9日
-    作    者   : l60609
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetApEndPppPara(VOS_UINT8 ucIndex)
 {
     return AT_ERROR;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetApDsFlowRptCfgPara
- 功能描述  : ^APDSFLOWRPTCFG=<enable>[,<threshold>[,<total_threshold>[,<oper>]]]
- 输入参数  : ucIndex --- 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月2日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetApDsFlowRptCfgPara(VOS_UINT8 ucIndex)
 {
     TAF_APDSFLOW_RPT_CFG_STRU           stRptCfg;
@@ -2663,20 +2213,7 @@ VOS_UINT32 AT_SetApDsFlowRptCfgPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryApDsFlowRptCfgPara
- 功能描述  : ^APDSFLOWRPTCFG?
- 输入参数  : ucIndex --- 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月2日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_QryApDsFlowRptCfgPara(VOS_UINT8 ucIndex)
 {
     /* 执行命令操作 */
@@ -2694,20 +2231,7 @@ VOS_UINT32 AT_QryApDsFlowRptCfgPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetDsFlowNvWriteCfgPara
- 功能描述  : ^DSFLOWNVWRCFG=<enable>[,<interval>]
- 输入参数  : ucIndex --- 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月2日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_SetDsFlowNvWriteCfgPara(VOS_UINT8 ucIndex)
 {
     TAF_DSFLOW_NV_WRITE_CFG_STRU        stWriteNvCfg;
@@ -2783,20 +2307,7 @@ VOS_UINT32 AT_SetDsFlowNvWriteCfgPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryDsFlowNvWriteCfgPara
- 功能描述  : ^DSFLOWNVWRCFG?
- 输入参数  : ucIndex --- 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年2月2日
-    作    者   : A00165503
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_UINT32 AT_QryDsFlowNvWriteCfgPara(VOS_UINT8 ucIndex)
 {
     /* 执行命令操作 */
@@ -2814,21 +2325,7 @@ VOS_UINT32 AT_QryDsFlowNvWriteCfgPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_SetImsPdpCfg
- 功能描述  : ^IMSPNDPCFG
- 输入参数  : ucIndex --- 端口索引
- 输出参数  : 无
- 返 回 值  : AT_XXX  --- ATC返回码
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2015年7月29日
-    作    者   : z00301431
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetImsPdpCfg(VOS_UINT8 ucIndex)
 {
     TAF_IMS_PDP_CFG_STRU                stImsPdpCfg;
@@ -2868,22 +2365,6 @@ VOS_UINT32 AT_SetImsPdpCfg(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
-/*****************************************************************************
- 函 数 名  : AT_SetMipPara
- 功能描述  : 处理^CMIP设置命令
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
-
- 修改历史      :
-  1.日    期   : 2017年3月25日
-    作    者   : Y00213812
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_SetMipPara(VOS_UINT8 ucIndex)
 {
 
@@ -2915,21 +2396,7 @@ VOS_UINT32 AT_SetMipPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_QryMipPara
- 功能描述  : 处理^CMIP查询命令
- 输入参数  : VOS_UINT8 ucIndex
- 输出参数  : 无
- 返 回 值  : VOS_UINT32
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年3月25日
-    作    者   : Y00213812
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_UINT32 AT_QryMipPara(VOS_UINT8 ucIndex)
 {
 
@@ -2948,5 +2415,553 @@ VOS_UINT32 AT_QryMipPara(VOS_UINT8 ucIndex)
     return AT_WAIT_ASYNC_RETURN;
 }
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
+
+VOS_UINT32 AT_SetVzwApnePara(VOS_UINT8 ucIndex)
+{
+    TAF_PS_VZWAPNE_INFO_STRU            stVzwapneInfo;
+    VOS_UINT8                           ucIsCustomCmd;
+
+    TAF_MEM_SET_S(&stVzwapneInfo, sizeof(stVzwapneInfo), 0, sizeof(TAF_PS_VZWAPNE_INFO_STRU));
+    ucIsCustomCmd = VOS_FALSE;
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* +VZWAPNE命令标记 */
+    if (AT_CMD_VZWAPNE == g_stParseContext[ucIndex].pstCmdElement->ulCmdIndex)
+    {
+        ucIsCustomCmd = VOS_TRUE;
+    }
+
+    /* 设置<wapn>/<cid> */
+    stVzwapneInfo.ucCid     = (VOS_UINT8)gastAtParaList[0].ulParaValue;
+
+    /* 设置<apncl> */
+    stVzwapneInfo.ucClass   = (VOS_UINT8)gastAtParaList[1].ulParaValue;
+
+    /* 设置<apnni> */
+    if (gastAtParaList[2].usParaLen > TAF_MAX_APN_LEN)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    if (0 != gastAtParaList[2].usParaLen)
+    {
+        /* 检查 */
+        if ( VOS_OK != AT_CheckApnFormat(gastAtParaList[2].aucPara,
+                                         gastAtParaList[2].usParaLen) )
+        {
+            return AT_CME_INCORRECT_PARAMETERS;
+        }
+
+        stVzwapneInfo.stApn.ucLength = (VOS_UINT8)gastAtParaList[2].usParaLen;
+        TAF_MEM_CPY_S(stVzwapneInfo.stApn.aucValue,
+                      sizeof(stVzwapneInfo.stApn.aucValue),
+                      gastAtParaList[2].aucPara,
+                      gastAtParaList[2].usParaLen);
+    }
+
+    /* 设置<apntype> */
+    stVzwapneInfo.enIpType  = (VOS_UINT8)gastAtParaList[3].ulParaValue + 1;
+
+    /* 设置<apned> */
+    stVzwapneInfo.ucEnable  = (VOS_UINT8)gastAtParaList[5].ulParaValue;
+
+    /* 设置<apntime> */
+    stVzwapneInfo.usInactiveTimer  = (VOS_UINT8)gastAtParaList[6].ulParaValue;
+
+    /* 发送跨核消息 */
+    if (VOS_OK != TAF_PS_SetVzwApneInfo(WUEPS_PID_AT,
+                                        AT_PS_BuildExClientId(gastAtClientTab[ucIndex].usClientId),
+                                        gastAtClientTab[ucIndex].opId,
+                                        ucIsCustomCmd,
+                                        &stVzwapneInfo))
+    {
+        return AT_ERROR;
+    }
+
+    /* 设置当前操作类型 */
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_VZWAPNE_SET;
+
+    /* 返回命令处理挂起状态 */
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
+VOS_UINT32 AT_QryVzwApnePara(VOS_UINT8 ucIndex)
+{
+    VOS_UINT8                           ucIsCustomCmd;
+
+    ucIsCustomCmd = VOS_FALSE;
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_READ_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* +VZWAPNE命令标记 */
+    if (AT_CMD_VZWAPNE == g_stParseContext[ucIndex].pstCmdElement->ulCmdIndex)
+    {
+        ucIsCustomCmd = VOS_TRUE;
+    }
+
+    /* 发送跨核消息 */
+    if (VOS_OK != TAF_PS_GetVzwApneInfo(WUEPS_PID_AT,
+                                        AT_PS_BuildExClientId(gastAtClientTab[ucIndex].usClientId),
+                                        gastAtClientTab[ucIndex].opId,
+                                        ucIsCustomCmd))
+    {
+        return AT_ERROR;
+    }
+
+    /* 设置当前操作类型 */
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_VZWAPNE_QRY;
+
+    /* 返回命令处理挂起状态 */
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
+VOS_UINT32 AT_TestVzwApnePara(VOS_UINT8 ucIndex)
+{
+    /* 参数检查 */
+    if (AT_CMD_OPT_TEST_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_ERROR;
+    }
+
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+        (VOS_CHAR *)pgucAtSndCodeAddr,
+        (VOS_CHAR *)pgucAtSndCodeAddr,
+        "%s: (1-8),(1-8),(\"VZWIMS\",\"VZWADMIN\",\"VZWINTERNET\",\"VZWAPP\"),(\"IPv4\",\"IPv6\",\"IPv4v6\"),(\"LTE\"),(\"Enabled\",\"Disabled\"),(0-255)",
+        g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_SetCgerepPara(VOS_UINT8 ucIndex)
+{
+    AT_MODEM_NET_CTX_STRU                  *pstNetCtx = VOS_NULL_PTR;
+
+    pstNetCtx = AT_GetModemNetCtxAddrFromClientId(ucIndex);
+
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数过多 */
+    if (gucAtParaIndex > 2)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* +CGEREP=[<mode>[,<bfr>]] */
+    if (0 == gucAtParaIndex)
+    {
+        pstNetCtx->stCgerepCfg.ucMode   = 0;
+        pstNetCtx->stCgerepCfg.ucBfr    = 0;
+    }
+    else if (1 == gucAtParaIndex)
+    {
+        if (0 == gastAtParaList[0].usParaLen)
+        {
+             return AT_CME_INCORRECT_PARAMETERS;
+        }
+
+        pstNetCtx->stCgerepCfg.ucMode   = (VOS_UINT8)gastAtParaList[0].ulParaValue;
+        pstNetCtx->stCgerepCfg.ucBfr    = 0;
+    }
+    else
+    {
+        if ( (0 == gastAtParaList[0].usParaLen)
+          || (0 == gastAtParaList[1].usParaLen))
+        {
+             return AT_CME_INCORRECT_PARAMETERS;
+        }
+
+        pstNetCtx->stCgerepCfg.ucMode   = (VOS_UINT8)gastAtParaList[0].ulParaValue;
+        pstNetCtx->stCgerepCfg.ucBfr    = (VOS_UINT8)gastAtParaList[1].ulParaValue;
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_QryCgerepPara(VOS_UINT8 ucIndex)
+{
+    AT_MODEM_NET_CTX_STRU              *pstNetCtx = VOS_NULL_PTR;
+
+    pstNetCtx = AT_GetModemNetCtxAddrFromClientId(ucIndex);
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_READ_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_ERROR;
+    }
+
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                                   (VOS_CHAR *)pgucAtSndCodeAddr,
+                                                   (VOS_CHAR *)pgucAtSndCodeAddr,
+                                                    "%s: %d,%d",
+                                                    g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
+                                                    pstNetCtx->stCgerepCfg.ucMode,
+                                                    pstNetCtx->stCgerepCfg.ucBfr);
+
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_SetCindPara(VOS_UINT8 ucIndex)
+{
+    AT_MODEM_NET_CTX_STRU              *pstNetCtx = VOS_NULL_PTR;
+    TAF_START_INFO_IND_STRU             stStartInfoInd;
+
+    pstNetCtx = AT_GetModemNetCtxAddrFromClientId(ucIndex);
+    TAF_MEM_SET_S(&stStartInfoInd, sizeof(stStartInfoInd), 0x00, sizeof(stStartInfoInd));
+
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数过多 */
+    if (1 < gucAtParaIndex)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    if (0 == gucAtParaIndex)
+    {
+        return AT_OK;
+    }
+
+    /* +CIND=[<ind>] 目前只支持signal的设置 */
+    if (0 != gastAtParaList[0].usParaLen)
+    {
+        pstNetCtx->ucCerssiReportType = (AT_CERSSI_REPORT_TYPE_ENUM_UINT8)gastAtParaList[0].ulParaValue;
+
+        stStartInfoInd.ucActionType             = TAF_START_EVENT_INFO_FOREVER;
+        stStartInfoInd.ucSignThreshold          = (VOS_UINT8)gastAtParaList[0].ulParaValue;
+        stStartInfoInd.ucRrcMsgType             = TAF_EVENT_INFO_CELL_SIGN;
+        stStartInfoInd.ucMinRptTimerInterval    = pstNetCtx->ucCerssiMinTimerInterval;
+
+        if (VOS_TRUE == TAF_MMA_SetCindReq(WUEPS_PID_AT, gastAtClientTab[ucIndex].usClientId, 0, &stStartInfoInd))
+        {
+            gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_CIND_SET;
+            return AT_WAIT_ASYNC_RETURN;
+        }
+        else
+        {
+            return AT_ERROR;
+        }
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_QryCindPara(VOS_UINT8 ucIndex)
+{
+    AT_MODEM_NET_CTX_STRU              *pstNetCtx = VOS_NULL_PTR;
+
+    pstNetCtx = AT_GetModemNetCtxAddrFromClientId(ucIndex);
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_READ_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_ERROR;
+    }
+
+    /* +CIND: <ind> 目前只支持signal的查询 */
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+                                                   (VOS_CHAR *)pgucAtSndCodeAddr,
+                                                   (VOS_CHAR *)pgucAtSndCodeAddr,
+                                                    "%s: %d",
+                                                    g_stParseContext[ucIndex].pstCmdElement->pszCmdName,
+                                                    pstNetCtx->ucCerssiReportType);
+
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_TestCindPara(VOS_UINT8 ucIndex)
+{
+    /* 参数检查 */
+    if (AT_CMD_OPT_TEST_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_ERROR;
+    }
+
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+        (VOS_CHAR *)pgucAtSndCodeAddr,
+        (VOS_CHAR *)pgucAtSndCodeAddr,
+        "%s: \"signal\",(0-5)",
+        g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 AT_SetDataSwitchStatus( VOS_UINT8 ucIndex )
+{
+    VOS_UINT8                           ucDataSwitchAT;
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        AT_WARN_LOG("AT_SetDataSwitchStatus: NOT AT_CMD_OPT_SET_PARA_CMD!");
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数个数不正确 */
+    if (1 != gucAtParaIndex)
+    {
+        AT_WARN_LOG("AT_SetDataSwitchStatus: para num is not equal 1!");
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    if (1 != gastAtParaList[0].usParaLen)
+    {
+        AT_WARN_LOG("AT_SetDataSwitchStatus: usParaLen  is not equal 1!");
+        return AT_CME_INCORRECT_PARAMETERS;
+
+    }
+
+    ucDataSwitchAT=(VOS_UINT8)gastAtParaList[0].ulParaValue;
+
+    /* 给TAF APS发送通知消息 */
+    if (VOS_OK != TAF_PS_Set_DataSwitchStatus(WUEPS_PID_AT,
+                                              AT_PS_BuildExClientId(gastAtClientTab[ucIndex].usClientId),
+                                              0,
+                                              ucDataSwitchAT))
+    {
+        AT_WARN_LOG("AT_SetDataSwitchStatus():TAF_PS_Set_DataSwitchStatus fail");
+        return AT_ERROR;
+    }
+
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_DATASWITCH_SET;
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+VOS_UINT32 AT_SetDataRoamSwitchStatus( VOS_UINT8 ucIndex )
+{
+    VOS_UINT8                           ucDataRoamSwitchAT;
+
+    /* 参数检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        AT_WARN_LOG("AT_SetDataRoamSwitchStatus: NOT AT_CMD_OPT_SET_PARA_CMD!");
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数个数不正确 */
+    if (1 != gucAtParaIndex)
+    {
+        AT_WARN_LOG("AT_SetDataRoamSwitchStatus: para num is not equal 1!");
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    if (1 != gastAtParaList[0].usParaLen)
+    {
+        AT_WARN_LOG("AT_SetDataRoamSwitchStatus: usParaLen  is not equal 1!");
+        return AT_CME_INCORRECT_PARAMETERS;
+
+    }
+
+    ucDataRoamSwitchAT=(VOS_UINT8)gastAtParaList[0].ulParaValue;
+
+    /* 给TAF APS发送通知消息 */
+    if (VOS_OK != TAF_PS_Set_DataRoamSwitchStatus(WUEPS_PID_AT,
+                                                  AT_PS_BuildExClientId(gastAtClientTab[ucIndex].usClientId),
+                                                  0,
+                                                  ucDataRoamSwitchAT) )
+    {
+        AT_WARN_LOG("AT_SetDataRoamSwitchStatus():TAF_PS_Set_DataRoamSwitchStatus fail");
+        return AT_ERROR;
+    }
+
+
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_DATAROAMSWITCH_SET;
+
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
+VOS_UINT32 AT_QryDataSwitchStatus(  VOS_UINT8 ucIndex )
+{
+    /* 发送跨核消息 */
+    if ( VOS_OK != TAF_PS_Get_DataSwitchStatus(WUEPS_PID_AT,
+                                               AT_PS_BuildExClientId(gastAtClientTab[ucIndex].usClientId),
+                                               0))
+    {
+        return AT_ERROR;
+    }
+
+    /* 设置当前操作类型 */
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_DATASWITCH_QRY;
+
+    /* 返回命令处理挂起状态 */
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
+
+VOS_UINT32 AT_QryDataRoamSwitchStatus(  VOS_UINT8 ucIndex )
+{
+    /* 发送跨核消息 */
+    if ( VOS_OK != TAF_PS_Get_DataRoamSwitchStatus(WUEPS_PID_AT,
+                                                   AT_PS_BuildExClientId(gastAtClientTab[ucIndex].usClientId),
+                                                   0))
+    {
+        return AT_ERROR;
+    }
+
+    /* 设置当前操作类型 */
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_DATAROAMSWITCH_QRY;
+
+    /* 返回命令处理挂起状态 */
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
+VOS_UINT32 AT_SetApnThrotInfoPara(VOS_UINT8 ucIndex)
+{
+    TAF_PS_APN_THROT_INFO_STRU                stApnThrotInfo;
+
+    TAF_MEM_SET_S(&stApnThrotInfo, sizeof(TAF_PS_APN_THROT_INFO_STRU), 0, sizeof(TAF_PS_APN_THROT_INFO_STRU));
+
+    /* 指令类型检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数数目错误 */
+    if (5 != gucAtParaIndex)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数为空 */
+    if ( (0 == gastAtParaList[0].usParaLen)
+      || (0 == gastAtParaList[1].usParaLen)
+      || (0 == gastAtParaList[2].usParaLen)
+      || (0 == gastAtParaList[3].usParaLen)
+      || (0 == gastAtParaList[4].usParaLen) )
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* CID与ApnClassType 必须一一对应 */
+    if (gastAtParaList[0].ulParaValue != gastAtParaList[1].ulParaValue)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 设置参数 */
+    stApnThrotInfo.ucCid               = (VOS_UINT8)gastAtParaList[0].ulParaValue;
+    stApnThrotInfo.ucApnClassType      = (VOS_UINT8)gastAtParaList[1].ulParaValue;
+    stApnThrotInfo.ulWaitTime          = gastAtParaList[2].ulParaValue;
+    stApnThrotInfo.ulPdnMaxConnTime    = gastAtParaList[3].ulParaValue;
+    stApnThrotInfo.ulPdnMaxConnCount   = gastAtParaList[4].ulParaValue;
+
+    /* 发送跨核消息 */
+    if (VOS_OK != TAF_PS_SetApnThrotInfo(WUEPS_PID_AT,
+                                         AT_PS_BuildExClientId(gastAtClientTab[ucIndex].usClientId),
+                                         gastAtClientTab[ucIndex].opId,
+                                         &stApnThrotInfo))
+    {
+        return AT_ERROR;
+    }
+
+    /* 设置当前操作类型 */
+    gastAtClientTab[ucIndex].CmdCurrentOpt = AT_CMD_APN_THROT_INFO_SET;
+
+    /* 返回命令处理挂起状态 */
+    return AT_WAIT_ASYNC_RETURN;
+}
+
+
+VOS_UINT32 At_SetUsbTetherInfo(VOS_UINT8 ucIndex)
+{
+    AT_RNIC_USB_TETHER_INFO_IND_STRU   *pstMsg;
+
+    /* 指令类型检查 */
+    if (AT_CMD_OPT_SET_PARA_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数数目错误 */
+    if (2 != gucAtParaIndex)
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    /* 参数为空 */
+    if ((0 == gastAtParaList[0].usParaLen)
+     || (0 == gastAtParaList[1].usParaLen)
+     || (RNIC_RMNET_NAME_MAX_LEN < gastAtParaList[1].usParaLen))
+    {
+        return AT_CME_INCORRECT_PARAMETERS;
+    }
+
+    AT_WARN_LOG1("At_SetUsbTetherInfo: para2 len is ",gastAtParaList[1].usParaLen);
+
+    pstMsg = (AT_RNIC_USB_TETHER_INFO_IND_STRU *)AT_ALLOC_MSG_WITH_HDR(sizeof(AT_RNIC_USB_TETHER_INFO_IND_STRU));
+
+    if (VOS_NULL_PTR == pstMsg)
+    {
+        AT_WARN_LOG("At_SetUsbTetherInfo: alloc msg fail!");
+        return AT_ERROR;
+    }
+
+    /* 初始化消息体 */
+    TAF_MEM_SET_S((VOS_INT8 *)pstMsg + VOS_MSG_HEAD_LENGTH,
+                  (VOS_SIZE_T)sizeof(AT_RNIC_USB_TETHER_INFO_IND_STRU) - VOS_MSG_HEAD_LENGTH,
+                  0x00,
+                  (VOS_SIZE_T)sizeof(AT_RNIC_USB_TETHER_INFO_IND_STRU) - VOS_MSG_HEAD_LENGTH);
+
+    /* 填写消息头和消息ID */
+    AT_CFG_MSG_HDR( pstMsg, ACPU_PID_RNIC, ID_AT_RNIC_USB_TETHER_INFO_IND );
+
+    /* 填写消息体 */
+    pstMsg->enTetherConnStat = (VOS_UINT8)gastAtParaList[0].ulParaValue;
+    TAF_MEM_CPY_S(pstMsg->aucRmnetName, RNIC_RMNET_NAME_MAX_LEN, gastAtParaList[1].aucPara, gastAtParaList[1].usParaLen);
+
+    if (VOS_OK != PS_SEND_MSG(WUEPS_PID_AT, pstMsg))
+    {
+        AT_WARN_LOG("At_SetUsbTetherInfo: Send msg fail!");
+        return AT_ERROR;
+    }
+
+    return AT_OK;
+}
+
+
+VOS_UINT32 At_TestUsbTetherInfo(VOS_UINT8 ucIndex)
+{
+    /* 参数检查 */
+    if (AT_CMD_OPT_TEST_CMD != g_stATParseCmd.ucCmdOptType)
+    {
+        return AT_ERROR;
+    }
+
+    gstAtSendData.usBufLen = (VOS_UINT16)At_sprintf(AT_CMD_MAX_LEN,
+        (VOS_CHAR *)pgucAtSndCodeAddr,
+        (VOS_CHAR *)pgucAtSndCodeAddr,
+        "%s: (\"0:disconn\",\"1:connect\"),(\"rmnet0 - rmnet6\")",
+        g_stParseContext[ucIndex].pstCmdElement->pszCmdName);
+
+    return AT_OK;
+}
+
 

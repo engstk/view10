@@ -209,7 +209,7 @@ static int do_iommu_domain_map(struct ion_iommu_domain *ion_domain,
 					/ (format->virt_page_line * PAGE_SIZE);
 		}
 
-		iova_size = lines * format->virt_page_line * PAGE_SIZE;
+		iova_size = lines * format->virt_page_line * PAGE_SIZE - (format->virt_page_line - format->phys_page_line) * PAGE_SIZE;
 	} else {
 		iova_size = phys_len;
 	}

@@ -71,7 +71,7 @@
 #ifndef ARCH_SHF_SMALL
 #define ARCH_SHF_SMALL 0
 #endif
-#ifdef CONFIG_HISI_HHEE
+#ifdef CONFIG_HISI_HHEE_TOKEN
 #include <linux/hisi/hisi_hhee.h>
 static unsigned long clarify_token;
 #endif
@@ -338,9 +338,6 @@ struct load_info {
 	struct _ddebug *debug;
 	unsigned int num_debug;
 	bool sig_ok;
-#ifdef CONFIG_KALLSYMS
-	unsigned long mod_kallsyms_init_off;
-#endif
 	struct {
 		unsigned int sym, str, mod, vers, info, pcpu;
 	} index;
@@ -1900,14 +1897,13 @@ void set_page_attributes(void *start, void *end, int (*set)(unsigned long start,
 static void set_section_ro_nx(void *base,
 			unsigned long text_size,
 			unsigned long ro_size,
-			unsigned long total_size)
+			unsigned long total_size,
+			int (*set_ro)(unsigned long start, int num_pages),
+			int (*set_nx)(unsigned long start, int num_pages))
 {
 	/* begin and end PFNs of the current subsection */
 	unsigned long begin_pfn;
 	unsigned long end_pfn;
-#ifdef CONFIG_HISI_HHEE
-	struct arm_smccc_res res;
-#endif
 
 	/*
 	 * Set RO for module text and RO-data:
@@ -1915,7 +1911,7 @@ static void set_section_ro_nx(void *base,
 	 * - Do not protect last partial page.
 	 */
 	if (ro_size > 0)
-		set_page_attributes(base, base + ro_size, set_memory_ro);
+		set_page_attributes(base, base + ro_size, set_ro);
 
 	/*
 	 * Set NX permissions for module data:
@@ -1926,34 +1922,53 @@ static void set_section_ro_nx(void *base,
 		begin_pfn = PFN_UP((unsigned long)base + text_size);
 		end_pfn = PFN_UP((unsigned long)base + total_size);
 		if (end_pfn > begin_pfn)
-			set_memory_nx(begin_pfn << PAGE_SHIFT, end_pfn - begin_pfn);
+			set_nx(begin_pfn << PAGE_SHIFT, end_pfn - begin_pfn);
 	}
-#ifdef CONFIG_HISI_HHEE
-	if(HHEE_ENABLE == hhee_check_enable())
-		arm_smccc_hvc( HHEE_LKM_UPDATE, (unsigned long)base, text_size,
-			clarify_token, 0, 0, 0, 0, &res);
-#endif
+}
 
+static inline void hhee_lkm_update(void *base, unsigned long size, bool nx)
+{
+#ifdef CONFIG_HISI_HHEE_TOKEN
+	struct arm_smccc_res res;
+
+	if (HHEE_ENABLE != hhee_check_enable())
+		return;
+
+	arm_smccc_hvc(HHEE_LKM_UPDATE, (unsigned long)base,
+			size, clarify_token, nx ? 1: 0, 0, 0, 0, &res);
+#endif
+}
+
+static void set_module_core_ro_nx(struct module *mod)
+{
+	set_section_ro_nx(mod->module_core, mod->core_text_size,
+			  mod->core_ro_size, mod->core_size,
+			  set_memory_ro, set_memory_nx);
+	hhee_lkm_update(mod->module_core, mod->core_text_size, false);
 }
 
 static void unset_module_core_ro_nx(struct module *mod)
 {
-	set_page_attributes(mod->module_core + mod->core_text_size,
-		mod->module_core + mod->core_size,
-		set_memory_x);
-	set_page_attributes(mod->module_core,
-		mod->module_core + mod->core_ro_size,
-		set_memory_rw);
+	set_section_ro_nx(mod->module_core, mod->core_text_size,
+			  mod->core_ro_size, mod->core_size,
+			  set_memory_rw, set_memory_x);
+	hhee_lkm_update(mod->module_core, mod->core_text_size, true);
+}
+
+static void set_module_init_ro_nx(struct module *mod)
+{
+	set_section_ro_nx(mod->module_init, mod->init_text_size,
+			  mod->init_ro_size, mod->init_size,
+			  set_memory_ro, set_memory_nx);
+	hhee_lkm_update(mod->module_init, mod->init_text_size, false);
 }
 
 static void unset_module_init_ro_nx(struct module *mod)
 {
-	set_page_attributes(mod->module_init + mod->init_text_size,
-		mod->module_init + mod->init_size,
-		set_memory_x);
-	set_page_attributes(mod->module_init,
-		mod->module_init + mod->init_ro_size,
-		set_memory_rw);
+	set_section_ro_nx(mod->module_init, mod->init_text_size,
+			  mod->init_ro_size, mod->init_size,
+			  set_memory_rw, set_memory_x);
+	hhee_lkm_update(mod->module_init, mod->init_text_size, true);
 }
 
 /* Iterate through all modules and set each module's text as RW */
@@ -2002,7 +2017,8 @@ void set_all_modules_text_ro(void)
 	mutex_unlock(&module_mutex);
 }
 #else
-static inline void set_section_ro_nx(void *base, unsigned long text_size, unsigned long ro_size, unsigned long total_size) { }
+static void set_module_core_ro_nx(struct module *mod) { }
+static void set_module_init_ro_nx(struct module *mod) { }
 static void unset_module_core_ro_nx(struct module *mod) { }
 static void unset_module_init_ro_nx(struct module *mod) { }
 #endif
@@ -2424,7 +2440,7 @@ static char elf_type(const Elf_Sym *sym, const struct load_info *info)
 	}
 	if (sym->st_shndx == SHN_UNDEF)
 		return 'U';
-	if (sym->st_shndx == SHN_ABS)
+	if (sym->st_shndx == SHN_ABS || sym->st_shndx == info->index.pcpu)
 		return 'a';
 	if (sym->st_shndx >= SHN_LORESERVE)
 		return '?';
@@ -2453,7 +2469,7 @@ static char elf_type(const Elf_Sym *sym, const struct load_info *info)
 }
 
 static bool is_core_symbol(const Elf_Sym *src, const Elf_Shdr *sechdrs,
-			unsigned int shnum)
+			unsigned int shnum, unsigned int pcpundx)
 {
 	const Elf_Shdr *sec;
 
@@ -2461,6 +2477,11 @@ static bool is_core_symbol(const Elf_Sym *src, const Elf_Shdr *sechdrs,
 	    || src->st_shndx >= shnum
 	    || !src->st_name)
 		return false;
+
+#ifdef CONFIG_KALLSYMS_ALL
+	if (src->st_shndx == pcpundx)
+		return true;
+#endif
 
 	sec = sechdrs + src->st_shndx;
 	if (!(sec->sh_flags & SHF_ALLOC)
@@ -2499,7 +2520,8 @@ static void layout_symtab(struct module *mod, struct load_info *info)
 	/* Compute total space required for the core symbols' strtab. */
 	for (ndst = i = 0; i < nsrc; i++) {
 		if (i == 0 ||
-		    is_core_symbol(src+i, info->sechdrs, info->hdr->e_shnum)) {
+		    is_core_symbol(src+i, info->sechdrs, info->hdr->e_shnum,
+				   info->index.pcpu)) {
 			strtab_size += strlen(&info->strtab[src[i].st_name])+1;
 			ndst++;
 		}
@@ -2515,21 +2537,10 @@ static void layout_symtab(struct module *mod, struct load_info *info)
 	strsect->sh_flags |= SHF_ALLOC;
 	strsect->sh_entsize = get_offset(mod, &mod->init_size, strsect,
 					 info->index.str) | INIT_OFFSET_MASK;
-	pr_debug("\t%s\n", info->secstrings + strsect->sh_name);
-
-	/* We'll tack temporary mod_kallsyms on the end. */
-	mod->init_size = ALIGN(mod->init_size,
-			       __alignof__(struct mod_kallsyms));
-	info->mod_kallsyms_init_off = mod->init_size;
-	mod->init_size += sizeof(struct mod_kallsyms);
 	mod->init_size = debug_align(mod->init_size);
+	pr_debug("\t%s\n", info->secstrings + strsect->sh_name);
 }
 
-/*
- * We use the full symtab and strtab which layout_symtab arranged to
- * be appended to the init section.  Later we switch to the cut-down
- * core-only ones.
- */
 static void add_kallsyms(struct module *mod, const struct load_info *info)
 {
 	unsigned int i, ndst;
@@ -2538,33 +2549,29 @@ static void add_kallsyms(struct module *mod, const struct load_info *info)
 	char *s;
 	Elf_Shdr *symsec = &info->sechdrs[info->index.sym];
 
-	/* Set up to point into init section. */
-	mod->kallsyms = mod->module_init + info->mod_kallsyms_init_off;
-
-	mod->kallsyms->symtab = (void *)symsec->sh_addr;
-	mod->kallsyms->num_symtab = symsec->sh_size / sizeof(Elf_Sym);
+	mod->symtab = (void *)symsec->sh_addr;
+	mod->num_symtab = symsec->sh_size / sizeof(Elf_Sym);
 	/* Make sure we get permanent strtab: don't use info->strtab. */
-	mod->kallsyms->strtab = (void *)info->sechdrs[info->index.str].sh_addr;
+	mod->strtab = (void *)info->sechdrs[info->index.str].sh_addr;
 
 	/* Set types up while we still have access to sections. */
-	for (i = 0; i < mod->kallsyms->num_symtab; i++)
-		mod->kallsyms->symtab[i].st_info
-			= elf_type(&mod->kallsyms->symtab[i], info);
+	for (i = 0; i < mod->num_symtab; i++)
+		mod->symtab[i].st_info = elf_type(&mod->symtab[i], info);
 
-	/* Now populate the cut down core kallsyms for after init. */
-	mod->core_kallsyms.symtab = dst = mod->module_core + info->symoffs;
-	mod->core_kallsyms.strtab = s = mod->module_core + info->stroffs;
-	src = mod->kallsyms->symtab;
-	for (ndst = i = 0; i < mod->kallsyms->num_symtab; i++) {
+	mod->core_symtab = dst = mod->module_core + info->symoffs;
+	mod->core_strtab = s = mod->module_core + info->stroffs;
+	src = mod->symtab;
+	for (ndst = i = 0; i < mod->num_symtab; i++) {
 		if (i == 0 ||
-		    is_core_symbol(src+i, info->sechdrs, info->hdr->e_shnum)) {
+		    is_core_symbol(src+i, info->sechdrs, info->hdr->e_shnum,
+				   info->index.pcpu)) {
 			dst[ndst] = src[i];
-			dst[ndst++].st_name = s - mod->core_kallsyms.strtab;
-			s += strlcpy(s, &mod->kallsyms->strtab[src[i].st_name],
+			dst[ndst++].st_name = s - mod->core_strtab;
+			s += strlcpy(s, &mod->strtab[src[i].st_name],
 				     KSYM_NAME_LEN) + 1;
 		}
 	}
-	mod->core_kallsyms.num_symtab = ndst;
+	mod->core_num_syms = ndst;
 }
 #else
 static inline void layout_symtab(struct module *mod, struct load_info *info)
@@ -3318,8 +3325,9 @@ static noinline int do_init_module(struct module *mod)
 	module_put(mod);
 	trim_init_extable(mod);
 #ifdef CONFIG_KALLSYMS
-	/* Switch to core kallsyms now init is done: kallsyms may be walking! */
-	rcu_assign_pointer(mod->kallsyms, &mod->core_kallsyms);
+	mod->num_symtab = mod->core_num_syms;
+	mod->symtab = mod->core_symtab;
+	mod->strtab = mod->core_strtab;
 #endif
 	mod_tree_remove_init(mod);
 	unset_module_init_ro_nx(mod);
@@ -3416,17 +3424,9 @@ static int complete_formation(struct module *mod, struct load_info *info)
 	/* This relies on module_mutex for list integrity. */
 	module_bug_finalize(info->hdr, info->sechdrs, mod);
 
-	/* Set RO and NX regions for core */
-	set_section_ro_nx(mod->module_core,
-				mod->core_text_size,
-				mod->core_ro_size,
-				mod->core_size);
-
-	/* Set RO and NX regions for init */
-	set_section_ro_nx(mod->module_init,
-				mod->init_text_size,
-				mod->init_ro_size,
-				mod->init_size);
+	/* Set RO and NX regions */
+	set_module_init_ro_nx(mod);
+	set_module_core_ro_nx(mod);
 
 	/* Mark state as coming so strong_try_module_get() ignores us,
 	 * but kallsyms etc. can see us. */
@@ -3689,9 +3689,9 @@ static inline int is_arm_mapping_symbol(const char *str)
 	       && (str[2] == '\0' || str[2] == '.');
 }
 
-static const char *symname(struct mod_kallsyms *kallsyms, unsigned int symnum)
+static const char *symname(struct module *mod, unsigned int symnum)
 {
-	return kallsyms->strtab + kallsyms->symtab[symnum].st_name;
+	return mod->strtab + mod->symtab[symnum].st_name;
 }
 
 static const char *get_ksymbol(struct module *mod,
@@ -3701,7 +3701,6 @@ static const char *get_ksymbol(struct module *mod,
 {
 	unsigned int i, best = 0;
 	unsigned long nextval;
-	struct mod_kallsyms *kallsyms = rcu_dereference_sched(mod->kallsyms);
 
 	/* At worse, next value is at end of module */
 	if (within_module_init(addr, mod))
@@ -3711,32 +3710,32 @@ static const char *get_ksymbol(struct module *mod,
 
 	/* Scan for closest preceding symbol, and next symbol. (ELF
 	   starts real symbols at 1). */
-	for (i = 1; i < kallsyms->num_symtab; i++) {
-		if (kallsyms->symtab[i].st_shndx == SHN_UNDEF)
+	for (i = 1; i < mod->num_symtab; i++) {
+		if (mod->symtab[i].st_shndx == SHN_UNDEF)
 			continue;
 
 		/* We ignore unnamed symbols: they're uninformative
 		 * and inserted at a whim. */
-		if (*symname(kallsyms, i) == '\0'
-		    || is_arm_mapping_symbol(symname(kallsyms, i)))
+		if (*symname(mod, i) == '\0'
+		    || is_arm_mapping_symbol(symname(mod, i)))
 			continue;
 
-		if (kallsyms->symtab[i].st_value <= addr
-		    && kallsyms->symtab[i].st_value > kallsyms->symtab[best].st_value)
+		if (mod->symtab[i].st_value <= addr
+		    && mod->symtab[i].st_value > mod->symtab[best].st_value)
 			best = i;
-		if (kallsyms->symtab[i].st_value > addr
-		    && kallsyms->symtab[i].st_value < nextval)
-			nextval = kallsyms->symtab[i].st_value;
+		if (mod->symtab[i].st_value > addr
+		    && mod->symtab[i].st_value < nextval)
+			nextval = mod->symtab[i].st_value;
 	}
 
 	if (!best)
 		return NULL;
 
 	if (size)
-		*size = nextval - kallsyms->symtab[best].st_value;
+		*size = nextval - mod->symtab[best].st_value;
 	if (offset)
-		*offset = addr - kallsyms->symtab[best].st_value;
-	return symname(kallsyms, best);
+		*offset = addr - mod->symtab[best].st_value;
+	return symname(mod, best);
 }
 
 /* For kallsyms to ask for address resolution.  NULL means not found.  Careful
@@ -3826,21 +3825,18 @@ int module_get_kallsym(unsigned int symnum, unsigned long *value, char *type,
 
 	preempt_disable();
 	list_for_each_entry_rcu(mod, &modules, list) {
-		struct mod_kallsyms *kallsyms;
-
 		if (mod->state == MODULE_STATE_UNFORMED)
 			continue;
-		kallsyms = rcu_dereference_sched(mod->kallsyms);
-		if (symnum < kallsyms->num_symtab) {
-			*value = kallsyms->symtab[symnum].st_value;
-			*type = kallsyms->symtab[symnum].st_info;
-			strlcpy(name, symname(kallsyms, symnum), KSYM_NAME_LEN);
+		if (symnum < mod->num_symtab) {
+			*value = mod->symtab[symnum].st_value;
+			*type = mod->symtab[symnum].st_info;
+			strlcpy(name, symname(mod, symnum), KSYM_NAME_LEN);
 			strlcpy(module_name, mod->name, MODULE_NAME_LEN);
 			*exported = is_exported(name, *value, mod);
 			preempt_enable();
 			return 0;
 		}
-		symnum -= kallsyms->num_symtab;
+		symnum -= mod->num_symtab;
 	}
 	preempt_enable();
 	return -ERANGE;
@@ -3849,12 +3845,11 @@ int module_get_kallsym(unsigned int symnum, unsigned long *value, char *type,
 static unsigned long mod_find_symname(struct module *mod, const char *name)
 {
 	unsigned int i;
-	struct mod_kallsyms *kallsyms = rcu_dereference_sched(mod->kallsyms);
 
-	for (i = 0; i < kallsyms->num_symtab; i++)
-		if (strcmp(name, symname(kallsyms, i)) == 0 &&
-		    kallsyms->symtab[i].st_info != 'U')
-			return kallsyms->symtab[i].st_value;
+	for (i = 0; i < mod->num_symtab; i++)
+		if (strcmp(name, symname(mod, i)) == 0 &&
+		    mod->symtab[i].st_info != 'U')
+			return mod->symtab[i].st_value;
 	return 0;
 }
 
@@ -3893,14 +3888,11 @@ int module_kallsyms_on_each_symbol(int (*fn)(void *, const char *,
 	module_assert_mutex();
 
 	list_for_each_entry(mod, &modules, list) {
-		/* We hold module_mutex: no need for rcu_dereference_sched */
-		struct mod_kallsyms *kallsyms = mod->kallsyms;
-
 		if (mod->state == MODULE_STATE_UNFORMED)
 			continue;
-		for (i = 0; i < kallsyms->num_symtab; i++) {
-			ret = fn(data, symname(kallsyms, i),
-				 mod, kallsyms->symtab[i].st_value);
+		for (i = 0; i < mod->num_symtab; i++) {
+			ret = fn(data, symname(mod, i),
+				 mod, mod->symtab[i].st_value);
 			if (ret != 0)
 				return ret;
 		}
@@ -4011,7 +4003,7 @@ static int __init proc_modules_init(void)
 module_init(proc_modules_init);
 #endif
 
-#ifdef CONFIG_HISI_HHEE
+#ifdef CONFIG_HISI_HHEE_TOKEN
 static int __init module_token_init(void)
 {
 

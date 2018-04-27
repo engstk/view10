@@ -56,8 +56,13 @@ extern "C"
 #include "mdrv_socp_common.h"
 #include "mdrv_diag_system_common.h"
 
+#ifdef DIAG_SYSTEM_5G
+#define SCM_CODER_SRC_LOM_CNF                       (SOCP_CODER_SRC_ACPU_CNF)
+#define SCM_CODER_SRC_LOM_IND                       (SOCP_CODER_SRC_ACPU_IND)
+#else
 #define SCM_CODER_SRC_LOM_CNF                       (SOCP_CODER_SRC_LOM_CNF1)
 #define SCM_CODER_SRC_LOM_IND                       (SOCP_CODER_SRC_LOM_IND1)
+#endif
 
 #define DIAG_CODER_SRC_CNF_PADDR       (DIAG_CODER_SRC_ACORE_CNF_PADDR)
 #define DIAG_CODER_SRC_CNF_LENGTH      (DIAG_CODER_SRC_ACORE_CNF_LENGTH)

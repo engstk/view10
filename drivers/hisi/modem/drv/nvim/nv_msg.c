@@ -45,7 +45,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
+#include <securec.h>
 #include "nv_msg.h"
 #include "nv_comm.h"
 #include "nv_debug.h"
@@ -72,7 +72,7 @@ nv_cmd_reply* nv_get_free_reply(void) {
         nv_printf("malloc fail\n");
         return NULL;
     }
-    (void)nv_memset((u8 *)pNvCmdReply, 0, sizeof(nv_cmd_reply));
+    (void)memset_s((u8 *)pNvCmdReply, sizeof(nv_cmd_reply), 0, sizeof(nv_cmd_reply));
 
     return pNvCmdReply;
 }
@@ -85,7 +85,7 @@ nv_cmd_req* nv_get_free_req(void) {
         nv_printf("malloc fail\n");
         return NULL;
     }
-    (void)nv_memset((u8 *)pNvCmdReq, 0, sizeof(nv_cmd_req));
+    (void)memset_s((u8 *)pNvCmdReq, sizeof(nv_cmd_req), 0, sizeof(nv_cmd_req));
 
     return pNvCmdReq;
 }
@@ -116,7 +116,7 @@ u32 bsp_nvm_acore_msg_cb(u32 result, u32 sn)
     spin_lock_irqsave(&pMsgQueue->lock, flags);
     list_for_each(me, &g_msg_ctrl.req_list.list)
     {
-    
+
         /*lint -save -e826*//*Info 826: (Info -- Suspicious pointer-to-pointer conversion (area too small))*/
         pNvCmdReply = list_entry(me, nv_cmd_reply, stList);/* [false alarm] */
         /*lint -restore*/
@@ -191,9 +191,9 @@ nv_cmd_req* nv_get_cmd_req(void)
 
     /* remove from current nv high/low cmd request list */
     spin_lock_irqsave(&pMsgQueue->lock, flags);
-    if (!list_empty(&pMsgQueue->list)) {        
+    if (!list_empty(&pMsgQueue->list)) {
         /*lint -save -e826*//*Info 826: (Info -- Suspicious pointer-to-pointer conversion (area too small))*/
-        pNvCmdReq = list_first_entry(&pMsgQueue->list, nv_cmd_req, stList);        
+        pNvCmdReq = list_first_entry(&pMsgQueue->list, nv_cmd_req, stList);
         /*lint -restore*/
         list_del(&pNvCmdReq->stList);
     }
@@ -205,9 +205,9 @@ nv_cmd_req* nv_get_cmd_req(void)
     pMsgQueue = &g_msg_ctrl.low_task_list;
     spin_lock_irqsave(&pMsgQueue->lock, flags);
     if (!list_empty(&pMsgQueue->list)) {
-        
+
         /*lint -save -e826*//*Info 826: (Info -- Suspicious pointer-to-pointer conversion (area too small))*/
-        pNvCmdReq = list_first_entry(&pMsgQueue->list, nv_cmd_req, stList);        
+        pNvCmdReq = list_first_entry(&pMsgQueue->list, nv_cmd_req, stList);
         /*lint -restore*/
         list_del(&pNvCmdReq->stList);
     }
@@ -497,9 +497,9 @@ u32 nv_send_flush_msg_async(u32 req_sn, nv_flush_list *flush_info) {
         spin_lock_irqsave(&pMsgQueue->lock, flags);
         list_add_tail(&pNvCmd->stList, &pMsgQueue->list);
         spin_unlock_irqrestore(&pMsgQueue->lock, flags);
-        
+
         /*lint -save -e701*//*Info 701: (Info -- Shift left of signed quantity (int))*/
-        nv_debug_record(NV_DEBUG_REQ_ASYNC_WRITE | (flush_info->list[i].itemid<<16));        
+        nv_debug_record(NV_DEBUG_REQ_ASYNC_WRITE | (flush_info->list[i].itemid<<16));
         /*lint -restore*/
         g_msg_ctrl.async_wr_count++;
         osl_sem_up(&g_nv_ctrl.task_sem);
@@ -536,7 +536,7 @@ u32 nv_send_flush_rmsg_async(u32 req_sn) {
     nv_spin_lock(flags, IPC_SEM_NV);
     len = sizeof(nv_flush_list) + sizeof(nv_flush_item_s) * pFlushInfo->count;
     /* coverity[secure_coding] */
-    nv_memcpy((void *)pDestFlushInfo, (void*)pFlushInfo, len);
+    (void)memcpy_s((void *)pDestFlushInfo, len, (void*)pFlushInfo, len);
     ddr_info->priority = 0;
     pFlushInfo->count = 0;
     nv_flush_cache((void*)ddr_info, sizeof(nv_global_info_s));
@@ -564,7 +564,7 @@ u32 nv_send_flush_rmsg_async(u32 req_sn) {
         spin_unlock_irqrestore(&pMsgQueue->lock, flags);
 
         /*lint -save -e701*//*Info 701: (Info -- Shift left of signed quantity (int))*/
-        nv_debug_record(NV_DEBUG_REQ_REMOTE_WRITE | (pDestFlushInfo->list[i].itemid<<16));        
+        nv_debug_record(NV_DEBUG_REQ_REMOTE_WRITE | (pDestFlushInfo->list[i].itemid<<16));
         /*lint -restore*/
         g_msg_ctrl.remote_wr_count++;
         osl_sem_up(&g_nv_ctrl.task_sem);
@@ -592,7 +592,7 @@ u32 nv_flush_wrbuf(nv_global_info_s* ddr_info) {
     nv_spin_lock(nvflag, IPC_SEM_NV);
     len = sizeof(nv_flush_list) + sizeof(nv_flush_item_s) * ddr_info->flush_info.count;
     /* coverity[secure_coding] */
-    nv_memcpy((void *)g_msg_ctrl.flush_info, &(ddr_info->flush_info), len);
+    (void)memcpy_s((void *)g_msg_ctrl.flush_info, len, &(ddr_info->flush_info), len);
     ddr_info->priority = 0;
     ddr_info->flush_info.count = 0;
     nv_flush_cache((void*)ddr_info, sizeof(nv_global_info_s));
@@ -650,7 +650,7 @@ u32 nv_add_wrbuf(nv_global_info_s* ddr_info, u32 itemid, u32 modem_id, u32 prior
     if ((ddr_info->priority >= g_nv_ctrl.mid_prio) || (pFlushInfo->count >= NV_FLUSH_LIST_OVER_SIZE)) {
         len = sizeof(nv_flush_list) + sizeof(nv_flush_item_s) * pFlushInfo->count;
         /* coverity[overrun-buffer-arg] *//* coverity[secure_coding] */
-        nv_memcpy((void *)g_msg_ctrl.flush_info, (void*)pFlushInfo, len);
+        (void)memcpy_s((void *)g_msg_ctrl.flush_info, len, (void*)pFlushInfo, len);
         ddr_info->priority = 0;
         pFlushInfo->count = 0;
         need_flush = 1;
@@ -741,7 +741,7 @@ u32 nv_msg_init(void)
     size_t len;
 
     /* coverity[secure_coding] */
-    nv_memset((void*)&g_msg_ctrl, 0, sizeof(struct nv_global_msg_info_stru));
+    (void)memset_s((void*)&g_msg_ctrl, sizeof(g_msg_ctrl), 0, sizeof(struct nv_global_msg_info_stru));
     g_msg_ctrl.req_sn = 0;
 
     spin_lock_init(&g_msg_ctrl.high_task_list.lock);

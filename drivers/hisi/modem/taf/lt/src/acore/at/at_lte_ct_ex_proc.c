@@ -121,7 +121,6 @@
 #include "at_lte_common.h"
 #include "ATCmdProc.h"
 
-/*快速校准 c00173035  start in 2010-12-14*/
 
 /******************************************************************************
  */
@@ -400,7 +399,6 @@ VOS_UINT32 initParaListU16( AT_PARSE_PARA_TYPE_STRU *pPara, VOS_UINT16 ulListLen
 }
 
 
-/*快速校准 c00173035  end in 2010-12-14*/
 
 /*lint -restore*/
 

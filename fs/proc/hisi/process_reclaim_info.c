@@ -67,7 +67,7 @@ int process_reclaim_result_read(struct seq_file *m, struct pid_namespace *ns,
 			task_unlock(tsk);
 		}
 	}
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,3,0)
+#if KERNEL_VERSION(4, 3, 0) <= LINUX_VERSION_CODE
 	seq_printf(m,
 			"nr_reclaimed=%u, nr_writedblock=%u, elapsed=%lld\n",
 			nr_reclaimed, nr_writedblock, elapsed_centisecs64);
@@ -106,10 +106,15 @@ void process_reclaim_result_write(struct task_struct *task,
 	task_lock(task);
 	if (!task->proc_reclaimed_result) {
 		task_unlock(task);
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,3,0)
-		result  = process_reclaim_result_cache_alloc(__GFP_NOWARN | __GFP_NORETRY | __GFP_KSWAPD_RECLAIM);
+#if KERNEL_VERSION(4, 3, 0) <= LINUX_VERSION_CODE
+		result  =
+		process_reclaim_result_cache_alloc(__GFP_NOWARN
+						   | __GFP_NORETRY
+						   | __GFP_KSWAPD_RECLAIM);
 #else
-		result  = process_reclaim_result_cache_alloc(__GFP_NOWARN | __GFP_NORETRY);
+		result  =
+		process_reclaim_result_cache_alloc(__GFP_NOWARN
+						   | __GFP_NORETRY);
 #endif
 
 		task_lock(task);
@@ -128,6 +133,27 @@ void process_reclaim_result_write(struct task_struct *task,
 	task_unlock(task);
 	if (result)
 		process_reclaim_result_cache_free(result);
+}
+
+bool process_reclaim_need_abort(struct mm_walk *walk)
+{
+	struct mm_struct *mm;
+
+	if (!walk || !walk->hiber)
+		return false;
+
+	if (reclaim_sigusr_pending(current)) {
+		pr_info("Reclaim abort!case is signal.\n");
+		return true;
+	}
+
+	mm = walk->mm;
+	if (mm && !list_empty(&mm->mmap_sem.wait_list)) {
+		pr_info("Reclaim abort!case is lock race.\n");
+		return true;
+	}
+
+	return false;
 }
 
 static int __init process_reclaim_info_init(void)

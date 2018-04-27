@@ -57,6 +57,8 @@
 #define FLP_IOCTL_TYPE_ENV		(0x464C0040)
 #define FLP_IOCTL_TYPE_COMMON           (0x464C00F0)
 
+#define MAX_CONFIG_SIZE           (32 * 1024)
+
 enum {
     AR_ACTIVITY_VEHICLE         = 0x00,
     AR_ACTIVITY_RIDING          = 0x01,

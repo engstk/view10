@@ -25,6 +25,7 @@ struct bootcheck {
 	u64 core;
 	u32 modid;
 	u32 type;
+	u32 subtype;
 };
 
 #define RDR_NEED_SAVE_MEM  1
@@ -34,7 +35,7 @@ static void rdr_check_log_save(u32 boot_type)
 {
 
 	if (need_save_mntndump_log(boot_type)) {
-		if (save_mntndump_log(NULL)) {
+		if (save_mntndump_log("need save done.")) {
 			pr_err("save_mntndump_log fail\n");
 		}
 	}
@@ -61,9 +62,7 @@ static int rdr_check_exceptionboot(struct bootcheck *info)
 	/*如果异常类型为正常的启动，则不需要保存log */
 	if (REBOOT_REASON_LABEL1 > reboot_type
 	    || (REBOOT_REASON_LABEL4 <= reboot_type
-	    && REBOOT_REASON_LABEL5 > reboot_type)
-	    || (REBOOT_REASON_LABEL6 <= reboot_type
-	    && REBOOT_REASON_LABEL8 > reboot_type)) {
+	    && REBOOT_REASON_LABEL5 > reboot_type)) {
 		BB_PRINT_PN();
 		return RDR_DONTNEED_SAVE_MEM;
 	}
@@ -73,18 +72,11 @@ static int rdr_check_exceptionboot(struct bootcheck *info)
 	info->mask = RDR_AP;
 	info->core = RDR_AP;
 	info->type = reboot_type;
+	info->subtype = rdr_get_exec_subtype_value();
 
 	/*如果异常类型为简易流程复位的，则都需要重启后保存log */
-	if ((REBOOT_REASON_LABEL1 <= reboot_type
-	    && REBOOT_REASON_LABEL3 > reboot_type)
-	    || MMC_S_EXCEPTION == reboot_type
-	    || LPM3_S_EXCEPTION == reboot_type) {
-		return RDR_NEED_SAVE_MEM;
-	}
-
-	/*if reboot_type is about pmu, need save log*/
-	if (REBOOT_REASON_LABEL5 <= reboot_type
-	    && REBOOT_REASON_LABEL6 > reboot_type) {
+	if (REBOOT_REASON_LABEL1 <= reboot_type
+	    && REBOOT_REASON_LABEL3 > reboot_type) {
 		return RDR_NEED_SAVE_MEM;
 	}
 
@@ -107,14 +99,46 @@ static int rdr_check_exceptionboot(struct bootcheck *info)
 		return RDR_NEED_SAVE_MEM;
 	}
 	rdr_check_log_save(reboot_type);
+
+	/* dump log is over but clear text is not, so need to save the clear text */
+	if (RDR_CLEARTEXT_LOG_DONE != tmpbb->cleartext_info.savefile_flag) {
+		rdr_exceptionboot_save_cleartext();
+	}
+
 	return RDR_DONTNEED_SAVE_MEM;
+}
+
+static inline void rdr_bootcheck_notify_dump(char *path, struct bootcheck *info)
+{
+	u64 result;
+
+	BB_PRINT_DBG("create dump file path:[%s].\n", path);
+	while (info->mask) {
+		if ((rdr_get_cur_regcore() & info->mask) == 0) {
+			BB_PRINT_DBG
+			    ("wait module register. cur:[0x%llx],need[0x%llx]\n",
+			     rdr_get_cur_regcore(), info->mask);
+			msleep(1000);
+			continue;
+		}
+		result = rdr_notify_onemodule_dump(info->modid, info->mask,
+						info->type, info->core, path);
+		BB_PRINT_ERR("info.mask is [%llx], result = [0x%llx]\n", info->mask,
+			     result);
+		if (result) {
+			info->mask &= (~result);
+		} else {
+			break;
+		}
+		BB_PRINT_ERR("rdr: notify [%s] core dump data done.\n",
+			     rdr_get_exception_core(result));
+	}
 }
 
 int rdr_bootcheck_thread_body(void *arg)
 {
 	int cur_reboot_times;
 	int ret;
-	u64 result;
 	char path[PATH_MAXLEN];
 	struct bootcheck info;
 	struct rdr_syserr_param_s p;
@@ -166,27 +190,9 @@ int rdr_bootcheck_thread_body(void *arg)
 		goto end;
 	}
 	rdr_set_saving_state(1);
-	BB_PRINT_DBG("create dump file path:[%s].\n", path);
-	while (info.mask) {
-		if ((rdr_get_cur_regcore() & info.mask) == 0) {
-			BB_PRINT_DBG
-			    ("wait module register. cur:[0x%llx],need[0x%llx]\n",
-			     rdr_get_cur_regcore(), info.mask);
-			msleep(1000);
-			continue;
-		}
-		result = rdr_notify_onemodule_dump(info.modid, info.mask,
-						info.type, info.core, path);
-		BB_PRINT_ERR("info.mask is [%llx], result = [0x%llx]\n", info.mask,
-			     result);
-		if (result) {
-			info.mask &= (~result);
-		} else {
-			break;
-		}
-		BB_PRINT_ERR("rdr: notify [%s] core dump data done.\n",
-			     rdr_get_exception_core(result));
-	}
+
+	rdr_bootcheck_notify_dump(path, &info);
+
 	if (check_himntn(HIMNTN_GOBAL_RESETLOG)) {
 		rdr_save_last_baseinfo(path);
 	}

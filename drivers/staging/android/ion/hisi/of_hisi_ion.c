@@ -43,6 +43,8 @@
 #include "hisi/hisi_ion_scene_pool.h"
 #endif
 
+#include <linux/hisi/hisi_idle_sleep.h>
+
 #define MAX_HISI_ION_DYNAMIC_AREA_NAME_LEN  64
 struct hisi_ion_dynamic_area {
 	phys_addr_t    base;
@@ -79,14 +81,9 @@ static int num_heaps;
 static struct ion_heap **heaps;
 static struct ion_platform_heap **heaps_data;
 
-static void __iomem *cluster0_resume_bit;
-static void __iomem *cluster1_resume_bit;
-
 #define MAX_HISI_ION_DYNAMIC_AREA_NUM  5
 static struct hisi_ion_dynamic_area  ion_dynamic_area_table[MAX_HISI_ION_DYNAMIC_AREA_NUM];
 static int ion_dynamic_area_count = 0;
-
-static int ion_cpu_map[CONFIG_NR_CPUS] = {0};
 
 static int add_dynamic_area(phys_addr_t base, unsigned long  len, const char* name)
 {
@@ -182,24 +179,6 @@ struct ion_heap *ion_get_system_heap(void)
 }
 #endif
 
-static void ion_pm_init(struct platform_device *pdev)
-{
-	struct device_node *np = pdev->dev.of_node;
-	u32 cluster0_resume_addr = 0, cluster1_resume_addr = 0;
-	int ret;
-
-	ret = of_property_read_u32(np, "cluster-0-resume", &cluster0_resume_addr);
-	if (ret < 0)
-		pr_err("Failed to get cluster-0-resume form dts!\n");
-
-	ret = of_property_read_u32(np, "cluster-1-resume", &cluster1_resume_addr);
-	if (ret < 0)
-		pr_err("Failed to get cluster-1-resume form dts!\n");
-
-	cluster0_resume_bit = ioremap(cluster0_resume_addr, SZ_4K);
-	cluster1_resume_bit = ioremap(cluster1_resume_addr, SZ_4K);
-}
-
 static inline void artemis_flush_cache(unsigned int level)
 {
 	asm volatile("msr s1_1_c15_c14_0, %0" : : "r" (level));
@@ -227,30 +206,32 @@ static void hisi_ion_flush_cache_all(void *dummy)
 void ion_flush_all_cpus_caches(void)
 {
 	int cpu;
-	unsigned int cluster0_stat;
-	unsigned int cluster1_stat;
-	unsigned int stat;
 	cpumask_t mask;
-
-	preempt_disable();
-	cluster0_stat = readl(cluster0_resume_bit) & 0x0f;
-	cluster1_stat = readl(cluster1_resume_bit) & 0x0f;
-
-	stat = ~(cluster0_stat | cluster1_stat << 4) & 0xff;
-	if (cluster1_stat == 0x0f)
-		stat |= (unsigned int)BIT(ion_cpu_map[4]);
-	if (cluster0_stat == 0x0f)
-		stat |= (unsigned int)BIT(ion_cpu_map[0]);
+	unsigned int idle_cpus;
 
 	cpumask_clear(&mask);
+
+	preempt_disable();
+
+	idle_cpus = hisi_get_idle_cpumask();
 	for_each_online_cpu(cpu) {
-		int pos = ion_cpu_map[cpu];
-		if (stat & (1 << pos))
+		if ((idle_cpus & BIT(cpu)) == 0)
 			cpumask_set_cpu(cpu, &mask);
 	}
 
+	if ((idle_cpus & 0x0f) == 0x0f) {
+		cpumask_set_cpu(0, &mask);
+	}
+
+	if ((idle_cpus & 0xf0) == 0xf0) {
+		cpumask_set_cpu(4, &mask);
+	}
+
 	on_each_cpu_mask(&mask, hisi_ion_flush_cache_all, NULL, 1);
+
 	preempt_enable();
+
+	return;
 }
 
 struct ion_client *hisi_ion_client_create(const char *name)
@@ -677,7 +658,6 @@ static int hisi_ion_probe(struct platform_device *pdev)
 		err = -EINVAL;
 		goto err_free_idev;
 	}
-	ion_pm_init(pdev);
 
 	/*
 	 * create the heaps as specified in the dts file
@@ -741,15 +721,8 @@ static struct platform_driver hisi_ion_driver = {
 static int __init hisi_ion_init(void)
 {
 	int ret;
-	int cpu;
 
 	ret = platform_driver_register(&hisi_ion_driver);
-
-	for_each_present_cpu(cpu){
-		int core_id = topology_core_id(cpu);
-		int cluster_id = topology_physical_package_id(cpu);
-		ion_cpu_map[cpu] = (cluster_id << 2) + core_id;
-	}
 
 	return ret;
 }

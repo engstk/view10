@@ -46,6 +46,7 @@
 		max77813 = <0>;
 		coul = <0>;
 		dtv = <0>;
+		ap_color = <0>;
 		status = "disabled";
 	};
 };

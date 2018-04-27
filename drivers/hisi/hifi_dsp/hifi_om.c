@@ -35,6 +35,9 @@
 #include "hifi_om.h"
 #include "drv_mailbox_msg.h"
 #include "hisi_rproc.h"
+#include "huawei_platform/log/imonitor.h"
+#include "huawei_platform/log/imonitor_keys.h"
+
 #include <dsm_audio/dsm_audio.h>
 #include <linux/hisi/rdr_pub.h>
 
@@ -48,6 +51,17 @@ struct hifi_om_s g_om_data;
 #define MAX_LEVEL_STR_LEN 32
 #define UNCONFIRM_ADDR (0)
 #define UNUSED_PARAMETER(x) (void)(x)
+
+#define BLKMIC_SECONE (17)
+#define BLKMIC_SECTWO (32)
+#define BLKMIC_SECTHR (64)
+#define BLKMIC_SECFOUR (128)
+#define HIFI_AP_MESG_CNT (127)
+#define IMONITOR_UPDATIME (96400) /*seconds number of one day*/
+#define BIGDATA_VOICE_HSEVENTID (916200001)
+#define BIGDATA_VOICE_HFEVENTID (916200002)
+#define BIGDATA_VOICE_HESEVENTID (916200003)
+#define BIGDATA_VOICE_BTEVENTID (916200004)
 
 static struct hifi_dsp_dump_info s_dsp_dump_info[] = {
 	{DSP_NORMAL, DUMP_DSP_LOG, FILE_NAME_DUMP_DSP_LOG, UNCONFIRM_ADDR, (DRV_DSP_UART_TO_MEM_SIZE-DRV_DSP_UART_TO_MEM_RESERVE_SIZE)},
@@ -113,11 +127,15 @@ static struct hifi_effect_info_stru effect_algo[] = {
 static  void hifi_om_voice_bsd_work_handler(struct work_struct *work);
 static  void hifi_om_show_audio_detect_info(struct work_struct *work);
 static  void hifi_om_show_voice_3a_info(struct work_struct *work);
-
+static  void hifi_om_voice_bigdata_handler(struct work_struct *work);
+static  void voice_bigdata_decode(char arrayblock[2][20], char arraybigdata[4][64], unsigned char *data);
+static  void voice_bigdata_update_imonitor_inc_blkmic(unsigned int eventID, unsigned short paramid, imedia_voice_bigdata_to_imonitor *voice_bigdata_buff, char *blockmic);
+static  void voice_bigdata_update_imonitor(unsigned int eventID, unsigned short paramid, imedia_voice_bigdata_to_imonitor *voice_bigdata_buff);
 static struct hifi_om_work_info work_info[] = {
 	{HIFI_OM_WORK_VOICE_BSD, "hifi_om_work_voice_bsd", hifi_om_voice_bsd_work_handler, {0}},
 	{HIFI_OM_WORK_AUDIO_OM_DETECTION, "hifi_om_work_audio_om_detect", hifi_om_show_audio_detect_info, {0}},
 	{HIFI_OM_WORK_VOICE_3A, "hifi_om_work_voice_3a", hifi_om_show_voice_3a_info, {0}},
+	{HIFI_OM_WORK_VOICE_BIGDATA, "hifi_om_work_voice_bigdata", hifi_om_voice_bigdata_handler, {0}},
 };
 
 static unsigned int dsm_notify_limit = 0x10;
@@ -151,7 +169,7 @@ static int hifi_chown(char *path, uid_t user, gid_t group)
 	if (NULL == path)
 		return -1;
 
-	old_fs = get_fs();
+	old_fs = get_fs();/*lint !e501*/
 	set_fs(KERNEL_DS);/*lint !e501*/
 
 	ret = (int)sys_chown((const char __user *)path, user, group);
@@ -174,7 +192,7 @@ static int hifi_create_dir(char *path)
 		return -1;
 	}
 
-	old_fs = get_fs();
+	old_fs = get_fs();/*lint !e501*/
 	set_fs(KERNEL_DS);/*lint !e501*/
 
 	fd = sys_access(path, 0);
@@ -430,6 +448,226 @@ static void hifi_om_show_voice_3a_info(struct work_struct *work)
 	return;
 }
 
+static  void hifi_om_voice_bigdata_handler(struct work_struct *work)
+{
+	int work_id = HIFI_OM_WORK_VOICE_BIGDATA;
+	struct hifi_om_work *om_work = NULL;
+	unsigned char data[MAIL_LEN_MAX] = {'\0'};
+	unsigned int data_len = 0;
+	static char voice_bigdata[4][64] = {{0},{0},{0},{0}};
+	static char voice_bigdata_miccheck[2][20] = {{0},{0}};
+	static struct timespec bigdata_time1 = {0, 0};
+	static struct timespec bigdata_time2 = {0, 0};
+	static int hifi_ap_count = 0;
+
+	spin_lock_bh(&work_info[work_id].ctl.lock);
+	if (!list_empty(&work_info[work_id].ctl.list)) {
+		om_work = list_entry(work_info[work_id].ctl.list.next, struct hifi_om_work, om_node);/*lint !e826*/
+		data_len = om_work->data_len;
+		memcpy(data, om_work->data, om_work->data_len);/*lint !e747*/ /* unsafe_function_ignore: memcpy */
+		list_del(&om_work->om_node);
+		kzfree(om_work);
+	}
+	spin_unlock_bh(&work_info[work_id].ctl.lock);
+
+	if ((sizeof(imedia_voice_bigdata)) != data_len) {
+		logw("unavailable data from hifi, data_len: %u\n", data_len);
+		return;
+	}
+
+	hifi_ap_count++;
+	bigdata_time2 = current_kernel_time();
+	if (hifi_ap_count < HIFI_AP_MESG_CNT) {
+		voice_bigdata_decode(voice_bigdata_miccheck, voice_bigdata, data);
+	}
+
+	if (IMONITOR_UPDATIME < (bigdata_time2.tv_sec - bigdata_time1.tv_sec)) {
+		imedia_voice_bigdata_to_imonitor *voice_bigdata_buff = NULL;
+		char *blockmic = NULL;
+
+		/*carry data from kernel to imonitor,handset mode*/
+		voice_bigdata_buff = (imedia_voice_bigdata_to_imonitor*)voice_bigdata[0];
+		blockmic = (char*)voice_bigdata_miccheck[0];
+		voice_bigdata_update_imonitor_inc_blkmic(BIGDATA_VOICE_HSEVENTID, E916200001_NOISECNT0_TINYINT, voice_bigdata_buff, blockmic);
+
+		/*carry data from kernel to imonitor,handfree mode*/
+		voice_bigdata_buff = (imedia_voice_bigdata_to_imonitor*)voice_bigdata[1];
+		blockmic = (char*)voice_bigdata_miccheck[1];
+		voice_bigdata_update_imonitor_inc_blkmic(BIGDATA_VOICE_HFEVENTID, E916200002_NOISECNT0_TINYINT, voice_bigdata_buff, blockmic);
+
+		/*carry data from kernel to imonitor,headset mode*/
+		voice_bigdata_buff = (imedia_voice_bigdata_to_imonitor*)voice_bigdata[2];
+		voice_bigdata_update_imonitor(BIGDATA_VOICE_HESEVENTID, E916200003_NOISECNT0_TINYINT, voice_bigdata_buff);
+
+		/*carry data from kernel to imonitor,bluetooth mode*/
+		voice_bigdata_buff = (imedia_voice_bigdata_to_imonitor*)voice_bigdata[3];
+		voice_bigdata_update_imonitor(BIGDATA_VOICE_BTEVENTID, E916200004_NOISECNT0_TINYINT, voice_bigdata_buff);
+
+		memset(voice_bigdata, 0, sizeof(voice_bigdata));/* unsafe_function_ignore: memset */
+		memset(voice_bigdata_miccheck, 0, sizeof(voice_bigdata_miccheck));/* unsafe_function_ignore: memset */
+		bigdata_time1 = current_kernel_time();
+		hifi_ap_count = 0;
+	}
+}
+
+/*carry data from kernel to imonitor,for handset mode and handfree mode*/
+static  void voice_bigdata_update_imonitor_inc_blkmic(unsigned int eventID, unsigned short paramid, imedia_voice_bigdata_to_imonitor *voice_bigdata_buff, char *blockmic)
+{
+	int i, j;
+	int blockmic_size = E916200001_BLOCKMICCNT19_TINYINT - E916200001_BLOCKMICCNT0_TINYINT + 1;
+	struct imonitor_eventobj *voice_bigdata_obj;
+
+	if ((NULL == voice_bigdata_buff) || (NULL == blockmic) || ((E916200001_NOISECNT0_TINYINT != paramid) && (E916200002_NOISECNT0_TINYINT != paramid))) {
+		logw(" imonitor data from kernel is empty \n");
+		return;
+	}
+
+	/*creat imonitor obj*/
+	voice_bigdata_obj = imonitor_create_eventobj(eventID);
+
+	if (NULL == voice_bigdata_obj) {
+		logw(" imonitor obj create fail \n");
+		return;
+	}
+
+	/*carry noise and voice data from kerenl to imonitor*/
+	for (i = paramid; i < VOICE_BIGDATA_NOISESIZE; i++) {
+		imonitor_set_param_integer(voice_bigdata_obj, i, voice_bigdata_buff->noise[i]);
+		imonitor_set_param_integer(voice_bigdata_obj, i + VOICE_BIGDATA_NOISESIZE, voice_bigdata_buff->voice[i]);
+	}
+
+	/*carry blockmic data from kerenl to imonitor*/
+	for (i = paramid + (VOICE_BIGDATA_NOISESIZE + VOICE_BIGDATA_VOICESIZE); i < (VOICE_BIGDATA_NOISESIZE + VOICE_BIGDATA_VOICESIZE + blockmic_size); i++) {
+		imonitor_set_param_integer(voice_bigdata_obj, i, *blockmic);
+		blockmic++;
+	}
+
+	/*carry charact data from kerenl to imonitor*/
+	for (i = 0; i < VOICE_BIGDATA_CHARACTSIZE; i++) {
+		j = (VOICE_BIGDATA_CHARACTSIZE - 1) - i;
+		imonitor_set_param_integer(voice_bigdata_obj, VOICE_BIGDATA_NOISESIZE + VOICE_BIGDATA_VOICESIZE + blockmic_size + i, voice_bigdata_buff->charact[j]);
+	}
+
+	imonitor_send_event(voice_bigdata_obj);
+	imonitor_destroy_eventobj(voice_bigdata_obj);
+}
+
+/*carry data from kernel to imonitor,for headset mode and bluetooth mode*/
+static  void voice_bigdata_update_imonitor(unsigned int eventID, unsigned short paramid, imedia_voice_bigdata_to_imonitor *voice_bigdata_buff)
+{
+	int i, j;
+	struct imonitor_eventobj *voice_bigdata_obj;
+
+	if ((NULL == voice_bigdata_buff) || ((E916200003_NOISECNT0_TINYINT != paramid) && (E916200004_NOISECNT0_TINYINT != paramid))) {
+		logw(" imonitor data from kernel is empty \n");
+		return;
+	}
+
+	/*creat imonitor obj*/
+	voice_bigdata_obj = imonitor_create_eventobj(eventID);
+
+	if (NULL == voice_bigdata_obj) {
+		logw(" imonitor obj create fail \n");
+		return;
+	}
+
+	/*carry noise and voice data from kerenl to imonitor*/
+	for (i = paramid; i < VOICE_BIGDATA_NOISESIZE; i++) {
+		imonitor_set_param_integer(voice_bigdata_obj, i, voice_bigdata_buff->noise[i]);
+		imonitor_set_param_integer(voice_bigdata_obj, i + VOICE_BIGDATA_NOISESIZE, voice_bigdata_buff->voice[i]);
+	}
+
+	/*carry charact data from kerenl to imonitor*/
+	for (i = 0; i < VOICE_BIGDATA_CHARACTSIZE; i++) {
+		j = (VOICE_BIGDATA_CHARACTSIZE - 1) - i;
+		imonitor_set_param_integer(voice_bigdata_obj, VOICE_BIGDATA_NOISESIZE + VOICE_BIGDATA_VOICESIZE + i, voice_bigdata_buff->charact[j]);
+	}
+	imonitor_send_event(voice_bigdata_obj);
+	imonitor_destroy_eventobj(voice_bigdata_obj);
+}
+
+static  void voice_bigdata_blockmic (char array[2][20], unsigned char device, unsigned char data)
+{
+	unsigned char micdata;
+	micdata = data;
+	if (device > 1) {
+		logw("unavailable bigdata blockmic data\n");
+		return;
+	}
+	if ((micdata > 0) && (micdata < BLKMIC_SECONE)) {
+		array[device][micdata-1]++;
+	}else if ((micdata >= BLKMIC_SECONE) && (micdata < BLKMIC_SECTWO)) {
+		array[device][16]++;
+	}else if ((micdata >= BLKMIC_SECTWO) && (micdata < BLKMIC_SECTHR)) {
+		array[device][17]++;
+	}else if ((micdata >= BLKMIC_SECTHR) && (micdata < BLKMIC_SECFOUR)) {
+		array[device][18]++;
+	}else if (micdata >= BLKMIC_SECFOUR) {
+		array[device][19]++;
+	}else {
+		;
+	}
+}
+
+static  void voice_bigdata_voicecharact(char array[4][64], unsigned char device, unsigned int data)
+{
+	unsigned int shi_var;
+	unsigned int datatran;
+	unsigned int index;
+	int i;
+	if (device > 3) {
+		logw("unavailable bigdata voicecharact data\n");
+		return;
+	}
+	datatran = data;
+	shi_var = 0x80000000;
+	for (i = 32; i < 64;i++) {
+		index = !!(datatran&shi_var);
+		array[device][i] = array[device][i] + index;
+		shi_var = shi_var>>1;
+	}
+}
+
+static  void voice_bigdata_decode(char arrayblock[2][20], char arraybigdata[4][64], unsigned char * data)
+{
+	imedia_voice_bigdata * bigdata_mesg = NULL;
+
+	if (NULL == data) {
+		logw(" data from hifi is empty \n");
+		return;
+	}
+	bigdata_mesg = (imedia_voice_bigdata*)data;
+	switch (bigdata_mesg->iMedia_Voice_bigdata_device) {
+		case MLIB_DEVICE_HANDSET:
+			arraybigdata[0][bigdata_mesg->iMedia_Voice_bigdata_noise]++;
+			arraybigdata[0][bigdata_mesg->iMedia_Voice_bigdata_voice+16]++;
+			voice_bigdata_voicecharact(arraybigdata, bigdata_mesg->iMedia_Voice_bigdata_device, bigdata_mesg->iMedia_Voice_bigdata_charact);
+			voice_bigdata_blockmic (arrayblock, bigdata_mesg->iMedia_Voice_bigdata_device, bigdata_mesg->iMedia_Voice_bigdata_miccheck);
+			break;
+		case MLIB_DEVICE_HANDFREE:
+			arraybigdata[1][bigdata_mesg->iMedia_Voice_bigdata_noise]++;
+			arraybigdata[1][bigdata_mesg->iMedia_Voice_bigdata_voice+16]++;
+			voice_bigdata_voicecharact(arraybigdata, bigdata_mesg->iMedia_Voice_bigdata_device, bigdata_mesg->iMedia_Voice_bigdata_charact);
+			voice_bigdata_blockmic (arrayblock, bigdata_mesg->iMedia_Voice_bigdata_device, bigdata_mesg->iMedia_Voice_bigdata_miccheck);
+			break;
+		case MLIB_DEVICE_USBHEADSET:
+		case MLIB_DEVICE_HEADSET:
+			bigdata_mesg->iMedia_Voice_bigdata_device = MLIB_DEVICE_HEADSET;
+			arraybigdata[2][bigdata_mesg->iMedia_Voice_bigdata_noise]++;
+			arraybigdata[2][bigdata_mesg->iMedia_Voice_bigdata_voice+16]++;
+			bigdata_mesg->iMedia_Voice_bigdata_device = bigdata_mesg->iMedia_Voice_bigdata_device - 1;
+			voice_bigdata_voicecharact(arraybigdata, bigdata_mesg->iMedia_Voice_bigdata_device, bigdata_mesg->iMedia_Voice_bigdata_charact);
+			break;
+		case MLIB_DEVICE_BLUETOOTH:
+			arraybigdata[3][bigdata_mesg->iMedia_Voice_bigdata_noise]++;
+			arraybigdata[3][bigdata_mesg->iMedia_Voice_bigdata_voice+16]++;
+			bigdata_mesg->iMedia_Voice_bigdata_device = bigdata_mesg->iMedia_Voice_bigdata_device - 1;
+			voice_bigdata_voicecharact(arraybigdata, bigdata_mesg->iMedia_Voice_bigdata_device, bigdata_mesg->iMedia_Voice_bigdata_charact);
+			break;
+		default:
+			break;
+		}
+}
 static void hifi_dump_dsp(DUMP_DSP_INDEX index)
 {
 	int ret = 0;
@@ -485,7 +723,7 @@ static void hifi_dump_dsp(DUMP_DSP_INDEX index)
 
 	data_addr = s_dsp_dump_info[index].data_addr;
 
-	fs = get_fs();
+	fs = get_fs();/*lint !e501*/
 	set_fs(KERNEL_DS);/*lint !e501*/
 
 	ret = hifi_om_create_log_dir(LOG_PATH_HIFI_LOG);
@@ -740,6 +978,7 @@ void hifi_om_init(struct platform_device *pdev, unsigned char* hifi_priv_base_vi
 	g_om_data.dsp_exception_no = (unsigned int*)(hifi_priv_base_virt + (DRV_DSP_EXCEPTION_NO - HIFI_UNSEC_BASE_ADDR));
 	g_om_data.dsp_log_cur_addr = (unsigned int*)(hifi_priv_base_virt + (DRV_DSP_UART_TO_MEM_CUR_ADDR - HIFI_UNSEC_BASE_ADDR));
 	g_om_data.dsp_log_addr = (char *)(hifi_priv_base_virt + (DRV_DSP_UART_TO_MEM - HIFI_UNSEC_BASE_ADDR));
+	memset(g_om_data.dsp_log_addr, 0, DRV_DSP_UART_TO_MEM_SIZE);/* unsafe_function_ignore: memset */
 	*g_om_data.dsp_log_cur_addr = DRV_DSP_UART_TO_MEM_RESERVE_SIZE;
 
 	g_om_data.dsp_debug_level_addr = (unsigned int*)(hifi_priv_base_virt + (DRV_DSP_UART_LOG_LEVEL - HIFI_UNSEC_BASE_ADDR));

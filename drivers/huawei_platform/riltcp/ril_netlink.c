@@ -91,7 +91,7 @@ static void kernel_ril_receive(struct sk_buff *__skb)
 			} else if (NETLINK_TCP_UNREG == nlh->nlmsg_type) {
 				hwlog_info("kernel_ril_receive NETLINK_TCP_UNREG\n");
 				g_ril_uspace_pid = 0;
-			} else if (NETLINK_TCP_RST_MSG == nlh->nlmsg_type) {
+			} else if (NETLINK_TCP_RST_MSG == nlh->nlmsg_type && nlh->nlmsg_len >= sizeof(struct nlmsghdr) + sizeof(Ril2KnlMsg)) {
 				rilmsg = (Ril2KnlMsg *)nlmsg_data(nlh);
 				if((NULL == rilmsg) || (NULL == rilmsg->if_name)) {
 					hwlog_err("kernel_ril_receive NETLINK_TCP_RST_MSG rilmsg = NULL\n");
@@ -99,6 +99,7 @@ static void kernel_ril_receive(struct sk_buff *__skb)
 					mutex_unlock(&ril_receive_sem);
 					return;
 				}
+				rilmsg->if_name[MAX_IF_NAME-1] = '\0';
 				hwlog_info("kernel_ril_receive NETLINK_TCP_RST_MSG if_name = %s\n",
 				rilmsg->if_name);
 				if (spin_trylock_bh(&deact_info_lock)) {

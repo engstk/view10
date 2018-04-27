@@ -133,6 +133,12 @@ VOS_UINT32 AT_SetApLanAddrPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryApLanAddrPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_TestApLanAddrPara(VOS_UINT8 ucIndex);
 
+VOS_UINT32 AT_SetIPv6TempAddrPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_TestIPv6TempAddrPara(VOS_UINT8 ucIndex);
+
+VOS_UINT32 AT_SetCgpiafPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_QryCgpiafPara(VOS_UINT8 ucIndex);
+
 #endif
 
 VOS_UINT32  At_SetApConnStPara(
@@ -160,13 +166,34 @@ VOS_UINT32 AT_SetDsFlowNvWriteCfgPara(VOS_UINT8 ucIndex);
 VOS_UINT32 AT_QryDsFlowNvWriteCfgPara(VOS_UINT8 ucIndex);
 
 VOS_UINT32 AT_SetImsPdpCfg(VOS_UINT8 ucIndex);
-
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, begin */
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 VOS_UINT32 AT_SetMipPara(VOS_UINT8 ucIndex);
 
 VOS_UINT32 AT_QryMipPara(VOS_UINT8 ucIndex);
 
-/* Added by Y00213812 for Spirnt 定制, 2017-3-25, end */
+#endif
+VOS_UINT32 AT_SetVzwApnePara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_QryVzwApnePara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_TestVzwApnePara(VOS_UINT8 ucIndex);
+
+VOS_UINT32 AT_SetCgerepPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_QryCgerepPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_SetCindPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_QryCindPara(VOS_UINT8 ucIndex);
+VOS_UINT32 AT_TestCindPara(VOS_UINT8 ucIndex);
+
+VOS_UINT32 AT_SetDataSwitchStatus(VOS_UINT8 ucIndex );
+
+VOS_UINT32 AT_QryDataSwitchStatus(VOS_UINT8 ucIndex );
+
+VOS_UINT32 AT_SetDataRoamSwitchStatus(VOS_UINT8 ucIndex);
+
+VOS_UINT32 AT_QryDataRoamSwitchStatus(VOS_UINT8 ucIndex);
+
+VOS_UINT32 AT_SetApnThrotInfoPara(VOS_UINT8 ucIndex);
+
+VOS_UINT32 At_SetUsbTetherInfo(VOS_UINT8 ucIndex);
+VOS_UINT32 At_TestUsbTetherInfo(VOS_UINT8 ucIndex);
 
 #if (VOS_OS_VER == VOS_WIN32)
 #pragma pack()
@@ -184,3 +211,4 @@ VOS_UINT32 AT_QryMipPara(VOS_UINT8 ucIndex);
 #endif
 
 #endif /* end of AtCmdPacketProc.h */
+

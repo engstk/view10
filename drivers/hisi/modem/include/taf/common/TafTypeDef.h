@@ -207,19 +207,7 @@ typedef TAF_UINT8           MN_OPERATION_ID_T;  /* Async operation ID type */
 #define TAF_ERR_SS_IMS_BASE             (0x1000)            /* IMS回复的SS错误码 */
 #define TAF_ERR_SS_IMSA_BASE            (0x2000)            /* IMSA回复的SS错误码 */
 #define TAF_ERR_DECODE_BASE             (0x2500)            /* 解码失败错误码 */
-/*****************************************************************************
- 枚举名    : TAF_ERROR_CODE_ENUM_UINT32
- 结构说明  : TAF层通用错误码
 
-  3.日    期   : 2013年07月09日
-    作    者   : s00217060
-    修改内容   : VoLTE_PhaseI项目:枚举定义进行调整
-                (1)CC层（网络）的原因值从1~255（目前协议规定最大127）
-                (2)CALL模块内部的原因值从256~511
-                (3)IMS原因值范围512~767
-                (4)IMSA模块内部原因值768~1023
-
-*****************************************************************************/
 enum TAF_ERROR_CODE_ENUM
 {
     TAF_ERR_NO_ERROR                                        = (TAF_ERR_CODE_BASE),          /* 成功 */
@@ -284,7 +272,21 @@ enum TAF_ERROR_CODE_ENUM
 
     TAF_ERR_NOT_SUPPORT_SRVCC                               = (TAF_ERR_CODE_BASE + 58),     /* USSI不支持SRVCC，CALL触发SRVCC场景主动退出会话 */
 
+    TAF_ERR_SILENT_AES_DEC_PIN_FAIL                         = (TAF_ERR_CODE_BASE + 59),     /* ^SILENTPIN PIN密文解密失败 */
+
+    TAF_ERR_SILENT_VERIFY_PIN_ERR                           = (TAF_ERR_CODE_BASE + 60),     /* ^SILENTPIN PIN码解锁失败 */
+
+    TAF_ERR_SILENT_AES_ENC_PIN_FAIL                         = (TAF_ERR_CODE_BASE + 61),     /* ^SILENTPIN PIN码加密失败 */
+
     TAF_ERR_IMS_OPEN_LTE_NOT_SUPPORT                        = (TAF_ERR_CODE_BASE + 62),     /* 打开ims开关时，不支持lte */
+
+    TAF_ERR_NOT_FIND_FILE                                   = (TAF_ERR_CODE_BASE + 63),     /* 文件不存在 */
+    TAF_ERR_NOT_FIND_NV                                     = (TAF_ERR_CODE_BASE + 64),     /* NV不存在 */
+    TAF_ERR_MODEM_ID_ERROR                                  = (TAF_ERR_CODE_BASE + 65),     /* MODEM ID 参数错误 */
+    TAF_ERR_NV_NOT_SUPPORT_ERR                              = (TAF_ERR_CODE_BASE + 66),     /* 不支持错误*/
+    TAF_ERR_WRITE_NV_TIMEOUT                                = (TAF_ERR_CODE_BASE + 67),     /* 写nv超时 */
+
+    TAF_ERR_NETWORK_FAILURE                                 = (TAF_ERR_CODE_BASE + 68),     /* 写nv超时 */
 
     TAF_ERR_PHONE_MSG_UNMATCH                               = (TAF_ERR_PHONE_BASE + 1),     /*消息关系不匹配*/
     TAF_ERR_PHONE_ATTACH_FORBIDDEN                          = (TAF_ERR_PHONE_BASE + 2),     /*禁止ATTACH过程*/
@@ -329,7 +331,6 @@ enum TAF_ERROR_CODE_ENUM
 };
 typedef  VOS_UINT32  TAF_ERROR_CODE_ENUM_UINT32;
 
-/* Added by s00217060 for 主动上报AT命令控制下移至C核, 2013-5-6, begin */
 #ifndef TAF_SUCCESS
 #define TAF_SUCCESS    TAF_ERR_NO_ERROR     /*函数执行成功*/
 #endif
@@ -374,7 +375,6 @@ typedef TAF_UINT8 TAF_PARA_TYPE;
 #define TAF_TELE_PARA_BUTT               (142)
 
 
-/* Modify by w00199382 for V7代码同步, 2012-04-07, End   */
 
 /*内部使用的参数查询宏定义*/
 #define TAF_MMA_AT_QUERY_PARA_BEGIN (TAF_TELE_PARA_BUTT + 1)/*137*/
@@ -452,6 +452,33 @@ typedef struct
     TIME_ZONE_TIME_STRU             stUniversalTimeandLocalTimeZone;
 }NAS_MM_INFO_IND_STRU;
 
+#define TAF_REBOOT_MOD_ID_MEM     0x68000000
+#define TAF_REBOOT_MOD_ID_BUTT    0X6FFFFFFF
+
+/*lint -save -e752*/
+extern VOS_VOID TAF_STD_MemCpy_s(
+    VOS_VOID                           *pDestBuffer,
+    VOS_UINT32                          ulDestSize,
+    const VOS_VOID                     *pSrcBuffer,
+    VOS_UINT32                          ulCount,
+    VOS_INT32                           lFileIdAndLine
+);
+/*lint -save -e752*/
+extern VOS_VOID TAF_STD_MemSet_s(
+    VOS_VOID                           *pDestBuffer,
+    VOS_UINT32                          ulDestSize,
+    VOS_CHAR                            ucChar,
+    VOS_UINT32                          ulCount,
+    VOS_INT32                           lFileIdAndLine
+);
+/*lint -save -e752*/
+extern VOS_VOID TAF_STD_MemMove_s(
+    VOS_VOID                           *pDestBuffer,
+    VOS_UINT32                          ulDestSize,
+    const VOS_VOID                     *pSrcBuffer,
+    VOS_UINT32                          ulCount,
+    VOS_INT32                           lFileIdAndLine
+);
 
 #if (VOS_OS_VER == VOS_WIN32)
 #define TAF_MEM_CPY_S(pDestBuffer, ulDestLen,  pSrcBuffer, ulCount) VOS_MemCpy_s( pDestBuffer, ulDestLen,  pSrcBuffer, ulCount)
@@ -462,36 +489,74 @@ typedef struct
 
 #define TAF_MEM_CMP( pucDestBuffer, pucSrcBuffer, ulBufferLen ) \
                     memcmp(pucDestBuffer, pucSrcBuffer, ulBufferLen )
-#else
-#define TAF_REBOOT_MOD_ID_MEM     0x68000000
-#define TAF_REBOOT_MOD_ID_BUTT    0X6FFFFFFF
+
+#elif (FEATURE_ON == FEATURE_MEMCPY_REBOOT_CFG)
 #define TAF_MEM_CPY_S(pDestBuffer, ulDestLen,  pSrcBuffer, ulCount) { \
-        if (VOS_NULL_PTR == VOS_MemCpy_s( pDestBuffer, (VOS_SIZE_T)(ulDestLen),  pSrcBuffer, (VOS_SIZE_T)(ulCount))) \
-        {\
-            mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__), 0, 0 ); \
-        }\
-    }
+            if (VOS_NULL_PTR == VOS_MemCpy_s( pDestBuffer, (VOS_SIZE_T)(ulDestLen),  pSrcBuffer, (VOS_SIZE_T)(ulCount))) \
+            {\
+                mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__), 0, 0 ); \
+            }\
+        }
 
 #define TAF_MEM_SET_S(pDestBuffer, ulDestLen, ucData, ulCount) { \
-        if (VOS_NULL_PTR == VOS_MemSet_s( pDestBuffer, (VOS_SIZE_T)(ulDestLen), (VOS_CHAR)(ucData), (VOS_SIZE_T)(ulCount) )) \
-        { \
-            mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__), 0, 0 ); \
-        } \
-    }
+            if (VOS_NULL_PTR == VOS_MemSet_s( pDestBuffer, (VOS_SIZE_T)(ulDestLen), (VOS_CHAR)(ucData), (VOS_SIZE_T)(ulCount) )) \
+            { \
+                mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__), 0, 0 ); \
+            } \
+        }
 
 #define TAF_MEM_MOVE_S(pDestBuffer, ulDestLen, pucSrcBuffer, ulCount) { \
-        if (VOS_NULL_PTR == VOS_MemMove_s( pDestBuffer, (VOS_SIZE_T)(ulDestLen), pucSrcBuffer, (VOS_SIZE_T)(ulCount) )) \
-        { \
-            mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__), 0, 0 ); \
-        } \
-    }
+            if (VOS_NULL_PTR == VOS_MemMove_s( pDestBuffer, (VOS_SIZE_T)(ulDestLen), pucSrcBuffer, (VOS_SIZE_T)(ulCount) )) \
+            { \
+                mdrv_om_system_error(TAF_REBOOT_MOD_ID_MEM, 0, (VOS_INT)((THIS_FILE_ID << 16) | __LINE__), 0, 0 ); \
+            } \
+        }
 
 #define TAF_MEM_CMP( pucDestBuffer, pucSrcBuffer, ulBufferLen ) \
-            VOS_MemCmp( pucDestBuffer, pucSrcBuffer, ulBufferLen )
+                VOS_MemCmp( pucDestBuffer, pucSrcBuffer, ulBufferLen )
+
+#else
+#define TAF_MEM_CPY_S(pDestBuffer, ulDestLen,  pSrcBuffer, ulCount) { \
+            TAF_STD_MemCpy_s( (pDestBuffer), (ulDestLen), (pSrcBuffer), (ulCount), (VOS_INT)((THIS_FILE_ID << 16) | __LINE__) ); \
+        }
+
+#define TAF_MEM_SET_S(pDestBuffer, ulDestLen, ucData, ulCount) { \
+            TAF_STD_MemSet_s( (pDestBuffer), (ulDestLen), ((VOS_CHAR)(ucData)), (ulCount), (VOS_INT)((THIS_FILE_ID << 16) | __LINE__) ); \
+        }
+
+#define TAF_MEM_MOVE_S(pDestBuffer, ulDestLen, pucSrcBuffer, ulCount) { \
+            TAF_STD_MemMove_s( (pDestBuffer), (ulDestLen), (pucSrcBuffer), (ulCount), (VOS_INT)((THIS_FILE_ID << 16) | __LINE__) ); \
+        }
+
+#define TAF_MEM_CMP( pucDestBuffer, pucSrcBuffer, ulBufferLen ) \
+                VOS_MemCmp( pucDestBuffer, pucSrcBuffer, ulBufferLen )
+
 #endif
 
 #define TAF_MIN(x, y)\
         (((x)<(y))?(x):(y))
+
+
+#if (OSA_CPU_ACPU == VOS_OSA_CPU)
+#define TAF_ACORE_NV_READ(modemid, id, item, len)                   mdrv_nv_readex(modemid, id, item, len)
+#define TAF_ACORE_NV_WRITE(modemid, id, item, len)                  mdrv_nv_writeex(modemid, id, item, len)
+#define TAF_ACORE_NV_READ_PART(modemid, id, off, item, len)         mdrv_nv_read_partex(modemid, id, off, item, len)
+#define TAF_ACORE_NV_WRITE_PART(modemid, id, off, item, len)        mdrv_nv_write_partex(modemid, id, off, item, len)
+#define TAF_ACORE_NV_GET_LENGTH(id, len)                            mdrv_nv_get_length(id, len)
+#define TAF_ACORE_NV_FLUSH()                                        mdrv_nv_flush()
+#define TAF_ACORE_NV_RESTORE_RESULT()                               mdrv_nv_restore_result()
+
+#define TAF_ACORE_NV_GET_NV_LIST_NUM()                              mdrv_nv_get_nvid_num()
+#define TAF_ACORE_NV_GET_NV_ID_LIST(list)                           mdrv_nv_get_nvid_list(list)
+#define TAF_ACORE_NV_UPGRADE_BACKUP(uloption)                       mdrv_nv_backup()
+#define TAF_ACORE_NV_UPGRADE_RESTORE()                              mdrv_nv_restore()
+#define TAF_ACORE_NV_BACKUP_FNV()                                   mdrv_nv_backup_factorynv()
+#define TAF_ACORE_NV_FREVERT_FNV()                                  mdrv_nv_revert_factorynv()
+#define TAF_ACORE_NV_GET_REVERT_NUM(enNvItem)                       mdrv_nv_get_revert_num(enNvItem)
+#define TAF_ACORE_NV_GET_REVERT_LIST(enNvItem, pusNvList, ulNvNum)  mdrv_nv_get_revert_list(enNvItem, pusNvList, ulNvNum)
+#endif
+
+
 
 #if ((VOS_OS_VER == VOS_WIN32) || (TAF_OS_VER == TAF_NUCLEUS))
 #pragma pack()

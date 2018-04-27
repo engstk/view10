@@ -6,6 +6,8 @@
 #include "hisi_hisee_fs.h"
 
 /* Hisee module general error code*/
+#define HISEE_TRUE           (1)
+#define HISEE_FALSE          (0)
 #define HISEE_OK             (0)
 #define HISEE_ERROR          (-10002)
 #define HISEE_NO_RESOURCES   (-10003)
@@ -36,7 +38,8 @@
 
 #define HISEE_WAIT_READY_TIMEOUT     (-9001)
 
-#define HISEE_DEVICE_NAME "hisee"
+#define HISEE_DEVICE_NAME    "hisee"
+#define HISEE_DEFAULT_COSID  (0)
 
 
 /* ATF service id */
@@ -51,6 +54,7 @@
 #define DELAY_BETWEEN_STEPS            (50)
 #define DELAY_FOR_HISEE_POWERON_UPGRADE	(200)
 #define DELAY_FOR_HISEE_POWEROFF		(50)
+#define DELAY_FOR_HISEE_POWERON_BOOTING    (200)
 
 #define HISEE_ATF_MESSAGE_HEADER_LEN   (16)
 #define HISEE_ATF_COS_APPDATA_TIMEOUT  (15000)
@@ -58,7 +62,11 @@
 #define HISEE_ATF_OTP_TIMEOUT        (10000)
 #define HISEE_ATF_COS_TIMEOUT        (30000)
 #define HISEE_ATF_SLOADER_TIMEOUT    (30000)
+#ifndef CONFIG_HISEE_SUPPORT_MULTI_COS
 #define HISEE_ATF_MISC_TIMEOUT    (30000)
+#else
+#define HISEE_ATF_MISC_TIMEOUT    (100000)
+#endif
 #define HISEE_ATF_APPLICATION_TIMEOUT    (60000)
 #define HISEE_ATF_GENERAL_TIMEOUT        (30000)
 #define HISEE_FPGA_ATF_COS_TIMEOUT        (3000000)
@@ -68,7 +76,7 @@
 
 #define SMC_TEST_RESULT_SIZE      (256)
 
-#define HISEE_COS_PATCH_BUFF_SIZE	(96 * SIZE_1K)
+#define HISEE_COS_PATCH_BUFF_SIZE	(384 * SIZE_1K)
 
 #define HISEE_SHARE_BUFF_SIZE (640 * SIZE_1K)
 #define HISEE_CMD_NAME_LEN    (128)
@@ -78,6 +86,8 @@
 
 #define HISEE_FACTORY_TEST_VERSION	(0x12345678)
 #define HISEE_SERVICE_WORK_VERSION	(0)
+
+#define MAX_CMD_BUFF_PARAM_LEN  (4)
 
 /* hisee apdu cmd type */
 #define HISEE_SET_KEY	(0)
@@ -93,9 +103,17 @@
 #define check_and_print_result()  \
 do {\
 	if (ret != HISEE_OK)\
-		pr_err("%s() run failed\n", __func__);\
+		pr_err("hisee:%s() run failed\n", __func__);\
 	else\
-		pr_err("%s() run success\n", __func__);\
+		pr_err("hisee:%s() run success\n", __func__);\
+} while (0)
+
+#define check_and_print_result_with_cosid()  \
+do {\
+	if (HISEE_OK != ret)\
+		pr_err("hisee:%s() run failed,cos_id=%d.\n", __func__, cos_id);\
+	else\
+		pr_err("hisee:%s() run success,cos_id=%d\n", __func__, cos_id);\
 } while (0)
 
 // cppcheck-suppress *
@@ -134,9 +152,15 @@ typedef enum _HISEE_STATE {
 
 typedef enum  _HISEE_COS_IMGID_TYPE {
 	COS_IMG_ID_0 = 0,
-	COS_IMG_ID_1,
-	COS_IMG_ID_2,
-	COS_IMG_ID_3,
+#ifdef CONFIG_HISEE_SUPPORT_MULTI_COS
+	COS_IMG_ID_1 = 1,
+	COS_IMG_ID_2 = 2,
+	COS_IMG_ID_3 = 3,
+	COS_IMG_ID_4 = 4,
+	COS_IMG_ID_5 = 5,
+	COS_IMG_ID_6 = 6,
+	COS_IMG_ID_7 = 7,
+#endif
 	MAX_COS_IMG_ID,
 } hisee_cos_imgid_type;
 
@@ -163,12 +187,12 @@ typedef enum {
 	CMD_UPGRADE_OTP,
 	CMD_UPGRADE_COS,
 	CMD_UPGRADE_MISC,
-#ifdef CFG_HICOS_MISCIMG_PATCH
+#ifdef CONFIG_HICOS_MISCIMG_PATCH
 	CMD_UPGRADE_COS_PATCH,
 #endif
 	CMD_UPGRADE_APPLET,
 	CMD_PRESAVE_COS_APPDATA,
-#ifdef HISEE_SUPPORT_MULTI_COS
+#ifdef CONFIG_HISEE_SUPPORT_MULTI_COS
 	CMD_LOAD_ENCOS_DATA,
 #endif
 	CMD_WRITE_RPMB_KEY,
@@ -183,6 +207,7 @@ typedef enum {
 
 	CMD_HISEE_POWER_ON = 0x30,
 	CMD_HISEE_POWER_OFF,
+	CMD_FORMAT_RPMB = 0x51,
 	CMD_END,
 } se_smc_cmd;
 
@@ -236,7 +261,7 @@ typedef struct _HISEE_MODULE_DATA {
 
 extern hisee_module_data g_hisee_data;
 extern atomic_t g_hisee_errno;
-extern unsigned int g_misc_version;
+extern unsigned int g_misc_version[];
 extern int g_hisee_partition_byname_find;
 extern unsigned int g_platform_id;
 extern u32 g_hisee_cos_upgrade_time;
@@ -250,5 +275,6 @@ int send_smc_process(atf_message_header *p_message_header, phys_addr_t phy_addr,
 void set_message_header(atf_message_header *header, unsigned int cmd_type);
 int send_apdu_cmd(int type);
 int hisee_lpmcu_send(rproc_msg_t msg_0, rproc_msg_t msg_1);
+int cos_image_upgrade_by_self(void);
 
 #endif

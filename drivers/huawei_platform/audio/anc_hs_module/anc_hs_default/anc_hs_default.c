@@ -163,6 +163,7 @@ static int anc_hs_default_probe(struct platform_device *pdev)
 err_out:
 	devm_kfree(g_anc_hs_default_priv->dev, g_anc_hs_default_priv);
 	g_anc_hs_default_priv = NULL;
+	return ret;
 }
 
 /**********************************************************

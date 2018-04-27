@@ -82,7 +82,7 @@ struct bkops_stats {
 enum bkops_dev_type {
 	BKOPS_DEV_NONE,
 	BKOPS_DEV_MMC,
-	BKOPS_DEV_UFS_VV,
+	BKOPS_DEV_UFS_1861,
 	BKOPS_DEV_UFS_HYNIX,
 	BKOPS_DEV_TYPE_MAX,
 };

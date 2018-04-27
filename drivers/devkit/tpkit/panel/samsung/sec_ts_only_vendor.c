@@ -236,10 +236,15 @@ int sec_ts_raw_device_init(struct sec_ts_data *ts)
 {
 	int ret;
 
-	sec_class = class_create(THIS_MODULE, "sec");
+	if (IS_ERR_OR_NULL(ts)) {
+		TS_LOG_ERR("%s: fail - invalid param\n", __func__);
+		return -EINVAL;
+	}
 
-	if (sec_class < 0) {
+	sec_class = class_create(THIS_MODULE, "sec");
+	if (IS_ERR(sec_class)) {
 		TS_LOG_ERR("%s:fail - class_create\n", __func__);
+		return -EIO;
 	}
 	ts->dev = device_create(sec_class, NULL, 0, ts, "sec_ts");
 

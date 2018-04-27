@@ -139,20 +139,7 @@ VOS_VOID PppFreeId(PPP_ID id_be_free)
     return;
 }
 
-/*****************************************************************************
- Prototype      : PppGetAllocedId
- Description    : 当前实现只有一个PPP链接，返回第一个已分配的PPP ID
- Input          : ---
- Output         : ---
- Return Value   : ---ppp_id
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2011-03-09
-    Author      : l00164359
-    Modification: Created function
-*****************************************************************************/
 PPP_ID PppGetAllocedId(VOS_VOID)
 {
     PPP_ID i;
@@ -168,20 +155,7 @@ PPP_ID PppGetAllocedId(VOS_VOID)
     return PPP_ID_TAIL_FLAG;
 }
 
-/*****************************************************************************
- Prototype      : PppIsIdValid
- Description    : 检查PPP ID是否合法
- Input          : ---
- Output         : ---
- Return Value   : ---VOS_OK 合法；VOS_ERR非法
- Calls          : ---
- Called By      : ---
 
- History        : ---
-  1.Date        : 2011-03-09
-    Author      : l00164359
-    Modification: Created function
-*****************************************************************************/
 VOS_UINT32 PppIsIdValid ( PPP_ID usPppId)
 {
     if((usPppId < 1)

@@ -23,7 +23,6 @@
 #include <linux/vmalloc.h>
 #include "hw_rscan_interface.h"
 
-/* #define RS_DEBUG */
 
 #define FILE_SIZE_MAX (4096)
 #define EOF (-1)
@@ -70,7 +69,7 @@
 	pr_info_ratelimited("%s[%s][%s] " fmt "\n", RSCAN_TRACE,\
 						tag, __func__, ##args)
 
-#ifdef RS_DEBUG
+#ifdef CONFIG_HW_ROOT_SCAN_ENG_DEBUG
 /*
  * A convenient interface for debug log print, Root Scan Log debug.
  * and the print rate is limited

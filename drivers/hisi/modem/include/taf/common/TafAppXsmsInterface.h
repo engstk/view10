@@ -484,6 +484,7 @@ typedef struct
 /*****************************************************************************
   10 º¯ÊýÉùÃ÷
 *****************************************************************************/
+#if (FEATURE_ON == FEATURE_UE_MODE_CDMA)
 extern VOS_UINT32 TAF_XSMS_SendSmsReq(
     MN_CLIENT_ID_T                      usClientId,
     MN_OPERATION_ID_T                   ucOpId,
@@ -505,6 +506,7 @@ extern VOS_UINT32 TAF_XSMS_DeleteSmsReq(
     MN_CLIENT_ID_T                      usClientId,
     MN_OPERATION_ID_T                   ucOpId,
     VOS_UINT8                           ucIndex);
+#endif
 
 #if (FEATURE_OFF == FEATURE_PHONE_SC)
 extern VOS_VOID TAF_LSMS_GetLteSmsEnableFlag(

@@ -1,0 +1,34 @@
+menu "Battery certification support"
+
+menuconfig HUAWEI_BATTERY_INFORMATION
+	bool
+    prompt "Certificate battery by information of IC."
+	default n
+
+config CERTIFICATION_IC_DS28EL15
+	bool
+    prompt "Support ds28el15 as certification IC."
+    depends on HUAWEI_BATTERY_INFORMATION
+	default n
+    help
+        It needs a onewire physical controller to work.
+
+config DS28EL15_COMMUNICATION_DEBUG
+	bool
+    prompt "Support ds28el15 communication debug."
+    depends on HUAWEI_BATTERY_INFORMATION
+    depends on CERTIFICATION_IC_DS28EL15
+	default n
+    help
+        It defines some nodes for trigger communication between ds28el15 and SoC.
+
+config ONEWIRE_PHY_PL061_GPIO
+	bool
+    prompt "Onewire physical controller: pl061(GPIO)."
+    depends on HUAWEI_BATTERY_INFORMATION
+    depends on GPIO_PL061
+	default n
+    help
+        It's a onewire physical controller!
+
+endmenu

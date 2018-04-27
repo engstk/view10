@@ -124,6 +124,7 @@ AT_INTER_MSG_ID_ENUM_UINT32                                 g_aenAtCmdWhiteListT
     ID_AT_MNTN_PC_REPLAY_MSG,
     ID_AT_MNTN_PC_REPLAY_CLIENT_TAB,
     ID_AT_MNTN_RPT_PORT,
+    ID_AT_MNTN_PS_CALL_ENTITY_RPT,
     ID_AT_COMM_CCPU_RESET_START,
     ID_AT_COMM_CCPU_RESET_END,
     ID_AT_COMM_HIFI_RESET_START,
@@ -254,6 +255,7 @@ TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU                          g_astAtAcorePrivacyM
     {TAF_CALL_APP_SEND_BURST_DTMF_REQ,                      AT_PrivacyMatchCallAppSendBurstReq},
     {TAF_CALL_APP_SEND_CONT_DTMF_REQ,                       AT_PrivacyMatchCallAppSendContReq},
     {TAF_CALL_APP_SEND_CUSTOM_DIAL_REQ,                     AT_PrivacyMatchCallAppSendCustomDialReq},
+
     {TAF_CALL_APP_ECONF_DIAL_REQ,                           AT_PrivacyMatchCallAppEconfDialReq},
     {TAF_MSG_REGISTERSS_MSG,                                AT_PrivacyMatchRegisterSsMsg},
     {TAF_MSG_PROCESS_USS_MSG,                               AT_PrivacyMatchProcessUssMsg},
@@ -338,6 +340,11 @@ TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU                          g_astTafXpdsAcorePri
 
 /* TAF发给TAF消息的脱敏处理函数表 */
 /* (由于hi6932无x模，导致该数组定义大小为0，会有pclint告警，gu添加处理后，删除该cdma宏) */
+TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU                          g_astTafAcorePrivacyMatchToTafMsgListTbl[] =
+{
+    /*实际发送PID是TAF*/
+    {ID_TAF_CALL_APP_ENCRYPT_VOICE_REQ,                     TAF_PrivacyMatchCallAppEncryptVoiceReq},
+};
 
 /* MTA发给AT消息的脱敏处理函数表 */
 TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU                      g_astTafMtaAcorePrivacyMatchToAtMsgListTbl[] =
@@ -380,6 +387,8 @@ TAF_LOG_PRIVACY_RCV_PID_MATCH_TBL_STRU                      g_astAtAcorePrivacyM
 TAF_LOG_PRIVACY_RCV_PID_MATCH_TBL_STRU                      g_astTafAcorePrivacyMatchRcvPidListTbl[] =
 {
 
+    /* TAF发给TAF的消息 */
+    {WUEPS_PID_TAF,     sizeof(g_astTafAcorePrivacyMatchToTafMsgListTbl)/sizeof(TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU),         g_astTafAcorePrivacyMatchToTafMsgListTbl},
     /* GUC A核C核都有调用，放最外层处理 */
     {WUEPS_PID_AT,      sizeof(g_astTafAcorePrivacyMatchToAtMsgListTbl)/sizeof(TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU),          g_astTafAcorePrivacyMatchToAtMsgListTbl},
 };
@@ -415,20 +424,7 @@ TAF_LOG_PRIVACY_RCV_PID_MATCH_TBL_STRU                  g_astTafDrvAgentAcorePri
     {WUEPS_PID_AT,     sizeof(g_astTafDrvAgentAcorePrivacyMatchToAtMsgListTbl)/sizeof(TAF_LOG_PRIVACY_MSG_MATCH_TBL_STRU),  g_astTafDrvAgentAcorePrivacyMatchToAtMsgListTbl},
 };
 
-/*****************************************************************************
- 函 数 名  : TAF_LogPrivacyGetModem0Pid
- 功能描述  : 转换I1/I2的pid的I0的Pid
- 输入参数  : VOS_UINT32 --输入pid
- 输出参数  : 无
- 返 回 值  : VOS_UINT32 --转换后pid
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月18日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-*****************************************************************************/
 LOCAL VOS_UINT32 TAF_LogPrivacyGetModem0Pid(
     VOS_UINT32                          ulSrcPid
 )
@@ -437,15 +433,8 @@ LOCAL VOS_UINT32 TAF_LogPrivacyGetModem0Pid(
 
     for (ulLoop = 0; ulLoop < sizeof(g_astTafPrivacyMatchModemPidMapTbl)/sizeof(TAF_LOG_PRIVACY_MATCH_MODEM_PID_MAP_TBL_STRU); ulLoop++)
     {
-        if (ulSrcPid == g_astTafPrivacyMatchModemPidMapTbl[ulLoop].ulModem1Pid)
-        {
-            return g_astTafPrivacyMatchModemPidMapTbl[ulLoop].ulModem0Pid;
-        }
-    }
-
-    for (ulLoop = 0; ulLoop < sizeof(g_astTafPrivacyMatchModemPidMapTbl)/sizeof(TAF_LOG_PRIVACY_MATCH_MODEM_PID_MAP_TBL_STRU); ulLoop++)
-    {
-        if (ulSrcPid == g_astTafPrivacyMatchModemPidMapTbl[ulLoop].ulModem2Pid)
+        if ( (ulSrcPid == g_astTafPrivacyMatchModemPidMapTbl[ulLoop].ulModem1Pid)
+          || (ulSrcPid == g_astTafPrivacyMatchModemPidMapTbl[ulLoop].ulModem2Pid) )
         {
             return g_astTafPrivacyMatchModemPidMapTbl[ulLoop].ulModem0Pid;
         }
@@ -454,21 +443,7 @@ LOCAL VOS_UINT32 TAF_LogPrivacyGetModem0Pid(
     return ulSrcPid;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchIsWhiteListAtCmd
- 功能描述  : 不包含敏感信息的消息,放入白名单,不需要进行过滤检查
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_FALSE -- 不在白名单中
-             VOS_TRUE  -- 在白名单中
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月18日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-*****************************************************************************/
 LOCAL VOS_UINT32 AT_PrivacyMatchIsWhiteListAtCmd(
     AT_MSG_STRU                        *pstAtMsg
 )
@@ -486,20 +461,7 @@ LOCAL VOS_UINT32 AT_PrivacyMatchIsWhiteListAtCmd(
     return VOS_FALSE;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyMatchAtCmd
- 功能描述  : 过滤At到At的层间消息函数
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月18日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID* AT_PrivacyMatchAtCmd(
     MsgBlock                           *pstMsg
 )
@@ -571,7 +533,7 @@ VOS_VOID* AT_PrivacyMatchAtCmd(
 
                 /* 消息结构体长度 + at命令字符串长度 - 消息结构体中aucValue数组长度 */
                 usPrivacyAtMsgLen       = sizeof(AT_MSG_STRU) + usPrivacyAtCmdLen - 4;
-
+                /* A核不调用多实例接口申请内存 */
                 pstPrivacyMatchAtMsg    = (AT_MSG_STRU *)VOS_MemAlloc(WUEPS_PID_AT,
                                                                       DYNAMIC_MEM_PT,
                                                                       usPrivacyAtMsgLen);
@@ -615,21 +577,7 @@ VOS_VOID* AT_PrivacyMatchAtCmd(
         return (VOS_VOID *)pstMsg;
     }
 }
-/*****************************************************************************
- 函 数 名  : AT_PrivacyFilterCnfCommProc
- 功能描述  : CimiRead命令脱敏
- 输入参数  : AT_MSG_STRU                           *pstMsg
- 输出参数  : 无
- 返 回 值  : AT_MSG_STRU* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月1日
-    作    者   : z00382546
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL AT_MSG_STRU* AT_PrivacyFilterCnfCommProc(
     AT_MSG_STRU                        *pstMsg,
     VOS_UINT32                          ulStartIndex,
@@ -655,6 +603,7 @@ LOCAL AT_MSG_STRU* AT_PrivacyFilterCnfCommProc(
 
     usPrivacyAtMsgLen    = sizeof(AT_MSG_STRU) + pstAtMsg->usLen - 4;
 
+    /* A核不调用多实例接口申请内存 */
     pucPrivacyMatchAtMsg = (VOS_UINT8 *)VOS_MemAlloc(WUEPS_PID_AT,
                                          DYNAMIC_MEM_PT,
                                          usPrivacyAtMsgLen);
@@ -692,21 +641,7 @@ LOCAL AT_MSG_STRU* AT_PrivacyFilterCnfCommProc(
     return pstPrivacyMatchAtMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyFilterCimi
- 功能描述  : CimiRead命令脱敏
- 输入参数  : AT_MSG_STRU                           *pstMsg
- 输出参数  : 无
- 返 回 值  : AT_MSG_STRU* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月1日
-    作    者   : z00382546
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL AT_MSG_STRU* AT_PrivacyFilterCimi(
     AT_MSG_STRU                        *pstMsg
 )
@@ -717,21 +652,7 @@ LOCAL AT_MSG_STRU* AT_PrivacyFilterCimi(
     ****************************************/
     return AT_PrivacyFilterCnfCommProc(pstMsg, 7, '\r');
 }
-/*****************************************************************************
- 函 数 名  : AT_PrivacyFilterCgsn
- 功能描述  : Cgsn命令脱敏
- 输入参数  : AT_MSG_STRU                           *pstMsg
- 输出参数  : 无
- 返 回 值  : AT_MSG_STRU* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月2日
-    作    者   : z00382546
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL AT_MSG_STRU* AT_PrivacyFilterCgsn(
     AT_MSG_STRU                        *pstMsg
 )
@@ -742,21 +663,7 @@ LOCAL AT_MSG_STRU* AT_PrivacyFilterCgsn(
     ****************************************/
     return AT_PrivacyFilterCnfCommProc(pstMsg, 2, '\r');
 }
-/*****************************************************************************
- 函 数 名  : AT_PrivacyFilterMeid
- 功能描述  : Cgsn命令脱敏
- 输入参数  : AT_MSG_STRU                           *pstMsg
- 输出参数  : 无
- 返 回 值  : AT_MSG_STRU* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月2日
-    作    者   : z00382546
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL AT_MSG_STRU* AT_PrivacyFilterMsid(
     AT_MSG_STRU                        *pstMsg
 )
@@ -795,6 +702,7 @@ LOCAL AT_MSG_STRU* AT_PrivacyFilterMsid(
 
     usPrivacyAtMsgLen    = sizeof(AT_MSG_STRU) + pstAtMsg->usLen - 4;
 
+    /* A核不调用多实例接口申请内存 */
     pstPrivacyMatchAtMsg = (AT_MSG_STRU *)VOS_MemAlloc(WUEPS_PID_AT,
                                                        DYNAMIC_MEM_PT,
                                                        usPrivacyAtMsgLen);
@@ -856,21 +764,7 @@ LOCAL AT_MSG_STRU* AT_PrivacyFilterMsid(
     return pstPrivacyMatchAtMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : AT_PrivacyFilterHplmn
- 功能描述  : hplmn命令脱敏
- 输入参数  : AT_MSG_STRU                           *pstMsg
- 输出参数  : 无
- 返 回 值  : AT_MSG_STRU* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月2日
-    作    者   : z00382546
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 LOCAL AT_MSG_STRU* AT_PrivacyFilterHplmn(
     AT_MSG_STRU                        *pstMsg
 )
@@ -883,20 +777,7 @@ LOCAL AT_MSG_STRU* AT_PrivacyFilterHplmn(
     return AT_PrivacyFilterCnfCommProc(pstMsg, 15, ',');
 }
 
-/*****************************************************************************
- 函 数 名  : AT_AcoreMsgLogPrivacyMatchProc
- 功能描述  : XPDS模块log脱敏回调函数入口
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID* AT_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 )
@@ -957,21 +838,7 @@ VOS_VOID* AT_AcoreMsgLogPrivacyMatchProc(
     return (VOS_VOID *)pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_AcoreMsgLogPrivacyMatchProc
- 功能描述  : GUC TAF脱敏处理函数总入口
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月05日
-    作    者   : y00307564
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 )
@@ -983,16 +850,20 @@ VOS_VOID* TAF_AcoreMsgLogPrivacyMatchProc(
     VOS_UINT32                                              ulRcvPidMatchTblSize;
     VOS_UINT32                                              ulMsgMatchTblSize;
     VOS_UINT32                                              ulMsgName;
+    VOS_UINT32                                              ulRcvPid;
 
     pstRcvMsgHeader = (MSG_HEADER_STRU *)pstMsg;
 
     ulRcvPidMatchTblSize = sizeof(g_astTafAcorePrivacyMatchRcvPidListTbl)/sizeof(TAF_LOG_PRIVACY_RCV_PID_MATCH_TBL_STRU);
     ulMsgMatchTblSize    = 0;
 
+    /* A核单编译, 需要将I1/I2的PID转换为I0的PID */
+    ulRcvPid = TAF_LogPrivacyGetModem0Pid(pstRcvMsgHeader->ulReceiverPid);
+
     /* 根据rcv pid查找pid映射表 */
     for (ulLoop = 0; ulLoop < ulRcvPidMatchTblSize; ulLoop++)
     {
-        if (pstRcvMsgHeader->ulReceiverPid == g_astTafAcorePrivacyMatchRcvPidListTbl[ulLoop].ulReceiverPid)
+        if (ulRcvPid == g_astTafAcorePrivacyMatchRcvPidListTbl[ulLoop].ulReceiverPid)
         {
             pstLogPrivacyMsgMatchTbl = g_astTafAcorePrivacyMatchRcvPidListTbl[ulLoop].pstLogPrivacyMatchMsgTbl;
 
@@ -1023,20 +894,7 @@ VOS_VOID* TAF_AcoreMsgLogPrivacyMatchProc(
     return (VOS_VOID *)pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XSMS_AcoreMsgLogPrivacyMatchProc
- 功能描述  : XSMS模块log脱敏回调函数入口
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月20日
-    作    者   : Z00408428
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID* TAF_XSMS_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 )
@@ -1084,20 +942,7 @@ VOS_VOID* TAF_XSMS_AcoreMsgLogPrivacyMatchProc(
     return (VOS_VOID *)pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_XPDS_AcoreMsgLogPrivacyMatchProc
- 功能描述  : XPDS模块log脱敏回调函数入口
- 输入参数  : MsgBlock *: 原始消息地址
- 输出参数  : 无
- 返 回 值  : VOS_VOID *: 脱敏后消息地址
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月15日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID* TAF_XPDS_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 )
@@ -1145,21 +990,7 @@ VOS_VOID* TAF_XPDS_AcoreMsgLogPrivacyMatchProc(
     return (VOS_VOID *)pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_MTA_AcoreMsgLogPrivacyMatchProc
- 功能描述  : MTA脱敏处理函数总入口
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年4月5日
-    作    者   : h00360002
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_MTA_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 )
@@ -1211,21 +1042,7 @@ VOS_VOID* TAF_MTA_AcoreMsgLogPrivacyMatchProc(
     return (VOS_VOID *)pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_MMA_AcoreMsgLogPrivacyMatchProc
- 功能描述  : MMA脱敏处理函数总入口
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_MMA_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 )
@@ -1277,21 +1094,7 @@ VOS_VOID* TAF_MMA_AcoreMsgLogPrivacyMatchProc(
     return (VOS_VOID *)pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_DRVAGENT_AcoreMsgLogPrivacyMatchProc
- 功能描述  : DRVAGENT脱敏处理函数总入口
- 输入参数  : MsgBlock                    *pstMsg
- 输出参数  : 无
- 返 回 值  : VOS_VOID* -- 脱敏后的消息
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年6月5日
-    作    者   : g00261581
-    修改内容   : 新生成函数
-
-*****************************************************************************/
 VOS_VOID* TAF_DRVAGENT_AcoreMsgLogPrivacyMatchProc(
     MsgBlock                           *pstMsg
 )
@@ -1343,20 +1146,7 @@ VOS_VOID* TAF_DRVAGENT_AcoreMsgLogPrivacyMatchProc(
     return (VOS_VOID *)pstMsg;
 }
 
-/*****************************************************************************
- 函 数 名  : TAF_OM_LayerMsgLogPrivacyMatchRegAcore
- 功能描述  : TAF向A核注册脱敏回调函数
- 输入参数  : NONE
- 输出参数  : NONE
- 返 回 值  : NONE
- 调用函数  :
- 被调函数  :
 
- 修改历史      :
-  1.日    期   : 2017年03月24日
-    作    者   : t00323010
-    修改内容   : 新生成函数
-*****************************************************************************/
 VOS_VOID TAF_OM_LayerMsgLogPrivacyMatchRegAcore(VOS_VOID)
 {
      /*  1、AT在PID init时先读取NV, 然后再注册脱敏回调函数, 所以此处直接使用NV值,
@@ -1370,9 +1160,7 @@ VOS_VOID TAF_OM_LayerMsgLogPrivacyMatchRegAcore(VOS_VOID)
         PS_OM_LayerMsgReplaceCBReg(WUEPS_PID_AT,     AT_AcoreMsgLogPrivacyMatchProc);
 
         PS_OM_LayerMsgReplaceCBReg(I0_WUEPS_PID_TAF, TAF_AcoreMsgLogPrivacyMatchProc);
-
         PS_OM_LayerMsgReplaceCBReg(I0_UEPS_PID_XSMS, TAF_XSMS_AcoreMsgLogPrivacyMatchProc);
-
         PS_OM_LayerMsgReplaceCBReg(I0_UEPS_PID_MTA,  TAF_MTA_AcoreMsgLogPrivacyMatchProc);
 
         PS_OM_LayerMsgReplaceCBReg(I0_WUEPS_PID_MMA, TAF_MMA_AcoreMsgLogPrivacyMatchProc);

@@ -130,18 +130,24 @@ void TC_NS_send_event_response_all(void)
 	if (TC_NS_send_event_response(AGENT_FS_ID))
 		tloge("failed to send response to AGENT_FS_ID\n");
 	event_data = find_event_control(AGENT_FS_ID);
-	if (event_data)
+	if (event_data) {
 		event_data->agent_alive = 0;
+		put_agent_event(event_data);
+	}
 	if (TC_NS_send_event_response(AGENT_MISC_ID))
 		tloge("failed to send response to AGENT_MISC_ID\n");
 	event_data = find_event_control(AGENT_MISC_ID);
-	if (event_data)
+	if (event_data) {
 		event_data->agent_alive = 0;
+		put_agent_event(event_data);
+	}
 	if (TC_NS_send_event_response(AGENT_SOCKET_ID))
 		tloge("failed to send response to AGENT_SOCKET_ID\n");
 	event_data = find_event_control(AGENT_SOCKET_ID);
-	if (event_data)
+	if (event_data) {
 		event_data->agent_alive = 0;
+		put_agent_event(event_data);
+	}
 
 }
 
@@ -155,12 +161,33 @@ struct __smc_event_data *find_event_control(unsigned int agent_id)
 	list_for_each_entry(event_data, &agent_control.agent_list, head) {/*lint !e64 !e826*/
 		if (event_data->agent_id == agent_id) {
 			tmp_data = event_data;
+			get_agent_event(event_data);
 			break;
 		}
 	}
 	spin_unlock_irqrestore(&agent_control.lock, flags);
 
 	return tmp_data;
+}
+static void free_event_control(unsigned int agent_id)
+{
+	struct __smc_event_data *event_data = NULL;
+	struct __smc_event_data *tmp_event = NULL;
+	unsigned long flags;
+	spin_lock_irqsave(&agent_control.lock, flags);
+	list_for_each_entry_safe(event_data, tmp_event,
+							&agent_control.agent_list, head) {
+		if (event_data->agent_id == agent_id) {
+			list_del(&event_data->head);
+			break;
+		}
+	}
+	spin_unlock_irqrestore(&agent_control.lock, flags);
+	if (event_data) {
+		/* Release the share memory obtained in TC_NS_register_agent() */
+		put_sharemem_struct(event_data->buffer);
+		put_agent_event(event_data);
+	}
 }
 
 
@@ -179,6 +206,7 @@ int agent_process_work(TC_NS_SMC_CMD *smc_cmd, unsigned int agent_id)
 	if ( NULL == event_data || 0 == event_data->agent_alive) {
 		/*TODO: if return, the pending task in S can't be resumed!! */
 		tloge("agent %u not exist\n", agent_id);
+		put_agent_event(event_data);
 		return TEEC_ERROR_GENERIC;/*lint !e570*/
 	}
 	tlogd("agent_process_work: returning client command");
@@ -192,6 +220,7 @@ int agent_process_work(TC_NS_SMC_CMD *smc_cmd, unsigned int agent_id)
 	/* Keep a copy of the SMC cmd to return to TEE when the work is done */
 	if (memcpy_s(&event_data->cmd, sizeof(TC_NS_SMC_CMD), smc_cmd, sizeof(TC_NS_SMC_CMD))) {
 		tloge("failed to memcpy_s smc_cmd\n");
+		put_agent_event(event_data);
 		return TEEC_ERROR_GENERIC;
 	}
 	isb();
@@ -200,7 +229,7 @@ int agent_process_work(TC_NS_SMC_CMD *smc_cmd, unsigned int agent_id)
 	/* Wake up the agent that will process the command */
 	tlogd("agent_process_work: wakeup the agent");
 	wake_up(&event_data->wait_event_wq);
-
+	put_agent_event(event_data);
 	return TEEC_SUCCESS;
 }
 
@@ -216,8 +245,12 @@ int agent_process_work(TC_NS_SMC_CMD *smc_cmd, unsigned int agent_id)
  */
 int is_agent_alive(unsigned int agent_id)
 {
-	if (find_event_control(agent_id))
+	struct __smc_event_data* event_data;
+	event_data = find_event_control(agent_id);
+	if (event_data) {
+		put_agent_event(event_data);
 		return 1;
+	}
 	else
 		return 0;
 }
@@ -235,7 +268,6 @@ int TC_NS_wait_event(unsigned int agent_id)
 	event_data = find_event_control(agent_id);
 	tlogd("agent %u waits for command\n", agent_id);
 	if (event_data) {
-		get_agent_event(event_data);
 		/* wait event will return either 0 or -ERESTARTSYS so just
 		 * return it further to the ioctl handler */
 		ret = wait_event_interruptible(event_data->wait_event_wq,/*lint !e774 !e845 !e712 !e40*/
@@ -299,12 +331,12 @@ int TC_NS_send_event_response(unsigned int agent_id)
 
 	if (TC_NS_get_uid() != 0) {
 		tloge("It is a fake tee agent\n");
+		put_agent_event(event_data);
 		return -1;
 	}
 
 	tlogd("agent %u sends answer back\n", agent_id);
 	if (event_data && event_data->ret_flag) {
-		get_agent_event(event_data);
 		event_data->send_flag = 1;
 		event_data->ret_flag = 0;
 		/* Send the command back to the TA session waiting for it */
@@ -313,6 +345,7 @@ int TC_NS_send_event_response(unsigned int agent_id)
 
 		return ret;
 	}
+	put_agent_event(event_data);
 	return -EINVAL;
 }
 
@@ -427,11 +460,7 @@ error:
 int TC_NS_unregister_agent(unsigned int agent_id)
 {
 	struct __smc_event_data *event_data = NULL;
-	struct __smc_event_data *tmp_event = NULL;
-
 	int ret = 0;
-	int find_flag = 0;
-	unsigned long flags;
 	TC_NS_SMC_CMD smc_cmd = { 0 };
 	struct mb_cmd_pack *mb_pack = NULL;
 
@@ -445,30 +474,18 @@ int TC_NS_unregister_agent(unsigned int agent_id)
 		tloge("system agent is not allowed to unregister  agent_id=0x%x\n", agent_id);
 		return TEEC_ERROR_GENERIC;
 	}
-
-	spin_lock_irqsave(&agent_control.lock, flags);
-	list_for_each_entry_safe(event_data, tmp_event,
-							&agent_control.agent_list, head) {
-		if (event_data->agent_id == agent_id) {
-			find_flag = 1;
-			list_del(&event_data->head);
-			break;
-		}
-	}
-	spin_unlock_irqrestore(&agent_control.lock, flags);
-
-	if (!find_flag) {
-		tloge("agent is not found\n");
-		return TEEC_ERROR_GENERIC;
-	}
-
 	mb_pack = mailbox_alloc_cmd_pack();
 	if (!mb_pack) {
 		tloge("alloc mailbox failed\n");
 		return TEEC_ERROR_GENERIC;
 	}
+	event_data = find_event_control(agent_id);
+	if (!event_data) {
+		mailbox_free(mb_pack);
+		tloge("agent is not found\n");
+		return TEEC_ERROR_GENERIC;
+	}
 
-	get_agent_event(event_data);
 	mb_pack->operation.paramTypes = TEE_PARAM_TYPE_VALUE_INPUT | (TEE_PARAM_TYPE_VALUE_INPUT << 4);
 	mb_pack->operation.params[0].value.a = virt_to_phys(event_data->buffer->kernel_addr);
 	mb_pack->operation.params[0].value.b = virt_to_phys(event_data->buffer->kernel_addr) >> 32; /*lint !e572*/
@@ -486,11 +503,11 @@ int TC_NS_unregister_agent(unsigned int agent_id)
 	tlogd("Unregistering agent %u\n", agent_id);
 	ret = TC_NS_SMC(&smc_cmd, 0);
 	mutex_unlock(&event_data->work_lock);
-	/* Release the share memory obtained in TC_NS_register_agent() */
-	put_sharemem_struct(event_data->buffer);
+	if (ret == TEEC_SUCCESS) {
+    		free_event_control(agent_id);
+	}
 	put_agent_event(event_data);
 
-	put_agent_event(event_data); /* paired with register_agent */
 	mailbox_free(mb_pack);
 
 	return ret;

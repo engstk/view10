@@ -233,7 +233,7 @@ Output:
 static ssize_t gt1x_tool_write(struct file *filp, const char __user * buff, size_t len, loff_t * data)
 {
 	u64 ret = 0;
-	short data_len = 0;
+	int data_len = 0;
 	if(!buff){
 		TS_LOG_ERR("%s: invalid buff\n", __func__);
 		return -EINVAL;
@@ -363,7 +363,8 @@ Output:
 static ssize_t gt1x_tool_read(struct file *filp, char __user * buffer, size_t count, loff_t * ppos)
 {
 	u16 addr, len, loc = 0;
-	short data_len;
+	int data_len = 0;
+	u8 tmp =0;
 
 	if(!buffer){
 		TS_LOG_ERR("%s: invalid buff\n", __func__);
@@ -406,7 +407,7 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user * buffer, size_t co
 				TS_LOG_ERR("[READ]Read data failed!\n");
 				return RESULT_ERR;
 			}
-			memcpy(&buffer[loc], &cmd_head.data[GTP_ADDR_LENGTH], len);
+			copy_to_user(&buffer[loc], &cmd_head.data[GTP_ADDR_LENGTH], len);
 			data_len -= len;
 			addr += len;
 			loc += len;
@@ -418,10 +419,14 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user * buffer, size_t co
 		return RESULT_ERR;
 	} else if (READ_FW_UPDATE_PROGRESS == cmd_head.wr) {
 	    /* read fw update progress */
-		buffer[0] = update_info.progress >> OFFSET_8BITS;
-		buffer[1] = update_info.progress & 0xff;
-		buffer[2] = update_info.max_progress >> OFFSET_8BITS;
-		buffer[3] = update_info.max_progress & 0xff;
+		tmp = update_info.progress >> OFFSET_8BITS;
+		copy_to_user(&buffer[0], &tmp,sizeof(tmp));
+		tmp = update_info.progress & 0xff;
+		copy_to_user(&buffer[1], &tmp,sizeof(tmp));
+		tmp = update_info.max_progress >> OFFSET_8BITS;
+		copy_to_user(&buffer[2], &tmp,sizeof(tmp));
+		tmp = update_info.max_progress & 0xff;
+		copy_to_user(&buffer[3], &tmp,sizeof(tmp));
 		*ppos += 4;
 		return READ_FW_UPDATE_PROGRESS;
 	} else if (READ_ERROR == cmd_head.wr) {
@@ -431,8 +436,7 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user * buffer, size_t co
 		/* Read driver version */
 		s32 tmp_len;
 		tmp_len = strlen(GTP_DRIVER_VERSION);
-		memcpy(buffer, GTP_DRIVER_VERSION, tmp_len);
-		buffer[tmp_len] = 0;
+		copy_to_user(buffer, GTP_DRIVER_VERSION, sizeof(GTP_DRIVER_VERSION));
 		*ppos += tmp_len + 1;
 		return (tmp_len + 1);
 	}

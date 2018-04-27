@@ -55,6 +55,11 @@
 #define NETLINK_HW_KSTATE	30	/* kstate send event to user */
 #endif
 
+
+#define NETLINK_HW_LOGCAT     29
+#define NETLINK_HW_LOGCAT_EXT 31
+
+
 /*netd communicate with hwfilter */
 #ifdef CONFIG_HW_NETFILTER_MODULE
 #define NETLINK_HW_NF   32
@@ -68,13 +73,25 @@
 #define NETLINK_EMCOM 35
 #endif
 
+#ifdef CONFIG_RIL_SIM_NETLINK_MODULE
+#define NETLINK_RIL_EVENT_SIM  36
+#endif
+
+#ifdef CONFIG_HW_NETBOOSTER_MODULE
+#define NETLINK_NETBOOSTER  37
+#endif
+
+#ifdef CONFIG_HISI_CAMERA_VL53L0_970
+#define NETLINK_ST_LASER_DRIVER 38
+#endif
+
 
 #if (defined(CONFIG_HW_CPULOAD_NOTI) || defined(CONFIG_HW_VIP_THREAD) \
         || defined(CONFIG_HW_IAWARE_THREAD_BOOST))
 #define NETLINK_HW_IAWARE_CPU 33
-#define MAX_LINKS 36
+#define MAX_LINKS 39
 #else
-#define MAX_LINKS 36
+#define MAX_LINKS 39
 #endif
 
 struct sockaddr_nl {

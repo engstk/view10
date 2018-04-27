@@ -1,21 +1,4 @@
-/******************************************************************************
 
-			  版权所有 (C), 2001-2011, 华为技术有限公司
-
-******************************************************************************
-文 件 名   : drv_mailbox_ifc.h
-版 本 号   : 初稿
-作	  者   : 莫南 00176101
-生成日期   : 2013年4月11日
-最近修改   :
-功能描述   : mailbox&跨核邮箱驱动软件，核间调用主体代码,包含文件。
-函数列表   :
-
-修改历史   :
-1.日	期	 : 2013年4月11日
-作	  者   : 莫南 00176101
-修改内容   : 创建文件
-******************************************************************************/
 #ifndef __DRV_MAILBOX_IFC_H__
 #define __DRV_MAILBOX_IFC_H__
 
@@ -212,11 +195,11 @@ struct ifc_mb {
 /*执行核:计算函数输出参数总大小的宏*/
 #define _IFC_OUTSIZE0(av, p)								   0
 #define _IFC_OUTSIZE1(av, d1, t1, a1, s1)					   __ifc_out_size(d1, s1, av)
-#define _IFC_OUTSIZE2(av, d2, t2, a2, s2, d1, t1, a1, s1)	   __ifc_out_size(d2, s2, av) + _IFC_OUTSIZE1(av, d1, t1, a1, s1)
-#define _IFC_OUTSIZE3(av, d3, t3, a3, s3, d2, t2, a2, s2,...)  __ifc_out_size(d3, s3, av) + _IFC_OUTSIZE2(av, d2, t2, a2, s2, __VA_ARGS__)
-#define _IFC_OUTSIZE4(av, d4, t4, a4, s4, d3, t3, a3, s3,...)  __ifc_out_size(d4, s4, av) + _IFC_OUTSIZE3(av, d3, t3, a3, s3, __VA_ARGS__)
-#define _IFC_OUTSIZE5(av, d5, t5, a5, s5, d4, t4, a4, s4,...)  __ifc_out_size(d5, s5, av) + _IFC_OUTSIZE4(av, d4, t4, a4, s4, __VA_ARGS__)
-#define _IFC_OUTSIZE6(av, d6, t6, a6, s6, d5, t5, a5, s5,...)  __ifc_out_size(d6, s6, av) + _IFC_OUTSIZE5(av, d5, t5, a5, s5, __VA_ARGS__)
+#define _IFC_OUTSIZE2(av, d2, t2, a2, s2, d1, t1, a1, s1)	   (__ifc_out_size(d2, s2, av) + _IFC_OUTSIZE1(av, d1, t1, a1, s1))
+#define _IFC_OUTSIZE3(av, d3, t3, a3, s3, d2, t2, a2, s2,...)  (__ifc_out_size(d3, s3, av) + _IFC_OUTSIZE2(av, d2, t2, a2, s2, __VA_ARGS__))
+#define _IFC_OUTSIZE4(av, d4, t4, a4, s4, d3, t3, a3, s3,...)  (__ifc_out_size(d4, s4, av) + _IFC_OUTSIZE3(av, d3, t3, a3, s3, __VA_ARGS__))
+#define _IFC_OUTSIZE5(av, d5, t5, a5, s5, d4, t4, a4, s4,...)  (__ifc_out_size(d5, s5, av) + _IFC_OUTSIZE4(av, d4, t4, a4, s4, __VA_ARGS__))
+#define _IFC_OUTSIZE6(av, d6, t6, a6, s6, d5, t5, a5, s5,...)  (__ifc_out_size(d6, s6, av) + _IFC_OUTSIZE5(av, d5, t5, a5, s5, __VA_ARGS__))
 
 #endif
 
@@ -242,11 +225,11 @@ struct ifc_mb {
 /*调用核:计算输入参数总大小的宏*/
 #define _IFC_INSIZE0(p) 								  0
 #define _IFC_INSIZE1(d1, t1, a1, s1)					  __ifc_in_size(d1, s1, 0)
-#define _IFC_INSIZE2(d2, t2, a2, s2, d1, t1, a1, s1)	 _IFC_INSIZE1(d1, t1, a1, s1) + __ifc_in_size(d2, s2, (unsigned int)a1)
-#define _IFC_INSIZE3(d3, t3, a3, s3, d2, t2, a2, s2,...) _IFC_INSIZE2(d2, t2, a2, s2, __VA_ARGS__) + __ifc_in_size(d3, s3, (unsigned int)a2)
-#define _IFC_INSIZE4(d4, t4, a4, s4, d3, t3, a3, s3,...) _IFC_INSIZE3(d3, t3, a3, s3, __VA_ARGS__) + __ifc_in_size(d4, s4, (unsigned int)a3)
-#define _IFC_INSIZE5(d5, t5, a5, s5, d4, t4, a4, s4,...) _IFC_INSIZE4(d4, t4, a4, s4, __VA_ARGS__) + __ifc_in_size(d5, s5, (unsigned int)a4)
-#define _IFC_INSIZE6(d6, t6, a6, s6, d5, t5, a5, s5,...) _IFC_INSIZE5(d5, t5, a5, s5, __VA_ARGS__) + __ifc_in_size(d6, s6, (unsigned int)a5)
+#define _IFC_INSIZE2(d2, t2, a2, s2, d1, t1, a1, s1)	 (_IFC_INSIZE1(d1, t1, a1, s1) + __ifc_in_size(d2, s2, (unsigned int)a1))
+#define _IFC_INSIZE3(d3, t3, a3, s3, d2, t2, a2, s2,...) (_IFC_INSIZE2(d2, t2, a2, s2, __VA_ARGS__) + __ifc_in_size(d3, s3, (unsigned int)a2))
+#define _IFC_INSIZE4(d4, t4, a4, s4, d3, t3, a3, s3,...) (_IFC_INSIZE3(d3, t3, a3, s3, __VA_ARGS__) + __ifc_in_size(d4, s4, (unsigned int)a3))
+#define _IFC_INSIZE5(d5, t5, a5, s5, d4, t4, a4, s4,...) (_IFC_INSIZE4(d4, t4, a4, s4, __VA_ARGS__) + __ifc_in_size(d5, s5, (unsigned int)a4))
+#define _IFC_INSIZE6(d6, t6, a6, s6, d5, t5, a5, s5,...) (_IFC_INSIZE5(d5, t5, a5, s5, __VA_ARGS__) + __ifc_in_size(d6, s6, (unsigned int)a5))
 
 /*调用核:保存并检查参数*/
 #define _IFC_DBGPARAM0(p, a)

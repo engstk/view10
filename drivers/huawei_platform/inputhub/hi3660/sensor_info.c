@@ -2836,6 +2836,10 @@ int combo_bus_trans(struct sensor_combo_cfg *p_cfg, uint8_t *tx, uint32_t tx_len
 		return -1;
 	}
 
+	if (tx_len >= (uint32_t)0xFFFF - sizeof(*pkt_combo_trans)){
+		hwlog_err("%s: tx_len %x too big\n", __func__, tx_len);
+		return -1;
+	}
 	cmd_wd_len = tx_len + sizeof(*pkt_combo_trans);
 	pkt_combo_trans = kzalloc((size_t)cmd_wd_len, GFP_KERNEL);
 	if (!pkt_combo_trans) {
@@ -5260,10 +5264,8 @@ static int rpc_commu(unsigned int cmd, unsigned int pare, uint16_t motion)
 {
 	int ret = -1;
 	write_info_t pkg_ap;
-	
 	rpc_ioctl_t pkg_ioctl;
 	memset(&pkg_ap, 0, sizeof(pkg_ap));
-	
 
 	pkg_ap.tag = TAG_RPC;
 	pkg_ap.cmd = cmd;
@@ -5275,7 +5277,6 @@ static int rpc_commu(unsigned int cmd, unsigned int pare, uint16_t motion)
 	if (ret) {
 		hwlog_err("send rpc cmd(%d) to mcu fail,ret=%d\n", cmd, ret);
 		return ret;
-	
 	}
 
 	return ret;
@@ -7168,6 +7169,10 @@ int mcu_sys_ready_callback(const pkt_header_t *head)
 		ret = sensor_set_fw_load();
 		if (ret < 0) {
 			hwlog_err("sensor fw dload err ret=%d\n", ret);
+		}
+		ret = motion_set_cfg_data();
+		if (ret < 0) {
+			hwlog_err("motion set cfg data err ret=%d\n", ret);
 		}
 		unregister_mcu_event_notifier(TAG_SYS, CMD_SYS_STATUSCHANGE_REQ,
 					      mcu_sys_ready_callback);

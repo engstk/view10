@@ -4,6 +4,7 @@
 #define __FOCALTECH_CORE_H__
 
 #include <linux/i2c.h>
+#include <linux/spi/spi.h>
 #include <linux/input.h>
 #include <linux/input/mt.h>
 #include <linux/slab.h>
@@ -49,6 +50,9 @@ extern  struct ts_kit_device_data *g_focal_dev_data ;
 #define FTS_ROI_PACKAGE_NUM     0x9C
 #define FTS_ROI_BUFF0_ADDR     0x7E
 #define FTS_DETECT_I2C_RETRY_TIMES			1
+#define FTS_DETECT_SPI_RETRY_TIMES			3
+#define FTS_COMMON_COMMAND_LENGTH			1
+#define FTS_COMMON_COMMAND_VALUE			1
 #define FTS_FW_MANUAL_UPDATE_FILE_NAME	"ts/touch_screen_firmware.img"
 
 #define FTS_VDDIO_GPIO_NAME		"ts_vddio_gpio"
@@ -92,11 +96,16 @@ extern  struct ts_kit_device_data *g_focal_dev_data ;
 #define FT5X46_RESET_KEEP_LOW_TIME		1500
 #define FT5X46_RESET_KEEP_LOW_TIME_BEFORE_POWERON		500
 #define FTS_EDGE_TOUCH_DATA_LEN			50
+#define FTS_FP_EDGE_TOUCH_DATA_LEN		70
+#define ABS_MT_TOUCH_MINOR_MAX			255
+#define ABS_MT_TOUCH_MAJOR_MAX			255
+#define MAX_COMMAND_LENGTH			16
 
 enum focal_ic_type {
 	FOCAL_FT8716 = 0,
 	FOCAL_FT8607,
 	FOCAL_FT5X46,
+	FOCAL_FT8719,
 };
 
 #if defined (CONFIG_HUAWEI_DSM)
@@ -122,6 +131,8 @@ struct ts_event {
 	u16 ewy[FTS_MAX_TOUCH_POINTS];
 	u16 xer[FTS_MAX_TOUCH_POINTS];
 	u16 yer[FTS_MAX_TOUCH_POINTS];
+	u16 wx[FTS_MAX_TOUCH_POINTS];
+	u16 wy[FTS_MAX_TOUCH_POINTS];
 
 	/* touch event: 0 -- down; 1-- up; 2 -- contact */
 	u8 touch_event[FTS_MAX_TOUCH_POINTS];
@@ -165,19 +176,28 @@ struct focal_platform_data {
 	struct regulator *vddd;
 	struct regulator *vdda;
 	int self_ctrl_power;
+	int self_ctrl_reset;
 	int power_down_ctrl;
 	bool open_threshold_status;
 	int only_open_once_captest_threshold;
 	int projectid_length_control_flag;
 	u32 enable_edge_touch;
 	u32 edge_data_addr;
+	u32 aft_wxy_enable;
 	u32 roi_pkg_num_addr;
 	int need_distinguish_lcd;
 	int fw_only_depend_on_lcd;//0 : fw depend on TP and others ,1 : fw only depend on lcd.
 	char lcd_panel_info[LCD_PANEL_INFO_MAX_LEN];
 	char lcd_module_name[FULL_NAME_MAX_LEN];
+	int fw_is_running;/* confirm fw is running,default 0 */
+	char fw_name[MAX_STR_LEN];
+	u8 lcd_noise_threshold;
+	u8 touch_switch_game_reg;
 };
 
+/* spi interface communication*/
+int fts_read(u8 *writebuf, u32 writelen, u8 *readbuf, u32 readlen);
+int fts_write(u8 *writebuf, u32 writelen);
 int focal_read(u8 *addr, u16 addr_len, u8 *value, u16 values_size);
 int focal_read_reg(u8 addr, u8 *val);
 int focal_read_default(u8 *values, u16 values_size);

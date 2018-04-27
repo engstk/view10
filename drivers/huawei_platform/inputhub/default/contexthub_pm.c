@@ -21,6 +21,7 @@
 #include "sensor_detect.h"
 
 uint32_t need_reset_io_power = 0;
+uint32_t need_set_3v_io_power = 0;
 int g_sensorhub_wdt_irq = -1;
 sys_status_t iom3_sr_status = ST_WAKEUP;
 int key_state;
@@ -255,22 +256,34 @@ static int sensorhub_io_driver_probe(struct platform_device *pdev)
 		hwlog_err("[%s,%d]: sensorhub_io_driver_probe match fail !\n", __FUNCTION__, __LINE__);
 		return -ENODEV;
 	}
-        power_node = of_find_node_by_name(NULL, "sensorhub_io_power");
-        if(!power_node)
-        {
-            hwlog_err("%s failed to find dts node sensorhub_io_power\n", __func__);
-        }else if(of_property_read_u32(power_node, "need-reset", &val))
-        {
-            hwlog_err("%s failed to find property need-reset.\n", __func__);
-        }else
-        {
-            need_reset_io_power = val;
-            hwlog_info("%s property need-reset is %d.\n", __func__, val);
-        }
+	power_node = of_find_node_by_name(NULL, "sensorhub_io_power");
+	if(!power_node) {
+		hwlog_err("%s failed to find dts node sensorhub_io_power\n", __func__);
+	} else {
+		if(of_property_read_u32(power_node, "need-reset", &val)) {
+			hwlog_err("%s failed to find property need-reset.\n", __func__);
+		} else {
+			need_reset_io_power = val;
+			hwlog_info("%s property need-reset is %d.\n", __func__, val);
+		}
+		val = 0;
+		if(of_property_read_u32(power_node, "set-3v", &val)) {
+			hwlog_err("%s failed to find property set-3v.\n", __func__);
+		} else {
+			need_set_3v_io_power = val;
+			hwlog_info("%s property set-3v is %d.\n", __func__, val);
+		}
+	}
 	sensorhub_vddio = regulator_get(&pdev->dev, SENSOR_VBUS);
 	if (IS_ERR(sensorhub_vddio)) {
 		hwlog_err("%s: regulator_get fail!\n", __func__);
 		return -EINVAL;
+	}
+
+	if (need_set_3v_io_power) {
+		ret = regulator_set_voltage(sensorhub_vddio, SENSOR_VOLTAGE_3V, SENSOR_VOLTAGE_3V);
+		if (ret < 0)
+			hwlog_err("failed to set sensorhub_vddio voltage to 3V\n");
 	}
 
 	ret = regulator_enable(sensorhub_vddio);
@@ -304,6 +317,7 @@ static bool should_be_processed_when_sr(int sensor_tag)
 	case TAG_PHONECALL:
 	case TAG_GPS_4774_I2C:
 	case TAG_FP:
+	case TAG_FP_UD:
 	case TAG_MAGN_BRACKET:
 		ret = false;
 		break;
@@ -322,7 +336,7 @@ void disable_sensors_when_suspend(void)
 	memset(&sensor_status_backup, 0, sizeof(sensor_status_backup));
 	memcpy(&sensor_status_backup, &sensor_status, sizeof(sensor_status_backup));
 	for (tag = TAG_SENSOR_BEGIN; tag < TAG_SENSOR_END; ++tag) {
-		if (sensor_status_backup.status[tag] && !(hifi_supported == 1 && (sensor_status.batch_cnt[tag] > 1))) {
+		if ((sensor_status_backup.status[tag] || sensor_status_backup.opened[tag]) && !(hifi_supported == 1 && (sensor_status.batch_cnt[tag] > 1))) {
 			if (should_be_processed_when_sr(tag)) {
 				inputhub_sensor_enable(tag, false);
 			}
@@ -340,13 +354,17 @@ void enable_sensors_when_resume(void)
 		.reserved[0] = TYPE_STANDARD	/*for step counter only*/
 	};
 	for (tag = TAG_SENSOR_BEGIN; tag < TAG_SENSOR_END; ++tag) {
-		if (sensor_status_backup.status[tag] && (0 == sensor_status.status[tag])
+		if ((sensor_status_backup.status[tag] || sensor_status_backup.opened[tag])
 			&& !(hifi_supported == 1 && (sensor_status.batch_cnt[tag] > 1))) {
 			if (should_be_processed_when_sr(tag)) {
-				delay_param.period = sensor_status_backup.delay[tag];
-				delay_param.batch_count = sensor_status_backup.batch_cnt[tag];
-				inputhub_sensor_enable(tag, true);
-				inputhub_sensor_setdelay(tag, &delay_param);
+				if (sensor_status_backup.opened[tag] && (0 == sensor_status.opened[tag])) {
+					inputhub_sensor_enable(tag, true);
+				}
+				if (sensor_status_backup.status[tag]) {
+					delay_param.period = sensor_status.status[tag] ? sensor_status.delay[tag] : sensor_status_backup.delay[tag];
+					delay_param.batch_count = sensor_status.status[tag] ? sensor_status.batch_cnt[tag] : sensor_status_backup.batch_cnt[tag];
+					inputhub_sensor_setdelay(tag, &delay_param);
+				}
 			}
 		}
 	}

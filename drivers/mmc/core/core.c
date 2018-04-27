@@ -101,9 +101,6 @@ u64 cmdlog_enable_flag = 0;   /* 0 : Disable , 1: Enable */
 u64 rwlog_index = 0;     /* device index, 0: for emmc */
 u64 mmc_debug_mask = 0;
 
-extern struct workqueue_struct *sd_sdio_test_work;
-extern int sd_init_loop_work;
-
 static int rwlog_enable_set(void *data, u64 val)
 {
     rwlog_enable_flag = val;
@@ -330,7 +327,7 @@ static void __mmc_start_request(struct mmc_host *host, struct mmc_request *mrq)
 		int tries = 500; /* Wait aprox 500ms at maximum */
 
 		while (host->ops->card_busy(host) && --tries)
-			mmc_delay(1);
+			mdelay(1);
 
 		if (tries == 0) {
 			mrq->cmd->error = -EBUSY;/*lint !e570*/
@@ -3076,16 +3073,6 @@ void mmc_rescan(struct work_struct *work)
 		mmc_schedule_delayed_work(&host->detect, HZ);
 	}
 
-	if(NULL != host->card)
-	{
-		if((0x5a5a == sd_init_loop_work) && mmc_card_sd(host->card))
-		{
-			sd_sdio_test_work = alloc_workqueue("sd_sdio_test_work",WQ_FREEZABLE | WQ_POWER_EFFICIENT,0);
-			INIT_DELAYED_WORK(&host->sd_sdio_test_work, sd_sdio_loop_test);
-			queue_delayed_work(sd_sdio_test_work,&host->sd_sdio_test_work, msecs_to_jiffies(1000));
-			sd_init_loop_work = 0;
-		}
-	}
 }
 /*lint -restore*/
 void mmc_start_host(struct mmc_host *host)

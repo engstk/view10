@@ -61,6 +61,14 @@
 #define JPG_FUNC_CLK_DEFAULT_RATE	(554 * 1000000L)
 #define JPG_FUNC_CLK_PD_RATE	(238 * 1000000L)
 
+#ifndef CONFIG_ES_LOW_FREQ
+	#define JPG_FUNC_CLK_DEFAULT_RATE_V501	(600 * 1000000L)
+#else
+	#define JPG_FUNC_CLK_DEFAULT_RATE_V501	(415 * 1000000L)
+#endif
+
+#define JPG_FUNC_CLK_PD_RATE_V501	(277 * 1000000L)
+
 #define HISI_JPU_ION_CLIENT_NAME	"hisi_jpu_ion"
 
 /*#define CONFIG_NO_USE_INTERFACE*/
@@ -98,6 +106,9 @@ struct hisi_jpu_data_type {
 
 	const char *jpg_func_clk_name;
 	struct clk *jpg_func_clk;
+
+	const char *jpg_platform_name;
+	jpeg_dec_platform jpu_support_platform;
 
 	struct ion_client *ion_client;
 	struct ion_handle *lb_ion_handle;

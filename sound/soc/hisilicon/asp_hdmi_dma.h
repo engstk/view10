@@ -184,8 +184,6 @@ void asp_hdmi_dma_stop(void);
  * @Description:config sio reg with parames, if number of  parames value is  0,reg value is default
  * @param value - see struct sio_config_parames
  */
-void asp_hdmi_SIO_config(struct sio_config_parameters parameters);
-
 void asp_hdmi_spdif_config(struct sio_config_parameters parameters);
 #endif
 

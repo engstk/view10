@@ -337,8 +337,9 @@ enum RegAddress {
   regMUS_INTERRUPT          = 0xD3,
   regMUS_INTERRUPT_MSK      = 0xD4,
   regMUS_TIMING             = 0xD5,
-  regWD_RESET               = 0xD6,
-  regWD_TIMING              = 0xD7,
+  regDEVICE_TYPE            = 0xD6,
+  regWD_RESET               = 0xD7,
+  regWD_TIMING              = 0xD8,
   regJIG_TIMING             = 0xD9,
   regWD_STATUS              = 0xDA,
   regWD_HISTORY_RESET       = 0xDB,
@@ -877,6 +878,17 @@ typedef union {
 typedef union {
   FSC_U8 byte;
   struct {
+    FSC_U8 Reserved_0         : 2;
+    FSC_U8 Sdp                : 1;
+    FSC_U8 Reserved_1         : 2;
+    FSC_U8 Cdp                : 1;
+    FSC_U8 Dcp                : 1;
+    FSC_U8 Reserved_2         : 1;
+  };
+} regDevice_Type_t; /* R/W */
+typedef union {
+  FSC_U8 byte;
+  struct {
     FSC_U8 JIG_HIGH_TIMER     : 5;
     FSC_U8 Reserved           : 3;
   };
@@ -1133,6 +1145,7 @@ typedef struct
   regMUS_Int_t        MUSInterrupt;
   regMUS_Int_Msk_t    MUSIntMask;
   regMUS_Timing_t     MUSTiming;
+  regDevice_Type_t    DeviceType;
   FSC_U8              WDReset;
   FSC_U8              WDTiming;
   regJig_Timing_t     JigTiming;

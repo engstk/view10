@@ -46,24 +46,7 @@
  *
  */
 
-/******************************************************************************
 
-                  版权所有 (C), 2015-2025, 华为技术有限公司
-
- ******************************************************************************
-  文 件 名   : Cbtapprl.h
-  版 本 号   : 初稿
-  作    者   : x00263027
-  生成日期   : 2015年3月2日
-  最近修改   :
-  功能描述   : Cbtapprl.h 的头文件
-  函数列表   :
-  修改历史   :
-  1.日    期   : 2015年3月2日
-    作    者   : x00263027
-    修改内容   : 创建文件
-
-******************************************************************************/
 
 #ifndef __CBT_APPRL_H__
 #define __CBT_APPRL_H__
@@ -72,6 +55,7 @@
   1 头文件包含
 *****************************************************************************/
 #include "cbtrl.h"
+#include "mdrv.h"
 
 
 #ifdef __cplusplus
@@ -102,12 +86,11 @@ extern VOS_UINT32                       g_ulCbtAcpuDbgFlag;
 
 /*值为CBT_READ_NV_IND_STRU结构体中，sizeof(ulErrorCode) + sizeof(ulNvId) + sizeof(ulCount)*/
 #define CBT_READ_NV_HEAD_SIZE               (12)
-#define CBT_WRITE_NV_HEAD_SIZE              (8)
 /*长度为NVID的值+NVID长度所占内存长度*/
 #define CBT_NV_ITEM_SIZE                    (4)
 #define CBT_IND_RESULT_SIZE                 (4)
 #define CBT_EST_IND_CHIP_ID_SIZE            (4)
-#define CBT_EST_IND_RSV_LEN                 (252)
+#define CBT_EST_IND_RSV_LEN                 (212)
 
 
 #define CBT_END_FRAME                       (1)
@@ -145,9 +128,6 @@ extern VOS_UINT32                       g_ulCbtAcpuDbgFlag;
 
 #define OM_APP_READ_NV_IND                        0x8022
 
-#define APP_OM_WRITE_NV_REQ                       0x8023
-#define OM_APP_WRITE_NV_CNF                       0x8024
-
 #define APP_OM_NV_BACKUP_REQ                      0x8025
 #define OM_APP_NV_BACKUP_CNF                      0x8026
 
@@ -158,9 +138,11 @@ extern VOS_UINT32                       g_ulCbtAcpuDbgFlag;
 
 typedef struct
 {
-    VOS_UINT32 ulResult;                            /*返回执行结果*/
-    VOS_UINT32 ulChipId;
-    VOS_UINT8  ausReserve[CBT_EST_IND_RSV_LEN];
+    VOS_UINT32     ulResult;                            /*返回执行结果*/
+    VOS_UINT16     usChipId;
+    VOS_UINT16     usRsv;
+    MSW_VER_INFO_S stswverinfo;
+    VOS_UINT8      ausReserve[CBT_EST_IND_RSV_LEN];
 }CBT_ESTABLISH_IND_STRU;
 
 typedef struct
@@ -188,23 +170,6 @@ typedef struct
     VOS_UINT32                  ulErrNvId;          /*返回出现错误的NVID*/
     VOS_UINT32                  ulCount;            /*返回的NV项个数*/
 }CBT_READ_NV_CNF_STRU;
-
-typedef struct
-{
-    VOS_UINT32 ulCount;             /*要写入的NV项个数*/
-    VOS_UINT16 ausNvItemData[2];    /*包括NVID值、NVID内容的长度、NVID的内容*/
-}CBT_WRITE_NV_REQ_STRU;
-
-typedef struct
-{
-    CBT_MSG_HEAD_STRU           stMsgHead;
-    VOS_UINT16                  usMsgId;      /* 消息ID */
-    CBT_COMPONENT_MODE_STRU     stCompMode;
-    VOS_UINT32                  ulMsgLength;
-
-    VOS_UINT32                  ulErrorCode;        /*返回执行结果*/
-    VOS_UINT32                  ulErrNvId;          /*返回出现错误的NVID*/
-}CBT_WRITE_NV_CNF_STRU;
 
 /*****************************************************************************
 结构名    : OMRL_CBT_HDLC_ENCODE_MEM_CTRL

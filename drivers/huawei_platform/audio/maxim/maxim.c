@@ -112,7 +112,6 @@ void maxim_list_del(struct maxim_priv *maxim)
 
 	list_del(&maxim->list);
 	kfree(maxim);
-	maxim = NULL;
 }
 
 void maxim_list_del_all(void)

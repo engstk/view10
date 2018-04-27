@@ -21,8 +21,8 @@ int __init early_parse_tp_color_cmdline(char *arg)
 	if (arg) {
 		len = strlen(arg);
 
-		if (len > sizeof(tp_color_buf)) {
-			len = sizeof(tp_color_buf);
+		if (len >= sizeof(tp_color_buf)) {
+			len = sizeof(tp_color_buf)-1;
 		}
 		memcpy(tp_color_buf, arg, len);
 	} else {
