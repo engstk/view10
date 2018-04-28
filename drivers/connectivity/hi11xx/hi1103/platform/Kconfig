@@ -69,16 +69,16 @@ config HI110X_GPS_REFCLK_INTERFACE
   ---help---
     Hisilicon 110X gps refclk interface with hwgps
 
-choice
-  prompt "GPS RefClk Type"
-  default HI110X_GPS_REFCLK_SRC_3
-  config HI110X_GPS_REFCLK_SRC_1
-    bool "modem provide gps one ref clk source, like plat A"
-  config HI110X_GPS_REFCLK_SRC_2
-    bool "modem provide gps two ref clk source, like plat D"
-  config HI110X_GPS_REFCLK_SRC_3
-    bool "modem provide gps three ref clk source, other plat"
-endchoice
+#choice
+#  prompt "GPS RefClk Type"
+#  default HI110X_GPS_REFCLK_SRC_3
+#  config HI110X_GPS_REFCLK_SRC_1
+#    bool "modem provide gps one ref clk source, like plat A"
+#  config HI110X_GPS_REFCLK_SRC_2
+#    bool "modem provide gps two ref clk source, like plat D"
+#  config HI110X_GPS_REFCLK_SRC_3
+#    bool "modem provide gps three ref clk source, other plat"
+#endchoice
 
 config HI110X_GPS_SYNC
   bool "Hisilicon 110X gps sync feature"

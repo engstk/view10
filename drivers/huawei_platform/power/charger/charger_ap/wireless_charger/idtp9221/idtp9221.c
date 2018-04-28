@@ -18,7 +18,7 @@
 #include <linux/power/hisi/hisi_bci_battery.h>
 #include <huawei_platform/power/wireless_charger.h>
 #include <huawei_platform/power/wired_channel_switch.h>
-#include <idtp9221.h>
+#include "idtp9221.h"
 
 #define HWLOG_TAG wireless_idtp9221
 HWLOG_REGIST();

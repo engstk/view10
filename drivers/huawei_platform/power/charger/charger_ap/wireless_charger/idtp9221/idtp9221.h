@@ -1,8 +1,8 @@
 #ifndef __IDT9221
 #define __IDT9221
-#include <idtp9221_fw.h>
-#include <idtp9221_fw_sram_0209.h>
-#include <idtp9221_fw_sram_020b.h>
+#include "idtp9221_fw.h"
+#include "idtp9221_fw_sram_0209.h"
+#include "idtp9221_fw_sram_020b.h"
 
 /******registers******/
 #define IDT9221_ADDR_LEN                      (2)

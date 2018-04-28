@@ -7,7 +7,7 @@
 #include <linux/miscdevice.h>
 #include <linux/platform_device.h>
 #include <linux/regulator/consumer.h>
-#include "ivp.h"
+#include "../ivp.h"
 
 /******addr defines for block IVP_CFG_NON_SEC_REG(fama)******/
 #define ADDR_IVP_CFG_SEC_REG_IVP_FAMA_CTRL0        (0x0530)
