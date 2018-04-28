@@ -112,3 +112,11 @@ all.config
 
 # Kdevelop4
 *.kdev4
+
+# Don't track:
+drivers/hisi/tzdriver/cfc_data.c
+drivers/hisi/tzdriver/rule.out
+drivers/hisi/tzdriver/cfc_graph.pyc
+drivers/hisi/tzdriver/cfc_graphgen.pyc
+drivers/hisi/tzdriver/cfc_rule_parser.pyc
+drivers/huawei_platform/oases/inlinehook_offset.h
