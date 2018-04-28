@@ -19,8 +19,8 @@
 #include <linux/string.h>
 #include <linux/uaccess.h>
 #include <linux/vmalloc.h>
-#include "./include/hw_rscan_scanner.h"
-#include "./include/hw_rscan_data_uploader.h"
+#include "hw_rscan_scanner.h"
+#include "hw_rscan_data_uploader.h"
 
 int rscan_proc_init(void);
 void rscan_proc_deinit(void);

@@ -11,7 +11,7 @@
 *
 */
 
-#include "hisi_fb.h"
+#include "../hisi_fb.h"
 
 #define DTS_COMP_DP_FAKE_PANEL	"hisilicon,dp_fake_panel"
 

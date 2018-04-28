@@ -15,10 +15,10 @@
 #include "link.h"
 #include "avgen.h"
 #include "core.h"
-#include "hisi_fb.h"
+#include "../hisi_fb.h"
 #include "intr.h"
 #include "../hisi_fb_def.h"
-#include "hdcp22/hdcp13.h"
+#include "../hdcp22/hdcp13.h"
 
 
 extern u16 usb31phy_cr_read(u32 addr);

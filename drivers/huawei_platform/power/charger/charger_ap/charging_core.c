@@ -23,7 +23,7 @@
 #ifdef CONFIG_WIRELESS_CHARGER
 #include <huawei_platform/power/wireless_charger.h>
 #endif
-#include <charging_core.h>
+#include "charging_core.h"
 #ifdef CONFIG_TCPC_CLASS
 #include <huawei_platform/usb/hw_pd_dev.h>
 #endif

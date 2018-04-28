@@ -27,7 +27,7 @@
  *
  */
 
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 
 
 #define DTS_COMP_MIPI_CMI_NT35521	"hisilicon,mipi_cmi_NT35521"

@@ -11,7 +11,7 @@
 *
 */
 
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 #include <huawei_platform/touthscreen/huawei_touchscreen.h>
 
 #define DTS_COMP_LG_ER69006 "hisilicon,mipi_lg_eR69006A"

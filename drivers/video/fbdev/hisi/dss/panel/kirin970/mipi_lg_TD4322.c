@@ -10,7 +10,7 @@
 * GNU General Public License for more details.
 *
 */
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 #include <huawei_platform/touthscreen/huawei_touchscreen.h>
 
 #define DTS_COMP_LG_TD4322	"hisilicon,mipi_lg_TD4322"

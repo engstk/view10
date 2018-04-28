@@ -36,7 +36,7 @@
 #include <linux/delay.h>
 #include "host_lib_driver_linux_if.h"
 #include "../hisi_fb_def.h"
-#include "hisi_dp.h"
+#include "../hisi_dp.h"
 #include <linux/hisi/hisi_drmdriver.h>
 #include <global_ddr_map.h>
 #include "hdcp13.h"

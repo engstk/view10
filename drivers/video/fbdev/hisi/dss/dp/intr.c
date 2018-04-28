@@ -10,9 +10,9 @@
 * GNU General Public License for more details.
 *
 */
-#include "hisi_fb.h"
-#include "hisi_dp.h"
-#include "hisi_fb_def.h"
+#include "../hisi_fb.h"
+#include "../hisi_dp.h"
+#include "../hisi_fb_def.h"
 
 #include "avgen.h"
 #include "dp_aux.h"
@@ -20,7 +20,7 @@
 #include "intr.h"
 #include "core.h"
 #include "edid.h"
-#include "hdcp22/hdcp13.h"
+#include "../hdcp22/hdcp13.h"
 
 
 /*lint -save -e* */

@@ -27,7 +27,7 @@
  *
  */
  /*lint -e551 -e551*/
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 #include "../mipi_lcd_utils.h"
 #include "lcdkit_ext.h"
 #define DTS_COMP_SHARP_NT36870 "hisilicon,mipi_sharp_NT36870"

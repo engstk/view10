@@ -27,7 +27,7 @@
  *
  */
 
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 #include <huawei_platform/touthscreen/huawei_touchscreen.h>
 
 // only for test video vesa3x

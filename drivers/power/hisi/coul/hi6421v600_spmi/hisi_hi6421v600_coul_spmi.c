@@ -1,7 +1,7 @@
 
 
 #include "hisi_hi6421v600_coul.h"
-#include <../hisi_coul_core.h>
+#include "../hisi_coul_core.h"
 #include <linux/hisi-spmi.h>
 #include <linux/of_hisi_spmi.h>
 

@@ -26,7 +26,7 @@
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 
 #define DTS_COMP_jdi_NT36860 "hisilicon,mipi_jdi_NT36860"
 static int g_lcd_fpga_flag;

@@ -20,7 +20,7 @@
 #include <linux/scatterlist.h>
 #include <linux/string.h>
 #include <linux/types.h>
-#include "./include/hw_rscan_utils.h"
+#include "hw_rscan_utils.h"
 
 int kcode_scan(uint8_t *hash);
 size_t kcode_get_size(void);

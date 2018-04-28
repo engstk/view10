@@ -8,7 +8,7 @@
  * Copyright (c) 2001-2021, Huawei Tech. Co., Ltd. All rights reserved.
  */
 
-#include "./include/hw_rscan_proc.h"
+#include "include/hw_rscan_proc.h"
 
 static const char *TAG = "hw_rscan_proc";
 static struct proc_dir_entry *proc_entry;

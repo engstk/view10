@@ -11,7 +11,7 @@
 *
 */
 
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 
 #define DTS_COMP_JDI_ER63450 "hisilicon,mipi_jdi_ER63450"
 

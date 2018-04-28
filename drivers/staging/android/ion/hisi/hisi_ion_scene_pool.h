@@ -19,7 +19,7 @@
 #include <linux/types.h>
 #include <linux/printk.h>
 #include <linux/hisi/hisi_ion.h>
-#include "ion_priv.h"
+#include "../ion_priv.h"
 #ifdef ION_SCENE_POOL_ALLOC_DEBUG
 #include <linux/time.h>
 #endif

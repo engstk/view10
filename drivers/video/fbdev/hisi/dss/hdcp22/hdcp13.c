@@ -13,7 +13,7 @@
 
 #include "../hisi_fb_def.h"
 #include "../dp/dp_aux.h"
-#include "hisi_fb.h"
+#include "../hisi_fb.h"
 #include "../dp/intr.h"
 #include "hdcp13.h"
 

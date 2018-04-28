@@ -27,7 +27,7 @@
  *
  */
 /*lint -e551 -e551*/
-#include "hisi_fb.h"
+#include "../../hisi_fb.h"
 #include "../mipi_lcd_utils.h"
 
 #define DTS_COMP_JDI_2LANE_NT36860C "hisilicon,mipi_jdi_2lane_NT36860C"

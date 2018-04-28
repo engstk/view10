@@ -14,7 +14,7 @@
 #define _HDCP13_H
 
 #include <linux/kernel.h>
-#include "hisi_dp.h"
+#include "../hisi_dp.h"
 
 
 #define REPEATER_STATE 0x2693

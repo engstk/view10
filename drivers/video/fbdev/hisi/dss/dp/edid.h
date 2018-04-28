@@ -15,8 +15,8 @@
 #define __PARSE_EDID_H__
 
 #include <linux/string.h>
-#include "hisi_fb.h"
-#include "hisi_dp.h"
+#include "../hisi_fb.h"
+#include "../hisi_dp.h"
 static const uint8_t edid_v1_header[8] = {0x00, 0xff, 0xff, 0xff,
                                    0xff, 0xff, 0xff, 0x00};
 
